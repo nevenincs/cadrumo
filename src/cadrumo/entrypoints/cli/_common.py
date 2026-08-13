@@ -162,6 +162,7 @@ __all__ = [
     "active_profile_label",
     "emit_help_text",
     "emit_progress_line",
+    "notice_lines",
     "parse_decimal_amount",
     "parse_optional_decimal_amount",
     "resolve_lifecycle_continuation_notice",
@@ -171,6 +172,9 @@ __all__ = [
 
 REQUESTED_CLI_LEAF_META_KEY = "cadrumo.requested_cli_leaf"
 """Context key holding the terminal leaf selected before root guards run."""
+
+_OPERATOR_SURFACE_RECONCILIATION_META_KEY = "cadrumo.operator_surface_reconciliation"
+"""Invocation-scoped immutable reconciliation shared by nested Click contexts."""
 
 _CLI_POLICY_REFUSAL_PROJECTION_ATTRIBUTE = "_cadrumo_cli_policy_refusal_projection"
 
@@ -610,6 +614,24 @@ def _action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
     return tuple(lines)
 
 
+def notice_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
+    """Render envelope notices as the matching machine-parsable text lines.
+
+    Text mode receives no ``notices`` channel of its own, so a command that
+    passes notices to :func:`_emit_envelope` and does not fold the same values
+    into its ``lines`` emits a diagnostic in JSON that is simply absent from the
+    terminal. Rebuilding the line from the notice itself is what stops the two
+    surfaces drifting: the code and the message are the notice's, never a second
+    sentence written beside it.
+
+    This is the tab-separated transport form every ``app`` surface uses. The
+    config storage surface renders its own wrapped, severity-labelled block
+    instead; that is a presentation choice for a human-read report and is not
+    substitutable here, where the line is parsed.
+    """
+    return tuple(f"notice\t{notice.code}\t{notice.message}" for notice in notices)
+
+
 def _emit_envelope(
     ctx: typer.Context,
     *,
@@ -946,11 +968,38 @@ def _current_operator_surface_exclusions() -> tuple[ExplicitExclusionInventoryRo
 
 
 def _current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
-    """Build the complete current CLI surface reconciliation without inference."""
-    from ...application.operator_surface import reconcile_operator_surface_inventory
+    """Return one complete live-surface reconciliation per CLI invocation.
+
+    Click and Typer share their context ``meta`` mapping across every nested
+    context in one invocation and create a new mapping for the next root
+    invocation. Keeping the frozen reconciliation there lets every notice
+    action in an overview batch consume the same descriptor-backed inventory
+    without giving it a process-global lifetime or weakening any canonical
+    resolver gate.
+
+    Direct callers outside an active Click invocation still receive a freshly
+    constructed reconciliation, preserving the live inspection semantics used
+    by standalone verification code.
+    """
+    from ...application.operator_surface import OperatorSurfaceReconciliation, reconcile_operator_surface_inventory
+
+    ctx = click.get_current_context(silent=True)
+    if ctx is None:
+        # Typer vendors Click and therefore owns a distinct context stack. The
+        # real ``aeat`` dispatch runs on that stack; upstream Click remains the
+        # first probe for plain-Click embedders of this boundary.
+        from typer._click.globals import get_current_context as get_current_typer_context
+
+        ctx = get_current_typer_context(silent=True)
+    if ctx is not None:
+        cached = ctx.meta.get(_OPERATOR_SURFACE_RECONCILIATION_META_KEY)
+        if cached is not None:
+            if not isinstance(cached, OperatorSurfaceReconciliation):
+                raise TypeError("operator-surface reconciliation context contains an invalid value")
+            return cached
 
     inventory = _current_operator_surface_schema_inventory()
-    return reconcile_operator_surface_inventory(
+    reconciliation = reconcile_operator_surface_inventory(
         live_leaves=inventory.live_leaves,
         result_schemas=inventory.result_schemas,
         input_schemas=inventory.input_rows,
@@ -959,6 +1008,9 @@ def _current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
         mcp_exposures=_current_operator_surface_mcp_exposures(inventory.command_keys),
         exclusions=_current_operator_surface_exclusions(),
     )
+    if ctx is not None:
+        ctx.meta[_OPERATOR_SURFACE_RECONCILIATION_META_KEY] = reconciliation
+    return reconciliation
 
 
 def active_profile_label() -> str | None:

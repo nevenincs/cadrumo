@@ -38,11 +38,13 @@ import re
 import shutil
 from collections.abc import Sequence
 from datetime import UTC, date, datetime
+from inspect import signature
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
-from typer.testing import CliRunner
+from typer.testing import CliRunner, Result
 
 from cadrumo.application.registry import (
     RegistryConformanceProfile,
@@ -97,6 +99,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _STAMPED_MODELO = "130"
 _STAMPED_REVISION = "2019-y-siguientes"
+
+
+class _StampArguments(TypedDict, total=False):
+    """Optional keyword arguments accepted by the revision stamp writer."""
+
+    engineered_by: str
+    review_status: StampableReviewStatus | RevisionReviewStatus | str
+    reviewed_by: str
+    reviewed_at: date
 
 
 def _real_d2025_coordinate() -> ConformanceCoordinate:
@@ -1387,7 +1398,7 @@ def test_stamp_refuses_the_core_operator_reviewed_member_handed_past_the_annotat
         stamp_revision(
             _STAMPED_MODELO,
             _STAMPED_REVISION,
-            review_status=RevisionReviewStatus.OPERATOR_REVIEWED,  # type: ignore[arg-type]
+            review_status=RevisionReviewStatus.OPERATOR_REVIEWED,
             reviewed_by="agent:conformance-cli-gate",
             reviewed_at=date(2026, 7, 28),
             registry_root=registry_copy,
@@ -1412,7 +1423,7 @@ def test_the_stamp_refusal_keys_on_the_value_not_on_which_enum_was_imported(
     result = stamp_revision(
         _STAMPED_MODELO,
         _STAMPED_REVISION,
-        review_status=RevisionReviewStatus.AGENT_REVIEWED,  # type: ignore[arg-type]
+        review_status=RevisionReviewStatus.AGENT_REVIEWED,
         reviewed_by="agent:conformance-cli-gate",
         reviewed_at=date(2026, 7, 28),
         registry_root=registry_copy,
@@ -1441,7 +1452,7 @@ def test_stamp_refuses_an_out_of_vocabulary_status_string_without_touching_the_m
         stamp_revision(
             _STAMPED_MODELO,
             _STAMPED_REVISION,
-            review_status=spelling,  # type: ignore[arg-type]
+            review_status=spelling,
             registry_root=registry_copy,
         )
 
@@ -1496,7 +1507,7 @@ def operator_signed_copy(registry_copy: Path) -> Path:
 def test_stamp_refuses_to_touch_the_review_axis_of_an_operator_signed_revision(
     operator_signed_copy: Path,
     label: str,
-    arguments: dict[str, object],
+    arguments: _StampArguments,
 ) -> None:
     """The effective status governs, not only the requested one.
 
@@ -1525,7 +1536,7 @@ def test_stamp_refuses_to_touch_the_review_axis_of_an_operator_signed_revision(
             _STAMPED_MODELO,
             _STAMPED_REVISION,
             registry_root=operator_signed_copy,
-            **arguments,  # type: ignore[arg-type]
+            **arguments,
         )
 
     assert manifest.read_bytes() == before, label
@@ -2036,13 +2047,18 @@ def test_stamp_refuses_a_provenance_claim_that_names_nobody(registry_copy: Path,
     """A whitespace identity is a claim with no claimant, so it is never written."""
     manifest = _manifest_of(registry_copy)
     before = manifest.read_text(encoding=UTF_8_ENCODING)
-    arguments: dict[str, object] = {field: "   "}
-    if field == "reviewed_by":
-        arguments["review_status"] = StampableReviewStatus.AGENT_REVIEWED
-        arguments["reviewed_at"] = date(2026, 7, 27)
+    arguments: _StampArguments
+    if field == "engineered_by":
+        arguments = {"engineered_by": "   "}
+    else:
+        arguments = {
+            "reviewed_by": "   ",
+            "review_status": StampableReviewStatus.AGENT_REVIEWED,
+            "reviewed_at": date(2026, 7, 27),
+        }
 
     with pytest.raises(StampError, match="names nobody"):
-        stamp_revision(_STAMPED_MODELO, _STAMPED_REVISION, registry_root=registry_copy, **arguments)  # type: ignore[arg-type]
+        stamp_revision(_STAMPED_MODELO, _STAMPED_REVISION, registry_root=registry_copy, **arguments)
 
     assert manifest.read_text(encoding=UTF_8_ENCODING) == before
 
@@ -2065,7 +2081,7 @@ def test_stamp_trims_a_padded_identity_before_writing_it(registry_copy: Path) ->
 # --------------------------------------------------------------------------- #
 
 
-def _stamp_cli(root: Path, *arguments: str) -> object:
+def _stamp_cli(root: Path, *arguments: str) -> Result:
     """Invoke the real ``stamp`` verb against a byte copy of a shipped modelo tree."""
     return CliRunner().invoke(
         app,
@@ -2092,9 +2108,11 @@ def test_the_stamp_command_defaults_the_review_date_to_today(registry_copy: Path
     assert result.exit_code == 0, result.stdout
     revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
     assert revision.review_status is RevisionReviewStatus.AGENT_REVIEWED
-    assert revision.reviewed_at == datetime.now(tz=UTC).date()
+    reviewed_at = revision.reviewed_at
+    assert reviewed_at == datetime.now(tz=UTC).date()
+    assert reviewed_at is not None
     # Echoed back, so the written value is never implicit to the caller.
-    assert f"reviewed_at={revision.reviewed_at.isoformat()}" in result.stdout
+    assert f"reviewed_at={reviewed_at.isoformat()}" in result.stdout
 
 
 def test_the_stamp_command_turns_a_writer_refusal_into_a_parameter_error(registry_copy: Path) -> None:
@@ -2393,10 +2411,10 @@ def test_the_writer_refuses_to_be_called_without_naming_a_registry_tree() -> Non
     assertion trap this class of test keeps falling into.
     """
     with pytest.raises(TypeError, match="registry_root"):
-        stamp_revision(_STAMPED_MODELO, _STAMPED_REVISION, engineered_by="agent:opus-executor")  # type: ignore[call-arg]
+        signature(stamp_revision).bind(_STAMPED_MODELO, _STAMPED_REVISION, engineered_by="agent:opus-executor")
 
     with pytest.raises(TypeError, match="registry_root"):
-        revision_manifest_path(_STAMPED_MODELO, _STAMPED_REVISION)  # type: ignore[call-arg]
+        signature(revision_manifest_path).bind(_STAMPED_MODELO, _STAMPED_REVISION)
 
 
 def test_the_stamp_command_refuses_when_no_registry_tree_is_named() -> None:

@@ -252,9 +252,13 @@ def _iter_citations(text: str) -> Iterator[tuple[str, tuple[str, ...], bool, tup
         remainder = text[match.end() :]
         has_trailing_help = bool(re.match(r"\s+--help\b", remainder))
         cited_options = tuple(_cited_options_after(text, match.end()))
+        verb = match.group(1)
+        path_tokens = match.group(2)
+        assert isinstance(verb, str)
+        assert isinstance(path_tokens, str)
         yield (
             match.group(0),
-            (match.group(1), *match.group(2).split()),
+            (verb, *path_tokens.split()),
             has_trailing_help,
             cited_options,
         )
@@ -977,7 +981,10 @@ _REDACTABLE_IDENTIFIER_TOKENS: dict[str, frozenset[str]] = {
 
 def _redactable_identifier_tokens() -> frozenset[str]:
     """Return every identifier token that marks an interpolation as redactable."""
-    return frozenset().union(*_REDACTABLE_IDENTIFIER_TOKENS.values())
+    tokens: set[str] = set()
+    for values in _REDACTABLE_IDENTIFIER_TOKENS.values():
+        tokens.update(values)
+    return frozenset(tokens)
 
 
 def _interpolated_names(node: ast.AST) -> Iterator[str]:

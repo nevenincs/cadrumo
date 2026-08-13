@@ -24,6 +24,7 @@ from typing import Any
 import pytest
 from click.testing import Result
 
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_storage  # noqa: F401 - autouse fixture
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -94,6 +95,13 @@ def _read_bundle(bundle_path: Path) -> dict[str, Any]:
     return json.loads(bundle_path.read_text(encoding="utf-8"))
 
 
+def _profile_id(raw: dict[str, Any]) -> str:
+    profile = STR_KEYED_MAPPING_ADAPTER.validate_python(raw["profile"])
+    exported_id = profile["profile_id"]
+    assert isinstance(exported_id, str)
+    return exported_id
+
+
 def _write_bundle(bundle_path: Path, raw: dict[str, Any]) -> None:
     bundle_path.write_text(json.dumps(raw), encoding="utf-8")
 
@@ -117,7 +125,7 @@ def _create_minimal_profile_and_export(bundle_path: Path) -> str:
     assert bundle_path.is_file()
 
     raw = _read_bundle(bundle_path)
-    exported_id = raw["profile"]["profile_id"]
+    exported_id = _profile_id(raw)
     assert_public_profile_id_redacted(r_export.output, exported_id)
     return exported_id
 
@@ -165,7 +173,7 @@ def _create_legal_entity_profile_and_export(bundle_path: Path) -> str:
     assert bundle_path.is_file()
 
     raw = _read_bundle(bundle_path)
-    exported_id = raw["profile"]["profile_id"]
+    exported_id = _profile_id(raw)
     assert_public_profile_id_redacted(r_export.output, exported_id)
     return exported_id
 
@@ -198,7 +206,7 @@ def _create_attribution_entity_profile_and_export(bundle_path: Path) -> str:
     assert bundle_path.is_file()
 
     raw = _read_bundle(bundle_path)
-    exported_id = raw["profile"]["profile_id"]
+    exported_id = _profile_id(raw)
     assert_public_profile_id_redacted(r_export.output, exported_id)
     return exported_id
 

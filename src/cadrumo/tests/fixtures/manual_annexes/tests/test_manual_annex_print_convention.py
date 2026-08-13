@@ -51,7 +51,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 #: A printed euro amount in the Spanish convention: thousands separated by ".",
 #: two decimals after ",". Matches "0,00", "624,00" and "21.420,00"; the sign of
 #: a negative amount sits outside the match and does not affect the zero test.
-_MONEY = re.compile(r"\d{1,3}(?:\.\d{3})*,\d{2}")
+_MONEY: re.Pattern[str] = re.compile(r"\d{1,3}(?:\.\d{3})*,\d{2}")
 
 _PDFS = _annex_pdfs()
 _IDS = [f"{p.parent.name}-{p.stem}" for p in _PDFS]
@@ -60,7 +60,7 @@ _IDS = [f"{p.parent.name}-{p.stem}" for p in _PDFS]
 def _printed_amounts(pdf_path: Path) -> list[str]:
     with pdfplumber.open(pdf_path) as pdf:
         text = "\n".join((page.extract_text() or "") for page in pdf.pages)
-    return _MONEY.findall(text)
+    return [match for match in _MONEY.findall(text) if isinstance(match, str)]
 
 
 def _as_decimal(printed: str) -> Decimal:

@@ -19,6 +19,7 @@ from collections.abc import Mapping
 from pydantic import Field, model_validator
 
 from ....application.preflight import HealthSeverity
+from ....core.identity import ProfileId
 from ....core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 
 ProvisioningFactPayload = Mapping[str, str | int | bool]
@@ -114,7 +115,7 @@ class ConfigCheckResult(OutputSchema):
     every probe row for diagnostics.
     """
 
-    profile_id: str | None = None
+    profile_id: ProfileId | None = None
     ok: bool
     capabilities: list[CheckCapabilityPayload] = []
     dependencies: list[CheckDependencyPayload] = []

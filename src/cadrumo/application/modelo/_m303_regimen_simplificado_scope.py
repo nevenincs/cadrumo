@@ -69,9 +69,9 @@ def m303_regimen_simplificado_scope_for_profile(
 
 
 def m303_regimen_simplificado_scope_for_composition(
-    composition: M303RegimeComposition,
+    composition: M303RegimeComposition | str,
 ) -> M303RegimenSimplificadoScopeDecision:
-    """Map one canonical IVA composition to its closed Modelo 303 scope."""
+    """Map one canonical or serialized IVA composition to the closed scope."""
     if composition is M303RegimeComposition.GENERAL:
         scope = M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED
     elif composition in {M303RegimeComposition.SIMPLIFIED, M303RegimeComposition.MIXED}:

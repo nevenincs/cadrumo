@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.smoke_homebrew import (
+from ..smoke_homebrew import (
     CLEANUP_STATE_NAME,
     _assert_oracle_evidence,
     _parser,

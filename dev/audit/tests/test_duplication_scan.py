@@ -18,12 +18,11 @@ from pathlib import Path
 
 import pytest
 
-from dev.audit.duplication import (
+from ..duplication import (
     DuplicationOutcome,
     run_duplication_scan,
 )
-from dev.audit.report import Status, audit_duplication
-
+from ..report import Status, audit_duplication
 from ._duplication_support import (
     _REPO_ROOT,
     _recorded_dispositions,

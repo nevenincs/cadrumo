@@ -248,8 +248,8 @@ def test_todays_python_only_descriptor_dispatches_no_acquisition_lane() -> None:
     produce no lane - which is what makes the empty loop correct rather than
     broken.
     """
-    from dev.docs.download_matrix import load_descriptor
-    from dev.packaging.publication_inputs import acquisition_lane_workflows
+    from ...docs.download_matrix import load_descriptor
+    from ...packaging.publication_inputs import acquisition_lane_workflows
 
     assert acquisition_lane_workflows(load_descriptor()) == ()
 
@@ -289,8 +289,8 @@ def test_the_precondition_holds_against_the_live_descriptor() -> None:
     tests; what this pins is that the CURRENT tree passes, so a red here means
     the descriptor changed rather than the code broke.
     """
-    from dev.docs.download_matrix import load_descriptor
-    from dev.packaging.publication_inputs import host_extension_precondition_refusal
+    from ...docs.download_matrix import load_descriptor
+    from ...packaging.publication_inputs import host_extension_precondition_refusal
 
     assert host_extension_precondition_refusal(load_descriptor(), claude_evidence_release="") is None
 
@@ -623,9 +623,9 @@ def test_the_seal_module_refuses_a_run_id_as_an_evidence_release() -> None:
     mistake unrepresentable from any caller, and it fails at seal time rather
     than after the soak.
     """
-    from dev.release import seal_candidate as seal_module
-    from dev.release._asset_transport import ReleaseAssetTransportError
-    from dev.release.release_candidate import ReleaseCandidateError
+    from .. import seal_candidate as seal_module
+    from .._asset_transport import ReleaseAssetTransportError
+    from ..release_candidate import ReleaseCandidateError
 
     with (
         scoped_env_var("CLAUDE_EVIDENCE_RELEASE", "1234567890"),

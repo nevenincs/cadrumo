@@ -20,6 +20,7 @@ from datetime import datetime
 from pydantic import Field, model_validator
 
 from ...core import Hex64Str
+from ...core.identity import TransactionId
 from ...core.json_contract import OutputSchema, register_schema
 from ...domain.transactions import BusinessClassification, LedgerClassificationRule
 from ._decimal_wire import DecimalWireText
@@ -95,7 +96,7 @@ class RuleApplyMatchPayload(OutputSchema):
     rows.
     """
 
-    transaction_id: str
+    transaction_id: TransactionId
     description: str
     matched_rule_id: Hex64Str
     classification: BusinessClassification
@@ -113,7 +114,7 @@ class RuleApplyAppliedPayload(OutputSchema):
     provenance.
     """
 
-    transaction_id: str
+    transaction_id: TransactionId
     matched_rule_id: Hex64Str
     classification: BusinessClassification
 

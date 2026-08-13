@@ -38,7 +38,16 @@ from ...application.live import (
 )
 from ...core import IvaCompensationStateProvenance, Modelo, Period
 from ...core.errors import CoreValidationError
-from ...core.identity import AeatExpedienteId, BucketId, ContentDigest, SnapshotId
+from ...core.identity import (
+    AeatCertificadoId,
+    AeatClaveLiquidacion,
+    AeatCsv,
+    AeatExpedienteId,
+    BucketId,
+    ContentDigest,
+    FilingRecordId,
+    SnapshotId,
+)
 from ...core.json_contract import OutputSchema, register_schema
 from ...core.time import validate_utc_aware
 from ...domain.calculations.registry import BindingId
@@ -76,7 +85,7 @@ class FiledListingRowPayload(OutputSchema):
     modelo: str
     year: int
     period: str
-    expediente_id: str
+    expediente_id: AeatExpedienteId
     status: str
     presented_at: str
     has_submitted_file: bool
@@ -106,7 +115,7 @@ class FiledCaptureFailurePayload(OutputSchema):
     modelo: str
     year: int
     period: str | None = None
-    expediente_id: str | None = None
+    expediente_id: AeatExpedienteId | None = None
     error_type: str
     message: str
 
@@ -552,7 +561,7 @@ class NotificationRowPayload(OutputSchema):
     does not acknowledge, mark, or mutate a notification in AEAT.
     """
 
-    certificado_id: str
+    certificado_id: AeatCertificadoId
     tipo: str
     concepto: str
     titular_nif: str
@@ -650,6 +659,116 @@ class NotificationsLatestResult(OutputSchema):
     row_count: int | None = Field(default=None, ge=0)
 
 
+class SancionReadingPayload(OutputSchema):
+    """JSON projection of one :class:`SancionLiquidacion` reading.
+
+    Every amount is the figure PRINTED on the document AEAT served, carried as
+    a string so the persisted ``Decimal`` scale survives the wire exactly —
+    ``774.29`` and ``774.290`` are different printings and JSON's float would
+    lose the difference. Nothing here is computed by this application, and an
+    absent reducción stays ``None`` rather than becoming ``"0"``, because a
+    reducción AEAT did not grant is not a reducción it granted at zero.
+    """
+
+    certificado_id: AeatCertificadoId
+    clave_liquidacion: AeatClaveLiquidacion
+    referencia: str
+    nif: str
+    objeto_tributario: str
+    base_sancion: str
+    porcentaje_minimo: str
+    sancion_resultante: str
+    reduccion_conformidad: str | None
+    reduccion_pronto_pago: str | None
+    diferencia: str | None
+    importe_a_ingresar: str
+    document_sha256: ContentDigest
+
+
+class NotificationDocumentPayload(OutputSchema):
+    """Shared projection of one stored :class:`NotificationDocumentRecord`.
+
+    The bytes themselves never appear here and never will: they live in the
+    encrypted attachment store, and this payload carries their content address
+    and digest so an operator can tie a reading back to the exact custody bytes
+    without the document leaving secure storage.
+
+    ``sancion`` and ``parse_refusal`` are mutually exclusive by construction —
+    the reader either vouched for a reading or refused to — and the refusal is
+    reported as primary result data rather than smuggled into a bespoke
+    advisory field, with the operator-facing diagnostic riding the envelope's
+    ``notices`` channel.
+    """
+
+    bucket_id: BucketId
+    certificado_id: AeatCertificadoId
+    attachment_id: ContentDigest
+    document_sha256: ContentDigest
+    byte_size: int = Field(ge=1)
+    source_url: str = Field(min_length=1)
+    fetched_at: datetime
+    sancion_parsed: bool
+    sancion: SancionReadingPayload | None = None
+    parse_refusal: str | None = Field(default=None, min_length=1, max_length=512)
+    mode: Literal["read"] = "read"
+
+    @model_validator(mode="after")
+    def _a_reading_is_present_or_refused_never_both_nor_neither(self) -> NotificationDocumentPayload:
+        """Keep the reading flag honest against the two fields it summarises.
+
+        A payload claiming ``sancion_parsed`` with no reading, or reporting
+        neither a reading nor a reason, would let an operator conclude the
+        document held no figures when the truth is that nobody looked.
+        """
+        if self.sancion_parsed != (self.sancion is not None):
+            raise ValueError("sancion_parsed must agree with the presence of a sancion reading")
+        if (self.sancion is None) == (self.parse_refusal is None):
+            raise ValueError("a stored document carries either a sancion reading or the reason there is none")
+        return self
+
+
+@register_schema("app.live.notifications.document.pull")
+class NotificationDocumentPullResult(NotificationDocumentPayload):
+    """Typed result for one guarded notification-document fetch.
+
+    ``already_in_custody`` is the idempotency outcome: a retry against a
+    certificado already held stores nothing and returns the row that was there,
+    which is otherwise indistinguishable from a first store. It is result data
+    rather than a diagnostic — the matching operator-facing advisory rides the
+    envelope's ``notices`` channel — and an agent routing on retries needs the
+    field, not the prose.
+    """
+
+    already_in_custody: bool
+
+
+@register_schema("app.live.notifications.document.view")
+class NotificationDocumentViewResult(NotificationDocumentPayload):
+    """Typed read-back of one stored notification document.
+
+    Resolved entirely from bucket-local encrypted custody through
+    :class:`NotificationDocumentService`. The verb that emits this contacts
+    AEAT not at all, so it can never be the act that serves a notification.
+    """
+
+
+class NotificationDocumentHistoryEntry(OutputSchema):
+    """One parsed document in custody, with only its own reported figures."""
+
+    certificado_id: AeatCertificadoId
+    fetched_at: datetime
+    sancion: SancionReadingPayload
+
+
+@register_schema("app.live.notifications.document.history")
+class NotificationDocumentHistoryResult(OutputSchema):
+    """Parsed notification documents held by this profile, without a total."""
+
+    bucket_id: BucketId
+    count: int = Field(ge=0)
+    documents: list[NotificationDocumentHistoryEntry]
+
+
 # ---------------------------------------------------------------------------
 # Portals leaves (local catalogue)
 # ---------------------------------------------------------------------------
@@ -738,7 +857,7 @@ class ExpedienteSnapshotSummaryPayload(OutputSchema):
     detail remains on :class:`ExpedientesViewResult`.
     """
 
-    snapshot_id: str
+    snapshot_id: SnapshotId
     captured_at: str
     source_url: str
     declaration_count: int
@@ -771,8 +890,8 @@ class ExpedientesCaptureResult(OutputSchema):
     """
 
     mode: Literal["single", "bulk"] = "single"
-    bucket_id: str
-    snapshot_id: str | None = None
+    bucket_id: BucketId
+    snapshot_id: SnapshotId | None = None
     captured_at: str | None = None
     persisted_at: str | None = None
     declaration_count: int
@@ -795,7 +914,7 @@ class ExpedientesListResult(OutputSchema):
     :class:`ExpedientesViewResult` for per-declaration detail.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     count: int
     rows: list[ExpedienteSnapshotSummaryPayload]
 
@@ -809,8 +928,8 @@ class ExpedientesViewResult(OutputSchema):
     :class:`ExpedienteDeclarationPayload`.
     """
 
-    bucket_id: str
-    snapshot_id: str
+    bucket_id: BucketId
+    snapshot_id: SnapshotId
     captured_at: str
     source_url: str
     declaration_count: int
@@ -827,8 +946,8 @@ class ExpedientesLatestResult(OutputSchema):
     the payload shape stable for JSON clients.
     """
 
-    bucket_id: str
-    snapshot_id: str | None
+    bucket_id: BucketId
+    snapshot_id: SnapshotId | None
     captured_at: str | None = None
     source_url: str | None = None
     declaration_count: int | None = None
@@ -852,7 +971,7 @@ class DeudaRowPayload(OutputSchema):
     Direction lives on ``direccion``, never in the sign of the amount.
     """
 
-    clave_liquidacion: str
+    clave_liquidacion: AeatClaveLiquidacion
     objeto_tributario: str
     importe_pendiente: str
     direccion: str
@@ -869,7 +988,7 @@ class DeudaSnapshotSummaryPayload(OutputSchema):
     :class:`DeudasViewResult`.
     """
 
-    snapshot_id: str
+    snapshot_id: SnapshotId
     captured_at: str
     source_url: str
     deuda_count: int
@@ -884,7 +1003,7 @@ class DeudasListResult(OutputSchema):
     :class:`DeudasViewResult` for per-liability detail.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     count: int
     rows: list[DeudaSnapshotSummaryPayload]
 
@@ -898,8 +1017,8 @@ class DeudasViewResult(OutputSchema):
     :class:`DeudaRowPayload`.
     """
 
-    bucket_id: str
-    snapshot_id: str
+    bucket_id: BucketId
+    snapshot_id: SnapshotId
     captured_at: str
     source_url: str
     deuda_count: int
@@ -917,8 +1036,8 @@ class DeudasLatestResult(OutputSchema):
     empty rather than triggering a live AEAT read.
     """
 
-    bucket_id: str
-    snapshot_id: str | None
+    bucket_id: BucketId
+    snapshot_id: SnapshotId | None
     captured_at: str | None = None
     source_url: str | None = None
     deuda_count: int | None = None
@@ -938,7 +1057,7 @@ class VerifyObservationPayload(OutputSchema):
     matched the live verdict.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     observation_id: str
     surface: str
     nif: str
@@ -967,12 +1086,12 @@ class JustificanteCaptureResult(OutputSchema):
     """
 
     bucket_id: BucketId
-    snapshot_id: str = Field(min_length=1, max_length=128)
+    snapshot_id: SnapshotId
     modelo: Modelo
     filing_year: int = Field(ge=1900, le=9999)
     period: JustificantePeriodToken
-    expediente_id: str = Field(min_length=12, max_length=32)
-    csv: str = Field(min_length=8, max_length=32)
+    expediente_id: AeatExpedienteId
+    csv: AeatCsv
     pdf_sha256: ContentDigest
     source_kind: ObservationSourceKind
     state: SnapshotLifecycleState
@@ -981,7 +1100,7 @@ class JustificanteCaptureResult(OutputSchema):
     calendar_evidence_available: bool
     modelo_filing_record_required: bool
     filing_evidence_stamped: bool
-    filing_record_id: str | None = None
+    filing_record_id: FilingRecordId | None = None
 
 
 class JustificanteSnapshotSummaryPayload(OutputSchema):
@@ -991,7 +1110,7 @@ class JustificanteSnapshotSummaryPayload(OutputSchema):
     :class:`JustificanteCaptureSnapshotService`.
     """
 
-    snapshot_id: str = Field(min_length=1, max_length=128)
+    snapshot_id: SnapshotId
     modelo: Modelo
     filing_year: int = Field(ge=1900, le=9999)
     period: JustificantePeriodToken
@@ -1011,7 +1130,7 @@ class JustificanteListResult(OutputSchema):
     official receipt without exposing the encrypted PDF bytes.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     count: int
     rows: list[JustificanteSnapshotSummaryPayload]
 
@@ -1027,12 +1146,12 @@ class JustificanteViewResult(OutputSchema):
     """
 
     bucket_id: BucketId
-    snapshot_id: str = Field(min_length=1, max_length=128)
+    snapshot_id: SnapshotId
     modelo: Modelo
     filing_year: int = Field(ge=1900, le=9999)
     period: JustificantePeriodToken
-    expediente_id: str = Field(min_length=12, max_length=32)
-    csv: str = Field(min_length=8, max_length=32)
+    expediente_id: AeatExpedienteId
+    csv: AeatCsv
     pdf_sha256: ContentDigest
     source_kind: ObservationSourceKind
     state: SnapshotLifecycleState
@@ -1065,7 +1184,7 @@ class VerifyListResult(OutputSchema):
     through :class:`VerifyService`; the command does not contact AEAT.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     count: int
     rows: list[VerifyObservationSummaryPayload]
 
@@ -1089,7 +1208,7 @@ class VerifyLatestResult(OutputSchema):
     lookup, and every observation-derived field is ``None``.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     observation_id: str | None
     surface: str
     nif: str

@@ -96,7 +96,7 @@ def emit_cli_tree(app: Sphinx, *, specific_sources: list[Path] | None = None) ->
         specific_sources: The changed-page specific-source set, or ``None`` for a
             full/update build.
     """
-    from dev.docs.cli_tree import default_cli_tree_path, write_cli_tree
+    from .cli_tree import default_cli_tree_path, write_cli_tree
 
     output_path = default_cli_tree_path(Path(app.srcdir))
     if not should_emit_cli_tree(output_path, specific_sources=specific_sources):
@@ -144,7 +144,7 @@ def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> No
             (the incremental changed-page set); ``None`` checks every enrolled
             page (a full build).
     """
-    from dev.docs.sequences import check_sequences_in_subprocess, refresh_invocation
+    from .sequences import check_sequences_in_subprocess, refresh_invocation
 
     if not should_check_sequences():
         return

@@ -821,7 +821,9 @@ def test_recapture_divergence_notices_fires_beyond_tolerance_end_to_end(tmp_path
         notices = recapture_divergence_notices((_filed_130_observation_for_tests(),), repository=repo)
 
     assert len(notices) == 1
-    assert notices[0].context["changed_casillas"] == "03"
+    context = notices[0].context
+    assert context is not None
+    assert context["changed_casillas"] == "03"
 
 
 def test_the_divergence_set_is_derived_from_the_captured_casillas_not_a_fixed_list() -> None:

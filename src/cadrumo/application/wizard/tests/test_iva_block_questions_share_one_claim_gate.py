@@ -17,11 +17,12 @@ from ....domain.deadlines import (
     MODELO_IVA_BLOCK_REQUIRED_PATHS,
 )
 from .._catalogue import _IVA_BLOCK_CLAIMED, SETUP_FLOW
+from .._models import WizardQuestion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _questions() -> tuple[object, ...]:
+def _questions() -> tuple[WizardQuestion, ...]:
     return tuple(question for section in SETUP_FLOW.sections for question in section.questions)
 
 

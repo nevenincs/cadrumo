@@ -205,7 +205,7 @@ def test_display_keys_are_registered_so_the_scaffold_keeps_them() -> None:
     surface consumes would be pruned as stale on the next scaffold run unless it
     is registered. Registration is what makes the catalogue the durable home.
     """
-    from dev.locales._fstring_registry import get_registered_keys
+    from ...locales._fstring_registry import get_registered_keys
 
     assert set(display_locale_keys()) <= get_registered_keys()
 

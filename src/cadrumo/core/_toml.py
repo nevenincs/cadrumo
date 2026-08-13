@@ -51,7 +51,13 @@ def read_toml(path: Path, *, error_factory: Callable[[str], Exception]) -> dict[
             (``rtoml.TomlParsingError``).
     """
     try:
-        return rtoml.load(path)
+        loaded = rtoml.load(path)
+        if not isinstance(loaded, Mapping):
+            raise error_factory(f"{path}: TOML root must be a mapping")
+        raw: dict[object, object] = {}
+        for key, value in loaded.items():
+            raw[key] = value
+        return to_str_keyed_dict(raw, error_factory=error_factory)
     except rtoml.TomlParsingError as exc:
         raise error_factory(f"{path}: invalid TOML: {exc}") from exc
     except OSError as exc:

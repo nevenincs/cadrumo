@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.docs.build import ensure_isolated_storage_root, remove_orphan_pages
+from ..build import ensure_isolated_storage_root, remove_orphan_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

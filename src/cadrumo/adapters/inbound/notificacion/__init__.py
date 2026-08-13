@@ -21,13 +21,14 @@ See Also:
 
 from __future__ import annotations
 
+from ._document_reader import NotificationDocumentReader
 from ._errors import NotificacionParseError, SancionArithmeticError, SancionParseError
-from ._sancion import SancionLiquidacion, parse_sancion_document
+from ._sancion import parse_sancion_document
 
 __all__ = [
     "NotificacionParseError",
+    "NotificationDocumentReader",
     "SancionArithmeticError",
-    "SancionLiquidacion",
     "SancionParseError",
     "parse_sancion_document",
 ]

@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging import desktop_capture as dc
+from .. import desktop_capture as dc
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

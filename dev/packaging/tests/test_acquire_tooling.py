@@ -18,14 +18,14 @@ from typing import Any
 
 import pytest
 
-from dev.packaging import (
+from .. import (
     acquire_claude_plugin,
     acquire_github_release,
     acquire_homebrew,
     acquire_mcpb,
     acquire_pypi,
 )
-from dev.packaging._acquire_common import (
+from .._acquire_common import (
     AcquisitionError,
     refuse_unavailable,
     require_command_succeeded,
@@ -33,7 +33,7 @@ from dev.packaging._acquire_common import (
     verify_python_cohort_download,
     verify_release_download,
 )
-from dev.packaging.cohort_manifest import (
+from ..cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
     BuildIdentity,
     LoadedReleaseCohort,
@@ -42,7 +42,7 @@ from dev.packaging.cohort_manifest import (
     load_release_cohort,
     write_manifest,
 )
-from dev.packaging.python_cohort import PythonCohort
+from ..python_cohort import PythonCohort
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

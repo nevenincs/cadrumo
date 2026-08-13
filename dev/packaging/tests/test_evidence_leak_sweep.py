@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.evidence_leak_sweep import main
+from ..evidence_leak_sweep import main
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

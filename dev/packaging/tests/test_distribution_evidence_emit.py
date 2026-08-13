@@ -17,8 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging._command import CommandResult, run_command
-from dev.packaging.cohort_manifest import (
+from .._command import CommandResult, run_command
+from ..cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
     BuildIdentity,
     LoadedReleaseCohort,
@@ -27,14 +27,14 @@ from dev.packaging.cohort_manifest import (
     load_release_cohort,
     write_manifest,
 )
-from dev.packaging.distribution_evidence_emit import (
+from ..distribution_evidence_emit import (
     build_client_evidence,
     build_installed_oracle_evidence,
     emit_client_evidence,
     emit_installed_oracle_evidence,
     main,
 )
-from dev.packaging.evidence import (
+from ..evidence import (
     AcquisitionIdentity,
     ClientIdentity,
     CommandTranscript,
@@ -42,8 +42,8 @@ from dev.packaging.evidence import (
     DistributionEvidence,
     EvidenceStatus,
 )
-from dev.packaging.installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
-from dev.packaging.installed_tax_oracle import InstalledTaxEvidence
+from ..installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
+from ..installed_tax_oracle import InstalledTaxEvidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -302,7 +302,7 @@ def _real_client_session() -> dict[str, object]:
 
 
 def _sdk_client() -> ClientIdentity:
-    from dev.packaging.distribution_evidence_emit import SDK_CLIENT_NAME
+    from ..distribution_evidence_emit import SDK_CLIENT_NAME
 
     return ClientIdentity(name=SDK_CLIENT_NAME, version="1.26.0", executable=sys.executable)
 
@@ -387,8 +387,8 @@ def test_required_real_client_rows_match_readiness() -> None:
     of whether this release happens to claim that channel. Anchoring it on the
     claimed set would silently drop the guard for every unclaimed client row.
     """
-    from dev.packaging.distribution_evidence_emit import _REQUIRED_REAL_CLIENT_ROW_IDS
-    from dev.release.readiness import ALL_DISTRIBUTION_ROWS
+    from ...release.readiness import ALL_DISTRIBUTION_ROWS
+    from ..distribution_evidence_emit import _REQUIRED_REAL_CLIENT_ROW_IDS
 
     claude_rows = frozenset(row for row in ALL_DISTRIBUTION_ROWS if row.startswith("claude-"))
     assert claude_rows == _REQUIRED_REAL_CLIENT_ROW_IDS
@@ -454,7 +454,7 @@ def test_version_mismatched_capture_against_cohort_is_refused(tmp_path: Path) ->
     capture is not this cohort's build: minting must refuse rather than copy the
     cohort version onto a foreign capture.
     """
-    from dev.packaging.distribution_evidence_emit import EvidenceCohortBindingError
+    from ..distribution_evidence_emit import EvidenceCohortBindingError
 
     cohort = _release_cohort(tmp_path / "cohort")
     with pytest.raises(EvidenceCohortBindingError, match="does not carry the cohort version"):
@@ -475,7 +475,7 @@ def test_version_binding_matches_on_a_token_boundary_not_a_substring(tmp_path: P
     "0.2.1" as a bare substring but is a different build, so the token-boundary
     match must still refuse it.
     """
-    from dev.packaging.distribution_evidence_emit import EvidenceCohortBindingError
+    from ..distribution_evidence_emit import EvidenceCohortBindingError
 
     cohort = _release_cohort(tmp_path / "cohort")  # version 0.2.1
     for foreign in ("0.2.10", "0.2.1rc1", "0.2.1.dev3"):
@@ -494,7 +494,7 @@ def test_isolation_fields_missing_from_capture_is_an_instructive_refusal(tmp_pat
     """A pre-isolation-recording capture refuses with a re-capture action, not a raw KeyError."""
     import json
 
-    from dev.packaging.distribution_evidence_emit import (
+    from ..distribution_evidence_emit import (
         EvidenceCohortBindingError,
         _mcp_evidence_from_mapping,
         _tax_evidence_from_mapping,
@@ -523,7 +523,7 @@ def test_cli_refuses_a_version_mismatched_capture_against_the_cohort(tmp_path: P
     mcp_json.write_text(json.dumps(_mcp_evidence().to_jsonable()), encoding="utf-8")
     evidence_dir = tmp_path / "distribution-install-readiness"
 
-    from dev.packaging.distribution_evidence_emit import EvidenceCohortBindingError
+    from ..distribution_evidence_emit import EvidenceCohortBindingError
 
     with pytest.raises(EvidenceCohortBindingError, match="does not carry the cohort version"):
         main(

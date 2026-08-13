@@ -18,13 +18,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
-from dev.packaging._acquire_common import (
+from ._acquire_common import (
     AcquisitionError,
     require_command_succeeded,
     verify_release_download,
 )
-from dev.packaging._command import run_command
-from dev.packaging.cohort_manifest import load_release_cohort
+from ._command import run_command
+from .cohort_manifest import load_release_cohort
 
 _UTF_8: Final[str] = "utf-8"
 _DEFAULT_REPO: Final[str] = "nevenincs/cadrumo"

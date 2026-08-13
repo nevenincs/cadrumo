@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.smoke_browser import _browser_env
+from ..smoke_browser import _browser_env
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.cohort_manifest import (
+from ..cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
     BuildIdentity,
     LoadedReleaseCohort,
@@ -25,7 +25,7 @@ from dev.packaging.cohort_manifest import (
     load_release_cohort,
     write_manifest,
 )
-from dev.packaging.evidence import (
+from ..evidence import (
     AcquisitionIdentity,
     CommandTranscript,
     DestinationIdentity,
@@ -38,7 +38,7 @@ from dev.packaging.evidence import (
     current_runtime_identity,
     evidence_identifier,
 )
-from dev.packaging.evidence_scrub import (
+from ..evidence_scrub import (
     SCRUBBED_MACHINE_ID,
     SCRUBBED_USER,
     SCRUBBED_WORKSPACE,

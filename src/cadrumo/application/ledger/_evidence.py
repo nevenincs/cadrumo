@@ -314,7 +314,7 @@ def _divergent_evidence_fields(
     review of this rule's origin campaign caught exactly that failure, on a
     recargo field a match had omitted.
     """
-    candidate = {
+    candidate: dict[str, object] = {
         "source_sha256": source_sha256,
         "media_kind": media_kind,
         "supplier": supplier,

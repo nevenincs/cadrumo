@@ -93,8 +93,9 @@ def _door_tokens(count: int, *, inscripcion: str = "") -> list[str]:
     cap-not-restart shape) and is exercised by the live-walk canonical set; this
     helper's subject is the ordering and future-date rules.
     """
-    tokens = [str(count)]
+    tokens: list[str] = [str(count)]
     relacion = DescendantRelacion.ADOPTADO.value if inscripcion else ""
+    assert isinstance(relacion, str)
     for offset in range(count):
         birth = date(2015 + offset, 6, 1).isoformat()
         tokens.extend([birth, relacion, *([inscripcion, ""] if inscripcion else []), "0", "true", "false", "", "", ""])

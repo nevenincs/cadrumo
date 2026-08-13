@@ -55,7 +55,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev.deploy.docs_static_site import (
+
+from ...deploy.docs_static_site import (
     CANONICAL_DOCS_BASE_URL,
     DEFAULT_SOURCE_LANGUAGE,
     DeploymentTarget,
@@ -65,9 +66,9 @@ from dev.deploy.docs_static_site import (
     _public_delivery_checks,
     _site_build_environment,
 )
-from dev.docs.build import docs_build_language, resolve_record_injector
-from dev.docs.pagefind_index import build_search_index
-from dev.docs.pagefind_inject import InjectionStats
+from ..build import docs_build_language, resolve_record_injector
+from ..pagefind_index import build_search_index
+from ..pagefind_inject import InjectionStats
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -537,7 +538,7 @@ def _probe_record() -> tuple[str, tuple[str, ...]]:
     declared term RECALLS the record, not that the content holds some string the
     test also chose.
     """
-    from dev.docs.pagefind_inject import _bounded_to_sample, _materialise_records
+    from ..pagefind_inject import _bounded_to_sample, _materialise_records
 
     bounded = _bounded_to_sample(_materialise_records(), _SAMPLE_PER_KIND)
     for record in bounded.records:
@@ -555,7 +556,7 @@ def _probe_casilla_record() -> tuple[str, tuple[str, ...]]:
     vocabulary and the localized definition content without inventing a
     search phrase or selecting a hand-curated fixture.
     """
-    from dev.docs.pagefind_inject import _bounded_to_sample, _materialise_records
+    from ..pagefind_inject import _bounded_to_sample, _materialise_records
 
     bounded = _bounded_to_sample(_materialise_records(), _SAMPLE_PER_KIND)
     for record in bounded.records:

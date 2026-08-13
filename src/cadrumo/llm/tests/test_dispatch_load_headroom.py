@@ -89,8 +89,11 @@ def _causes(refusal: LLMContentionError) -> tuple[str, ...]:
     context = refusal.context or {}
     causes = context.get("contention_causes")
     assert isinstance(causes, tuple)
-    assert all(isinstance(cause, str) for cause in causes)
-    return causes
+    typed_causes: list[str] = []
+    for cause in causes:
+        assert isinstance(cause, str)
+        typed_causes.append(cause)
+    return tuple(typed_causes)
 
 
 def _declared_requirement_bytes() -> int:

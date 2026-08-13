@@ -24,12 +24,12 @@ replace them, at which point ``verification_source`` is upgraded to
 
 from __future__ import annotations
 
-import json
 import logging
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import TypeAdapter
 
 from ......domain.transactions import TransactionDirection
 from ......tests import FIXTURES_DIR
@@ -44,10 +44,11 @@ _N26_FIXTURE_PAIRS = (
     ("n26-savings-2025-01.pdf", "n26-savings-2025-01.expected.json"),
     ("n26-savings-2025-05.pdf", "n26-savings-2025-05.expected.json"),
 )
+_EXPECTED_ROWS = TypeAdapter(list[dict[str, object]])
 
 
 def _load_expected(name: str) -> list[dict[str, object]]:
-    return json.loads((_FIXTURES / name).read_text(encoding="utf-8"))
+    return _EXPECTED_ROWS.validate_json((_FIXTURES / name).read_text(encoding="utf-8"))
 
 
 def test_pdf_n26_provider_ingests_fixture_rows() -> None:

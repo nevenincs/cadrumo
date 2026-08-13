@@ -199,11 +199,11 @@ def test_link_result_is_invoice_only() -> None:
             "operation": "ledger.link",
             "bucket_id": "default",
             "transaction_id": "a" * 64,
-            "invoice_id": "inv-1",
+            "invoice_id": "b" * 64,
             "actor": "operator",
         },
     )
-    assert result.invoice_id == "inv-1"
+    assert result.invoice_id == "b" * 64
     assert not hasattr(result, "evidence_id")
     assert not hasattr(result, "evidence_update")
     assert not hasattr(result, "transaction")

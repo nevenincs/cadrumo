@@ -12,6 +12,7 @@ from ....core import Modelo, PaymentElection, Period, PriorDomiciliationElection
 from ....core.resources import bundled_path
 from ....domain.bienes_inversion import BienesInversionIvaRegister, RegistroRegularizacionResult
 from ....domain.calculations.registry import (
+    ExportLayoutDefinition,
     RegistrySnapshot,
     RegistrySnapshotRef,
     bundled_authority,
@@ -135,7 +136,7 @@ required = true
 '''
 
 
-def _load_isolated_did_layout(tmp_path: Path) -> tuple[RegistrySnapshot, object]:
+def _load_isolated_did_layout(tmp_path: Path) -> tuple[RegistrySnapshot, ExportLayoutDefinition]:
     source = bundled_authority().catalogues.sources[_SOURCE_REF]
     assert source.sha256 == _SOURCE_SHA256
     parsed = extract_record_design(bundled_path() / source.corpus_path)

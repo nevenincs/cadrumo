@@ -37,7 +37,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging._base_image import dockerfile_path, linux_base_image
+from .._base_image import dockerfile_path, linux_base_image
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

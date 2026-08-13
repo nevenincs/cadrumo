@@ -638,7 +638,7 @@ class TargetResolver:
 
         (locator,) = matching_locators
         command_path = tuple(locator.command_path.split())
-        from dev.docs.cli_reference import cli_reference_page_for_command
+        from ..cli_reference import cli_reference_page_for_command
 
         try:
             routed_page = cli_reference_page_for_command(command_path)

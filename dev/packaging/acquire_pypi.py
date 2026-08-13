@@ -17,7 +17,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
-from dev.packaging._acquire_common import (
+from ._acquire_common import (
     PYTHON_COHORT_WHEEL_NAMES,
     AcquisitionError,
     require_command_succeeded,
@@ -25,11 +25,11 @@ from dev.packaging._acquire_common import (
     venv_executable,
     verify_python_cohort_download,
 )
-from dev.packaging._command import CommandResult, run_command
-from dev.packaging.cohort_manifest import load_release_cohort
-from dev.packaging.distribution_evidence_emit import emit_installed_oracle_evidence
-from dev.packaging.evidence import AcquisitionIdentity, DestinationIdentity
-from dev.packaging.python_cohort import PythonCohort, load_python_cohort
+from ._command import CommandResult, run_command
+from .cohort_manifest import load_release_cohort
+from .distribution_evidence_emit import emit_installed_oracle_evidence
+from .evidence import AcquisitionIdentity, DestinationIdentity
+from .python_cohort import PythonCohort, load_python_cohort
 
 _UTF_8: Final[str] = "utf-8"
 _DEFAULT_INDEX_URL: Final[str] = "https://pypi.org/simple"

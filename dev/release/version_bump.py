@@ -46,7 +46,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core import PRODUCT_IDENTITY
-from dev.release import readiness, version_identity
+
+from . import readiness, version_identity
 
 _UTF_8: Final[str] = "utf-8"
 

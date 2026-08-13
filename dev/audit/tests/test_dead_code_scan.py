@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.audit.dead_code import DeadCodeOutcome, run_dead_code_scan
+from ..dead_code import DeadCodeOutcome, run_dead_code_scan
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 

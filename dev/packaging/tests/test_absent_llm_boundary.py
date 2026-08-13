@@ -23,9 +23,9 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging._distribution_names import normalise_distribution_name
-from dev.packaging._smoke_common import optional_extra_registry
-from dev.packaging.smoke_absent_llm import _EXPECTED_EXTRA, _INFERENCE_SURFACES
+from .._distribution_names import normalise_distribution_name
+from .._smoke_common import optional_extra_registry
+from ..smoke_absent_llm import _EXPECTED_EXTRA, _INFERENCE_SURFACES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

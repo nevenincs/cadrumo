@@ -41,7 +41,7 @@ from pathlib import Path
 import pytest
 from textual.widgets import DataTable
 
-from .....adapters.inbound.tui import FormApp, FormPage, FormScreen, presenting_forms_through
+from .....adapters.inbound.tui import FormApp, FormField, FormPage, FormScreen, presenting_forms_through
 from .....application.user_profile import ProfileRepository, profile_create_storage_span
 from .....application.workflow import workflow_state_repository
 from .....core import AuthProviderKind, ClaveMovilRoute, require_active_bucket_id
@@ -140,7 +140,7 @@ def _validator_of(page: FormPage, key: str):
     return validate
 
 
-def _field_of(page: FormPage, key: str):
+def _field_of(page: FormPage, key: str) -> FormField:
     """Return one field off the page, naming what it offers when absent."""
     for field in page.fields:
         if field.key == key:

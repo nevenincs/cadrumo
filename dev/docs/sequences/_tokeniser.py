@@ -122,7 +122,7 @@ def _command_tree() -> Mapping[tuple[str, ...], _NodeInfo]:
 
     # The materialisation helpers are the shared docs-tooling substrate; reusing
     # them keeps the token grammar bound to the same tree the reference projects.
-    from dev.docs.cli_reference import _collect_commands, _force_lazy_imports
+    from ..cli_reference import _collect_commands, _force_lazy_imports
 
     _force_lazy_imports(app)
     # Typer vendors its own Click fork; get_command returns typer's Command type,

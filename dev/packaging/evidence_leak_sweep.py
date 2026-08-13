@@ -46,7 +46,7 @@ def sweep_directory_for_leaks(directory: Path, *, tokens: tuple[str, ...] = ()) 
     unreadable JSON file is reported as a refusal rather than skipped, because
     a payload the sweep cannot inspect is a payload it cannot clear.
     """
-    from dev.packaging.evidence_scrub import find_residual_leaks
+    from .evidence_scrub import find_residual_leaks
 
     if not directory.is_dir():
         raise EvidenceLeakSweepError(f"leak-sweep directory does not exist: {directory}")

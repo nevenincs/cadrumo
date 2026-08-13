@@ -21,7 +21,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry import bundled_authority
-from dev.docs.terminology._resolution import ChunkHit, TargetResolver
+
+from .._resolution import ChunkHit, TargetResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -29,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 @pytest.fixture(scope="module")
 def resolver() -> TargetResolver:
     """Build the resolver once (projects casilla records + legal index)."""
-    from dev.docs.terminology._resolution import TargetResolver
+    from .._resolution import TargetResolver
 
     return TargetResolver()
 
@@ -51,7 +52,7 @@ def _hit(
 
 def test_casilla_toml_resolves_to_the_casilla_surface(resolver: TargetResolver) -> None:
     """A real casilla TOML fragment resolves to its modelo's casilla target."""
-    from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
+    from .._resolution import GroundingSurface, ResolvedTarget
 
     path = (
         "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes"
@@ -71,7 +72,7 @@ def test_model_only_diseno_source_is_dropped_without_casilla_locator(
     resolver: TargetResolver,
 ) -> None:
     """A model-only Diseño workbook hit fails closed without a casilla locator."""
-    from dev.docs.terminology._resolution import DroppedHit, DropReason
+    from .._resolution import DroppedHit, DropReason
 
     path = (
         "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_036/files/"
@@ -90,9 +91,9 @@ def test_normatives_source_resolves_to_the_generated_legal_anchor(resolver: Targ
     resolves it to the legal id carrying the generated page/anchor target and
     BOE permalink provenance.
     """
-    from dev.docs.legal_reference import legal_reference_target
-    from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
-    from dev.docs.terminology._search_record import SearchRecordKind
+    from ...legal_reference import legal_reference_target
+    from .._resolution import GroundingSurface, ResolvedTarget
+    from .._search_record import SearchRecordKind
 
     # ley-37-1992:art-104 has corpus_ref corpus/normatives/html/ley-37-1992-art-104.html#a104
     catalogue = bundled_authority().catalogues.legal
@@ -119,8 +120,8 @@ def test_normatives_target_uses_generated_legal_reference_and_preserves_permalin
     resolver: TargetResolver,
 ) -> None:
     """The target follows the renderer while the catalogue permalink stays provenance."""
-    from dev.docs.legal_reference import legal_reference_target
-    from dev.docs.terminology._resolution import ResolvedTarget
+    from ...legal_reference import legal_reference_target
+    from .._resolution import ResolvedTarget
 
     catalogue = bundled_authority().catalogues.legal
     legal_id = "ley-37-1992:art-104"
@@ -147,7 +148,7 @@ def test_legal_toml_resolves_to_a_legal_target(resolver: TargetResolver) -> None
     provision; it never chooses a representative when a range is absent,
     invalid, or overlaps multiple tables.
     """
-    from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
+    from .._resolution import GroundingSurface, ResolvedTarget
 
     out = resolver.resolve(
         _hit(
@@ -170,9 +171,9 @@ def test_precise_legal_toml_range_resolves_named_provision_and_preserves_boe_pro
     resolver: TargetResolver,
 ) -> None:
     """A precise legal-table range resolves its generated provision target."""
-    from dev.docs.legal_reference import legal_reference_target
-    from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
-    from dev.docs.terminology._search_record import SearchRecordKind
+    from ...legal_reference import legal_reference_target
+    from .._resolution import GroundingSurface, ResolvedTarget
+    from .._search_record import SearchRecordKind
 
     path = "src/cadrumo/_data/registry/aeat/legal/atribucion-rentas.toml"
     legal_id = "orden-hap-2250-2015:art-1"
@@ -199,7 +200,7 @@ def test_legal_toml_range_spanning_two_legal_tables_is_dropped(
     resolver: TargetResolver,
 ) -> None:
     """A range overlapping two legal tables cannot identify one provision."""
-    from dev.docs.terminology._resolution import DroppedHit, DropReason
+    from .._resolution import DroppedHit, DropReason
 
     path = "src/cadrumo/_data/registry/aeat/legal/atribucion-rentas.toml"
     out = resolver.resolve(_hit(path, line_start=19, line_end=22))
@@ -210,7 +211,7 @@ def test_legal_toml_range_spanning_two_legal_tables_is_dropped(
 
 def test_legal_toml_range_in_sources_table_is_dropped(resolver: TargetResolver) -> None:
     """A source-evidence table is not a legal provision target."""
-    from dev.docs.terminology._resolution import DroppedHit, DropReason
+    from .._resolution import DroppedHit, DropReason
 
     path = "src/cadrumo/_data/registry/aeat/legal/atribucion-rentas.toml"
     out = resolver.resolve(_hit(path, line_start=101, line_end=112))
@@ -221,7 +222,7 @@ def test_legal_toml_range_in_sources_table_is_dropped(resolver: TargetResolver) 
 
 def test_invalid_legal_toml_source_range_is_dropped(resolver: TargetResolver) -> None:
     """An invalid source line range is never mapped to a legal provision."""
-    from dev.docs.terminology._resolution import DroppedHit, DropReason
+    from .._resolution import DroppedHit, DropReason
 
     path = "src/cadrumo/_data/registry/aeat/legal/atribucion-rentas.toml"
     out = resolver.resolve(_hit(path, line_start=20, line_end=19))
@@ -236,7 +237,7 @@ def test_code_module_resolves_to_its_api_stub(resolver: TargetResolver) -> None:
     The codebase grounding surface: ``src/cadrumo/foo/bar.py`` ->
     ``api/cadrumo.foo.bar.html`` (the apidocs stub-naming convention).
     """
-    from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
+    from .._resolution import GroundingSurface, ResolvedTarget
 
     out = resolver.resolve(_hit("src/cadrumo/domain/calculations/registry/_temporal.py"))
     assert isinstance(out, ResolvedTarget)
@@ -246,7 +247,7 @@ def test_code_module_resolves_to_its_api_stub(resolver: TargetResolver) -> None:
 
 def test_package_init_resolves_to_the_package_stub(resolver: TargetResolver) -> None:
     """A package ``__init__.py`` resolves to the package's dotted stub page."""
-    from dev.docs.terminology._resolution import ResolvedTarget
+    from .._resolution import ResolvedTarget
 
     out = resolver.resolve(_hit("src/cadrumo/domain/calculations/registry/__init__.py"))
     assert isinstance(out, ResolvedTarget)
@@ -263,7 +264,7 @@ def test_cli_navigation_page_is_dropped_without_an_emitted_record(
     ``cli/app.html``; valid CLI grounding comes from emitted command/option
     records with exact page-and-anchor targets.
     """
-    from dev.docs.terminology._resolution import DroppedHit, DropReason
+    from .._resolution import DroppedHit, DropReason
 
     out = resolver.resolve(_hit("docs/cli/app.rst"))
     assert isinstance(out, DroppedHit)
@@ -284,10 +285,10 @@ def test_emitted_cli_option_resolves_to_its_exact_page_anchor(
     record's exact page-and-anchor target and classify it as CLI; it must not
     widen the hit to a family landing page or invent a record.
     """
-    from dev.docs.cli_reference import cli_reference_page_for_command
-    from dev.docs.pagefind_inject import materialise_search_records
-    from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
-    from dev.docs.terminology._search_record import SearchRecordKind
+    from ...cli_reference import cli_reference_page_for_command
+    from ...pagefind_inject import materialise_search_records
+    from .._resolution import GroundingSurface, ResolvedTarget
+    from .._search_record import SearchRecordKind
 
     projection = materialise_search_records()
     assert projection.cli_skipped_reason is None
@@ -344,10 +345,10 @@ def test_emitted_nested_cli_command_resolves_to_its_exact_page_anchor(
     resolver: TargetResolver,
 ) -> None:
     """A real emitted nested command record resolves from its command locator."""
-    from dev.docs.cli_reference import cli_reference_page_for_command
-    from dev.docs.pagefind_inject import materialise_search_records
-    from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
-    from dev.docs.terminology._search_record import SearchRecordKind
+    from ...cli_reference import cli_reference_page_for_command
+    from ...pagefind_inject import materialise_search_records
+    from .._resolution import GroundingSurface, ResolvedTarget
+    from .._search_record import SearchRecordKind
 
     projection = materialise_search_records()
     assert projection.cli_skipped_reason is None
@@ -391,7 +392,7 @@ def test_cli_output_schema_prose_is_dropped_without_a_parameter_locator(
     resolver: TargetResolver,
 ) -> None:
     """Output-schema prose is not a parameter source locator."""
-    from dev.docs.terminology._resolution import DroppedHit, DropReason
+    from .._resolution import DroppedHit, DropReason
 
     source_path = Path("docs/cli/app/diagnostics.rst")
     source_lines = source_path.read_text(encoding="utf-8").splitlines()
@@ -415,7 +416,7 @@ def test_cli_output_schema_prose_is_dropped_without_a_parameter_locator(
 
 def test_cli_source_range_past_file_end_is_dropped(resolver: TargetResolver) -> None:
     """A CLI locator range beyond the real source file cannot resolve."""
-    from dev.docs.terminology._resolution import DroppedHit, DropReason
+    from .._resolution import DroppedHit, DropReason
 
     source_path = Path("docs/cli/config.rst")
     source_line_count = len(source_path.read_text(encoding="utf-8").splitlines())
@@ -431,7 +432,7 @@ def test_cli_source_range_past_file_end_is_dropped(resolver: TargetResolver) -> 
 
 def test_ambiguous_cli_source_range_is_dropped(resolver: TargetResolver) -> None:
     """A range spanning two generated parameters cannot pick one CLI record."""
-    from dev.docs.terminology._resolution import DroppedHit, DropReason
+    from .._resolution import DroppedHit, DropReason
 
     source_path = Path("docs/cli/app/diagnostics.rst")
     source_lines = source_path.read_text(encoding="utf-8").splitlines()
@@ -471,7 +472,7 @@ def test_ambiguous_cli_source_range_is_dropped(resolver: TargetResolver) -> None
 
 def test_docs_page_resolves_to_its_built_page(resolver: TargetResolver) -> None:
     """A docs source page resolves to its built HTML page anchor."""
-    from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
+    from .._resolution import GroundingSurface, ResolvedTarget
 
     out = resolver.resolve(_hit("docs/how-to/profile-setup.md"))
     assert isinstance(out, ResolvedTarget)
@@ -490,7 +491,7 @@ def test_unknown_path_is_dropped_and_reported(resolver: TargetResolver) -> None:
     Anti-tautology: a path the map cannot resolve MUST surface in the dropped
     report with a reason, never be silently turned into a target.
     """
-    from dev.docs.terminology._resolution import DroppedHit, DropReason
+    from .._resolution import DroppedHit, DropReason
 
     out = resolver.resolve(_hit("some/random/unmapped/file.xyz"))
     assert isinstance(out, DroppedHit)
@@ -500,7 +501,7 @@ def test_unknown_path_is_dropped_and_reported(resolver: TargetResolver) -> None:
 
 def test_test_surface_is_dropped_as_excluded(resolver: TargetResolver) -> None:
     """A test/fixture path is dropped as an excluded surface (never indexed)."""
-    from dev.docs.terminology._resolution import DroppedHit, DropReason
+    from .._resolution import DroppedHit, DropReason
 
     out = resolver.resolve(_hit("src/cadrumo/domain/calculations/registry/tests/test_temporal.py"))
     assert isinstance(out, DroppedHit)
@@ -513,7 +514,7 @@ def test_casilla_for_unknown_modelo_is_dropped(resolver: TargetResolver) -> None
     Defence: the path matches the casilla rule but the entity is absent, so it
     is dropped as NO_TARGET_ENTITY rather than half-mapped to nothing.
     """
-    from dev.docs.terminology._resolution import DroppedHit, DropReason
+    from .._resolution import DroppedHit, DropReason
 
     path = "src/cadrumo/_data/registry/aeat/modelos/999/revisions/2099/casillas/0001-casillas.toml"
     out = resolver.resolve(_hit(path))
@@ -528,7 +529,7 @@ def test_casilla_for_unknown_modelo_is_dropped(resolver: TargetResolver) -> None
 
 def test_batch_resolution_partitions_resolved_and_dropped() -> None:
     """``resolve_chunk_hits`` partitions resolvable hits from dropped ones."""
-    from dev.docs.terminology._resolution import resolve_chunk_hits
+    from .._resolution import resolve_chunk_hits
 
     hits = (
         _hit("src/cadrumo/domain/calculations/registry/_temporal.py"),
@@ -546,7 +547,7 @@ def test_batch_resolution_partitions_resolved_and_dropped() -> None:
 
 def test_resolver_reuse_avoids_reprojection() -> None:
     """A pre-built resolver can resolve multiple batches without re-projecting."""
-    from dev.docs.terminology._resolution import TargetResolver, resolve_chunk_hits
+    from .._resolution import TargetResolver, resolve_chunk_hits
 
     shared = TargetResolver()
     first = resolve_chunk_hits((_hit("docs/index.md"),), resolver=shared)
@@ -559,7 +560,7 @@ def test_chunk_hit_and_resolved_target_are_frozen() -> None:
     """The strict-frozen contract on the typed inputs/outputs."""
     from pydantic import ValidationError
 
-    from dev.docs.terminology._resolution import ChunkHit
+    from .._resolution import ChunkHit
 
     hit = ChunkHit(path="docs/index.md", line_start=1, line_end=2, score=0.5)
     with pytest.raises(ValidationError):

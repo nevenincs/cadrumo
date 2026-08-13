@@ -40,7 +40,15 @@ from ...core import (
     RefundElection,
     ResultDisposition,
 )
-from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
+from ...core.identity import (
+    BucketId,
+    CalculationRevisionId,
+    FilingRecordId,
+    ProfileId,
+    TransactionId,
+    VerificationReportId,
+    WorkUnitId,
+)
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 from ...domain.buckets import (
     BucketActorLabel,
@@ -290,7 +298,7 @@ class CrossPeriodDependencyEvidencePayload(OutputSchema):
     clean: bool
     blockers: tuple[str, ...]
     observation_source_kind: str | None = None
-    filing_record_id: str | None = None
+    filing_record_id: FilingRecordId | None = None
     calculation_revision_id: CalculationRevisionId | None = None
     external_evidence_kind: str | None = None
     expected_member_nifs: tuple[str, ...] = ()
@@ -950,9 +958,9 @@ class ModeloExportPayload(OutputSchema):
     """
 
     operation: str = "modelo.export"
-    work_unit_id: str
+    work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
-    bucket_id: str
+    bucket_id: BucketId
     modelo: str
     filing_year: int
     period: Period
@@ -1166,7 +1174,7 @@ class ModeloReadinessMissingBindingPayload(OutputSchema):
 class LedgerIssuePayload(OutputSchema):
     """One ledger issue in the readiness result."""
 
-    transaction_id: str
+    transaction_id: TransactionId
     reason: str
     detail: str = Field(min_length=1, max_length=512)
     operator_action: OperatorActionAxis
@@ -1177,7 +1185,7 @@ class ModeloReadinessResult(OutputSchema):
     """Active-profile modelo readiness report."""
 
     operation: str = "modelo.readiness"
-    profile_id: str
+    profile_id: ProfileId
     modelo: str
     revision_id: RevisionId
     filing_year: int
@@ -1213,7 +1221,7 @@ class WorkResumeResult(OutputSchema):
     operation: str = "modelo.work.resume"
     prior_workflow_run_id: str
     resolved_source: str | None = None
-    work_unit_id: str | None = None
+    work_unit_id: WorkUnitId | None = None
     short_work_unit_id: str | None = None
     calculation_revision_id: CalculationRevisionId | None = None
     short_calculation_revision_id: str | None = None

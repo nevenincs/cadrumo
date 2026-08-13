@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import io
 import json
+import re
 from collections.abc import Iterator, Mapping
 from pathlib import Path
 
@@ -41,7 +42,8 @@ from sphinx.errors import SphinxError
 
 from cadrumo.core.observability import GOLDEN_MASK_FIELDS, differing_paths
 from cadrumo.tests.env_scope import scoped_env_var
-from dev.docs.sequences import (
+
+from ..sequences import (
     ParsedSequence,
     SequenceGolden,
     SequenceTranscript,
@@ -50,11 +52,12 @@ from dev.docs.sequences import (
     check_sequences,
     check_sequences_in_subprocess,
     compare_transcript_to_golden,
+    discover_sequences,
     execute_sequence,
     parse_sequence,
     refresh_sequences,
 )
-from dev.docs.sequences.__main__ import main as sequences_cli_main
+from ..sequences.__main__ import main as sequences_cli_main
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -407,6 +410,53 @@ class TestBothSurfacesRedOnDivergence:
         problems = check_sequences_in_subprocess(docs_root=docs_root, goldens_root=goldens_root, jobs=2)
         assert problems != ()
         assert any("golden expects 99" in problem for problem in problems), problems
+
+    def test_bounded_check_reports_the_last_real_frame_before_expiry(
+        self,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """The public bounded check reports a real child runner's last frame.
+
+        The enrolled lifecycle page is the measured long-running surface. The
+        check launches its real child interpreter and the bounded supervisor
+        expires after the runner has journalled one of that page's actual
+        frames. The assertion resolves the reported coordinate against current
+        discovery, proving the parent/child receipt without pinning which frame
+        scheduling reaches before expiry.
+        """
+        seed_sequence_id = "irpf-lifecycle-position"
+        seed, discovery_problems = discover_sequences(sequence_id=seed_sequence_id)
+        assert discovery_problems == ()
+        assert len(seed) == 1
+        page = seed[0].page
+        discovered, discovery_problems = discover_sequences(page=page)
+        assert discovery_problems == ()
+        timeout = 30.0
+
+        exit_code = sequences_cli_main(
+            [
+                "check",
+                "--page",
+                page,
+                "--timeout",
+                str(timeout),
+            ],
+        )
+
+        assert exit_code == 1
+        stderr = capsys.readouterr().err
+        assert f"timeout after {timeout}s while executing page {page!r}" in stderr
+        sequence_match = re.search(r" sequence '(?P<sequence_id>[^']+)' frame ", stderr)
+        assert sequence_match is not None
+        enrolled = next(item for item in discovered if item.sequence_id == sequence_match.group("sequence_id"))
+        frame_match = re.search(r" frame (?P<index>\d+) \(", stderr)
+        assert frame_match is not None
+        frame_index = int(frame_match.group("index"))
+        frame = enrolled.sequence.executed_frames[frame_index]
+        assert (
+            f"sequence {enrolled.sequence_id!r} frame {frame_index} ({frame.source} line {frame.line_number})"
+        ) in stderr
+        assert " ".join(frame.argv) in stderr
 
     def test_clean_goldens_pass_both_surfaces_green(
         self,

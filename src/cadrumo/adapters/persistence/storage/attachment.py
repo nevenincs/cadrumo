@@ -34,6 +34,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
+from ....core.identity import BucketId
 from ....core.logging import get_logger
 from ....core.secure_object_write import SecureObjectWrite
 from ....core.time import now
@@ -219,7 +220,7 @@ class AttachmentStore(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
     objects: SecureObjectRepository | None = Field(default=None, exclude=True, repr=False)
-    bucket_id: str | None = Field(default=None)
+    bucket_id: BucketId | None = Field(default=None)
 
     def _bound_bucket_id(self) -> str | None:
         """Return the profile bucket this store serves, when one is resolvable.

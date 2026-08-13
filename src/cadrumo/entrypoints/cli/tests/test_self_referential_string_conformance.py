@@ -263,7 +263,11 @@ def _advertised_option_choices(verb_path: tuple[str, ...], option_flag: str) -> 
         if getattr(param, "param_type_name", None) == "option" and option_flag in opts:
             choices = getattr(getattr(param, "type", None), "choices", None)
             assert choices is not None, f"{' '.join(verb_path)} {option_flag} is not a choice option"
-            return frozenset(choices)
+            typed_choices: set[str] = set()
+            for choice in choices:
+                assert isinstance(choice, str), f"{' '.join(verb_path)} {option_flag} has a non-string choice"
+                typed_choices.add(choice)
+            return frozenset(typed_choices)
     raise AssertionError(f"{' '.join(verb_path)} has no {option_flag} option")
 
 

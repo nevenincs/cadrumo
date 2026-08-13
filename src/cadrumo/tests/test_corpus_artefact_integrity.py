@@ -45,8 +45,8 @@ _MIN_ARTEFACTS = 200
 _MIN_NAMED_ARTEFACTS = 190
 #: ``stored_path`` shape the naming check can read: ``files/NN-slug.ext``.
 _STORED_PATH_SHAPE = re.compile(r"^files/\d+-.+\.[A-Za-z0-9]+$")
-_UPDATED_STAMP = re.compile(r"actualizado[-\s]+(\d{1,2})[-\s](\d{1,2})[-\s](\d{2,4})")
-_SIZE_TOKEN = re.compile(r"(\d+)[-\s]*kb")
+_UPDATED_STAMP: re.Pattern[str] = re.compile(r"actualizado[-\s]+(\d{1,2})[-\s](\d{1,2})[-\s](\d{2,4})")
+_SIZE_TOKEN: re.Pattern[str] = re.compile(r"(\d+)[-\s]*kb")
 
 
 def _manifest_rows() -> list[tuple[Path, dict[str, object]]]:
@@ -71,9 +71,11 @@ def _publication_tokens(text: str) -> tuple[tuple[str, str, str] | None, str | N
     size = _SIZE_TOKEN.search(text.lower())
     normalised = None
     if stamp is not None:
-        day, month, year = stamp.groups()
+        day = str(stamp.group(1))
+        month = str(stamp.group(2))
+        year = str(stamp.group(3))
         normalised = (day.lstrip("0"), month.lstrip("0"), year[-2:])
-    return normalised, size.group(1) if size is not None else None
+    return normalised, str(size.group(1)) if size is not None else None
 
 
 #: Rows whose ``stored_path`` predates the ``files/NN-slug.ext`` convention and

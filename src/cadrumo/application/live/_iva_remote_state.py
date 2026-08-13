@@ -1007,7 +1007,7 @@ def _is_playwright_target_closed_context(context: dict[str, object]) -> bool:
     message = str(exception)
     if name == "TargetClosedError" and "Target page, context or browser has been closed" in message:
         return True
-    return name == "Error" and "net::ERR_ABORTED" in message and "frame was detached" in message
+    return bool(name == "Error" and "net::ERR_ABORTED" in message and "frame was detached" in message)
 
 
 def build_iva_remote_state_acquisition_report(

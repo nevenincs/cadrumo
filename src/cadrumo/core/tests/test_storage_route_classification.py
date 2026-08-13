@@ -72,7 +72,7 @@ def test_constructor_database_url_classifies_as_explicit(tmp_path: Path) -> None
 
         assert route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL, db_path_parts
         assert route.database_path == db_path, db_path_parts
-        assert route.bucket_id == "", db_path_parts
+        assert route.bucket_id is None, db_path_parts
 
 
 def test_active_bucket_database_route_is_detected(tmp_path: Path) -> None:
@@ -116,7 +116,7 @@ def test_no_active_profile_classifies_root_fallback_database(tmp_path: Path) -> 
 
     assert route.kind is StorageRouteKind.ROOT_FALLBACK_DATABASE
     assert route.database_path == tmp_path / "cadrumo.db"
-    assert route.bucket_id == ""
+    assert route.bucket_id is None
 
 
 def test_root_route_refuses_existing_former_database_without_touching_bytes(tmp_path: Path) -> None:

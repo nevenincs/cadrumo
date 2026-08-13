@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_runner import semantic_cli_output
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_profile, _invoke
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
@@ -33,7 +34,7 @@ def _refusal_document(*, locale: str, verb: str, work_unit_id: str) -> dict[str,
         ],
     )
     assert result.exit_code != 0, result.output
-    document = json.loads(semantic_cli_output(result))
+    document = STR_KEYED_MAPPING_ADAPTER.validate_json(semantic_cli_output(result))
     assert document["status"] == "error"
     assert document["command"] == f"modelo.work.{verb}"
     return document

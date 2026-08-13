@@ -635,7 +635,9 @@ def _create_202_work_unit(period: str) -> str:
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)
     assert payload["period"] == {"filing_year": 2026, "code": period}
-    return payload["work_unit_id"]
+    work_unit_id = payload["work_unit_id"]
+    assert isinstance(work_unit_id, str)
+    return work_unit_id
 
 
 @pytest.mark.parametrize("period", ["1P", "2P", "3P"])

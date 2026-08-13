@@ -93,10 +93,17 @@ def _ladder_scope() -> str | None:
     """
     result = _invoke(["--format", "json", "app", "ledger", "counterparty", "show", _SUPPLIER_CIF])
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)["result"]
-    if not payload["confirmed"]:
+    payload = json.loads(result.output)
+    assert isinstance(payload, dict), result.output
+    body = payload.get("result")
+    assert isinstance(body, dict), result.output
+    confirmed = body.get("confirmed")
+    assert isinstance(confirmed, bool), result.output
+    if not confirmed:
         return None
-    return payload["territorial_scope"]
+    scope = body.get("territorial_scope")
+    assert isinstance(scope, str), result.output
+    return scope
 
 
 def test_the_ladder_answers_nothing_before_the_operator_does() -> None:

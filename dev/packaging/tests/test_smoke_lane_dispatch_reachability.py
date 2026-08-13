@@ -25,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.campaign import _LANES
+from ..campaign import _LANES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

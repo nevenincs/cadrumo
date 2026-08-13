@@ -22,7 +22,8 @@ import pytest
 
 from cadrumo.core import Modelo
 from cadrumo.core.external_constants import OutputLanguage
-from dev.docs.terminology._resolution import (
+
+from .._resolution import (
     ChunkHit,
     DroppedHit,
     DropReason,
@@ -30,14 +31,14 @@ from dev.docs.terminology._resolution import (
     ResolutionResult,
     ResolvedTarget,
 )
-from dev.docs.terminology._search_record import SearchRecordKind
-from dev.docs.terminology._unified_record import (
+from .._search_record import SearchRecordKind
+from .._unified_record import (
     RankingTier,
     SearchRecord,
     SearchRecordMetadata,
     to_search_record,
 )
-from dev.docs.terminology._wrangle import (
+from .._wrangle import (
     STRONG_SIGNAL_SCORE_FLOOR,
     CollapseReason,
     DirectoryCluster,
@@ -60,7 +61,7 @@ def _hit(path: str, score: float) -> ChunkHit:
 
 def _real_casilla_target(score: float, *, index: int = 0) -> ResolvedTarget:
     """A ResolvedTarget built from a REAL M303 casilla projection record."""
-    from dev.docs.terminology._casilla_projection import project_modelo_casillas
+    from .._casilla_projection import project_modelo_casillas
 
     records = project_modelo_casillas(Modelo.M303)
     unified = to_search_record(records[index])
@@ -73,7 +74,7 @@ def _real_casilla_target(score: float, *, index: int = 0) -> ResolvedTarget:
 
 def _real_concept_target(score: float) -> ResolvedTarget:
     """A ResolvedTarget built from the REAL prorrata concept card."""
-    from dev.docs.terminology._concept_cards import project_concept_cards
+    from .._concept_cards import project_concept_cards
 
     cards, _ = project_concept_cards()
     prorrata = next(c for c in cards if c.concept_id == "prorrata")

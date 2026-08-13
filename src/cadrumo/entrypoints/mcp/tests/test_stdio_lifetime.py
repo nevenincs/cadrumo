@@ -75,7 +75,7 @@ def _wait_for_pid_exit(pid: int, timeout: float) -> bool:
     if not handle:
         return True
     try:
-        return kernel32.WaitForSingleObject(ctypes.c_void_p(handle), int(timeout * 1000)) == 0
+        return bool(kernel32.WaitForSingleObject(ctypes.c_void_p(handle), int(timeout * 1000)) == 0)
     finally:
         kernel32.CloseHandle(ctypes.c_void_p(handle))
 
@@ -494,7 +494,8 @@ def _orphanable_spawn() -> tuple[str, dict[str, str]]:
     import sysconfig
     from pathlib import Path as _Path
 
-    base = getattr(sys, "_base_executable", None) or sys.executable
+    base_candidate: object = getattr(sys, "_base_executable", None)
+    base = base_candidate if isinstance(base_candidate, str) and base_candidate else sys.executable
     # Derived from this test module's own location (four parents up: tests ->
     # mcp -> entrypoints -> cadrumo -> src) rather than an absolute `import
     # cadrumo`, so the relative-imports gate stays satisfied.

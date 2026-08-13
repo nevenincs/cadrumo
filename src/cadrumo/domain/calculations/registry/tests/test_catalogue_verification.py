@@ -374,8 +374,17 @@ def _record_design_label(corpus_path: str, casilla_id: str) -> str:
 
 def _manual_extracted_text(corpus_path: str) -> str:
     extracted_path = Path(f"{_source_path(corpus_path)}.extracted.json")
-    payload = json.loads(extracted_path.read_text(encoding="utf-8"))
-    return "\n".join(unit["text"] for unit in payload["units"])
+    raw_payload = json.loads(extracted_path.read_text(encoding="utf-8"))
+    assert isinstance(raw_payload, dict)
+    raw_units = raw_payload.get("units")
+    assert isinstance(raw_units, list)
+    texts: list[str] = []
+    for raw_unit in raw_units:
+        assert isinstance(raw_unit, dict)
+        text = raw_unit.get("text")
+        assert isinstance(text, str)
+        texts.append(text)
+    return "\n".join(texts)
 
 
 def test_modelo_100_2021_deportistas_0489_is_grounded_in_dictionary_and_manual() -> None:

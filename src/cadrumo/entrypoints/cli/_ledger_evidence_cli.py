@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 import typer
 
 from ...application.cli_exception_preconditions import CliExceptionPrecondition
@@ -54,6 +56,12 @@ evidence_app = typer.Typer(
     help=tr("cli.app.ledger.evidence.group_help"),
     no_args_is_help=True,
 )
+
+
+class _InvoiceClassKwarg(TypedDict, total=False):
+    """Optional keyword passed only when the operator supplied an invoice class."""
+
+    invoice_class: InvoiceClass
 
 
 def register_evidence_commands(app: typer.Typer) -> None:
@@ -669,7 +677,7 @@ def _run_evidence_confirm(
             # Omitted rather than defaulted when the operator says nothing, so the
             # DOCUMENT's own statement stands. Passing ORDINARIA here would
             # override a rectificativa the reader correctly recovered.
-            **({} if invoice_class is None else {"invoice_class": invoice_class}),
+            **_invoice_class_kwarg(invoice_class),
             rectifies_invoice_number=rectifies,
             series=series,
             notes=notes,
@@ -809,12 +817,27 @@ def _resolved_outcome(result: InvoiceConfirmationResult) -> str | None:
     return result.establishment.category.outcome.value
 
 
+def _invoice_class_kwarg(invoice_class: InvoiceClass | None) -> _InvoiceClassKwarg:
+    """Keep an omitted invoice class omitted so document-derived defaults survive."""
+    if invoice_class is None:
+        return {}
+    return {"invoice_class": invoice_class}
+
+
 def _evidence_service() -> PurchaseInvoiceEvidenceService:
     return PurchaseInvoiceEvidenceService()
 
 
 def _evidence_payload(record: PurchaseInvoiceEvidence) -> dict[str, object]:
-    return record.model_dump(mode="json")
+    dumped = record.model_dump(mode="json")
+    if not isinstance(dumped, dict):
+        raise TypeError("evidence payload dump must be a mapping")
+    payload: dict[str, object] = {}
+    for key, value in dumped.items():
+        if not isinstance(key, str):
+            raise TypeError("evidence payload keys must be text")
+        payload[key] = value
+    return payload
 
 
 def _evidence_text_lines(record: PurchaseInvoiceEvidence) -> list[str]:

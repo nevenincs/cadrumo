@@ -45,6 +45,8 @@ import tomllib
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import TypeAdapter
+
 from ..core.resources import bundled_path
 
 __all__ = [
@@ -67,12 +69,24 @@ _USER_ASSIGNED = frozenset(
     | {f"Q{letter}" for letter in "MNOPQRSTUVWXYZ"}
     | {f"X{letter}" for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"},
 )
+_COUNTRY_ROWS = TypeAdapter(list[dict[str, object]])
+_STRING_LIST = TypeAdapter(list[str])
 
 
 @lru_cache(maxsize=1)
 def _vocabulary() -> tuple[frozenset[str], frozenset[str]]:
-    payload = tomllib.loads(Path(bundled_path(*_VOCABULARY)).read_text(encoding="utf-8"))["country"]
-    return frozenset(r["code"] for r in payload), frozenset(r["alpha3"] for r in payload)
+    raw = tomllib.loads(Path(bundled_path(*_VOCABULARY)).read_text(encoding="utf-8"))
+    payload = _COUNTRY_ROWS.validate_python(raw["country"])
+    codes: set[str] = set()
+    alpha3_codes: set[str] = set()
+    for row in payload:
+        code = row.get("code")
+        alpha3 = row.get("alpha3")
+        assert isinstance(code, str)
+        assert isinstance(alpha3, str)
+        codes.add(code)
+        alpha3_codes.add(alpha3)
+    return frozenset(codes), frozenset(alpha3_codes)
 
 
 @lru_cache(maxsize=1)
@@ -87,7 +101,7 @@ def uncatalogued_alpha2_codes() -> tuple[str, ...]:
     schema = Path(bundled_path(*_SII_SCHEMA)).read_text(encoding="utf-8", errors="replace")
     block = re.search(r'<simpleType name="CountryType2">(.*?)</simpleType>', schema, re.S)
     assert block is not None, "AEAT's SII schema no longer declares CountryType2"
-    recognised = frozenset(re.findall(r'value="([A-Z]{2})"', block.group(1)))
+    recognised = frozenset(code for code in re.findall(r'value="([A-Z]{2})"', block.group(1)) if isinstance(code, str))
     carried, _ = _vocabulary()
     return tuple(sorted(recognised - carried - _USER_ASSIGNED))
 
@@ -100,7 +114,8 @@ def uncatalogued_alpha3_codes() -> tuple[str, ...]:
     alpha-2 side is drawn from AEAT's: it is the set a real structured document
     can actually state, so a specimen is a gap a document could genuinely present.
     """
-    statable = frozenset(json.loads(Path(bundled_path(*_FACTURAE_CODES)).read_text(encoding="utf-8"))["codes"])
+    raw = json.loads(Path(bundled_path(*_FACTURAE_CODES)).read_text(encoding="utf-8"))
+    statable = frozenset(_STRING_LIST.validate_python(raw["codes"]))
     _, carried = _vocabulary()
     return tuple(sorted(statable - carried))
 

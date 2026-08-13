@@ -253,7 +253,7 @@ def _registry_portal_bindings_for_modelo(code: ModeloCode) -> frozenset[Portal]:
                 "portals: registry snapshot unavailable for modelo %s; no portal bindings",
                 code,
             )
-            return frozenset()
+            return frozenset[Portal]()
         bound: set[Portal] = set()
         for revision in modelo.revisions.values():
             for link in revision.application_links:

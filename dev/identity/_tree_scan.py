@@ -91,7 +91,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from dev.sanitizer import ResidualKind, checksum_valid_spans
+from ..sanitizer import ResidualKind, checksum_valid_spans
 
 _UTF_8: Final[str] = "utf-8"
 

@@ -53,7 +53,13 @@ async def _run_expand(modelo: str | None) -> list[str]:
             page = await browser.new_page()
             await page.set_content(_PAGE_CONTENT)
             await _expand_matching_branches(page, modelo=modelo)
-            return await page.evaluate("() => window.__clicked")
+            raw_clicked = await page.evaluate("() => window.__clicked")
+            assert isinstance(raw_clicked, list)
+            clicked: list[str] = []
+            for item in raw_clicked:
+                assert isinstance(item, str)
+                clicked.append(item)
+            return clicked
         finally:
             await browser.close()
 

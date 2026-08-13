@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.docs.terminology._sweep import ServiceRagSearchClient, SweepError, run_sweep
+from .._sweep import ServiceRagSearchClient, SweepError, run_sweep
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs, pytest.mark.resident_service]
 

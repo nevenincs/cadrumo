@@ -19,6 +19,7 @@ from __future__ import annotations
 from pydantic import Field, field_validator
 
 from ...core.decimal import try_parse_canonical_decimal
+from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema, register_schema
 from ...domain.categories import ProportionalityKind, SpendingCategory
 from ...domain.usage_ratios import UsageRatioValidationError, validate_usage_ratio_bound
@@ -100,7 +101,7 @@ class RatiosValidateFindingPayload(OutputSchema):
 class RatiosListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios list``."""
 
-    bucket_id: str
+    bucket_id: BucketId
     rows: list[RatiosRowPayload]
     count: int
     censo_mismatch: str | None = None
@@ -110,7 +111,7 @@ class RatiosListResult(OutputSchema):
 class RatiosSetResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios set``."""
 
-    bucket_id: str
+    bucket_id: BucketId
     category: SpendingCategory
     ratio: str
 
@@ -124,7 +125,7 @@ class RatiosSetResult(OutputSchema):
 class RatiosUnsetResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios unset``."""
 
-    bucket_id: str
+    bucket_id: BucketId
     category: SpendingCategory
     #: Empty after a successful unset — the override no longer exists.
     ratio: str = ""
@@ -134,7 +135,7 @@ class RatiosUnsetResult(OutputSchema):
 class RatiosEligibleResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios eligible``."""
 
-    bucket_id: str
+    bucket_id: BucketId
     rows: list[RatiosEligibleRowPayload]
     count: int
 
@@ -147,7 +148,7 @@ class RatiosValidateResult(OutputSchema):
     :func:`validate_ratios_for_bucket`.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     profile_present: bool
     eligible_count: int
     overrides_count: int

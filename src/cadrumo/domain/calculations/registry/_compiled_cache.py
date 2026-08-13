@@ -470,7 +470,7 @@ def _decode_and_validate(raw: bytes) -> CompiledRegistryPayload | None:
         # The bytes are produced solely by _encode_frame above and are gated by the
         # integrity digest verified immediately before this load; a corrupt/foreign
         # payload is refused. See the module docstring for the threat model.
-        payload = pickle.loads(payload_bytes)  # noqa: S301  # nosemgrep: python.lang.security.deserialization.pickle.avoid-pickle
+        payload: object = pickle.loads(payload_bytes)  # noqa: S301  # nosemgrep: python.lang.security.deserialization.pickle.avoid-pickle
     except Exception:
         _LOGGER.debug("Compiled registry cache payload could not be deserialised; recomputing", exc_info=True)
         return None
@@ -488,7 +488,7 @@ def _digests_equal(left: bytes, right: bytes) -> bool:
     return hmac.compare_digest(left, right)
 
 
-def _is_compiled_registry_payload(payload: object) -> bool:
+def _is_compiled_registry_payload(payload: object) -> TypeGuard[CompiledRegistryPayload]:
     """Whether ``payload`` is exactly ``(tuple[ModeloDefinition, ...], RegistryCatalogues)``.
 
     The structural gate that keeps a foreign or truncated-shape pickle -- even

@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....application.ledger import LedgerProviderID
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ._ledger_ux_support import (
     _FOUR_ROW_CSV,
     _FOUR_ROW_OFX,
@@ -27,9 +28,13 @@ def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
 
 
 def _json_document(output: str) -> dict[str, object]:
-    document = json.loads(output)
-    assert isinstance(document, dict)
-    return document
+    return STR_KEYED_MAPPING_ADAPTER.validate_json(output)
+
+
+def _json_object(value: object) -> dict[str, object]:
+    """Narrow one decoded JSON value before typed subscripting."""
+
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(value)
 
 
 def _notice_projection(document: dict[str, object], code: str) -> dict[str, object]:
@@ -42,11 +47,10 @@ def _notice_projection(document: dict[str, object], code: str) -> dict[str, obje
 
 def _assert_transaction_validation_error(output: str) -> dict[str, object]:
     document = _json_document(output)
-    error = document["error"]
-    assert isinstance(error, dict)
+    error = _json_object(document["error"])
     assert error["code"] == "ERROR_TRANSACTION_VALIDATION"
     action = error["action"]
-    assert isinstance(action, dict)
+    action = _json_object(action)
     assert action["failed_condition_id"] == "cli.ledger.transaction.valid"
     assert action["evidence"] == [
         {
@@ -83,14 +87,14 @@ def test_unknown_provider_error_enumerates_known_providers(tmp_path: Path) -> No
     )
     assert result.exit_code != 0
     document = _json_document(result.output)
-    error = document["error"]
-    assert isinstance(error, dict)
+    error = _json_object(document["error"])
     assert error["code"] == "REFUSED_CLI_BOUNDARY"
     assert error["category"] == "REFUSED"
-    context = error["context"]
-    assert isinstance(context, dict)
+    context = _json_object(error["context"])
     assert context["value"] == "quickbooks"
-    assert set(context["accepted"].split(", ")) == {provider.value for provider in LedgerProviderID}
+    accepted = context["accepted"]
+    assert isinstance(accepted, str)
+    assert set(accepted.split(", ")) == {provider.value for provider in LedgerProviderID}
 
 
 def test_missing_csv_preserves_the_typed_import_precondition(tmp_path: Path) -> None:
@@ -128,8 +132,7 @@ def test_generic_csv_missing_currency_warning_is_provider_neutral_in_cli(tmp_pat
     )
 
     assert result.exit_code == 0, result.output
-    payload = _json_document(result.output)["result"]
-    assert isinstance(payload, dict)
+    payload = _json_object(_json_document(result.output)["result"])
     validation = payload["validation"]
     assert isinstance(validation, dict)
     assert validation["valid"] is True
@@ -262,8 +265,7 @@ def test_import_of_a_blank_data_row_csv_emits_a_notice(tmp_path: Path, locale: s
     )
     assert result.exit_code == 0, result.output
     document = _json_document(result.output)
-    payload = document["result"]
-    assert isinstance(payload, dict)
+    payload = _json_object(document["result"])
     assert payload["imported"] == 0
     assert not {"empty_import_notice", "dry_run_notice", "likely_duplicate_notice"}.intersection(payload)
     assert _notice_projection(document, "ledger.import.no_rows_imported") == {
@@ -288,7 +290,7 @@ def test_reimport_of_existing_rows_explains_the_zero_import(tmp_path: Path) -> N
     )
     assert second.exit_code == 0, second.output
     document = _json_document(second.output)
-    payload = document["result"]
+    payload = _json_object(document["result"])
     assert payload["imported"] == 0
     assert payload["skipped"] == 1
     assert _notice_projection(document, "ledger.import.all_rows_skipped") == {
@@ -314,7 +316,7 @@ def test_import_dry_run_reports_the_real_would_import_count(tmp_path: Path) -> N
     )
     assert dry_run.exit_code == 0, dry_run.output
     document = _json_document(dry_run.output)
-    payload = document["result"]
+    payload = _json_object(document["result"])
     assert payload["dry_run"] is True
     assert payload["imported"] == 4
     assert payload["skipped"] == 0
@@ -438,7 +440,7 @@ def test_import_warns_on_likely_cross_format_duplicate(tmp_path: Path) -> None:
     )
     assert result.exit_code == 0, result.output
     document = _json_document(result.output)
-    payload = document["result"]
+    payload = _json_object(document["result"])
     assert payload["imported"] == 1
     assert payload["likely_duplicates"] == 1
     assert _notice_projection(document, "ledger.import.likely_duplicates") == {

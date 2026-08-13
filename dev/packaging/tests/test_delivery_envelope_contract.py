@@ -11,8 +11,8 @@ from typing import Any
 
 import pytest
 
-from dev.packaging.installed_mcp_oracle import InstalledMcpOracleError
-from dev.packaging.installed_tax_oracle import (
+from ..installed_mcp_oracle import InstalledMcpOracleError
+from ..installed_tax_oracle import (
     PROFILE_LABEL,
     InstalledTaxOracleError,
     assert_envelope_contract,

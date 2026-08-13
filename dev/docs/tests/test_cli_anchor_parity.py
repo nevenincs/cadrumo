@@ -72,7 +72,7 @@ def _page_anchor_set(rst: str) -> set[str]:
 
 def _render_cli_reference(tmp_path: Path) -> dict[str, str]:
     """Render every CLI-reference RST page in one clean subprocess."""
-    from dev.docs.cli_reference import generate_cli_reference_in_subprocess
+    from ..cli_reference import generate_cli_reference_in_subprocess
 
     return generate_cli_reference_in_subprocess(tmp_path)
 
@@ -91,7 +91,7 @@ def test_every_cli_record_target_resolves(tmp_path: Path) -> None:
     target fragment is a real section id on that page. A record whose page or
     fragment does not resolve is a dead deep link and fails loudly.
     """
-    from dev.docs.terminology._cli_projection import project_cli_search_records
+    from ..terminology._cli_projection import project_cli_search_records
 
     rendered = _render_cli_reference(tmp_path)
     assert rendered, "CLI reference rendered no pages"
@@ -132,7 +132,7 @@ def test_direct_child_config_leaves_resolve_on_family_page(tmp_path: Path) -> No
     would break, and the case a naive "everything is on the family page" builder
     got right only for these leaves while breaking every grouped command.
     """
-    from dev.docs.terminology._cli_projection import project_cli_search_records
+    from ..terminology._cli_projection import project_cli_search_records
 
     rendered = _render_cli_reference(tmp_path)
     config_family_rst = "cli/config.rst"

@@ -37,6 +37,7 @@ from ._common import resolve_notice_action
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import TaxRoute
+    from ...domain.user_profile import UserProfileRecord
 
 logger = get_logger(__name__)
 
@@ -238,7 +239,7 @@ def overview_no_aeat_history_notice(*, tax_route: TaxRoute | None) -> Notice | N
     )
 
 
-def _live_censo_verified_profile_keys(record) -> tuple[str, ...]:
+def _live_censo_verified_profile_keys(record: UserProfileRecord | None) -> tuple[str, ...]:
     """Return profile paths whose current value was stamped from live censo sync."""
     if record is None:
         return ()

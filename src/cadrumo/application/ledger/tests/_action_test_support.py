@@ -189,7 +189,11 @@ def secure_objects(_ledger_module_runtime: TestRuntimeProfile) -> Iterator[Secur
     yield _ledger_module_runtime.repository
 
 
-def _repositories(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_ID):
+def _repositories(
+    objects: SecureObjectRepository,
+    *,
+    bucket_id: str = _BUCKET_ID,
+) -> tuple[TransactionCatalogueRepository, BucketEventHistoryRepository]:
     return (
         TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects),
         BucketEventHistoryRepository(objects=objects),

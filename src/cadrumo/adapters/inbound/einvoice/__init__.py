@@ -26,7 +26,7 @@ faster** than a vision read of the same document.
 
 from __future__ import annotations
 
-from ._parsers import ParsedEInvoice, ParsedEInvoiceLine, parse_einvoice_document
+from ._parsers import FacturaeInvoiceClass, ParsedEInvoice, ParsedEInvoiceLine, parse_einvoice_document
 from ._record_batch import (
     AeatParty,
     AeatRecordBatch,
@@ -46,6 +46,7 @@ __all__ = [
     "AeatRecordBatch",
     "AeatRecordFamily",
     "EInvoiceXmlParseError",
+    "FacturaeInvoiceClass",
     "ParsedAeatRecord",
     "ParsedEInvoice",
     "ParsedEInvoiceLine",

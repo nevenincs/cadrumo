@@ -35,14 +35,13 @@ from pathlib import Path
 
 import pytest
 
-from dev.docs.sequences import (
+from ..sequences import (
     FrameKind,
     StaticBlocker,
     default_docs_root,
     discover_sequences,
     live_aeat_tokens,
 )
-
 from ._ratchet_support import ratchet_divergences
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]

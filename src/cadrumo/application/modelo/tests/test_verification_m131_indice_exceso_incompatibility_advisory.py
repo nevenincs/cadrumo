@@ -47,6 +47,7 @@ import pytest
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
+    ModeloRevision,
     VerificationPredicateDefinition,
     load_modelo_path,
 )
@@ -102,7 +103,7 @@ def _profile() -> TaxpayerProfile:
 
 
 @lru_cache
-def _m131_2025_revision():
+def _m131_2025_revision() -> ModeloRevision:
     modelo = load_modelo_path(bundled_path("registry", "aeat", "modelos", "131"))
     return modelo.revisions["2025"]
 

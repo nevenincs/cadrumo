@@ -27,6 +27,7 @@ to the nearest slot and mint an invoice whose cuota disagrees with its face.
 from __future__ import annotations
 
 from decimal import Decimal
+from enum import StrEnum
 from xml.etree.ElementTree import Element
 
 from ....core import DocumentShape
@@ -34,7 +35,7 @@ from ....core.decimal import coerce_decimal
 from ._shape import iter_pdf_embedded_files, probe_document_shape
 from ._xml import EInvoiceXmlParseError, parse_hardened_xml
 
-__all__ = ["ParsedEInvoice", "ParsedEInvoiceLine", "parse_einvoice_document"]
+__all__ = ["FacturaeInvoiceClass", "ParsedEInvoice", "ParsedEInvoiceLine", "parse_einvoice_document"]
 
 # Tax-scheme identifiers that mark an element as carrying an IVA number rather
 # than some other national registration. EN16931 uses schemeID="VA"; Facturae
@@ -57,6 +58,17 @@ _UNTDID_CATEGORY: dict[str, str] = {
     "O": "operacion_no_sujeta",
     "B": "recargo_equivalencia",
 }
+
+
+class FacturaeInvoiceClass(StrEnum):
+    """Class code stated by Facturae's ``InvoiceHeader/InvoiceClass``."""
+
+    ORIGINAL = "OO"
+    ORIGINAL_CORRECTIVE = "OR"
+    ORIGINAL_SUMMARY = "OC"
+    COPY = "CO"
+    COPY_CORRECTIVE = "CR"
+    COPY_SUMMARY = "CC"
 
 
 class ParsedEInvoiceLine:
@@ -91,6 +103,7 @@ class ParsedEInvoice:
         "customer_name",
         "customer_postal_code",
         "customer_tax_id",
+        "facturae_invoice_class",
         "grand_total",
         "invoice_date",
         "invoice_number",
@@ -139,6 +152,7 @@ class ParsedEInvoice:
         self.customer_country_code: str | None = None
         self.invoice_number: str | None = None
         self.invoice_series: str | None = None
+        self.facturae_invoice_class: FacturaeInvoiceClass | None = None
         self.rectifies_invoice_number: str | None = None
         self.invoice_date: str | None = None
         self.currency: str | None = None
@@ -697,6 +711,11 @@ def _apply_facturae_identification(invoice: Element, parsed: ParsedEInvoice) -> 
         # CORRECTED invoice's number under Corrective/ in this same subtree.
         parsed.invoice_number = _direct_child_text(header, "InvoiceNumber")
         parsed.invoice_series = _direct_child_text(header, "InvoiceSeriesCode")
+        stated_class = _direct_child_text(header, "InvoiceClass")
+        try:
+            parsed.facturae_invoice_class = FacturaeInvoiceClass(stated_class) if stated_class is not None else None
+        except ValueError:
+            parsed.facturae_invoice_class = None
         # The number of the invoice this one CORRECTS, which the direct-child
         # scoping above deliberately steps past. It was read and discarded: a
         # rectificativa is a different CLASS of invoice by RD 1619/2012 art. 15,

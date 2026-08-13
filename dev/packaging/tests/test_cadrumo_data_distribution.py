@@ -50,7 +50,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging._distribution_limits import PYPI_FILE_CAP_BYTES
+from .._distribution_limits import PYPI_FILE_CAP_BYTES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

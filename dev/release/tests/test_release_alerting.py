@@ -18,8 +18,8 @@ from typing import Any, Final
 import pytest
 import yaml
 
-from dev.release import alerting
-from dev.release.alerting import AlertError, ReleaseAlert, alert_payload, emit_alert
+from .. import alerting
+from ..alerting import AlertError, ReleaseAlert, alert_payload, emit_alert
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.docs.serve import (
+from ..serve import (
     _DEFAULT_HOST,
     _DEFAULT_PORT,
     PortStatus,

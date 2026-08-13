@@ -9,6 +9,7 @@ from typing import cast
 import pytest
 from click.testing import Result
 
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.errors import ErrorCategory, get_error_exit_code
 from ....tests.cli_runner import semantic_cli_output
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_profile, _invoke
@@ -21,7 +22,7 @@ _LOCALES = ("en", "es", "ca", "hu")
 
 
 def _notice(output: str, code: str) -> dict[str, object]:
-    return next(item for item in _notices(output) if item["code"] == code)
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(next(item for item in _notices(output) if item["code"] == code))
 
 
 def _discarded_work_evidence(work_unit_id: str) -> dict[str, str | int]:
@@ -51,7 +52,7 @@ def _assert_terminal_refusal(
     output = result.output
     assert exit_code == get_error_exit_code(ErrorCategory.REFUSED), output
     assert stdout == ""
-    document = json.loads(stderr)
+    document = STR_KEYED_MAPPING_ADAPTER.validate_json(stderr)
     assert document["command"] == command
     error = cast(dict[str, object], document["error"])
     assert "suggestion" not in error

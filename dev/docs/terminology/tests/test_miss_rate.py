@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.docs.terminology._miss_rate import (
+from .._miss_rate import (
     HeldOutCaseKind,
     MissReason,
     evaluate_held_out_miss_rate,
@@ -12,7 +12,7 @@ from dev.docs.terminology._miss_rate import (
     load_committed_relevance,
     load_held_out_query_set,
 )
-from dev.docs.terminology._sweep import enumerate_query_vocabulary
+from .._sweep import enumerate_query_vocabulary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

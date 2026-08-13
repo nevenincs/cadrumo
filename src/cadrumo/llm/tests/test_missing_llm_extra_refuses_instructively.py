@@ -191,7 +191,11 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
     assert line is not None, completed.stdout
     report = json.loads(line.removeprefix(_MARKER))
     assert isinstance(report, dict)
-    return report
+    typed_report: dict[str, object] = {}
+    for key, value in report.items():
+        assert isinstance(key, str), "JSON object keys must be strings"
+        typed_report[key] = value
+    return typed_report
 
 
 def test_the_driven_inventory_covers_every_guarded_entry_point() -> None:

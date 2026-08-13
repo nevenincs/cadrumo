@@ -215,6 +215,8 @@ REMOTE_GUARD_LITERAL_SCAN_TOKENS = (
 def aeat_host(origin: str) -> str:
     """Return a configured AEAT host name without a scheme."""
     value = getattr(_AEAT.domains, origin)
+    if not isinstance(value, str):
+        raise AssertionError(f"configured AEAT origin {origin!r} is not a string")
     host = urlparse(value).hostname
     if host is None:
         raise AssertionError(f"configured AEAT origin {origin!r} has no host")

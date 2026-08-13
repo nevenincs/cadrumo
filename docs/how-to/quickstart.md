@@ -214,8 +214,8 @@ The final filing step is outside `aeat`:
 
 1. Log in to the official AEAT electronic filing portal.
 2. Open the Modelo 130 form for the relevant year and period.
-3. Enter the box values the calculation produced. Read them back at any time
-   with `aeat app modelo work status --modelo 130 --year 2026 --period 1T`.
+3. Enter the box values the calculation produced. The command card below reads
+   them back before it records the local filing marker.
 4. Review, sign, and keep the justificante AEAT issues after filing.
 
 The full handoff checklist is in

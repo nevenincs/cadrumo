@@ -18,6 +18,7 @@ from ....adapters.outbound.google import (
     CalcSheetsApplyResult,
     CalcSheetsExportPreview,
     GoogleAuthError,
+    apply_export_plan,
     preview_export_plan,
     relation_edit_payload,
     resolve_active_profile,
@@ -104,7 +105,7 @@ def _filing_period_or_refusal(*, modelo: str, period: str, year: int) -> Period:
         ) from exc
 
 
-def _load_snapshot(modelo: str, period: Period):
+def _load_snapshot(modelo: str, period: Period) -> RegistrySnapshot:
     authority = _bundled_authority()
     if modelo not in {candidate.id for candidate in authority.modelos}:
         available = ", ".join(sorted(candidate.id for candidate in authority.modelos))
@@ -233,6 +234,7 @@ def google_sync_calc_export(
             credentials=credentials,
             root_folder_id=root_folder_id,
             sync_run_repository=SyncRunRecordRepository(),
+            apply_export_plan=apply_export_plan,
         )
     except (GoogleAuthError, OutboundStorageError) as exc:
         raise _google_refusal(exc) from exc

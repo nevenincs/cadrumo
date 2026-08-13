@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -58,7 +59,9 @@ def _create_202_work_unit(period: str) -> str:
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)
     _assert_payload_period(payload, year=2026, code=period)
-    return payload["work_unit_id"]
+    work_unit_id = STR_KEYED_MAPPING_ADAPTER.validate_python(payload)["work_unit_id"]
+    assert isinstance(work_unit_id, str)
+    return work_unit_id
 
 
 def _calculate_202_work_unit(work_unit_id: str) -> dict[str, object]:
@@ -80,7 +83,7 @@ def _calculate_202_work_unit(work_unit_id: str) -> dict[str, object]:
     assert result.exit_code == 0, result.output
     assert "cannot map workflow period" not in result.output
     assert "invalid registry period" not in result.output
-    return _payload(result.output)
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(_payload(result.output))
 
 
 def test_create_calculate_status_verify_agree_on_modelo_202_pago_fraccionado_periods() -> None:

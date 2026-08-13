@@ -67,7 +67,7 @@ import sys
 from pathlib import Path
 from typing import Final, NamedTuple
 
-from dev.audit.legal_catalogue import load_legal_entries, required_text_by_entry
+from .legal_catalogue import load_legal_entries, required_text_by_entry
 
 #: Phrases a Spanish approving provision uses. Matched accent-insensitively
 #: against a folded copy, because the corpus and the catalogue disagree on

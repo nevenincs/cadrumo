@@ -45,7 +45,7 @@ from dataclasses import asdict, dataclass
 from enum import StrEnum
 from typing import Annotated, Final
 
-from dev.identity.hex64_redeclaration_census import DeclarationKind, census
+from .hex64_redeclaration_census import DeclarationKind, census
 
 #: A real digest. The probe must accept this or it has not reached the constraint.
 VALID_DIGEST: Final[str] = hashlib.sha256(b"probe").hexdigest()

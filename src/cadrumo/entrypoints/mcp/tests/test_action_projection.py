@@ -43,7 +43,13 @@ def _catalogue_entry(action_id: str) -> ActionCatalogueEntry:
 
 def _all_mapping_keys(value: object) -> set[str]:
     if isinstance(value, Mapping):
-        return set(value) | {key for item in value.values() for key in _all_mapping_keys(item)}
+        keys: set[str] = set()
+        for raw_key, item in value.items():
+            if not isinstance(raw_key, str):
+                raise TypeError("schema mapping keys must be strings")
+            keys.add(raw_key)
+            keys.update(_all_mapping_keys(item))
+        return keys
     if isinstance(value, list | tuple):
         return {key for item in value for key in _all_mapping_keys(item)}
     return set()

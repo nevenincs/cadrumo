@@ -226,8 +226,8 @@ def test_workbook_uses_the_canonical_parts_helpers_not_shadow_copies() -> None:
     distinct function object rather than the exact `_parts` helper the PDF
     extractor also shares.
     """
-    import dev.docs.preprocess._parts as parts
-    import dev.docs.preprocess._workbook as workbook
+    from .. import _parts as parts
+    from .. import _workbook as workbook
 
     assert workbook.split_units_by_budget is parts.split_units_by_budget
     assert workbook.stamp_part_anchors is parts.stamp_part_anchors
@@ -242,9 +242,8 @@ def test_workbook_and_pdf_extractors_share_one_budget_and_naming_scheme() -> Non
     split identically rather than each carrying its own drifted budget or
     naming convention.
     """
-    import dev.docs.preprocess._pdf as pdf
-    import dev.docs.preprocess._workbook as workbook
-
+    from .. import _pdf as pdf
+    from .. import _workbook as workbook
     from .._parts import TEXT_BUDGET_BYTES, part_stand_in_path
 
     assert pdf.split_units_by_budget is workbook.split_units_by_budget

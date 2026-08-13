@@ -70,7 +70,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from ..application.ledger import ManualLedgerTransactionResult
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core import FieldOrigin
-from ..core.identity import TaxIdIdentityToken
+from ..core.identity import BucketId, TaxIdIdentityToken, TransactionId
 from ..domain.categories import SpendingCategory
 from ..domain.iva import IvaCategory
 from ..domain.transactions import BusinessClassification
@@ -81,7 +81,7 @@ class LLMClassificationSuggestion(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1)
+    transaction_id: TransactionId
     provenance: str = Field(min_length=1)
     classification: BusinessClassification
     category: SpendingCategory | None = None
@@ -102,7 +102,7 @@ class LLMSaturatedSuggestion(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1)
+    transaction_id: TransactionId
     provenance: str = Field(min_length=1)
     classification: BusinessClassification
     category: SpendingCategory | None = None
@@ -131,7 +131,7 @@ class OperatorIvaDerivationResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str
+    transaction_id: TransactionId
     iva_category: IvaCategory
     derivable: bool
     iva_rate: Decimal | None = None
@@ -164,7 +164,7 @@ class LLMSplitSuggestion(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1)
+    transaction_id: TransactionId
     provenance: str = Field(min_length=1)
     reason: str = Field(min_length=1)
     parent_amount: Decimal
@@ -182,8 +182,8 @@ class LLMSplitApplyResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1)
-    parent_transaction_id: str = Field(min_length=1)
+    bucket_id: BucketId
+    parent_transaction_id: TransactionId
     split_group_id: str = Field(min_length=1)
     child_transaction_ids: tuple[str, ...]
     provenance: str = Field(min_length=1)
@@ -195,8 +195,8 @@ class LLMSuggestionRejectionResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1)
-    transaction_id: str = Field(min_length=1)
+    bucket_id: BucketId
+    transaction_id: TransactionId
     bucket_event_id: str = Field(min_length=1)
     suggestion_kind: str = Field(min_length=1)
     provenance: str = Field(min_length=1)

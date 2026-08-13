@@ -229,6 +229,9 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "app live filed pull-all",
     "app live filed pull-sources",
     "app live notifications pull",
+    # Persists fetched notification-document bytes and their manifest into
+    # bucket-scoped encrypted custody; it never changes AEAT state.
+    "app live notifications document pull",
     "app live expedientes pull",
     "app live verify nif-iva",
     "app live verify tgvi",

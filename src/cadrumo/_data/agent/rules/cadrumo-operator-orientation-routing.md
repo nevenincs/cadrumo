@@ -59,9 +59,13 @@ authority this table paraphrases, and it grows as command families are added.
 ## Live AEAT read questions
 
 - "Pull something AEAT actually holds" → the `aeat app live` family: `justificante
-  pull`, `filed pull`, `notifications pull`, `expedientes pull`, `iva-wallet
+  pull`, `filed pull`, `notifications pull`, `notifications document pull`,
+  `expedientes pull`, `iva-wallet
   pull-history`. Every verb here reads; none of them submits — see the safety
   rule for why `aeat app live` can never write to AEAT.
+- `notifications document pull CERTIFICADO_ID` stores the served document only
+  when AEAT already reports that notification as read. It refuses an unread
+  notification because the taxpayer must personally decide when to open it.
 - "What history does AEAT hold for this taxpayer, and did we get all of it?" →
   `filed discover` first, then `filed pull-all`. `discover` reports which
   modelo/ejercicio pairs a history sweep would walk and persists nothing;

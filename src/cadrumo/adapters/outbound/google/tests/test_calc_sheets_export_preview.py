@@ -14,6 +14,7 @@ from __future__ import annotations
 import ast
 import inspect
 import textwrap
+from collections.abc import Callable
 from datetime import date
 
 import pytest
@@ -124,7 +125,7 @@ class TestNewTargetPreview:
         assert preview.formula_cells_to_write == len(plan.formula_cells)
 
 
-def _code_body_source(func: object) -> str:
+def _code_body_source(func: Callable[..., object]) -> str:
     """Return a function's source with its docstring stripped.
 
     The docstring legitimately narrates the write helpers and Sheets actions

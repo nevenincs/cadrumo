@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import ast
 import inspect
+from importlib import import_module
 from pathlib import Path
 
 import pytest
 
-import dev.registry as registry_facade
 from cadrumo.core import M303ProrrataActivityProjectionField, M303ProrrataActivityProjectionRef
 from cadrumo.domain.calculations.registry import RegistryValidationError
-from dev.registry import SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION, load_semantic_map
+
+from .. import SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION, load_semantic_map
+
+registry_facade = import_module("..", __package__)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -29,6 +29,7 @@ from datetime import datetime
 
 from pydantic import Field
 
+from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema, register_schema
 from ...domain.buckets import (
     BucketActorLabel,
@@ -70,7 +71,7 @@ class BucketHistoryResult(OutputSchema):
     """
 
     operation: str
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     event_types: list[BucketEventType] | None = None
     since: datetime | None = None
     until: datetime | None = None

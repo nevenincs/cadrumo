@@ -87,6 +87,9 @@ from ...domain.calculations.registry import (
     BindingId as _BindingId,
 )
 from ...domain.calculations.registry import (
+    DataBindingDefinition as _DataBindingDefinition,
+)
+from ...domain.calculations.registry import (
     InputKind as _InputKind,
 )
 from ...domain.calculations.registry import (
@@ -610,14 +613,20 @@ def _validate_filing_input_keys(
     if non_string:
         raise _ModeloBuilderError(
             translated_message="application.filing.build_draft.errors.input_key_not_string",
-            context={"offending_count": len(non_string), "input_keys": tuple(sorted(non_string))},
+            context={
+                "offending_count": len(non_string),
+                "input_keys": tuple(sorted(non_string)),
+            },
         )
 
     padded = tuple(key for key in inputs if key != key.strip())
     if padded:
         raise _ModeloBuilderError(
             translated_message="application.filing.build_draft.errors.input_key_padded",
-            context={"offending_count": len(padded), "input_keys": tuple(sorted(padded))},
+            context={
+                "offending_count": len(padded),
+                "input_keys": tuple(sorted(padded)),
+            },
         )
 
     noncanonical_tokens = _casilla_noncanonical_reference_tokens(snapshot.revision)
@@ -630,7 +639,10 @@ def _validate_filing_input_keys(
                 "offending_count": len(supplied_noncanonical),
                 "input_keys": tuple(sorted(supplied_noncanonical)),
                 "noncanonical_references": tuple(
-                    {"token": key, "canonical_casilla_ids": tuple(noncanonical_tokens[key])}
+                    {
+                        "token": key,
+                        "canonical_casilla_ids": tuple(noncanonical_tokens[key]),
+                    }
                     for key in sorted(supplied_noncanonical)
                 ),
             },
@@ -735,7 +747,7 @@ def _string_inputs_for_ids(inputs: _ModeloInputs, input_ids: frozenset[_BindingI
 
 
 def _binding_provenance(
-    binding: object,
+    binding: _DataBindingDefinition,
 ) -> tuple[_BindingSourceKind, tuple[_LegalRefId, ...], tuple[_SourceRefId, ...]]:
     """Extract the typed source kind and grounding from a binding definition.
 
@@ -747,22 +759,14 @@ def _binding_provenance(
     provenance parity with casillas (the casilla half already populates
     :class:`ModeloCasillaProvenance`).
     """
-    source = getattr(binding, "source", None)
-    if not isinstance(source, _BindingSourceKind):
-        raise _ModeloBuilderError(
-            translated_message="application.filing.build_draft.errors.binding_source_not_typed",
-            context={
-                "binding_id": str(getattr(binding, "id", binding)),
-                "observed_source_type": type(source).__name__,
-            },
-        )
-    legal_refs = tuple(getattr(binding, "legal_refs", ()) or ())
-    source_refs = tuple(getattr(binding, "source_refs", ()) or ())
+    source = binding.source
+    legal_refs = binding.legal_refs
+    source_refs = binding.source_refs
     if not legal_refs or not source_refs:
         raise _ModeloBuilderError(
             translated_message="application.filing.build_draft.errors.binding_provenance_missing",
             context={
-                "binding_id": str(getattr(binding, "id", binding)),
+                "binding_id": str(binding.id),
                 "source": source.value,
                 "legal_ref_count": len(legal_refs),
                 "source_ref_count": len(source_refs),
@@ -773,7 +777,7 @@ def _binding_provenance(
 
 def _filing_binding_values(
     inputs: _ModeloInputs,
-    bindings: Mapping[_BindingId, object],
+    bindings: Mapping[_BindingId, _DataBindingDefinition],
     enum_binding_ids: frozenset[_BindingId] = frozenset(),
     non_decimal_binding_ids: frozenset[_BindingId] = frozenset(),
 ) -> list[_ModeloBindingValue]:
@@ -942,7 +946,11 @@ def _binding_input(binding_id: _BindingId, value: object, binding: object) -> _M
         return _decimal_input(binding_id, value)
     raise _ModeloBuilderError(
         translated_message="application.filing.build_draft.errors.binding_family_has_no_input_channel",
-        context={"binding_id": binding_id, "data_type": data_type, "value_family": family},
+        context={
+            "binding_id": binding_id,
+            "data_type": data_type,
+            "value_family": family,
+        },
     )
 
 

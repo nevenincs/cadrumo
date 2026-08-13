@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.registry._parity_tapes import _diff_paths
+from .._parity_tapes import _diff_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

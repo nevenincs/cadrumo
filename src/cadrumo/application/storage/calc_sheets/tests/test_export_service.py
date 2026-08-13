@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pytest
 
+from .....adapters.outbound.google import apply_export_plan
 from .....adapters.outbound.storage import OutboundStorageValidationError
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
@@ -75,6 +76,7 @@ def test_a_failed_apply_still_persists_a_sync_run_record_and_reraises(tmp_path: 
                 credentials=object(),
                 root_folder_id="",
                 sync_run_repository=repository,
+                apply_export_plan=apply_export_plan,
             )
 
         records = [repository.load(identifier) for identifier in repository.iter_ids()]

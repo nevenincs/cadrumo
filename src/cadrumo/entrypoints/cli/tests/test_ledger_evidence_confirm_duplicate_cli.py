@@ -55,7 +55,13 @@ def _add_the_document(tmp_path: Path, *, filename: str = "factura.xml") -> str:
         ["--format", "json", "app", "ledger", "evidence", "add", str(source), "--supplier", "Mayorista SL"],
     )
     assert added.exit_code == 0, added.output
-    return json.loads(added.output)["result"]["evidence_id"]
+    payload = json.loads(added.output)
+    assert isinstance(payload, dict), added.output
+    body = payload.get("result")
+    assert isinstance(body, dict), added.output
+    evidence_id = body.get("evidence_id")
+    assert isinstance(evidence_id, str), added.output
+    return evidence_id
 
 
 def _confirm(evidence_id: str, *extra: str):

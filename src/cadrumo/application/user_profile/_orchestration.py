@@ -132,7 +132,11 @@ def _append_workflow_event(state: WorkflowState, *, action: str, bucket_id: str,
 
 
 @contextmanager
-def profile_create_storage_span(profile_id: str, *, passphrase_callback: PassphraseCallback | None = None):
+def profile_create_storage_span(
+    profile_id: str,
+    *,
+    passphrase_callback: PassphraseCallback | None = None,
+) -> Generator[str]:
     """Open the first-profile storage span for a bucket being created.
 
     The span writes the provisional :class:`~cadrumo.core.BucketPointer`

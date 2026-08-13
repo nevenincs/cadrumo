@@ -73,6 +73,23 @@ _PdfWord = dict[str, Any]
 _logger = get_logger(__name__)
 _INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 
+
+def _pdf_word_text(word: _PdfWord) -> str:
+    """Return the textual value required from a pdfplumber word."""
+    value = word.get("text")
+    if not isinstance(value, str):
+        raise DeclaracionParseError("pdf word is missing textual content")
+    return value
+
+
+def _pdf_word_float(word: _PdfWord, key: str) -> float:
+    """Return a numeric pdfplumber word coordinate as a concrete float."""
+    value = word.get(key)
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return float(value)
+    raise DeclaracionParseError(f"pdf word field {key!r} is not numeric")
+
+
 # AEAT tax-id shape: a natural-person NIF/NIE or a legal-entity CIF. Held here
 # as one fragment so the label-order variants below cannot drift apart, and so
 # accepting a new label rendering can never widen the accepted value.
@@ -419,7 +436,12 @@ def _resolve_period(text: str, *, period_override: str | None) -> str:
         raise DeclaracionParseError(
             translated_message="adapters.inbound.declaracion.errors.period_unresolved",
         )
-    return match.group("period").upper()
+    period = match.group("period")
+    if not isinstance(period, str):
+        raise DeclaracionParseError(
+            translated_message="adapters.inbound.declaracion.errors.period_unresolved",
+        )
+    return period.upper()
 
 
 def _extract_tax_id(text: str) -> str:
@@ -733,10 +755,10 @@ def _named_label_line_value(line: list[_PdfWord], *, printed_number: str | None)
     box number is returned unchanged so the blank-box guard still sees it and
     reports the target absent.
     """
-    raw = line[-1]["text"].strip()
+    raw = _pdf_word_text(line[-1]).strip()
     if printed_number is None or raw != printed_number.strip() or len(line) < 2:
         return raw
-    preceding = line[-2]["text"].strip()
+    preceding = _pdf_word_text(line[-2]).strip()
     return preceding if _STRICT_PRINTED_AMOUNT_RE.match(preceding) else raw
 
 
@@ -1165,8 +1187,8 @@ def _find_column_x_range(
     matches = [w for w in words if w["text"].lower() == column_anchor.lower()]
     if not matches:
         return (0.0, float("inf"))
-    x_min = min(w["x0"] for w in matches)
-    x_max = max(w["x1"] for w in matches)
+    x_min = min(_pdf_word_float(w, "x0") for w in matches)
+    x_max = max(_pdf_word_float(w, "x1") for w in matches)
     return (x_min, x_max)
 
 

@@ -29,30 +29,32 @@ from typing import Final
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
+if not __package__:
+    __package__ = "dev.packaging"
 
-from dev.packaging._acquire_common import (  # noqa: E402
+from ._acquire_common import (  # noqa: E402
     AcquisitionError,
     capture_owned_server_launch,
     refuse_unavailable,
     require_command_succeeded,
     verify_artifact_digest,
 )
-from dev.packaging._command import run_command  # noqa: E402
-from dev.packaging.cohort_manifest import LoadedReleaseCohort, load_release_cohort  # noqa: E402
-from dev.packaging.distribution_evidence_emit import SDK_CLIENT_NAME, emit_client_evidence  # noqa: E402
-from dev.packaging.evidence import (  # noqa: E402
+from ._command import run_command  # noqa: E402
+from .cohort_manifest import LoadedReleaseCohort, load_release_cohort  # noqa: E402
+from .distribution_evidence_emit import SDK_CLIENT_NAME, emit_client_evidence  # noqa: E402
+from .evidence import (  # noqa: E402
     AcquisitionIdentity,
     ClientIdentity,
     CommandTranscript,
     DestinationIdentity,
 )
-from dev.packaging.installed_mcp_oracle import (  # noqa: E402
+from .installed_mcp_oracle import (  # noqa: E402
     InstalledMcpEvidence,
     isolated_mcp_environment,
     run_installed_mcp_oracle,
 )
-from dev.packaging.python_cohort import load_python_cohort  # noqa: E402
-from dev.packaging.smoke_mcpb import resolve_mcpb_value, run_concurrent_launches  # noqa: E402
+from .python_cohort import load_python_cohort  # noqa: E402
+from .smoke_mcpb import resolve_mcpb_value, run_concurrent_launches  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
 _DEFAULT_REPO: Final[str] = "nevenincs/cadrumo"

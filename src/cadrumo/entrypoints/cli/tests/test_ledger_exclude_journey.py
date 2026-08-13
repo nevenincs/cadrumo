@@ -71,7 +71,12 @@ def _add_row() -> str:
     )
     assert added.exit_code == 0, added.output
     payload = json.loads(added.output)
-    return payload.get("result", payload)["transaction_id"]
+    assert isinstance(payload, dict), added.output
+    body = payload.get("result", payload)
+    assert isinstance(body, dict), added.output
+    transaction_id = body.get("transaction_id")
+    assert isinstance(transaction_id, str), added.output
+    return transaction_id
 
 
 def test_exclude_returns_quintet_and_marks_row_excluded() -> None:

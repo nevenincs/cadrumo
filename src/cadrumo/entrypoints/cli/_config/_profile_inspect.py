@@ -100,10 +100,13 @@ def _resolve_show_pointer(
 
 def _read_record_for_show(ctx: typer.Context, pointer: _ProfileBucketPointer) -> _UserProfileRecord:
     """Read the profile record, rendering the unreadable/missing report and exiting 2."""
-    from ....domain.user_profile import ProfileNotFoundError
+    from ....domain.user_profile import ProfileNotFoundError, UserProfileRecord
 
     try:
-        return _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+        record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+        if not isinstance(record, UserProfileRecord):
+            raise _ConfigBoundaryError(TypeError("profile record reader returned an invalid record"))
+        return record
     except ProfileNotFoundError as exc:
         _emit_profile_record_missing(
             ctx,

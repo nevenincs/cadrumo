@@ -13,7 +13,7 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
-from ....core import Period
+from ....core import STR_KEYED_MAPPING_ADAPTER, Period
 from ....core.errors import ERROR_REGISTRY
 from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.categories import SpendingCategory
@@ -67,7 +67,7 @@ def _create_profile() -> None:
     assert result.exit_code == 0, result.output
 
 
-def _create_work_unit(*, modelo: str, year: int, period: str) -> dict[str, object]:
+def _create_work_unit(*, modelo: str, year: int, period: str) -> dict[str, str]:
     """Create a work unit and let the registry authority pick the revision.
 
     No ``--revision`` is injected. AEAT binds each ``(modelo, filing_year,
@@ -95,22 +95,25 @@ def _create_work_unit(*, modelo: str, year: int, period: str) -> dict[str, objec
         ],
     )
     assert result.exit_code == 0, result.output
-    return _payload(result.output)
+    payload = STR_KEYED_MAPPING_ADAPTER.validate_python(_payload(result.output))
+    work_unit_id = payload["work_unit_id"]
+    assert isinstance(work_unit_id, str)
+    return {"work_unit_id": work_unit_id}
 
 
-def _create_303_work_unit() -> dict[str, object]:
+def _create_303_work_unit() -> dict[str, str]:
     return _create_work_unit(modelo="303", year=2026, period="1T")
 
 
-def _create_115_work_unit() -> dict[str, object]:
+def _create_115_work_unit() -> dict[str, str]:
     return _create_work_unit(modelo="115", year=2026, period="1T")
 
 
-def _create_111_work_unit() -> dict[str, object]:
+def _create_111_work_unit() -> dict[str, str]:
     return _create_work_unit(modelo="111", year=2025, period="2T")
 
 
-def _create_180_work_unit() -> dict[str, object]:
+def _create_180_work_unit() -> dict[str, str]:
     return _create_work_unit(modelo="180", year=2026, period="0A")
 
 

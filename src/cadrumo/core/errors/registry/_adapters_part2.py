@@ -628,6 +628,46 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.persistence.storage.custody._errors.ProfileCustodyError",
+        ErrorCode(
+            code="FAIL_STORAGE_PROFILE_CUSTODY",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_storage_profile_custody",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.persistence.storage.custody._errors.ProfileCustodyRecordError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_PROFILE_CUSTODY_RECORD",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_profile_custody_record",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.persistence.storage.custody._errors.ProfileCustodyPasswordError",
+        ErrorCode(
+            code="REFUSED_STORAGE_PROFILE_CUSTODY_PASSWORD",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_profile_custody_password",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.persistence.storage.custody._errors.ProfileCustodyRefusedError",
+        ErrorCode(
+            code="REFUSED_STORAGE_PROFILE_CUSTODY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_profile_custody",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.inbound.financial.providers._base.FinancialProviderConfigError",
         ErrorCode(
             code="ERROR_FINANCIAL_PROVIDER_CONFIG",

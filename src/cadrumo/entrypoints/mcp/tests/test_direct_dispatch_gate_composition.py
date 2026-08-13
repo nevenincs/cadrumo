@@ -70,7 +70,15 @@ def _execute_call(server: Any, command_key: str) -> Any:
 
 
 def _sole_text(result: Any) -> str:
-    return " ".join(block.text for block in result.content if block.type == "text")
+    texts: list[str] = []
+    for block in result.content:
+        if block.type != "text":
+            continue
+        text = block.text
+        if not isinstance(text, str):
+            raise TypeError("text result blocks must contain strings")
+        texts.append(text)
+    return " ".join(texts)
 
 
 @pytest.mark.parametrize(

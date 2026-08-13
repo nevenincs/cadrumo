@@ -29,7 +29,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.calculations._errors import (
+from ....core import NoRecoveryOutcome
+from .._errors import (
     BindingPrefillTypeError,
     CalculationRefusalPrecondition,
     ObservationCasillaReferenceError,
@@ -37,8 +38,7 @@ from cadrumo.application.calculations._errors import (
     ObservationKeyError,
     calculation_no_recovery_verdict,
 )
-from cadrumo.application.calculations._m303_carry_ingress import M303CarryIngressError
-from cadrumo.core import NoRecoveryOutcome
+from .._m303_carry_ingress import M303CarryIngressError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -210,7 +210,7 @@ def test_calculation_refusal_renders_as_its_key_and_never_as_prose(key: str) -> 
 
 
 def test_observation_key_refusal_renders_as_its_key() -> None:
-    from cadrumo.application.calculations._observations_repository import observation_key_for_token
+    from .._observations_repository import observation_key_for_token
 
     with pytest.raises(ObservationKeyError) as excinfo:
         observation_key_for_token("303", 1999, "1T")
@@ -219,9 +219,9 @@ def test_observation_key_refusal_renders_as_its_key() -> None:
 
 
 def test_row_set_grouping_refusal_renders_as_its_key() -> None:
-    from cadrumo.application.calculations._row_set_assembly import assemble_observations_for_grouping
-    from cadrumo.core.resources import resources
-    from cadrumo.domain.calculations.registry import RegistryValidationError
+    from ....core.resources import resources
+    from ....domain.calculations.registry import RegistryValidationError
+    from .._row_set_assembly import assemble_observations_for_grouping
 
     revision = resources().modelos.authority.snapshot("190", filing_year=2025, period="0A").revision
 

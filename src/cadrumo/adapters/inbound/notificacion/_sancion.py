@@ -49,12 +49,12 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Final, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.decimal import is_aeat_printed_money
 from ....core.i18n import tr
-from ....core.identity import AeatCertificadoId, AeatClaveLiquidacion
+from ....domain.notifications import SancionLiquidacion
 from ..pdf import parse_spanish_decimal
 from ._errors import SancionArithmeticError, SancionParseError
 
@@ -76,66 +76,6 @@ _CLAVE_RE: Final[re.Pattern[str]] = re.compile(r"^[0-9A-Z]{10,30}$")
 _REFERENCIA_RE: Final[re.Pattern[str]] = re.compile(r"^[0-9A-Z/\-.]{4,40}$")
 
 _MONEY_FIELDS: Final = ("base_sancion", "sancion_resultante", "reduccion_conformidad", "reduccion_pronto_pago")
-
-
-class SancionLiquidacion(BaseModel):
-    """The typed reading of one AEAT sanción / liquidación document.
-
-    Every field is a figure printed on the document. Nothing here is derived,
-    defaulted or inferred: an absent reducción is ``None``, never ``0``, so a
-    reducción AEAT did not grant is distinguishable from one it granted at
-    zero.
-
-    Attributes:
-        certificado_id: The notification the document was served under, carried
-            so the record stays bound to its provenance.
-        clave_liquidacion: AEAT's ``Clave de liquidación`` for this act.
-        referencia: The ``Referencia`` AEAT printed on the document.
-        nif: The ``N.I.F.`` the act is issued against, verbatim.
-        objeto_tributario: Which LGT object this act is, classified from the
-            document's own heading vocabulary.
-        base_sancion: ``Base sobre la que se liquida la sanción``.
-        porcentaje_minimo: ``Porcentaje mínimo de sanción``, as printed (a
-            percentage, so ``50,00 %`` is ``Decimal("50.00")`` and never
-            ``0.5``).
-        sancion_resultante: ``Sanción resultante``, before any reducción.
-        reduccion_conformidad: The printed ``Reducción del 30%`` (LGT art.
-            188.1), or ``None`` when the document grants none.
-        reduccion_pronto_pago: The printed ``Reducción del 40%`` (LGT art.
-            188.3), or ``None`` when the document grants none.
-        diferencia: The printed ``Diferencia`` line, when the template prints
-            one.
-        importe_a_ingresar: The amount actually payable — the printed
-            ``Importe a ingresar`` when present, else the printed
-            ``Diferencia``. Reconciled against the other printed lines before
-            this record is returned.
-        document_sha256: Digest of the PDF bytes this record was read from, so
-            a stored reading can be tied back to the exact custody bytes.
-        mode: Structural read-only marker. A record that cannot be anything but
-            a reading cannot be repurposed to drive a filing.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    certificado_id: AeatCertificadoId
-    clave_liquidacion: AeatClaveLiquidacion
-    referencia: str = Field(min_length=1, max_length=64)
-    nif: str = Field(min_length=8, max_length=16)
-    objeto_tributario: Literal["sancion", "liquidacion"]
-    base_sancion: Decimal
-    porcentaje_minimo: Decimal
-    sancion_resultante: Decimal
-    reduccion_conformidad: Decimal | None = None
-    reduccion_pronto_pago: Decimal | None = None
-    diferencia: Decimal | None = None
-    importe_a_ingresar: Decimal
-    document_sha256: str = Field(min_length=64, max_length=64)
-    mode: Literal["read"] = "read"
-
-    @property
-    def reducciones_total(self) -> Decimal:
-        """Return the sum of every reducción the document actually printed."""
-        return (self.reduccion_conformidad or _ZERO) + (self.reduccion_pronto_pago or _ZERO)
 
 
 # Label vocabulary. Keys are field names; values are the accent-stripped,
@@ -554,7 +494,4 @@ def _assert_printed_lines_reconcile(record: SancionLiquidacion) -> None:
         )
 
 
-__all__ = [
-    "SancionLiquidacion",
-    "parse_sancion_document",
-]
+__all__ = ["parse_sancion_document"]

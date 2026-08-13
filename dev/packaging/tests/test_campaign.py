@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.campaign import (
+from ..campaign import (
     _COHORT_DIR,
     _LANES,
     _PROFILES,

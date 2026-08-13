@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.python_cohort import (
+from ..python_cohort import (
     PythonCohort,
     _verify_direct_urls,
     digest_install_target,

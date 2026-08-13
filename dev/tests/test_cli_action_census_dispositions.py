@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from dev.quality.cli_action_census import CandidateRecord, census
-from dev.quality.cli_action_census_dispositions import (
+from ..quality.cli_action_census import CandidateRecord, census
+from ..quality.cli_action_census_dispositions import (
     DEFAULT_DISPOSITIONS_PATH,
     CandidateDisposition,
     CandidateKey,

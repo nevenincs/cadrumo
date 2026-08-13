@@ -32,7 +32,6 @@ See Also:
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
@@ -41,7 +40,7 @@ from typing import Final
 import pytest
 
 from ....application.ledger import InvoiceDraft, deterministic_findings, write_extraction_draft
-from ....core import resolve_active_bucket_id
+from ....core import STR_KEYED_MAPPING_ADAPTER, resolve_active_bucket_id
 from ....core.config import load_settings
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
@@ -89,9 +88,7 @@ def seeded_draft(tmp_path: Path) -> Iterator[None]:
 def _envelope() -> dict[str, object]:
     result = _invoke(["--format", "json", "app", "ledger", "evidence", "review", "show", _REFERENCE])
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
-    assert isinstance(payload, dict)
-    return payload
+    return STR_KEYED_MAPPING_ADAPTER.validate_json(result.output)
 
 
 def _notice(envelope: dict[str, object], code: str) -> dict[str, object]:
@@ -99,7 +96,7 @@ def _notice(envelope: dict[str, object], code: str) -> dict[str, object]:
     assert isinstance(notices, list)
     matching = [notice for notice in notices if isinstance(notice, dict) and notice.get("code") == code]
     assert len(matching) == 1, notices
-    return matching[0]
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(matching[0])
 
 
 @pytest.mark.usefixtures("seeded_draft")

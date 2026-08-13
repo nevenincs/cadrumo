@@ -13,9 +13,17 @@ import threading
 from collections.abc import Iterator
 from pathlib import Path
 
-import dev.deploy.docs_static_site as _docs_static_site
 import pytest
-from dev.deploy.docs_static_site import (
+
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.tests.env_scope import scoped_env_var
+
+from ...docs.build import pagefind_index_mode
+from ...docs.i18n import DEFAULT_SITE_LANGUAGE, TARGET_LANGUAGES
+from ...docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS
+from ...docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV, should_check_sequences
+from .. import docs_static_site as _docs_static_site
+from ..docs_static_site import (
     _DOWNLOAD_LATEST_SCHEMA,
     _DOWNLOAD_LATEST_STATIC_PATH,
     _REQUIRED_ARTIFACTS,
@@ -32,13 +40,6 @@ from dev.deploy.docs_static_site import (
     _validate_language_roots,
     _write_language_entry,
 )
-from dev.docs.build import pagefind_index_mode
-from dev.docs.i18n import DEFAULT_SITE_LANGUAGE, TARGET_LANGUAGES
-from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS
-from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV, should_check_sequences
-
-from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.tests.env_scope import scoped_env_var
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -53,7 +53,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, cast
 
 from .....core.resources import bundled_path
 
@@ -95,7 +95,7 @@ def _repair_pattern_value(value: str) -> str:
     """Drop backslashes that escape a character XSD regex does not allow escaping."""
 
     def unescape(match: re.Match[str]) -> str:
-        escaped = match.group(1)
+        escaped = cast(str, match.group(1))
         if escaped in _XSD_ESCAPABLE_METACHARACTERS or escaped in _XSD_CLASS_ESCAPE_LETTERS:
             return match.group(0)
         return escaped

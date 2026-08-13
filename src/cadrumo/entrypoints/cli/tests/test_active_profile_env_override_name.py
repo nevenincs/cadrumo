@@ -176,12 +176,13 @@ _GENERIC_UNKNOWN_FRAGMENT = "Unknown profile"
 
 def _combined_output(result: object) -> str:
     """Combine stdout, stderr, and any raised exception text for fragment checks."""
-    combined = getattr(result, "output", "") or ""
-    stderr = getattr(result, "stderr", None)
-    if stderr:
+    output: object = getattr(result, "output", "")
+    combined = output if isinstance(output, str) else ""
+    stderr: object = getattr(result, "stderr", None)
+    if isinstance(stderr, str) and stderr:
         combined = f"{combined}\n{stderr}"
-    exc = getattr(result, "exception", None)
-    if exc:
+    exc: object = getattr(result, "exception", None)
+    if isinstance(exc, BaseException):
         combined = f"{combined}\n{exc}"
     return combined
 

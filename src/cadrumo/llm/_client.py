@@ -168,7 +168,8 @@ class LLMRetryPolicy(BaseModel):
         # Full-jitter in the upper half: still spreads a synchronised batch,
         # while never collapsing the backoff toward zero the way [0, capped)
         # would on an unlucky draw.
-        jittered = capped * (0.5 + secrets.randbelow(501) / 1000)
+        random_fraction = float(secrets.randbelow(501)) / 1000
+        jittered: float = capped * (0.5 + random_fraction)
         if retry_after_s is not None:
             return max(jittered, retry_after_s)
         return jittered

@@ -52,8 +52,10 @@ import os
 import re
 import shutil
 import time
+import warnings
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import chdir, contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -68,6 +70,7 @@ from pydantic import BaseModel, Field, JsonValue
 
 from cadrumo.adapters.persistence.storage import close_active_bucket_session, dispose_engine
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.time import frozen_clock
 from cadrumo.domain.user_profile import UserProfileFact
@@ -172,6 +175,13 @@ _TRANSIENT_REGISTRY_RACE_MARKERS: tuple[str, ...] = (
 )
 _TRANSIENT_RETRY_ATTEMPTS: int = 8
 
+#: An optional child-process handoff path.  The parent check supervisor owns
+#: its lifetime; the runner only records the last frame that actually started.
+#: It deliberately does not use a ``CADRUMO_*`` name because sandbox execution
+#: correctly scrubs that operator-facing namespace.
+_PROGRESS_JOURNAL_ENV: str = "CLI_SEQUENCE_PROGRESS_JOURNAL"
+_SEQUENCE_PROGRESS_PAGE: ContextVar[str | None] = ContextVar("sequence_progress_page", default=None)
+
 #: A captured value must be a non-null JSON scalar: it interpolates into a
 #: later frame's argv, where an object, array, or null has no faithful text.
 CapturedScalar = str | int | float | bool
@@ -265,6 +275,27 @@ class SequenceSandbox:
     frozen_instant: datetime
 
 
+@dataclass(frozen=True)
+class _PageSeedState:
+    """Immutable result of executing one named seed in a page sandbox."""
+
+    frames: tuple[SequenceFrame, ...]
+    executions: tuple[FrameExecution, ...]
+    captures: tuple[CapturedValue, ...]
+
+
+def _seed_execution_signature(frames: tuple[SequenceFrame, ...]) -> tuple[str, ...]:
+    """Return the narration-independent executable identity of one seed."""
+    return tuple(
+        json.dumps(
+            frame.model_dump(exclude={"source", "line_number", "step_description"}, mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        for frame in frames
+    )
+
+
 def default_fixtures_root() -> Path:
     """Return the committed ``docs/_sequences/fixtures/`` synthetic-input tree.
 
@@ -326,6 +357,53 @@ def _frame_at(frame: SequenceFrame) -> str:
     if frame.source == "body":
         return f"line {frame.line_number}"
     return f"{frame.source} line {frame.line_number}"
+
+
+@contextmanager
+def _sequence_progress_scope(page: str) -> Iterator[None]:
+    """Bind the owning docs page while its sequences execute.
+
+    The binding is invocation-scoped, so a child interpreter that checks more
+    than one page cannot report a stale page after a prior sequence returns.
+    """
+    token = _SEQUENCE_PROGRESS_PAGE.set(page)
+    try:
+        yield
+    finally:
+        _SEQUENCE_PROGRESS_PAGE.reset(token)
+
+
+def _record_frame_progress(
+    sequence: ParsedSequence,
+    frame: SequenceFrame,
+    *,
+    frame_index: int,
+    argv: tuple[str, ...],
+) -> None:
+    """Persist the dynamically-derived last-started frame for a supervising child.
+
+    Diagnostics stay outside :class:`SequenceTranscript`: the journal is a
+    parent/child supervision aid, never sequence or golden data.  A single
+    child executes frames serially, so replacing the sole record is sufficient
+    and avoids accumulating an unbounded diagnostic log.
+    """
+    journal = os.environ.get(_PROGRESS_JOURNAL_ENV)
+    page = _SEQUENCE_PROGRESS_PAGE.get()
+    if journal is None or page is None:
+        return
+    payload = {
+        "page": page,
+        "sequence_id": sequence.sequence_id,
+        "frame_index": frame_index,
+        "frame_source": frame.source,
+        "frame_line": frame.line_number,
+        "argv": list(argv),
+    }
+    atomic_write_best_effort_text(
+        Path(journal),
+        json.dumps(payload, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _live_aeat_tokens(frame: SequenceFrame) -> tuple[str, ...]:
@@ -917,9 +995,12 @@ def _execute_frame(
     sequence: ParsedSequence,
     frame: SequenceFrame,
     captures: dict[str, CapturedScalar],
+    *,
+    frame_index: int,
 ) -> FrameExecution:
     """Execute one frame, enforce its exit code, and thread its captures."""
     argv = _resolved_argv(frame, captures)
+    _record_frame_progress(sequence, frame, frame_index=frame_index, argv=argv)
     result = _invoke_frame(argv[1:])
     # The runner records the two streams separately: ``Result.output`` under
     # this Click version is the COMBINED capture, so read the split
@@ -1032,7 +1113,10 @@ def _execute_in_root(
         captures: dict[str, CapturedScalar] = {}
         # @static frames are display-only: they never run, so they never enter
         # the transcript (and therefore never the golden).
-        frames = tuple(_execute_frame(sequence, frame, captures) for frame in sequence.executed_frames)
+        frames = tuple(
+            _execute_frame(sequence, frame, captures, frame_index=frame_index)
+            for frame_index, frame in enumerate(sequence.executed_frames)
+        )
     return SequenceTranscript(
         sequence_id=sequence.sequence_id,
         profile_id=sandbox.profile_id,
@@ -1104,6 +1188,8 @@ def _execute_page_in_root(
     tuple therefore carries one transcript per executable sequence, in page order.
     """
     transcripts: list[SequenceTranscript] = []
+    page_seeds: dict[str, _PageSeedState] = {}
+    page_seed_signatures: dict[tuple[str, ...], tuple[str, _PageSeedState]] = {}
     with sequence_sandbox(
         sequence_id=label,
         sandbox_root=sandbox_root,
@@ -1113,7 +1199,91 @@ def _execute_page_in_root(
             if not sequence.executed_frames:
                 continue  # all-@static: nothing runs, so no transcript
             captures: dict[str, CapturedScalar] = {}
-            frames = tuple(_execute_frame(sequence, frame, captures) for frame in sequence.executed_frames)
+            seed_source = f"seed:{sequence.seed}" if sequence.seed is not None else None
+            seed_frames = (
+                tuple(frame for frame in sequence.executed_frames if frame.source == seed_source)
+                if seed_source is not None
+                else ()
+            )
+            body_frames = tuple(frame for frame in sequence.executed_frames if frame.source != seed_source)
+            reused_seed_executions: tuple[FrameExecution, ...] = ()
+            seed_signature = _seed_execution_signature(seed_frames)
+
+            if sequence.seed is not None and not seed_frames:
+                detail = (
+                    f"page {label!r} sequence {sequence.sequence_id!r} requests seed "
+                    f"{sequence.seed!r}, but no inlined seed frames are available; reparse the "
+                    "sequence from its contract before running page coherence"
+                )
+                warnings.warn(detail, UserWarning, stacklevel=2)
+                raise SequenceExecutionError(sequence.sequence_id, detail)
+
+            if sequence.seed is not None and sequence.seed not in page_seeds and seed_signature in page_seed_signatures:
+                prior_identity, prior = page_seed_signatures[seed_signature]
+                warnings.warn(
+                    f"page {label!r} sequence {sequence.sequence_id!r} seed {sequence.seed!r} "
+                    f"is execution-equivalent to already-run seed {prior_identity!r}; reused its "
+                    "once-per-page state and immutable captures instead of replaying side effects",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                page_seeds[sequence.seed] = _PageSeedState(
+                    frames=seed_frames,
+                    executions=prior.executions,
+                    captures=prior.captures,
+                )
+                captures.update({item.name: item.value for item in prior.captures})
+                reused_seed_executions = prior.executions
+            elif sequence.seed is not None and sequence.seed in page_seeds:
+                prior = page_seeds[sequence.seed]
+                if prior.frames != seed_frames:
+                    detail = (
+                        f"page {label!r} sequence {sequence.sequence_id!r} reuses seed identity "
+                        f"{sequence.seed!r} with a divergent definition; give the changed recipe "
+                        "a new seed identity or make every use structurally equivalent"
+                    )
+                    warnings.warn(detail, UserWarning, stacklevel=2)
+                    raise SequenceExecutionError(sequence.sequence_id, detail)
+                available = {item.name: item.value for item in prior.captures}
+                required = {binding.name for frame in seed_frames for binding in frame.captures}
+                missing = sorted(required - available.keys())
+                if missing:
+                    detail = (
+                        f"page {label!r} sequence {sequence.sequence_id!r} cannot reuse seed "
+                        f"{sequence.seed!r}; page seed state lacks captures {missing}. Re-run from "
+                        "a clean page root and ensure every declared seed capture resolves"
+                    )
+                    warnings.warn(detail, UserWarning, stacklevel=2)
+                    raise SequenceExecutionError(sequence.sequence_id, detail)
+                warnings.warn(
+                    f"page {label!r} sequence {sequence.sequence_id!r} would replay seed "
+                    f"{sequence.seed!r}; reused its once-per-page state and immutable captures instead",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                captures.update(available)
+                reused_seed_executions = prior.executions
+            elif sequence.seed is not None:
+                seed_executions = tuple(
+                    _execute_frame(sequence, frame, captures, frame_index=frame_index)
+                    for frame_index, frame in enumerate(seed_frames)
+                )
+                seed_captures = tuple(item for execution in seed_executions for item in execution.captured)
+                state = _PageSeedState(
+                    frames=seed_frames,
+                    executions=seed_executions,
+                    captures=seed_captures,
+                )
+                page_seeds[sequence.seed] = state
+                page_seed_signatures[seed_signature] = (sequence.seed, state)
+                reused_seed_executions = seed_executions
+
+            body_start = len(seed_frames)
+            body_executions = tuple(
+                _execute_frame(sequence, frame, captures, frame_index=body_start + frame_index)
+                for frame_index, frame in enumerate(body_frames)
+            )
+            frames = reused_seed_executions + body_executions
             transcripts.append(
                 SequenceTranscript(
                     sequence_id=sequence.sequence_id,

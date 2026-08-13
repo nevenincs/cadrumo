@@ -9,7 +9,7 @@ import sys
 
 import pytest
 
-from dev.packaging.smoke_docker import (
+from ..smoke_docker import (
     _browser_probe_source,
     _command_succeeds,
     _core_probe_source,

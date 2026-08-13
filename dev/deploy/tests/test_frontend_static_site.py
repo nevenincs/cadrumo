@@ -5,7 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from dev.deploy.frontend_static_site import (
+
+from ..frontend_static_site import (
     _PROTECTED_PREFIX_EXCLUDES,
     _REQUIRED_ARTIFACTS,
     _validate_site_artifacts,
@@ -103,7 +104,7 @@ def test_validate_refuses_a_landing_page_without_bundle_references(tmp_path: Pat
 
 def test_hashed_assets_are_immutable_and_never_invalidated() -> None:
     """Content-hashed assets carry a forever cache and skip invalidation."""
-    from dev.deploy.frontend_static_site import _ASSET_CACHE_CONTROL, _INVALIDATION_PATHS
+    from ..frontend_static_site import _ASSET_CACHE_CONTROL, _INVALIDATION_PATHS
 
     assert "immutable" in _ASSET_CACHE_CONTROL
     assert "/assets/*" not in _INVALIDATION_PATHS

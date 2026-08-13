@@ -17,6 +17,7 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....domain.buckets import BucketEvent, BucketEventType
 from ....domain.categories import SpendingCategory
 from ....domain.iva import IvaCategory
@@ -144,7 +145,7 @@ _VOLATILE_TIMESTAMP_KEYS = ("classified_at", "created_at", "modified_at")
 
 
 def _stable_dump(transaction: Transaction) -> dict[str, object]:
-    dumped = transaction.model_dump(mode="json")
+    dumped = STR_KEYED_MAPPING_ADAPTER.validate_python(transaction.model_dump(mode="json"))
     for key in _VOLATILE_TIMESTAMP_KEYS:
         dumped.pop(key, None)
     return dumped

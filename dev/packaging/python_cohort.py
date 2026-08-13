@@ -15,10 +15,10 @@ from typing import Any, Final
 
 from packaging.requirements import Requirement
 
-from dev.packaging._distribution_limits import PYPI_FILE_CAP_BYTES
-from dev.packaging._distribution_names import normalise_distribution_name
-from dev.packaging._hashing import sha256_path
-from dev.packaging._proof_ledger import record_proof
+from ._distribution_limits import PYPI_FILE_CAP_BYTES
+from ._distribution_names import normalise_distribution_name
+from ._hashing import sha256_path
+from ._proof_ledger import record_proof
 
 _UTF_8: Final[str] = "utf-8"
 _MANIFEST_NAME: Final[str] = "python-cohort.json"

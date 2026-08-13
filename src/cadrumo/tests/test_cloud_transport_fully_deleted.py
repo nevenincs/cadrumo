@@ -346,7 +346,7 @@ def _settings_model_fields() -> tuple[str, ...]:
     """
     from ..core.config import Settings
 
-    return tuple(Settings.model_fields)
+    return tuple(str(name) for name in Settings.model_fields)
 
 
 def _transport_of(stamp: str) -> str:

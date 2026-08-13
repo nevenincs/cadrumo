@@ -104,9 +104,14 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final, NoReturn, Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
-from ...adapters.inbound.einvoice import EInvoiceXmlParseError, ParsedEInvoice, parse_einvoice_document
+from ...adapters.inbound.einvoice import (
+    EInvoiceXmlParseError,
+    FacturaeInvoiceClass,
+    ParsedEInvoice,
+    parse_einvoice_document,
+)
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
 from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice, resolve_iva_rate_slot
@@ -516,6 +521,42 @@ class DraftDiscrepancyFinding(BaseModel):
     observed: Decimal | None = None
 
 
+def _facturae_invoice_class_findings(
+    *,
+    declared: FacturaeInvoiceClass | None,
+    rectifies_invoice_number: str | None,
+) -> tuple[DraftDiscrepancyFinding, ...]:
+    """Report Facturae class gaps and contradictions without choosing a side."""
+    if declared is None:
+        return ()
+
+    findings: list[DraftDiscrepancyFinding] = []
+    if declared in {FacturaeInvoiceClass.ORIGINAL_SUMMARY, FacturaeInvoiceClass.COPY_SUMMARY}:
+        findings.append(
+            DraftDiscrepancyFinding(
+                kind=DraftDiscrepancyKind.INVOICE_CLASS_UNMODELLED,
+                detail=f"Facturae InvoiceClass {declared.value!r} declares recapitulativa, which is not modelled",
+            ),
+        )
+
+    declares_correction = declared in {
+        FacturaeInvoiceClass.ORIGINAL_CORRECTIVE,
+        FacturaeInvoiceClass.COPY_CORRECTIVE,
+    }
+    carries_correction = rectifies_invoice_number is not None
+    if declares_correction != carries_correction:
+        findings.append(
+            DraftDiscrepancyFinding(
+                kind=DraftDiscrepancyKind.INVOICE_CLASS_CONTRADICTED,
+                detail=(
+                    f"Facturae InvoiceClass {declared.value!r} and Corrective/InvoiceNumber "
+                    f"presence={carries_correction!r} disagree"
+                ),
+            ),
+        )
+    return tuple(findings)
+
+
 class InvoiceDraft(BaseModel):
     """Best-effort invoice fields extracted from an on-host PDF text layer.
 
@@ -725,6 +766,7 @@ class InvoiceDraft(BaseModel):
     provenance: tuple[FieldProvenance, ...] = ()
     discrepancies: tuple[DraftDiscrepancyFinding, ...] = ()
     raw_text_length: int = 0
+    _facturae_invoice_class: FacturaeInvoiceClass | None = PrivateAttr(default=None)
 
     @model_validator(mode="after")
     def _provenance_names_real_fields(self) -> Self:
@@ -1473,6 +1515,7 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
         raw_text_length=len(evidence.data),
         provenance=_structured_provenance(parsed=parsed, evidence=evidence, derived=country_codes),
     )
+    draft._facturae_invoice_class = parsed.facturae_invoice_class
 
     # Exactness is not correctness, and conflating the two is what left this path
     # unchecked. Reaching no model makes prompt injection categorically
@@ -1480,7 +1523,17 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
     # arithmetic closes, or whether the regime it prints in words matches the tax
     # it charged. Those are questions about the ISSUER's document, not about the
     # reader, and an exactly-read wrong invoice is still a wrong invoice.
-    return draft.model_copy(update={"discrepancies": deterministic_findings(draft)})
+    return draft.model_copy(
+        update={
+            "discrepancies": (
+                *deterministic_findings(draft),
+                *_facturae_invoice_class_findings(
+                    declared=parsed.facturae_invoice_class,
+                    rectifies_invoice_number=parsed.rectifies_invoice_number,
+                ),
+            ),
+        },
+    )
 
 
 def _extract_invoice_fields_via_vision(
@@ -2197,10 +2250,11 @@ def _fields_a_reconfirm_would_change(candidate: Invoice, stored: Invoice) -> tup
     """
     compared = candidate.model_dump(mode="json")
     against = stored.model_dump(mode="json")
+    field_names = tuple(str(name) for name in Invoice.model_fields)
     return tuple(
         sorted(
             name
-            for name in Invoice.model_fields
+            for name in field_names
             if name not in _INVOICE_FIELDS_A_CONFIRM_DOES_NOT_AUTHOR and compared.get(name) != against.get(name)
         ),
     )
@@ -2435,7 +2489,7 @@ def confirm_invoice_draft_from_evidence(
     retention_rate: Decimal | None = None,
     retention_amount: Decimal | None = None,
     recargo_amount: Decimal | None = None,
-    invoice_class: InvoiceClass = InvoiceClass.ORDINARIA,
+    invoice_class: InvoiceClass | None = None,
     supply_nature: SupplyNature | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
@@ -2747,15 +2801,24 @@ def confirm_invoice_draft_from_evidence(
     # refuses one without a series -- correctly, and it could not refuse
     # before, because nothing ever told it the invoice was a rectificativa.
     resolved_series = _operator_value_or_reading(series, draft.invoice_series)
-    # Derived from the corrected reference rather than carried as a second
-    # field: the Invoice model already ties the two together in BOTH
-    # directions, so a class and a reference that could disagree would be two
-    # spellings of one fact with no authority between them.
-    resolved_invoice_class = (
-        InvoiceClass.RECTIFICATIVA
-        if invoice_class is InvoiceClass.ORDINARIA and resolved_rectifies is not None
-        else invoice_class
-    )
+    declared_class = draft._facturae_invoice_class
+    if declared_class in {FacturaeInvoiceClass.ORIGINAL, FacturaeInvoiceClass.COPY}:
+        resolved_invoice_class = InvoiceClass.ORDINARIA
+    elif declared_class in {
+        FacturaeInvoiceClass.ORIGINAL_CORRECTIVE,
+        FacturaeInvoiceClass.COPY_CORRECTIVE,
+    }:
+        resolved_invoice_class = InvoiceClass.RECTIFICATIVA
+    elif invoice_class is not None:
+        # Recapitulativa has no domain member. Preserve the operator's statement
+        # instead of flattening the document's distinct class onto ordinaria.
+        resolved_invoice_class = invoice_class
+    else:
+        # A document declaring no Facturae class retains the established
+        # corrective-reference inference.
+        resolved_invoice_class = (
+            InvoiceClass.RECTIFICATIVA if resolved_rectifies is not None else InvoiceClass.ORDINARIA
+        )
 
     repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     # Built with the SAME argument set `create_catalogue_invoice` is handed below,

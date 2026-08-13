@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
@@ -13,6 +12,7 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.ledger import FILER_POSTCODE_FACT_PATH
 from ....application.user_profile import profile_create_storage_span, set_active_fields
 from ....application.workflow import workflow_state_repository
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.config import override_settings
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
@@ -25,6 +25,10 @@ _PROFILE_LABEL = "tester"
 
 def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Result:
     return invoke_cached_cli(args, env=env)
+
+
+def _json_object(value: object) -> dict[str, object]:
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(value)
 
 
 @contextmanager
@@ -79,10 +83,13 @@ def _create_profile_and_import(tmp_path: Path) -> str:
 
     listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
-    payload = json.loads(listed.output)
-    rows = payload.get("result", payload).get("rows", [])
+    payload = STR_KEYED_MAPPING_ADAPTER.validate_json(listed.output)
+    rows = _json_object(payload.get("result", payload)).get("rows", [])
+    assert isinstance(rows, list)
     assert rows, listed.output
-    return rows[0]["transaction_id"]
+    transaction_id = _json_object(rows[0])["transaction_id"]
+    assert isinstance(transaction_id, str)
+    return transaction_id
 
 
 def _set_profile_axis(key: str, value: str) -> None:
@@ -178,7 +185,10 @@ def _add_eligible_mixed_expense() -> str:
         env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["result"]["transaction_id"]
+    payload = STR_KEYED_MAPPING_ADAPTER.validate_json(result.output)
+    transaction_id = _json_object(payload["result"])["transaction_id"]
+    assert isinstance(transaction_id, str)
+    return transaction_id
 
 
 def _flatten_box(text: str) -> str:

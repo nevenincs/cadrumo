@@ -16,6 +16,7 @@ the settlement auto-seed (general / ninguna).
 from __future__ import annotations
 
 from ...core import ProrrataEspecialTransitionKind
+from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema, register_schema
 
 
@@ -60,7 +61,7 @@ class SectorDefinitionPayload(OutputSchema):
 class ProrrataElectResult(OutputSchema):
     """Shared shape for the regime-election verbs; the two verbs register distinct keys."""
 
-    bucket_id: str
+    bucket_id: BucketId
     entry: ProrrataEntryPayload
     count: int
 
@@ -84,7 +85,7 @@ class ProrrataRevokeEspecialResult(ProrrataElectResult):
 class ProrrataDeclareSectorResult(OutputSchema):
     """JSON envelope for ``aeat app ledger prorrata declare-sector``."""
 
-    bucket_id: str
+    bucket_id: BucketId
     sector: SectorDefinitionPayload
     count: int
 
@@ -93,7 +94,7 @@ class ProrrataDeclareSectorResult(OutputSchema):
 class ProrrataListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger prorrata list``."""
 
-    bucket_id: str
+    bucket_id: BucketId
     entries: list[ProrrataEntryPayload]
     sectors: list[SectorDefinitionPayload]
     count: int

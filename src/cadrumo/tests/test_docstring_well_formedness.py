@@ -79,7 +79,7 @@ def _napoleon_section_names() -> frozenset[str]:
 
 SECTION_NAMES = _napoleon_section_names()
 
-_HEADER = re.compile(r"^(?P<indent>[ \t]*)(?P<name>[A-Za-z][A-Za-z ]*):[ \t]*$")
+_HEADER: re.Pattern[str] = re.compile(r"^(?P<indent>[ \t]*)(?P<name>[A-Za-z][A-Za-z ]*):[ \t]*$")
 _ENTRY = re.compile(r"^(?P<indent>[ \t]+)(?P<name>\*{0,2}[A-Za-z_][A-Za-z0-9_]*)[ \t]*(?:\([^)]*\))?[ \t]*:")
 
 #: Sections whose entries name function parameters.
@@ -95,8 +95,14 @@ def _section_headers(doc: str) -> list[tuple[int, int, str]]:
     headers = []
     for index, line in enumerate(doc.splitlines()):
         match = _HEADER.match(line)
-        if match and match.group("name").strip().casefold() in SECTION_NAMES:
-            headers.append((index, _indent_of(line), match.group("name").strip()))
+        if match is None:
+            continue
+        name = match.group("name")
+        if not isinstance(name, str):
+            raise AssertionError("section header regex returned a non-string name")
+        canonical_name = name.strip()
+        if canonical_name.casefold() in SECTION_NAMES:
+            headers.append((index, _indent_of(line), canonical_name))
     return headers
 
 

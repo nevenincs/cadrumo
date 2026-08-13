@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from ....application.user_profile import CapabilitySource
 from ....core import ServiceCapability
+from ....core.identity import ProfileId
 from ....core.json_contract import OutputSchema, register_schema
 
 
@@ -48,7 +49,7 @@ class CapabilitiesShowResult(OutputSchema):
     the global/default posture.
     """
 
-    profile_id: str | None = None
+    profile_id: ProfileId | None = None
     capabilities: list[CapabilityRowPayload] = []
 
 
@@ -62,6 +63,6 @@ class CapabilitySetResult(OutputSchema):
     capability id, and enabled flag.
     """
 
-    profile_id: str
+    profile_id: ProfileId
     capability: ServiceCapability
     enabled: bool

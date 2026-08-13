@@ -56,9 +56,8 @@ def test_changed_m303_evidence_with_stored_identity_is_rejected() -> None:
     original = _m303_revision()
     assert original.filing_instance_evidence is not None
     assert original.filing_instance_evidence.m303 is not None
-    changed = original.model_construct(
-        **{
-            **original.__dict__,
+    changed = original.model_copy(
+        update={
             "filing_instance_evidence": original.filing_instance_evidence.model_copy(
                 update={
                     "m303": original.filing_instance_evidence.m303.model_copy(

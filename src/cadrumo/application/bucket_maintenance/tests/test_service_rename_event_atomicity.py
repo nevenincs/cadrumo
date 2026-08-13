@@ -25,6 +25,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....core.time import frozen_clock
 from ....domain.buckets import (
     BucketEvent,
@@ -62,9 +63,7 @@ _TAX_ID = "12345678Z"
 _INSTANT = datetime(2030, 1, 1, 10, 0, 0, tzinfo=UTC)
 
 
-def _event_repository():
-    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-
+def _event_repository() -> BucketEventHistoryRepository:
     return BucketEventHistoryRepository()
 
 

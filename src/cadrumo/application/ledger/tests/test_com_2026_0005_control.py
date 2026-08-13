@@ -27,13 +27,12 @@ than as a silently smaller test.
 from __future__ import annotations
 
 import hashlib
-import json
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
+from ....core import STR_KEYED_MAPPING_ADAPTER, DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
 from .._closure_findings import closure_findings
 from .._evidence_draft import InvoiceDraft
 from .._evidence_input import EvidenceInput
@@ -69,8 +68,10 @@ def _control_fixtures() -> dict[str, Path]:
     """
     found: dict[str, Path] = {}
     for sidecar in _CORPUS.glob("*.provenance.json"):
-        declared = json.loads(sidecar.read_text(encoding="utf-8"))
+        declared = STR_KEYED_MAPPING_ADAPTER.validate_json(sidecar.read_text(encoding="utf-8"))
         doc_id = declared.get("corpus_doc_id")
+        if not isinstance(doc_id, str):
+            continue
         if doc_id in {_LAYOUT_MINIMAL_ID, _CAMERA_PHOTO_ID}:
             # The sidecar carries TWO suffixes (``.pdf.provenance.json``), so
             # `with_suffix("")` would strip only the last one and leave a path
@@ -80,7 +81,7 @@ def _control_fixtures() -> dict[str, Path]:
 
 
 def _sidecar_for(path: Path) -> dict[str, object]:
-    return json.loads(Path(f"{path}.provenance.json").read_text(encoding="utf-8"))
+    return STR_KEYED_MAPPING_ADAPTER.validate_json(Path(f"{path}.provenance.json").read_text(encoding="utf-8"))
 
 
 def test_both_control_renderings_are_bundled_and_byte_intact() -> None:

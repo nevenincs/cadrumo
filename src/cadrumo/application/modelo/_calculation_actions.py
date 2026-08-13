@@ -50,7 +50,6 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import (
     M210_TIPO_RENTA_CODE_PROJECTION,
@@ -96,6 +95,7 @@ from ...domain.modelos import (
 )
 from ..calculations import CalculationObservationRepository
 from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
+from ..prorrata_register import ProrrataRegisterRepository
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -1126,8 +1126,18 @@ def _validated_bucket_casilla_inputs(
 ) -> Mapping[CasillaId, Decimal]:
     """Return canonical caller casillas before source ownership checks."""
     if casilla_inputs is None:
-        return {}
-    return _validate_casilla_input_ids(snapshot.revision, casilla_inputs)
+        return dict[CasillaId, Decimal]()
+    validated_inputs: dict[CasillaId, Decimal] = {}
+    for casilla_id, value in _validate_casilla_input_ids(snapshot.revision, casilla_inputs).items():
+        validated_inputs[casilla_id] = _require_decimal_input(value)
+    return validated_inputs
+
+
+def _require_decimal_input(value: object) -> Decimal:
+    """Keep the source-mesh contract concrete at the engine boundary."""
+    if not isinstance(value, Decimal):
+        raise TypeError(f"validated casilla input is not a Decimal: {value!r}")
+    return value
 
 
 def _resolve_bucket_aggregation_source_resolution(
@@ -1721,7 +1731,7 @@ def list_calculation_revisions(
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     catalogue = cr_repo.load()
     revisions = tuple(
-        revision for revision in catalogue.values() if work_unit_id is None or revision.work_unit_id == work_unit_id
+        revision for revision in catalogue if work_unit_id is None or revision.work_unit_id == work_unit_id
     )
     return tuple(sorted(revisions, key=lambda r: (r.work_unit_id, r.created_at)))
 

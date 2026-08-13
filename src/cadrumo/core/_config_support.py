@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field, SecretStr
 
 from ._models import STRICT_FROZEN_CONFIG
 from .external_constants import OutputLanguage, load_external_constants
+from .identity import BucketId
 
 _EXTERNAL_CONSTANTS = load_external_constants()
 
@@ -153,7 +154,7 @@ class StorageRouteClassification(BaseModel):
     kind: StorageRouteKind
     database_url: str = Field(min_length=1)
     database_path: Path | None = None
-    bucket_id: str = ""
+    bucket_id: BucketId | None = None
 
 
 def default_clave_sede_access_url_template() -> str:

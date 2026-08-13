@@ -233,7 +233,7 @@ class Attachment(BaseModel):
     def _normalize_metadata(cls, value: object) -> Mapping[str, str]:
         """Validate the ``metadata`` escape hatch: strings only, non-empty keys."""
         if value is None:
-            return MappingProxyType({})
+            return MappingProxyType(dict[str, str]())
         if not isinstance(value, Mapping):
             raise AttachmentValidationError("metadata must be a mapping of string keys to string values")
         normalized: dict[str, str] = {}

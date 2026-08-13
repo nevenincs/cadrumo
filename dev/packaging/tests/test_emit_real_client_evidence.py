@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.emit_real_client_evidence import (
+from ..emit_real_client_evidence import (
     RealClientSessionError,
     assert_session_carries_no_secret,
 )

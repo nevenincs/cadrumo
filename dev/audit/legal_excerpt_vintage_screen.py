@@ -177,14 +177,15 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core import CorpusAnchorResolutionError, normalise_corpus_text, resolve_anchored_extracted_unit
-from dev.audit.legal_catalogue import load_legal_entries
-from dev.corpus.fetch_boe_normative import (
+
+from ..corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
     article_block_title,
     article_redaction_markup,
     assert_serves_the_article_in_force,
 )
-from dev.docs.preprocess import render_normative_prose
+from ..docs.preprocess import render_normative_prose
+from .legal_catalogue import load_legal_entries
 
 #: Declared locally rather than imported from ``cadrumo.core``: ``dev/`` is
 #: unshipped tooling and must not reach into the shipped package's internals,

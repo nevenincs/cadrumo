@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import pytest
 from pydantic import ValidationError
@@ -64,6 +64,7 @@ from ._notification_document_support import (
 )
 from ._notification_document_support import (
     SANCION_TEXT_LINES,
+    build_service,
 )
 from ._notification_document_support import (
     read_row as _read_row,
@@ -83,7 +84,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_a_captured_document_survives_the_encrypted_roundtrip(tmp_path: Path) -> None:
     """Strict equality across the real encrypted store, field for field."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        service = NotificationDocumentService()
+        service = build_service()
         document = _document()
 
         persisted = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=document).record
@@ -114,7 +115,7 @@ def test_a_captured_document_survives_the_encrypted_roundtrip(tmp_path: Path) ->
 def test_the_document_bytes_land_in_the_encrypted_attachment_store(tmp_path: Path) -> None:
     """The bytes are in encrypted custody, byte-identical, and classified honestly."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        service = NotificationDocumentService()
+        service = build_service()
         document = _document()
 
         record = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=document).record
@@ -137,7 +138,7 @@ def test_re_pulling_one_notification_stores_nothing_and_returns_what_is_held(tmp
     is proof the second call never built a record at all.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        service = NotificationDocumentService()
+        service = build_service()
 
         first = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
         second = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
@@ -155,7 +156,7 @@ def test_an_unpulled_notification_is_a_miss_not_a_blank_record(tmp_path: Path) -
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID),
         pytest.raises(NotificationDocumentNotFoundError),
     ):
-        NotificationDocumentService().show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
+        build_service().show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
 
 
 # ── The legal guard ────────────────────────────────────────────────────────
@@ -166,7 +167,7 @@ def test_an_unread_notification_is_refused_before_any_byte_is_stored(tmp_path: P
     unread = _read_row(certificado_id=_CERT_UNREAD).model_copy(update={"leida": False})
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        service = NotificationDocumentService()
+        service = build_service()
 
         with pytest.raises(SedeNavigationError, match=r"comparecencia|read"):
             service.persist_document(
@@ -183,7 +184,7 @@ def test_a_pending_notification_with_no_read_column_is_refused(tmp_path: Path) -
     pending = _read_row(certificado_id=_CERT_UNREAD).model_copy(update={"leida": None, "tipo": "pendiente"})
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        service = NotificationDocumentService()
+        service = build_service()
 
         with pytest.raises(SedeNavigationError):
             service.persist_document(
@@ -210,13 +211,14 @@ async def test_a_refused_row_never_reaches_the_wire(tmp_path: Path) -> None:
     """
 
     class _Tripwire:
+        @override
         def __getattribute__(self, name: str) -> object:
             raise AssertionError(f"the fetch path was entered on a refused row: touched {name!r}")
 
     unread = _read_row(certificado_id=_CERT_UNREAD).model_copy(update={"leida": False})
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        service = NotificationDocumentService()
+        service = build_service()
 
         with pytest.raises(SedeNavigationError):
             await service.pull_document(
@@ -231,7 +233,7 @@ async def test_a_refused_row_never_reaches_the_wire(tmp_path: Path) -> None:
 def test_a_document_for_another_notification_is_refused(tmp_path: Path) -> None:
     """Custody must not file one taxpayer act under another notification's id."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        service = NotificationDocumentService()
+        service = build_service()
 
         with pytest.raises(
             LiveApplicationInputError,
@@ -277,7 +279,7 @@ def test_an_unreadable_document_keeps_its_bytes_and_records_the_refusal(tmp_path
     truncated = _pdf_bytes(("Clave de liquidacion: A2860024500012345", "Referencia: 2024/0001234"))
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        service = NotificationDocumentService()
+        service = build_service()
 
         record = service.persist_document(
             bucket_id=_BUCKET_ID,
@@ -305,7 +307,7 @@ def test_deleting_the_attachment_id_on_disk_makes_the_load_refuse(tmp_path: Path
     at nothing — a custody claim with no custody.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        service = NotificationDocumentService()
+        service = build_service()
         service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
 
         def _drop(decoded: dict[str, Any]) -> None:
@@ -335,7 +337,7 @@ def test_dropping_a_figure_from_the_nested_reading_makes_the_load_refuse(tmp_pat
     a missing amount could come back as a plausible number.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        service = NotificationDocumentService()
+        service = build_service()
         service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
 
         def _drop(decoded: dict[str, Any]) -> None:
@@ -369,7 +371,7 @@ def test_deleting_the_parse_refusal_on_disk_silently_loses_it(tmp_path: Path) ->
     truncated = _pdf_bytes(("Clave de liquidacion: A2860024500012345", "Referencia: 2024/0001234"))
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        service = NotificationDocumentService()
+        service = build_service()
         persisted = service.persist_document(
             bucket_id=_BUCKET_ID,
             row=_read_row(),
@@ -401,7 +403,7 @@ def test_deleting_the_parse_refusal_on_disk_silently_loses_it(tmp_path: Path) ->
 def test_a_zero_byte_size_on_disk_makes_the_load_refuse(tmp_path: Path) -> None:
     """A custody record claiming zero bytes is a contradiction, not a small document."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        service = NotificationDocumentService()
+        service = build_service()
         service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
 
         def _zero(decoded: dict[str, Any]) -> None:
@@ -431,7 +433,7 @@ def test_the_stored_record_is_not_readable_as_plaintext_on_disk(tmp_path: Path) 
     this service writes ultimately lands, so it stays pinned here too.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        service = NotificationDocumentService()
+        service = build_service()
         record = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document()).record
 
         raw = profile.paths.database_file.read_bytes()
@@ -457,7 +459,7 @@ def test_no_file_anywhere_under_the_profile_root_carries_the_plaintext_document(
     the same way as one it already writes.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        service = NotificationDocumentService()
+        service = build_service()
         document = _document()
         record = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=document).record
 

@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.smoke_mcpb import _npx_argv
+from ..smoke_mcpb import _npx_argv
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -54,7 +54,8 @@ from pydantic import Field, RootModel, StringConstraints
 
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.external_constants import UTF_8_ENCODING
-from dev.docs.cli_reference import (
+
+from .cli_reference import (
     _assert_no_fallback_surfaces,
     _collect_commands,
     _force_lazy_imports,

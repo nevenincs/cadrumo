@@ -33,6 +33,7 @@ review-visible, but the advisory keeps dead bindings from accumulating.
 from __future__ import annotations
 
 import argparse
+import math
 import os
 import re
 import subprocess
@@ -40,9 +41,9 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Final
+from typing import Annotated, Final
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints, ValidationError
 
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
@@ -55,10 +56,17 @@ from ._golden_store import (
     write_golden,
 )
 from ._parser import parse_sequence
-from ._runner import SequenceTranscript, execute_page_sequences, execute_sequence
+from ._runner import (
+    _PROGRESS_JOURNAL_ENV,
+    SequenceTranscript,
+    _sequence_progress_scope,
+    execute_page_sequences,
+    execute_sequence,
+)
 from ._schema import ParsedSequence, SequenceId
 
 _UTF_8: Final[str] = "utf-8"
+_NonEmptyText = Annotated[str, StringConstraints(min_length=1)]
 
 __all__ = [
     "COHERENCE_TIER_PREFIX",
@@ -94,6 +102,19 @@ class DiscoveredSequence(BaseModel):
     sequence_id: SequenceId
     line_number: int = Field(ge=1)
     sequence: ParsedSequence
+
+
+class _SequenceProgressRecord(BaseModel):
+    """Strict child-to-parent receipt for the last executing sequence frame."""
+
+    model_config = _STRICT_FROZEN
+
+    page: _NonEmptyText
+    sequence_id: SequenceId
+    frame_index: int = Field(ge=0)
+    frame_source: _NonEmptyText
+    frame_line: int = Field(ge=1)
+    argv: list[_NonEmptyText] = Field(min_length=1)
 
 
 def default_docs_root() -> Path:
@@ -351,7 +372,8 @@ def refresh_sequences(
         if not item.sequence.executed_frames:
             continue  # all-@static: nothing runs, so there is no golden to write
         try:
-            transcript = _execute_in_fresh_sandbox(item.sequence)
+            with _sequence_progress_scope(item.page):
+                transcript = _execute_in_fresh_sandbox(item.sequence)
         except SequenceEngineError as exc:
             all_problems.append(f"page {item.page!r}: {exc}")
             continue
@@ -393,7 +415,8 @@ def check_sequences(
             all_problems.append(str(exc))
             continue
         try:
-            transcript = _execute_in_fresh_sandbox(item.sequence)
+            with _sequence_progress_scope(item.page):
+                transcript = _execute_in_fresh_sandbox(item.sequence)
         except SequenceEngineError as exc:
             all_problems.append(f"page {item.page!r}: {exc}")
             continue
@@ -416,6 +439,35 @@ def _english_pinned_env() -> dict[str, str]:
     return environment
 
 
+def _timeout_progress_diagnostic(journal: Path, *, timeout: float) -> str:
+    """Render the last frame recorded by a timed-out check child.
+
+    The runner writes only runtime-derived data immediately before each actual
+    CLI invocation.  A missing or malformed journal is itself useful evidence:
+    the child did not reach a frame before the supplied supervisor deadline.
+    """
+    try:
+        record = _SequenceProgressRecord.model_validate_json(journal.read_text(encoding=_UTF_8))
+    except (OSError, ValidationError):
+        return f"timeout after {timeout}s before the child recorded an executing frame"
+    return (
+        f"timeout after {timeout}s while executing page {record.page!r} "
+        f"sequence {record.sequence_id!r} frame {record.frame_index} "
+        f"({record.frame_source} line {record.frame_line}): {' '.join(record.argv)}"
+    )
+
+
+def _positive_finite_timeout(value: str) -> float:
+    """Parse one finite, positive subprocess deadline for argparse."""
+    try:
+        timeout = float(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be a finite number greater than zero") from exc
+    if not math.isfinite(timeout) or timeout <= 0:
+        raise argparse.ArgumentTypeError("must be a finite number greater than zero")
+    return timeout
+
+
 def _run_check_child(command: list[str], *, timeout: float) -> tuple[str, ...]:
     """Run one check child; return its report tuple (empty on a clean pass).
 
@@ -423,16 +475,23 @@ def _run_check_child(command: list[str], *, timeout: float) -> tuple[str, ...]:
         SequenceEngineError: When the child cannot run the check surface
             (any exit other than 0 or 1).
     """
-    result = subprocess.run(  # noqa: S603 - fixed interpreter and module entrypoint.
-        command,
-        cwd=Path(__file__).resolve().parents[3],
-        env=_english_pinned_env(),
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
-        timeout=timeout,
-        check=False,
-    )
+    with TemporaryDirectory(prefix="cli-sequence-progress-", ignore_cleanup_errors=True) as tmp:
+        journal = Path(tmp) / "last-frame.json"
+        environment = _english_pinned_env()
+        environment[_PROGRESS_JOURNAL_ENV] = str(journal)
+        try:
+            result = subprocess.run(  # noqa: S603 - fixed interpreter and module entrypoint.
+                command,
+                cwd=Path(__file__).resolve().parents[3],
+                env=environment,
+                capture_output=True,
+                text=True,
+                encoding=_UTF_8,
+                timeout=timeout,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise SequenceEngineError(_timeout_progress_diagnostic(journal, timeout=timeout)) from exc
     if result.returncode == 0:
         return ()
     report = "\n".join(part.strip() for part in (result.stdout, result.stderr) if part.strip())
@@ -560,6 +619,7 @@ def check_sequences_in_subprocess(
 def check_page_coherence_in_subprocess(
     *,
     docs_root: Path | None = None,
+    page: str | None = None,
     timeout: float = 3600,
     jobs: int = 1,
 ) -> tuple[str, ...]:
@@ -577,6 +637,14 @@ def check_page_coherence_in_subprocess(
     Raises:
         SequenceEngineError: When a child cannot run the check surface.
     """
+    if page is not None:
+        command = _scoped_check_command(
+            page=page,
+            docs_root=docs_root,
+            goldens_root=None,
+            coherence=True,
+        )
+        return _run_check_child(command, timeout=timeout)
     return _check_pages_in_subprocesses(
         docs_root=docs_root,
         goldens_root=None,
@@ -635,11 +703,12 @@ def check_page_coherence(
         executable = [item for item in items if item.sequence.executed_frames]
         try:
             with TemporaryDirectory(prefix="cli-sequence-page-", ignore_cleanup_errors=True) as tmp:
-                transcripts = execute_page_sequences(
-                    [item.sequence for item in executable],
-                    label=docname,
-                    sandbox_root=Path(tmp),
-                )
+                with _sequence_progress_scope(docname):
+                    transcripts = execute_page_sequences(
+                        [item.sequence for item in executable],
+                        label=docname,
+                        sandbox_root=Path(tmp),
+                    )
                 for item, transcript in zip(executable, transcripts, strict=True):
                     all_problems.extend(
                         f"{COHERENCE_TIER_PREFIX}: {problem}"
@@ -679,6 +748,16 @@ def _build_argument_parser() -> argparse.ArgumentParser:
                     "cumulative output"
                 ),
             )
+            sub.add_argument(
+                "--timeout",
+                type=_positive_finite_timeout,
+                default=None,
+                metavar="SECONDS",
+                help=(
+                    "run the check in one bounded child interpreter and report the "
+                    "last started page, sequence, frame, and resolved command on expiry"
+                ),
+            )
     return parser
 
 
@@ -699,7 +778,8 @@ def _owning_page(sequence_id: str, *, docs_root: Path | None = None) -> str | No
 
 def main(argv: list[str] | None = None) -> int:
     """CLI entry: exit 0 on a clean run, 1 on any problem, 2 on usage errors."""
-    args = _build_argument_parser().parse_args(argv)
+    parser = _build_argument_parser()
+    args = parser.parse_args(argv)
 
     if args.mode == "refresh":
         written, problems, advisories = refresh_sequences(
@@ -724,7 +804,19 @@ def main(argv: list[str] | None = None) -> int:
         if args.sequence is not None:
             print("--coherence is a page-level tier; scope with --page, not --sequence", file=sys.stderr)
             return 2
-        coherence_problems = check_page_coherence(docs_root=args.docs_root, page=args.page)
+        try:
+            coherence_problems = (
+                check_page_coherence(docs_root=args.docs_root, page=args.page)
+                if args.timeout is None
+                else check_page_coherence_in_subprocess(
+                    docs_root=args.docs_root,
+                    page=args.page,
+                    timeout=args.timeout,
+                )
+            )
+        except SequenceEngineError as exc:
+            print(f"FAIL: {exc}", file=sys.stderr)
+            return 1
         if coherence_problems:
             for problem in coherence_problems:
                 print(f"FAIL: {problem}", file=sys.stderr)
@@ -740,12 +832,26 @@ def main(argv: list[str] | None = None) -> int:
         print("cli-sequence page coherence: clean")
         return 0
 
-    problems, advisories = check_sequences(
-        docs_root=args.docs_root,
-        goldens_root=args.goldens_root,
-        page=args.page,
-        sequence_id=args.sequence,
-    )
+    try:
+        if args.timeout is None:
+            problems, advisories = check_sequences(
+                docs_root=args.docs_root,
+                goldens_root=args.goldens_root,
+                page=args.page,
+                sequence_id=args.sequence,
+            )
+        else:
+            problems = check_sequences_in_subprocess(
+                docs_root=args.docs_root,
+                goldens_root=args.goldens_root,
+                page=args.page,
+                sequence_id=args.sequence,
+                timeout=args.timeout,
+            )
+            advisories = ()
+    except SequenceEngineError as exc:
+        print(f"FAIL: {exc}", file=sys.stderr)
+        return 1
     for advisory in advisories:
         print(f"advisory: {advisory}")
     if problems:

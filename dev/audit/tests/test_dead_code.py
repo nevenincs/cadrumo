@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.audit.dead_code import (
+from ..dead_code import (
     DeadCodeOutcome,
     DeadCodeResult,
     parse_vulture_output,

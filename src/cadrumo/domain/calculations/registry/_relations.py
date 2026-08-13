@@ -39,6 +39,7 @@ if TYPE_CHECKING:
 __all__ = [
     "RegistryFoldRequirement",
     "RelationDefinition",
+    "derive_offset_source_period",
     "relation_requirement_index",
     "relation_source_requirements",
     "resolve_relation_values",
@@ -356,7 +357,8 @@ def _relation_source_year(relation: RelationDefinition, *, filing_year: int) -> 
     return filing_year + (selector.filing_year_delta or 0)
 
 
-def _derive_offset_source_period(relation: RelationDefinition, *, target_period: str) -> str | None:
+def derive_offset_source_period(relation: RelationDefinition, *, target_period: str) -> str | None:
+    """Return the source period selected by a relation's period offset."""
     anchor = _derive_offset_source_anchor(relation, target_period=target_period)
     return None if anchor is None else anchor[1]
 

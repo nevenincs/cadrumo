@@ -37,32 +37,14 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
-from typing import TYPE_CHECKING, Final, Literal
+from typing import Final, Literal
 
 from pydantic import BaseModel, Field
 
-from ...adapters.inbound.notificacion import (
-    NotificacionParseError,
-    SancionLiquidacion,
-    SancionParseError,
-    parse_sancion_document,
-)
-from ...adapters.inbound.pdf import extract_pages_text_from_bytes
-from ...adapters.outbound.aeat.sede import (
-    NotificationDocument,
-    RemoteNotification,
-    assert_notification_content_readable,
-    fetch_notification_document,
-)
-from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ...adapters.persistence.storage import (
-    LIVE_NOTIFICATION_DOCUMENT_NAMESPACE,
-    resolve_attachment_store,
-    secure_object_repository_for_bucket,
-)
 from ...core import STRICT_FROZEN_CONFIG
-from ...core.config import Settings, load_settings
+from ...core.config import Settings
 from ...core.identity import AeatCertificadoId, BucketId
 from ...core.logging import get_logger
 from ...core.time import now
@@ -74,15 +56,20 @@ from ...domain.attachments import (
     AttachmentStoreProtocol,
     add_attachment,
 )
+from ...domain.notifications import SancionLiquidacion
 from ._errors import (
     LiveApplicationInputError,
     LiveReadPrecondition,
     live_read_no_recovery_verdict,
 )
-from ._snapshot_base import SnapshotNotFoundError
-
-if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.auth import AeatSession
+from ._notification_ports import (
+    NotificationContentGuard,
+    NotificationDocumentFetcher,
+    NotificationDocumentProtocol,
+    NotificationDocumentReaderProtocol,
+    NotificationRowProtocol,
+)
+from ._snapshot_base import SnapshotNotFoundError, SnapshotRepository
 
 log = get_logger(__name__)
 
@@ -213,32 +200,8 @@ def notification_document_object_key(bucket_id: str, certificado_id: str) -> str
     return f"notification-document:{trimmed_bucket}:{trimmed_certificado}"
 
 
-def _document_repository(
-    settings: Settings,
-    bucket_id: str,
-) -> SecureSnapshotRepository[NotificationDocumentRecord]:
-    """Bind the encrypted secure-object repository for one bucket's document records."""
-    return SecureSnapshotRepository(
-        bucket_id=bucket_id,
-        payload_model=NotificationDocumentRecord,
-        namespace_definition=LIVE_NOTIFICATION_DOCUMENT_NAMESPACE,
-        object_key=notification_document_object_key,
-        not_found_factory=lambda certificado_id: NotificationDocumentNotFoundError(
-            translated_message="application.live.notifications.errors.document_not_found",
-            context={"certificado_id": certificado_id},
-        ),
-        ambiguous_prefix_factory=lambda certificado_id, full_ids: NotificationDocumentNotFoundError(
-            translated_message="application.live.notifications.errors.document_prefix_ambiguous",
-            context={"certificado_id": certificado_id, "match_count": len(full_ids)},
-        ),
-        domain_label="notification-document",
-        input_error_cls=LiveApplicationInputError,
-        objects=secure_object_repository_for_bucket(bucket_id, settings),
-    )
-
-
 def _record_in_custody(
-    repository: SecureSnapshotRepository[NotificationDocumentRecord],
+    repository: SnapshotRepository[NotificationDocumentRecord],
     certificado_id: str,
 ) -> NotificationDocumentRecord | None:
     """Return the record already in custody for ``certificado_id``, or ``None``.
@@ -257,8 +220,8 @@ def _diverging_persisted_fields(
     existing: NotificationDocumentRecord,
     *,
     bucket_id: str,
-    row: RemoteNotification,
-    document: NotificationDocument,
+    row: NotificationRowProtocol,
+    document: NotificationDocumentProtocol,
 ) -> tuple[str, ...]:
     """Return every caller-supplied field on which a re-store disagrees with custody.
 
@@ -295,27 +258,37 @@ class NotificationDocumentService:
 
     def __init__(
         self,
-        settings: Settings | None = None,
         *,
-        attachment_store: AttachmentStoreProtocol | None = None,
+        settings: Settings,
+        attachment_store: AttachmentStoreProtocol,
+        repository_factory: Callable[[str], SnapshotRepository[NotificationDocumentRecord]],
+        content_guard: NotificationContentGuard,
+        document_fetcher: NotificationDocumentFetcher,
+        document_reader: NotificationDocumentReaderProtocol,
     ) -> None:
-        """Bind the service to a settings object and an optional injected store.
+        """Bind the service to its application ports and concrete deployment settings.
 
         Args:
-            settings: Deployment settings; loaded when omitted.
-            attachment_store: Byte-custody port. Resolved to the concrete
-                encrypted :class:`adapters.persistence.storage.AttachmentStore`
-                when omitted, so production has exactly one construction site.
+            settings: Deployment settings supplied by the composition root.
+            attachment_store: Encrypted byte-custody port.
+            repository_factory: Bucket-scoped notification-record repository.
+            content_guard: Legal comparecencia guard for notification rows.
+            document_fetcher: Sede document fetch port.
+            document_reader: In-memory PDF/text reading port.
         """
-        self._settings = settings or load_settings()
+        self._settings = settings
         self._attachment_store = attachment_store
+        self._repository_factory = repository_factory
+        self._content_guard = content_guard
+        self._document_fetcher = document_fetcher
+        self._document_reader = document_reader
 
     def persist_document(
         self,
         *,
         bucket_id: str,
-        row: RemoteNotification,
-        document: NotificationDocument,
+        row: NotificationRowProtocol,
+        document: NotificationDocumentProtocol,
     ) -> NotificationDocumentCustody:
         """Take custody of already-fetched document bytes and record the binding.
 
@@ -351,7 +324,7 @@ class NotificationDocumentService:
                 supplied row, or when a document is already in custody for this
                 certificado and the incoming one disagrees with it.
         """
-        assert_notification_content_readable(row)
+        self._content_guard(row)
         if str(document.certificado_id) != str(row.certificado_id):
             raise LiveApplicationInputError(
                 translated_message="application.live.notifications.errors.document_row_mismatch",
@@ -369,7 +342,7 @@ class NotificationDocumentService:
                 ),
             )
 
-        repository = _document_repository(self._settings, bucket_id)
+        repository = self._repository_factory(bucket_id)
         existing = _record_in_custody(repository, str(row.certificado_id))
         if existing is not None:
             diverging = _diverging_persisted_fields(
@@ -395,7 +368,7 @@ class NotificationDocumentService:
             return NotificationDocumentCustody(record=existing, already_in_custody=True)
 
         attachment = add_attachment(
-            resolve_attachment_store(self._attachment_store),
+            self._attachment_store,
             content=AttachmentBytesContent(data=document.pdf_bytes),
             request=AttachmentIngestionRequest(
                 kind=AttachmentKind.AEAT_NOTIFICATION_PDF,
@@ -438,8 +411,8 @@ class NotificationDocumentService:
         self,
         *,
         bucket_id: str,
-        session: AeatSession,
-        row: RemoteNotification,
+        session: object,
+        row: NotificationRowProtocol,
     ) -> NotificationDocumentCustody:
         """Fetch one already-read notification's document and take custody of it.
 
@@ -465,20 +438,20 @@ class NotificationDocumentService:
             SedeNavigationError: When ``row`` is anything other than already
                 read, or when the AEAT landing is off-policy.
         """
-        assert_notification_content_readable(row)
-        document = await fetch_notification_document(session, row, settings=self._settings)
+        self._content_guard(row)
+        document = await self._document_fetcher(session, row, settings=self._settings)
         return self.persist_document(bucket_id=bucket_id, row=row, document=document)
 
     def show(self, *, bucket_id: str, certificado_id: str) -> NotificationDocumentRecord:
         """Return the stored record for one certificado, or raise if none is stored."""
-        return _document_repository(self._settings, bucket_id).load(certificado_id)
+        return self._repository_factory(bucket_id).load(certificado_id)
 
     def list_documents(self, *, bucket_id: str) -> tuple[NotificationDocumentRecord, ...]:
         """Return every stored document record for the bucket, newest fetch first."""
-        records = _document_repository(self._settings, bucket_id).list_snapshots()
+        records = self._repository_factory(bucket_id).list_snapshots()
         return tuple(sorted(records, key=lambda record: record.fetched_at, reverse=True))
 
-    def _read_document(self, document: NotificationDocument) -> tuple[SancionLiquidacion | None, str | None]:
+    def _read_document(self, document: NotificationDocumentProtocol) -> tuple[SancionLiquidacion | None, str | None]:
         """Read the document's text layer, returning either a record or a refusal.
 
         A refusal is NOT an error at this boundary. The bytes are already in
@@ -491,37 +464,13 @@ class NotificationDocumentService:
         The extraction is in-memory: the bytes are never written to a path for
         a parser to open.
         """
-        try:
-            pages = extract_pages_text_from_bytes(
-                document.pdf_bytes,
-                error_class=NotificacionParseError,
-                pdf_label="an AEAT notification document",
-                source_label="the fetched notification PDF",
-            )
-        except NotificacionParseError as exc:
-            # A scan-only or XFA document has no text layer to read. The bytes
-            # are already in custody and remain the artefact; only the
-            # convenience reading is unavailable.
-            log.info("notification document has no readable text layer: certificado=%s", document.certificado_id)
-            return None, f"{type(exc).__name__}: {exc}"[:512]
-
-        text = "\n".join(pages)
-        try:
-            return (
-                parse_sancion_document(
-                    text,
-                    certificado_id=str(document.certificado_id),
-                    document_sha256=document.pdf_sha256,
-                ),
-                None,
-            )
-        except SancionParseError as exc:
+        sancion, refusal = self._document_reader.read(document)
+        if refusal is not None:
             log.info(
-                "notification document not read as a sanción: certificado=%s reason=%s",
+                "notification document reading refused: certificado=%s",
                 document.certificado_id,
-                type(exc).__name__,
             )
-            return None, f"{type(exc).__name__}: {exc}"[:512]
+        return sancion, refusal
 
 
 __all__ = [

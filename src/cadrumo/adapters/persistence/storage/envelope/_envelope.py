@@ -200,7 +200,21 @@ class Envelope[PayloadT: BaseModel](BaseModel):
         # CAST-RATIONALE-GENERIC-CLASSGETITEM: __class_getitem__ on a pydantic
         # generic model returns type[Envelope[PayloadT]] at runtime; the stub
         # annotates it as type[Self], so make the runtime contract explicit.
-        return cast("type[Envelope[PayloadT]]", cls.__class_getitem__(payload_cls))
+        return _parameterized_envelope_type(payload_cls, envelope_cls=cls)
+
+
+def _parameterized_envelope_type[PayloadT: BaseModel](
+    payload_cls: type[PayloadT],
+    *,
+    envelope_cls: type[Envelope[PayloadT]] = Envelope,
+) -> type[Envelope[PayloadT]]:
+    """Return the runtime Pydantic generic class for one payload type.
+
+    Keeping the dynamic ``__class_getitem__`` operation behind a free generic
+    function gives callers a type-inferable boundary; Ty cannot propagate the
+    payload variable through the generic model's classmethod receiver.
+    """
+    return cast("type[Envelope[PayloadT]]", envelope_cls.__class_getitem__(payload_cls))
 
 
 def save_envelope[T: BaseModel](envelope: Envelope[T], path: Path) -> None:

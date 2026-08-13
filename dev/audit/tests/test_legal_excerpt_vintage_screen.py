@@ -20,14 +20,14 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import resolve_anchored_extracted_unit
-from dev.corpus.fetch_boe_normative import (
+
+from ...corpus.fetch_boe_normative import (
     ArticleRedaction,
     NormativeAcquisitionError,
     article_block_title,
     article_redaction_markup,
     assert_serves_the_article_in_force,
 )
-
 from ..legal_catalogue import LEGAL_DIR, load_legal_entries, required_text_by_entry
 from ..legal_excerpt_vintage_screen import (
     Finding,

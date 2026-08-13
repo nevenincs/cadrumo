@@ -48,12 +48,12 @@ from .._notification_documents import (
     _CALLER_SUPPLIED_FIELDS,
     _NON_IDENTITY_FIELDS,
     NotificationDocumentRecord,
-    NotificationDocumentService,
 )
 from ._notification_document_support import (
     BUCKET_ID,
     CERT_READ,
     DETAIL_URL,
+    build_service,
     read_row,
     sancion_pdf_bytes,
     served_document,
@@ -237,7 +237,7 @@ def test_the_injected_custody_port_receives_the_served_bytes(tmp_path: Path) -> 
         store = _RecordingAttachmentStore()
         document = served_document()
 
-        NotificationDocumentService(attachment_store=store).persist_document(
+        build_service(attachment_store=store).persist_document(
             bucket_id=BUCKET_ID,
             row=read_row(),
             document=document,
@@ -259,7 +259,7 @@ def test_the_bytes_are_written_through_the_shared_ingestion_primitive(tmp_path: 
         document = served_document()
 
         record = (
-            NotificationDocumentService(attachment_store=store)
+            build_service(attachment_store=store)
             .persist_document(
                 bucket_id=BUCKET_ID,
                 row=read_row(),
@@ -287,12 +287,12 @@ def test_a_custody_port_that_refuses_leaves_no_record_behind(tmp_path: Path) -> 
     refusal below would be routed around and a record would appear anyway.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
-        service = NotificationDocumentService(attachment_store=_RefusingAttachmentStore())
+        service = build_service(attachment_store=_RefusingAttachmentStore())
 
         with pytest.raises(_ByteWriteRefusedError):
             service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document())
 
-        assert NotificationDocumentService().list_documents(bucket_id=BUCKET_ID) == ()
+        assert build_service().list_documents(bucket_id=BUCKET_ID) == ()
 
 
 # ── Re-storing an act that is already in custody ───────────────────────────
@@ -302,7 +302,7 @@ def test_a_matching_re_store_returns_what_is_held_and_writes_nothing(tmp_path: P
     """The no-op: same certificado, same document, one write in total."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         store = _RecordingAttachmentStore()
-        service = NotificationDocumentService(attachment_store=store)
+        service = build_service(attachment_store=store)
 
         first = service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document())
         second = service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document())
@@ -325,7 +325,7 @@ def test_a_matching_re_store_leaves_the_encrypted_row_byte_identical(tmp_path: P
     which a returned-value comparison alone could not establish.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
-        service = NotificationDocumentService()
+        service = build_service()
         service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document())
         with stored_document_row(profile) as row:
             before = bytes(row.payload)
@@ -356,7 +356,7 @@ def test_a_re_store_changing_a_caller_supplied_field_refuses_rather_than_droppin
     other_url = "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/DetalleSede?ncc=2699101808461&v=2"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         store = _RecordingAttachmentStore()
-        service = NotificationDocumentService(attachment_store=store)
+        service = build_service(attachment_store=store)
         first = service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document()).record
 
         with pytest.raises(LiveApplicationInputError) as excinfo:
@@ -383,7 +383,7 @@ def test_a_re_store_of_a_different_document_refuses_and_overwrites_nothing(tmp_p
     other_bytes = sancion_pdf_bytes(("Clave de liquidacion: A2860024500099999", "Referencia: 2024/0009999"))
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         store = _RecordingAttachmentStore()
-        service = NotificationDocumentService(attachment_store=store)
+        service = build_service(attachment_store=store)
         first = service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document()).record
 
         with pytest.raises(LiveApplicationInputError) as excinfo:

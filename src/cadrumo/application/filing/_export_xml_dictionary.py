@@ -159,7 +159,8 @@ def render_xml_dictionary_layout(
         _set_xml_dictionary_path(root, entry.path, rendered, element_order=element_order)
     if draft.modelo == Modelo.M100:
         _stamp_toma_datos_nif(root, draft)
-    return ElementTree.tostring(root, encoding=_UTF_8, xml_declaration=True)
+    payload: bytes = ElementTree.tostring(root, encoding=_UTF_8, xml_declaration=True)
+    return payload
 
 
 _XML_DICTIONARY_ROOT_TAG = "Declaracion"

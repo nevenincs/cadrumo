@@ -102,7 +102,10 @@ class CasillaPopulationScope(BaseModel):
     @property
     def divergence_scope(self) -> dict[CasillaId, None]:
         """Return ``comparable_casilla_ids`` in the mapping shape the comparison takes."""
-        return dict.fromkeys(self.comparable_casilla_ids)
+        scope: dict[CasillaId, None] = {}
+        for casilla_id in self.comparable_casilla_ids:
+            scope[casilla_id] = None
+        return scope
 
     @property
     def is_empty(self) -> bool:

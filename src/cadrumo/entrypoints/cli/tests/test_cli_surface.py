@@ -20,6 +20,7 @@ from typing import Any, cast
 
 import pytest
 
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.config import override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
@@ -116,6 +117,12 @@ def _run_ledger_cli_json(args: list[str]) -> dict[str, Any]:
     return _json(result)
 
 
+def _json_object(value: object) -> dict[str, object]:
+    """Narrow one CLI payload before returning it from a typed helper."""
+
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(value)
+
+
 def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, Any]:
     """Create the seed manual transaction the rest of the workflow operates on."""
     payload = _run_ledger_cli_json(
@@ -200,7 +207,7 @@ def _ledger_update_transaction(transaction_id: str) -> dict[str, object]:
     assert Decimal(cast(str, transaction["amount"])) == Decimal("121.50")
     assert transaction["description"] == "cash office supplies corrected"
     assert edited["bucket_event_ids"]
-    return edited
+    return _json_object(edited)
 
 
 def _ledger_classify_transaction(transaction_id: str) -> dict[str, object]:
@@ -227,7 +234,7 @@ def _ledger_classify_transaction(transaction_id: str) -> dict[str, object]:
     assert transaction["business_classification"] == "BUSINESS"
     assert transaction["category_id"] == "software_suscripcion"
     assert classified["review_status"] == "reviewed"
-    return classified
+    return _json_object(classified)
 
 
 def _seed_usage_ratio_for_telefonia(bucket_id: str) -> None:
@@ -267,7 +274,7 @@ def _ledger_allocate_transaction(transaction_id: str) -> dict[str, object]:
     assert transaction["business_classification"] == "MIXED"
     assert Decimal(cast(str, transaction["business_pct"])) == Decimal("0.60")
     assert transaction["usage_ratio_id"] == "telefonia_movil"
-    return allocated
+    return _json_object(allocated)
 
 
 def _assert_ledger_status_one_ready_row(bucket_id: str) -> None:

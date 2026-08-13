@@ -125,7 +125,7 @@ def _existing_vigente_filing_record(
     ``PRESENTADO`` revision must have exactly one VIGENTE record; ``None``
     signals an inconsistent state the caller refuses rather than masking.
     """
-    for record in catalogue.values():
+    for record in catalogue.records.values():
         if record.calculation_revision_id == calculation_revision_id and record.status is ModeloRecordStatus.VIGENTE:
             return record
     return None
@@ -510,7 +510,7 @@ def list_filing_records(
     modelo_code = ModeloCode(str(modelo)) if modelo is not None else None
     records = tuple(
         record
-        for record in catalogue.values()
+        for record in catalogue.records.values()
         if (bucket_id is None or record.bucket_id == bucket_id)
         and (modelo_code is None or record.modelo == modelo_code)
         and (include_superseded or record.status is ModeloRecordStatus.VIGENTE)
@@ -557,7 +557,7 @@ def list_verification_reports(
     catalogue = vr_repo.load()
     reports = tuple(
         r
-        for r in catalogue.values()
+        for r in catalogue.reports.values()
         if calculation_revision_id is None or r.calculation_revision_id == calculation_revision_id
     )
     return tuple(sorted(reports, key=lambda r: (r.calculation_revision_id, r.run_at)))

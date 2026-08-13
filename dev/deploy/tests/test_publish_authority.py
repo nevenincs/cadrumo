@@ -23,15 +23,16 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from dev.deploy import docs_static_site, frontend_static_site
-from dev.deploy.docs_static_site import (
+
+from ...deploy import docs_static_site, frontend_static_site
+from ..docs_static_site import (
     _CI_MARKERS,
     _DEPLOY_ROLE_VARIABLE,
     _language_build_command,
     _require_authorized_publish_environment,
     _site_build_environment,
 )
-from dev.deploy.frontend_static_site import _require_human_publish_environment
+from ..frontend_static_site import _require_human_publish_environment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

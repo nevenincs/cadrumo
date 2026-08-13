@@ -24,6 +24,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ....core import SyncSurface, require_active_bucket_id
@@ -82,6 +83,7 @@ def export_modelo_to_sheets(
     credentials: object,
     root_folder_id: str,
     sync_run_repository: SyncRunRecordRepositoryProtocol,
+    apply_export_plan: Callable[..., CalcSheetsApplyResult],
 ) -> CalcSheetsApplyResult:
     """Apply an already-built export plan to Sheets and record the run's provenance.
 
@@ -96,21 +98,21 @@ def export_modelo_to_sheets(
 
     Args:
         plan: The :class:`SheetExportPlan` to materialise.
-        credentials: Google API credentials, forwarded to
-            :func:`~adapters.outbound.google.apply_export_plan` unchanged.
+        credentials: Google API credentials, forwarded to ``apply_export_plan``
+            unchanged.
         root_folder_id: The operator's Drive root folder id.
         sync_run_repository: Persistence port for the completed-run provenance
             record, co-written with its bucket event.
+        apply_export_plan: Outbound apply callable supplied by the composing
+            entrypoint.
 
     Returns:
         The adapter's :class:`~adapters.outbound.google.CalcSheetsApplyResult`.
 
     Raises:
-        Whatever :func:`~adapters.outbound.google.apply_export_plan` raises,
-        after the failed run's provenance has been persisted.
+        Whatever ``apply_export_plan`` raises,
+            after the failed run's provenance has been persisted.
     """
-    from ....adapters.outbound.google import apply_export_plan
-
     bucket_id = require_active_bucket_id()
     scope = _export_scope_description(plan)
 

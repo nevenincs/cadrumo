@@ -35,7 +35,8 @@ import pytest
 from babel.messages.pofile import read_po
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev.docs.i18n import TARGET_LANGUAGES, user_scope_source_pages
+
+from ..i18n import TARGET_LANGUAGES, user_scope_source_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

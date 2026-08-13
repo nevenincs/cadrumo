@@ -107,7 +107,9 @@ def _update_description(transaction_id: str, new_description: str) -> str:
         ["--format", "json", "app", "ledger", "update", transaction_id, "--description", new_description],
     )
     assert result.exit_code == 0, result.output
-    return _json_result(result)["transaction_id"]
+    raw_transaction_id: object = _json_result(result).get("transaction_id")
+    assert isinstance(raw_transaction_id, str), result.output
+    return raw_transaction_id
 
 
 # --- update: the old handle keeps answering across all three read verbs -------

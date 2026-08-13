@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.python_cohort import (
+from ..python_cohort import (
     COHORT_STAMPED_WHEEL_DATA_PATHS,
     _stamp_bundled_verdict_into_build_tree,
 )

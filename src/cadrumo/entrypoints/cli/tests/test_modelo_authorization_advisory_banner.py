@@ -96,7 +96,9 @@ def _create_modelo_117_work_unit() -> str:
     payload = unwrap_schema_envelope(result.output)
     assert payload["status"] == "created"
     assert payload["applicability_guard_bypassed"] is False
-    return payload["work_unit_id"]
+    work_unit_id = payload["work_unit_id"]
+    assert isinstance(work_unit_id, str)
+    return work_unit_id
 
 
 def _calculate_args(work_unit_id: str) -> list[str]:

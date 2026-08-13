@@ -974,7 +974,7 @@ class DescendantInfo(BaseModel):
         """The months of *filing_year* covered by the Art. 81.1 entry-event limb."""
         anchor = self.art_58_2_entry_date()
         if anchor is None:
-            return frozenset()
+            return frozenset[int]()
         return _months_of_year_between(
             (anchor.year, anchor.month),
             (anchor.year + _ART_81_1_ENTRY_WINDOW_YEARS, anchor.month),
@@ -1315,9 +1315,9 @@ class DescendantInfo(BaseModel):
         hold.
         """
         if not self.convive_con_contribuyente:
-            return frozenset()
+            return frozenset[int]()
         if self.age_at_year_end(filing_year) > _MAX_AGE_MENOR_TRES:
-            return frozenset()
+            return frozenset[int]()
         if self.gastos_guarderia_mensuales:
             declared = frozenset(entry.month for entry in self.gastos_guarderia_mensuales)
             return declared & self._segundo_ciclo_window(filing_year)
@@ -1351,7 +1351,7 @@ class DescendantInfo(BaseModel):
         if self.age_at_year_end(filing_year) != _MAX_AGE_MENOR_TRES:
             return frozenset(range(1, 13))
         if self.segundo_ciclo_infantil_inicio_mes is None:
-            return frozenset()
+            return frozenset[int]()
         return frozenset(range(1, self.segundo_ciclo_infantil_inicio_mes))
 
     def age_eligible_guarderia_meses(self, filing_year: int) -> int:

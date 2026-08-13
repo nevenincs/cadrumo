@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import tomllib
 from decimal import Decimal
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -26,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def _load_irpf_toml() -> dict[str, dict[str, dict[str, str]]]:
     path = bundled_path("registry", "aeat", "legal", "irpf.toml")
     with path.open("rb") as handle:
-        return tomllib.load(handle)
+        return cast(dict[str, dict[str, dict[str, str]]], tomllib.load(handle))
 
 
 def test_lirpf_art_85_parameters_match_registry_toml_values() -> None:

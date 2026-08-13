@@ -10,7 +10,9 @@ from pydantic import ValidationError
 
 from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
-from dev.docs.terminology._query_aliases import (
+
+from ...terminology_handbook import load_terminology_handbook
+from .._query_aliases import (
     QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
     QueryAliasAuthority,
     QueryAliasAuthorityError,
@@ -20,8 +22,7 @@ from dev.docs.terminology._query_aliases import (
     query_alias_authority_path,
     validate_query_alias_authority,
 )
-from dev.docs.terminology._sweep import enumerate_query_vocabulary
-from dev.docs.terminology_handbook import load_terminology_handbook
+from .._sweep import enumerate_query_vocabulary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

@@ -33,6 +33,7 @@ from ...core.resources import resources
 from ...domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
+    CasillaObservation,
     FormulaId,
     LegalRefId,
     ModeloRevision,
@@ -267,7 +268,7 @@ def _compare_row_provenance(
     year_b: int,
     casilla_id: CasillaId,
     casilla_meta: Mapping[CasillaId, CasillaDefinition],
-    observation: object | None,
+    observation: CasillaObservation | None,
 ) -> tuple[str | None, tuple[str, ...], tuple[str, ...]]:
     cdef = casilla_meta.get(casilla_id)
     if cdef is None:
@@ -280,11 +281,11 @@ def _compare_row_provenance(
                 "casilla_id": casilla_id,
             },
         )
-    formula_id = getattr(observation, "formula_id", None)
+    formula_id = observation.formula_id if observation is not None else None
     if formula_id is None and cdef.formula is not None:
         formula_id = cdef.formula
-    legal_refs = tuple(getattr(observation, "legal_refs", ())) or tuple(cdef.legal_refs)
-    source_refs = tuple(getattr(observation, "source_refs", ())) or tuple(cdef.source_refs)
+    legal_refs = observation.legal_refs if observation is not None else tuple(cdef.legal_refs)
+    source_refs = observation.source_refs if observation is not None else tuple(cdef.source_refs)
     if not legal_refs or not source_refs:
         raise ModeloProjectionError(
             translated_message="errors.error.modelo_projection",
@@ -829,8 +830,8 @@ def compare_modelo_years(
         cdef = casilla_meta.get(casilla_id)
         if cdef is None:
             return casilla_id, ""
-        label = getattr(cdef, "label", casilla_id)
-        sections = getattr(cdef, "section", ())
+        label = cdef.label
+        sections = cdef.section
         primary_section = sections[0] if sections else ""
         return label, primary_section
 

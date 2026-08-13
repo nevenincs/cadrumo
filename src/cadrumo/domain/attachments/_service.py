@@ -17,6 +17,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ._enums import AttachmentKind, AttachmentSource
 from ._models import Attachment
@@ -35,7 +36,7 @@ class AttachmentIngestionRequest(BaseModel):
     source_reference: str
     mime_type: str
     captured_at: datetime
-    bucket_id: str | None = None
+    bucket_id: BucketId | None = None
     captured_by: str | None = None
     source_command: str | None = None
     link_transaction_ids: tuple[str, ...] = ()

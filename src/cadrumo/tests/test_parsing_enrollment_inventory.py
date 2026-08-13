@@ -176,7 +176,7 @@ does not accept.
 def _literal_string_members(node: ast.AST) -> frozenset[str]:
     """Return the string constants of a literal set/tuple/list, or empty."""
     if not isinstance(node, (ast.Set, ast.Tuple, ast.List)):
-        return frozenset()
+        return frozenset[str]()
     return frozenset(e.value for e in node.elts if isinstance(e, ast.Constant) and isinstance(e.value, str))
 
 

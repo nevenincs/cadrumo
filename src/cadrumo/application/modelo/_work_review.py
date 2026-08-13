@@ -331,7 +331,8 @@ def _persisted_decimal_bindings(
 ) -> Mapping[BindingId, Decimal]:
     """Read only historical decimal replay facts, never live profile state."""
     if revision is None:
-        return {}
+        empty_bindings: dict[BindingId, Decimal] = {}
+        return empty_bindings
     enum_ids = enum_consumed_binding_ids(snapshot.revision)
     date_ids = revision_date_binding_ids(snapshot.revision)
     decimal_bindings: dict[BindingId, Decimal] = {}
@@ -339,7 +340,8 @@ def _persisted_decimal_bindings(
         if binding_id in enum_ids or binding_id in date_ids:
             continue
         try:
-            decimal_bindings[binding_id] = Decimal(raw_value)
+            parsed_value: Decimal = Decimal(str(raw_value))
+            decimal_bindings[binding_id] = parsed_value
         except InvalidOperation as exc:
             raise StoredCalculationDriftError(
                 translated_message="errors.storage.stored_data_validation_boundary",

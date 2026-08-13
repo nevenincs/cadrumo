@@ -20,6 +20,7 @@ from __future__ import annotations
 from collections import defaultdict
 
 import pytest
+from pydantic import BaseModel
 
 from .. import RegistryValidationError
 from .._invoice_bindings import (
@@ -45,7 +46,11 @@ def _invoice_facts_by_modelo() -> dict[str, set[str]]:
             for binding in revision.bindings:
                 if str(binding.source) not in _INVOICE_SOURCES:
                     continue
-                selector = binding.selector if isinstance(binding.selector, dict) else binding.selector.model_dump()
+                selector = binding.selector
+                if isinstance(selector, BaseModel):
+                    selector = selector.model_dump()
+                else:
+                    selector = {str(key): value for key, value in selector.items()}
                 fact = selector.get("fact")
                 if fact is not None:
                     drawn[modelo.id].add(str(fact))

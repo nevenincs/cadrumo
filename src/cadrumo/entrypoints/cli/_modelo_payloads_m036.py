@@ -25,7 +25,7 @@ from pydantic import Field
 
 from ...application.modelo import ModeloReconciliationEvidenceKind, ModeloReconciliationVerdict
 from ...core import IvaCompensationStateProvenance, Period
-from ...core.identity import BucketId, WorkUnitId
+from ...core.identity import BucketId, ProfileId, WorkUnitId
 from ...core.json_contract import OutputSchema, register_schema
 
 
@@ -44,7 +44,7 @@ class M036DeclarationRecordResult(OutputSchema):
 
     declaration_id: str
     bucket_id: BucketId
-    profile_id: str
+    profile_id: ProfileId
     event_kind: str
     declared_on: str
     sede_justificante: str | None = None
@@ -64,7 +64,7 @@ class M036DeclarationRowPayload(OutputSchema):
 
     declaration_id: str
     bucket_id: BucketId
-    profile_id: str
+    profile_id: ProfileId
     event_kind: str
     declared_on: str
     sede_justificante: str | None = None
@@ -94,7 +94,7 @@ class M036DeclarationShowResult(OutputSchema):
     operation: str = "modelo.m036.view"
     declaration_id: str
     bucket_id: BucketId
-    profile_id: str
+    profile_id: ProfileId
     event_kind: str
     declared_on: str
     sede_justificante: str | None = None

@@ -7,7 +7,8 @@ from functools import lru_cache
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
-from .. import ModeloRevision, load_registry_tree
+from .. import load_registry_tree
+from .._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 
 _WWW6_HOST = aeat_host("www6")
 
@@ -107,7 +108,7 @@ _M349_CADENCE_REQUIRED_TEXT = (
 
 
 @lru_cache(maxsize=1)
-def _load_modelo_349():
+def _load_modelo_349() -> tuple[ModeloDefinition, RegistryCatalogues]:
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(modelo for modelo in modelos if modelo.id == "349")
     return modelo, catalogues

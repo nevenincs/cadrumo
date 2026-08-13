@@ -35,7 +35,7 @@ from typing import Final
 
 from packaging.markers import InvalidMarker, Marker
 
-from dev.packaging._distribution_names import normalise_distribution_name
+from ._distribution_names import normalise_distribution_name
 
 _UTF_8: Final[str] = "utf-8"
 

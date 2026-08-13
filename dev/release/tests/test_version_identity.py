@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.release.version_identity import (
+from ..version_identity import (
     PYPI_PROJECTS,
     VersionIdentityError,
     assert_version_available,

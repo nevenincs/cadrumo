@@ -20,7 +20,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
-from ._bindings_previous_filing import _is_direct_previous_filing_binding
+from ._bindings_previous_filing import is_direct_previous_filing_binding
 from ._errors import RegistryValidationError
 from ._ids import ModeloId, RelationId
 from ._iva_wallet_relation_targets import (
@@ -28,7 +28,7 @@ from ._iva_wallet_relation_targets import (
     iva_wallet_owned_relation_targets_for_revision,
 )
 from ._period_offset_math import apply_period_offset
-from ._relations import _derive_offset_source_period
+from ._relations import derive_offset_source_period
 from ._schema import (
     DataBindingDefinition,
     ModeloDefinition,
@@ -319,7 +319,7 @@ def validate_slot_source_hygiene(
     overlap between the two mechanisms):
 
     (a) A binding with ``source = "previous_filing"`` MUST satisfy the
-        direct-selector predicate (``_is_direct_previous_filing_binding``). A
+        direct-selector predicate (``is_direct_previous_filing_binding``). A
         NON-direct previous_filing binding (e.g. ``{source_modelo, source_casilla_id}``
         with no period anchor) is a mis-stamped relation-materialisation slot and
         becomes a registry validation ERROR — it MUST declare
@@ -377,7 +377,7 @@ def _validate_slot_binding_source(
         relation_id for relation_id, target_binding in wallet_relation_targets if target_binding == binding.id
     }
     # Gate (a): a previous_filing binding must carry a DIRECT selector.
-    if is_previous_filing and not wallet_relation_ids and not _is_direct_previous_filing_binding(binding):
+    if is_previous_filing and not wallet_relation_ids and not is_direct_previous_filing_binding(binding):
         failures.append(
             f"{binding_scope} declares source 'previous_filing' with a non-direct selector "
             f"(no period/source_periods/offset anchor); a relation-materialisation slot must "
@@ -404,7 +404,7 @@ def _relation_source_periods_for_validation(relation: RelationDefinition) -> tup
     failures: list[str] = []
     for target_period in relation.target_periods:
         try:
-            source_period = _derive_offset_source_period(relation, target_period=target_period)
+            source_period = derive_offset_source_period(relation, target_period=target_period)
         except RegistryValidationError as exc:
             failures.append(str(exc))
             continue

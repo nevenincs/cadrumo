@@ -495,8 +495,12 @@ def _rewrite_local_provider_sidecar(
     update: dict[str, object],
 ) -> dict[str, object]:
     sidecar_path = next((provider.root / namespace).glob("*.meta.json"))
-    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
-    assert isinstance(sidecar, dict)
+    raw_sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    assert isinstance(raw_sidecar, dict)
+    sidecar: dict[str, object] = {}
+    for key, value in raw_sidecar.items():
+        assert isinstance(key, str)
+        sidecar[key] = value
     sidecar.update(update)
     sidecar_path.write_text(json.dumps(sidecar, sort_keys=True), encoding="utf-8")
     return sidecar

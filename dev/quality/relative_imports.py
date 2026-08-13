@@ -1,12 +1,12 @@
-r"""Enforce the relative-imports mandate inside `src/cadrumo/`.
+r"""Enforce relative self-imports inside the repository's Python packages.
 
 Ruff's `flake8-tidy-imports.banned-api` (TID251) resolves relative
 imports back to their absolute path before matching the banned prefix,
-so banning `cadrumo` would also flag every legitimate `from .module import
-X` inside `src/cadrumo/`. This script exists to fill that gap.
+so banning `cadrumo` or `dev` would also flag every legitimate relative
+self-import. This script exists to fill that gap for both package roots.
 
-It walks the AST of every `*.py` file under `src/cadrumo/` and reports
-any `import cadrumo[.X]` or `from cadrumo[.X] import Y` statement. AST
+It walks the AST of every `*.py` file under `src/cadrumo/` and `dev/` and
+reports absolute imports of the package that owns each file. AST
 parsing (rather than regex) ensures absolute-import-looking text inside
 docstrings or `textwrap.dedent` blocks does not produce false positives.
 
@@ -17,12 +17,11 @@ Intended invocation:
   appended (per-file scan); see `prek.toml`.
 * Direct invocation: `python -m dev.quality.relative_imports [PATH...]`.
   When PATHs are supplied, only those files are scanned (any path
-  outside `src/cadrumo/` is silently skipped â€” boundary `tests/` and
-  `dev/` are out of scope by design).
+  outside `src/cadrumo/` and `dev/` is silently skipped).
 
-Boundaries: `tests/` and `dev/` live outside the package and may
-import `cadrumo.*` absolutely; this script does not scan them, even when
-explicitly listed on the command line.
+Inside ``src/cadrumo`` absolute ``cadrumo.*`` self-imports are forbidden.
+Inside ``dev`` absolute ``dev.*`` self-imports are forbidden. Cross-package
+``dev -> cadrumo`` imports remain absolute and are permitted.
 
 Known blind-spot: dynamic-import strings such as
 ``pytest.importorskip("cadrumo.X")`` or ``importlib.import_module("cadrumo.X")``
@@ -45,6 +44,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 _UTF_8: Final[str] = "utf-8"
 SRC_CADRUMO = REPO_ROOT / "src" / "cadrumo"
+DEV_ROOT = REPO_ROOT / "dev"
+PACKAGE_ROOTS: tuple[tuple[Path, str], ...] = (
+    (SRC_CADRUMO, "cadrumo"),
+    (DEV_ROOT, "dev"),
+)
 
 # Sanity cap: any single Python source file larger than this is almost
 # certainly not handwritten code (vendored blob, generated dump, mis-
@@ -55,8 +59,8 @@ SRC_CADRUMO = REPO_ROOT / "src" / "cadrumo"
 _MAX_SOURCE_BYTES = 2 * 1024 * 1024
 
 
-def _scan_file(path: Path) -> tuple[list[tuple[int, str]], list[str]]:
-    """Return (findings, errors) for absolute `cadrumo.*` imports in `path`.
+def _scan_file(path: Path, package: str) -> tuple[list[tuple[int, str]], list[str]]:
+    """Return findings and errors for absolute self-imports in ``path``.
 
     `findings` is a list of (lineno, rendered) tuples. `errors` is a
     list of human-readable diagnostic strings; non-empty when the file
@@ -99,7 +103,7 @@ def _scan_file(path: Path) -> tuple[list[tuple[int, str]], list[str]]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                if alias.name != "cadrumo" and not alias.name.startswith("cadrumo."):
+                if alias.name != package and not alias.name.startswith(f"{package}."):
                     continue
                 rendered = f"import {alias.name}"
                 if alias.asname:
@@ -110,28 +114,35 @@ def _scan_file(path: Path) -> tuple[list[tuple[int, str]], list[str]]:
             continue
         if node.level != 0 or node.module is None:
             continue
-        if node.module != "cadrumo" and not node.module.startswith("cadrumo."):
+        if node.module != package and not node.module.startswith(f"{package}."):
             continue
         names = ", ".join(alias.name + (f" as {alias.asname}" if alias.asname else "") for alias in node.names)
         findings.append((node.lineno, f"from {node.module} import {names}"))
     return findings, errors
 
 
+def _package_for_path(path: Path) -> str | None:
+    """Return the owning package for a repository package source path."""
+    resolved = path.resolve()
+    for root, package in PACKAGE_ROOTS:
+        try:
+            resolved.relative_to(root.resolve())
+        except ValueError:
+            continue
+        return package
+    return None
+
+
 def _resolve_targets(args: list[str]) -> list[Path]:
     """Pick the files to scan.
 
-    With no args, walk every `*.py` under `src/cadrumo/`. With args, take
-    the listed paths and keep only those inside `src/cadrumo/`. Paths
-    outside `src/cadrumo/` (tests, scripts, env, etc.) are silently
-    dropped because the mandate scopes there explicitly to absolute
-    imports â€” surfacing them as "skipped" would be noise during a
-    pre-commit run.
+    With no args, walk every Python file under both governed package roots.
+    With args, keep only Python files inside either root.
     """
     if not args:
-        return sorted(SRC_CADRUMO.rglob("*.py"))
+        return sorted(path for root, _package in PACKAGE_ROOTS for path in root.rglob("*.py"))
 
     targets: list[Path] = []
-    src_cadrumo_resolved = SRC_CADRUMO.resolve()
     for raw in args:
         # Resolve relative to the current working directory â€” standard
         # CLI semantics. prek invokes hooks from the repo root, so this
@@ -139,9 +150,7 @@ def _resolve_targets(args: list[str]) -> list[Path]:
         candidate = Path(raw).resolve()
         if candidate.suffix != ".py":
             continue
-        try:
-            candidate.relative_to(src_cadrumo_resolved)
-        except ValueError:
+        if _package_for_path(candidate) is None:
             continue
         if not candidate.is_file():
             continue
@@ -161,8 +170,9 @@ def main(argv: list[str] | None = None) -> int:
     """
     args = list(argv) if argv is not None else sys.argv[1:]
 
-    if not SRC_CADRUMO.is_dir():
-        sys.stderr.write(f"src/cadrumo not found at {SRC_CADRUMO}\n")
+    missing = [root for root, _package in PACKAGE_ROOTS if not root.is_dir()]
+    if missing:
+        sys.stderr.write("package root(s) not found: " + ", ".join(str(path) for path in missing) + "\n")
         return 2
 
     targets = _resolve_targets(args)
@@ -170,7 +180,10 @@ def main(argv: list[str] | None = None) -> int:
     all_findings: list[tuple[Path, int, str]] = []
     all_errors: list[str] = []
     for path in targets:
-        findings, errors = _scan_file(path)
+        package = _package_for_path(path)
+        if package is None:
+            continue
+        findings, errors = _scan_file(path, package)
         for lineno, rendered in findings:
             all_findings.append((path, lineno, rendered))
         all_errors.extend(errors)
@@ -186,7 +199,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if all_findings:
         sys.stderr.write(
-            "Absolute `cadrumo.*` imports are banned inside src/cadrumo/.\n"
+            "Absolute package self-imports are banned inside src/cadrumo/ and dev/.\n"
             "Use relative imports (`from .module import X` or `from ..sibling import Y`).\n\n",
         )
         for path, lineno, line in all_findings:

@@ -9,7 +9,7 @@ from typing import Final
 
 import pytest
 
-from dev.packaging.proof_cache import (
+from ..proof_cache import (
     PROOF_SCOPE_PATHS,
     environment_fingerprint,
     lookup,

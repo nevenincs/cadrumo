@@ -24,12 +24,12 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, Final
 
-from dev.packaging._acquire_common import capture_owned_server_launch
-from dev.packaging.cohort_manifest import load_release_cohort
-from dev.packaging.desktop_capture import collect_seed_secrets
-from dev.packaging.distribution_evidence_emit import _mcp_evidence_from_mapping, emit_client_evidence
-from dev.packaging.evidence import AcquisitionIdentity, ClientIdentity, DestinationIdentity
-from dev.packaging.installed_mcp_oracle import isolated_mcp_environment
+from ._acquire_common import capture_owned_server_launch
+from .cohort_manifest import load_release_cohort
+from .desktop_capture import collect_seed_secrets
+from .distribution_evidence_emit import _mcp_evidence_from_mapping, emit_client_evidence
+from .evidence import AcquisitionIdentity, ClientIdentity, DestinationIdentity
+from .installed_mcp_oracle import isolated_mcp_environment
 
 _DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")
 _UTF_8: Final[str] = "utf-8"

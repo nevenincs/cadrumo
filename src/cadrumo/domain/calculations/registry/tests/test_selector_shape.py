@@ -498,7 +498,7 @@ def test_previous_filing_selector_rejects_unknown_key() -> None:
             "spurious_key": "leaked",
         },
         binding_id="bad-previous-filing",
-        expected_substrings=("bad-previous-filing", "_PreviousModeloSelector"),
+        expected_substrings=("bad-previous-filing", "PreviousModeloSelector"),
     )
 
 

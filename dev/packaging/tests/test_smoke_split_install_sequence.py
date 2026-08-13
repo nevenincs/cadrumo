@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging._smoke_common import (
+from .._smoke_common import (
     build_companion_wheels,
     build_wheel,
     create_pip_venv,
@@ -20,7 +20,7 @@ from dev.packaging._smoke_common import (
     venv_cadrumo_path,
     venv_python_path,
 )
-from dev.packaging.smoke_split_install import _COHORT_PROBE, _install_cohort_with_pip
+from ..smoke_split_install import _COHORT_PROBE, _install_cohort_with_pip
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

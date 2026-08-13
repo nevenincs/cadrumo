@@ -167,7 +167,10 @@ def extract_verification_code_from_html(html: str) -> str | None:
     match = _VERIFICATION_CODE_TEXT_RE.search(normalized)
     if match is None:
         return None
-    return match.group("code").strip().upper() or None
+    code = match.group("code")
+    if not isinstance(code, str):
+        return None
+    return code.strip().upper() or None
 
 
 def url_diagnostic(value: str) -> dict[str, object]:

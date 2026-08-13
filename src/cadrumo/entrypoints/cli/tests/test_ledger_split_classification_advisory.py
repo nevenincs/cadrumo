@@ -72,7 +72,13 @@ def _add_row(*, amount: str, description: str, idempotency_key: str) -> str:
         ],
     )
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["result"]["transaction_id"]
+    payload = json.loads(result.output)
+    assert isinstance(payload, dict), result.output
+    body = payload.get("result")
+    assert isinstance(body, dict), result.output
+    transaction_id = body.get("transaction_id")
+    assert isinstance(transaction_id, str), result.output
+    return transaction_id
 
 
 def _classify_business(transaction_id: str) -> None:

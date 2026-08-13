@@ -52,7 +52,12 @@ def _show(*args: str) -> dict[str, object]:
     """Run ``counterparty show`` through the real CLI and return its result payload."""
     result = _invoke(["--format", "json", "app", "ledger", "counterparty", "show", *args])
     assert result.exit_code == 0, result.output
-    return unwrap_schema_envelope(result.output)
+    raw_payload = unwrap_schema_envelope(result.output)
+    payload: dict[str, object] = {}
+    for key, value in raw_payload.items():
+        assert isinstance(key, str), result.output
+        payload[key] = value
+    return payload
 
 
 def _confirm_canarias() -> None:

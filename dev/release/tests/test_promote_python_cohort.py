@@ -33,15 +33,15 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.installed_tax_oracle import (
+from ...packaging.installed_tax_oracle import (
     EXPECTED_FORMULA,
     EXPECTED_LEGAL_REF,
     EXPECTED_SOURCE_REF,
     EXPECTED_VALUE,
     TARGET_CASILLA,
 )
-from dev.packaging.python_cohort import PythonCohort, load_python_cohort
-from dev.release.promote_python_cohort import validate_promotion
+from ...packaging.python_cohort import PythonCohort, load_python_cohort
+from ..promote_python_cohort import validate_promotion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

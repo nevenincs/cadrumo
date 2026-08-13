@@ -19,6 +19,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....domain.deadlines import RecargoBand, Recovery
 from .._overview_payloads import OverviewCalendarEntryPayload, OverviewRecoveryPayload
 
@@ -42,11 +43,11 @@ def _canonical_recovery() -> Recovery:
 
 
 def _recovery_json() -> dict[str, object]:
-    return _canonical_recovery().model_dump(mode="json")
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(_canonical_recovery().model_dump(mode="json"))
 
 
 def _recargo_band_json() -> dict[str, object]:
-    return _canonical_recovery().recargo_band.model_dump(mode="json")
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(_canonical_recovery().recargo_band.model_dump(mode="json"))
 
 
 def test_canonical_recovery_projects_into_the_payload_field_for_field() -> None:

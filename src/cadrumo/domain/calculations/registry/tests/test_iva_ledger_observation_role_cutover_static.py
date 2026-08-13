@@ -45,8 +45,13 @@ def _constructor_calls(name: str) -> Iterator[tuple[str, ast.Call]]:
 
 def _binding_records(value: object) -> Iterator[dict[str, object]]:
     if isinstance(value, dict):
-        if value.get("source") == "ledger_iva_aggregation":
-            yield value
+        record: dict[str, object] = {}
+        for key, child in value.items():
+            if not isinstance(key, str):
+                continue
+            record[key] = child
+        if record.get("source") == "ledger_iva_aggregation":
+            yield record
         for child in value.values():
             yield from _binding_records(child)
     elif isinstance(value, list):

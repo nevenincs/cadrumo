@@ -39,8 +39,8 @@ from typing import Final
 import pydantic
 import pytest
 
-from dev.packaging.evidence import DistributionEvidence, EvidenceStatus
-from dev.release.readiness import ALL_DISTRIBUTION_ROWS
+from ...packaging.evidence import DistributionEvidence, EvidenceStatus
+from ...release.readiness import ALL_DISTRIBUTION_ROWS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

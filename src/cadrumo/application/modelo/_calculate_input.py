@@ -841,7 +841,7 @@ def _ambiguous_relacion_hijo_ids(work_unit_id: str, contributing_hijo_ids: froze
     already has months to lose.
     """
     if not contributing_hijo_ids:
-        return frozenset()
+        return frozenset[str]()
     from ...domain.user_profile import ProfileNotFoundError
     from ..user_profile import UserProfileLifecycleRepository
     from ._work_lifecycle import get_work_unit
@@ -850,7 +850,7 @@ def _ambiguous_relacion_hijo_ids(work_unit_id: str, contributing_hijo_ids: froze
     try:
         record = UserProfileLifecycleRepository(bucket_id=unit.bucket_id).load(unit.bucket_id)
     except ProfileNotFoundError:
-        return frozenset()
+        return frozenset[str]()
     facts = {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
     descendientes = descendant_list_from_facts(facts)
     return frozenset(

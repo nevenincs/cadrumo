@@ -462,7 +462,7 @@ def supply_nature_implied_by_category(category: IvaCategory | None) -> SupplyNat
         # The table is keyed per category AND direction, and the nature is a
         # property of the supply rather than of who filed it -- so every row for
         # this category contributes, whichever way the document ran.
-        if (key[0] if isinstance(key, tuple) else key) is category
+        if key[0] is category
         for reference in components.legal_refs
     }
     articles = {

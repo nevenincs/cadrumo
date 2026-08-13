@@ -19,7 +19,7 @@ from typing import Any, Final
 
 import pytest
 
-from dev.packaging.marketplace_publish import (
+from ..marketplace_publish import (
     _SUPERSESSION_REPORT,
     MarketplacePublishError,
     SupersessionVerdict,
@@ -28,7 +28,7 @@ from dev.packaging.marketplace_publish import (
     publish_cohort_plugins,
     superseded_names,
 )
-from dev.packaging.marketplace_publish import _read_cohort_index as read_cohort_index
+from ..marketplace_publish import _read_cohort_index as read_cohort_index
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

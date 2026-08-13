@@ -142,7 +142,9 @@ def parse_drive_file_id(reference: str) -> str | None:
     for pattern in _DRIVE_ID_PATTERNS:
         match = pattern.search(candidate)
         if match:
-            return match.group("id")
+            drive_id = match.group("id")
+            if isinstance(drive_id, str):
+                return drive_id
     return None
 
 

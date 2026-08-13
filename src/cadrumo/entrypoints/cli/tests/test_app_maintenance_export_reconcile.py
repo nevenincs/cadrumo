@@ -26,6 +26,7 @@ from ....application.user_profile import (
     prepare_profile_export,
 )
 from ....application.user_profile._bundle_export_operation import PROFILE_EXPORT_STAGED_TEMP_SUFFIX
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....domain.user_profile import UserProfilePortableExport
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -76,10 +77,8 @@ def _request(destination: Path) -> ProfileBundleExportRequest:
 def _reconcile_json() -> dict[str, object]:
     result = invoke_cached_cli(list(_RECONCILE_ARGV))
     assert result.exit_code == 0, result.output
-    envelope = json.loads(result.output)
-    payload = envelope["result"]
-    assert isinstance(payload, dict)
-    return payload
+    envelope = STR_KEYED_MAPPING_ADAPTER.validate_json(result.output)
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(envelope["result"])
 
 
 def _first_row(rows: object) -> dict[str, object]:

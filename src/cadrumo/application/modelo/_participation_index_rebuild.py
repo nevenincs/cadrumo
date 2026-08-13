@@ -83,7 +83,7 @@ def _filing_record_for_revision(
     filings: ModeloRecordCatalogue,
 ) -> ModeloRecord | None:
     """Return the filing record bound to ``calculation_revision_id``, if any."""
-    for record in filings.values():
+    for record in filings.records.values():
         if record.calculation_revision_id == calculation_revision_id:
             return record
     return None

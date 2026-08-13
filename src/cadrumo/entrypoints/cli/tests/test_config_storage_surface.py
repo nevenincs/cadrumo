@@ -22,7 +22,7 @@ def _json_envelope(args: list[str]) -> Any:
 
 def _all_keys(value: object) -> set[str]:
     if isinstance(value, dict):
-        return set(value) | {key for child in value.values() for key in _all_keys(child)}
+        return {str(key) for key in value} | {key for child in value.values() for key in _all_keys(child)}
     if isinstance(value, list):
         return {key for child in value for key in _all_keys(child)}
     return set()

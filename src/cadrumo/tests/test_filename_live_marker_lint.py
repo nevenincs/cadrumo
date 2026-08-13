@@ -48,7 +48,7 @@ def _module_marker_names(source: str, filename: str) -> frozenset[str]:
         target = node.targets[0]
         if isinstance(target, ast.Name) and target.id == "pytestmark":
             return frozenset(_marker_names_from_value(node.value))
-    return frozenset()
+    return frozenset[str]()
 
 
 def _marker_names_from_value(value: ast.expr) -> Iterator[str]:

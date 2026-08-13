@@ -31,15 +31,15 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-from dev.release._asset_transport import (
+from ._asset_transport import (
     EvidenceLane,
     download_release_assets,
     evidence_tag,
     resolve_gh,
     run_gh_with_retry,
 )
-from dev.release.readiness import ReadinessReport, build_report
-from dev.release.release_candidate import (
+from .readiness import ReadinessReport, build_report
+from .release_candidate import (
     ReleaseCandidate,
     fetch_candidate,
     list_sealed_candidate_tags,

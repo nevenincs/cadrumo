@@ -116,6 +116,7 @@ from ._actions_common import (
 )
 from ._actions_common import (
     purchase_invoice_evidence_records,
+    resolve_attachment_store,
 )
 from ._actions_common import (
     raise_finalized_modelo_blocked as _raise_finalized_modelo_blocked,
@@ -745,8 +746,6 @@ def _record_attachment_back_references(
     """
     if not transaction.attachment_ids:
         return
-    from ...adapters.persistence.storage import resolve_attachment_store
-
     store = resolve_attachment_store(attachment_store)
     for attachment_id in transaction.attachment_ids:
         link_attachment_transaction(

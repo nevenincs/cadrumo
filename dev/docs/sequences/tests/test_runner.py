@@ -32,6 +32,7 @@ from .. import (
     ParsedSequence,
     SequenceExecutionError,
     SequenceTranscript,
+    execute_page_sequences,
     execute_sequence,
     parse_sequence,
     sequence_sandbox,
@@ -72,6 +73,145 @@ def _result_sequence(body: str, *, sequence_id: str = "runner-refusal-case") -> 
         options={"verify": "Verify the command completed."},
         body=body,
     )
+
+
+def _profile_seed_sequence(
+    seeds_root: Path,
+    sequence_id: str,
+    *,
+    seed: str = "active-profile",
+) -> ParsedSequence:
+    """Build one real read-only body around a seed capture used by its argv."""
+    return parse_sequence(
+        sequence_id=sequence_id,
+        options={"verify": "Verify the seeded profile is readable.", "seed": seed},
+        body=('@result aeat --format json config profile show {profile_label}\n@expect status == "success"\n'),
+        seeds_root=seeds_root,
+    )
+
+
+class TestPageSeedLifecycle:
+    """Named setup executes once per page while isolated runs stay self-contained."""
+
+    @staticmethod
+    def _write_seed(seeds_root: Path) -> None:
+        seeds_root.mkdir(parents=True)
+        (seeds_root / "active-profile.seq").write_text(
+            "@setup aeat --format json config profile list\n@capture profile_label result.active_profile\n",
+            encoding="utf-8",
+        )
+
+    def test_page_reuses_equivalent_seed_execution_and_capture(self, tmp_path: Path) -> None:
+        seeds_root = tmp_path / "seeds"
+        self._write_seed(seeds_root)
+        first = _profile_seed_sequence(seeds_root, "page-seed-first")
+        second = _profile_seed_sequence(seeds_root, "page-seed-second")
+
+        with pytest.warns(UserWarning, match="would replay seed 'active-profile'.*immutable captures"):
+            transcripts = execute_page_sequences(
+                (first, second),
+                label="how-to/page-seed",
+                sandbox_root=tmp_path / "page",
+            )
+
+        assert len(transcripts) == 2
+        assert transcripts[0].frames[0] == transcripts[1].frames[0]
+        assert transcripts[0].captures["profile_label"] == "docs-sequence-sandbox"
+        assert transcripts[1].captures["profile_label"] == "docs-sequence-sandbox"
+        assert "docs-sequence-sandbox" in transcripts[1].result_frame.argv
+
+    def test_isolated_execution_still_runs_its_own_seed(self, tmp_path: Path) -> None:
+        seeds_root = tmp_path / "seeds"
+        self._write_seed(seeds_root)
+        sequence = _profile_seed_sequence(seeds_root, "isolated-seed")
+
+        first = execute_sequence(sequence, sandbox_root=tmp_path / "isolated-a")
+        second = execute_sequence(sequence, sandbox_root=tmp_path / "isolated-b")
+
+        assert first.frames[0].kind is FrameKind.SETUP
+        assert second.frames[0].kind is FrameKind.SETUP
+        assert first.captures == second.captures == {"profile_label": "docs-sequence-sandbox"}
+
+    def test_differently_named_execution_equivalent_seed_reuses_state(self, tmp_path: Path) -> None:
+        seeds_root = tmp_path / "seeds"
+        self._write_seed(seeds_root)
+        (seeds_root / "active-profile-alias.seq").write_text(
+            "@step Inspect the already active profile.\n"
+            "@setup aeat --format json config profile list\n"
+            "@capture profile_label result.active_profile\n",
+            encoding="utf-8",
+        )
+        first = _profile_seed_sequence(seeds_root, "seed-canonical")
+        alias = _profile_seed_sequence(seeds_root, "seed-equivalent-alias", seed="active-profile-alias")
+
+        with pytest.warns(UserWarning, match="execution-equivalent.*instead of replaying side effects"):
+            transcripts = execute_page_sequences(
+                (first, alias),
+                label="how-to/seed-alias",
+                sandbox_root=tmp_path / "page",
+            )
+
+        assert transcripts[0].frames[0] == transcripts[1].frames[0]
+        assert transcripts[1].captures["profile_label"] == "docs-sequence-sandbox"
+
+    def test_same_seed_identity_with_divergent_definition_warns_and_refuses(self, tmp_path: Path) -> None:
+        seeds_root = tmp_path / "seeds"
+        self._write_seed(seeds_root)
+        first = _profile_seed_sequence(seeds_root, "divergent-seed-first")
+        second = _profile_seed_sequence(seeds_root, "divergent-seed-second")
+        changed_seed = second.frames[0].model_copy(
+            update={
+                "command_line": "aeat --format json config profile show",
+                "argv": ("aeat", "--format", "json", "config", "profile", "show"),
+            },
+        )
+        divergent = second.model_copy(update={"frames": (changed_seed, *second.frames[1:])})
+
+        with (
+            pytest.warns(UserWarning, match="divergent definition"),
+            pytest.raises(SequenceExecutionError, match=r"new seed identity.*structurally equivalent"),
+        ):
+            execute_page_sequences(
+                (first, divergent),
+                label="how-to/divergent-seed",
+                sandbox_root=tmp_path / "divergent",
+            )
+
+    def test_seed_identity_without_inlined_state_warns_and_refuses(self, tmp_path: Path) -> None:
+        body_only = _result_sequence(
+            '@result aeat --format json config profile list\n@expect status == "success"\n',
+            sequence_id="missing-seed-state",
+        ).model_copy(update={"seed": "missing-state"})
+
+        with (
+            pytest.warns(UserWarning, match="no inlined seed frames are available"),
+            pytest.raises(SequenceExecutionError, match="reparse the sequence from its contract"),
+        ):
+            execute_page_sequences(
+                (body_only,),
+                label="how-to/missing-seed-state",
+                sandbox_root=tmp_path / "missing",
+            )
+
+    def test_page_seed_context_never_leaks_to_another_page(self, tmp_path: Path) -> None:
+        seeds_root = tmp_path / "seeds"
+        self._write_seed(seeds_root)
+        sequence = _profile_seed_sequence(seeds_root, "page-local-seed")
+
+        first_page = execute_page_sequences(
+            (sequence,),
+            label="how-to/page-a",
+            sandbox_root=tmp_path / "page-a",
+        )
+        second_page = execute_page_sequences(
+            (sequence,),
+            label="how-to/page-b",
+            sandbox_root=tmp_path / "page-b",
+        )
+
+        assert first_page[0].frames[0].kind is FrameKind.SETUP
+        assert second_page[0].frames[0].kind is FrameKind.SETUP
+        assert first_page[0].storage_root != second_page[0].storage_root
 
 
 @pytest.fixture(scope="module")

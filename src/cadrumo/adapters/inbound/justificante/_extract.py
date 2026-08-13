@@ -317,7 +317,18 @@ def _require(match: re.Match[str] | None, field: str) -> str:
     """
     if match is None:
         raise JustificanteParseError(f"could not locate required field: {field}", missing=(field,))
-    return match.group(1).strip()
+    return _match_group_text(match, 1, field)
+
+
+def _match_group_text(match: re.Match[str], group: int | str, field: str) -> str:
+    """Return a regex capture as text, refusing an ill-typed parser result."""
+    value = match.group(group)
+    if not isinstance(value, str):
+        raise JustificanteParseError(
+            f"regex capture for {field} did not contain text",
+            malformed=(field,),
+        )
+    return value.strip()
 
 
 def extract_justificante(text: str, pdf_path: Path) -> Justificante:
@@ -455,13 +466,13 @@ def _extract_period_and_ejercicio(normalised: str) -> tuple[str, str | None]:
     4. Anything without period or ejercicio fails hard.
     """
     ejercicio_match = _EJERCICIO_RE.search(normalised) or _EJERCICIO_LOOSE_RE.search(normalised)
-    ejercicio = ejercicio_match.group(1).strip() if ejercicio_match else None
+    ejercicio = _match_group_text(ejercicio_match, 1, "ejercicio") if ejercicio_match else None
     period_match = _PERIOD_RE.search(normalised)
     if period_match is not None:
-        return period_match.group(1).strip(), ejercicio
+        return _match_group_text(period_match, 1, "period"), ejercicio
     positional_match = _PERIOD_POSITIONAL_RE.search(normalised)
     if positional_match is not None:
-        period = positional_match.group("period").strip()
+        period = _match_group_text(positional_match, "period", "period")
         # Quarterly modelos older than 2024 print only the positional
         # ``Y0000001S 2022 4T`` line — there is no labelled
         # ``Ejercicio 2022``. Promote the year captured by the
@@ -469,7 +480,7 @@ def _extract_period_and_ejercicio(normalised: str) -> tuple[str, str | None]:
         # so downstream code (and the deep-extractor binding) sees a
         # populated year.
         if ejercicio is None:
-            ejercicio = positional_match.group("year").strip()
+            ejercicio = _match_group_text(positional_match, "year", "ejercicio")
         return period, ejercicio
     if ejercicio is not None:
         return "0A", ejercicio
@@ -494,7 +505,7 @@ def _extract_presented_at(normalised: str) -> datetime:
 def _extract_presentation_id(normalised: str) -> str | None:
     """Optional presentation identifier; either standard or annual regex shape."""
     presentation_match = _PRESENTATION_ID_RE.search(normalised) or _PRESENTATION_ID_ANNUAL_RE.search(normalised)
-    return presentation_match.group(1).strip() if presentation_match else None
+    return _match_group_text(presentation_match, 1, "presentation_id") if presentation_match else None
 
 
 def _extract_totals(normalised: str) -> tuple[Decimal | None, Decimal | None]:

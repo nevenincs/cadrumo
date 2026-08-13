@@ -794,16 +794,16 @@ def export_layout_renderability_reason(
     package that place the sentence in an operator payload. Those consumers are
     the remaining reason this projection exists.
     """
+    if layout is None:
+        return "the registry snapshot has no complete export_layouts definition"
     code = export_layout_renderability_reason_code(layout)
     if code is None:
         return None
-    if code is ExportLayoutRenderabilityReason.NO_COMPLETE_EXPORT_LAYOUTS:
-        return "the registry snapshot has no complete export_layouts definition"
     if code is ExportLayoutRenderabilityReason.XML_DICTIONARY_SOURCE_ABSENT:
-        return f"XML dictionary export layout {layout.id!r} declares no dictionary source"  # type: ignore[union-attr]
+        return f"XML dictionary export layout {layout.id!r} declares no dictionary source"
     if code is ExportLayoutRenderabilityReason.UNSUPPORTED_LAYOUT_FORMAT:
-        return f"export layout {layout.id!r} uses unsupported format {layout.format!r}"  # type: ignore[union-attr]
-    return f"export layout {layout.id!r} declares no export records"  # type: ignore[union-attr]
+        return f"export layout {layout.id!r} uses unsupported format {layout.format!r}"
+    return f"export layout {layout.id!r} declares no export records"
 
 
 def _export_layout_not_renderable_error(

@@ -46,6 +46,7 @@ from __future__ import annotations
 import re
 import tomllib
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -66,12 +67,22 @@ def _aeat_country_codes() -> frozenset[str]:
     text = Path(bundled_path(*_SII_SCHEMA)).read_text(encoding="utf-8", errors="replace")
     block = re.search(r'<simpleType name="CountryType2">(.*?)</simpleType>', text, re.S)
     assert block is not None, "AEAT's SII schema no longer declares CountryType2"
-    return frozenset(re.findall(r'value="([A-Z]{2})"', block.group(1)))
+    return frozenset(cast(str, code) for code in re.findall(r'value="([A-Z]{2})"', block.group(1)))
 
 
 def _vocabulary() -> list[dict[str, object]]:
     payload = tomllib.loads(Path(bundled_path("registry", "aeat", "iva", "country_names.toml")).read_text("utf-8"))
-    return list(payload["country"])
+    raw_country = payload.get("country")
+    assert isinstance(raw_country, list)
+    rows: list[dict[str, object]] = []
+    for raw_row in raw_country:
+        assert isinstance(raw_row, dict)
+        row: dict[str, object] = {}
+        for key, value in raw_row.items():
+            assert isinstance(key, str)
+            row[key] = value
+        rows.append(row)
+    return rows
 
 
 def test_the_aeat_register_is_actually_populated() -> None:

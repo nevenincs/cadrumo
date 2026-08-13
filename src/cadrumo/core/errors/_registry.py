@@ -237,15 +237,17 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
     # import window (when another module triggers CadrumoError subclass
     # creation while _registry.py is still executing) this name does not
     # yet exist in the module globals.  Defer rather than crash.
-    declared = globals().get("_DECLARED_CODE_BY_QUALNAME")
+    declared: object = globals().get("_DECLARED_CODE_BY_QUALNAME")
     if declared is None:
         _DEFERRED_BIND.add(error_type)
         # _DECLARED_CODE_BY_QUALNAME is absent during the circular-import window;
         # get_registered_error_code drains _DEFERRED_BIND after loading.
         return None
+    if not isinstance(declared, Mapping):
+        raise RuntimeError("the declared error-code registry is not a mapping")
     qualname = _qualname(error_type)
     code = declared.get(qualname)
-    if code is None:
+    if not isinstance(code, ErrorCode):
         raise ValueError(
             f"CadrumoError subclass {qualname} is missing a declared ErrorCode "
             f"registry entry. If this class was just added, declare it in the "

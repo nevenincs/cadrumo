@@ -53,11 +53,12 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final, Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind
 from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.identity import InvoiceId
 from ...domain.iva import IvaRetencionRole, category_components
 from ._errors import AggregationValidationError, t
 from ._retenciones import RetencionObservation, RetencionScheme
@@ -169,7 +170,7 @@ class InvoiceRetencionProjection(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    invoice_id: str
+    invoice_id: InvoiceId
     observation: RetencionObservation | None
     defects: tuple[InvoiceRetencionProjectionDefect, ...]
 
@@ -232,7 +233,7 @@ class InvoiceRetencionRouteRequest(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    invoice_id: str = Field(min_length=1)
+    invoice_id: InvoiceId
     scheme: RetencionScheme
 
 

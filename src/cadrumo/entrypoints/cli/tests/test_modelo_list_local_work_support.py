@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .envelope_helpers import unwrap_schema_envelope
@@ -19,7 +20,7 @@ def _modelo_row(payload: dict[str, object], code: str) -> dict[str, object]:
         # ``isinstance(row, dict)`` only proves *some* dict, not that its keys
         # are ``str`` — this data is always parsed JSON envelope output, so
         # re-keying with ``str(k)`` gives an honestly-typed ``dict[str, object]``.
-        typed_row = {str(k): v for k, v in row.items()}
+        typed_row = STR_KEYED_MAPPING_ADAPTER.validate_python(row)
         if typed_row.get("code") == code:
             return typed_row
     raise AssertionError(f"modelo {code!r} was not listed in payload: {payload!r}")

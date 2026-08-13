@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.docs.apidocs import ApiStubManager
+from ..apidocs import ApiStubManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

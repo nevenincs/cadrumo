@@ -60,8 +60,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Final, cast
 
-from dev.ci.perf_measurement import timed_subprocess
-from dev.packaging.installed_tax_oracle import (
+from ..ci.perf_measurement import timed_subprocess
+from .installed_tax_oracle import (
     isolated_product_environment,
     profile_create_arguments,
     work_calculate_arguments,

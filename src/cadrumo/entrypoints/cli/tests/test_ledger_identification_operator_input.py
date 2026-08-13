@@ -37,7 +37,9 @@ def _intracom_row() -> dict[str, object]:
     _import_corpus()
     rows = [row for row in _list_rows() if "cliente DE GmbH intracom" in row["description"]]
     assert rows, "corpus must contain a DE intracommunity client invoice"
-    return rows[0]
+    raw_row = rows[0]
+    assert isinstance(raw_row, dict)
+    return {str(key): value for key, value in raw_row.items()}
 
 
 def _intracom_transaction_id() -> str:

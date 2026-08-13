@@ -99,7 +99,7 @@ def test_docs_build_directory_contains_only_canonical_html() -> None:
 
 def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None:
     """Canonical docs builds clear stale preview files from their build root."""
-    from dev.docs.build import remove_noncanonical_build_entries
+    from ..build import remove_noncanonical_build_entries
 
     docs_root = tmp_path / "docs"
     build_root = docs_root / "_build"
@@ -118,7 +118,7 @@ def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None
 
 def test_docs_build_jobs_accepts_only_serial_or_auto_settings() -> None:
     """The deployment override pins serial or parallel Sphinx workers."""
-    from dev.docs.build import docs_build_jobs
+    from ..build import docs_build_jobs
 
     assert docs_build_jobs({}) == "auto"
     assert docs_build_jobs({"CADRUMO_DOCS_JOBS": "1"}) == "1"
@@ -128,7 +128,7 @@ def test_docs_build_jobs_accepts_only_serial_or_auto_settings() -> None:
 
 def test_pagefind_index_mode_defaults_to_full_and_accepts_pages() -> None:
     """Local docs keep records; deployment may index rendered pages alone."""
-    from dev.docs.build import pagefind_index_mode
+    from ..build import pagefind_index_mode
 
     assert pagefind_index_mode({}) == "full"
     assert pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "full"}) == "full"
@@ -137,7 +137,7 @@ def test_pagefind_index_mode_defaults_to_full_and_accepts_pages() -> None:
 
 def test_pagefind_index_mode_rejects_unknown_values() -> None:
     """The deployment cannot silently select an unsupported search contract."""
-    from dev.docs.build import pagefind_index_mode
+    from ..build import pagefind_index_mode
 
     with pytest.raises(SystemExit, match="CADRUMO_DOCS_PAGEFIND_MODE"):
         pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "records-only"})
@@ -147,7 +147,7 @@ def test_deployment_sitemap_uses_canonical_human_doc_urls(tmp_path: Path) -> Non
     """The deployed sitemap uses canonical URLs and omits generated surfaces."""
     from defusedxml import ElementTree
 
-    from dev.docs.build import write_deployment_sitemap
+    from ..build import write_deployment_sitemap
 
     for relative in (
         "index.html",
@@ -443,8 +443,8 @@ _SEQUENCE_DIRECTIVE_BODY = (
 
 def _sequence_golden_json() -> str:
     """Return a schema-valid golden matching the fixture directive's three frames."""
-    from dev.docs.sequences._golden_store import GoldenFrame, SequenceGolden
-    from dev.docs.sequences._schema import FrameKind
+    from ..sequences._golden_store import GoldenFrame, SequenceGolden
+    from ..sequences._schema import FrameKind
 
     golden = SequenceGolden(
         sequence_id=_SEQUENCE_ID,

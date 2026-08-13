@@ -126,7 +126,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         )
         if record is None:
             return self._empty_document()
-        envelope = Envelope[self._model_type].model_validate_json(record.payload)  # ty: ignore[invalid-type-form]  # reason: pydantic runtime generic parameterisation; the model type is a per-instance value, which no static type expression can carry
+        envelope = Envelope.for_payload_type(self._model_type).model_validate_json(record.payload)
         if not inner_envelope_classification_is_expected(envelope.classification, self._definition.sensitivity):
             from ..storage import ClassificationError
 
@@ -141,6 +141,8 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
                 f"{self.namespace}/{self.object_key} is at version {envelope.schema_version}; "
                 f"consumer supports up to {self._definition.schema_version}",
             )
+        if not isinstance(envelope.payload, self._model_type):
+            raise TypeError(f"{self.namespace}/{self.object_key} envelope payload has an unexpected type")
         return envelope.payload
 
     def to_secure_object_write(self, document: DocumentT) -> SecureObjectWrite:

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging._command import run_command
+from .._command import run_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

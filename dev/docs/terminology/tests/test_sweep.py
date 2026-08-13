@@ -26,21 +26,22 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev.docs.pagefind_inject import SearchRecordProjection, materialise_search_records
-from dev.docs.terminology._query_aliases import (
+
+from ...pagefind_inject import SearchRecordProjection, materialise_search_records
+from .._query_aliases import (
     QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
     QueryAliasAuthority,
     QueryAliasEntry,
 )
-from dev.docs.terminology._resolution import (
+from .._resolution import (
     ChunkHit,
     GroundingSurface,
     ResolutionResult,
     TargetResolver,
     resolve_chunk_hits,
 )
-from dev.docs.terminology._search_record import SearchRecordKind
-from dev.docs.terminology._sweep import (
+from .._search_record import SearchRecordKind
+from .._sweep import (
     RagSearchClient,
     SweepQuery,
     SweepResult,
@@ -50,8 +51,8 @@ from dev.docs.terminology._sweep import (
     enumerate_query_vocabulary,
     run_sweep,
 )
-from dev.docs.terminology._unified_record import SearchRecord
-from dev.docs.terminology._wrangle import wrangle
+from .._unified_record import SearchRecord
+from .._wrangle import wrangle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

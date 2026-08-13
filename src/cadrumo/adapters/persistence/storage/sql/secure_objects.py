@@ -365,7 +365,7 @@ class SecureObjectRepository:
         self._check_session_freshness(namespace)
         digest_to_key = {secure_object_key_digest(key): key for key in object_keys}
         if not digest_to_key:
-            return frozenset()
+            return frozenset[str]()
         present: set[str] = set()
         digests = tuple(digest_to_key)
         with session_scope(self._engine) as session:

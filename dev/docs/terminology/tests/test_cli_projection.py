@@ -22,7 +22,8 @@ import pytest
 from docutils.nodes import make_id
 
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
-from dev.docs.terminology._cli_projection import CliOptionRecord, CliProjectionStats, CliSurfaceRecord
+
+from .._cli_projection import CliOptionRecord, CliProjectionStats, CliSurfaceRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.docs]
 
@@ -32,7 +33,7 @@ _FOUR_LANGUAGES = frozenset(OutputLanguage(code) for code in SUPPORTED_OUTPUT_LA
 @pytest.fixture(scope="module")
 def projection() -> tuple[tuple[CliSurfaceRecord, ...], tuple[CliOptionRecord, ...], CliProjectionStats]:
     """Project the live CLI tree once for the whole module (4 subprocess walks)."""
-    from dev.docs.terminology._cli_projection import project_cli_search_records
+    from .._cli_projection import project_cli_search_records
 
     return project_cli_search_records()
 
@@ -40,7 +41,7 @@ def projection() -> tuple[tuple[CliSurfaceRecord, ...], tuple[CliOptionRecord, .
 @pytest.fixture(scope="module")
 def live_leaf_keys() -> set[str]:
     """The live leaf-command registry keys, from the independent house walk."""
-    from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
+    from ...cli_reference import collect_live_leaf_paths_in_subprocess
 
     return set(collect_live_leaf_paths_in_subprocess())
 
@@ -124,7 +125,7 @@ def test_every_target_anchor_resolves_to_the_cli_reference_shape(
     resolution against rendered pages is proven by
     ``dev/docs/tests/test_cli_anchor_parity.py``.
     """
-    from dev.docs.cli_reference import cli_reference_page_for_command
+    from ...cli_reference import cli_reference_page_for_command
 
     commands, _options, _stats = projection
     for record in commands:

@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.release.burned_versions import (
+from ..burned_versions import (
     LEDGER_PATH,
     BurnedVersion,
     BurnedVersionLedgerError,

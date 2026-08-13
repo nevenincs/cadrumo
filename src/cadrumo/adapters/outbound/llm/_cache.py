@@ -426,7 +426,10 @@ class LLMCache:
         except (ValueError, TypeError):
             _log.debug("ignoring malformed LLM cache payload while filtering logical root", exc_info=True)
             return False
-        return decoded.get("logical_root") == self._logical_root()
+        if not isinstance(decoded, dict):
+            return False
+        logical_root = decoded.get("logical_root")
+        return isinstance(logical_root, str) and logical_root == self._logical_root()
 
     @staticmethod
     def _sanitise_model_for_path(model: str) -> str:

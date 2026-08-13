@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from dev.packaging.cohort_manifest import (
+from ..cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
     ArtifactKind,
     ArtifactRecord,

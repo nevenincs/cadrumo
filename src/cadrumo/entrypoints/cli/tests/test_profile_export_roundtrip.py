@@ -763,7 +763,7 @@ def test_config_profile_export_result_refuses_malformed_transport_and_reconcile_
     from .._config_payloads import ConfigProfileExportReconcileFailurePayload, ConfigProfileExportResult
 
     base_kwargs = {
-        "profile_id": "profile-1",
+        "profile_id": "11111111-1111-4111-8111-111111111111",
         "display_name": "Example",
         "out": str(tmp_path / "bundle.json"),
         "schema_version": 3,

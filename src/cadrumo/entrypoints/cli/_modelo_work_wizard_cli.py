@@ -564,16 +564,30 @@ def _profile_resolved_binding_ids(unit: WorkUnit) -> frozenset[str]:
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
-        return frozenset()
+        return frozenset[str]()
     try:
-        return profile_resolvable_binding_ids(
-            modelo=str(unit.modelo),
-            bucket_id=bucket_id,
-            filing_year=unit.filing_year,
-            period=unit.period,
+        return _text_frozenset(
+            profile_resolvable_binding_ids(
+                modelo=str(unit.modelo),
+                bucket_id=bucket_id,
+                filing_year=unit.filing_year,
+                period=unit.period,
+            ),
         )
     except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
-        return frozenset()
+        return frozenset[str]()
+
+
+def _text_frozenset(value: object) -> frozenset[str]:
+    """Validate the application binding-id collection at the CLI boundary."""
+    if not isinstance(value, (set, frozenset, tuple, list)):
+        raise TypeError("binding-id projection must be a collection")
+    values: set[str] = set()
+    for item in value:
+        if not isinstance(item, str):
+            raise TypeError("binding-id projection must contain text")
+        values.add(item)
+    return frozenset(values)
 
 
 def _page_key(step: _WizardStep) -> str:

@@ -12,7 +12,7 @@ from typing import Final
 
 import pytest
 
-from dev.packaging._hashing import sha256_path
+from .._hashing import sha256_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

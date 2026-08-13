@@ -20,9 +20,11 @@ from typing import Final, override
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
+if not __package__:
+    __package__ = "dev.packaging"
 
-from dev.packaging._command import CommandResult, run_command  # noqa: E402
-from dev.packaging._hashing import sha256_path  # noqa: E402
+from ._command import CommandResult, run_command  # noqa: E402
+from ._hashing import sha256_path  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
 _FORMULA_NAME: Final[str] = "cadrumo"

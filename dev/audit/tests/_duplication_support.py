@@ -14,7 +14,7 @@ from collections import Counter
 from collections.abc import Sequence
 from pathlib import Path
 
-from dev.audit.duplication import (
+from ..duplication import (
     CloneGroup,
 )
 

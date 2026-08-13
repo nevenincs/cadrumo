@@ -42,12 +42,12 @@ See Also:
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pdfplumber
 import pytest
 
+from .....core import STR_KEYED_MAPPING_ADAPTER
 from .....tests import FIXTURES_DIR
 from .. import parse_declaracion
 from .._detect import detect_template_revision
@@ -74,7 +74,9 @@ def _fixture(modelo: str, stem: str) -> Path:
 
 
 def _sidecar(modelo: str, stem: str) -> dict[str, object]:
-    return json.loads(_fixture(modelo, stem).with_suffix(".json").read_text(encoding="utf-8"))
+    return STR_KEYED_MAPPING_ADAPTER.validate_json(
+        _fixture(modelo, stem).with_suffix(".json").read_text(encoding="utf-8"),
+    )
 
 
 def _declared_tax_id(modelo: str, stem: str) -> str:

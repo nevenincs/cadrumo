@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.docs.env_reference import render_environment_reference, target_path
+from ..env_reference import render_environment_reference, target_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

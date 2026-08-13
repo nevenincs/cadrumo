@@ -63,9 +63,16 @@ def _imported_transaction_id(tmp_path: Path) -> str:
     listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
-    rows = payload.get("result", payload).get("rows", [])
-    assert rows, listed.output
-    return rows[0]["transaction_id"]
+    assert isinstance(payload, dict), listed.output
+    result = payload.get("result", payload)
+    assert isinstance(result, dict), listed.output
+    rows = result.get("rows", [])
+    assert isinstance(rows, list) and rows, listed.output
+    first = rows[0]
+    assert isinstance(first, dict), listed.output
+    transaction_id = first.get("transaction_id")
+    assert isinstance(transaction_id, str), listed.output
+    return transaction_id
 
 
 def _allocate(transaction_id: str, business_pct: str) -> dict[str, Any]:

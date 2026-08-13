@@ -21,6 +21,7 @@ applies elsewhere, or rejects a model proposal.
 
 from __future__ import annotations
 
+from ...core.identity import TransactionId
 from ...core.json_contract import OutputSchema
 
 
@@ -42,7 +43,7 @@ class LedgerClassifyLlmSuggestResult(OutputSchema):
 
     llm: bool
     provider: str
-    transaction_id: str
+    transaction_id: TransactionId
     classification: str | None = None
     category: str | None = None
     confidence: str | None = None
@@ -66,7 +67,7 @@ class LedgerClassifyLlmSaturateResult(OutputSchema):
 
     llm: bool
     provider: str
-    transaction_id: str
+    transaction_id: TransactionId
     # Stage-1 classification decision carried alongside the saturated substrate.
     classification: str | None = None
     category: str | None = None
@@ -100,7 +101,7 @@ class LedgerClassifyLlmRejectResult(OutputSchema):
     llm: bool
     rejected: bool
     provider: str
-    transaction_id: str
+    transaction_id: TransactionId
     suggestion_kind: str
     provenance: str
     bucket_event_id: str

@@ -39,7 +39,7 @@ lose it from.
 
 from __future__ import annotations
 
-from typing import Final, get_args
+from typing import Final, cast, get_args
 
 import pytest
 from pydantic import BaseModel
@@ -101,8 +101,9 @@ _FAMILIES: Final[tuple[tuple[str, type[BaseModel], object, Modelo], ...]] = (
 
 
 def _undeclared(model: type[BaseModel], literal: object) -> frozenset[str]:
-    declared = frozenset(get_args(literal))
-    return frozenset(model.model_fields) - declared - _NOT_A_DRAWABLE_COLUMN
+    declared = frozenset(cast(str, field_name) for field_name in get_args(literal))
+    model_fields = frozenset(cast(str, field_name) for field_name in model.model_fields)
+    return model_fields - declared - _NOT_A_DRAWABLE_COLUMN
 
 
 def _has_export_layout(modelo: Modelo) -> bool:

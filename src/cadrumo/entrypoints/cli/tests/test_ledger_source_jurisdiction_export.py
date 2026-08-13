@@ -70,7 +70,13 @@ def _add_manual_row(*, date: str, description: str, source_jurisdiction: str) ->
         ],
     )
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["result"]["transaction_id"]
+    payload = json.loads(result.output)
+    assert isinstance(payload, dict), result.output
+    body = payload.get("result")
+    assert isinstance(body, dict), result.output
+    transaction_id = body.get("transaction_id")
+    assert isinstance(transaction_id, str), result.output
+    return transaction_id
 
 
 def _export_rows(tmp_path: Path, export_format: str) -> list[dict[str, str]]:

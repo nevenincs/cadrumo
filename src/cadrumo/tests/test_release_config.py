@@ -197,7 +197,7 @@ class ReleaseChecklist(BaseModel):
     audit_state_gate: AuditStateGateChecklist
 
 
-_VERSION_RE = re.compile(r"^__version__\s*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)
+_VERSION_RE: re.Pattern[str] = re.compile(r"^__version__\s*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)
 
 
 def _read_pyproject_version() -> str:
@@ -208,7 +208,10 @@ def _read_pyproject_version() -> str:
 def _read_init_version() -> str:
     match = _VERSION_RE.search(INIT_PATH.read_text(encoding="utf-8"))
     assert match, f"__version__ not found in {INIT_PATH}"
-    return match.group(1)
+    version = match.group(1)
+    if not isinstance(version, str):
+        raise AssertionError("version regex returned a non-string value")
+    return version
 
 
 @pytest.fixture(scope="module")

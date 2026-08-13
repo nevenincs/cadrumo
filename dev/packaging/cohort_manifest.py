@@ -13,7 +13,7 @@ from typing import Final, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from dev.packaging._hashing import sha256_path
+from ._hashing import sha256_path
 
 _UTF_8: Final[str] = "utf-8"
 _SCHEMA: Final[Literal["cadrumo.release-cohort.v1"]] = "cadrumo.release-cohort.v1"

@@ -39,7 +39,9 @@ async def _discover_filed_period(*, bucket_id: str, modelo: str, year: int) -> P
     snapshot = await capture_expedientes(bucket_id=bucket_id, modelo=modelo, year=year)
     for declaration in snapshot.declarations:
         if declaration.modelo == modelo:
-            return declaration.period
+            period = declaration.period
+            assert period is None or isinstance(period, Period)
+            return period
     return None
 
 

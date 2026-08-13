@@ -97,7 +97,7 @@ def _modelo_100():
 def _formula_target_casillas_for_revision(modelo: ModeloDefinition, revision_id: str) -> frozenset[CasillaId]:
     revision = modelo.revisions.get(revision_id)
     if revision is None:
-        return frozenset()
+        return frozenset[CasillaId]()
     return frozenset(formula.target_casilla_id for formula in revision.formulas)
 
 

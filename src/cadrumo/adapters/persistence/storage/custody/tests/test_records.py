@@ -1,0 +1,158 @@
+"""Real contract tests for strict profile-custody records."""
+
+from __future__ import annotations
+
+import base64
+import json
+from typing import Literal
+from uuid import UUID
+
+import pytest
+
+from ......core import StorageCategory, storage_location
+from .. import (
+    PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
+    PROFILE_CUSTODY_PASSWORD_GENERATION_MAX,
+    PROFILE_CUSTODY_PASSWORD_MAX_BYTES,
+    ProfileCustodyEnvelope,
+    ProfileCustodyKdfParameters,
+    ProfileCustodyPasswordError,
+    ProfileCustodyRecordError,
+    ProfileCustodyRefusal,
+    ProfileCustodyRefusedError,
+    ProfileCustodyWrappedDek,
+    decode_profile_password,
+    parse_profile_custody_envelope,
+    profile_custody_path,
+    validate_profile_password,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_PROFILE_ID = UUID("b6af9dd0-7c7d-46d1-bb8d-4c842c62be4d")
+
+
+def _b64(byte: int, length: int) -> str:
+    return base64.b64encode(bytes([byte]) * length).decode("ascii")
+
+
+def _envelope(
+    *,
+    password_generation: int = 1,
+    previous_envelope_digest: str | None = None,
+    memory_mib: Literal[19, 32, 64, 128, 256] = 64,
+    iterations: Literal[2, 3, 4, 6, 8, 10] = 3,
+    parallelism: Literal[1, 2, 4] = 1,
+) -> ProfileCustodyEnvelope:
+    return ProfileCustodyEnvelope.create(
+        profile_id=_PROFILE_ID,
+        password_generation=password_generation,
+        dek_epoch=_b64(1, 16),
+        kdf=ProfileCustodyKdfParameters(
+            algorithm="argon2id",
+            version=19,
+            memory_mib=memory_mib,
+            iterations=iterations,
+            parallelism=parallelism,
+            salt_b64=_b64(2, 16),
+            output_bytes=32,
+        ),
+        wrapped_dek=ProfileCustodyWrappedDek(
+            nonce_b64=_b64(3, 12),
+            ciphertext_b64=_b64(4, 32),
+            tag_b64=_b64(5, 16),
+        ),
+        previous_envelope_digest=previous_envelope_digest,
+    )
+
+
+def test_current_envelope_roundtrips_through_the_raw_persisted_boundary() -> None:
+    envelope = _envelope()
+
+    assert parse_profile_custody_envelope(envelope.canonical_json_bytes()) == envelope
+
+
+def test_canonical_envelope_has_exact_byte_ceiling_and_refuses_one_extra_raw_byte() -> None:
+    envelope = _envelope(
+        password_generation=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX,
+        previous_envelope_digest="sha256:" + "f" * 64,
+        memory_mib=256,
+        iterations=10,
+        parallelism=4,
+    )
+    canonical = envelope.canonical_json_bytes()
+
+    assert len(canonical) == PROFILE_CUSTODY_ENVELOPE_MAX_BYTES
+    assert parse_profile_custody_envelope(canonical) == envelope
+    with pytest.raises(ProfileCustodyRecordError, match="byte canonical limit"):
+        parse_profile_custody_envelope(canonical + b" ")
+
+
+def test_envelope_generation_is_bounded_before_canonical_serialization() -> None:
+    with pytest.raises(ProfileCustodyRecordError):
+        _envelope(password_generation=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX + 1)
+
+
+def test_parser_refuses_duplicate_unknown_digest_and_noncanonical_records() -> None:
+    envelope = _envelope()
+    document = envelope.canonical_json_bytes().decode("utf-8")
+    duplicate = document.replace('"schema_version":1', '"schema_version":1,"schema_version":1', 1).encode("utf-8")
+    unknown = document.replace("{", '{"unexpected":true,', 1).encode("utf-8")
+    foreign_version = document.replace('"schema_version":1', '"schema_version":2', 1).encode("utf-8")
+    altered = document.replace(envelope.self_digest, "sha256:" + "f" * 64).encode("utf-8")
+    parsed = json.loads(document)
+    reordered = json.dumps(dict(reversed(tuple(parsed.items()))), separators=(",", ":")).encode("utf-8")
+    alternate_separators = json.dumps(parsed).encode("utf-8")
+    whitespace = document.replace("{", "{ ", 1).encode("utf-8")
+    upper_case_uuid = document.replace(str(_PROFILE_ID), str(_PROFILE_ID).upper()).encode("utf-8")
+    compact_uuid = document.replace(str(_PROFILE_ID), _PROFILE_ID.hex).encode("utf-8")
+
+    for corrupted in (
+        duplicate,
+        unknown,
+        foreign_version,
+        altered,
+        reordered,
+        alternate_separators,
+        whitespace,
+        upper_case_uuid,
+        compact_uuid,
+    ):
+        with pytest.raises(ProfileCustodyRecordError):
+            parse_profile_custody_envelope(corrupted)
+
+
+def test_password_contract_preserves_unicode_and_rejects_unrepresentable_inputs() -> None:
+    password = "  p\u0001ass phrase with spaces  "  # noqa: S105 - synthetic boundary input
+    byte_boundary_password = "😀" * 256
+
+    assert validate_profile_password(password) == password
+    assert len(byte_boundary_password.encode("utf-8")) == PROFILE_CUSTODY_PASSWORD_MAX_BYTES
+    assert decode_profile_password(byte_boundary_password.encode("utf-8")) == byte_boundary_password
+
+    for invalid in ("a" * 14, "a" * 257, "\ud800" + "a" * 14):
+        with pytest.raises(ProfileCustodyPasswordError):
+            validate_profile_password(invalid)
+    with pytest.raises(ProfileCustodyPasswordError):
+        decode_profile_password(b"\xff" * 15)
+
+
+def test_custody_taxonomy_is_closed_to_current_profile_capsule_artifacts() -> None:
+    assert storage_location(StorageCategory.PROFILE_CAPSULE_PASSWORD_ENVELOPE).subpath == "custody/envelope.v1.json"
+    assert storage_location(StorageCategory.PROFILE_CAPSULE_COMMIT).subpath == "profile.commit.v1.json"
+    with pytest.raises(ValueError):
+        profile_custody_path(_PROFILE_ID, StorageCategory.BUCKET_LOCK)
+
+
+def test_refusal_taxonomy_carries_the_hard_cutover_and_supervision_outcomes() -> None:
+    assert set(ProfileCustodyRefusal) == {
+        ProfileCustodyRefusal.LEGACY_CUSTODY_DETECTED,
+        ProfileCustodyRefusal.DEK_ROTATION_UNSUPPORTED,
+        ProfileCustodyRefusal.KDF_RESOURCE_LIMIT,
+        ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE,
+    }
+    error = ProfileCustodyRefusedError(
+        ProfileCustodyRefusal.LEGACY_CUSTODY_DETECTED,
+        context={"refusal": "forged-refusal", "profile_id": str(_PROFILE_ID)},
+    )
+    assert error.context == {"refusal": "LEGACY_CUSTODY_DETECTED", "profile_id": str(_PROFILE_ID)}

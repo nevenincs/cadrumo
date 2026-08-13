@@ -25,7 +25,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import ClassVar, cast, override
+from typing import ClassVar, override
 
 from pydantic import ValidationError
 
@@ -122,8 +122,7 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
                     exc_info=True,
                 )
                 continue
-            # CAST-RATIONALE-SUBMISSION-ENVELOPE-CAST: envelope verified via metadata
-            payload = cast(ModeloPresentado, envelope.payload)
+            payload = envelope.payload
             if secure_object_key_digest(payload.submission_id) != item.object_key:
                 raise SecureObjectRowIdentityError(
                     self.namespace,

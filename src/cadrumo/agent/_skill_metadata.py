@@ -290,9 +290,14 @@ def parse_skill_frontmatter(text: str) -> Mapping[str, object]:
     if matched is None:
         raise SkillMetadataError("SKILL.md has no leading YAML frontmatter block")
     loaded = yaml.safe_load(matched.group("body"))
-    if not isinstance(loaded, dict):
+    if not isinstance(loaded, Mapping):
         raise SkillMetadataError("SKILL.md frontmatter is not a YAML mapping")
-    return loaded
+    frontmatter: dict[str, object] = {}
+    for key, value in loaded.items():
+        if not isinstance(key, str):
+            raise SkillMetadataError("SKILL.md frontmatter mapping keys must be strings")
+        frontmatter[key] = value
+    return frontmatter
 
 
 def parse_skill_metadata(text: str) -> SkillMetadata:

@@ -50,7 +50,13 @@ def _run_probe(body: str) -> dict[str, object]:
         f"probe produced no verdict (exit {completed.returncode})\n"
         f"--- stdout ---\n{completed.stdout}\n--- stderr ---\n{completed.stderr}"
     )
-    return json.loads(stdout.splitlines()[-1])
+    parsed = json.loads(stdout.splitlines()[-1])
+    assert isinstance(parsed, dict), stdout
+    verdict: dict[str, object] = {}
+    for key, value in parsed.items():
+        assert isinstance(key, str), stdout
+        verdict[key] = value
+    return verdict
 
 
 def test_stdlib_getpass_really_falls_back_to_an_echoing_read() -> None:

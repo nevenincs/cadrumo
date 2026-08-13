@@ -18,6 +18,7 @@ rather than a smoke test.
 
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -64,7 +65,7 @@ Borders and band fills are governed by this bar, not the body-text one.
 
 def _linearise(channel: float) -> float:
     """Undo the sRGB transfer function for one 0..1 channel (WCAG 2.1)."""
-    return channel / 12.92 if channel <= 0.03928 else ((channel + 0.055) / 1.055) ** 2.4
+    return channel / 12.92 if channel <= 0.03928 else math.pow((channel + 0.055) / 1.055, 2.4)
 
 
 def _relative_luminance(hex_colour: str) -> float:

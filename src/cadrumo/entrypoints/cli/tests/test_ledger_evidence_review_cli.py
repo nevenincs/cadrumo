@@ -188,9 +188,10 @@ def _json_result(args: list[str]) -> dict[str, object]:
     result = _invoke(["--format", "json", *args])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
+    assert isinstance(payload, dict), result.output
     body = payload.get("result", payload)
-    assert isinstance(body, dict)
-    return body
+    assert isinstance(body, dict), result.output
+    return {str(key): value for key, value in body.items()}
 
 
 def _objects(payload: Mapping[str, object], key: str) -> list[dict[str, object]]:

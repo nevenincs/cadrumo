@@ -14,8 +14,8 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import ValidationError
 
-from dev.release.readiness import ReadinessCheck, ReadinessReport
-from dev.release.release_candidate import (
+from ..readiness import ReadinessCheck, ReadinessReport
+from ..release_candidate import (
     CANDIDATE_TAG_RE,
     ReleaseCandidate,
     ReleaseCandidateError,
@@ -25,7 +25,7 @@ from dev.release.release_candidate import (
     consumed_tag,
     seal_candidate,
 )
-from dev.release.soak_promoter import PromotionDecision, promote_once, select_promotable
+from ..soak_promoter import PromotionDecision, promote_once, select_promotable
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

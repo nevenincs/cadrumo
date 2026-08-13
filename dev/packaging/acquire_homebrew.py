@@ -18,16 +18,16 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Final
 
-from dev.packaging._acquire_common import (
+from ._acquire_common import (
     AcquisitionError,
     require_command_succeeded,
     run_installed_behavior_oracles,
 )
-from dev.packaging._command import CommandResult, run_command
-from dev.packaging.cohort_manifest import load_release_cohort
-from dev.packaging.distribution_evidence_emit import emit_installed_oracle_evidence
-from dev.packaging.evidence import AcquisitionIdentity, DestinationIdentity
-from dev.packaging.python_cohort import PythonCohort, load_python_cohort
+from ._command import CommandResult, run_command
+from .cohort_manifest import load_release_cohort
+from .distribution_evidence_emit import emit_installed_oracle_evidence
+from .evidence import AcquisitionIdentity, DestinationIdentity
+from .python_cohort import PythonCohort, load_python_cohort
 
 _UTF_8: Final[str] = "utf-8"
 # The account-scoped tap (repo `nevenincs/homebrew-tap`) serving every product

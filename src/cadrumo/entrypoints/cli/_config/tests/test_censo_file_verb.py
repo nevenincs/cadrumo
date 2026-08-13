@@ -18,7 +18,7 @@ def _invoke_with_artefact(tmp_path: Path, payload: bytes):
     return invoke_cached_cli(["--format", "json", "config", "profile", "censo", "file", "--file", str(artefact)])
 
 
-def _stderr_document(result) -> dict[str, dict[str, str]]:
+def _stderr_document(result) -> dict[str, object]:
     """Extract the JSON error document from stderr (line-scanned: logging may interleave)."""
     stderr = result.stderr if result.stderr_bytes is not None else ""
     for line in stderr.splitlines():
@@ -26,7 +26,11 @@ def _stderr_document(result) -> dict[str, dict[str, str]]:
         if candidate.startswith("{"):
             parsed = json.loads(candidate)
             assert isinstance(parsed, dict)
-            return parsed
+            document: dict[str, object] = {}
+            for key, value in parsed.items():
+                assert isinstance(key, str), candidate
+                document[key] = value
+            return document
     raise AssertionError(f"no JSON document on stderr: {stderr[:400]!r}")
 
 
@@ -34,15 +38,21 @@ def test_non_pdf_artefact_refuses_with_the_registered_parse_code(tmp_path: Path)
     result = _invoke_with_artefact(tmp_path, b"not a certificate")
     assert result.exit_code != 0
     document = _stderr_document(result)
-    assert document["error"]["code"] == "FAIL_CERTIFICADO_CENSAL_PARSE"
-    assert "profile edit" in (document["error"].get("suggestion") or "")
+    error = document.get("error")
+    assert isinstance(error, dict)
+    assert error.get("code") == "FAIL_CERTIFICADO_CENSAL_PARSE"
+    suggestion = error.get("suggestion")
+    suggestion_text = suggestion if isinstance(suggestion, str) else ""
+    assert "profile edit" in suggestion_text
 
 
 def test_pdf_artefact_refuses_while_extraction_is_unpinned(tmp_path: Path) -> None:
     result = _invoke_with_artefact(tmp_path, b"%PDF-1.7 specimen-free")
     assert result.exit_code != 0
     document = _stderr_document(result)
-    assert document["error"]["code"] == "FAIL_CERTIFICADO_CENSAL_PARSE"
+    error = document.get("error")
+    assert isinstance(error, dict)
+    assert error.get("code") == "FAIL_CERTIFICADO_CENSAL_PARSE"
 
 
 def test_missing_artefact_is_refused_at_the_cli_boundary(tmp_path: Path) -> None:

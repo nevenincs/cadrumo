@@ -41,7 +41,7 @@ from typing import Final
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from dev.release._asset_transport import (
+from ._asset_transport import (
     download_release_assets,
     list_releases,
     resolve_gh,

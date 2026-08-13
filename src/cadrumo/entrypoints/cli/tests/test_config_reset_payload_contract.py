@@ -9,7 +9,6 @@ already refuses, and must accept the same journal a real reset run produces.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -22,6 +21,7 @@ from ....application._config_reset_models import (
     ConfigResetTarget,
     ConfigResetTargetPhase,
 )
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from .._config_payloads import ConfigResetOperationPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -69,7 +69,7 @@ def test_projection_round_trips_a_real_completed_journal() -> None:
 
 def _payload_kwargs(**overrides: object) -> dict[str, object]:
     payload = ConfigResetOperationPayload.from_operation(_completed_operation())
-    base = payload.model_dump(mode="json")
+    base = STR_KEYED_MAPPING_ADAPTER.validate_python(payload.model_dump(mode="json"))
     base.update(overrides)
     return base
 
@@ -77,7 +77,7 @@ def _payload_kwargs(**overrides: object) -> dict[str, object]:
 def _mutable_payload_mapping(value: object) -> dict[str, object]:
     """Narrow a JSON object before a malformed-input test mutates it."""
     assert isinstance(value, dict)
-    return cast(dict[str, object], value)
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(value)
 
 
 def test_malformed_operation_id_is_refused() -> None:

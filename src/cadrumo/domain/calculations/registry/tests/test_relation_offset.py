@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 from .....core import CasillaId, validated_casilla_id
 from .._errors import RegistryValidationError
-from .._relations import _derive_offset_source_anchor, _derive_offset_source_period
+from .._relations import _derive_offset_source_anchor, derive_offset_source_period
 from .._schema import RelationDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -34,9 +34,9 @@ def _relation(**overrides: object) -> RelationDefinition:
 
 def test_quarterly_offset_resolves_previous_quarter() -> None:
     relation = _relation(target_periods=("2T", "3T", "4T"), source_period_offset_from_target=-1)
-    assert _derive_offset_source_period(relation, target_period="2T") == "1T"
-    assert _derive_offset_source_period(relation, target_period="3T") == "2T"
-    assert _derive_offset_source_period(relation, target_period="4T") == "3T"
+    assert derive_offset_source_period(relation, target_period="2T") == "1T"
+    assert derive_offset_source_period(relation, target_period="3T") == "2T"
+    assert derive_offset_source_period(relation, target_period="4T") == "3T"
 
 
 def test_quarterly_offset_wraps_across_year_boundary() -> None:
@@ -47,7 +47,7 @@ def test_quarterly_offset_wraps_across_year_boundary() -> None:
     along with a negative year delta rather than ``None``.
     """
     relation = _relation(target_periods=("1T", "2T", "3T", "4T"), source_period_offset_from_target=-1)
-    assert _derive_offset_source_period(relation, target_period="1T") == "4T"
+    assert derive_offset_source_period(relation, target_period="1T") == "4T"
     assert _derive_offset_source_anchor(relation, target_period="1T") == (-1, "4T")
 
 
@@ -58,22 +58,22 @@ def test_pago_fraccionado_offset_resolves_previous_period() -> None:
     to 3P of the prior year (year_delta=-1).
     """
     relation = _relation(target_periods=("1P", "2P", "3P"), source_period_offset_from_target=-1)
-    assert _derive_offset_source_period(relation, target_period="2P") == "1P"
-    assert _derive_offset_source_period(relation, target_period="3P") == "2P"
-    assert _derive_offset_source_period(relation, target_period="1P") == "3P"
+    assert derive_offset_source_period(relation, target_period="2P") == "1P"
+    assert derive_offset_source_period(relation, target_period="3P") == "2P"
+    assert derive_offset_source_period(relation, target_period="1P") == "3P"
     assert _derive_offset_source_anchor(relation, target_period="1P") == (-1, "3P")
 
 
 def test_monthly_offset_resolves_previous_month() -> None:
     relation = _relation(target_periods=("02", "12"), source_period_offset_from_target=-1)
-    assert _derive_offset_source_period(relation, target_period="02") == "01"
-    assert _derive_offset_source_period(relation, target_period="12") == "11"
+    assert derive_offset_source_period(relation, target_period="02") == "01"
+    assert derive_offset_source_period(relation, target_period="12") == "11"
 
 
 def test_monthly_offset_wraps_across_year_boundary() -> None:
     """Month 01 with offset=-1 wraps to month 12 of the prior year."""
     relation = _relation(target_periods=("01",), source_period_offset_from_target=-1)
-    assert _derive_offset_source_period(relation, target_period="01") == "12"
+    assert derive_offset_source_period(relation, target_period="01") == "12"
     assert _derive_offset_source_anchor(relation, target_period="01") == (-1, "12")
 
 
@@ -90,4 +90,4 @@ def test_zero_offset_rejected() -> None:
 def test_unknown_period_format_rejected_at_resolution() -> None:
     relation = _relation(target_periods=("ANUAL",), source_period_offset_from_target=-1)
     with pytest.raises(RegistryValidationError, match="cannot interpret target period"):
-        _derive_offset_source_period(relation, target_period="ANUAL")
+        derive_offset_source_period(relation, target_period="ANUAL")

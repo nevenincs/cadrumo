@@ -24,12 +24,15 @@ from typing import Any, Final
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
+if not __package__:
+    __package__ = "dev.packaging"
 
 from cadrumo.agent import materialise_marketplace  # noqa: E402
-from dev.packaging._command import CommandResult, run_command  # noqa: E402
-from dev.packaging._hashing import sha256_path  # noqa: E402
-from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle  # noqa: E402
-from dev.packaging.python_cohort import PythonCohort, load_python_cohort  # noqa: E402
+
+from ._command import CommandResult, run_command  # noqa: E402
+from ._hashing import sha256_path  # noqa: E402
+from .installed_mcp_oracle import run_installed_mcp_oracle  # noqa: E402
+from .python_cohort import PythonCohort, load_python_cohort  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
 _PLUGIN_ID: Final[str] = "cadrumo@neve"

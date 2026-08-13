@@ -116,6 +116,13 @@ class _ParsedOfxRow:
     booked_date: date
 
 
+def _normalise_text_value(value: object, *, default: str = "") -> str:
+    """Return a stripped text value, or ``default`` for absent/non-text data."""
+    if not isinstance(value, str):
+        return default
+    return value.strip() or default
+
+
 def _resolve_statement_context(statement: _OfxStatementLike) -> tuple[str, str]:
     """Return the ``(currency, account_id)`` context for one OFX statement block.
 
@@ -138,13 +145,16 @@ def _resolve_statement_context(statement: _OfxStatementLike) -> tuple[str, str]:
             f"OFX statement CURDEF must be a three-letter ISO 4217 code; got {raw_currency!r}",
         ) from exc
     account = statement.account
-    account_id = (getattr(account, "acctid", None) or "account") if account is not None else "account"
+    account_id = _normalise_text_value(
+        getattr(account, "acctid", None) if account is not None else None,
+        default="account",
+    )
     return currency, account_id
 
 
 def _stripped_attr(source: object, attr: str) -> str:
     """Return ``source.attr`` coerced to a stripped string (empty when absent/None)."""
-    return (getattr(source, attr, None) or "").strip()
+    return _normalise_text_value(getattr(source, attr, None))
 
 
 class OfxProvider(FinancialProvider):

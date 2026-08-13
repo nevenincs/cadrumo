@@ -113,7 +113,7 @@ def command_keys_for_toolsets(active: frozenset[Toolset]) -> frozenset[str]:
     toolset membership so it cannot drift from the manifest.
     """
     if not active:
-        return frozenset()
+        return frozenset[str]()
     members = {group.toolset: group.command_keys for group in build_toolsets()}
     keys: set[str] = set()
     for toolset in active:

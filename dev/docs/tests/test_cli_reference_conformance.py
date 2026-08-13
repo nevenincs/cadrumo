@@ -80,7 +80,7 @@ def _rendered_reference() -> dict[str, str]:
     """
     import tempfile
 
-    from dev.docs.cli_reference import generate_cli_reference_in_subprocess
+    from ..cli_reference import generate_cli_reference_in_subprocess
 
     with tempfile.TemporaryDirectory() as tmp:
         return generate_cli_reference_in_subprocess(Path(tmp))
@@ -119,7 +119,8 @@ def test_typer_positional_renders_as_argument() -> None:
     than leaving them at the mercy of whatever default the renderer picks.
     """
     from cadrumo.core.external_constants import OutputLanguage
-    from dev.docs.cli_reference import _render_param_table
+
+    from ..cli_reference import _render_param_table
 
     app = typer.Typer()
 
@@ -148,7 +149,7 @@ def test_every_live_leaf_is_documented() -> None:
 
     Failures indicate that the build-time renderer omitted a live command.
     """
-    from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
+    from ..cli_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
     assert live_keys, "the live CLI walk enumerated no leaves; this gate would pass over an empty tree"
@@ -167,7 +168,7 @@ def test_every_documented_path_resolves_to_a_live_command() -> None:
 
     Failures indicate that the build-time renderer emitted a stale command entry.
     """
-    from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
+    from ..cli_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
     assert live_keys, "the live CLI walk enumerated no leaves; this gate would pass over an empty tree"
@@ -197,7 +198,8 @@ def test_schema_registry_entries_map_to_live_commands_or_group_callbacks() -> No
     under a group callback rather than a leaf command.
     """
     from cadrumo.core.json_contract import SCHEMA_REGISTRY
-    from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
+
+    from ..cli_reference import collect_live_leaf_paths_in_subprocess
 
     _populate_schema_registry()
     live_keys = set(collect_live_leaf_paths_in_subprocess())
@@ -226,7 +228,8 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
     of the drift check.
     """
     from cadrumo.core.json_contract import SCHEMA_REGISTRY
-    from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
+
+    from ..cli_reference import collect_live_leaf_paths_in_subprocess
 
     _populate_schema_registry()
     live_keys = set(collect_live_leaf_paths_in_subprocess())

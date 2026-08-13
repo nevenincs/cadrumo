@@ -236,7 +236,16 @@ def _iva_transaction(
     )
 
 
-def _repositories(objects: SecureObjectRepository):
+def _repositories(
+    objects: SecureObjectRepository,
+) -> tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    ModeloRecordCatalogueRepository,
+    VerificationReportCatalogueRepository,
+    BucketEventHistoryRepository,
+    TransactionCatalogueRepository,
+]:
     return (
         WorkUnitCatalogueRepository(objects=objects),
         CalculationRevisionCatalogueRepository(objects=objects),

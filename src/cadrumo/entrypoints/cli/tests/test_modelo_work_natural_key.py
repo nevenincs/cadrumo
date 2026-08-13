@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
@@ -23,9 +24,9 @@ def _invoke(args: list[str]):
 
 def _envelope_status(output: str) -> str:
     """Return the outer envelope ``status`` field from a CLI ``--json`` document."""
-    import json
-
-    return json.loads(output)["status"]
+    status = STR_KEYED_MAPPING_ADAPTER.validate_json(output)["status"]
+    assert isinstance(status, str)
+    return status
 
 
 def _create_profile() -> None:

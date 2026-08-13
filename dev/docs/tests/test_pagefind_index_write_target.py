@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.docs.pagefind_index import build_search_index
+from ..pagefind_index import build_search_index
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

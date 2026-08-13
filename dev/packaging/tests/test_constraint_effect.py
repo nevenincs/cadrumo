@@ -21,8 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging._distribution_names import normalise_distribution_name
-from dev.packaging.constraint_effect import (
+from .._distribution_names import normalise_distribution_name
+from ..constraint_effect import (
     ConstraintDriftError,
     assert_installed_matches_constraints,
     parse_constraint_lines,

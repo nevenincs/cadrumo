@@ -47,7 +47,16 @@ def _parameters_toml() -> dict[str, dict[str, object]]:
         payload = tomllib.load(handle)
     parameters = payload["parameters"]
     assert isinstance(parameters, dict)
-    return parameters
+    typed_parameters: dict[str, dict[str, object]] = {}
+    for key, value in parameters.items():
+        assert isinstance(key, str)
+        assert isinstance(value, dict)
+        typed_value: dict[str, object] = {}
+        for field_name, field_value in value.items():
+            assert isinstance(field_name, str)
+            typed_value[field_name] = field_value
+        typed_parameters[key] = typed_value
+    return typed_parameters
 
 
 def _corpus_text() -> str:
