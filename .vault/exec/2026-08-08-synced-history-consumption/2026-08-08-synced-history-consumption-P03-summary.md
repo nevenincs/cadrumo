@@ -5,14 +5,10 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:fbdcc4974397b3f657338b293c2a4f6443ee1a132a9ca863d0f1569e78e6cc19'
+body_hash: 'sha256:d61b098fcdbe6d176ee9994487a4aa5b5de81e418769c25cac4aa94b4cba2d75'
 related:
   - "[[2026-08-08-synced-history-consumption-plan]]"
 ---
-
-
-
-
 # `synced-history-consumption` `P03` summary
 
 P03 removed repeated operator-surface construction from one overview invocation, made bounded sequence failures identify their real runtime coordinate, and completed the generated proof that had prevented the carry-treatment campaign from closing.
@@ -31,4 +27,4 @@ The CLI now reuses one dynamically built operator-surface reconciliation per inv
 
 The sequence runner executes equivalent named seeds once per page and reuses immutable captures. S41 deleted duplicate quickstart ledger, invoice, attachment, and filing operations from dependent contracts, regenerated only the affected goldens through the CLI, and proved fourteen isolated sequences plus five cumulative pages.
 
-Final registry verification passed for 73 modelos and 94 revisions; the runtime-derived authority probe found zero undeclared direct previous-filing bindings; the focused registry and resolver suite passed 98 tests; focused lint passed; and independent reviews reported no remaining findings.
+Final registry verification passed for 73 modelos and 94 revisions; the runtime-derived authority probe found zero undeclared direct previous-filing bindings; the focused registry suite passed 85 tests, the calculation, resolver, and work-unit suite passed 31 tests, and focused lint passed. Independent review closed the recorded implementation findings. Remaining low Vault hygiene warnings are historical documentation metadata observations, including the intentional PLAN022 ordering warning; they do not represent runtime, registry, or generated-proof failures.

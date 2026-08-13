@@ -9,7 +9,7 @@ supersedes:
   - '2026-07-15-cli-authority-verb-conformance-adr'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:cad42f4bd7fb6a0a9dba5f980f0df5fe8552a90c300c0ea046f27b70914f1d9f'
+body_hash: 'sha256:2a5b095f7c4fb032951235f2ce85c8e3b7ce51ad2c307eb59bc9daf7281d2084'
 ---
 # `cli-action-envelope` adr: `profile custody action envelope grammar` | (**status:** `accepted`)
 
@@ -20,7 +20,7 @@ The superseded CLI authority record mixed backend ownership with general command
 ## Considerations
 
 - `2026-08-09-cli-action-envelope-hardening-adr` remains authoritative for application verdicts and schema-resolved action chains.
-- Custody semantics belong to `2026-08-13-profile-password-custody-adr`.
+- Custody semantics belong to `2026-08-13-profile-password-custody-rollup-adr`.
 
 ## Considered options
 
@@ -42,3 +42,4 @@ Delegation preserves one CLI envelope authority while removing backend-shaped co
 ## Consequences
 
 Future custody verbs must extend the existing action-envelope schema before exposure; they cannot introduce a parallel envelope.
+

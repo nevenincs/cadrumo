@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:f5b7ea1d2210106a9219d9fb1c477bcb3536bf1a63265d6ada0dfee81eab68a2'
+body_hash: 'sha256:2a5fc43c73a592e523e013333a930e34ce952aa6fb49cedeeae099e311eacec8'
 step_id: 'S18'
 related:
   - "[[2026-08-08-synced-history-consumption-plan]]"
@@ -23,28 +23,25 @@ related:
 - Declare the twelve S18 source-modelo classifications from their own existing legal and source references.
 - Associate every classification with the construct that owns its direct carry.
 - Make the registry validator fail closed when a direct previous-filing source has no dependency-bearing classification, is relabelled `non_dependency`, lacks target coverage, or omits a required legal reference.
-- Remove duplicate sequence setup where the canonical seed already supplies the invoice evidence, and resolve the quickstart attachment through the seeded expense lookup.
-- Regenerate the fourteen affected goldens only through the sequence generator.
+- Remove duplicate sequence setup where the canonical seed already supplies the invoice evidence.
+- Regenerate changed goldens only through the sequence generator.
 
 ## Outcome
 
-The loaded authority has no undeclared direct `previous_filing` carry. All fifteen carry declarations are present: twelve are owned by S18 across Modelo 100, Modelo 130, Modelo 131, and Modelo 720; three Modelo 353 declarations are separately owned by S35 and are included only in the full-authority result. The two Modelo 390 annual-partition bindings were already classified and were never part of the measured undeclared set.
+The prior undeclared population is closed: twelve carries are owned by S18 across Modelo 100, Modelo 130, Modelo 131, and Modelo 720; Modelo 353's three carry declarations are separately owned by S35. The two Modelo 390 annual-partition bindings were already classified.
 
-The validator consumes the same source-modelo key as the previous-filing resolver, so it has one canonical failure path rather than a modelo-specific exception or parallel authority. The mutation suite proves both treatment kinds, missing relation-less direct-settlement classification, and `non_dependency` rejection.
+The validator consumes the prior-filing resolver's canonical source-modelo key. Its loaded mutation coverage proves missing factual-evidence classification, missing relation-less direct-annual-settlement classification, and `non_dependency` relabelling are refused without a modelo-specific exception.
 
 ## Verification
 
-- Loaded `ValidatedRegistryAuthority` probe: all fifteen carries have exactly one source-modelo classification with construct and legal-reference coverage.
-- `aeat app registry verify`: `Verificado=True`.
-- Focused registry and resolver suite: 105 passed.
-- Focused Ruff: all checks passed.
-- All fourteen affected exact golden checks are clean: `first-quarter-export-file`, `modelo-130-first-quarter`, `irpf-lifecycle-q1`, `irpf-lifecycle-q2`, `modelo-130-export-file`, `modelo-130-inspect-boxes`, `modelo-130-manual-casilla`, `modelo-130-quarterly`, `modelo-130-review-chain`, `quickstart-modelo-130`, `quickstart-revision`, `review-values-bindings`, `review-values-manual-casilla`, and `review-values-review-saved`.
-- Required first-quarterly-filing, Modelo 130, quickstart, and review-calculation-values page gates are clean.
-
-## Review
-
-Independent S18 code review is PASS. It found the missing direct-carry closure before approval; the generic validator and real mutation coverage resolved that finding. The remaining Modelo 720 work-unit/provenance observation is medium severity and non-blocking to the declared carry-treatment and generated-sequence scope.
+- `aeat --format json app registry verify` passed with `verified=true`.
+- The current loaded-authority probe found 21 direct `previous_filing` bindings and zero missing or `non_dependency` source-modelo classifications.
+- Focused registry validation and classification suite: 85 passed in 27.56 seconds.
+- Focused calculation, resolver-join, and Modelo 720 work-unit suite: 31 passed in 27.96 seconds.
+- Ruff passed for the validator and S18-owned registry, calculation, and resolver tests.
+- All fourteen S18 isolated sequence checks and all five owning-page coherence checks passed under the public 180-second timeout. The P03.S41 record contains the exact sequence and timing inventory.
+- The feature-scoped Vault check completed successfully; plan validation completed with the pre-existing `PLAN022` ordering warning.
 
 ## Notes
 
-The broader IRPF-lifecycle page remains red for unrelated overview `target_command_key` and Notice drift. That is a global current-tree failure, not an S18 contract or generated-artifact failure, and it is excluded from this Step's closure claim.
+The `verification-reports-modelo-303` contract had duplicated the canonical seed's evidence capture and attachment. P03.S41 removed the duplicate body frames and refreshed that exact generated golden through the canonical CLI; its isolated and page-coherence gates both passed. No generated JSON was hand-authored.

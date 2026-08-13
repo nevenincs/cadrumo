@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:1e6ce73caa8c52b82b326f53db7c0c65f140877746690394ed4725eee7c638e7'
+body_hash: 'sha256:3adaa8cc70c06eb50cbb77957d520eda9c9b5ebe1f087199fe97bf712ec6ff0c'
 related: []
 ---
 ---
@@ -45,15 +45,10 @@ Final re-review status: CLOSED FOR THE REQUIRED M720 CONTRACT. `src/cadrumo/appl
 
 ## Recommendations
 
-The first recommendation is satisfied by the corrected generic validator. The remaining mutation coverage, generated-evidence, and M720 boundary recommendations stay open.
+All four recommendations recorded by this review are now satisfied. The generic validator and its real loaded mutations cover both treatment families, the M720 proof covers real work-unit, taxpayer, and provenance boundaries, and P03.S43/S41 completed the fourteen isolated and five owning-page generated gates. The historical findings and their intermediate re-review states above remain the review ledger.
 
-Final status: the validator, mutation coverage, and M720 boundary recommendations are satisfied. Only the generated-evidence recommendation remains open.
-
-- Make the registry validator iterate every direct `previous_filing` binding and require exactly one source-modelo classification regardless of treatment. Apply construct-membership and binding legal-reference coverage checks to both `direct_annual_settlement` and `factual_evidence` classifications.
-- Add real mutation tests that remove the Modelo 720 classification and a relation-less settlement classification, and prove both mutations fail registry validation. Include factual-evidence construct-membership and legal-reference removal mutations.
-- Refresh the execution record against current-tree evidence, run the runner-required page-level gates for every affected page, and account for all fourteen regenerated sequences. Do not approve `P02.S18` until the complete generated surface is current and green.
-- Extend the M720 boundary proof through distinct real work units in one taxpayer bucket plus a second taxpayer bucket, asserting the intended same-taxpayer work-unit behavior and cross-taxpayer refusal. Preserve and assert capture source kind, source year and period, stamped revision, capture time or fingerprint, and legal and source references through the production source-mesh provenance projection; do not treat an encoded `source_ref` suffix as full provenance.
+No S18 code or generated-proof remediation remains open. Low feature-level Vault hygiene observations remain separately recorded by the final completion review; they do not invalidate this review's registry, calculation, provenance, or generated-sequence conclusions.
 
 ## Final verdict
 
-PASS for P02.S18 review closure. There are no open critical or high findings. The M720 item remains a non-blocking medium observation about a broader persistence/provenance boundary; it neither contradicts the fifteen carry-treatment declarations nor invalidates the P02.S18 registry or generated-sequence gates.
+PASS for P02.S18 review closure. The recorded high and medium findings are closed. Remaining low Vault hygiene warnings are feature-level documentation metadata observations, not S18 code or generated-proof failures; this review therefore does not claim a warning-free feature tree.
