@@ -11,6 +11,18 @@ the registered schema keys. There is no allowlist: a leaf without a
 schema fails the gate, and a registry key without a matching leaf
 fails the gate. Either side surfaces a structural regression that
 must be fixed before the suite goes green.
+
+The scope here is deliberately STRUCTURAL: it settles which command owns
+which schema, never what constraints that schema publishes. A field
+retyped from a plain ``str`` onto a canonical identifier alias changes the
+advertised ``minLength`` / ``maxLength`` / ``pattern`` without moving a
+single registry key, so this gate stays green through it. The
+CONTENT of those advertised constraints is pinned separately, across both
+the CLI envelope and the MCP ``output_schema`` built from the same
+registry, by
+``entrypoints.mcp.tests.test_identifier_schema_contract_pin``. Read the two
+together: a loosening caught by neither would be a genuine gap in the
+published operator contract.
 """
 
 from __future__ import annotations
