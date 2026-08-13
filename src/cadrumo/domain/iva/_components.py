@@ -458,6 +458,19 @@ _AGRICULTURAL_ACTIVITY_NOTE: Final[str] = (
     "not reach."
 )
 
+_ESTIMACION_OBJETIVA_NOTE: Final[str] = (
+    "Possible rather than expected, and the gap is in the SCOPE rather than in the rate. RIRPF "
+    "art. 95.6.1.º sets the retención on a rendimiento whose actividad económica determines its "
+    "rendimiento neto by estimación objetiva at 1 % of the ingresos íntegros satisfechos, and the "
+    "bundled excerpt carries it. What the excerpt truncates is art. 95.6.2.º, the list of "
+    "activities the apartado reaches, so whether a given taxpayer's activity is one of them cannot "
+    "be settled from the bundled text. Two further reasons keep this POSSIBLE rather than "
+    "expected: the IVA régimen simplificado and the IRPF estimación objetiva are regimes of "
+    "different taxes whose populations merely tend to coincide, so this category does not "
+    "establish the IRPF method at all; and an agrícola, ganadera or forestal activity is reached "
+    "by apartados 4 and 5 at their own rates instead."
+)
+
 _PROFESSIONAL_SERVICE_NOTE: Final[str] = (
     "Possible rather than expected because whether a retención arises depends on facts the IVA "
     "category does not carry: the rendimiento must be the contraprestación of an actividad "
@@ -915,14 +928,14 @@ _COMPONENT_ROWS: Final[tuple[_RowEntry, ...]] = (
         recargo=IvaComponentPresence.ZERO_BY_LAW,
         recargo_grounding=IvaGroundingConfidence.REASONED,
         retencion=IvaRetencionExpectation.POSSIBLE,
-        retencion_grounding=IvaGroundingConfidence.REASONED,
-        retencion_note=(
-            "Reasoned, not measured: activities in estimación objetiva can bear a retención under "
-            "RIRPF art. 95, but the applicable apartado and its rate are not covered by the "
-            "bundled art. 95 excerpt (which carries apartado 1 only). Treat the rate as ungrounded "
-            "until the full article is bundled."
+        retencion_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
+        retencion_note=_ESTIMACION_OBJETIVA_NOTE,
+        legal_refs=(
+            _LIVA_SIMPLIFICADO_AMBITO,
+            _LIVA_SIMPLIFICADO_CUOTA,
+            _LIRPF_PAGOS_A_CUENTA,
+            _RIRPF_RETENCION_ACTIVIDADES,
         ),
-        legal_refs=(_LIVA_SIMPLIFICADO_AMBITO, _LIVA_SIMPLIFICADO_CUOTA),
     ),
     # The received side is declared ARISES rather than non-arising: the régimen
     # simplificado computes a cuota from módulos in which the taxpayer's own
@@ -940,16 +953,21 @@ _COMPONENT_ROWS: Final[tuple[_RowEntry, ...]] = (
         recargo=IvaComponentPresence.ZERO_BY_LAW,
         recargo_grounding=IvaGroundingConfidence.REASONED,
         retencion=IvaRetencionExpectation.POSSIBLE,
-        retencion_grounding=IvaGroundingConfidence.REASONED,
+        retencion_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
         retencion_note=(
-            "Reasoned, not measured, on both counts. The régimen simplificado (LIVA arts. 122/123) "
-            "describes the taxpayer's own output regime, so whether a RECEIVED invoice legitimately "
-            "carries this category is itself unsettled; the pair is declared to arise because "
-            "refusing a real operation is worse than carrying an unused row. Where a retención does "
-            "arise the taxpayer is the retenedor, and the applicable RIRPF art. 95 apartado is not "
-            "covered by the bundled excerpt (apartado 1 only)."
+            "Whether a RECEIVED invoice legitimately carries this category is itself unsettled -- "
+            "the régimen simplificado (LIVA arts. 122/123) describes the taxpayer's own OUTPUT "
+            "regime -- and the pair is declared to arise because refusing a real operation is "
+            "worse than carrying an unused row. That uncertainty is about the row, not about the "
+            "retención: where one arises the taxpayer is the retenedor, and it is grounded exactly "
+            "as on the issued side. " + _ESTIMACION_OBJETIVA_NOTE
         ),
-        legal_refs=(_LIVA_SIMPLIFICADO_AMBITO, _LIVA_SIMPLIFICADO_CUOTA),
+        legal_refs=(
+            _LIVA_SIMPLIFICADO_AMBITO,
+            _LIVA_SIMPLIFICADO_CUOTA,
+            _LIRPF_PAGOS_A_CUENTA,
+            _RIRPF_RETENCION_ACTIVIDADES,
+        ),
     ),
     # REAGP, the régimen especial de la agricultura, ganadería y pesca. Both
     # sides arise and they are different operations rather than mirror images:
