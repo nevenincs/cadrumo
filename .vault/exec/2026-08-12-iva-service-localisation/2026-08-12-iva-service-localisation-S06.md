@@ -5,45 +5,11 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:a04d7f80bb933155653376f08af16e68f0de0b434d88b417e4aed665c6e8b278'
+body_hash: 'sha256:5fa9f31b73a7677e7662055af748816e2f7bd4b845a8e35cb97e75f54df9ec3a'
 step_id: 'S06'
 related:
   - "[[2026-08-12-iva-service-localisation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace iva-service-localisation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S06 and 2026-08-12-iva-service-localisation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Sweep the consumers of the outbound services row for the widened outcome: any caller, projection, advisory or Modelo 303 routing that assumed an ES-to-outside-the-Comunidad service is always not-subject. Run the full IVA and ledger suites sequentially and triage owner failures from peer churn before closing. Record the art 69.Dos list as a named carry-forward in the exec record - its population is over-taxed by default, which is the direction nothing in the apparatus watches and ## Scope
-
-- `src/cadrumo/domain/iva/`
-- `src/cadrumo/application/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Sweep the consumers of the outbound services row for the widened outcome: any caller, projection, advisory or Modelo 303 routing that assumed an ES-to-outside-the-Comunidad service is always not-subject. Run the full IVA and ledger suites sequentially and triage owner failures from peer churn before closing. Record the art 69.Dos list as a named carry-forward in the exec record - its population is over-taxed by default, which is the direction nothing in the apparatus watches
 
@@ -135,3 +101,20 @@ default: over-taxing a population an operator can see and correct beats
 relieving one silently. But "art. 69.Dos is unmodelled" understated it, and the
 next change on this axis should read art. 70's B2C rules alongside 69.Dos rather
 than only the lettered list.
+
+**RETRACTED, and the retraction is the useful part.** The paragraph above
+flagged electronically supplied services as probably over-taxed by the subject
+outcome. Reading art. 70 says the opposite, and the reading is short enough to
+record here so nobody re-derives it: art. 70.Uno.4.º locates e-services,
+telecommunications and broadcasting at the recipient only when that recipient is
+established IN the TAI, so it never reaches an outbound supply; art. 70.Dos only
+ever pulls services INTO the TAI that would otherwise fall outside the
+Comunidad, so it can add Spanish taxation and never remove it; and art. 69.Dos
+names no e-services item. An outbound B2C e-service to a non-EU consumer is
+therefore located in the TAI by art. 69.Uno.2.º and taxed here. The subject
+outcome is correct.
+
+The wider claim -- that art. 70's B2C special rules deserve reading alongside
+69.Dos -- was right, and reading them is what closed this. What survives of the
+carry-forward is only art. 69.Dos's own list, which is modelled under
+`2026-08-12-iva-art-69-dos-services-adr`.

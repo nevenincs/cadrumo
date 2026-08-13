@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:6c5b45dfca44bba0511269315421911ae50a82d99945e67b5e7960eb6315064e'
+body_hash: 'sha256:0cfff272789fa585e50e0952484cd22f01a25a8b6338427ed547287c4d914b1d'
 related:
   - "[[2026-08-12-iva-service-localisation-reference]]"
 ---
@@ -161,3 +161,16 @@ list.
 Anchored `corpus_ref` values become available to the citation table generally,
 which means a future row can cite any article of any consolidated document the
 tree bundles without fetching a per-article duplicate.
+
+**Both consequences above are now superseded by
+`2026-08-12-iva-art-69-dos-services-adr`, one closed and one retracted.**
+
+The art. 69.Dos list is modelled there as a closed statutory vocabulary the
+operator states, so the over-taxed population shrinks to the B2C services whose
+item nobody has named -- a question rather than a silent charge.
+
+The electronically-supplied-services concern is withdrawn. Art. 70.Uno.4.º
+locates e-services at the recipient only when the recipient is established in the
+TAI, art. 70.Dos only ever pulls services INTO the TAI, and art. 69.Dos names no
+e-services item -- so the subject outcome for an outbound B2C e-service is
+correct rather than a defect awaiting a fix.
