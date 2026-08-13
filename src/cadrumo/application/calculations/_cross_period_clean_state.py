@@ -20,7 +20,7 @@ from datetime import date
 from typing import Final, NamedTuple, cast
 
 from ...adapters.persistence.profile.justificante import JustificanteRepository
-from ...core import CasillaId, Modelo, Period
+from ...core import CasillaId, Modelo, Period, normalise_aeat_csv
 from ...core.identity import CalculationRevisionId, same_tax_identifier
 from ...domain.calculations.registry import (
     Modelo202Modality,
@@ -991,13 +991,14 @@ def _justificante_observation_reference_blockers(
     if not observation_source_metadata:
         return []
     blockers: list[CrossPeriodCleanStateBlocker] = []
-    metadata_csv = _clean_metadata_value(
+    metadata_csv = _clean_metadata_csv(
         observation_source_metadata.get("aeat_justificante_csv") or observation_source_metadata.get("justificante_csv"),
     )
-    if metadata_csv is not None and metadata_csv.casefold() != justificante.csv.casefold():
+    receipt_csv = normalise_aeat_csv(justificante.csv)
+    if metadata_csv is not None and metadata_csv != receipt_csv:
         blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
     metadata_csvs = _clean_metadata_csvs(observation_source_metadata.get("aeat_justificante_csvs"))
-    if metadata_csvs and justificante.csv.casefold() not in {csv.casefold() for csv in metadata_csvs}:
+    if metadata_csvs and receipt_csv not in metadata_csvs:
         blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
 
     metadata_expediente_id = _clean_metadata_value(observation_source_metadata.get("aeat_expediente_id"))
@@ -1016,8 +1017,20 @@ def _clean_metadata_value(value: str | None) -> str | None:
     return cleaned or None
 
 
+def _clean_metadata_csv(value: str | None) -> str | None:
+    """Return a filed-history CSV reference in the one comparison form, or ``None``.
+
+    Distinct from :func:`_clean_metadata_value`, which stays a plain trim
+    because it also serves the expediente id -- a different namespace whose
+    grammar this transform does not describe. Normalising here rather than at
+    each comparison means the checks above are plain equality and cannot drift
+    apart from one another.
+    """
+    return normalise_aeat_csv(value or "") or None
+
+
 def _clean_metadata_csvs(value: str | None) -> tuple[str, ...]:
-    return tuple(dict.fromkeys(item.strip() for item in (value or "").split(",") if item.strip()))
+    return tuple(dict.fromkeys(normalise_aeat_csv(item) for item in (value or "").split(",") if item.strip()))
 
 
 def _resolved_filing_identity(filing: ModeloRecord, taxpayer_tax_id: str | None) -> str | None:

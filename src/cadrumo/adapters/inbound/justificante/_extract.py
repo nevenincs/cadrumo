@@ -30,7 +30,7 @@ from pathlib import Path
 
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from ....core import Period, PeriodError, fold_diacritics, is_aeat_csv
+from ....core import Period, PeriodError, fold_diacritics, is_aeat_csv, normalise_aeat_csv
 from ....core.decimal import european_thousands_reading_is_ambiguous
 from ....core.logging import get_logger
 from ....core.time import now
@@ -436,7 +436,7 @@ def _extract_csv(text: str, normalised: str, source_label: object) -> str:
     )
     if csv_match is None:
         raise JustificanteCsvNotFoundError(f"no Código Seguro de Verificación found in {source_label}")
-    csv = csv_match.group(1).upper()
+    csv = normalise_aeat_csv(csv_match.group(1))
     if not is_aeat_csv(csv):
         raise JustificanteCsvNotFoundError(
             f"Código Seguro de Verificación {csv!r} in {source_label} does not match the AEAT shape",

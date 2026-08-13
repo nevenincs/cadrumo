@@ -68,7 +68,7 @@ from ...adapters.persistence.storage import (
     secure_object_repository_for_bucket,
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period
+from ...core import Modelo, Period, normalise_aeat_csv
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import AeatCsv, BucketId, ContentDigest, tax_id_identity_token
@@ -548,6 +548,29 @@ def parse_capture_to_justificante(snapshot: JustificanteCaptureSnapshot) -> Just
     return parse_justificante_bytes(snapshot.decoded_pdf_bytes())
 
 
+def _require_receipt_csv_matches_capture(
+    justificante: Justificante,
+    snapshot: JustificanteCaptureSnapshot,
+) -> None:
+    """Refuse a parsed receipt whose CSV is not the one the capture was fetched under.
+
+    One guard rather than one per caller: the two registration paths asked the
+    same question with the same refusal, so a second copy could only drift.
+    Both sides go through the shared comparison form, so a receipt whose CSV
+    differs only in case or surrounding whitespace is still the same receipt.
+    """
+    if normalise_aeat_csv(justificante.csv) == normalise_aeat_csv(snapshot.csv):
+        return
+    raise LiveApplicationInputError(
+        translated_message="application.live.justificante.errors.csv_mismatch",
+        context={"snapshot_id": snapshot.snapshot_id},
+        precondition_verdict=live_read_no_recovery_verdict(
+            LiveReadPrecondition.JUSTIFICANTE_MATCHES_CAPTURE,
+            facts={"snapshot_id": snapshot.snapshot_id, "csv_matches": False},
+        ),
+    )
+
+
 def register_capture_justificante_metadata(
     *,
     snapshot: JustificanteCaptureSnapshot,
@@ -574,15 +597,7 @@ def register_capture_justificante_metadata(
         justificante = parse_capture_to_justificante(snapshot)
     except JustificanteParseError:
         return None
-    if justificante.csv.strip().upper() != snapshot.csv.strip().upper():
-        raise LiveApplicationInputError(
-            translated_message="application.live.justificante.errors.csv_mismatch",
-            context={"snapshot_id": snapshot.snapshot_id},
-            precondition_verdict=live_read_no_recovery_verdict(
-                LiveReadPrecondition.JUSTIFICANTE_MATCHES_CAPTURE,
-                facts={"snapshot_id": snapshot.snapshot_id, "csv_matches": False},
-            ),
-        )
+    _require_receipt_csv_matches_capture(justificante, snapshot)
     if not _justificante_matches_capture_axis(justificante, snapshot):
         raise LiveApplicationInputError(
             translated_message="application.live.justificante.errors.capture_axis_mismatch",
@@ -715,15 +730,7 @@ def register_capture_as_filing_evidence(
         )
 
     justificante = parse_capture_to_justificante(snapshot)
-    if justificante.csv.strip().upper() != snapshot.csv.strip().upper():
-        raise LiveApplicationInputError(
-            translated_message="application.live.justificante.errors.csv_mismatch",
-            context={"snapshot_id": snapshot.snapshot_id},
-            precondition_verdict=live_read_no_recovery_verdict(
-                LiveReadPrecondition.JUSTIFICANTE_MATCHES_CAPTURE,
-                facts={"snapshot_id": snapshot.snapshot_id, "csv_matches": False},
-            ),
-        )
+    _require_receipt_csv_matches_capture(justificante, snapshot)
     expected_tax_id = _expected_tax_id_for_filing_record(current)
     if not _justificante_matches_filing_record(
         justificante,
@@ -886,10 +893,9 @@ def _existing_capture_evidence_matches_current_csv(filing: ModeloRecord, csv: st
     if evidence is None:
         return False
     kind = getattr(evidence.kind, "value", evidence.kind)
-    return (
-        str(kind) in {"aeat_csv_register", "aeat_justificante_pdf", "aeat_live_capture"}
-        and evidence.reference_id.strip().upper() == csv.strip().upper()
-    )
+    if str(kind) not in {"aeat_csv_register", "aeat_justificante_pdf", "aeat_live_capture"}:
+        return False
+    return normalise_aeat_csv(evidence.reference_id) == normalise_aeat_csv(csv)
 
 
 def stamp_capture_evidence_if_filed(snapshot: JustificanteCaptureSnapshot) -> ModeloRecord | None:

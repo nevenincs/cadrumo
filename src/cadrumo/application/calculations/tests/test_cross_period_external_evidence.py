@@ -218,6 +218,66 @@ def test_live_capture_evidence_rejects_expediente_only_metadata_without_comparab
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
 
 
+@pytest.mark.parametrize(
+    "metadata_spelling",
+    ["LIVECAP130SPELL1", "livecap130spell1", "  LiveCap130Spell1  "],
+)
+def test_filed_history_csv_reference_reconciles_however_the_register_spelled_it(
+    tmp_path: Path,
+    metadata_spelling: str,
+) -> None:
+    """A register CSV reference is the same identifier in any spelling.
+
+    The receipt side normalises at its model boundary, but the register metadata
+    is a plain string map with no boundary at all, so this comparison is one of
+    the places two spellings of one identifier genuinely meet. It previously
+    reconciled them by casefolding at each comparison -- a lowercase key the
+    uppercase contract refuses, and a transliterating transform on a value that
+    must reach AEAT's cotejo endpoint byte-for-byte.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        csv = "LIVECAP130SPELL1"
+        _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
+        filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
+
+        blockers = _external_evidence_blockers(
+            filing,
+            "aeat_sede_justificante",
+            source_metadata={
+                "aeat_register_status": "ALTA",
+                "authenticated_identity": "X1234567L",
+                "aeat_justificante_csv": metadata_spelling,
+                "aeat_justificante_csvs": f"OTHER-RECEIPT-CSV,{metadata_spelling}",
+            },
+        )
+
+        assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers
+
+
+def test_filed_history_csv_reference_still_refuses_a_different_receipt(tmp_path: Path) -> None:
+    """The discriminating half: normalising must not merge two identifiers into one.
+
+    Without this the parametrisation above would keep passing for a comparison
+    that had stopped comparing at all.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        csv = "LIVECAP130SPELL2"
+        _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
+        filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
+
+        blockers = _external_evidence_blockers(
+            filing,
+            "aeat_sede_justificante",
+            source_metadata={
+                "aeat_register_status": "ALTA",
+                "authenticated_identity": "X1234567L",
+                "aeat_justificante_csv": "  livecap130spell2x  ",
+            },
+        )
+
+        assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
+
+
 def test_csv_register_evidence_clears_with_matching_justificante_metadata(tmp_path: Path) -> None:
     """A CSV-register reference clears the gate only when its justificante is enrolled."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):

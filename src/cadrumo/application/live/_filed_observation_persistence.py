@@ -46,7 +46,7 @@ from ...application.calculations import (
     observation_key,
     persist_observation_envelope_and_iva_history,
 )
-from ...core import IvaCompensationStateProvenance, Modelo, Period, PeriodKind
+from ...core import IvaCompensationStateProvenance, Modelo, Period, PeriodKind, normalise_aeat_csv
 from ...core.hashing import sha256_hex
 from ...core.identity import same_tax_identifier
 from ...core.json_contract import Notice, NoticeSeverity
@@ -512,12 +512,10 @@ def _emit_filed_justificante_evidence_event(
 
 
 def _existing_justificante_evidence_matches(filing: ModeloRecord, justificante: Justificante) -> bool:
-    if filing.external_evidence is None:
+    evidence = filing.external_evidence
+    if evidence is None or not is_justificante_backed_external_evidence(evidence.kind):
         return False
-    return (
-        is_justificante_backed_external_evidence(filing.external_evidence.kind)
-        and filing.external_evidence.reference_id.strip().upper() == justificante.csv.strip().upper()
-    )
+    return normalise_aeat_csv(evidence.reference_id) == normalise_aeat_csv(justificante.csv)
 
 
 def _filed_observation_history_period_sort_key(modelo: str, period: Period) -> tuple[int, str]:
@@ -591,7 +589,7 @@ def _parse_matching_filed_justificante(
             exc_info=True,
         )
         return _FiledJustificanteParse(reason=FiledJustificanteUnreachedReason.CSV_UNRESOLVABLE)
-    if captured_csv.strip().upper() != justificante.csv.strip().upper():
+    if normalise_aeat_csv(captured_csv) != normalise_aeat_csv(justificante.csv):
         logger.warning(
             "filed observation: ignored justificante artefact %s whose receipt csv %s "
             "disagrees with the csv %s its bytes were fetched under",
@@ -705,6 +703,12 @@ def _filed_observation_source_metadata(
     request type. An empty string would be indistinguishable from AEAT declaring
     one, and absence here means "the row did not say", which is the honest
     reading.
+
+    The CSV references are written in the shared comparison form, because this
+    is the writing side of a key the cross-period clean-state gate reads back
+    and compares. Deduplicating on a trim alone left two spellings of one
+    identifier surviving as two entries, which is the same second-key defect the
+    comparison side was carrying.
     """
     metadata = {
         "aeat_register_status": observation.status.strip().upper(),
@@ -714,7 +718,7 @@ def _filed_observation_source_metadata(
     tipo_solicitud = observation.metadata.get("tipo_solicitud", "").strip()
     if tipo_solicitud:
         metadata["aeat_tipo_solicitud"] = tipo_solicitud
-    unique_csvs = tuple(dict.fromkeys(csv.strip() for csv in justificante_csvs if csv.strip()))
+    unique_csvs = tuple(dict.fromkeys(normalise_aeat_csv(csv) for csv in justificante_csvs if csv.strip()))
     if len(unique_csvs) == 1:
         metadata["aeat_justificante_csv"] = unique_csvs[0]
     elif len(unique_csvs) > 1:
