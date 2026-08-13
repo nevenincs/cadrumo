@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:1764693d61ad8ada189b25134a7e03152f91c46d29488424804f7ac8de7079a3'
+body_hash: 'sha256:0c34dde659c04a2d1bb1b00659643b3019f21618194aaa80145098e5072d0dc9'
 step_id: 'S43'
 related:
   - "[[2026-08-08-aeat-design-relayout-boundary-plan]]"
@@ -60,3 +60,18 @@ Applied diff, exactly two lines:
 **`.git/index.lock` was FROZEN, not contended, and was not removed.** Its mtime held at `12:23:26.846124100` across four samples spanning roughly four minutes, where every other lock encountered today cleared within seconds. Frozen means the holder died, which needs the owning process or an operator rather than a waiting executor. Reported.
 
 **Consequence, recorded because it is the risk this Step carried:** the validated change sat uncommitted in the shared worktree while the lock was frozen, and an uncommitted registry change is live for every agent running the suite here. Filing year 2024 refusing is the intended fix, but it reds any peer test expecting it to resolve.
+
+## Correction (2026-08-13)
+
+**This Step's premise and its narrowing were reverted the day after this record was written, and the record above describes an abandoned tree state.** Recorded here rather than edited into the prose above, because the record is history.
+
+The axis named throughout this record as "filing year" is the EJERCICIO (the fiscal year reported), not the calendar year of filing - confirmed at `src/cadrumo/domain/calculations/registry/_temporal.py:95`, where coverage is decided solely by `period_selector.includes_year(filing_year)`. Restated on that axis: the revision covers ejercicio 2024 onward, correctly, because Orden HAC/657/2025 (BOE-A-2025-12818) Article 1 approves modelo 200 for "los periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2024" - the same orden this revision's `orden_aplicabilidad` already cited.
+
+Commit `515f4c502b` (this Step) moved BOTH `valid_from` and `period_selector.year_from` to 2025, exactly as the diff above shows. Commit `867b1fe7e7`, one day later, reverted the `period_selector` half of that change, because narrowing `year_from` to 2025 took Impuesto sobre Sociedades offline for ejercicio 2024: "ten failures across two suites, two lanes and two tree states", per that commit's own message. The reverting commit also added a regression test,
+`src/cadrumo/domain/calculations/registry/tests/test_modelo_200_ejercicio_2024_resolves.py`, pinning ejercicio 2024 to resolve against this revision.
+
+`valid_from` does NOT participate in registry coverage on the production resolution path: `_temporal.py:117` is guarded by `if on is not None`, and no production caller passes `on`. So the `valid_from = 2025-01-01` half of this Step's change - the only half that survived the revert - narrows nothing. At HEAD, `period_selector = { year_from = 2024, periods = ["0A"] }` and the revision resolves for ejercicio 2024, 2025 and 2026 alike.
+
+**The Verification section above is therefore no longer descriptive of HEAD.** It was a genuine result against the tree state this Step produced on 2026-08-08/09; it does not describe the tree this record's reader will find today. Filing year 2024 does NOT refuse at HEAD - it resolves against this same revision.
+
+The underlying defect this Step's premise identified is still live, restated on the correct axis: this single revision covers ejercicio 2024 onward while its export fragment tree still encodes the ejercicio-2025 record design (78 record ids against 2025's 77-record decomposition), so ejercicio 2024 is written at the 2025 layout. The remedy is a successor revision authored from the ejercicio-2024 design (tracked separately); narrowing this revision to ejercicio 2025 onward is only correct once that successor exists, and must land in the same commit as that successor - never before it, as this Step's own history now demonstrates.
