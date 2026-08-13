@@ -29,3 +29,4 @@ formulas = [
 bindings = [
     "renta-2025-base-liquidable-negativa-general-anterior",
 ]
+dependency_classifications = ["renta-2025-dep-100"]

@@ -1,0 +1,8 @@
+[[revisions."2024".dependency_classifications]]
+id = "modelo-131-2024-dep-131"
+source_modelo = "131"
+treatment = "direct_annual_settlement"
+conditional_on_economic_activity = true
+target_constructs = ["modelo-131-2024-objective-estimation-instalment"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]

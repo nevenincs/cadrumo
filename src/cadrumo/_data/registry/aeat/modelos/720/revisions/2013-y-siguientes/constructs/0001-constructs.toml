@@ -78,6 +78,7 @@ bindings = [
     "modelo-720-prior-year-valores-valoracion-baseline",
     "modelo-720-prior-year-inmuebles-valoracion-baseline",
 ]
+dependency_classifications = ["modelo-720-dep-720"]
 export_layouts = ["modelo-720-fichero-aeat"]
 extraction_profiles = ["modelo-720-declaracion-pdf"]
 verification_expectations = ["modelo-720-informative-summary-verification"]

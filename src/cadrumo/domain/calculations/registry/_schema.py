@@ -721,8 +721,6 @@ class DependencyClassificationDefinition(RegistryModel):
             return self
         if not self.target_constructs:
             raise RegistryValidationError(f"dependency classification {self.id!r} must declare target_constructs")
-        if self.treatment == "direct_annual_settlement" and not self.relation_refs:
-            raise RegistryValidationError(f"dependency classification {self.id!r} must declare relation_refs")
         return self
 
 

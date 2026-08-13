@@ -242,7 +242,7 @@
         "notices": [],
         "result": {
           "bucket_event_ids": [
-            "ea8ec31cb01a46d3ef62e61e39bcf6cd1fb4893ef2a64092c67b77524f712d6c"
+            "28079a4e9af8dd06b0673e24edf8c8263f4f949857998b1d8b14bf15bcb5eb56"
           ],
           "bucket_id": "<bucket-id>",
           "review_status": "reviewed",
@@ -278,12 +278,12 @@
             "purchase_invoice_evidence_id": null,
             "source_jurisdiction": "ES",
             "taxable_base": "2000",
-            "transaction_id": "9cf7ba434ad0d8813e84f19e55bbbb8c737ec25100c0b691936e1428a1916d87",
+            "transaction_id": "41922f71722d942a709837a264846035827bf65e470ef805e4978f5bfdd71beb",
             "usage_ratio_id": null,
             "value_date": null,
             "value_in_eur": null
           },
-          "transaction_id": "9cf7ba434ad0d8813e84f19e55bbbb8c737ec25100c0b691936e1428a1916d87"
+          "transaction_id": "41922f71722d942a709837a264846035827bf65e470ef805e4978f5bfdd71beb"
         },
         "schema_version": "2",
         "status": "success"
@@ -326,7 +326,7 @@
         "notices": [],
         "result": {
           "bucket_event_ids": [
-            "91b28abfb529c4ac6bad4a34ca984856dee8a39b11e0e0000278c57d846d0cd2"
+            "4ea99c5b485802943364a2495fd09b4e0b4af9662ac19fe1d4eb05b8df999bec"
           ],
           "bucket_id": "<bucket-id>",
           "review_status": "reviewed",
@@ -362,12 +362,12 @@
             "purchase_invoice_evidence_id": null,
             "source_jurisdiction": "ES",
             "taxable_base": "1000",
-            "transaction_id": "b8be863d5ff8cc1e93a73a50f03468279fde4c74da22fb22460094e2fcf6c703",
+            "transaction_id": "4432506b527db6047d42beb91b7d07a64752d99f54605ca04a3755cef582bb68",
             "usage_ratio_id": null,
             "value_date": null,
             "value_in_eur": null
           },
-          "transaction_id": "b8be863d5ff8cc1e93a73a50f03468279fde4c74da22fb22460094e2fcf6c703"
+          "transaction_id": "4432506b527db6047d42beb91b7d07a64752d99f54605ca04a3755cef582bb68"
         },
         "schema_version": "2",
         "status": "success"
@@ -414,7 +414,7 @@
         "notices": [],
         "result": {
           "bucket_event_ids": [
-            "9f84402053351921a9fa0cb4736542dba029b4a393acd3e22cb1732ae98783b3"
+            "053792240c85558cd96d3baf1466c2f1fc6a431930fcdcadf2752e28f041e19f"
           ],
           "bucket_id": "<bucket-id>",
           "review_status": "reviewed",
@@ -450,12 +450,12 @@
             "purchase_invoice_evidence_id": "c8be619067c5822d",
             "source_jurisdiction": "ES",
             "taxable_base": "250",
-            "transaction_id": "76a7bf818bb9fff3f0aec19ac5f03e017250aa29778e83349f9fb96c7a76a5f8",
+            "transaction_id": "bbc1fb4bc721992b722306cf673aa136a6b4d177d6f83d77c9e4d3026e77205a",
             "usage_ratio_id": null,
             "value_date": null,
             "value_in_eur": null
           },
-          "transaction_id": "76a7bf818bb9fff3f0aec19ac5f03e017250aa29778e83349f9fb96c7a76a5f8"
+          "transaction_id": "bbc1fb4bc721992b722306cf673aa136a6b4d177d6f83d77c9e4d3026e77205a"
         },
         "schema_version": "2",
         "status": "success"
@@ -559,7 +559,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "200",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "1df9220e2de07c06f64d504422443d9329c83ec3ecdcc611565d0d68529c6bf1",
+          "calculation_revision_id": "b486424b0b9a5570218d31e6296ac1fc29b9e8323f39fb1f0c7f5747bdd4be55",
           "casilla_values": {
             "01": "4000",
             "02": "250",
@@ -1174,7 +1174,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 1df9220e2de07c06f64d504422443d9329c83ec3ecdcc611565d0d68529c6bf1 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 2T` and re-inspect this one with `aeat app modelo work revision 1df9220e2de07c06f64d504422443d9329c83ec3ecdcc611565d0d68529c6bf1`.",
+          "saved_confirmation": "Saved as draft calculation revision b486424b0b9a5570218d31e6296ac1fc29b9e8323f39fb1f0c7f5747bdd4be55 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 2T` and re-inspect this one with `aeat app modelo work revision b486424b0b9a5570218d31e6296ac1fc29b9e8323f39fb1f0c7f5747bdd4be55`.",
           "source_provenance": [
             {
               "binding_source": "ledger_renta_income_aggregation",
@@ -1188,39 +1188,39 @@
               "dependency_treatment": "",
               "fingerprint": null,
               "source_kind": "ledger_renta_income_aggregation",
-              "source_ref": "transaction:9cf7ba434ad0d8813e84f19e55bbbb8c737ec25100c0b691936e1428a1916d87"
+              "source_ref": "transaction:41922f71722d942a709837a264846035827bf65e470ef805e4978f5bfdd71beb"
             },
             {
               "binding_source": "ledger_renta_income_aggregation",
               "dependency_treatment": "",
               "fingerprint": null,
               "source_kind": "ledger_renta_income_aggregation",
-              "source_ref": "transaction:b8be863d5ff8cc1e93a73a50f03468279fde4c74da22fb22460094e2fcf6c703"
+              "source_ref": "transaction:4432506b527db6047d42beb91b7d07a64752d99f54605ca04a3755cef582bb68"
             },
             {
               "binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
               "dependency_treatment": "",
               "fingerprint": null,
               "source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "source_ref": "transaction:76a7bf818bb9fff3f0aec19ac5f03e017250aa29778e83349f9fb96c7a76a5f8"
+              "source_ref": "transaction:bbc1fb4bc721992b722306cf673aa136a6b4d177d6f83d77c9e4d3026e77205a"
             },
             {
               "binding_source": "previous_filing",
-              "dependency_treatment": "",
+              "dependency_treatment": "direct_annual_settlement",
               "fingerprint": null,
               "source_kind": "previous_filing",
               "source_ref": "130:2026:1T:modelo-130-resultados-negativos-anteriores"
             },
             {
               "binding_source": "previous_filing",
-              "dependency_treatment": "",
+              "dependency_treatment": "direct_annual_settlement",
               "fingerprint": null,
               "source_kind": "previous_filing",
               "source_ref": "130:2026:1T:modelo-130-pagos-fraccionados-anteriores"
             },
             {
               "binding_source": "previous_filing",
-              "dependency_treatment": "",
+              "dependency_treatment": "factual_evidence",
               "fingerprint": null,
               "source_kind": "previous_filing",
               "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
@@ -1315,7 +1315,7 @@
             "action": null,
             "code": "modelo.work.verify.finding.advisory",
             "context": {
-              "binding_id": "9cf7ba434ad0d8813e84f19e55bbbb8c737ec25100c0b691936e1428a1916d87",
+              "binding_id": "41922f71722d942a709837a264846035827bf65e470ef805e4978f5bfdd71beb",
               "diagnostic_reason_code": "missing_transaction_evidence",
               "kind": "advisory",
               "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
@@ -1330,7 +1330,7 @@
             "action": null,
             "code": "modelo.work.verify.finding.advisory",
             "context": {
-              "binding_id": "b8be863d5ff8cc1e93a73a50f03468279fde4c74da22fb22460094e2fcf6c703",
+              "binding_id": "4432506b527db6047d42beb91b7d07a64752d99f54605ca04a3755cef582bb68",
               "diagnostic_reason_code": "missing_transaction_evidence",
               "kind": "advisory",
               "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
@@ -1343,7 +1343,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "1df9220e2de07c06f64d504422443d9329c83ec3ecdcc611565d0d68529c6bf1",
+          "calculation_revision_id": "b486424b0b9a5570218d31e6296ac1fc29b9e8323f39fb1f0c7f5747bdd4be55",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1434,7 +1434,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "6788748ff53ba1323b03cad86b7f8b70cc4a31afa54c4374cfa01f7fa4ca57eb",
+          "verification_report_id": "d67a4e813859e74f7877df3183f54798143ff5613767e5986b0c98c4c9db6c0c",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

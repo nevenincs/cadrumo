@@ -12,6 +12,7 @@ from .....tests.aeat_literal_fixtures import aeat_host
 from .. import (
     InputKind,
     ModeloRevision,
+    RegistryValidationError,
     RegistryValidator,
     build_snapshot,
 )
@@ -64,6 +65,79 @@ def test_committed_modelo_720_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_720()
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     assert set(modelo.revisions) == {"2013-y-siguientes"}
+
+
+def test_validator_rejects_missing_factual_evidence_previous_filing_classification() -> None:
+    """The actual prior-year valuations require their Modelo 720 classification.
+
+    This removes the loaded revision's sole factual-evidence classification and
+    its construct membership together, so the refusal proves the direct
+    previous-filing completeness gate rather than a dangling construct id.
+    """
+    modelo, catalogues = _load_modelo_720()
+    revision = modelo.revisions["2013-y-siguientes"]
+    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "720")
+    construct = next(item for item in revision.constructs if classification.id in item.dependency_classifications)
+    mutated_construct = construct.model_copy(
+        update={
+            "dependency_classifications": tuple(
+                item for item in construct.dependency_classifications if item != classification.id
+            ),
+        },
+    )
+    mutated_revision = revision.model_copy(
+        update={
+            "dependency_classifications": tuple(
+                item for item in revision.dependency_classifications if item.id != classification.id
+            ),
+            "constructs": tuple(item if item.id != construct.id else mutated_construct for item in revision.constructs),
+        },
+    )
+    mutated_modelo = modelo.model_copy(
+        update={"revisions": {**modelo.revisions, revision.id: mutated_revision}},
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"previous_filing source modelo '720' has no dependency classification",
+    ):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
+
+
+def test_validator_rejects_non_dependency_previous_filing_classification() -> None:
+    """A direct prior-year baseline cannot be re-labelled as non-dependent."""
+    modelo, catalogues = _load_modelo_720()
+    revision = modelo.revisions["2013-y-siguientes"]
+    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "720")
+    construct = next(item for item in revision.constructs if classification.id in item.dependency_classifications)
+    mutated_construct = construct.model_copy(
+        update={
+            "dependency_classifications": tuple(
+                item for item in construct.dependency_classifications if item != classification.id
+            ),
+        },
+    )
+    mutated_classification = classification.model_copy(
+        update={"treatment": "non_dependency", "target_constructs": (), "relation_refs": ()},
+    )
+    mutated_revision = revision.model_copy(
+        update={
+            "dependency_classifications": tuple(
+                mutated_classification if item.id == classification.id else item
+                for item in revision.dependency_classifications
+            ),
+            "constructs": tuple(item if item.id != construct.id else mutated_construct for item in revision.constructs),
+        },
+    )
+    mutated_modelo = modelo.model_copy(
+        update={"revisions": {**modelo.revisions, revision.id: mutated_revision}},
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"previous_filing source modelo '720' cannot be classified as non_dependency",
+    ):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
 @pytest.mark.parametrize(

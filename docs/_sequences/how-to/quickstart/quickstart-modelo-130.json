@@ -827,7 +827,7 @@
             },
             {
               "binding_source": "previous_filing",
-              "dependency_treatment": "",
+              "dependency_treatment": "factual_evidence",
               "fingerprint": null,
               "source_kind": "previous_filing",
               "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
@@ -846,6 +846,109 @@
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "add",
+        "--date",
+        "2026-02-11",
+        "--amount",
+        "605",
+        "--direction",
+        "OUTGOING",
+        "--description",
+        "compra",
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "material_oficina",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105",
+        "--idempotency-key",
+        "qs-compra"
+      ],
+      "captures": [
+        {
+          "json_path": "result.transaction_id",
+          "name": "expense_id",
+          "value": "e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.add",
+        "notices": [
+          {
+            "action": null,
+            "code": "ledger.add.idempotent_noop",
+            "context": {
+              "idempotency_key": "qs-compra",
+              "transaction_id": "e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6"
+            },
+            "message": "Idempotent no-op: a transaction with this idempotency key already exists (e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6); nothing was added.",
+            "severity": "info"
+          }
+        ],
+        "result": {
+          "bucket_event_ids": [],
+          "bucket_id": "<bucket-id>",
+          "review_status": "reviewed",
+          "transaction": {
+            "amount": "605",
+            "attachment_ids": [],
+            "booked_date": "2026-02-11",
+            "business_classification": "BUSINESS",
+            "business_pct": null,
+            "category_id": "material_oficina",
+            "classification_confidence": "1",
+            "classification_reason": "aeat app ledger add",
+            "classified_at": "2026-04-01T09:00:00+00:00",
+            "classified_by": "manual",
+            "counterparty": "",
+            "counterparty_country": null,
+            "counterparty_identification_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-02-11",
+            "description": "compra",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": "105",
+            "iva_category": null,
+            "iva_rate": "0.21",
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": "500",
+            "transaction_id": "e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
       "stderr_text": null,
       "text": null
     },
@@ -918,7 +1021,7 @@
         "app",
         "ledger",
         "attach",
-        "e28390f0",
+        "e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6",
         "--purchase-invoice-evidence-id",
         "8642ce90453eb12c"
       ],
