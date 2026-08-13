@@ -2,11 +2,10 @@
 @step Create the work unit for the filing target.
 aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @step Calculate the quarter's IVA from the classified ledger.
-aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
+aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --m303-filing-evidence fixtures/m303-filing-evidence-2026-1T.json
 @step Verify the calculated draft.
 aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
 @expect result.granted_verificado_completo == true
-@step Export the verified revision to a local fichero-BOE.
+@step Attempt the fichero-BOE export. Modelo 303 refuses it: the layout is withdrawn rather than shipped partial, because a partial one would let a filing under-declare in silence.
 @result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output modelo-303.boe
-@expect result.byte_size == 7365
-@expect exit_code == 0
+@expect exit_code == 2

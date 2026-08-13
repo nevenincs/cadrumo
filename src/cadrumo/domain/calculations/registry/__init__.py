@@ -369,6 +369,7 @@ from ._m303_regimen_simplificado_projection import (
     project_m303_regimen_simplificado_rows,
 )
 from ._legal import (
+    assert_legal_ref_ids_resolve,
     legal_reference_quotes_corpus,
     verify_legal_catalogue,
     verify_legal_reference,
@@ -1052,6 +1053,7 @@ __all__ = [
     "XmlDictionaryEntry",
     "aggregate_withholding_by_clave",
     "applicable_filing_schedules",
+    "assert_legal_ref_ids_resolve",
     "assert_remote_operation_allowed",
     "assert_remote_operations_allowed",
     "audit_bundled_classification_coherence",

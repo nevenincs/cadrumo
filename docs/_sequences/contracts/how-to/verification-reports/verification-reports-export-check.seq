@@ -1,12 +1,12 @@
 :seed: iva-evidence-2026
 @setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
-@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
+@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --m303-filing-evidence fixtures/m303-filing-evidence-2026-1T.json
 @setup aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
 @step Check where your filing stands.
 aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T
 @expect result.modelo == "303"
-@step Once verification grants verified-complete, retry the export.
+@step Verified-complete is necessary but not sufficient: Modelo 303 has no fichero-BOE layout, so the export still refuses.
 @result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
-@expect result.modelo == "303"
-@expect result.filing_year == 2026
-@expect exit_code == 0
+@expect exit_code == 2
+@expect error.code == "REFUSED_MODELO_EXPORT_UNSUPPORTED"
+@expect error.context.modelo == "303"

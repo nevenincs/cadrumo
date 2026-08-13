@@ -220,6 +220,7 @@
         "command": "modelo.work.calculate",
         "notices": [
           {
+            "action": null,
             "code": "modelo.work.calculate.plazo_vencido_unassessed_preview",
             "context": {
               "article_27_assessment_status": "unassessed",
@@ -232,8 +233,7 @@
               "legal_refs": "ley-58-2003:art-27.2"
             },
             "message": "WARNING: voluntary filing period expired (Art. 27 LGT). The displayed rate is an unassessed preview; this application does not determine surcharge or interest liability.",
-            "severity": "warning",
-            "suggestion": null
+            "severity": "warning"
           }
         ],
         "result": {
@@ -375,6 +375,15 @@
           "result_summary": [],
           "saved": true,
           "saved_confirmation": "Saved as draft calculation revision f144e5b7cbe826ee3e785fe192672cdcfd74b34959fc9419bd6d054ce35669e7 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 349 --year 2026 --period 02` and re-inspect this one with `aeat app modelo work revision f144e5b7cbe826ee3e785fe192672cdcfd74b34959fc9419bd6d054ce35669e7`.",
+          "source_provenance": [
+            {
+              "binding_source": "collectible_invoice",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:b0582e6ac9a65b6cecb7e11399b2b6d4d541b52e45f58690a3b32ac5f143f5de",
+              "source_kind": "collectible_invoice",
+              "source_ref": "collectible_invoice:5f6226984e838fa553b9647364c5e3199cb833d79c8932072b9a67bc39eabc17"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",

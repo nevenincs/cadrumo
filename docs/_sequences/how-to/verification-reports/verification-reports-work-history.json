@@ -130,15 +130,15 @@
             "code": "1T",
             "filing_year": 2026
           },
-          "revision_id": "2023-y-siguientes",
+          "revision_id": "2026-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "f713b22348af",
+          "short_work_unit_id": "af6b2264dd9d",
           "state": "borrador",
           "status": "created",
           "status_message": "New work unit created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "8f0c67734152d161da3519c86d15b19ad105967a20d34cab3982f713b22348af"
+          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
         },
         "schema_version": "2",
         "status": "success"
@@ -171,11 +171,36 @@
         "command": "modelo.work.status",
         "notices": [
           {
+            "action": {
+              "action": {
+                "action_id": "operator.modelo.work.calculate",
+                "cli_path": [
+                  "app",
+                  "modelo",
+                  "work",
+                  "calculate"
+                ],
+                "target_command_key": "modelo.work.calculate"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "work_unit_id",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "work_unit_id",
+                  "status": "resolved",
+                  "value": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+                }
+              ]
+            },
             "code": "modelo.work.status.next_action",
-            "context": null,
-            "message": "Draft or recalculate this unit with `aeat app modelo work calculate`, then verify the draft with `aeat app modelo work verify`.",
-            "severity": "info",
-            "suggestion": "aeat app modelo work calculate 8f0c67734152d161da3519c86d15b19ad105967a20d34cab3982f713b22348af"
+            "context": {
+              "continuation_outcome": "action_available",
+              "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
+              "work_unit_state": "borrador"
+            },
+            "message": "Status calculate summary",
+            "severity": "info"
           }
         ],
         "result": {
@@ -196,13 +221,13 @@
             "code": "1T",
             "filing_year": 2026
           },
-          "revision_id": "2023-y-siguientes",
+          "revision_id": "2026-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "f713b22348af",
+          "short_work_unit_id": "af6b2264dd9d",
           "state": "borrador",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "8f0c67734152d161da3519c86d15b19ad105967a20d34cab3982f713b22348af"
+          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
         },
         "schema_version": "2",
         "status": "success"
@@ -235,11 +260,35 @@
         "command": "modelo.work.history",
         "notices": [
           {
+            "action": {
+              "action": {
+                "action_id": "operator.modelo.work.status",
+                "cli_path": [
+                  "app",
+                  "modelo",
+                  "work",
+                  "status"
+                ],
+                "target_command_key": "modelo.work.status"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "work_unit_id",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "work_unit_id",
+                  "status": "resolved",
+                  "value": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+                }
+              ]
+            },
             "code": "modelo.work.history.next_action",
-            "context": null,
-            "message": "Review this work unit's current state with `aeat app modelo work status`.",
-            "severity": "info",
-            "suggestion": "aeat app modelo work status 8f0c67734152d161da3519c86d15b19ad105967a20d34cab3982f713b22348af"
+            "context": {
+              "continuation_outcome": "action_available",
+              "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+            },
+            "message": "History next action summary",
+            "severity": "info"
           }
         ],
         "result": {
@@ -248,9 +297,9 @@
           "events": [
             {
               "actor": "docs-sequence-sandbox",
-              "event_id": "57203bf74507de9029f2428233780fa103ae17b60355485ebce0f9706d9a7915",
+              "event_id": "4756356f3409e5c92c58beab15127a6ac141fe955f21e8867e0ef0221cb92a29",
               "event_type": "modelo.work_unit.created",
-              "object_id": "8f0c67734152d161da3519c86d15b19ad105967a20d34cab3982f713b22348af",
+              "object_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
               "object_type": "work_unit",
               "occurred_at": "2026-04-01T09:00:00+00:00",
               "payload": {
@@ -258,12 +307,12 @@
                 "modelo": "303",
                 "name": "303-2026-1T",
                 "period": "1T",
-                "revision_id": "2023-y-siguientes"
+                "revision_id": "2026-y-siguientes"
               }
             }
           ],
           "operation": "modelo.work.history",
-          "work_unit_id": "8f0c67734152d161da3519c86d15b19ad105967a20d34cab3982f713b22348af"
+          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
         },
         "schema_version": "2",
         "status": "success"

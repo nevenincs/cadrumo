@@ -306,6 +306,22 @@ rows) or ``service`` (dependency rows) -- the two shapes ``config check`` emits.
 #: Row keys that carry a host-conditional row's stable identifier.
 _ROW_ID_KEYS: tuple[str, ...] = ("check", "service")
 
+#: Suffix marking a host-conditional row's measured byte quantities.
+#:
+#: Masking the ``detail`` sentence alone leaves the numbers it was rendered from
+#: pinned under ``facts``, which reintroduces the very defect
+#: :data:`PLATFORM_CONDITIONAL_PREFLIGHT_CHECKS` documents: ``free_memory_bytes``
+#: and ``free_vram_bytes`` are live readings that drift between two runs on the
+#: same box, so a golden carrying them is red on its own author's machine a
+#: second later. Keyed on the suffix rather than an enumeration of names for the
+#: reason the row ids are: the fact set grows with each reader and a literal list
+#: rots, whereas every byte quantity a host-conditional row reports is by
+#: construction a measurement of THAT host.
+#:
+#: Only the values mask; the keys stay under exact comparison, so a row that
+#: stops reporting a quantity still reds.
+_HOST_MEASURED_FACT_SUFFIX = "_bytes"
+
 
 def _host_conditional_row_id(node: Mapping[str, object]) -> str | None:
     """Return the row's id when it names a host-conditional row, else ``None``."""
@@ -356,8 +372,15 @@ def mask_host_conditional_details(document: object) -> object:
     """
     if isinstance(document, Mapping):
         masked: dict[str, object] = {str(key): mask_host_conditional_details(value) for key, value in document.items()}
-        if _host_conditional_row_id(document) is not None and isinstance(document.get("detail"), str):
-            masked["detail"] = MASK_SENTINEL
+        if _host_conditional_row_id(document) is not None:
+            if isinstance(document.get("detail"), str):
+                masked["detail"] = MASK_SENTINEL
+            facts = document.get("facts")
+            if isinstance(facts, Mapping):
+                masked["facts"] = {
+                    str(key): (MASK_SENTINEL if str(key).endswith(_HOST_MEASURED_FACT_SUFFIX) else value)
+                    for key, value in facts.items()
+                }
         return masked
     if isinstance(document, list | tuple):
         return [mask_host_conditional_details(item) for item in document]

@@ -20,7 +20,7 @@
 @setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 1T
 @capture wu1 result.work_unit_id
 @step Calculate the first quarter.
-@setup aeat --format json app modelo work calculate {wu1}
+@setup aeat --format json app modelo work calculate {wu1} --m303-filing-evidence fixtures/m303-filing-evidence-2025-1T.json
 @capture cr1 result.calculation_revision_id
 @step Verify the first quarter before filing it.
 @setup aeat --format json app modelo work verify {cr1}
@@ -29,21 +29,21 @@
 @step Open, calculate, verify and file the second quarter.
 @setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 2T
 @capture wu2 result.work_unit_id
-@setup aeat --format json app modelo work calculate {wu2}
+@setup aeat --format json app modelo work calculate {wu2} --m303-filing-evidence fixtures/m303-filing-evidence-2025-2T.json
 @capture cr2 result.calculation_revision_id
 @setup aeat --format json app modelo work verify {cr2}
 @setup aeat --format json app modelo work file {cr2}
 @step Open, calculate, verify and file the third quarter.
 @setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 3T
 @capture wu3 result.work_unit_id
-@setup aeat --format json app modelo work calculate {wu3}
+@setup aeat --format json app modelo work calculate {wu3} --m303-filing-evidence fixtures/m303-filing-evidence-2025-3T.json
 @capture cr3 result.calculation_revision_id
 @setup aeat --format json app modelo work verify {cr3}
 @setup aeat --format json app modelo work file {cr3}
 @step Open, calculate, verify and file the fourth quarter.
 @setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 4T
 @capture wu4 result.work_unit_id
-@setup aeat --format json app modelo work calculate {wu4}
+@setup aeat --format json app modelo work calculate {wu4} --m303-filing-evidence fixtures/m303-filing-evidence-2025-4T.json
 @capture cr4 result.calculation_revision_id
 @setup aeat --format json app modelo work verify {cr4}
 @setup aeat --format json app modelo work file {cr4}

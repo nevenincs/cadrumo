@@ -30,11 +30,12 @@
             "definitive_volume_con_derecho": null,
             "definitive_volume_sin_derecho": null,
             "ejercicio": 2026,
+            "especial_transition": null,
             "interrupted": false,
             "provisional_percentage": "80",
             "provisional_provenance": "carried_prior_definitiva",
             "regime": "especial",
-            "schema_version": "1",
+            "schema_version": "2",
             "sector_id": "arrendamiento",
             "source_observation_ref": null
           }
@@ -87,13 +88,13 @@
         "command": "ledger.add",
         "notices": [
           {
+            "action": null,
             "code": "ledger.add.sector_unmatched",
             "context": {
               "sector_id": "arrendamiento"
             },
-            "message": "--sector 'arrendamiento' matches no declared differentiated sector (LIVA arts. 9.1.c / 101), so this input deducts under the common-use percentage rather than the sector's own. Run 'app ledger prorrata declare-sector --sector-id arrendamiento ...' to route it, or correct the tag.",
-            "severity": "warning",
-            "suggestion": null
+            "message": "--sector 'arrendamiento' matches no declared differentiated sector (LIVA arts. 9.1.c / 101), so this input is deducted at the common-use percentage rather than the sector percentage. The sector must exist before it can own the input.",
+            "severity": "warning"
           }
         ],
         "result": {

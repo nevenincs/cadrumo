@@ -3,13 +3,12 @@
 @setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @capture work_unit_id result.work_unit_id
 @step Calculate the quarter so a saved revision carries a reference number.
-@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
+@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --m303-filing-evidence fixtures/m303-filing-evidence-2026-1T.json
 @capture revision_id result.calculation_revision_id
 @step Verify a specific calculation by its reference number.
 aeat --format json app modelo work verify {revision_id}
 @step File a specific calculation by its reference number.
 aeat --format json app modelo work file {revision_id}
-@step Export a specific work unit and revision by their reference numbers.
+@step Address an export by reference numbers. Modelo 303 refuses the fichero-BOE layout itself, so the addressing is shown against that refusal.
 @result aeat --format json app modelo export {work_unit_id} --revision {revision_id} --output ./modelo-303.boe
-@expect result.byte_size == 7365
-@expect exit_code == 0
+@expect exit_code == 2

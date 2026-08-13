@@ -108,6 +108,7 @@
         "command": "modelo.work.calculate",
         "notices": [
           {
+            "action": null,
             "code": "modelo.work.calculate.plazo_vencido_unassessed_preview",
             "context": {
               "article_27_assessment_status": "unassessed",
@@ -120,8 +121,7 @@
               "legal_refs": "ley-58-2003:art-27.2"
             },
             "message": "WARNING: voluntary filing period expired (Art. 27 LGT). The displayed rate is an unassessed preview; this application does not determine surcharge or interest liability.",
-            "severity": "warning",
-            "suggestion": null
+            "severity": "warning"
           }
         ],
         "result": {
@@ -339,6 +339,7 @@
           ],
           "saved": true,
           "saved_confirmation": "Saved as draft calculation revision 2b12750373422e1066646eefcc8267be09804726ab0936c98be56c205f67f9f6 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 184 --year 2024 --period 0A` and re-inspect this one with `aeat app modelo work revision 2b12750373422e1066646eefcc8267be09804726ab0936c98be56c205f67f9f6`.",
+          "source_provenance": [],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",

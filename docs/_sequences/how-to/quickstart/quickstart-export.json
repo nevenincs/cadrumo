@@ -192,14 +192,14 @@
         "command": "ledger.add",
         "notices": [
           {
+            "action": null,
             "code": "ledger.add.idempotent_noop",
             "context": {
               "idempotency_key": "qs-compra",
               "transaction_id": "e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6"
             },
             "message": "Idempotent no-op: a transaction with this idempotency key already exists (e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6); nothing was added.",
-            "severity": "info",
-            "suggestion": null
+            "severity": "info"
           }
         ],
         "result": {
@@ -396,7 +396,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.verify\nverification_report_id\ta3cb6c04866c4c259ccb7bc5bd934f246afb62ba37dd97d5a945301583e62e3a\ncalculation_revision_id\tfda84cfe91994369fc8e01fd68f319498869f325c1e8ebfc9f6b96594e8af035\ncompleteness_status\tcomplete\ngranted_verificado_completo\ttrue\nrun_at\t2026-04-01T09:00:00+00:00\nverified_by\tdocs-sequence-sandbox\nresolved_casilla_id_count\t0\nmissing_required_casilla_id_count\t0\nfinding_count\t2\nfinding\tadvisory\twarning\t\tcross-period dependency scoped out as no-prior-obligation (pre-activity): modelo=100 year=2025 period=0A origin=previous_filing_binding. The period falls strictly before the operator-declared activity-start date 2026-01-01, which has not yet been corroborated against an AEAT censo snapshot.\tConfirm the recorded activity-start date is correct. Once the live AEAT censo read is available, the date will be corroborated and this advisory cleared.\nfinding_legal_refs\t\trd-1065-2007:art-9\nfinding_source_refs\t\taeat-dr-130-2019-v12, aeat-modelo-130-instructions\nfinding\tadvisory\twarning\t\toutput VAT transaction '5e530ccb8059c3819f61c3257961f6cb67c1d8654830c318d303d4bc53149303' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.\tAdvisory only: keep issued/sales invoice support for ledger row 5e530ccb8059c3819f61c3257961f6cb67c1d8654830c318d303d4bc53149303. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 5e530ccb8059c3819f61c3257961f6cb67c1d8654830c318d303d4bc53149303 --attachment-id ATTACHMENT_ID`, then rerun verification.\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-dr-130-2019-v12, aeat-modelo-130-instructions\n"
+      "text": "operation\tmodelo.work.verify\nverification_report_id\t4389f6e7d147e99fe3bfc25b42bb92b6bbd0e943a01973f0dcbd2b281c7f2022\ncalculation_revision_id\tfda84cfe91994369fc8e01fd68f319498869f325c1e8ebfc9f6b96594e8af035\ncompleteness_status\tcomplete\ngranted_verificado_completo\ttrue\nrun_at\t2026-04-01T09:00:00+00:00\nverified_by\tdocs-sequence-sandbox\nresolved_casilla_id_count\t0\nmissing_required_casilla_id_count\t0\nfinding_count\t2\nfinding\tadvisory\twarning\t\tModelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding).\tnull\nfinding_legal_refs\t\trd-1065-2007:art-9\nfinding_source_refs\t\taeat-dr-130-2019-v12, aeat-modelo-130-instructions\nfinding\tadvisory\twarning\t\tAn output transaction has no supporting evidence.\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-dr-130-2019-v12, aeat-modelo-130-instructions\n"
     },
     {
       "argv": [
@@ -418,40 +418,77 @@
       "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.export",
-        "notices": [
-          {
-            "code": "modelo.export.local_export_not_official_evidence",
-            "context": {
-              "evidence_status": "local_export_not_official_aeat_filing_evidence",
-              "filing_year": "2026",
-              "modelo": "130",
-              "period": "1T"
-            },
-            "message": "Local export wrote an AEAT-compatible fichero-BOE file only; it is not official AEAT filing evidence. Official evidence comes from AEAT after filing: justificante, consulta de declaraciones presentadas, or CSV cotejo.",
-            "severity": "warning",
-            "suggestion": "After filing through AEAT, capture official evidence with `aeat app modelo reconcile pull --modelo 130 --year 2026 --period 1T`, or `aeat app live justificante pull --modelo 130 --year 2026 --period 1T` when live read access is available; otherwise import AEAT justificante/CSV evidence with `aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id CSV --set CASILLA=VALUE`."
-          }
-        ],
+        "command": "app.modelo.export",
+        "error": {
+          "action": null,
+          "category": "REFUSED",
+          "code": "REFUSED_MODELO_EXPORT_UNSUPPORTED",
+          "context": {
+            "modelo": "130",
+            "reason": "the registry snapshot has no complete export_layouts definition"
+          },
+          "message": "Modelo 130 cannot be exported to fichero-BOE because the registry snapshot has no complete export_layouts definition. Calculation, verification, and local filing records may still exist, but this command cannot produce an AEAT upload file for this modelo and does not certify BOE/export correctness.",
+          "retryable": false,
+          "runbook_id": null,
+          "trace_id": null
+        },
+        "notices": [],
+        "schema_version": "2",
+        "status": "error"
+      },
+      "envelope_source": "stderr",
+      "exit_code": 2,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "file",
+        "--modelo",
+        "130",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.file",
+        "notices": [],
         "result": {
-          "bucket_event_id": "2b3cbcc5da5a5da4b27dfba580c3daa2389db7d44c8ce9b01c4b05397b8f0697",
+          "aeat_accepted": false,
+          "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "byte_size": 946,
           "calculation_revision_id": "fda84cfe91994369fc8e01fd68f319498869f325c1e8ebfc9f6b96594e8af035",
-          "file_sha256": "53811a0d55fa5f20dd0a84f5edfa7e8d2cb010cd7e69d5a2212eb8f59f69eb6b",
+          "external_evidence": null,
+          "filed_at": "2026-04-01T09:00:00+00:00",
+          "filed_by": "docs-sequence-sandbox",
+          "filing_record_id": "bb4dcfd8050dd4514eed512034093fcbef33ead6246cef6038ce674d8037c736",
           "filing_year": 2026,
-          "format": "fichero-boe",
+          "kind": "internal_filing",
+          "live_submission": false,
           "modelo": "130",
-          "operation": "modelo.export",
-          "output_path": "modelo-130-2026-1T.boe",
+          "notes": null,
+          "operation": "modelo.work.file",
           "period": {
             "code": "1T",
             "filing_year": 2026
           },
+          "status": "vigente",
+          "superseded_at": null,
+          "superseded_by_filing_record_id": null,
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
-        "status": "warning"
+        "status": "success"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

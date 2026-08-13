@@ -118,15 +118,17 @@
         "command": "modelo.work.calculate",
         "notices": [
           {
+            "action": null,
             "code": "modelo.work.calculate.source_advisory",
             "context": {
               "casilla_id": "0513",
+              "legal_refs": "ley-35-2006:art-56, ley-35-2006:art-58, ley-35-2006:art-61, orden-hac-277-2026:art-3",
               "reason": "source_issue",
+              "remedy": "Declare each descendant on the active profile, with its date of birth, before filing.",
               "source_kind": "minimo_descendientes_undeclared"
             },
             "message": "casilla '0513' (mínimo por descendientes, parte estatal) resolved to zero because the active profile declares no renta_family.descendiente facts. If you have children or other eligible descendants, the Art. 58 LIRPF allowance is being silently omitted",
-            "severity": "warning",
-            "suggestion": "Declare them with `aeat config profile descendiente add --descendiente NACIMIENTO=YYYY-MM-DD[,...]` before filing."
+            "severity": "warning"
           }
         ],
         "result": {
@@ -57950,6 +57952,22 @@
           ],
           "saved": true,
           "saved_confirmation": "Saved as draft calculation revision 8df53c040fb5ff8813af9b79dc32456b9d138655d2dbc19f6e9d2647961cbba0 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 100 --year 2025 --period 0A` and re-inspect this one with `aeat app modelo work revision 8df53c040fb5ff8813af9b79dc32456b9d138655d2dbc19f6e9d2647961cbba0`.",
+          "source_provenance": [
+            {
+              "binding_source": "relation_prefill",
+              "dependency_treatment": "direct_annual_settlement",
+              "fingerprint": null,
+              "source_kind": "relation_prefill",
+              "source_ref": "renta-2025-rel-130-pagos-fraccionados:130:2025:1T,2T,3T,4T:19"
+            },
+            {
+              "binding_source": "relation_prefill",
+              "dependency_treatment": "direct_annual_settlement",
+              "fingerprint": null,
+              "source_kind": "relation_prefill",
+              "source_ref": "renta-2025-rel-131-pagos-fraccionados:131:2025:1T,2T,3T,4T:15"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -57988,47 +58006,52 @@
         "command": "modelo.work.verify",
         "notices": [
           {
+            "action": null,
             "code": "modelo.work.verify.finding.blocking_rule",
             "context": {
               "casilla_id": "0011",
+              "ingreso_id": "0003",
+              "ingreso_value": "24000",
               "kind": "blocking_rule",
               "legal_refs": "ley-35-2006:dt-12",
+              "reduccion_id": "0011",
               "severity": "warning"
             },
-            "message": "DT_12A_REDUCCION_POSSIBLE: casilla 0003 = 24000 but casilla 0011 (reduccion trabajo) is zero. If this income includes a plan-de-pensiones capital rescate with pre-31-Dec-2006 aportaciones, a 40%% DT 12a LIRPF reduccion may apply.",
-            "severity": "warning",
-            "suggestion": "Supply --rescate-plan-pensiones-capital IMPORTE --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales IMPORTE to aeat app modelo work calculate to auto-inject the DT 12a reduccion into the reduccion casilla (ley-35-2006:dt-12)."
+            "message": "Income 0003 of 24000 EUR may qualify for reduction 0011.",
+            "severity": "warning"
           },
           {
+            "action": null,
             "code": "modelo.work.verify.finding.advisory",
             "context": {
               "kind": "advisory",
               "legal_refs": "ley-35-2006:art-48, ley-58-2003:art-119, ley-58-2003:art-120, ley-35-2006:art-50, orden-hac-277-2026:art-3",
+              "origin_ids": "renta-2025-base-liquidable-negativa-general-anterior",
               "severity": "warning",
-              "source_refs": "aeat-dr-100-2025-dictionary, aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form"
+              "source_filing_year": "2024",
+              "source_modelo": "100",
+              "source_period": "0A",
+              "source_refs": "aeat-dr-100-2025-dictionary, aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form",
+              "target_filing_year": "2025",
+              "target_modelo": "100",
+              "target_period": "0A"
             },
-            "message": "cross-period previous-filing carry treated as zero by explicit operator input: modelo=100 year=2024 period=0A origin_ids=renta-2025-base-liquidable-negativa-general-anterior for target modelo=100 year=2025 period=0A. No prior filing evidence is required because the taxpayer is not applying a positive prior-year negative-base balance.",
-            "severity": "warning",
-            "suggestion": "If a prior-year negative general base balance exists and is being applied, replace the zero with the carried amount and capture/import the prior Modelo 100 AEAT evidence before filing."
+            "message": "Modelo 100 2024 0A carries a zero value into 100 2025.",
+            "severity": "warning"
           },
           {
+            "action": null,
             "code": "modelo.work.verify.finding.advisory",
             "context": {
               "kind": "advisory",
               "legal_refs": "ley-58-2003:art-119, ley-58-2003:art-120, ley-35-2006:art-99, orden-hac-277-2026:art-3, rd-439-2007:art-108, orden-eha-3435-2007:anexo-ii, orden-hac-56-2024:art-1, rd-439-2007:art-109, orden-eha-672-2007:art-3, ley-35-2006:art-86, ley-35-2006:art-87, ley-35-2006:art-88, ley-35-2006:art-89, orden-hap-2250-2015:art-1, orden-hap-2250-2015:art-3, orden-eha-3127-2009:art-1, orden-hac-1431-2025:art-2, orden-eha-3377-2011:art-1",
               "severity": "warning",
+              "source_modelo_count": "7",
+              "source_modelos": "111|123|130|131|184|190|193",
               "source_refs": "aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form, aeat-modelo-190-instructions-2025, boe-modelo-190-2025-form, aeat-modelo-193-296-note-2025, boe-modelo-193-2011-form"
             },
-            "message": "Cross-period dependencies on source modelos the taxpayer does not file were scoped out as not applicable: 111, 123, 130, 131, 184, 190, 193. For suffered retenciones, enter the income-certificate amount with --binding KEY=VALUE, not --casilla. KEY=VALUE means the binding id on the left of one equals sign and the value on the right. For mutually exclusive pagos fraccionados, confirm the activity-estimation regime on the profile.",
-            "severity": "warning",
-            "suggestion": "Use `aeat app modelo bindings list --missing` to identify the retenciones binding. Supply the certificate amount with --binding KEY=VALUE where applicable: put the binding id on the left of one equals sign and the amount on the right. Confirm the profile's IRPF estimation regime if a mutually exclusive pago-fraccionado modelo was scoped out."
-          },
-          {
-            "code": "modelo.work.verify.next_action_granted",
-            "context": null,
-            "message": "Verification passed. Export the filing artefact with `aeat app modelo export`.",
-            "severity": "info",
-            "suggestion": "aeat app modelo export"
+            "message": "7 source modelo(s) are not applicable to this taxpayer: 111|123|130|131|184|190|193.",
+            "severity": "warning"
           }
         ],
         "result": {
@@ -58036,18 +58059,19 @@
           "completeness_status": "complete",
           "findings": [
             {
+              "action": null,
               "casilla_id": "0011",
               "expectation_id": null,
               "kind": "blocking_rule",
               "legal_refs": [
                 "ley-35-2006:dt-12"
               ],
-              "message": "DT_12A_REDUCCION_POSSIBLE: casilla 0003 = 24000 but casilla 0011 (reduccion trabajo) is zero. If this income includes a plan-de-pensiones capital rescate with pre-31-Dec-2006 aportaciones, a 40%% DT 12a LIRPF reduccion may apply.",
-              "next_action": "Supply --rescate-plan-pensiones-capital IMPORTE --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales IMPORTE to aeat app modelo work calculate to auto-inject the DT 12a reduccion into the reduccion casilla (ley-35-2006:dt-12).",
+              "message": "Income 0003 of 24000 EUR may qualify for reduction 0011.",
               "severity": "warning",
               "source_refs": []
             },
             {
+              "action": null,
               "casilla_id": null,
               "expectation_id": null,
               "kind": "advisory",
@@ -58058,8 +58082,7 @@
                 "ley-35-2006:art-50",
                 "orden-hac-277-2026:art-3"
               ],
-              "message": "cross-period previous-filing carry treated as zero by explicit operator input: modelo=100 year=2024 period=0A origin_ids=renta-2025-base-liquidable-negativa-general-anterior for target modelo=100 year=2025 period=0A. No prior filing evidence is required because the taxpayer is not applying a positive prior-year negative-base balance.",
-              "next_action": "If a prior-year negative general base balance exists and is being applied, replace the zero with the carried amount and capture/import the prior Modelo 100 AEAT evidence before filing.",
+              "message": "Modelo 100 2024 0A carries a zero value into 100 2025.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-100-2025-dictionary",
@@ -58068,6 +58091,7 @@
               ]
             },
             {
+              "action": null,
               "casilla_id": null,
               "expectation_id": null,
               "kind": "advisory",
@@ -58091,8 +58115,7 @@
                 "orden-hac-1431-2025:art-2",
                 "orden-eha-3377-2011:art-1"
               ],
-              "message": "Cross-period dependencies on source modelos the taxpayer does not file were scoped out as not applicable: 111, 123, 130, 131, 184, 190, 193. For suffered retenciones, enter the income-certificate amount with --binding KEY=VALUE, not --casilla. KEY=VALUE means the binding id on the left of one equals sign and the value on the right. For mutually exclusive pagos fraccionados, confirm the activity-estimation regime on the profile.",
-              "next_action": "Use `aeat app modelo bindings list --missing` to identify the retenciones binding. Supply the certificate amount with --binding KEY=VALUE where applicable: put the binding id on the left of one equals sign and the amount on the right. Confirm the profile's IRPF estimation regime if a mutually exclusive pago-fraccionado modelo was scoped out.",
+              "message": "7 source modelo(s) are not applicable to this taxpayer: 111|123|130|131|184|190|193.",
               "severity": "warning",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1",
@@ -58109,7 +58132,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "2a9a7c500ef31dbf1e1792baa708489b5f0fe96c6090ca636626dbd82d24d562",
+          "verification_report_id": "f852ae08a494e5fc0b74105c013acd8958492bb814ac2153438e43cd339228da",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -58143,16 +58166,16 @@
         "active_profile": "docs-sequence-sandbox",
         "command": "app.modelo.export",
         "error": {
+          "action": null,
           "category": "FAIL",
           "code": "FAIL_MODELO_EXPORT",
           "context": {
             "calculation_revision_id": "8df53c040fb5ff8813af9b79dc32456b9d138655d2dbc19f6e9d2647961cbba0",
-            "cause": "export layout 'modelo-100-2025-xml-dictionary' cannot write the declaration's mandatory Aux block: aux_version is not declared on the layout. Every AEAT XSD for this modelo declares Aux with minOccurs=1 as the first element of Declaracion, and its Idioma and VERSION children are mandatory too, so a partial block is invalid and an omitted one fails at the first element. No bundled AEAT dictionary declares these rows and no bundled source carries an authoritative VERSION, so the value cannot be derived and is not invented: an invented token would satisfy the schema while asserting something unverified. Declare aux_version on the export layout once AEAT's value is known."
+            "cause": "explicit presenter and taxpayer identity facts are required"
           },
           "message": "Could not write the export file for calculation revision 8df53c040fb5ff8813af9b79dc32456b9d138655d2dbc19f6e9d2647961cbba0.",
           "retryable": false,
           "runbook_id": null,
-          "suggestion": null,
           "trace_id": null
         },
         "notices": [],

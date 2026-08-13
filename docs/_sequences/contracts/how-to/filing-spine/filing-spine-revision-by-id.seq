@@ -2,7 +2,7 @@
 @step Create the work unit for the filing target.
 @setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @step Calculate the quarter so a saved revision carries a reference number.
-@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
+@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --m303-filing-evidence fixtures/m303-filing-evidence-2026-1T.json
 @capture revision_id result.calculation_revision_id
 @step View one specific saved calculation by its reference number.
 @result aeat --format json app modelo work revision {revision_id}
