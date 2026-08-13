@@ -187,6 +187,7 @@ class SingletonNumericRule(_StrictModel):
         "integer",
         "decimal",
         "date_yyyymmdd",
+        "date_ddmmyyyy",
         "enumeration",
         "percentage_decimal",
         "digit_string",
@@ -224,6 +225,7 @@ class SingletonNumericRule(_StrictModel):
             "decimal": ExportValuePolicy.IMPLIED_DECIMAL,
             "percentage_decimal": ExportValuePolicy.IMPLIED_DECIMAL,
             "date_yyyymmdd": ExportValuePolicy.YYYYMMDD,
+            "date_ddmmyyyy": ExportValuePolicy.DDMMYYYY,
             "enumeration": ExportValuePolicy.ENUMERATED_DIGITS,
             "digit_string": ExportValuePolicy.DIGIT_STRING,
             "identifier_digits": ExportValuePolicy.IDENTIFIER_DIGITS,
@@ -235,8 +237,11 @@ class SingletonNumericRule(_StrictModel):
         }[self.semantic_kind]
         if self.value_policy != required_policy:
             raise ValueError(f"{self.semantic_kind} requires value_policy {required_policy!r}")
-        if self.semantic_kind == "date_yyyymmdd" and (self.integer_digits, self.decimal_digits) != (8, 0):
-            raise ValueError("date_yyyymmdd requires exactly 8 integer digits and 0 decimal digits")
+        if self.semantic_kind in {"date_yyyymmdd", "date_ddmmyyyy"} and (
+            self.integer_digits,
+            self.decimal_digits,
+        ) != (8, 0):
+            raise ValueError(f"{self.semantic_kind} requires exactly 8 integer digits and 0 decimal digits")
         if self.semantic_kind == "integer" and (self.integer_digits <= 0 or self.decimal_digits != 0):
             raise ValueError("integer requires positive integer digits and 0 decimal digits")
         if self.semantic_kind in {"decimal", "percentage_decimal"} and (

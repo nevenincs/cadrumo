@@ -25,6 +25,7 @@ class ExportValuePolicy(StrEnum):
     UNSIGNED_INTEGER = "unsigned-integer"
     IMPLIED_DECIMAL = "implied-decimal"
     YYYYMMDD = "yyyymmdd"
+    DDMMYYYY = "ddmmyyyy"
     ENUMERATED_DIGITS = "enumerated-digits"
     DIGIT_STRING = "digit-string"
     IDENTIFIER_DIGITS = "identifier-digits"
@@ -63,6 +64,7 @@ _WIRE_LENGTH_BY_POLICY: dict[ExportValuePolicy, int] = {
     ExportValuePolicy.SELECTED_1_UNSELECTED_0: 1,
     ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS: 2,
     ExportValuePolicy.YYYYMMDD: 8,
+    ExportValuePolicy.DDMMYYYY: 8,
     ExportValuePolicy.FOUR_DIGIT_YEAR: 4,
     ExportValuePolicy.TWO_DIGIT_MONTH: 2,
     ExportValuePolicy.TWO_DIGIT_DAY: 2,
@@ -254,6 +256,15 @@ def _project_yyyymmdd(value: object) -> str:
     return value
 
 
+def _project_ddmmyyyy(value: object) -> str:
+    if type(value) is date:
+        return value.strftime("%d%m%Y")
+    if not isinstance(value, str):
+        raise RegistryValidationError("ddmmyyyy export value must be a date or exactly eight ASCII digits")
+    _validate_ddmmyyyy(value)
+    return value
+
+
 def _require_ascii_digits(raw: str, *, label: str) -> None:
     if not raw or not raw.isascii() or not raw.isdigit():
         raise RegistryValidationError(f"{label} export field must contain only non-empty ASCII digits")
@@ -290,6 +301,15 @@ def _validate_yyyymmdd(raw: str) -> None:
         raise RegistryValidationError("yyyymmdd export field must contain a real calendar date") from exc
 
 
+def _validate_ddmmyyyy(raw: str) -> None:
+    if len(raw) != 8 or not raw.isascii() or not raw.isdigit():
+        raise RegistryValidationError("ddmmyyyy export field must contain exactly eight ASCII digits")
+    try:
+        date(int(raw[4:]), int(raw[2:4]), int(raw[:2]))
+    except ValueError as exc:
+        raise RegistryValidationError("ddmmyyyy export field must contain a real calendar date") from exc
+
+
 _PROJECTOR_BY_POLICY: dict[ExportValuePolicy, Callable[[object], object]] = {
     ExportValuePolicy.SELECTED_1_UNSELECTED_0: _project_selected_unselected,
     ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS: _project_four_digit_year,
@@ -297,6 +317,7 @@ _PROJECTOR_BY_POLICY: dict[ExportValuePolicy, Callable[[object], object]] = {
     ExportValuePolicy.ENUMERATED_DIGITS: _project_unsigned_integer,
     ExportValuePolicy.IMPLIED_DECIMAL: _project_unsigned_decimal,
     ExportValuePolicy.YYYYMMDD: _project_yyyymmdd,
+    ExportValuePolicy.DDMMYYYY: _project_ddmmyyyy,
     ExportValuePolicy.DIGIT_STRING: partial(_project_digit_identity, ExportValuePolicy.DIGIT_STRING),
     ExportValuePolicy.IDENTIFIER_DIGITS: partial(_project_digit_identity, ExportValuePolicy.IDENTIFIER_DIGITS),
     ExportValuePolicy.FOUR_DIGIT_YEAR: _project_full_year,
@@ -322,6 +343,7 @@ _WIRE_VALIDATOR_BY_POLICY: dict[ExportValuePolicy, Callable[[str], None]] = {
     ExportValuePolicy.TWO_DIGIT_MONTH: partial(_validate_calendar_part, label="month", minimum=1, maximum=12),
     ExportValuePolicy.TWO_DIGIT_DAY: partial(_validate_calendar_part, label="day", minimum=1, maximum=31),
     ExportValuePolicy.YYYYMMDD: _validate_yyyymmdd,
+    ExportValuePolicy.DDMMYYYY: _validate_ddmmyyyy,
 }
 
 __all__ = [

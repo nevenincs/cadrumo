@@ -80,13 +80,17 @@ _DECIMAL_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
     re.IGNORECASE,
 )
 _INTEGER_CONTENT_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<whole>\d+)\s*enteros?$", re.IGNORECASE)
-_DATE_CONTENT: Final[str] = "aaaammdd"
+_DATE_FORMAT_BY_POLICY: Final[Mapping[ExportValuePolicy, str]] = {
+    ExportValuePolicy.YYYYMMDD: "aaaammdd",
+    ExportValuePolicy.DDMMYYYY: "ddmmaaaa",
+}
 _SINGLETON_POLICY_SHAPES: Final[Mapping[ExportValuePolicy, Literal["integer", "decimal", "date", "digit_identity"]]] = {
     ExportValuePolicy.SELECTED_1_UNSELECTED_0: "integer",
     ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS: "integer",
     ExportValuePolicy.UNSIGNED_INTEGER: "integer",
     ExportValuePolicy.IMPLIED_DECIMAL: "decimal",
     ExportValuePolicy.YYYYMMDD: "date",
+    ExportValuePolicy.DDMMYYYY: "date",
     ExportValuePolicy.ENUMERATED_DIGITS: "integer",
     ExportValuePolicy.DIGIT_STRING: "digit_identity",
     ExportValuePolicy.IDENTIFIER_DIGITS: "digit_identity",
@@ -584,7 +588,7 @@ def _numeric_derivation(
             f"official numeric field {joined_field.semantic_entry.export_field_id!r} has no unambiguous content form",
         )
     normalised_content = " ".join(content.split())
-    if normalised_content.casefold() == _DATE_CONTENT:
+    if normalised_content.casefold() == _DATE_FORMAT_BY_POLICY[ExportValuePolicy.YYYYMMDD]:
         if parser_field.length != 8:
             raise RegistryValidationError(
                 f"official date field {joined_field.semantic_entry.export_field_id!r} has "
@@ -598,7 +602,7 @@ def _numeric_derivation(
             justification=ExportJustification.NONE,
             signed=False,
             export_record_id=export_record_id,
-            date_format=_DATE_CONTENT,
+            date_format=_DATE_FORMAT_BY_POLICY[ExportValuePolicy.YYYYMMDD],
             derivation_code="numeric-date-aaaammdd-v1",
         )
     decimal_match = _DECIMAL_CONTENT_RE.fullmatch(normalised_content)
@@ -694,7 +698,9 @@ def _profile_singleton_derivation(
         raise RegistryValidationError(f"unsupported singleton export value policy {rule.value_policy!r}")
     if policy_shape == "date":
         data_type = "date"
-        date_format = _DATE_CONTENT
+        date_format = _DATE_FORMAT_BY_POLICY.get(rule.value_policy)
+        if date_format is None:
+            raise RegistryValidationError(f"date singleton export policy lacks a date format {rule.value_policy!r}")
         padding = ExportPadding.NONE
         justification = ExportJustification.NONE
     elif policy_shape == "decimal":

@@ -249,6 +249,18 @@ from ._schema_base import (
     governance_stamp_fields,
     manifest_only_fields,
 )
+from ._schema_exports import (
+    ExportComputedKey,
+    ExportDraftAttribute,
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+    ExportSemanticPayloadAxis,
+    ExportValuePolicyValue,
+    OneBasedExportOffset,
+    ProjectionEndpointDeclaration,
+    export_semantic_payload_axis,
+)
 from ._schema_extraction import BboxAnchorSpec, ExtractionProfileDefinition, ExtractionTargetDefinition
 from ._schema_formula import (
     BracketEntry,
@@ -275,19 +287,9 @@ from ._schema_surfaces import (
     CasillaConstraints,
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
-    ExportComputedKey,
-    ExportDraftAttribute,
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-    ExportSemanticPayloadAxis,
-    ExportValuePolicyValue,
-    OneBasedExportOffset,
-    ProjectionEndpointDeclaration,
     RelationDefinition,
     RelationPeriodAlignment,
     RelationRevisionSelector,
-    export_semantic_payload_axis,
 )
 
 # Scalar and annotated value types live in ``_schema_scalars``; retaining these

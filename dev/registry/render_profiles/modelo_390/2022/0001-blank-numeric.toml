@@ -1,0 +1,261 @@
+schema_version = 1
+fragment_id = "blank-numeric"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 15
+source_cell = "A15"
+ordinal = 10
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m390-2022-devengo-ejercicio-year-yyyy"
+decision_statement = "The Devengo ejercicio field is rendered as the four-digit filing year, unsigned, with no decimal component."
+justification = "The exact official design leaves Contenido blank while marking the four-character field obligatory. Its Devengo ejercicio meaning and exact extent admit the established four-digit year policy without inventing a narrower or wider representation."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 15
+source_cell = "A15"
+ordinal = 10
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_ddmmyyyy"
+value_policy = "ddmmyyyy"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 65
+source_cell = "A65"
+ordinal = 60
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "Pág. 1"
+source_cell = "E65"
+expected_normalized_statement = "4. Representante - Personas Jurídicas - Represent. 1 - Fecha Poder (DDMMAAAA)"
+justification = "The exact official description explicitly names the eight-character power-of-attorney date as DDMMAAAA, so the generic day-first date policy is required."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_ddmmyyyy"
+value_policy = "ddmmyyyy"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 69
+source_cell = "A69"
+ordinal = 64
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "Pág. 1"
+source_cell = "E69"
+expected_normalized_statement = "4. Representante - Personas Jurídicas - Represent. 2 - Fecha Poder (DDMMAAAA)"
+justification = "The exact official description explicitly names the eight-character power-of-attorney date as DDMMAAAA, so the generic day-first date policy is required."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_ddmmyyyy"
+value_policy = "ddmmyyyy"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 73
+source_cell = "A73"
+ordinal = 68
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "Pág. 1"
+source_cell = "E73"
+expected_normalized_statement = "4. Representante - Personas Jurídicas - Represent. 3 - Fecha Poder (DDMMAAAA)"
+justification = "The exact official description explicitly names the eight-character power-of-attorney date as DDMMAAAA, so the generic day-first date policy is required."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 5"
+source_row = 59
+source_cell = "A59"
+ordinal = 54
+record_identity = "Pág. 5"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m390-2022-rs-agricola-actividad-1-codigo-identifier-digits"
+decision_statement = "The agricultural simplified-regime activity code in slot 1 is rendered as a two-digit identifier, unsigned, with no decimal component and no closed value domain asserted."
+justification = "The exact official design leaves Contenido and validation blank. It describes a code rather than a quantity, so arithmetic representation is excluded; an enumeration is also excluded because no canonical two-digit domain is published in this source."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 5"
+source_row = 59
+source_cell = "A59"
+ordinal = 54
+record_identity = "Pág. 5"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 5"
+source_row = 65
+source_cell = "A65"
+ordinal = 60
+record_identity = "Pág. 5"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m390-2022-rs-agricola-actividad-2-codigo-identifier-digits"
+decision_statement = "The agricultural simplified-regime activity code in slot 2 is rendered as a two-digit identifier, unsigned, with no decimal component and no closed value domain asserted."
+justification = "The exact official design leaves Contenido and validation blank. It describes a code rather than a quantity, so arithmetic representation is excluded; an enumeration is also excluded because no canonical two-digit domain is published in this source."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 5"
+source_row = 65
+source_cell = "A65"
+ordinal = 60
+record_identity = "Pág. 5"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 5"
+source_row = 71
+source_cell = "A71"
+ordinal = 66
+record_identity = "Pág. 5"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m390-2022-rs-agricola-actividad-3-codigo-identifier-digits"
+decision_statement = "The agricultural simplified-regime activity code in slot 3 is rendered as a two-digit identifier, unsigned, with no decimal component and no closed value domain asserted."
+justification = "The exact official design leaves Contenido and validation blank. It describes a code rather than a quantity, so arithmetic representation is excluded; an enumeration is also excluded because no canonical two-digit domain is published in this source."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 5"
+source_row = 71
+source_cell = "A71"
+ordinal = 66
+record_identity = "Pág. 5"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 5"
+source_row = 77
+source_cell = "A77"
+ordinal = 72
+record_identity = "Pág. 5"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m390-2022-rs-agricola-actividad-4-codigo-identifier-digits"
+decision_statement = "The agricultural simplified-regime activity code in slot 4 is rendered as a two-digit identifier, unsigned, with no decimal component and no closed value domain asserted."
+justification = "The exact official design leaves Contenido and validation blank. It describes a code rather than a quantity, so arithmetic representation is excluded; an enumeration is also excluded because no canonical two-digit domain is published in this source."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 5"
+source_row = 77
+source_cell = "A77"
+ordinal = 72
+record_identity = "Pág. 5"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 5"
+source_row = 83
+source_cell = "A83"
+ordinal = 78
+record_identity = "Pág. 5"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m390-2022-rs-agricola-actividad-5-codigo-identifier-digits"
+decision_statement = "The agricultural simplified-regime activity code in slot 5 is rendered as a two-digit identifier, unsigned, with no decimal component and no closed value domain asserted."
+justification = "The exact official design leaves Contenido and validation blank. It describes a code rather than a quantity, so arithmetic representation is excluded; an enumeration is also excluded because no canonical two-digit domain is published in this source."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 5"
+source_row = 83
+source_cell = "A83"
+ordinal = 78
+record_identity = "Pág. 5"
+
+[design_identity]
+modelo = "390"
+design_epoch = "2022"
+source_ref = "aeat-dr-390-2022"
+source_sha256 = "7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe"
