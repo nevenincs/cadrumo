@@ -340,6 +340,13 @@ class OverviewCalendarEvent(_CalendarJustificanteStateInvariant):
     justificante_verified: bool | None = None
     verified_justificante_csv: str | None = Field(default=None, min_length=1, max_length=64)
 
+    @model_validator(mode="after")
+    def _enforce_notification_service_state_on_message_events(self) -> OverviewCalendarEvent:
+        """Reject a notification service state attached to a non-message event."""
+        if self.notificacion_estado_servicio is not None and self.event_type is not OverviewCalendarEventType.MESSAGE:
+            raise ValueError("notificacion_estado_servicio may only be set on message events")
+        return self
+
 
 class CalendarWarning(BaseModel):
     """One under-specified-profile warning attached to a calendar query."""

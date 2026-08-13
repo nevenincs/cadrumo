@@ -23,6 +23,7 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from pydantic import ValidationError
 
 from ....application.overview import OverviewCalendarEvent, OverviewCalendarEventType
 from ....core import NotificacionEstadoServicio
@@ -38,9 +39,10 @@ def _event(
     *,
     authenticated_identity: str | None = None,
     notificacion_estado_servicio: NotificacionEstadoServicio | None = None,
+    event_type: OverviewCalendarEventType = OverviewCalendarEventType.FILING,
 ) -> OverviewCalendarEvent:
     return OverviewCalendarEvent(
-        event_type=OverviewCalendarEventType.FILING,
+        event_type=event_type,
         notificacion_estado_servicio=notificacion_estado_servicio,
         event_date=date(2026, 4, 15),
         source="live-snapshot",
@@ -58,7 +60,13 @@ def test_the_service_state_reaches_the_payload() -> None:
     know whether a notification is still inside its access window.
     """
     state = next(iter(NotificacionEstadoServicio))
-    projected = strict_round_trip(OverviewCalendarEventPayload, _event(notificacion_estado_servicio=state))
+    projected = strict_round_trip(
+        OverviewCalendarEventPayload,
+        _event(
+            event_type=OverviewCalendarEventType.MESSAGE,
+            notificacion_estado_servicio=state,
+        ),
+    )
 
     assert projected.notificacion_estado_servicio == state.value
 
@@ -91,8 +99,18 @@ def test_the_projection_still_succeeds_with_both_fields_populated() -> None:
     state = next(iter(NotificacionEstadoServicio))
     projected = strict_round_trip(
         OverviewCalendarEventPayload,
-        _event(authenticated_identity=_NIF, notificacion_estado_servicio=state),
+        _event(
+            authenticated_identity=_NIF,
+            event_type=OverviewCalendarEventType.MESSAGE,
+            notificacion_estado_servicio=state,
+        ),
     )
 
     assert projected.notificacion_estado_servicio == state.value
     assert _NIF not in projected.model_dump_json()
+
+
+def test_a_filing_event_cannot_claim_a_notification_service_state() -> None:
+    """A declaration reference can never reach the DEHu legal-effect notice path."""
+    with pytest.raises(ValidationError, match="notificacion_estado_servicio may only be set on message events"):
+        _event(notificacion_estado_servicio=NotificacionEstadoServicio.RECHAZO_TACITO)

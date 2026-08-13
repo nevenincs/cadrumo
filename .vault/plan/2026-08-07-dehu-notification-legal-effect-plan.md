@@ -4,7 +4,7 @@ tags:
   - '#dehu-notification-legal-effect'
 date: '2026-08-07'
 modified: '2026-08-13'
-body_hash: 'sha256:762342825275862a8447a42d7c4667dececd16e90d52d132521a686b1e52b26b'
+body_hash: 'sha256:4c9178f1dc3f683a4817b456c56e3fcb6b9f19196aa9d7c5dae8dad8d01374b9'
 tier: L2
 related:
   - '[[2026-08-07-dehu-notification-legal-effect-adr]]'
@@ -94,7 +94,7 @@ Surface the computed service state on the typed calendar event, widen post-filin
 
 Run every targeted suite plus the tree-wide vault and locale gates and triage any red signature; blocked on every Step in Phases P01 through P03 being closed, including the human review gate.
 
-- [ ] `P04.S09` - Run the targeted suites sequentially, core tests, the registry legal and catalogue tests, application overview tests and entrypoints cli tests, plus vaultspec-core vault check all and the locales scaffold --check gate, capture full output to a log file per aeat-local-execution, and triage any red signature as owner-surface or unrelated peer churn before closing this Step; `no production files, verification only`.
+- [x] `P04.S09` - Run the targeted suites sequentially, core tests, the registry legal and catalogue tests, application overview tests and entrypoints cli tests, plus vaultspec-core vault check all and the locales scaffold --check gate, capture full output to a log file per aeat-local-execution, and triage any red signature as owner-surface or unrelated peer churn before closing this Step; `no production files, verification only`.
 
 ## Parallelization
 
