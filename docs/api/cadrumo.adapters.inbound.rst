@@ -19,5 +19,6 @@ Subpackages
    cadrumo.adapters.inbound.einvoice
    cadrumo.adapters.inbound.financial
    cadrumo.adapters.inbound.justificante
+   cadrumo.adapters.inbound.notificacion
    cadrumo.adapters.inbound.pdf
    cadrumo.adapters.inbound.tui
