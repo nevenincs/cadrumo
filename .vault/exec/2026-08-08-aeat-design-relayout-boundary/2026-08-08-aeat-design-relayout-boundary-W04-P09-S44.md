@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:09add858abd0eb1b59a7511d75234549d978071ae9e28bde9f0f00035374aa2a'
+body_hash: 'sha256:67fea5bfff820501f45833ae684268f8992e5fd43c5b6d69951dc22a8b10e988'
 step_id: 'S44'
 related:
   - "[[2026-08-08-aeat-design-relayout-boundary-plan]]"
@@ -44,6 +44,8 @@ The export tree deletion was confirmed via `git ls-files "src/cadrumo/_data/regi
 The line above reads `period_selector = { year_from = 2025, periods = ["0A"] }`. Read directly from `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/revision.toml` at HEAD, the true value is `period_selector = { year_from = 2024, periods = ["0A"] }`. The `year_from = 2025` narrowing this record described as landed was reverted by commit `867b1fe7e7`, one day before this record was written - see the sibling `2026-08-08-aeat-design-relayout-boundary-W04-P09-S43.md` record's own correction section for the full commit history.
 
 `valid_from = 2025-01-01` is correctly reported above and does survive at HEAD, but on its own it narrows nothing. Registry coverage is decided solely by `period_selector.includes_year(filing_year)` at `src/cadrumo/domain/calculations/registry/_temporal.py:95`; the `valid_from` comparison at `_temporal.py:117` is guarded by `if on is not None`, and no production caller passes `on`, so that branch never runs on the resolution path this record's ruling depends on.
+
+**Further correction (2026-08-13):** "no production caller passes `on`" overstates the finding and is narrowed here. Four production call sites DO pass `on` - `src/cadrumo/application/_foreign_asset_thresholds.py:60`, `src/cadrumo/application/modelo/_binding_readiness.py:163`, `src/cadrumo/domain/calculations/registry/_queries.py:584`, and `src/cadrumo/application/registry/_diff.py:168` / `:377` / `:378` (`_snapshot.py:192` forwards whatever `on` it is given) - so `valid_from` is not globally inert. What the ruling actually depends on, correctly narrower: `resolve_registry_revision_for_work_target` in `src/cadrumo/application/modelo/_work_addressing.py:700`, `:709`, `:713` - the calculate/verify/file/export path - does NOT pass `on`, so `valid_from` is inert only on THAT path, which is the resolution path this record's ruling concerns.
 
 The axis this record calls "filing year" throughout is the EJERCICIO (the fiscal year reported), not the calendar year of filing. Restated on that axis: the revision covers ejercicio 2024 onward at HEAD, correctly, grounded in Orden HAC/657/2025 (BOE-A-2025-12818) Article 1 - the orden this revision's own `orden_aplicabilidad` already cites, and which approves modelo 200 for the periodos impositivos of 2024. There is therefore no narrowing at HEAD and no naming debt: the revision is named `2024-y-siguientes` and covers ejercicio 2024 onward, so the name is accurate.
 

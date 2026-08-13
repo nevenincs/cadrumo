@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:0c34dde659c04a2d1bb1b00659643b3019f21618194aaa80145098e5072d0dc9'
+body_hash: 'sha256:81e8bd3f98a146892026dd2c822a896a5715a1ed73ee35c0ae059c1990acb1bd'
 step_id: 'S43'
 related:
   - "[[2026-08-08-aeat-design-relayout-boundary-plan]]"
@@ -71,6 +71,8 @@ Commit `515f4c502b` (this Step) moved BOTH `valid_from` and `period_selector.yea
 `src/cadrumo/domain/calculations/registry/tests/test_modelo_200_ejercicio_2024_resolves.py`, pinning ejercicio 2024 to resolve against this revision.
 
 `valid_from` does NOT participate in registry coverage on the production resolution path: `_temporal.py:117` is guarded by `if on is not None`, and no production caller passes `on`. So the `valid_from = 2025-01-01` half of this Step's change - the only half that survived the revert - narrows nothing. At HEAD, `period_selector = { year_from = 2024, periods = ["0A"] }` and the revision resolves for ejercicio 2024, 2025 and 2026 alike.
+
+**Further correction (2026-08-13):** the claim above that "no production caller passes `on`" is too broad and is narrowed here. Four production call sites DO pass `on`: `src/cadrumo/application/_foreign_asset_thresholds.py:60`, `src/cadrumo/application/modelo/_binding_readiness.py:163`, `src/cadrumo/domain/calculations/registry/_queries.py:584`, and `src/cadrumo/application/registry/_diff.py:168` / `:377` / `:378`; `_snapshot.py:192` forwards whatever `on` it is given. What stays true, narrower: the calculate/verify/file/export resolution path - `resolve_registry_revision_for_work_target` in `src/cadrumo/application/modelo/_work_addressing.py:700`, `:709`, `:713` - does NOT pass `on`, so `valid_from` is inert only on THAT path. That is why this Step's `valid_from` edit alone narrowed nothing while the `period_selector` narrowing took ejercicio 2024 offline. Treating `valid_from` as globally inert would risk a future narrowing silently changing foreign-asset thresholds, binding readiness, registry queries and revision diffs.
 
 **The Verification section above is therefore no longer descriptive of HEAD.** It was a genuine result against the tree state this Step produced on 2026-08-08/09; it does not describe the tree this record's reader will find today. Filing year 2024 does NOT refuse at HEAD - it resolves against this same revision.
 
