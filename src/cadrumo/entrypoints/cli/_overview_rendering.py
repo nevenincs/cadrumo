@@ -32,6 +32,7 @@ from ...core import (
     ActionArgumentSource,
     ActionArgumentStatus,
     Modelo,
+    NotificacionEstadoServicio,
 )
 from ...core.i18n import tr
 from ...core.json_contract import (
@@ -182,6 +183,63 @@ def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) 
     ]
 
 
+_DEEMED_SERVED_NOTICE_CODE = "overview.notificacion.rechazo_tacito"
+
+#: Legal-catalogue entry establishing the rechazo-tácito window the notice reports.
+#: It rides on :attr:`Notice.context` so the operator can trace the claim that a
+#: notification nobody opened is nevertheless legally served back to the provision
+#: that says so, rather than taking the surface's word for it.
+DEEMED_SERVED_LEGAL_REF = "ley-39-2015:art-43.2"
+
+
+def overview_deemed_served_notification_notices(events: Sequence[OverviewCalendarEvent]) -> list[Notice]:
+    """Surface notifications the law already deems served, whatever their procedural kind.
+
+    A DEHu notification left unopened for the
+    :data:`~cadrumo.core.DEHU_RECHAZO_TACITO_DIAS_NATURALES` window is *rechazada*
+    under Ley 39/2015 art. 43.2 — served, with every downstream plazo already
+    running, even though the taxpayer never read it. That consequence attaches to
+    the notification's delivery state, not to its
+    :class:`~cadrumo.core.PostFilingEventKind`, so a plain ``notificacion`` whose
+    concepto matches no sharper procedural pattern carries it just as a
+    requerimiento does and cannot be reported through the kind-keyed
+    :func:`overview_post_filing_event_notices` context map.
+
+    The affected certificado ids ride on :attr:`Notice.context` beside the
+    legal-catalogue entry that establishes the window, so a machine consumer keeps
+    the structured list and an operator keeps the provenance. Empty when no
+    notification has lapsed.
+    """
+    deemed_served = tuple(
+        event for event in events if event.notificacion_estado_servicio is NotificacionEstadoServicio.RECHAZO_TACITO
+    )
+    if not deemed_served:
+        return []
+    certificado_ids = sorted({event.reference_id for event in deemed_served if event.reference_id})
+    message = tr(
+        "cli.overview.notificacion.rechazo_tacito_summary",
+        default=(
+            "%{count} AEAT notification(s) are legally served by rechazo tácito "
+            "(Ley 39/2015 art. 43.2): %{certificados}. The plazos are already running."
+        ),
+        count=len(deemed_served),
+        certificados=", ".join(certificado_ids),
+    )
+    return [
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code=_DEEMED_SERVED_NOTICE_CODE,
+            message=message,
+            action=resolve_notice_action(action=ActionReference(action_id="operator.live.notifications.list")),
+            context={
+                "legal_ref": DEEMED_SERVED_LEGAL_REF,
+                "certificado_ids": ",".join(certificado_ids),
+                "count": str(len(deemed_served)),
+            },
+        ),
+    ]
+
+
 def _calendar_evidence_notice_with_action(notice: Notice) -> Notice:
     """Attach the concrete history-pull action at the CLI presentation boundary."""
     if notice.code != NO_AEAT_HISTORY_NOTICE_CODE:
@@ -241,7 +299,11 @@ def overview_calendar_output(
     post_filing_notices = overview_post_filing_event_notices(cal.events)
     for notice in post_filing_notices:
         lines.append(f"post_filing_pending\t{len(notice.context or {})}\t{notice.message}")
-    calendar_notices = [*coverage_notices, *post_filing_notices]
+    deemed_served_notices = overview_deemed_served_notification_notices(cal.events)
+    for notice in deemed_served_notices:
+        context = notice.context or {}
+        lines.append(f"notificacion_rechazo_tacito\t{context.get('count', '')}\t{notice.message}")
+    calendar_notices = [*coverage_notices, *post_filing_notices, *deemed_served_notices]
     for evidence_notice in evidence_notices:
         notice = _calendar_evidence_notice_with_action(evidence_notice)
         lines.append(f"{notice.code}\t{notice.message}")
@@ -296,6 +358,11 @@ def overview_calendar_profile_output(
         tagged = notice.model_copy(update={"context": {**(notice.context or {}), "profile": label}})
         notices.append(tagged)
         lines.append(f"post_filing_pending\t{label}\t{len(notice.context or {})}\t{notice.message}")
+    for notice in overview_deemed_served_notification_notices(cal.events):
+        context = notice.context or {}
+        tagged = notice.model_copy(update={"context": {**context, "profile": label}})
+        notices.append(tagged)
+        lines.append(f"notificacion_rechazo_tacito\t{label}\t{context.get('count', '')}\t{notice.message}")
     payload: dict[str, object] = {
         "profile_id": bucket_id,
         "label": label,
@@ -766,11 +833,13 @@ def _calendar_event_text_line(event: OverviewCalendarEvent) -> str:
 
 
 __all__ = [
+    "DEEMED_SERVED_LEGAL_REF",
     "overview_agenda_output",
     "overview_backlog_output",
     "overview_calendar_output",
     "overview_calendar_profile_output",
     "overview_coverage_notices",
+    "overview_deemed_served_notification_notices",
     "overview_explain_output",
     "overview_pipeline_output",
     "overview_post_filing_event_notices",
