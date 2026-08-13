@@ -4,7 +4,7 @@ tags:
   - '#aeat-liabilities-sanciones'
 date: '2026-08-07'
 modified: '2026-08-13'
-body_hash: 'sha256:5dc202a312fbc3f9450be6c3c319f42e21d52208b5d11cb0b4118086a542bc65'
+body_hash: 'sha256:62bde92ad901e6e3519db3f8863a3c9b1f0918e6e5c5d68066305c43919ae6aa'
 tier: L2
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
@@ -259,8 +259,8 @@ Persist a fetched notification PDF through the encrypted content-addressed Attac
 - [x] `P08.S25` - Add the frozen PersistedNotificationDocument model carrying certificado_id, the AttachmentStore attachment id, pdf_sha256, source_url and fetched_at under STRICT config, exposing NO filesystem path field of any kind, verified by a model validation unit test asserting the field set and that no field name or value carries a path; `src/cadrumo/application/live/_notification_documents.py`.
 - [x] `P08.S26` - Add NotificationDocumentService storing the fetched bytes through the encrypted content-addressed AttachmentStore resolved the way application/ledger/_actions_common.py resolves it, delegating to that single-writer primitive rather than re-implementing its write path, verified by a unit test asserting the store receives the bytes and the service opens no second write path; `src/cadrumo/application/live/_notification_documents.py`.
 - [x] `P08.S27` - Make a re-store of an already-persisted certificado id a content-addressed no-op returning the existing record with no second attachment write and no re-stamped fetched_at, and refuse with an instructive localised conflict when the same certificado id arrives with a different pdf_sha256, verified by an idempotency test covering the no-op, the field-complete match and the divergent-digest refusal; `src/cadrumo/application/live/_notification_documents.py`.
-- [ ] `P08.S28` - Write the strict roundtrip test against a real SecureObjectRepository, real key provider, real SQLite engine and real AttachmentStore, populating every defaultable field non-default and asserting strict pydantic equality, then the anti-tautology proof deleting a persisted field on disk and asserting reload refusal; `src/cadrumo/application/live/tests/test_notification_documents_service.py`.
-- [ ] `P08.S29` - Write the custody gate proving a full fetch-and-store cycle writes the PDF bytes to no filesystem path: run the service against a temporary profile root, assert every file created is an encrypted store artefact and that the plaintext PDF magic bytes appear nowhere on disk, then the mutation proof writing the bytes to a temp file and confirming the gate reds; `src/cadrumo/application/live/tests/test_notification_document_custody.py`.
+- [x] `P08.S28` - Write the strict roundtrip test against a real SecureObjectRepository, real key provider, real SQLite engine and real AttachmentStore, populating every defaultable field non-default and asserting strict pydantic equality, then the anti-tautology proof deleting a persisted field on disk and asserting reload refusal; `src/cadrumo/application/live/tests/test_notification_documents_service.py`.
+- [x] `P08.S29` - Write the custody gate proving a full fetch-and-store cycle writes the PDF bytes to no filesystem path: run the service against a temporary profile root, assert every file created is an encrypted store artefact and that the plaintext PDF magic bytes appear nowhere on disk, then the mutation proof writing the bytes to a temp file and confirming the gate reds; `src/cadrumo/application/live/tests/test_notification_document_custody.py`.
 
 ### Phase `P09` - Deterministic sancion and liquidacion parser
 

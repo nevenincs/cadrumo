@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:21f9f6f92c58e9e16cfb786b611f5c3b5df88127b332e1d8faa997a8c3b3351b'
+body_hash: 'sha256:ca6a3e73799705ae57da55715c03b23920dbba180de07d18645c0434af1777e8'
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-P01-S01]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P01-S02]]'
@@ -34,6 +34,8 @@ related:
   - '[[2026-08-07-aeat-liabilities-sanciones-P08-S25]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P08-S26]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P08-S27]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P08-S28]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P08-S29]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-plan]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-research]]'
@@ -84,6 +86,8 @@ Auto-generated index of all documents tagged with `#aeat-liabilities-sanciones`.
 - `2026-08-07-aeat-liabilities-sanciones-P08-S25` - Add the frozen PersistedNotificationDocument model carrying certificado_id, the AttachmentStore attachment id, pdf_sha256, source_url and fetched_at under STRICT config, exposing NO filesystem path field of any kind, verified by a model validation unit test asserting the field set and that no field name or value carries a path
 - `2026-08-07-aeat-liabilities-sanciones-P08-S26` - Add NotificationDocumentService storing the fetched bytes through the encrypted content-addressed AttachmentStore resolved the way application/ledger/_actions_common.py resolves it, delegating to that single-writer primitive rather than re-implementing its write path, verified by a unit test asserting the store receives the bytes and the service opens no second write path
 - `2026-08-07-aeat-liabilities-sanciones-P08-S27` - Make a re-store of an already-persisted certificado id a content-addressed no-op returning the existing record with no second attachment write and no re-stamped fetched_at, and refuse with an instructive localised conflict when the same certificado id arrives with a different pdf_sha256, verified by an idempotency test covering the no-op, the field-complete match and the divergent-digest refusal
+- `2026-08-07-aeat-liabilities-sanciones-P08-S28` - Write the strict roundtrip test against a real SecureObjectRepository, real key provider, real SQLite engine and real AttachmentStore, populating every defaultable field non-default and asserting strict pydantic equality, then the anti-tautology proof deleting a persisted field on disk and asserting reload refusal
+- `2026-08-07-aeat-liabilities-sanciones-P08-S29` - Write the custody gate proving a full fetch-and-store cycle writes the PDF bytes to no filesystem path: run the service against a temporary profile root, assert every file created is an encrypted store artefact and that the plaintext PDF magic bytes appear nowhere on disk, then the mutation proof writing the bytes to a temp file and confirming the gate reds
 
 ### plan
 
