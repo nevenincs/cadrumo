@@ -51,7 +51,7 @@ from .....domain.calculations.registry import (
 from .._html import parse_html
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
-from ._adapter_utils import assert_pdf_response, assert_read_http_for, cell_text
+from ._adapter_utils import assert_pdf_response, assert_read_http_for, assert_read_landing, cell_text
 from ._auth_state import storage_state_for_session
 from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
@@ -67,9 +67,16 @@ _EXTERNAL = Settings.external_constants()
 _SEDE_BASE = _EXTERNAL.aeat.domains.www6
 _SEDE_HOST = urlsplit(_SEDE_BASE).netloc
 _AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
-_RESUMEN_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
 _NOTIF_SUMMARY_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.notifications_summary}"
 _NOTIF_QUERY_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.notifications_query}"
+_NOTIFICATIONS_READ_PATHS: tuple[str, ...] = tuple(
+    urlsplit(path).path
+    for path in (
+        _EXTERNAL.aeat.sede_paths.notifications_summary,
+        _EXTERNAL.aeat.sede_paths.notifications_query,
+        _EXTERNAL.aeat.sede_paths.notifications_detail,
+    )
+)
 
 # AEAT dispatches the authenticated sede across a ``www{n}`` load-balancer pool;
 # the read guard admits any subdomain under the AEAT apex (host-suffix widened)
@@ -81,11 +88,12 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     classification="authenticated_read_surface",
     allowed_hosts=(_SEDE_HOST,),
     allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),
+    allowed_read_paths=_NOTIFICATIONS_READ_PATHS,
     # The detail endpoint serves the notification PDF only on a POST. Scoped to
     # that one path: the allowance is a transport fact, and the LEGAL gate is
     # ``assert_notification_content_readable``, which refuses every row AEAT
     # does not already report as read.
-    allowed_read_post_paths=(_EXTERNAL.aeat.sede_paths.notifications_detail,),
+    allowed_read_post_paths=(_NOTIFICATIONS_READ_PATHS[2],),
     synthetic_data_allowed=False,
     requires_authentication=True,
     requires_aeat_authorization=True,
@@ -634,6 +642,7 @@ async def fetch_notification_document(
 
     settings = settings or Settings()
     url = notification_detail_url(str(row.certificado_id))
+    _assert_read_http("GET", url)
     assert_read_http_for(_READ_GUARD_POLICY, "POST", url)
 
     storage_state = storage_state_for_session(session)
@@ -644,6 +653,7 @@ async def fetch_notification_document(
         page = await context.new_page()
         # Land the detail page first so AEAT sees the referring navigation.
         await page.goto(url, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
+        assert_notifications_read_landing(_notifications_landing_url(page, requested_url=url))
         response = await context.request.post(
             url,
             form={
@@ -744,6 +754,11 @@ async def _navigate_and_parse(
     Split out so storage-state navigation and the landing/marker guard remain
     one explicit adapter boundary shared by the authenticated fetch paths.
     """
+    # Both requests are known before a browser context exists. Refusing either
+    # here proves an unrecognised path cannot produce even a warm-up navigation.
+    _assert_read_http("GET", _NOTIF_SUMMARY_URL)
+    _assert_read_http("GET", url)
+
     browser_session = await browser_session_factory(settings)
     context = None
     try:
@@ -755,15 +770,17 @@ async def _navigate_and_parse(
         # I/O errors are suppressed here since they do not prevent the
         # primary goto from succeeding.
         try:
-            await page.goto(_RESUMEN_URL, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
+            await page.goto(_NOTIF_SUMMARY_URL, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
+            assert_notifications_read_landing(
+                _notifications_landing_url(page, requested_url=_NOTIF_SUMMARY_URL),
+            )
         except (PlaywrightError, OSError) as exc:
             log.debug(
                 "fetch_notifications: warm-up navigation to %s suppressed: %s",
-                _RESUMEN_URL,
+                _NOTIF_SUMMARY_URL,
                 exc,
                 exc_info=True,
             )
-        _assert_read_http("GET", url)
         try:
             await page.goto(url, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
         except PlaywrightError as exc:
@@ -773,8 +790,8 @@ async def _navigate_and_parse(
         # the host-suffix read guard so an off-AEAT redirect fails closed
         # while a ``www{n}`` load-balancer dispatch is tolerated.
         landing_url = _notifications_landing_url(page, requested_url=url)
+        assert_notifications_read_landing(landing_url)
         landing = urlsplit(landing_url)
-        _assert_read_http("GET", f"{landing.scheme}://{landing.netloc}{landing.path}")
         html = await page.content()
         snapshot = parser(html, source_url=_recorded_landing_url(landing_url, fallback_url=url))
         if not snapshot.rows and not _notifications_marker_present(html):
@@ -817,6 +834,16 @@ def _assert_read_http(method: str, url: str) -> None:
     assert_read_http_for(_READ_GUARD_POLICY, method, url)
 
 
+def assert_notifications_read_landing(landing_url: str | None) -> None:
+    """Refuse a DEHú landing outside the exact notification read routes."""
+    assert_read_landing(
+        landing_url,
+        surface="DEHu notifications",
+        policy=_READ_GUARD_POLICY,
+        allowed_path_prefixes=_READ_GUARD_POLICY.allowed_read_paths,
+    )
+
+
 def _recorded_landing_url(landing_url: str, *, fallback_url: str) -> str:
     """Return the usable landing origin/path for evidence provenance."""
     landing = urlsplit(landing_url)
@@ -839,6 +866,7 @@ __all__ = [
     "NotificationsSnapshot",
     "RemoteNotification",
     "assert_notification_content_readable",
+    "assert_notifications_read_landing",
     "fetch_notification_document",
     "fetch_notifications_query",
     "fetch_notifications_summary",

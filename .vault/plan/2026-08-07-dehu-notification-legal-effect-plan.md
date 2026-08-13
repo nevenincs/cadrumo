@@ -4,7 +4,7 @@ tags:
   - '#dehu-notification-legal-effect'
 date: '2026-08-07'
 modified: '2026-08-13'
-body_hash: 'sha256:18b859bd79dca4d2a889ff752f0f1bc5c2ffcecd69e17ef933e6807554c12572'
+body_hash: 'sha256:58b3101167981f4ddbca5872c6aa1e95e3687ded39c6ef55140bcc169ab76bf2'
 tier: L2
 related:
   - '[[2026-08-07-dehu-notification-legal-effect-adr]]'
@@ -111,7 +111,7 @@ Run every targeted suite plus the tree-wide vault and locale gates and triage an
 
 Run a strictly serial, authenticated, read-only acceptance program proving the real DEHu notification route, typed persistence, legal-effect projection, and operator Notice without any remote mutation; no local-only proof can close this phase.
 
-- [ ] `P05.S12` - Prove the canonical DEHu route and remote-operation guard permit only authenticated read-only notification fetches and refuse acknowledge, mark-read, comparecer, submit, present, and every other AEAT mutation before transport.; `src/cadrumo/application/live src/cadrumo/adapters/outbound/aeat/sede src/cadrumo/domain/calculations/registry src/cadrumo/entrypoints/cli`.
+- [x] `P05.S12` - Prove the canonical DEHu route and remote-operation guard permit only authenticated read-only notification fetches and refuse acknowledge, mark-read, comparecer, submit, present, and every other AEAT mutation before transport.; `src/cadrumo/application/live src/cadrumo/adapters/outbound/aeat/sede src/cadrumo/domain/calculations/registry src/cadrumo/entrypoints/cli`.
 - [ ] `P05.S13` - Verify active-profile and authenticated-session preconditions with sanctioned read-only diagnostics, record only presence and readiness facts, and stop for the operator if login, certificate, or Cl@ve interaction is required.; `src/cadrumo/entrypoints/cli/_app_live_auth_preflight.py src/cadrumo/entrypoints/cli/_app_live.py src/cadrumo/entrypoints/cli/_config`.
 - [ ] `P05.S14` - Execute one real authenticated aeat app live notifications pull through DEHu, prove traffic reached the canonical guarded service, and record sanitized typed evidence of the persisted snapshot id, capture time, row count, and source host without remote mutation.; `src/cadrumo/entrypoints/cli/_app_live_notifications_cli.py src/cadrumo/application/live/__init__.py src/cadrumo/application/live/_notifications.py src/cadrumo/adapters/outbound/aeat/sede/_notifications.py`.
 - [ ] `P05.S15` - Inspect the just-captured snapshot only through typed latest and view commands, correlate its sanitized id and count with the pull envelope, and prove the remote parser supplied fecha_notificacion and leida inputs consumed by service-state computation.; `src/cadrumo/entrypoints/cli/_app_live_notifications_cli.py src/cadrumo/entrypoints/cli/_app_live_payloads.py src/cadrumo/application/live/_notifications.py src/cadrumo/adapters/outbound/aeat/sede/_notifications.py src/cadrumo/application/overview/_calendar.py`.

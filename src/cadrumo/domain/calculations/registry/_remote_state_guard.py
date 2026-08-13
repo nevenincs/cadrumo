@@ -141,6 +141,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
     classification: CrossReferenceClassification
     allowed_hosts: tuple[str, ...] = Field(default_factory=tuple)
     allowed_host_suffixes: tuple[str, ...] = Field(default_factory=tuple)
+    allowed_read_paths: tuple[str, ...] = Field(default_factory=tuple)
     allowed_read_post_paths: tuple[str, ...] = Field(default_factory=tuple)
     allowed_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
     synthetic_data_allowed: bool
@@ -161,6 +162,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
         self._validate_authentication_consistency()
         self._validate_synthetic_data_consistency()
         self._validate_gov_idp_hosts()
+        self._validate_read_post_paths_are_declared_reads()
         return self
 
     def _validate_evidence_tier(self) -> None:
@@ -274,13 +276,20 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
             raise RegistryValidationError(f"allowed host suffix is not an AEAT host: {suffix!r}")
         return value
 
-    @field_validator("allowed_read_post_paths")
+    @field_validator("allowed_read_paths", "allowed_read_post_paths")
     @classmethod
-    def _validate_read_post_paths(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+    def _validate_read_paths(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         for path in value:
             if not path.startswith("/"):
-                raise RegistryValidationError(f"allowed read POST path must be absolute: {path!r}")
+                raise RegistryValidationError(f"allowed read path must be absolute: {path!r}")
         return value
+
+    def _validate_read_post_paths_are_declared_reads(self) -> None:
+        """Require a bounded read surface to name every sanctioned read POST."""
+        if self.allowed_read_paths and not set(self.allowed_read_post_paths).issubset(self.allowed_read_paths):
+            raise RegistryValidationError(
+                "allowed read POST paths must be a subset of the policy's allowed read paths",
+            )
 
     @field_validator("allowed_browser_action_patterns")
     @classmethod
@@ -460,6 +469,8 @@ def _evaluate_http(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -
         )
     if not _host_within_policy(policy, host):
         return _blocked(policy, f"AEAT host {host!r} is not in allowed read-only hosts")
+    if policy.allowed_read_paths and path not in policy.allowed_read_paths:
+        return _blocked(policy, f"AEAT path {path!r} is not in allowed read-only paths")
     text = f"{operation.url} {operation.action or ''}".lower()
     action = _first_declared_forbidden_action(policy, text)
     if action is not None:

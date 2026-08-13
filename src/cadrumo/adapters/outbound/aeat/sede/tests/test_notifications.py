@@ -10,16 +10,23 @@ from __future__ import annotations
 from urllib.parse import urlsplit
 
 import pytest
+from pydantic import AnyUrl
 
 from ......core.config import Settings
+from ......domain.calculations.registry import (
+    RegistryValidationError,
+    RemoteOperation,
+    assert_remote_operation_allowed,
+)
 from ......tests import FIXTURES_DIR
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
 from .._errors import SedeNavigationError
 from .._notifications import (
-    _RESUMEN_URL,
+    _READ_GUARD_POLICY,
     _navigate_and_parse,
     _notifications_landing_url,
     _recorded_landing_url,
+    assert_notifications_read_landing,
     parse_notifications_query,
     parse_notifications_summary,
 )
@@ -139,7 +146,7 @@ class TestNavigateAndParseLandingGuard:
                     profile_name="notifications-populated",
                 ),
             )
-            assert boundary.requested_urls.index(_RESUMEN_URL) < boundary.requested_urls.index(_SUMMARY_URL)
+            assert [url for url in boundary.requested_urls if url == _SUMMARY_URL] == [_SUMMARY_URL, _SUMMARY_URL]
         assert len(snap.rows) == 2
 
     @pytest.mark.asyncio
@@ -191,6 +198,25 @@ class TestNavigateAndParseLandingGuard:
         assert context["row_count"] == 0
         assert context["landing_path"] == urlsplit(_QUERY_URL).path
 
+    @pytest.mark.asyncio
+    async def test_unknown_same_host_path_is_refused_before_any_navigation(self) -> None:
+        """A same-host mutation-shaped path cannot reach even the warm-up request."""
+        unknown = f"{_AEAT.domains.www6}/wlpl/GNNO-JDIT/comparecer"
+        async with opened_http_boundary() as boundary:
+            boundary.configure_html("<html><body>unreachable</body></html>")
+            with pytest.raises(RegistryValidationError, match="allowed read-only paths"):
+                await _navigate_and_parse(
+                    {},
+                    url=unknown,
+                    parser=parse_notifications_query,
+                    settings=Settings(),
+                    browser_session_factory=real_browser_factory(
+                        boundary=boundary,
+                        profile_name="notifications-rejected-before-navigation",
+                    ),
+                )
+        assert boundary.requested_urls == []
+
 
 class _LandedPage:
     """Carries a landed URL, the one attribute ``_notifications_landing_url`` reads off a page."""
@@ -236,6 +262,35 @@ class TestNotificationsLandingIsRefusedWhenUnreadable:
         context = excinfo.value.context
         assert context is not None
         assert context["requested_url"] == _SUMMARY_URL
+
+
+class TestNotificationsExactReadPaths:
+    """The notification reader admits only its observed read routes."""
+
+    def test_all_declared_routes_are_exact_and_the_detail_post_is_a_subset(self) -> None:
+        summary = urlsplit(_AEAT.sede_paths.notifications_summary).path
+        query = urlsplit(_AEAT.sede_paths.notifications_query).path
+        detail = urlsplit(_AEAT.sede_paths.notifications_detail).path
+
+        assert _READ_GUARD_POLICY.allowed_read_paths == (summary, query, detail)
+        assert _READ_GUARD_POLICY.allowed_read_post_paths == (detail,)
+        assert set(_READ_GUARD_POLICY.allowed_read_post_paths).issubset(_READ_GUARD_POLICY.allowed_read_paths)
+
+    @pytest.mark.parametrize("method", ("GET", "HEAD", "OPTIONS", "POST"))
+    def test_unknown_same_host_path_is_refused_for_every_http_method(self, method: str) -> None:
+        unknown = f"{_AEAT.domains.www12}/wlpl/GNNO-JDIT/comparecer"
+
+        with pytest.raises(RegistryValidationError):
+            assert_remote_operation_allowed(
+                _READ_GUARD_POLICY,
+                RemoteOperation(kind="http", method=method, url=AnyUrl(unknown)),
+            )
+
+    def test_a_redirect_to_an_undeclared_aeat_path_is_refused(self) -> None:
+        redirected = f"{_AEAT.domains.www12}/wlpl/GNNO-JDIT/acknowledge"
+
+        with pytest.raises(SedeNavigationError, match="allowed read-only paths"):
+            assert_notifications_read_landing(redirected)
 
 
 def _query_table(date_headers: tuple[str, str], modo_header: str) -> str:
@@ -524,4 +579,9 @@ class TestNotificationContentIsGatedOnAlreadyRead:
 
         detail = Settings.external_constants().aeat.sede_paths.notifications_detail
 
-        assert _READ_GUARD_POLICY.allowed_read_post_paths == (detail,)
+        assert _READ_GUARD_POLICY.allowed_read_paths == (
+            urlsplit(Settings.external_constants().aeat.sede_paths.notifications_summary).path,
+            urlsplit(Settings.external_constants().aeat.sede_paths.notifications_query).path,
+            urlsplit(detail).path,
+        )
+        assert _READ_GUARD_POLICY.allowed_read_post_paths == (urlsplit(detail).path,)

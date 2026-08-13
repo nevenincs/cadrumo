@@ -206,8 +206,9 @@ class WorkflowEngine:
                 :func:`adapters.outbound.aeat.sede.walk_expedientes_tree`. Defaults to the
                 live walker.
             notifications_source: Test seam over
-                :func:`adapters.outbound.aeat.sede.fetch_notifications_query`. Defaults to
-                the live fetcher.
+                a bucket-scoped application capture. ``None`` leaves the
+                inbox stage not wired; it must never default to a direct
+                outbound-adapter fetch.
         """
         self._deadline_engine = deadline_engine
         self._filing_draft_builder = filing_draft_builder
