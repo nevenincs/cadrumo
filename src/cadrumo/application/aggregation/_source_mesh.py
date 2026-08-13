@@ -524,12 +524,44 @@ class CalculationSourceDiagnostic(BaseModel):
     at parity with the provenance channel beside it: an operator asked to act on
     a regulated figure needs the provision that establishes it, and prose in
     ``message`` is not a field a machine consumer can route on.
+
+    This is the CASILLA-DERIVED path: the subject is the casilla's (or its
+    binding's) own computation, and the refs are read off a registry object the
+    advisory already holds, never minted here. For an advisory whose subject is
+    instead a rule the advisory itself is asserting -- an eligibility condition
+    governing one of the casilla's INPUTS, which the casilla's own refs do not
+    describe -- use :attr:`asserted_legal_refs`, not this field. Reading a
+    casilla's whole-article refs onto a claim about one apartado of it produces a
+    ref coarser than the claim, which is worse than no ref at all: it looks
+    corroborated and is not.
     """
     source_refs: tuple[SourceRefId, ...] = ()
     """Official AEAT source references grounding this advisory's subject.
 
     The ``source_refs`` half of the pair above, carried for the same reason and
-    populated from the same registry definitions.
+    populated from the same registry definitions. Casilla-derived, at parity
+    with :attr:`legal_refs`.
+    """
+    asserted_legal_refs: tuple[LegalRefId, ...] = ()
+    """Legal-catalogue ids the advisory asserts ITSELF, distinct from any casilla.
+
+    The ADVISORY-ASSERTED path, not a replacement for :attr:`legal_refs` and not
+    replaced by it -- the two coexist because they answer different questions.
+    ``legal_refs`` describes what establishes the casilla the advisory happens
+    to be about; this field describes the provision the advisory's own MESSAGE
+    is a claim about, which is what a message such as "Art. 61 norma 1 halves
+    this" or an eligibility-rule disclosure asserts. That claim is a property of
+    the advisory, not of the casilla it addresses, and a casilla's whole-article
+    refs are frequently coarser than it.
+
+    Every id here is validated at registry build to resolve to a
+    :class:`~domain.calculations.registry.LegalReference` catalogue entry --
+    the check a prose-only message could never carry. Declaring an id here is a
+    TAX REVIEW against the provision the message states, never a mechanical
+    derivation from a casilla or binding already in hand: copying the
+    :attr:`legal_refs` construction pattern (reading a casilla's or binding's own
+    refs) onto this field reproduces exactly the coarse-ref defect this field
+    exists to avoid.
     """
     out_of_window_count: int | None = Field(default=None, ge=1)
     out_of_window_min_filing_date: date | None = None

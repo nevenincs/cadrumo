@@ -559,6 +559,21 @@ test-dev-tooling:
 test-dev-ci:
     @uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests dev/docs/apidocs/tests
 
+# Run the four conformance gates that are correctly `integration`-marked
+# (each genuinely crosses architectural layers) but were reached by no
+# automatically-triggered workflow: the per-push lane pins `unit`, and the
+# only `integration` invocation lived in the dispatch-only full lane, so none
+# of the four had ever run on a push at any revision. ci.yml calls THIS
+# recipe so the path set and the marker expression have one declaration
+# site, same convention `test-dev-ci` established above. The marker
+# expression excludes every marker this repository ever pairs with
+# `integration` so a future addition to this path set cannot silently pull
+# in a test this lane cannot satisfy.
+[doc('Run the four cross-layer conformance gates the per-push lane needs (rule-surface, status-frontend, self-referential-string, suggestion-command).')]
+[group('testing')]
+test-per-push-integration-gates:
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "integration and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/agent/tests/test_rule_surface_conformance.py src/cadrumo/entrypoints/cli/_config/tests/test_status_frontend_gate.py src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py
+
 # Enrol the tests that query the resident vaultspec-rag search service. Held out
 # of every other lane by the `resident_service` marker, because the service is a
 # separate product this project does not install and its own isolation guard
