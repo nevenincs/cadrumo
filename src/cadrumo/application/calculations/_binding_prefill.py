@@ -557,19 +557,27 @@ def _iva_compensation_history_observation(
 
 def _requirements_by_binding(
     snapshot: RegistrySnapshot,
-) -> dict[str, tuple[str, int, tuple[str, ...]]]:
-    grouped: dict[str, tuple[str, int, set[str]]] = {}
+) -> dict[str, tuple[str, int, tuple[str, ...], str]]:
+    grouped: dict[str, tuple[str, int, set[str], str]] = {}
     for requirement in previous_filing_observation_requirements(
         snapshot.revision,
         filing_year=snapshot.filing_year,
         period=snapshot.period,
     ):
         for binding_id in requirement.binding_ids:
-            current = grouped.setdefault(binding_id, (requirement.source_modelo, requirement.filing_year, set()))
+            current = grouped.setdefault(
+                binding_id,
+                (
+                    requirement.source_modelo,
+                    requirement.filing_year,
+                    set(),
+                    requirement.dependency_treatment,
+                ),
+            )
             current[2].add(requirement.periods[0])
     return {
-        binding_id: (source_modelo, source_year, tuple(sorted(periods)))
-        for binding_id, (source_modelo, source_year, periods) in grouped.items()
+        binding_id: (source_modelo, source_year, tuple(sorted(periods)), dependency_treatment)
+        for binding_id, (source_modelo, source_year, periods, dependency_treatment) in grouped.items()
     }
 
 
@@ -598,12 +606,13 @@ def _unsatisfied_previous_filing_bindings(
         if binding.id in resolved_binding_ids or binding.id in excluded:
             continue
         selector = binding.selector
-        source_modelo, source_filing_year, source_periods = requirement_index.get(
+        source_modelo, source_filing_year, source_periods, _dependency_treatment = requirement_index.get(
             binding.id,
             (
                 str(_selector_value(selector, "source_modelo", "") or ""),
                 snapshot.filing_year + _selector_year_delta(_selector_value(selector, "filing_year_delta", 0)),
                 _selector_periods(_selector_value(selector, "source_periods", ())),
+                "",
             ),
         )
         unsatisfied.append(
@@ -711,12 +720,6 @@ def _prefilled_bindings(
     value came from.
     """
     binding_index = {binding.id: binding for binding in snapshot.revision.bindings}
-    # The registry declares treatment per SOURCE modelo, which is the same key the
-    # relation resolver reads it under. Absent means the revision declared none.
-    treatment_by_source = {
-        str(classification.source_modelo): str(classification.treatment)
-        for classification in (snapshot.revision.dependency_classifications or ())
-    }
     requirement_index = _requirements_by_binding(snapshot)
     pre_activity_zero_binding_ids = _pre_activity_scoped_binding_ids(snapshot, activity_start_date)
 
@@ -726,12 +729,13 @@ def _prefilled_bindings(
         if binding is None:
             continue
         selector = binding.selector
-        source_modelo, source_filing_year, source_periods = requirement_index.get(
+        source_modelo, source_filing_year, source_periods, dependency_treatment = requirement_index.get(
             binding_id,
             (
                 str(_selector_value(selector, "source_modelo", "") or ""),
                 snapshot.filing_year + _selector_year_delta(_selector_value(selector, "filing_year_delta", 0)),
                 _selector_periods(_selector_value(selector, "source_periods", ())),
+                "",
             ),
         )
         source_kind = (
@@ -753,7 +757,7 @@ def _prefilled_bindings(
                 source_modelo=source_modelo,
                 source_filing_year=source_filing_year,
                 source_periods=source_periods,
-                dependency_treatment=treatment_by_source.get(source_modelo, ""),
+                dependency_treatment=dependency_treatment,
                 resolved_at=resolved_at,
             ),
         )
@@ -926,7 +930,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
         None,
     )
     if prefilled is None:
-        source_modelo, source_year, source_periods = _requirements_by_binding(snapshot)[
+        source_modelo, source_year, source_periods, _dependency_treatment = _requirements_by_binding(snapshot)[
             MODELO_303_IVA_COMPENSATION_BINDING_ID
         ]
         resolved_at = captured_at if captured_at is not None else now()

@@ -32,8 +32,12 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import RegistryFoldRequirement, relation_source_requirements
-from .._binding_prefill import PrefilledBinding
+from ....domain.calculations.registry import (
+    RegistryFoldRequirement,
+    previous_filing_observation_requirements,
+    relation_source_requirements,
+)
+from .._binding_prefill import PrefilledBinding, _prefilled_bindings
 from .._relation_prefill import _relation_value_grounding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -128,6 +132,43 @@ def test_the_prefilled_binding_treatment_defaults_to_undeclared() -> None:
     assert binding.dependency_treatment == ""
     assert binding.dependency_treatment not in {_SETTLEMENT, _EVIDENCE}
     assert binding.value == Decimal("1234.56"), "carrying the treatment must not disturb the value"
+
+
+def test_direct_previous_filing_treatment_reaches_the_prefilled_provenance() -> None:
+    """The direct carry reads its treatment from the typed registry requirement.
+
+    Modelo 303's repeated IVA-compensation carry is a real direct
+    ``previous_filing`` binding with a declared ``factual_evidence`` treatment.
+    Exercise the production prefilled-binding projection against that loaded
+    snapshot: no application-local classification lookup may reconstruct or
+    override the treatment after the registry requirement has supplied it.
+    """
+    from datetime import UTC, datetime
+    from decimal import Decimal
+
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="1T")
+    requirement = next(
+        item
+        for item in previous_filing_observation_requirements(
+            snapshot.revision,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period,
+        )
+        if item.dependency_treatment == _EVIDENCE
+    )
+    binding_id = requirement.binding_ids[0]
+
+    prefilled = _prefilled_bindings(
+        snapshot,
+        {binding_id: Decimal("1.00")},
+        observations=(),
+        activity_start_date=None,
+        resolved_at=datetime(2026, 8, 13, 12, 0, tzinfo=UTC),
+    )
+
+    assert len(prefilled) == 1
+    assert prefilled[0].dependency_treatment == requirement.dependency_treatment
+    assert prefilled[0].value == Decimal("1.00")
 
 
 def test_carrying_the_treatment_does_not_withhold_the_value() -> None:

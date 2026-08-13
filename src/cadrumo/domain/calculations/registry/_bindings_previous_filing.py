@@ -119,6 +119,10 @@ def previous_filing_observation_requirements(
     source_casilla_ids_by_key: dict[tuple[ModeloId, int, str], set[CasillaId]] = {}
     legal_refs_by_key: dict[tuple[ModeloId, int, str], set[LegalRefId]] = {}
     source_refs_by_key: dict[tuple[ModeloId, int, str], set[SourceRefId]] = {}
+    dependency_treatment_by_key: dict[tuple[ModeloId, int, str], str] = {}
+    classifications_by_source = {
+        classification.source_modelo: classification for classification in revision.dependency_classifications
+    }
     for binding in revision.bindings:
         if binding.source != BindingSourceKind.PREVIOUS_FILING:
             continue
@@ -132,6 +136,8 @@ def previous_filing_observation_requirements(
             source_casilla_ids_by_key.setdefault(key, set()).update(_previous_filing_source_ids(selector))
             legal_refs_by_key.setdefault(key, set()).update(binding.legal_refs)
             source_refs_by_key.setdefault(key, set()).update(binding.source_refs)
+            classification = classifications_by_source.get(selector.source_modelo)
+            dependency_treatment_by_key[key] = "" if classification is None else str(classification.treatment)
     return tuple(
         RegistryFoldRequirement(
             source_modelo=modelo,
@@ -144,6 +150,7 @@ def previous_filing_observation_requirements(
             periods=(required_period,),
             binding_ids=tuple(sorted(binding_ids_by_key[(modelo, expected_year, required_period)])),
             source_casilla_ids=tuple(sorted(source_casilla_ids_by_key[(modelo, expected_year, required_period)])),
+            dependency_treatment=dependency_treatment_by_key[(modelo, expected_year, required_period)],
             legal_refs=tuple(sorted(legal_refs_by_key[(modelo, expected_year, required_period)])),
             source_refs=tuple(sorted(source_refs_by_key[(modelo, expected_year, required_period)])),
         )
