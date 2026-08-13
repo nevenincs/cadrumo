@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:f296662321910d70fbb9a264dd1f578b0df120deb0c4692f9db3a555d5bd2a1e'
+body_hash: 'sha256:81689819fea9d7afd5022baa64e7b0916e7624e1e70801c7be0d67ab88f5aa60'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
@@ -87,39 +87,95 @@ visible. Nothing about it is narrower; the names simply drifted.
 
 ## Finding 3 -- six rows are verified only to surface level, not to claim level
 
-`W09.P17.S92`, `W09.P17.S183`, `W09.P17.S267`, `W09.P17.S269`, and the
-claim-level halves of `W07.P15.S57` and `W09.P17.S176`.
+**RESOLVED. All six were read against their assertions, and all six are
+delivered.** This section originally recorded them as unverified because a
+generic match over hundreds of files is not evidence. Reading the claims instead
+of locating the files settles every one, and two of them turned out to be
+delivered MORE completely than the row asked.
 
-The surface each names exists -- the extract and confirm CLI suites ship, the
-redaction rules and their enrolment gate ship -- but each row asserts something
-*sharper* than existence: that a specific envelope carries provenance end to end,
-that a naming convention holds across a suite, that one rule stopped matching UTC
-timestamps, that a near-miss identity ruling was taken and applied. Establishing
-those needs reading the assertions, not locating the file.
+- `W07.P15.S57` -- `test_tabular_extra_split.py` carries both sides the row
+  demanded: a known fixed-layout file importing fully without the extra, and an
+  unknown vocabulary refusing at the mapping call and naming the extra. It also
+  carries a third case the row did not ask for, proving the refusal is caused by
+  the extra's ABSENCE rather than by the file -- the anti-tautology control that
+  makes the other two mean anything.
+- `W09.P17.S92` -- `test_evidence_provenance_reaches_the_operator.py` drives
+  extract and confirm end to end and asserts the envelope carries both
+  provenance and discrepancies, including an arithmetic disagreement reaching
+  the extract envelope and a self-contradicting document refused at confirm.
+  That is reachability, which is what the row said the hand-built parity gate
+  could not establish.
+- `W09.P17.S176` -- delivered on BOTH limbs the row offered as alternatives, not
+  one. `_evaluate_anchor_against` takes a `derive` callable and resolves
+  `CONTRADICTED` when the re-derivation disagrees with the value; and the
+  structured path RAISES when a caller supplies an explicit anchor for a textual
+  value with no derivation, with a message naming the exact hazard the row
+  described -- an envelope asserting the record evidences one value on the
+  strength of a different string occurring in it. **This entry corrects a
+  mid-verification reading of my own**: on the public signature alone the refusal
+  leg appears absent, and only reading the structured caller shows it is there.
+- `W09.P17.S183` -- the `asserted_gap` prefix is carried in test NAMES across the
+  ledger suites, which is exactly the countable, greppable form the row asked
+  for in place of a docstring convention.
+- `W09.P17.S267` -- `_ISO_INSTANT_RE`, `_timestamp_spans` and
+  `_outside_timestamps` ship, and the module's own comment restates the defect
+  the row reported: the seconds and microseconds of a serialised instant are
+  seven digits with separators and a trailing letter, and `12345678Z` even
+  carries a valid check character, so only the surrounding span can tell the two
+  apart.
+- `W09.P17.S269` -- the ruling is taken and recorded at the strategy level, as
+  the row required. The personal identity is split into two rules by whether a
+  separator breaks the span: the unbroken arm hashes a lookalike rather than risk
+  missing a mistyped identity, while the separator-bearing arm was carved out on
+  measurement after this application's own work-unit names normalised onto the
+  identity shape and an operator was handed a path they could not use.
 
-**Classification: unverified.** Recorded as unverified rather than assumed
-delivered, because a generic match over hundreds of files is not evidence and
-reporting it as such is exactly the shape the swarm-audit rule warns about --
-examining part of a corpus and reporting success over the whole of it.
+**Classification: delivered as specified, record absent.** No row in the audit
+now stands unverified.
 
 ## What this says about readiness
 
-The plan is **substantively complete and bibliographically incomplete**. No row
-in any of the three findings turned out to be unbuilt. The gap is that 34
-closures were taken without the artefact that distinguishes the three completion
-states, and the six in Finding 3 are the population where that distinction still
-cannot be made from the record.
+The plan is **substantively complete**. All 34 record-less closures were checked
+against the tree, and not one turned out to be unbuilt, narrowed, or
+recorded-but-not-implemented. Two are delivered beyond what their row asked --
+`S57` carries an anti-tautology control nobody demanded, and `S176` implements
+both limbs of an either/or.
 
-The cluster is diagnostic: 20 of the 34 sit in `W09.P17`, the campaign's final
-phase, and several say in their own text that they landed by a peer lane. This is
-what record discipline looks like when it decays -- late, under parallel
-delivery, in the phase where rows were being opened and closed fastest.
+What is incomplete is the evidence trail, in two places.
+
+**34 of 306 steps closed without an execution record.** The cluster is
+diagnostic: 20 sit in `W09.P17`, the campaign's final phase, and several say in
+their own text that they landed by a peer lane. This is what record discipline
+looks like when it decays -- late, under parallel delivery, in the phase where
+rows were opening and closing fastest.
+
+**18 phases and 10 waves closed with zero phase summaries.** No
+`*-summary.md` exists anywhere under this feature's exec directory. That is a
+separate omission from the missing step records and it is total rather than
+partial, which makes it a convention that was never adopted on this campaign
+rather than one that lapsed under pressure.
+
+Neither gap is a reason to reopen a row. The rows are closed correctly; the
+question the trail could not answer -- which of the three completion states each
+closure was -- is answered here, per row, against HEAD.
 
 ## Actions
 
-- The six Finding 3 rows are the only open work this audit creates. Each needs
-  its claim read against its tests, and either a record or a correction.
-- The eight Finding 1 rows need no verification. If their prose is ever wanted in
-  the exec trail it can be lifted from the plan verbatim, but it is not lost.
-- Nothing here justifies reopening a closed row. The rows are closed correctly;
-  it is the evidence trail that was thin.
+- **No open verification work remains.** Every one of the 34 is classified
+  against HEAD, and the six that were unverified at first pass are resolved
+  above.
+- The eight Finding 1 rows need no reconstruction. Their account is in the plan
+  verbatim and can be lifted from there if it is ever wanted in the exec trail.
+- **Retrospective step records are deliberately NOT written.** Thirty-four
+  records authored now would each imply a contemporaneous account nobody has,
+  which is a worse artefact than an honest gap: a reader cannot tell a
+  reconstructed record from a written-at-the-time one, and every later reader
+  would treat them alike. The governing rule accepts a close audit in their
+  place, and this is it.
+- The absent phase summaries are recorded as a convention gap, not scheduled for
+  retrospective authoring, for the same reason.
+- Carried forward to any future campaign on this surface: a row that closes with
+  its verdict written into the plan text is the tell that the record was skipped.
+  Eight rows here did it, four of them recording a REVERSAL of their own premise
+  -- the most valuable thing a record can carry and the easiest to lose when it
+  is filed as a work item instead of as evidence.
