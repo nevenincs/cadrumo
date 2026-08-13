@@ -11,9 +11,6 @@ related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # Add the notification-documents section to the AEAT notifications how-to in singular imperative steps, stating plainly that the tool reads only notifications already opened in the sede and that an unread notification must be opened by the taxpayer personally because opening it is the moment it becomes legally served
 
 ## Scope

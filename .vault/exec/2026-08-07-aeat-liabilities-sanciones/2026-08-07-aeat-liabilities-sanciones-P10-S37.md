@@ -11,9 +11,6 @@ related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # Register the document subgroup under app live notifications and wire aeat app live notifications document pull taking the certificado id as a positional Argument, resolving the row from the persisted notification snapshot and calling the guarded adapter fetch and the storage service. The subgroup carries the literal pull stem the CLI contract requires, never capture or fetch or refresh or sync
 
 ## Scope

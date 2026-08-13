@@ -11,9 +11,6 @@ related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # Author real es, en, ca and hu values for the history verb help and its standing notice via python -m dev.locales set, then scaffold --check clean
 
 ## Scope

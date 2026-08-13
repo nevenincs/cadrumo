@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:ca37917c4b0e17511a43f7f3608fb4d41918174aea255788ff2bba09763d7382'
+body_hash: 'sha256:a89a8bc931ab23216a3aa260fb33ba4e3f69d848cd738900ef9697909eaf43a6'
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-P01-S01]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P01-S02]]'
@@ -43,11 +43,31 @@ related:
   - '[[2026-08-07-aeat-liabilities-sanciones-P09-S33]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P09-S34]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P09-S35]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P10-S36]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P10-S37]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P10-S38]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P10-S39]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P10-S40]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P10-S41]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P10-S42]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P10-S43]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P10-summary]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P11-S44]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P11-S45]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P11-S46]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P11-S47]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P11-summary]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P12-S48]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P12-S49]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P12-S50]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P12-S51]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P12-summary]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-plan]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-research]]'
   - '[[2026-08-12-aeat-liabilities-sanciones-p05-p06-closeout-honesty-audit]]'
   - '[[2026-08-13-aeat-liabilities-sanciones-notification-documents-adr]]'
+  - '[[2026-08-13-aeat-liabilities-sanciones-notification-documents-close-audit]]'
 ---
 
 # `aeat-liabilities-sanciones` feature index
@@ -64,6 +84,7 @@ Auto-generated index of all documents tagged with `#aeat-liabilities-sanciones`.
 ### audit
 
 - `2026-08-12-aeat-liabilities-sanciones-p05-p06-closeout-honesty-audit` - `aeat-liabilities-sanciones` audit: closeout honesty review after the live discovery session
+- `2026-08-13-aeat-liabilities-sanciones-notification-documents-close-audit` - `aeat-liabilities-sanciones` audit: `notification documents implementation close review`
 
 ### exec
 
@@ -102,6 +123,25 @@ Auto-generated index of all documents tagged with `#aeat-liabilities-sanciones`.
 - `2026-08-07-aeat-liabilities-sanciones-P09-S33` - Establish whether the AEAT text layer emits the UNE 82100 NBSP or narrow-NBSP thousands separator and admit them in the anchored house pattern. RESOLVED on the empirical finding the tree already carried at adapters/inbound/pdf/_label_regex.py, which records NBSP and narrow-NBSP grouping as observed AEAT rendering and ASCII space as never emitted. Both forms were refused by the sancion reader, so a genuine AEAT document would have been refused outright. The separator taxonomy now has one source consumed by all three grammars, ASCII space stays refused, and _strip_leaders no longer destroys the separator ahead of the check. Verified by a regression pinning the accepted and refused separator forms with a mutation proof, landed in the tree's existing tests/test_sancion_parser.py rather than the row's originally-named test_sancion_parse.py, which would have been a near-duplicate file
 - `2026-08-07-aeat-liabilities-sanciones-P09-S34` - Make a document in which no label matches report explicitly unparsed and refuse to return a record of zeroes or a clean empty result, verified by a regression feeding an unrelated PDF and asserting the refusal, paired with the standing lesson that this reader has twice returned a silent zero against populated data
 - `2026-08-07-aeat-liabilities-sanciones-P09-S35` - Confirm the notificacion package facade exports the sancion parse entry point and its typed record for the application layer, and that the PDF-bytes-to-text step reuses the canonical extract_pages_text_from_bytes rather than introducing a second extractor, verified by the import hygiene gate and a check that no second pdfplumber call site is added
+- `2026-08-07-aeat-liabilities-sanciones-P10-S36` - Add the document pull and document view payload models as new OutputSchema subclasses in the existing _app_live_payloads module, carrying no bespoke advisory, next or suggestion field, verified by test_json_schema_conformance
+- `2026-08-07-aeat-liabilities-sanciones-P10-S37` - Register the document subgroup under app live notifications and wire aeat app live notifications document pull taking the certificado id as a positional Argument, resolving the row from the persisted notification snapshot and calling the guarded adapter fetch and the storage service. The subgroup carries the literal pull stem the CLI contract requires, never capture or fetch or refresh or sync
+- `2026-08-07-aeat-liabilities-sanciones-P10-S38` - Wire aeat app live notifications document view taking the certificado id as a positional Argument and reading only the persisted record and its parse, making no AEAT contact at all, verified by a CLI integration test asserting the verb completes with no session factory available
+- `2026-08-07-aeat-liabilities-sanciones-P10-S39` - Project the comparecencia refusal, the unparsed-document report and the re-fetch no-op through the typed Notice channel on the shared envelope spine, rebuilding each text line from the same notice so JSON and text cannot drift, verified by test_rule_surface_conformance
+- `2026-08-07-aeat-liabilities-sanciones-P10-S40` - Enroll app live notifications document pull in PROFILE_BOUND_WRITE_VERB_PATHS beside the existing app live notifications pull entry with a comment stating it persists fetched document bytes to bucket storage, verified by test_root_fallback_guard_predicate_covers_profile_bound_mutations extended with the new entry
+- `2026-08-07-aeat-liabilities-sanciones-P10-S41` - Classify the document read-back leaf on the reviewed-non-mutating roster as a pure read over persisted records, verified by test_every_app_leaf_is_accounted_for_by_name_independent_census staying green with both new leaves accounted for
+- `2026-08-07-aeat-liabilities-sanciones-P10-S42` - Add document pull to the operator-orientation agent-harness document alongside notifications pull in the same commit as the verb, stating that it refuses any notification AEAT does not report as read, verified by test_documented_command_conformance
+- `2026-08-07-aeat-liabilities-sanciones-P10-S43` - Author real es, en, ca and hu values for every new tr key on the two leaves and their notices via python -m dev.locales set, obtaining the ca and hu strings before running set rather than leaving either catalogue to a later sweep, then scaffold and scaffold --check clean with no self-referencing placeholder and no allowlist entry
+- `2026-08-07-aeat-liabilities-sanciones-P10-summary` - `aeat-liabilities-sanciones` `P10` summary
+- `2026-08-07-aeat-liabilities-sanciones-P11-S44` - Wire aeat app live notifications document history listing every parsed document the profile holds with each document's own reported figures, certificado id and date, computing no total and asserting no payable balance, verified by a CLI integration test over two persisted parses asserting the payload carries no summed field
+- `2026-08-07-aeat-liabilities-sanciones-P11-S45` - Attach a standing info Notice to the history payload stating it records what AEAT served and is neither a payable balance nor the recaudacion register the deudas verbs read, because payment, appeal, reduction and supersession are not stated on the document, verified by a test asserting the notice is present on every history emit
+- `2026-08-07-aeat-liabilities-sanciones-P11-S46` - Add the no-total invariant gate asserting the history payload schema declares no field summing amounts across documents, keyed by field name and by the schema shape rather than by a count, then the mutation proof adding a total field and confirming the gate reds
+- `2026-08-07-aeat-liabilities-sanciones-P11-S47` - Author real es, en, ca and hu values for the history verb help and its standing notice via python -m dev.locales set, then scaffold --check clean
+- `2026-08-07-aeat-liabilities-sanciones-P11-summary` - `aeat-liabilities-sanciones` `P11` summary
+- `2026-08-07-aeat-liabilities-sanciones-P12-S48` - Add the cli-sequence contract file for the notification-document reads declaring the document pull, document view and document history steps in singular imperative sentences, each blocked live-aeat where it reads the operator's authenticated session
+- `2026-08-07-aeat-liabilities-sanciones-P12-S49` - Add the notification-documents section to the AEAT notifications how-to in singular imperative steps, stating plainly that the tool reads only notifications already opened in the sede and that an unread notification must be opened by the taxpayer personally because opening it is the moment it becomes legally served
+- `2026-08-07-aeat-liabilities-sanciones-P12-S50` - Enroll any new user-facing term the section introduces in the Terminology Handbook as a concept fragment referenced with the term role, never redeclared in prose, verified by the terminology scaffold check
+- `2026-08-07-aeat-liabilities-sanciones-P12-S51` - Verify the documentation with pytest dev/docs/tests/test_docs_build.py and the documented-command conformance integration gate, resolving every link and every cited verb against the live operator-surface manifest
+- `2026-08-07-aeat-liabilities-sanciones-P12-summary` - `aeat-liabilities-sanciones` `P12` summary
 
 ### plan
 

@@ -11,9 +11,6 @@ related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # Wire aeat app live notifications document history listing every parsed document the profile holds with each document's own reported figures, certificado id and date, computing no total and asserting no payable balance, verified by a CLI integration test over two persisted parses asserting the payload carries no summed field
 
 ## Scope

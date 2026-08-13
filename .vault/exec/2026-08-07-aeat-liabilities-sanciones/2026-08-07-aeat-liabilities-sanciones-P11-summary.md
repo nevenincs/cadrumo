@@ -5,16 +5,12 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:39574250497d210362b4354f51c11a9341e30f1ebe731c19ee47ca0a1d63e8f8'
+body_hash: 'sha256:5f055e65eb27c2ed50bebfe0d683c74d9947716a363d1c5413929a689dfe5791'
 related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # `aeat-liabilities-sanciones` `P11` summary
-
 
 ## Description
 

@@ -11,9 +11,6 @@ related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # Verify the documentation with pytest dev/docs/tests/test_docs_build.py and the documented-command conformance integration gate, resolving every link and every cited verb against the live operator-surface manifest
 
 ## Scope

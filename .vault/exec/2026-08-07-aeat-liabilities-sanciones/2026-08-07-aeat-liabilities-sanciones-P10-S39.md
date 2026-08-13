@@ -11,9 +11,6 @@ related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # Project the comparecencia refusal, the unparsed-document report and the re-fetch no-op through the typed Notice channel on the shared envelope spine, rebuilding each text line from the same notice so JSON and text cannot drift, verified by test_rule_surface_conformance
 
 ## Scope

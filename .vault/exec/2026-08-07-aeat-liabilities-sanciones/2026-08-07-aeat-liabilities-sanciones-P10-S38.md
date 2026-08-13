@@ -11,9 +11,6 @@ related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # Wire aeat app live notifications document view taking the certificado id as a positional Argument and reading only the persisted record and its parse, making no AEAT contact at all, verified by a CLI integration test asserting the verb completes with no session factory available
 
 ## Scope

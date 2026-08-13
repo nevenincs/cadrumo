@@ -11,9 +11,6 @@ related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # Add the no-total invariant gate asserting the history payload schema declares no field summing amounts across documents, keyed by field name and by the schema shape rather than by a count, then the mutation proof adding a total field and confirming the gate reds
 
 ## Scope

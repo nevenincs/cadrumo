@@ -11,9 +11,6 @@ related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # Add the document pull and document view payload models as new OutputSchema subclasses in the existing _app_live_payloads module, carrying no bespoke advisory, next or suggestion field, verified by test_json_schema_conformance
 
 ## Scope

@@ -11,9 +11,6 @@ related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # Attach a standing info Notice to the history payload stating it records what AEAT served and is neither a payable balance nor the recaudacion register the deudas verbs read, because payment, appeal, reduction and supersession are not stated on the document, verified by a test asserting the notice is present on every history emit
 
 ## Scope

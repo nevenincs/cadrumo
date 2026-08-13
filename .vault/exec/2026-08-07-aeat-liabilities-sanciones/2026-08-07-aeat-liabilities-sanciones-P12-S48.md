@@ -11,9 +11,6 @@ related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # Add the cli-sequence contract file for the notification-document reads declaring the document pull, document view and document history steps in singular imperative sentences, each blocked live-aeat where it reads the operator's authenticated session
 
 ## Scope

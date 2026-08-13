@@ -11,9 +11,6 @@ related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # Add document pull to the operator-orientation agent-harness document alongside notifications pull in the same commit as the verb, stating that it refuses any notification AEAT does not report as read, verified by test_documented_command_conformance
 
 ## Scope

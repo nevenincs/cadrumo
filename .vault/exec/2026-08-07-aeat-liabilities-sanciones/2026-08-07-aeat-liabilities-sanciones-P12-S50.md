@@ -11,9 +11,6 @@ related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # Enroll any new user-facing term the section introduces in the Terminology Handbook as a concept fragment referenced with the term role, never redeclared in prose, verified by the terminology scaffold check
 
 ## Scope

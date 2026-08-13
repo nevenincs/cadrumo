@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:e6e9be3b3dbf9f7e0a3cfa986cdae0042c43accdc54b9c9e7586fca415c11fd0'
+body_hash: 'sha256:c914d1f5a7fd8c2bf345e6cf3bc5c482f889686c1d62e14943192beacde87e00'
 related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
   - "[[2026-08-07-aeat-liabilities-sanciones-adr]]"
@@ -14,7 +14,7 @@ related:
 
 # `aeat-liabilities-sanciones` audit: closeout honesty review after the live discovery session
 
-## Context
+## Scope
 
 Written as the campaign-close honesty review this project mandates before any
 claim of structural completeness, against a session that ran an authenticated
@@ -25,7 +25,9 @@ The review is deliberately adversarial about its own session's work, because
 the standing failure mode here is a closeout that reads as green while the
 goal is untouched.
 
-## What the goal asks, and what it still does not have
+## Findings
+
+### What the goal asks, and what it still does not have
 
 The standing goal is that an operator can see, inside the application, what
 AEAT currently reports as owed.
@@ -266,6 +268,14 @@ observing identical failures.
 
 **Remediation:** none owed by this campaign. Recorded so a later closeout does
 not inherit them as unexplained.
+
+## Recommendations
+
+Carry the deferred recaudación work only when a populated listing can be
+observed; preserve every live-surface observation in its execution record;
+keep the notification reader fail-loud against under-declaration; and never
+rewrite shared history to manufacture one-Step atomicity after concurrent work
+has already landed.
 
 ## Verdict
 

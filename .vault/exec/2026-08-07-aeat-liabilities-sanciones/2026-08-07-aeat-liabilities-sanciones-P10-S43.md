@@ -11,9 +11,6 @@ related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # Author real es, en, ca and hu values for every new tr key on the two leaves and their notices via python -m dev.locales set, obtaining the ca and hu strings before running set rather than leaving either catalogue to a later sweep, then scaffold and scaffold --check clean with no self-referencing placeholder and no allowlist entry
 
 ## Scope

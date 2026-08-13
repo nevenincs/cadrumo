@@ -5,13 +5,11 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:0f919ffdca4d6b7d1e45ebe09d909e0690822b8d2e28459b33b666e5d5c97583'
+body_hash: 'sha256:4bc58873b508ec4eb06cbc40bb3fa5a5c06bbf3d364a2b5cc3225284f5bfda49'
 related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
   - "[[2026-08-13-aeat-liabilities-sanciones-notification-documents-adr]]"
 ---
-
-
 
 # `aeat-liabilities-sanciones` audit: `notification documents implementation close review`
 
@@ -26,7 +24,6 @@ shared-worktree changes. It also re-read the legally binding
 still admits exactly `leida is True` before any request crosses the wire.
 
 ## Findings
-
 
 ### history-envelope-roundtrip | high | The history schema rejects its own JSON representation
 
@@ -74,7 +71,6 @@ execution records at review time; implementation presence is not completion
 evidence.
 
 ## Recommendations
-
 
 - For `history-envelope-roundtrip`, use the payload module's canonical
   list-typed sequence shape and prove the registered schema accepts the exact

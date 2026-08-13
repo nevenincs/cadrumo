@@ -11,9 +11,6 @@ related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # Enroll app live notifications document pull in PROFILE_BOUND_WRITE_VERB_PATHS beside the existing app live notifications pull entry with a comment stating it persists fetched document bytes to bucket storage, verified by test_root_fallback_guard_predicate_covers_profile_bound_mutations extended with the new entry
 
 ## Scope

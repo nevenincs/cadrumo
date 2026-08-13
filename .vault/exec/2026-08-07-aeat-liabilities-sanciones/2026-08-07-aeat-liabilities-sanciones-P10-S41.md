@@ -11,9 +11,6 @@ related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
 
-
-
-
 # Classify the document read-back leaf on the reviewed-non-mutating roster as a pure read over persisted records, verified by test_every_app_leaf_is_accounted_for_by_name_independent_census staying green with both new leaves accounted for
 
 ## Scope
