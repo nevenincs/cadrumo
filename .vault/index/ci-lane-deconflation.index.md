@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#ci-lane-deconflation'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:c33628ec2cf7dba41fec8e66a5c14aea5c8f28a1b39fe8efc94974fdd2b6ae0d'
+body_hash: 'sha256:8d8c6b309b2508b0b462df6da4e63f4ca9d323319083df806997722927f68fb7'
 related:
   - '[[2026-08-05-ci-lane-deconflation-P01-S02]]'
   - '[[2026-08-05-ci-lane-deconflation-P01-S03]]'
@@ -63,6 +63,7 @@ related:
   - '[[2026-08-06-ci-lane-deconflation-integration-lane-external-dependency-audit]]'
   - '[[2026-08-07-ci-lane-deconflation-docs-lane-golden-staleness-audit]]'
   - '[[2026-08-10-ci-lane-deconflation-integration-lane-live-service-dependency-adr]]'
+  - '[[2026-08-13-ci-lane-deconflation-deferred-carry-forward-audit]]'
 ---
 
 # `ci-lane-deconflation` feature index
@@ -85,6 +86,7 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 - `2026-08-06-ci-lane-deconflation-close-honesty-review-audit` - `ci-lane-deconflation` audit: `what a fresh reader would find missing, vague, or unverified`
 - `2026-08-06-ci-lane-deconflation-integration-lane-external-dependency-audit` - `ci-lane-deconflation` audit: `integration parallel lane depends on a live ECB service`
 - `2026-08-07-ci-lane-deconflation-docs-lane-golden-staleness-audit` - `ci-lane-deconflation` audit: the docs lane is red on stale goldens, not on nondeterminism
+- `2026-08-13-ci-lane-deconflation-deferred-carry-forward-audit` - `ci-lane-deconflation` audit: `deferred carry-forward at 45 of 49`
 
 ### exec
 
