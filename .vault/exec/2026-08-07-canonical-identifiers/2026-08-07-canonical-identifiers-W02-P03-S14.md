@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:978a521c6e38b9db74998803c7685ef0d29b74e6d6413ad63370542ea1c5945a'
+body_hash: 'sha256:e36e771a768b33bdd7d1da7d9a57b504c409b14ed36b15d02c7e353ea4d5e408'
 step_id: 'S14'
 related:
   - "[[2026-08-07-canonical-identifiers-plan]]"
@@ -39,15 +39,39 @@ opened and cleared.
 
 | namespace | grammar, verbatim | where the CSV enters | pre-hashed or raw |
 | --- | --- | --- | --- |
-| `cadrumo.domain.justificante.metadata` | `{csv}` | `extract_identifier` returns `payload.csv`; the bound-repository base passes that return value straight through as `object_key` on save and compares it against the lookup key on load | **RAW** - no hash, no truncation, no prefix, no encoding step |
+| `cadrumo.domain.justificante.metadata` | `{csv}` | `extract_identifier` returns `payload.csv`; the bound-repository base passes that return value straight through as `object_key` on save and compares it against the lookup key on load | **RAW into the grammar, HMAC-digested into the column** - see the two-layer note below; the answer is not a single word |
 
-The key is the CSV itself. The base repository composes nothing around it: the
-save path sets `object_key` to the extractor's return value, and the load path
-re-derives the identifier from the loaded payload and refuses when the two
-differ. The only transformation the value meets is a shape-safety guard that
-rejects path separators, dot-prefixes and relative-path tokens, and that guard
-deliberately declines to know any domain alphabet so one helper can serve every
-governance repository. Nothing in the storage layer knows a CSV is a CSV.
+The single-word answer that column invites is wrong, so the two layers are
+separated here rather than collapsed.
+
+**At the repository layer the CSV is folded RAW.** The base repository composes
+nothing around it: the save path sets `object_key` to the extractor's return
+value, and the load path re-derives the identifier from the loaded payload and
+refuses when the two differ. The only transformation the value meets is a
+shape-safety guard that rejects path separators, dot-prefixes and relative-path
+tokens, and that guard deliberately declines to know any domain alphabet so one
+helper can serve every governance repository. Nothing at this layer knows a CSV
+is a CSV.
+
+**At the substrate the natural key is never stored in the clear.** The
+`object_key` column holds a keyed HMAC-SHA256 digest of the natural key, and the
+same digest is length-prefixed into the payload's AEAD associated data alongside
+the namespace and the schema version, so a ciphertext moved to a different
+namespace-and-key row fails its authentication tag and refuses to decrypt.
+
+The distinction is the whole point for a key-composition redesign, and getting it
+backwards in either direction is expensive. Reading only the grammar suggests
+that changing the composition rewrites a column of readable CSVs, which would be
+a cheap migration. It is not: every stored key is a digest that cannot be
+reversed, and the digest is bound into the AEAD of every stored payload. A
+composition change therefore invalidates the associated data of every existing
+ciphertext in the namespace, so re-keying is a decrypt-and-re-encrypt pass under
+the old and new identities, not a column update.
+
+Reading only the substrate suggests the CSV is already hashed and so its shape
+does not matter. It does: the digest is computed over the natural key exactly as
+the repository handed it over, so any change to the natural key's normal form -
+including a case change - produces an unrelated digest.
 
 The row asked for "every storage key derived from the CSV value", so the
 complement is part of the answer. Four namespaces carry a CSV in the PAYLOAD but
@@ -100,6 +124,13 @@ stored, under the same identifier in a different case. That is a better failure
 than a wrong value and a worse one than a match, and it is unrecoverable from the
 message alone.
 
+The HMAC layer closes off the obvious mitigation. Because the column holds a
+digest rather than the key, the two spellings hash to unrelated values and there
+is no near-miss for a diagnostic to notice - no prefix, no case-insensitive
+index, no "did you mean" recoverable at the storage layer. Whatever reconciles
+the two forms has to run BEFORE the key is composed, which puts it in the read
+path's own normalisation, not in the substrate.
+
 The same module's receipt-matching helper compares the taxpayer identifier
 case-insensitively and says so in its docstring. The identifier that addresses
 the row did not get the same treatment.
@@ -119,12 +150,12 @@ row is authorised to fix. The row informs and does not gate.
 
 The commit that retired the receipt domain's CSV alias asserted in its message
 that this namespace "has exactly one key-deriving consumer". Re-measured at
-enumeration time that is not the shape of the surface: **four write sites and two
+enumeration time that is not the shape of the surface: **five write sites and two
 keyed-read sites across three modules**, plus three full-scan read sites that
 enumerate every stored key without composing one.
 
-The four write sites are three in the live justificante application module and
-one in the filed-observation persistence module. The two keyed reads are in the
+The five write sites are three in the live justificante application module and
+two in the filed-observation persistence module. The two keyed reads are in the
 cross-period clean-state gate and the external-import actions module, and both
 are the reads carrying the unnormalised reference id described above. The three
 full-scan reads are in the overview evidence surface; they list rather than
