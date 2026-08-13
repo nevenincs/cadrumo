@@ -88,6 +88,14 @@ _NON_DERIVABLE_REASONS: dict[IvaCategory, str] = {
         "not subject to Spanish IVA (no devengo); no rate is derivable here, "
         "but this reason does not confirm the filing treatment"
     ),
+    IvaCategory.REAGP_COMPENSATION: (
+        "régimen especial de la agricultura, ganadería y pesca: no IVA rate is "
+        "derivable here because none is charged — LIVA art. 130.Cinco sets a "
+        "compensación a tanto alzado of 12 % of the sale price for explotaciones "
+        "agrícolas o forestales and 10,5 % for ganaderas o pesqueras, which is "
+        "not an IVA tipo; supply the compensación from the self-issued document "
+        "LIVA art. 134.Tres requires"
+    ),
     IvaCategory.DOMESTIC_REVERSE_CHARGE: (
         "potential domestic reverse charge (inversión del sujeto pasivo): "
         "no rate is derivable here; verify the operation evidence and supply "

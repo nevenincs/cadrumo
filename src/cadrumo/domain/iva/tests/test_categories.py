@@ -40,6 +40,7 @@ def test_iva_category_has_every_named_member() -> None:
         "IMPORT_THIRD_COUNTRY",
         "RECARGO_EQUIVALENCIA",
         "REGIMEN_SIMPLIFICADO",
+        "REAGP_COMPENSATION",
         "OPERACION_NO_SUJETA",
         "ERRONEOUS_INVOICE",
         "UNKNOWN",

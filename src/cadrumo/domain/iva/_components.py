@@ -415,6 +415,9 @@ _LIVA_TIPO_GENERAL: Final[str] = "ley-37-1992:art-90"
 _LIVA_TIPOS_REDUCIDOS: Final[str] = "ley-37-1992:art-91"
 _LIVA_SIMPLIFICADO_AMBITO: Final[str] = "ley-37-1992:art-122"
 _LIVA_SIMPLIFICADO_CUOTA: Final[str] = "ley-37-1992:art-123"
+_LIVA_REAGP_COMPENSACION: Final[str] = "ley-37-1992:art-130"
+_LIVA_REAGP_REINTEGRO: Final[str] = "ley-37-1992:art-131"
+_LIVA_REAGP_DEDUCCION: Final[str] = "ley-37-1992:art-134"
 _LIVA_RECARGO_AMBITO: Final[str] = "ley-37-1992:art-154"
 _LIVA_RECARGO_SUJETOS: Final[str] = "ley-37-1992:art-158"
 _LIVA_RECARGO_TIPOS: Final[str] = "ley-37-1992:art-161"
@@ -442,6 +445,17 @@ _NON_RESIDENT_SUPPLIER_NOTE: Final[str] = (
     "is not an IRPF rendimiento; no IRPF retención arises for the Spanish acquirer, and RIRPF "
     "art. 76.1 names no obligation running the other way. Any IRNR withholding obligation is a "
     "separate tax and is out of this table's scope."
+)
+
+_AGRICULTURAL_ACTIVITY_NOTE: Final[str] = (
+    "Possible rather than expected, and grounded on both sides. RIRPF art. 95.4 sets the "
+    "retención on the contraprestación of an actividad agrícola o ganadera at 1 % for engorde de "
+    "porcino y avicultura and 2 % otherwise, over the ingresos íntegros satisfechos, and scopes "
+    "itself to activities obtaining productos naturales directly from the explotación without "
+    "transformation -- the same population LIVA art. 130.Tres describes. It stays POSSIBLE because "
+    "the payer must also be an obliged retenedor (LIRPF art. 99), which the IVA category does not "
+    "carry, and because a REAGP operation may instead be a servicio accesorio the apartado does "
+    "not reach."
 )
 
 _PROFESSIONAL_SERVICE_NOTE: Final[str] = (
@@ -936,6 +950,66 @@ _COMPONENT_ROWS: Final[tuple[_RowEntry, ...]] = (
             "covered by the bundled excerpt (apartado 1 only)."
         ),
         legal_refs=(_LIVA_SIMPLIFICADO_AMBITO, _LIVA_SIMPLIFICADO_CUOTA),
+    ),
+    # REAGP, the régimen especial de la agricultura, ganadería y pesca. Both
+    # sides arise and they are different operations rather than mirror images:
+    # LIVA art. 131.2.º makes the ACQUIRER pay the compensación on an ordinary
+    # domestic supply, so the issued side is the taxpayer farming and being
+    # compensated, and the received side is the taxpayer buying and paying it.
+    #
+    # No cuota on either face, and that is the regime's whole point: a REAGP
+    # farmer does not repercutir IVA, and art. 130.Dos gives them a compensación
+    # a tanto alzado instead -- 12 % of the sale price for agrícolas y
+    # forestales, 10,5 % for ganaderas y pesqueras (art. 130.Cinco). What the
+    # acquirer pays is therefore not a cuota, though art. 134.Uno lets them
+    # deduct its amount as if it were one, against the self-issued document
+    # art. 134.Tres requires.
+    _row(
+        IvaCategory.REAGP_COMPENSATION,
+        _ISSUED,
+        base=IvaComponentPresence.REQUIRED,
+        # NONE rather than REGIMEN_ESPECIAL, and the difference is the point:
+        # the régimen simplificado settles a real cuota through its own path,
+        # while here no cuota arises at all. What flows is a compensación, which
+        # art. 130 names as such precisely because it is not tax charged.
+        cuota=IvaComponentPresence.ZERO_BY_LAW,
+        cuota_settlement=IvaCuotaSettlement.NONE,
+        cuota_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
+        # Art. 161's tipos all name an entrega to a comerciante minorista under
+        # the recargo regime; none reaches a compensación. Inferred from that
+        # ladder rather than stated, exactly as the other zero-cuota rows infer
+        # it.
+        recargo=IvaComponentPresence.ZERO_BY_LAW,
+        recargo_grounding=IvaGroundingConfidence.REASONED,
+        retencion=IvaRetencionExpectation.POSSIBLE,
+        retencion_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
+        retencion_note=_AGRICULTURAL_ACTIVITY_NOTE,
+        legal_refs=(
+            _LIVA_REAGP_COMPENSACION,
+            _LIVA_REAGP_REINTEGRO,
+            _LIRPF_PAGOS_A_CUENTA,
+            _RIRPF_RETENCION_ACTIVIDADES,
+        ),
+    ),
+    _row(
+        IvaCategory.REAGP_COMPENSATION,
+        _RECEIVED,
+        base=IvaComponentPresence.REQUIRED,
+        cuota=IvaComponentPresence.ZERO_BY_LAW,
+        cuota_settlement=IvaCuotaSettlement.NONE,
+        cuota_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
+        recargo=IvaComponentPresence.ZERO_BY_LAW,
+        recargo_grounding=IvaGroundingConfidence.REASONED,
+        retencion=IvaRetencionExpectation.POSSIBLE,
+        retencion_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
+        retencion_note=_AGRICULTURAL_ACTIVITY_NOTE,
+        legal_refs=(
+            _LIVA_REAGP_COMPENSACION,
+            _LIVA_REAGP_REINTEGRO,
+            _LIVA_REAGP_DEDUCCION,
+            _LIRPF_PAGOS_A_CUENTA,
+            _RIRPF_RETENCION_ACTIVIDADES,
+        ),
     ),
     _row(
         IvaCategory.ERRONEOUS_INVOICE,
