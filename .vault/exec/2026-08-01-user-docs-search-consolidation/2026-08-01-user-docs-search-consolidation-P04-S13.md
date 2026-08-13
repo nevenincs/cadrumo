@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:d3ca1d4c013b11855b0566c3d18d6e39a533635f5732301236869550a9496078'
+body_hash: 'sha256:13ebca5911bf16961e922987641318bbf5049e4daef456a04166a5d86cf6b8c9'
 step_id: 'S13'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -100,3 +100,16 @@ What changed in this campaign's favour is that the publish is now checkable befo
 One caveat stated plainly rather than glossed: a clean stub census is not proof that the full strict build passes end to end. The entries above also record sequence-golden divergences and machine-specific hardware-fact fields as a separate, recurring red. That class is unverified today and the dry-run verb is exactly how to settle it without publishing.
 
 P04.S13 remains open. No deploy, cache invalidation or live mutation was attempted.
+
+### 2026-08-13 the sequence-golden class: measured three ways, no verdict obtainable
+
+The entry above flagged the recurring sequence-golden divergences as unverified. They were then actively measured, because the distinction between a cleared precondition and a still-red one decides what an operator is being asked to authorise. Three attempts, none of which produced a divergence:
+
+- The goldens gate under parallel pytest lost three workers to "node down: Not properly terminated". That is this worktree's documented backing-share failure under concurrent I/O and carries no information about the code.
+- Re-run sequentially, as the local-execution discipline requires before blaming code: five sibling tests passed, then the goldens test itself hit its own deadlock ceiling while blocked inside its subprocess pool. It reported zero divergences because it never reached a verdict.
+- Run directly outside the pytest ceiling, unsharded: still executing after roughly fifty minutes wall and thirty-eight minutes of CPU, on a box carrying 140 concurrent Python processes from other agents.
+
+So the honest state of this class is UNMEASURED UNDER LOAD, not red. No failing signature is named here, because none was observed, and restating the earlier record's divergences as current would be an inherited claim rather than a measurement. If a later run returns a verdict it belongs in this record with its signature and its owning surface.
+
+The distinction matters for exactly one reason: the other precondition this row's history named, the missing API stubs, is now definitively CLEAR. Nothing technical is known to be blocking a publish. That is not the same as knowing nothing is, and the dry-run verb remains the way to settle it without writing anything outward.
+
