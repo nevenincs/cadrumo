@@ -26,14 +26,18 @@ related:
 - Confirm the committed OR corpus record as corrective with its corrected invoice reference.
 - Remove the declared code and prove the corrective-reference fallback remains effective.
 - Mutate the OR declaration to OO and prove the contradiction is surfaced and cannot silently mint the inference's answer.
+- Mutate the committed anchors through CO and CR and prove the copy axis does not change the domain class.
+- Drive OC and CC through real evidence storage and prove each raises the recapitulativa finding while preserving a discriminatory operator class.
+- Remove the corrective reference under OR and CR and prove both reverse contradictions are reported.
 
 ## Outcome
 
-- Four end-to-end corpus cases cover the declaration, fallback, and disagreement paths.
-- The complete focused feature gate passed lint and forty-two tests.
+- Ten real-behavior cases exhaust the six declared codes, the absent fallback, and both contradiction directions.
+- The complete focused feature gate passed lint and forty-eight tests.
 
 ## Notes
 
 - Semantic discovery remained temporarily unavailable; exact source discovery located the established real-storage test harness.
 - The first mutation assertion expected the domain wrapper exception, while the candidate builder correctly raised Pydantic validation at its immediate boundary; the assertion now names that real exception and message.
+- An independent review found the copy, recapitulativa, and reverse-contradiction branches supported only by inspection; S05 was reopened and the missing executable matrix was added before re-closing it.
 - Focused verification does not establish repository-wide readiness.
