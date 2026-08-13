@@ -111,26 +111,32 @@ def _get_session_store() -> SessionStoreProtocol:
     return session_store
 
 
-def _invalid_assertion_diagnostic(assertion: AeatLoginAssertion) -> str:
-    """Return a non-secret diagnostic suffix for a failed live assertion."""
-    parts = [
-        f"status={getattr(assertion, 'status_code', None)}",
-        f"error={getattr(assertion, 'error_message', None)!r}",
-    ]
+def _invalid_assertion_diagnostic(assertion: AeatLoginAssertion) -> dict[str, object]:
+    """Return the non-secret machine facts describing a failed live assertion.
+
+    The landing URL is decomposed into host and path so a query string, which
+    is where an AEAT redirect carries session material, never enters the
+    diagnostic. No credential, cookie value, or certificate secret is read:
+    the cookie is reported only as a presence flag.
+    """
+    facts: dict[str, object] = {
+        "status_code": getattr(assertion, "status_code", None),
+        "assertion_error": getattr(assertion, "error_message", None),
+    }
     detail = getattr(assertion, "assertion_detail", None)
     landing_url = getattr(detail, "landing_url", None)
     if isinstance(landing_url, str) and landing_url:
         try:
             parsed = urlsplit(landing_url)
         except ValueError:
-            parts.append("landing_url_parse=invalid")
+            facts["landing_url_parse"] = "invalid"
         else:
-            parts.append(f"landing_host={parsed.netloc!r}")
-            parts.append(f"landing_path={parsed.path!r}")
+            facts["landing_host"] = parsed.netloc
+            facts["landing_path"] = parsed.path
     session_cookie_present = getattr(detail, "session_cookie_present", None)
     if session_cookie_present is not None:
-        parts.append(f"session_cookie_present={bool(session_cookie_present)}")
-    return " ".join(parts)
+        facts["session_cookie_present"] = bool(session_cookie_present)
+    return facts
 
 
 class StorageStatePaths(BaseModel):
@@ -508,8 +514,8 @@ async def _ensure_authenticated_aeat_session_locked(
             from ...adapters.outbound.aeat.auth import AeatLoginAssertionError
 
             raise AeatLoginAssertionError(
-                "AEAT authentication completed but live verification failed: "
-                f"{_invalid_assertion_diagnostic(assertion)}",
+                translated_message="errors.auth.auth_aeat_login_assertion",
+                context=_invalid_assertion_diagnostic(assertion),
             )
         _assert_session_identity_matches_expected(session, expected_identity)
         return AuthenticatedAeatSessionResult(

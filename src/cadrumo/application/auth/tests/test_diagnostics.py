@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -19,8 +20,10 @@ from ....core.external_constants import UTF_8_ENCODING, load_external_constants
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_runtime_profile
 from .._diagnostics import (
+    AUTH_DIAGNOSTIC_PHONE_STATES,
     AuthDiagnosticPhoneState,
     _DiagnosticPayload,
+    _summary_from_payload,
     list_auth_diagnostics,
     load_auth_diagnostic,
     record_auth_diagnostic_phone_state,
@@ -176,11 +179,23 @@ def test_auth_diagnostic_phone_state_error_is_in_error_registry() -> None:
 
 
 def test_auth_diagnostic_phone_state_error_round_trips_through_build_error_envelope() -> None:
-    err = AuthDiagnosticPhoneStateError("not_a_valid_state", context={"phone_state": "not_a_valid_state"})
+    """The envelope carries the resolved locale text, not the rejected raw token.
+
+    The error is built exactly as the production raise site builds it. Passing
+    the token positionally, as this fixture once did, made the envelope message
+    the token itself, so the assertion that a message exists passed while the
+    operator was shown an untranslated internal value.
+    """
+    err = AuthDiagnosticPhoneStateError(
+        translated_message="errors.refused.refused_auth_diagnostic_phone_state",
+        context={"phone_state": "not_a_valid_state"},
+    )
     envelope = build_error_envelope(err)
     assert envelope.code == "REFUSED_AUTH_DIAGNOSTIC_PHONE_STATE"
     assert envelope.category == "REFUSED"
     assert envelope.message
+    assert envelope.message != "not_a_valid_state"
+    assert envelope.message != err.translated_message
 
 
 def test_diagnostic_payload_round_trips_through_json() -> None:
@@ -224,13 +239,150 @@ def test_diagnostic_payload_round_trips_through_json() -> None:
 
 
 def test_diagnostic_payload_rejects_non_object_json() -> None:
-    """_payload() raises ValueError when the JSON root is not an object."""
+    """A non-object JSON root refuses through the registered key and the failing rule.
+
+    The refusal carries no authored sentence: the operator-facing text resolves
+    from the registered locale key and the check that failed travels as the
+    ``validation_rule`` machine fact, so the message is translated in every
+    locale rather than pinned to English at the raise site.
+
+    Pinning the key and the facts alone would stay green even if English prose
+    were passed alongside the key, because message resolution prefers the key.
+    The prose would not stay hidden -- ``str(exc)`` prefers the positional
+    message, so it still reaches tracebacks, logs, and every boundary that
+    renders the exception directly. Asserting the absence is what makes
+    re-introducing a sentence at this raise site fail.
+
+    The error still subclasses :exc:`ValueError`, so a pydantic validator
+    guarding on that type keeps matching.
+    """
     import json as _json
 
+    from ....core.errors import get_registered_error_code, resolve_error_message
     from .._diagnostics import _payload
 
-    with pytest.raises(ValueError, match="not a JSON object"):
+    with pytest.raises(AuthDiagnosticPayloadError) as raised:
         _payload(_json.dumps([1, 2, 3]).encode(UTF_8_ENCODING))
+
+    error = raised.value
+    assert isinstance(error, ValueError)
+    assert error.translated_message == "errors.refused.refused_auth_diagnostic_payload"
+    assert error.context == {"validation_rule": "json_root_object", "json_root_type": "list"}
+    assert get_registered_error_code(error).code == "REFUSED_AUTH_DIAGNOSTIC_PAYLOAD"
+    assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
+    resolved = resolve_error_message(error)
+    assert resolved and resolved != error.translated_message
+
+
+@pytest.mark.parametrize(
+    ("build_payload", "expected_context"),
+    [
+        pytest.param(
+            lambda: {"diagnostic_id": "diag-1", "reason": "r"},
+            {"validation_rule": "captured_at_present"},
+            id="captured_at_missing",
+        ),
+        pytest.param(
+            lambda: {"diagnostic_id": "diag-1", "reason": "r", "captured_at": "not-an-instant"},
+            {"validation_rule": "iso_8601_instant", "field": "captured_at"},
+            id="captured_at_not_iso",
+        ),
+        pytest.param(
+            lambda: {"diagnostic_id": "diag-1", "reason": "r", "captured_at": "2026-08-13T09:00:00"},
+            {"validation_rule": "utc_aware_instant", "field": "captured_at"},
+            id="captured_at_naive",
+        ),
+        pytest.param(
+            lambda: {
+                "diagnostic_id": "diag-1",
+                "reason": "r",
+                "captured_at": "2026-08-13T09:00:00+00:00",
+                "phone_state": "not_a_known_state",
+            },
+            {
+                "validation_rule": "closed_phone_state_vocabulary",
+                "phone_state": "not_a_known_state",
+                "accepted_phone_states": ", ".join(AUTH_DIAGNOSTIC_PHONE_STATES),
+            },
+            id="phone_state_outside_vocabulary",
+        ),
+        pytest.param(
+            lambda: {
+                "diagnostic_id": "diag-1",
+                "reason": "r",
+                "captured_at": "2026-08-13T09:00:00+00:00",
+                "phone_state": "app_did_not_prompt",
+            },
+            {
+                "validation_rule": "browser_proven_state_requires_landing_source",
+                "phone_state_source": "",
+            },
+            id="browser_proven_state_without_landing_source",
+        ),
+        pytest.param(
+            lambda: {
+                "diagnostic_id": "diag-1",
+                "reason": "r",
+                "captured_at": "2026-08-13T09:00:00+00:00",
+                "phone_state": "app_did_not_prompt",
+                "phone_state_source": "aeat_authenticated_landing",
+            },
+            {"validation_rule": "browser_proven_state_requires_observation_instant"},
+            id="browser_proven_state_without_observation_instant",
+        ),
+    ],
+)
+def test_diagnostic_payload_refusals_author_no_sentence(
+    build_payload: Callable[[], dict[str, object]],
+    expected_context: dict[str, object],
+) -> None:
+    """Every structural payload refusal renders from the key and names its rule.
+
+    The six rejections once differed by an authored English sentence, which is
+    the only thing that told them apart. They now share the one registered key
+    and are distinguished by the ``validation_rule`` fact, so a consumer routes
+    on data and an operator reads the refusal in their own locale.
+
+    Each case asserts ``str(exc)`` degrades to the key. That is the assertion a
+    re-introduced positional sentence fails; a key-and-context assertion alone
+    would not, because resolution prefers the key while ``str(exc)`` prefers
+    the sentence.
+    """
+    from ....core.errors import get_registered_error_code, resolve_error_message
+
+    payload = _DiagnosticPayload.model_validate(build_payload())
+    with pytest.raises(AuthDiagnosticPayloadError) as raised:
+        _summary_from_payload(payload)
+
+    error = raised.value
+    assert error.translated_message == "errors.refused.refused_auth_diagnostic_payload"
+    assert error.context == expected_context
+    assert get_registered_error_code(error).code == "REFUSED_AUTH_DIAGNOSTIC_PAYLOAD"
+    assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
+    resolved = resolve_error_message(error)
+    assert resolved and resolved != error.translated_message
+
+
+def test_record_phone_state_refusal_authors_no_sentence() -> None:
+    """An unrecognised phone state refuses through the key and carries the value as a fact.
+
+    The rejected token used to be the error's positional message, so it was
+    English-shaped text in every locale. It is now the ``phone_state`` machine
+    fact behind the registered key, and ``str(exc)`` degrading to that key is
+    what proves the raise site authors no sentence.
+    """
+    from ....core.errors import get_registered_error_code, resolve_error_message
+
+    with pytest.raises(AuthDiagnosticPhoneStateError) as raised:
+        record_auth_diagnostic_phone_state("diag-1", "not_a_known_state")
+
+    error = raised.value
+    assert error.translated_message == "errors.refused.refused_auth_diagnostic_phone_state"
+    assert error.context == {"phone_state": "not_a_known_state"}
+    assert get_registered_error_code(error).code == "REFUSED_AUTH_DIAGNOSTIC_PHONE_STATE"
+    assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
+    resolved = resolve_error_message(error)
+    assert resolved and resolved != error.translated_message
 
 
 def test_rapid_encrypted_diagnostic_captures_list_and_load_individually(tmp_path: Path) -> None:

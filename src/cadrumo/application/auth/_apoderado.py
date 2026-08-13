@@ -186,7 +186,8 @@ class _ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
         failure they handle rather than a storage-layer one leaking through.
         """
         return ApoderadoConfigurationIdentityError(
-            "stored apoderado configuration does not belong to the bucket it was read from",
+            translated_message="errors.integrity.integrity_apoderado_configuration_identity",
+            context={"repository_bucket_id": self._bound_bucket_id, "storage_row_identity": "payload_key_mismatch"},
         )
 
     @override
@@ -203,7 +204,11 @@ class _ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
         """
         if self._bound_bucket_id is not None and payload.bucket_id != self._bound_bucket_id:
             raise ApoderadoConfigurationIdentityError(
-                "apoderado configuration names a different bucket than the repository it is saved through",
+                translated_message="errors.integrity.integrity_apoderado_configuration_identity",
+                context={
+                    "bucket_id": payload.bucket_id,
+                    "repository_bucket_id": self._bound_bucket_id,
+                },
             )
         super().save(payload)
 
@@ -293,7 +298,7 @@ class ApoderadoService:
             validate_identity(represented_nif)
         except IdentityError as exc:
             raise ApoderadoRepresentedNifInvalidError(
-                "represented party tax identifier is not a valid NIF, NIE, or CIF",
+                translated_message="errors.refused.refused_apoderado_invalid_represented_nif",
             ) from exc
         granted = parse_scope_tokens(scope_tokens, self._catalogue)
         config = ApoderadoConfiguration(
