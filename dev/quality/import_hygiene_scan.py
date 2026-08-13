@@ -119,9 +119,7 @@ _TUI_MODULE_DISPOSITIONS: Final[dict[str, TuiMigrationDisposition]] = {
     f"{LEGACY_TUI_PACKAGE}._status_screen": TuiMigrationDisposition(
         "interface", f"{CANONICAL_TUI_PACKAGE}.profile.status"
     ),
-    f"{LEGACY_TUI_PACKAGE}._theme": TuiMigrationDisposition(
-        "interface", f"{CANONICAL_TUI_PACKAGE}.components.theme"
-    ),
+    f"{LEGACY_TUI_PACKAGE}._theme": TuiMigrationDisposition("interface", f"{CANONICAL_TUI_PACKAGE}.components.theme"),
 }
 
 _TUI_SYMBOL_DISPOSITIONS: Final[dict[tuple[str, str], TuiMigrationDisposition]] = {
@@ -583,9 +581,7 @@ def _registration_references(tree: ast.Module, aliases: dict[str, str]) -> tuple
             if isinstance(value, ast.Constant) and isinstance(value.value, str):
                 if _targets_module(value.value, CANONICAL_TUI_PACKAGE):
                     found.add((value.lineno, value.value))
-            elif (target := _expression_reference(value, aliases)) and _targets_module(
-                target, CANONICAL_TUI_PACKAGE
-            ):
+            elif (target := _expression_reference(value, aliases)) and _targets_module(target, CANONICAL_TUI_PACKAGE):
                 found.add((value.lineno, target))
     return tuple(sorted(found))
 
@@ -1644,19 +1640,19 @@ def _parse_tui_manifest_consumer(path: Path, *, repo_root: Path) -> ast.Module:
 def _tui_migration_identity_sha256(rows: Iterable[TuiMigrationRow]) -> str:
     """Hash exact semantic identities and dispositions, excluding volatile locators."""
     identities_and_dispositions = [
-            (
-                str(row.kind),
-                row.legacy_module,
-                row.symbol,
-                row.consumer,
-                row.consumer_kind,
-                row.owner_lane,
-                row.replacement,
-                row.deletion_proof,
-                row.state,
-            )
-            for row in rows
-        ]
+        (
+            str(row.kind),
+            row.legacy_module,
+            row.symbol,
+            row.consumer,
+            row.consumer_kind,
+            row.owner_lane,
+            row.replacement,
+            row.deletion_proof,
+            row.state,
+        )
+        for row in rows
+    ]
     ordered_identities = sorted(
         identities_and_dispositions,
         key=lambda row: tuple("" if part is None else part for part in row),

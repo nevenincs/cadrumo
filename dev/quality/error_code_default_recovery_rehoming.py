@@ -766,9 +766,7 @@ def _validate_fingerprint_owners(
             continue
         path = fingerprint.path
         covering = [
-            step
-            for step in steps
-            if (not step.checked or not require_open_owner) and _scope_covers(path, step.scope)
+            step for step in steps if (not step.checked or not require_open_owner) and _scope_covers(path, step.scope)
         ]
         if not any(step.step_id == owner_id for step in covering):
             errors.append(f"E_REHOMING_OWNER_SCOPE:{row.historical.error_qualname}:{owner_id}:{path}")
@@ -867,9 +865,7 @@ def _generate_rehoming_ledger(
         # and re-deriving it from the current open population would either find
         # nothing (the owner has closed) or find several closed Steps whose
         # scopes overlap, neither of which is a correction.
-        recorded_owner_by_path = {
-            ownership.fingerprint.path: ownership.owner_step for ownership in row.ownerships
-        }
+        recorded_owner_by_path = {ownership.fingerprint.path: ownership.owner_step for ownership in row.ownerships}
         ownerships: list[FingerprintOwnership] = []
         for fingerprint in fingerprints:
             if not authors_message:
@@ -2958,7 +2954,9 @@ class _LexicalScanner(ast.NodeVisitor):
         )
 
 
-def _scan_current_source(root: Path) -> tuple[
+def _scan_current_source(
+    root: Path,
+) -> tuple[
     dict[str, tuple[SourceFingerprint, ...]],
     dict[str, frozenset[tuple[str, str, str, str, str]]],
 ]:

@@ -253,10 +253,7 @@ class SemanticMap(_StrictModel):
         mismatched_envelopes = tuple(
             envelope.record_identity
             for envelope in self.variable_envelopes
-            if (
-                envelope.source_ref != self.source_ref
-                or envelope.source_sha256 != self.source_sha256
-            )
+            if (envelope.source_ref != self.source_ref or envelope.source_sha256 != self.source_sha256)
         )
         if mismatched_envelopes:
             raise ValueError(
