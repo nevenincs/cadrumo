@@ -5235,8 +5235,10 @@ cli:
       row_count: Row count
       source_reference_count: Source reference count
       status: Status
+      unverified_invariant_families: Unverified invariant families
       verification_expectation_count: Verification expectation count
       verified: Verified
+      verified_invariant_families: Verified invariant families
       workbook_parity_ref_count: Workbook parity ref count
     observation_help: Encrypted filed-declaration observation manifest to verify
     source_observation_help: Encrypted source observation manifest required by previous-filing

@@ -5645,8 +5645,10 @@ cli:
       row_count: Nº filas
       source_reference_count: Nº referencias de origen
       status: Estado
+      unverified_invariant_families: Familias de invariantes no verificadas
       verification_expectation_count: Nº expectativas de verificación
       verified: Verificado
+      verified_invariant_families: Familias de invariantes verificadas
       workbook_parity_ref_count: Nº referencias de paridad de libro
     observation_help: Manifiesto cifrado de observación de declaración presentada
       que se va a verificar

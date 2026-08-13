@@ -5521,8 +5521,10 @@ cli:
       row_count: Sorok száma
       source_reference_count: Forráshivatkozások száma
       status: Állapot
+      unverified_invariant_families: Nem ellenőrzött invariánscsaládok
       verification_expectation_count: Ellenőrzési elvárások száma
       verified: Ellenőrzött
+      verified_invariant_families: Ellenőrzött invariánscsaládok
       workbook_parity_ref_count: Munkafüzet paritás-hivatkozások száma
     observation_help: A titkosított benyújtott bevallás megfigyelési manifesztje az
       ellenőrzéshez.

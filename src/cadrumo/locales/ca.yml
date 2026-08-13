@@ -5592,8 +5592,10 @@ cli:
       row_count: files
       source_reference_count: referències de font
       status: estat
+      unverified_invariant_families: Famílies d'invariants no verificades
       verification_expectation_count: expectatives de verificació
       verified: verificades
+      verified_invariant_families: Famílies d'invariants verificades
       workbook_parity_ref_count: refs de paritat del llibre
     observation_help: Manifest xifrat d'observació de declaració presentada que cal
       verificar
