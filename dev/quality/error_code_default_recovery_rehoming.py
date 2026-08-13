@@ -849,14 +849,34 @@ def _generate_rehoming_ledger(
     legacy: RehomingLedger,
     current: dict[str, tuple[SourceFingerprint, ...]],
     steps: tuple[_PlanStep, ...],
+    authored: dict[str, frozenset[tuple[str, str, str, str, str]]] | None = None,
 ) -> RehomingLedger:
     errors: list[str] = []
     generated: list[RehomingRow] = []
+    authored_by_qualname = authored or {}
     for row in legacy.rows:
         qualname = row.historical.error_qualname
         fingerprints = current.get(qualname, ())
+        # Mirror the validator: a row whose sites no longer author a message has
+        # landed, so its owner is expected to have closed. Drawing its covering
+        # set from open Steps only would leave it ownerless and unrenderable.
+        authored_groups = authored_by_qualname.get(qualname, frozenset())
+        authors_message = any(fingerprint.structural_group in authored_groups for fingerprint in fingerprints)
+        # A landed row keeps the owner already recorded against its path. That
+        # owner is immutable provenance -- it is the Step that did the work --
+        # and re-deriving it from the current open population would either find
+        # nothing (the owner has closed) or find several closed Steps whose
+        # scopes overlap, neither of which is a correction.
+        recorded_owner_by_path = {
+            ownership.fingerprint.path: ownership.owner_step for ownership in row.ownerships
+        }
         ownerships: list[FingerprintOwnership] = []
         for fingerprint in fingerprints:
+            if not authors_message:
+                recorded = recorded_owner_by_path.get(fingerprint.path)
+                if recorded is not None:
+                    ownerships.append(FingerprintOwnership(fingerprint, recorded))
+                    continue
             covering = [step for step in steps if not step.checked and _scope_covers(fingerprint.path, step.scope)]
             if not covering:
                 errors.append(f"E_REHOMING_GENERATE_OWNER_ZERO:{qualname}:{fingerprint.path}")
@@ -889,7 +909,8 @@ def migrate_legacy_ledger(
 ) -> RehomingLedger:
     """Derive strict-current ownership evidence from immutable legacy rows."""
     legacy = _load_legacy_rehoming_ledger(legacy_path)
-    generated = _generate_rehoming_ledger(legacy, current_source_fingerprints(root), _current_plan_steps(plan_path))
+    fingerprints, authored = _scan_current_source(root)
+    generated = _generate_rehoming_ledger(legacy, fingerprints, _current_plan_steps(plan_path), authored)
     return validate_rehoming_ledger(generated, root=root, plan_path=plan_path)
 
 
@@ -919,10 +940,12 @@ def _write_migrated_ledger(
     legacy = _load_legacy_rehoming_ledger(legacy_path)
     last_drift: RehomingLedgerError | None = None
     for _ in range(_MIGRATION_WRITE_ATTEMPTS):
+        fingerprints, authored = _scan_current_source(root)
         generated = _generate_rehoming_ledger(
             legacy,
-            current_source_fingerprints(root),
+            fingerprints,
             _current_plan_steps(plan_path),
+            authored,
         )
         try:
             output_path.write_text(render_rehoming_ledger(generated), encoding=_UTF_8)
