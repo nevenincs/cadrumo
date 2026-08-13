@@ -56,7 +56,13 @@ class OperationEventEmitter(Protocol):
         """Publish a transition to a definition-declared phase."""
         ...
 
-    async def progress(self, *, completed: int, total: int, unit_code: OperationEventCode | None = None) -> None:
+    async def progress(
+        self,
+        *,
+        completed: int,
+        total: int,
+        unit_code: OperationEventCode | None = None,
+    ) -> None:
         """Publish bounded unit progress."""
         ...
 

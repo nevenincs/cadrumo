@@ -9,7 +9,7 @@ from types import ModuleType
 
 import pytest
 
-from .. import OperationCapabilities, OperationInteractionRequest, OperationRequest
+from .. import OperationCapabilities, OperationExecutorContext, OperationInteractionRequest, OperationRequest
 from .. import __all__ as public_names
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -29,6 +29,7 @@ def test_representative_contracts_resolve_from_public_facade() -> None:
     assert OperationCapabilities.__module__.endswith("._capabilities")
     assert OperationRequest.__module__.endswith("._models")
     assert "OperationEvent" in public_names
+    assert OperationExecutorContext.__module__.endswith("._executor")
     assert OperationInteractionRequest.__module__.endswith("._interactions")
 
 
@@ -37,4 +38,4 @@ def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
     tree = ast.parse(facade.read_text(encoding="utf-8"))
     targets = {node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.module is not None}
 
-    assert targets == {"core", "_capabilities", "_events", "_interactions", "_models"}
+    assert targets == {"core", "_capabilities", "_events", "_executor", "_interactions", "_models"}

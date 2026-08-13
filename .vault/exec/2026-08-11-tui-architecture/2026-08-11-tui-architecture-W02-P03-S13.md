@@ -56,6 +56,9 @@ related:
 - Separate cooperative cancellation, deadline access, typed event facts, secure operand lookup, and cleanup ownership into narrow supervisor-provided ports.
 - Reuse `AsyncCloseable`, `ContentDigest`, and the existing operation identity, request, event-code, diagnostic-reference, severity, effect, and result-reference authorities.
 - Keep event identity, revision, sequence, timestamp, persistence, lifecycle mutation, and terminal settlement outside executor control.
+- Export all seven executor protocols through the sole public operation-platform facade.
+- Exercise the public runtime-checkable protocols directly with complete structural implementations and independently incomplete surfaces.
+- Preserve the semantic public callable names `phase_code`, `unit_code`, and `operand_type`, including keyword invocation and signature proof.
 
 ## Outcome
 
@@ -66,9 +69,18 @@ Focused verification passed:
 - `uv run ruff check src/cadrumo/application/operations/_executor.py` - passed.
 - `uv run basedpyright src/cadrumo/application/operations/_executor.py` - passed with 0 errors, 0 warnings, and 0 notes.
 - `uv run pytest -q src/cadrumo/application/operations/tests/test_contract_invariants.py src/cadrumo/application/operations/tests/test_facade.py` - 72 passed in 4.20 seconds.
+- `uv run ruff check src/cadrumo/application/operations/_executor.py src/cadrumo/application/operations/__init__.py src/cadrumo/application/operations/tests/test_executor.py src/cadrumo/application/operations/tests/test_facade.py` - passed after review remediation.
+- `uv run basedpyright src/cadrumo/application/operations/_executor.py src/cadrumo/application/operations/__init__.py src/cadrumo/application/operations/tests/test_executor.py` - passed with 0 errors, 0 warnings, and 0 notes.
+- `uv run pytest -q -n 0 src/cadrumo/application/operations/tests/test_executor.py src/cadrumo/application/operations/tests/test_facade.py src/cadrumo/application/operations/tests/test_contract_invariants.py` - 74 passed in 1.19 seconds.
+- Final callable-name remediation reran the same Ruff and basedpyright commands successfully, then the same focused pytest command passed 75 tests in 1.42 seconds.
+- `uvx vaultspec-core vault check all` completed successfully during closeout with 1,349 pre-existing repository warnings and no failing check.
 
 ## Notes
 
 Live code and vault semantic searches converged on `OperationCapabilities` and D3/D5 as the operation-specific authorities and on `core.async_cleanup.AsyncCloseable` as the canonical cleanup shape. Whole-file reads covered the operation models, capabilities, events, interactions, public facade, and asynchronous cleanup implementation. Targeted source search found no existing generic executor context, cancellation scope, operation event-emission port, or digest-addressed operand lookup to reuse. The new module therefore owns these missing application ports without duplicating observability capture, persistence, frontend, adapter, or cleanup execution.
+
+Independent review initially found unreproduced RAG evidence, missing public-facade exposure, and missing direct protocol tests. After RAG admission recovered, live code search returned `_executor.py`, `_capabilities.py`, `core.async_cleanup`, and the operation facade as the top ownership cluster; live vault search returned the governing TUI architecture ADR, plan, and research. Whole-file reads and targeted search additionally covered core operation axes and existing application and adapter cleanup consumers. The incomplete-index caveat was handled by exact `rg` across cancellation, deadline, cleanup, secure-reference, executor, and event-emission terms. No competing executor-context authority or semantic duplicate was found.
+
+One initial xdist-focused run ended in an unrelated worker internal error before tests ran. The explicit serial command then exposed the repository's required test marker, which was added. Final review adjudicated the previously preserved underscore-prefixed protocol parameters as a public callable regression. The exact three semantic names were restored and are now pinned by direct keyword use and signature inspection; the final serial focused run passed all 75 tests.
 
 The existing S16 row owns behavioral refusal proofs for invalid phase emission and unowned resources; this contract-only step does not mirror those future supervisor and registry rules in tests. Unrelated shared-worktree changes, including concurrent formatting edits in existing operation tests, were preserved and excluded.
