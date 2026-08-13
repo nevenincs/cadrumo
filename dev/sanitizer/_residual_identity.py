@@ -1,4 +1,12 @@
-"""Residual-identity detection over a sanitised PDF, without the cleartext.
+"""Identity detection over arbitrary text, without the cleartext.
+
+Two surfaces consume this. A sanitised PDF is checked against its own sidecar by
+:func:`scan_for_residual_identities` below; a working tree is checked by
+:mod:`dev.identity`, which reuses the same patterns, the same checksums and the
+same value-free finding discipline through :func:`checksum_valid_spans`. The
+detection lives in the sanitiser package rather than in its test package because
+it is a library with a non-test consumer, and it is reached only through the
+package facade.
 
 The sanitiser replaces exactly what a ``TokenMap`` names, so an identity nobody
 listed passes through untouched. The existing adversarial gate cannot see that:
@@ -37,6 +45,7 @@ from __future__ import annotations
 import contextlib
 import io
 import re
+from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
@@ -135,6 +144,32 @@ _VALIDATORS = {
 }
 
 
+def checksum_valid_spans(text: str, kinds: frozenset[ResidualKind]) -> Iterator[tuple[ResidualKind, int, str]]:
+    """Yield ``(kind, offset, candidate)`` for every match its class accepts.
+
+    This is the one match-and-verify loop in the project. Both the PDF surface
+    scan below and the working-tree canary in :mod:`dev.identity` run over it, so
+    a pattern correction or a checksum change reaches both at once; a second copy
+    of the loop is how the two would silently disagree about what an identity is.
+
+    The candidate string IS returned, because the caller needs it to decide
+    whether the match is accounted for. That is the last point at which the value
+    may exist: nothing built from a span may carry it forward. Findings are
+    value-free by construction, and so is anything that renders one.
+
+    Args:
+        text: The text to scan.
+        kinds: The pattern classes to apply. Ordering of the yield is by class
+            name then by offset, so callers get deterministic output.
+    """
+    for kind in sorted(kinds, key=lambda candidate: candidate.value):
+        pattern, is_valid = _VALIDATORS[kind]
+        for match in pattern.finditer(text):
+            candidate: str = match.group(1)
+            if is_valid(candidate):
+                yield kind, match.start(1), candidate
+
+
 def accounted_for_values(sidecar: dict[str, Any]) -> frozenset[str]:
     """Every value the sanitiser recorded itself as having written.
 
@@ -202,13 +237,8 @@ def scan_for_residual_identities(
     findings: list[ResidualFinding] = []
     for surface_name, payload in surfaces:
         text = payload.decode("latin-1", errors="replace")
-        for kind in sorted(selected):
-            pattern, is_valid = _VALIDATORS[kind]
-            for match in pattern.finditer(text):
-                candidate = match.group(1)
-                if _canonical(candidate) in accounted:
-                    continue
-                if not is_valid(candidate):
-                    continue
-                findings.append(ResidualFinding(kind=kind, surface=surface_name, offset=match.start(1)))
+        for kind, offset, candidate in checksum_valid_spans(text, selected):
+            if _canonical(candidate) in accounted:
+                continue
+            findings.append(ResidualFinding(kind=kind, surface=surface_name, offset=offset))
     return tuple(sorted(findings, key=lambda f: (f.surface, f.kind.value, f.offset)))

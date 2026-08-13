@@ -508,10 +508,10 @@ test-integration:
 # the reason `packaging-smoke-preflight-tests` states it: these directories are
 # mixed-marker, so inheriting the default `-m 'unit and ...'` would silently
 # deselect the integration contracts and still exit zero.
-[doc('Run the dev/ tooling gates that no other lane reaches (audit, deploy, env, locales, sanitizer, registry, docs, agent-eval, ingest-harness subsystems).')]
+[doc('Run the dev/ tooling gates that no other lane reaches (audit, deploy, env, identity, locales, sanitizer, registry, docs, agent-eval, ingest-harness subsystems).')]
 [group('testing')]
 test-dev-tooling:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/corpus/tests dev/deploy/tests dev/env/tests dev/locales/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/corpus/tests dev/deploy/tests dev/env/tests dev/identity/tests dev/locales/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests
 
 # Run the dev-tree workflow/tooling conformance gates that CI runs per-push
 # (workflow structural pins, evidence-transport conformance, shard-plugin
