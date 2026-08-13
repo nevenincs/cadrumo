@@ -13,7 +13,7 @@ failure modes surfaced to external callers:
 
 from __future__ import annotations
 
-from ...core.errors import CadrumoError
+from ...core.errors import CadrumoError, get_registered_error_code
 
 
 class PortalRegistryError(CadrumoError):
@@ -23,14 +23,27 @@ class PortalRegistryError(CadrumoError):
 class UnknownPortalError(PortalRegistryError):
     """Raised by :func:`cadrumo.domain.portals.get_portal` on unknown names.
 
+    The operator-facing text is the class's registered locale key and nothing
+    else. The offending identifier travels as a locale-neutral machine fact in
+    ``context``, so it is never spelled into a sentence the class would then
+    carry into tracebacks, structured logs and every direct rendering in all
+    four locales.
+
+    The key is read from the central error-code registry rather than repeated
+    here, so the class carries no second spelling that could drift from the
+    registered one.
+
     Attributes:
         portal: The offending portal name or value as supplied by the
             caller.
     """
 
     def __init__(self, portal: str) -> None:
-        """Initialise with the offending portal identifier."""
-        super().__init__(f"unknown portal: {portal!r}")
+        """Initialise from the offending portal identifier alone."""
+        super().__init__(
+            context={"portal": portal},
+            translated_message=get_registered_error_code(type(self)).message_key,
+        )
         self.portal = portal
 
 

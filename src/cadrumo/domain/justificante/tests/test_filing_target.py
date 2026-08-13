@@ -47,7 +47,7 @@ def _receipt(**updates: object) -> Justificante:
         ({"modelo": "130"}, False),
         ({"ejercicio": "2024"}, False),
         ({"period": Period.from_year_and_code(2025, "2T")}, False),
-        ({"tax_id": "Y7654321Z"}, False),
+        ({"tax_id": "Y7654321G"}, False),
         # The receipt's own presentation identifier is not a matching axis, so
         # neither carrying a different one nor carrying none at all changes the
         # verdict. These two cases previously asserted the opposite.

@@ -17,7 +17,7 @@ from pathlib import Path
 from pydantic import AnyHttpUrl, BaseModel, Field, ValidationInfo, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG, Period, PeriodError
-from ...core.identity import AeatCsv, AeatPresentationId, ContentDigest, same_tax_identifier
+from ...core.identity import AeatCsv, AeatPresentationId, ContentDigest, SubjectTaxId, same_tax_identifier
 
 
 class JustificanteParserBackend(StrEnum):
@@ -70,7 +70,7 @@ class Justificante(BaseModel):
     period: Period
     presentation_id: AeatPresentationId | None = None
     presented_at: datetime
-    tax_id: str = Field(..., min_length=4, max_length=32)
+    tax_id: SubjectTaxId
     total_a_ingresar: Decimal | None = None
     total_a_devolver: Decimal | None = None
     verification_url: AnyHttpUrl

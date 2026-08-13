@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.identity import BucketId
 from ...core.time import UtcInstant
 
 __all__ = ["EvidenceConsentLedgerEntry", "evidence_consent_ledger_entry_object_key"]
@@ -37,7 +38,7 @@ class EvidenceConsentLedgerEntry(BaseModel):
     model_config = _STRICT_FROZEN
 
     entry_id: str = Field(min_length=1, description="Stable id for this ledger entry (a UUID4 hex).")
-    profile_bucket_id: str = Field(min_length=1, description="Encrypted bucket (profile) the dispatch ran under.")
+    profile_bucket_id: BucketId
     evidence_content_address: str = Field(
         min_length=1,
         description="SHA-256 content address of the evidence the acknowledgement covered.",

@@ -1644,7 +1644,7 @@ class OutOfWindowTransactionIndexEntry(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1, max_length=128)
+    transaction_id: TransactionId
     filing_date: date
 
 

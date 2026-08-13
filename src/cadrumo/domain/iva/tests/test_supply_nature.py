@@ -398,8 +398,7 @@ def test_a_category_the_catalogue_names_a_service_derives_services() -> None:
     for category in service_named:
         derivation = supply_nature_implied_by_category(category)
         assert derivation.nature is SupplyNature.SERVICES, (
-            f"{category.value} is named a service but its grounding derives "
-            f"{derivation.nature} ({derivation.outcome})"
+            f"{category.value} is named a service but its grounding derives {derivation.nature} ({derivation.outcome})"
         )
 
 

@@ -21,6 +21,8 @@ from .. import (
     UserProfileSchemaLoadError,
     load_user_profile_schema,
 )
+from .._errors import SCHEMA_LOAD_MESSAGE_KEY
+from .._loader import CONDITION_SCHEMA_PATH_STAT, CONDITION_SCHEMA_TABLE_PRESENT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -60,9 +62,11 @@ def test_missing_user_profile_schema_path_raises_typed_localized_error(tmp_path:
         load_user_profile_schema(missing)
 
     assert isinstance(exc_info.value.__cause__, FileNotFoundError)
-    assert exc_info.value.translated_message == "errors.fail.fail_user_profile_schema_load"
+    assert exc_info.value.translated_message == SCHEMA_LOAD_MESSAGE_KEY
+    assert str(exc_info.value) == SCHEMA_LOAD_MESSAGE_KEY
     assert exc_info.value.context == {
         "operation": "stat",
+        "condition": CONDITION_SCHEMA_PATH_STAT,
         "path": str(missing),
         "schema": "user_profile",
     }
@@ -76,9 +80,11 @@ def test_user_profile_schema_missing_tables_raises_structured_domain_error(tmp_p
         load_user_profile_schema(schema_path)
 
     assert exc_info.value.__cause__ is None
-    assert exc_info.value.translated_message == "errors.fail.fail_user_profile_schema_load"
+    assert exc_info.value.translated_message == SCHEMA_LOAD_MESSAGE_KEY
+    assert str(exc_info.value) == SCHEMA_LOAD_MESSAGE_KEY
     assert exc_info.value.context == {
         "operation": "validate",
+        "condition": CONDITION_SCHEMA_TABLE_PRESENT,
         "path": str(schema_path),
         "schema": "user_profile",
     }

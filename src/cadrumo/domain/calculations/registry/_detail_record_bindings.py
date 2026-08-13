@@ -12,6 +12,7 @@ from pydantic import BaseModel, BeforeValidator, Field, field_validator
 from ....core import STRICT_FROZEN_CONFIG, M720AssetClassCode, MetodoValoracion, TipoOperacionVinculada
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.external_constants import DEFAULT_CURRENCY
+from ....core.identity import TaxIdIdentityToken
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import (
     invariant_diagnostics,
@@ -115,7 +116,7 @@ class RelatedPartyOperationObservation(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     source_id: str = Field(min_length=1, max_length=128)
-    counterparty_tax_id: str = Field(min_length=1, max_length=64)
+    counterparty_tax_id: TaxIdIdentityToken
     counterparty_legal_name: str = Field(default="", max_length=200)
     # Required, and deliberately not defaulted to Spain. Modelo 232 declares
     # operations with países o territorios calificados como paraísos fiscales
@@ -392,7 +393,7 @@ class AtributionMemberObservation(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     source_id: str = Field(min_length=1, max_length=128)
-    member_tax_id: str = Field(min_length=1, max_length=64)
+    member_tax_id: TaxIdIdentityToken
     member_legal_name: str = Field(default="", max_length=200)
     country_code: str | None = Field(default=None, min_length=2, max_length=2)
     """The party's country, or ``None`` when the source stated none.
@@ -524,7 +525,7 @@ class RefundOperationObservation(BaseModel):
     member_state_code: str = Field(min_length=2, max_length=2)
     operation_kind_code: str = Field(min_length=1, max_length=4)
     operation_date: date
-    supplier_tax_id: str = Field(min_length=1, max_length=64)
+    supplier_tax_id: TaxIdIdentityToken
     refund_amount: Decimal
 
     _iso_code_uppercase = field_validator("member_state_code")(uppercase_alpha_code("member_state_code"))

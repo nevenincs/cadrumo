@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import COUNTERPART_SOURCE_KINDS, BindingSourceKind, CounterpartSourceKind
+from ....core.identity import TaxIdIdentityToken
 from ._binding_selector_utils import (
     intracommunity_clave_validator,
     invariant_diagnostics,
@@ -65,7 +66,7 @@ class CounterpartAggregationObservation(BaseModel):
         default=BindingSourceKind.LEDGER_TRANSACTION,
     )
     source_id: str = Field(min_length=1, max_length=128)
-    party_tax_id: str = Field(min_length=1, max_length=64)
+    party_tax_id: TaxIdIdentityToken
     country_code: str = Field(min_length=2, max_length=2)
     transaction_date: date
     base_amount: Decimal

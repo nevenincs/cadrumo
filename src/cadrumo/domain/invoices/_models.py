@@ -30,6 +30,7 @@ from ...core.identity import (
     BucketId,
     IdentityError,
     InvoiceId,
+    TaxIdIdentityToken,
     tax_id_identity_token,
     validate_spanish_tax_id,
 )
@@ -523,7 +524,7 @@ class Invoice(BaseModel):
     operation_date: date | None = None
     operation_date_role: InvoiceOperationDateRole | None = None
     counterparty_name: str = Field(min_length=1)
-    counterparty_tax_id: str | None = Field(default=None, min_length=1)
+    counterparty_tax_id: TaxIdIdentityToken | None = None
     counterparty_country: str = Field(min_length=2, max_length=2)
     # Which Member State IVA-IDENTIFIES the counterparty, read from the prefix
     # of the IVA number the document printed. A DIFFERENT fact from

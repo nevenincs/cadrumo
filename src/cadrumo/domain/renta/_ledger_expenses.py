@@ -21,6 +21,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Modelo, Period
+from ...core.identity import TransactionId
 from ..categories import (
     CategoryCitation,
     CategoryProfile,
@@ -147,7 +148,7 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
 class RentaDeductibleExpenseFact(_RentaStrictFrozenModel):
     """Canonical ledger fact eligible for Renta deductibility evaluation."""
 
-    transaction_id: str = Field(min_length=1, max_length=128)
+    transaction_id: TransactionId
     invoice_id: str | None = Field(default=None, min_length=1, max_length=128)
     catalogue_id: str = Field(min_length=1, max_length=128)
     operation_date: date
@@ -200,7 +201,7 @@ class RentaDeductibleExpenseFact(_RentaStrictFrozenModel):
 class RentaDeductibilityResult(_RentaStrictFrozenModel):
     """Deductibility evaluation result before registry binding resolution."""
 
-    transaction_id: str = Field(min_length=1, max_length=128)
+    transaction_id: TransactionId
     invoice_id: str | None = Field(default=None, min_length=1, max_length=128)
     category: SpendingCategory
     category_family: SpendingCategoryFamily
@@ -241,7 +242,7 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     tax_year: int = Field(ge=2000, le=2099)
     activity_key: str = Field(min_length=1, max_length=128)
     target_casilla_id: CasillaId
-    transaction_id: str = Field(min_length=1, max_length=128)
+    transaction_id: TransactionId
     invoice_id: str | None = Field(default=None, min_length=1, max_length=128)
     catalogue_id: str = Field(min_length=1, max_length=128)
     operation_date: date
