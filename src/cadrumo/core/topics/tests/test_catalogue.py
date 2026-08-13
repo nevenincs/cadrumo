@@ -26,7 +26,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...resources import resources
-from .. import Topic, TopicCatalogue, TopicNotFoundError, load_topic_catalogue
+from .. import Topic, TopicCatalogue, TopicCatalogueEmptyError, TopicNotFoundError, load_topic_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -106,21 +106,23 @@ def test_empty_catalogue_directory_refuses_with_its_own_locale_key(tmp_path: Pat
     """An empty registry directory refuses distinctly from a missing slug.
 
     A bundled catalogue carrying no TOML is a different failure from a slug the
-    operator mistyped, so it must not borrow the not-found sentence. The loader
-    runs against a real empty directory rather than a patched fingerprint.
+    operator mistyped, so it carries its own registered code rather than
+    borrowing the not-found identity. The loader runs against a real empty
+    directory rather than a patched fingerprint.
 
     As with the missing-slug refusal, the key and facts alone would stay green
     against re-introduced English prose; ``str(exc)`` degrading to the key is
     what proves this raise site authors no sentence.
     """
-    from ...errors import resolve_error_message
+    from ...errors import get_registered_error_code, resolve_error_message
 
-    with pytest.raises(TopicNotFoundError) as raised:
+    with pytest.raises(TopicCatalogueEmptyError) as raised:
         load_topic_catalogue(tmp_path)
 
     error = raised.value
-    assert error.translated_message == "core.topics.errors.catalogue_empty"
-    assert error.context == {"catalogue_root": str(tmp_path.resolve())}
+    assert error.translated_message == "errors.refused.refused_topic_catalogue_empty"
+    assert error.context == {"catalogue_root": str(tmp_path.resolve()), "topic_count": 0}
+    assert get_registered_error_code(error).code == "REFUSED_TOPIC_CATALOGUE_EMPTY"
     assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
     resolved = resolve_error_message(error)
     assert resolved and resolved != error.translated_message
@@ -179,6 +181,7 @@ _EXPECTED_PUBLIC_EXPORTS = frozenset(
     {
         "Topic",
         "TopicCatalogue",
+        "TopicCatalogueEmptyError",
         "TopicNotFoundError",
         "load_topic_catalogue",
     },

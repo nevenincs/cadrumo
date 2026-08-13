@@ -44,6 +44,15 @@ class TopicNotFoundError(_CadrumoError):
     """Raised when a requested slug is absent from a :class:`TopicCatalogue`."""
 
 
+class TopicCatalogueEmptyError(_CadrumoError):
+    """Raised when the bundled catalogue directory declares no topic at all.
+
+    A directory carrying no TOML is an integrity failure of the shipped
+    registry, not an operator mistyping a slug, so it carries its own
+    registered code rather than borrowing the not-found identity.
+    """
+
+
 class Topic(BaseModel):
     """One conceptual topic.
 
@@ -89,7 +98,10 @@ class TopicCatalogue(BaseModel):
         for topic in self.topics:
             if topic.slug == slug:
                 return topic
-        raise TopicNotFoundError(f"topic not found: {slug!r}")
+        raise TopicNotFoundError(
+            context={"slug": slug},
+            translated_message="errors.refused.refused_topic_not_found",
+        )
 
     def slugs(self) -> tuple[str, ...]:
         """Return every registered slug sorted alphabetically."""
@@ -134,13 +146,17 @@ def _load_topic_catalogue_cached(
             ),
         )
     if not topics:
-        raise TopicNotFoundError(f"topic catalogue at {target} is empty")
+        raise TopicCatalogueEmptyError(
+            context={"catalogue_root": str(target), "topic_count": 0},
+            translated_message="errors.refused.refused_topic_catalogue_empty",
+        )
     return TopicCatalogue(topics=tuple(topics))
 
 
 __all__ = [
     "Topic",
     "TopicCatalogue",
+    "TopicCatalogueEmptyError",
     "TopicNotFoundError",
     "load_topic_catalogue",
 ]
