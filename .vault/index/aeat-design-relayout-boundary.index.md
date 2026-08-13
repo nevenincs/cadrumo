@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:ba972050b3cf6021fa5f99b4d43dbe4eca5b635bb28d1cbcb0f03ae0b4b3662a'
+body_hash: 'sha256:f7c4108fadb8c39b7e3c38bc4a8c81a74092c2354e00190cb64113ab96d0ac13'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -27,6 +27,7 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S71]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S72]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S73]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S78]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S79]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S80]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S11]]'
@@ -35,6 +36,7 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S14]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S74]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W04-P09-S43]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W04-P09-S44]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-modelo-200-partition-adr]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
@@ -80,6 +82,8 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-08-08-aeat-design-relayout-boundary-W01-P03-S14` - Handle the ambiguity refusal in the registry describe and bindings query
 - `2026-08-08-aeat-design-relayout-boundary-W01-P03-S74` - Record and verify that the profile inspect surface already refuses on the ambiguity error
 - `2026-08-08-aeat-design-relayout-boundary-W04-P09-S43` - Narrow the Modelo 200 revision to filing year 2025 onward
+- `2026-08-08-aeat-design-relayout-boundary-W01-P02-S78` - Establish Modelo 200's export fragment tree provenance and author method
+- `2026-08-08-aeat-design-relayout-boundary-W04-P09-S44` - Do not retire the Modelo 200 revision directory
 
 ### plan
 
