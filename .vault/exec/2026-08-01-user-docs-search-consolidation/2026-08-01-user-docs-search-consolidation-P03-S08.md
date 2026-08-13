@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-05'
-modified: '2026-08-12'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:5f65bd237fa01b958721e3308de21d6912ad88bad92a07dcfe4b0f20db3b0e2e'
+body_hash: 'sha256:6ca73e2b8eee1065886acd7fbf2efccc99c714368fb24b1bed82d02decfb0a07'
 step_id: 'S08'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -138,3 +138,20 @@ The row stays OPEN on its second half. It requires the same probes re-run agains
 ### 2026-08-12 the deployed-half blocker changed composition; the row is unchanged
 
 The AWS-credential blocker the deployed half depends on through P04.S12/S13 is cleared: `aws sts get-caller-identity` now succeeds. That does not close this row. The live read-only probe is unchanged -- `/docs/` answers 200, `/docs/es/`, `/docs/ca/`, `/docs/hu/` answer 404 -- and P04.S12/S13 remain open on a separate blocker outside this campaign: 29 modules across other campaigns' surfaces still carry no API stub, so the strict full build the publish path runs first has no confirmed green run. The built-site half proven in the entry above is untouched. P03.S08 stays open pending the deployment-side evidence those two rows own.
+
+### 2026-08-13 the built half is green, and the row's stated blocker was a recipe defect
+
+The row's precondition was investigated rather than accepted, and it did not hold as written. It claimed the built half was blocked because "the local build carries only one of the three localized roots" and that "the justfile already declares one recipe per language". Both observations were real. The inference was not.
+
+**The recipes never built language roots at all.** In the build driver, `--language` selects the CATALOGUE and `--out-dir` is the only thing that puts a build in a per-language subdirectory. `docs-lang` and `docs-langs` passed `--language` alone, so each localized build rendered into the canonical English root at `docs/_build/html` and, because `output_root` was `None`, cleared that root's non-canonical entries on the way in. Three languages in sequence therefore overwrote one another in the English root and produced no language root whatsoever. That is exactly the artefact the row observed: an `es` directory holding stale subdirectories and not one rendered page, with no `ca` or `hu` beside it. Confirmed live — a run launched from the recipe was traced to a `sphinx -b html ... docs\_build\html` process, targeting the English root while nominally building Spanish. It was stopped before it reached its write phase, and the English root was verified intact afterwards.
+
+Fixed in `b9441f3f8f`: both recipes now pass `--out-dir docs/_build/html/<lang>`, matching what the deploy publisher has always done, with the reason recorded beside them so the distinction is not re-lost.
+
+**The gate does not depend on that precondition, by design.** `_root_page_corpus` prefers a real localized root when one exists and otherwise takes the real English pages and retargets the single signal Pagefind reads to decide a page's language, the `<html lang>` attribute. Its docstring states why: the property under test is WHICH index the records land in relative to the pages, the language attribute alone decides that, and the localized Sphinx builds themselves are covered by `test_docs_build_localized`. The probes assert recall of the injected RECORDS, which carry the all-language content blob on every root regardless of the surrounding prose. So the claim is honestly established by the gate as designed.
+
+**Result.** `uv run --no-sync pytest -q -m integration dev/docs/tests/test_deployment_search_parity.py` — **26 passed in 634.49s**. That covers `test_every_root_recalls_a_record_by_its_declared_terms_in_any_language` and `test_every_root_recalls_a_casilla_by_its_declared_localized_terms`, each parametrised over `en`, `es`, `ca` and `hu`, run through real Pagefind indices in a real browser via `pagefind.js`, plus per-root corpus placement, cross-root record-count parity, and per-root kind narrowing.
+
+Two shared-tree conditions were met and re-run rather than triaged as regressions, both outside this campaign's surface and both transient mid-edit states of live peer work: a `RegistryLoadError` on duplicate catalogue ids in an untracked `legal/iva-dana-2024.toml`, and an `ImportError` for `AEAT_THOUSANDS_SEPARATORS` from `cadrumo.core.decimal` during a peer relocation that was mid-write. Neither file was touched. Both resolved on their own and the re-run was clean.
+
+What this does NOT establish: nothing about any deployed root. The original row's second clause — re-probing the deployed roots so a CI pass can never mask a broken live root — is precisely the claim a green built-site run cannot substitute for, and it is now carried by its own row.
+
