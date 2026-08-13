@@ -70,6 +70,41 @@ Two further hazards, both measured rather than anticipated:
 * **Article-scoped is not always small.** Art. 90 is 8 KB; art. 91 is 952 KB
   across 41 redactions, because payload size tracks amendment history rather
   than article length.
+
+==========================================================
+The THIRD endpoint: as-published text BOE never consolidated
+==========================================================
+
+``fetch_published_document`` reads ``doc.php``, the single-document view. It
+exists because a class of BOE instruments has no consolidated text at all -- a
+``corrección de errores`` is published once and never amended, so ``act.php``
+redirects to ``doc.php`` and every consolidated-shape invariant above refuses
+it correctly. Bilateral tax conventions are the same shape, which is why their
+bundled excerpts' permalinks already point at ``doc.php``.
+
+**Its invariants are the mirror image of the consolidated ones, and the danger
+is the mirror image too.** ``act.php`` can serve a superseded redaction, so the
+guard there is "serve each bloque's latest version". ``doc.php`` always serves
+the text exactly as first published, so the guard here is "prove BOE holds no
+consolidated text for this id" -- otherwise the as-published copy of an amended
+norm lands in the corpus as authoritative, which is the very defect the
+consolidated guards exist to prevent, reached through the other door. That
+proof cannot be read off the payload, so it costs one extra request.
+
+==========================================================
+Line endings are canonicalised on write, deliberately
+==========================================================
+
+BOE's response line endings are not stable: measured, the consolidated pages
+for RDL 6/2024 and RDL 7/2024 carry 181 CRLF pairs each, all inside the
+``<script>`` chrome, while ``boe-a-2024-12944`` carries none. The bundled
+corpus is hashed and those hashes are pinned in the registry's source
+catalogue, so a payload whose line endings vary by fetch (or by a checkout's
+autocrlf) produces a different digest for identical legal text. Every writer
+here therefore normalises CRLF to LF before writing. It is a line-terminator
+canonicalisation and nothing else -- no character of legal text is touched --
+and it is what makes ``sha256`` a stable identity for the document rather than
+for one fetch of it.
 """
 
 from __future__ import annotations
@@ -89,6 +124,7 @@ if str(_ROOT) not in sys.path:  # pragma: no cover - import bootstrap
 
 _CORPUS: Final[Path] = _ROOT / "src/cadrumo/_data/corpus/normatives/html"
 _ACT_URL: Final[str] = "https://www.boe.es/buscar/act.php"
+_DOC_URL: Final[str] = "https://www.boe.es/buscar/doc.php"
 _ARTICLE_URL: Final[str] = (
     "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/{document_id}/texto/bloque/{block}"
 )
@@ -118,9 +154,58 @@ _DOCUMENT_ID = re.compile(
     re.IGNORECASE,
 )
 
+#: The single-document view's server-emitted self-identification. Preferred
+#: over the id echoed into the page body because it names the ENDPOINT as well
+#: as the id, so it cannot be satisfied by a consolidated page that merely
+#: mentions the same document.
+_CANONICAL_LINK = re.compile(
+    r"<link\b[^>]*\brel=\"canonical\"[^>]*\bhref=\"(?P<href>[^\"]+)\"",
+    re.IGNORECASE,
+)
+
+_CRLF: Final[bytes] = b"\r\n"
+_LF: Final[bytes] = b"\n"
+
 
 class NormativeAcquisitionError(RuntimeError):
     """The payload cannot be shown to be the consolidated text in force."""
+
+
+def canonical_lf_bytes(data: bytes) -> bytes:
+    """Return ``data`` with CRLF line terminators normalised to LF.
+
+    Applied by every writer in this module so a document's ``sha256`` is an
+    identity for the document rather than for one fetch of it. See the module
+    docstring for the measurement that motivates it.
+
+    Args:
+        data: The fetched payload bytes.
+
+    Returns:
+        The same bytes with every CRLF replaced by a bare LF.
+    """
+    return data.replace(_CRLF, _LF)
+
+
+def _write_verified(destination: Path, data: bytes) -> Path:
+    """Write canonicalised bytes and read them back before returning the path.
+
+    Args:
+        destination: Path under the bundled corpus to write.
+        data: The fetched payload bytes, pre-canonicalisation.
+
+    Returns:
+        The written path.
+
+    Raises:
+        NormativeAcquisitionError: If the read-back does not match.
+    """
+    canonical = canonical_lf_bytes(data)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_bytes(canonical)
+    if destination.read_bytes() != canonical:
+        raise NormativeAcquisitionError(f"read-back of {destination} does not match the fetched bytes")
+    return destination
 
 
 @dataclass(frozen=True)
@@ -294,12 +379,7 @@ def fetch_normative(
     if missing:
         raise NormativeAcquisitionError(f"fetched {document_id} but these required phrases are absent: {missing}")
 
-    destination = _CORPUS / destination_name
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_bytes(data)
-    if destination.read_bytes() != data:
-        raise NormativeAcquisitionError(f"read-back of {destination} does not match the fetched bytes")
-    return destination
+    return _write_verified(_CORPUS / destination_name, data)
 
 
 @dataclass(frozen=True)
@@ -465,9 +545,133 @@ def fetch_article(
             f"fetched {document_id} block {block} but these required phrases are absent: {missing}"
         )
 
-    destination = _CORPUS / destination_name
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_bytes(data)
-    if destination.read_bytes() != data:
-        raise NormativeAcquisitionError(f"read-back of {destination} does not match the fetched bytes")
-    return destination
+    return _write_verified(_CORPUS / destination_name, data)
+
+
+def assert_serves_the_published_document(payload: str, *, document_id: str) -> None:
+    """Refuse a payload that is not this document's own single-document view.
+
+    Two refusals, both reading the payload alone:
+
+    One refusal, and deliberately only one: the server-emitted ``rel="canonical"``
+    link must name this endpoint and this id. It is preferred over the id echoed
+    into the page body, which any view of the document satisfies, and it is the
+    whole of what a payload can establish here.
+
+    **It does NOT establish that the document is un-consolidated, and no payload
+    check can.** Measured against live BOE: ``doc.php?id=BOE-A-2024-23422`` --
+    a norm BOE does consolidate -- returns a 618 KB as-published page whose
+    canonical link names ``doc.php`` and which carries no version selector at
+    all, so it is shape-identical to the corrección de errores this function was
+    written for. That is why :func:`assert_boe_holds_no_consolidated_text` costs
+    a second request instead of reading a flag off these bytes: it is the only
+    thing standing between the corpus and an as-published redaction of an
+    amended norm.
+
+    Args:
+        payload: The decoded response body.
+        document_id: The BOE identifier the caller asked for.
+
+    Raises:
+        NormativeAcquisitionError: If the payload is not this document's own
+            single-document view.
+    """
+    found = _CANONICAL_LINK.search(payload)
+    canonical = found.group("href").strip() if found else None
+    expected = f"{_DOC_URL}?id={document_id}"
+    if canonical != expected:
+        raise NormativeAcquisitionError(f"payload declares canonical URL {canonical!r}, not the requested {expected!r}")
+
+
+def assert_boe_holds_no_consolidated_text(*, document_id: str, client: httpx.Client) -> None:
+    """Refuse an as-published fetch of a document BOE also consolidates.
+
+    This is the guard that makes :func:`fetch_published_document` safe. The
+    single-document view serves the text exactly as first published and never
+    reflects a later amendment, so bundling it for a norm that HAS been amended
+    stores repealed law under a current filename -- the same defect the
+    consolidated fetcher's redaction invariant exists to prevent, reached
+    through the other endpoint. No payload can state its own absence from the
+    consolidated collection -- and, measured, the single-document view of a
+    consolidated norm is indistinguishable in shape from that of an
+    un-consolidated one -- so the fact is established by asking for it: a
+    request for the consolidated view that is still served BY the consolidated
+    view, and that carries a version selector, proves consolidated text exists.
+
+    A redirect away from ``act.php`` is the expected, accepted answer -- it is
+    exactly how BOE says "there is no consolidated text for this id".
+
+    Args:
+        document_id: The BOE identifier being acquired as-published.
+        client: The HTTP client to probe with, shared with the caller's fetch.
+
+    Raises:
+        NormativeAcquisitionError: If BOE serves consolidated text for the id.
+    """
+    response = client.get(_ACT_URL, params={"id": document_id})
+    response.raise_for_status()
+    served = urlsplit(str(response.url))
+    wanted = urlsplit(_ACT_URL)
+    if (served.scheme, served.netloc, served.path) != (wanted.scheme, wanted.netloc, wanted.path):
+        return
+    if not version_selections(response.content.decode("utf-8", errors="replace")):
+        return
+    raise NormativeAcquisitionError(
+        f"BOE serves consolidated text for {document_id}, so the as-published view would bundle the "
+        "original redaction of a norm that may since have been amended; use fetch_normative instead"
+    )
+
+
+def fetch_published_document(
+    *,
+    document_id: str,
+    destination_name: str,
+    required_text: tuple[str, ...] = (),
+    client: httpx.Client | None = None,
+) -> Path:
+    """Fetch one as-published BOE document BOE holds no consolidated text for.
+
+    The shape for instruments that are published once and never amended -- a
+    ``corrección de errores`` is the canonical case, and a bilateral tax
+    convention is the other. For anything BOE consolidates, this refuses and
+    directs the caller to :func:`fetch_normative`.
+
+    Args:
+        document_id: The BOE identifier, e.g. ``BOE-A-2024-24097``.
+        destination_name: Filename under ``corpus/normatives/html/``.
+        required_text: Phrases that must appear in the fetched bytes.
+        client: Injected for testing; a real client is created when omitted.
+
+    Returns:
+        The written path.
+
+    Raises:
+        NormativeAcquisitionError: If the response came from another endpoint,
+            the payload is not this document's single-document view, BOE also
+            consolidates the id, a ``required_text`` phrase is absent, or the
+            read-back does not match.
+    """
+    owned = client is None
+    http = client or httpx.Client(
+        follow_redirects=True,
+        timeout=90,
+        headers={"User-Agent": "cadrumo-corpus-hydration/1.0"},
+    )
+    try:
+        response = http.get(_DOC_URL, params={"id": document_id})
+        response.raise_for_status()
+        assert_served_by_the_requested_endpoint(final_url=str(response.url), requested_url=_DOC_URL)
+        data = response.content
+        assert_boe_holds_no_consolidated_text(document_id=document_id, client=http)
+    finally:
+        if owned:
+            http.close()
+
+    payload = data.decode("utf-8", errors="replace")
+    assert_serves_the_published_document(payload, document_id=document_id)
+
+    missing = [phrase for phrase in required_text if phrase not in payload]
+    if missing:
+        raise NormativeAcquisitionError(f"fetched {document_id} but these required phrases are absent: {missing}")
+
+    return _write_verified(_CORPUS / destination_name, data)
