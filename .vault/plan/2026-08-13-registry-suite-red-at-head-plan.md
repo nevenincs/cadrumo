@@ -4,7 +4,7 @@ tags:
   - '#registry-suite-red-at-head'
 date: '2026-08-13'
 modified: '2026-08-13'
-body_hash: 'sha256:22c38d347d1276dcf9f6bcb13e01267ac6e22800ca46edc561e0a947829071b9'
+body_hash: 'sha256:55ad2a6540a65f412c72002a94b9a8a4e172dfe7cd6e4abed978d6d26d852720'
 tier: L2
 related:
   - '[[2026-08-13-registry-suite-red-at-head-audit]]'
@@ -72,7 +72,7 @@ Three surfaces currently mislead: the relation consistency check fails on its ow
 The M322, M353 and M390 manual worked examples fail at fixture construction, before any figure is compared, so they are dark rather than red: they neither prove the engine right nor prove it wrong. Until they execute, the honest position is that these IVA figures are unverified rather than incorrect. In every row in this Phase the sweep is not the deliverable, the re-run is.
 
 - [x] `P02.S05` - Sweep the IvaLedgerObservation fixture builders to declare the deduction authority the real projection carries, deriving it from the invoice classification path rather than choosing a kind that makes the test pass; `src/cadrumo/domain/calculations/registry/tests/`.
-- [ ] `P02.S11` - Re-run the M322, M353 and M390 manual worked examples and confirm each reproduces its AEAT figure, treating a swept fixture whose oracle has not executed as not done; `src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `P02.S11` - Re-run the M322, M353 and M390 manual worked examples and confirm each reproduces its AEAT figure, treating a swept fixture whose oracle has not executed as not done; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `P02.S07` - Sweep the IvaLedgerSelector fixtures for the two required axes and confirm each pytest.raises case still fires its originally asserted refusal rather than loosening the match; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `P02.S08` - Supply the renta-2024 maternidad profile binding to the registry-layer M100 harnesses from the production derivation authority, never a hand-picked literal; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `P02.S09` - Sweep the Justificante fixtures onto the constrained AeatCsv alias, coordinating with the canonical-identifiers owner before editing; `src/cadrumo/domain/calculations/registry/tests/`.
