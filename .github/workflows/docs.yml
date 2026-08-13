@@ -45,11 +45,30 @@ on:
       - "src/cadrumo/_data/terminology/**"
       - ".github/workflows/docs.yml"
 
-# A docs run is a disposable signal for the newest push, like the other per-push
-# lanes: the next push supersedes it.
+# Push runs QUEUE; pull-request runs supersede — the same split ci.yml already
+# carries, and for the same measured reason.
+#
+# THIS LANE HAD NEVER PRODUCED A SUCCESS. Measured over its last 12 runs: 10
+# cancelled, 2 failed, 0 succeeded. Every push to `main` shares `github.ref`,
+# so with an unconditional `cancel-in-progress` each push killed the run the
+# previous push started, and at this fleet's commit rate no run outlived the
+# interval to the next one. The comment this replaces called a docs run "a
+# disposable signal for the newest push", which is true of the INTENT and was
+# false of the effect: a signal that never arrives is not disposable, it is
+# absent, and a cancelled run reports identically to a run that never started.
+#
+# THE CANCELLATION BOUGHT NOTHING. With `cancel-in-progress` absent only ONE
+# run may be pending in a group, and a newly queued run cancels the previously
+# pending one — so both settings cap this lane at one in flight and one
+# waiting, differing only in whether the in-flight run is allowed to finish.
+# The runners are self-hosted and consume no Actions minutes, so there is no
+# billing saving either.
+#
+# The cost that is real: a completed verdict may name a sha a few commits old.
+# That is strictly better than the no-verdict-at-all this replaces.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
