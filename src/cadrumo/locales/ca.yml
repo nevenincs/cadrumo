@@ -5417,9 +5417,9 @@ cli:
       sobrenotificar un esborrany en curs com a encara pendent o ometre esborranys
       en curs més antics.
     notificacion:
-      rechazo_tacito_summary: '%{count} notificació(ns) de lAEAT estan legalment notificades
-        per rebuig tàcit (Llei 39/2015 art. 43.2): %{certificados}. Els terminis ja
-        estan corrent.'
+      rechazo_tacito_summary: '%{count} notificació(ns) de l''AEAT estan legalment
+        notificades per rebuig tàcit (Llei 39/2015 art. 43.2): %{certificados}. Els
+        terminis ja estan corrent.'
     period: Període
     period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
       0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
