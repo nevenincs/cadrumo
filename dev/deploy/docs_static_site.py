@@ -477,13 +477,16 @@ def _write_language_entry(html_root: Path) -> Path:
 def _validate_language_entry(html_root: Path) -> None:
     """Require the apex entry to exist and to reach every published root.
 
-    This replaces the artifact check the apex used to get as the English site.
-    It cannot be the same check: the sitemap, the 404 page and the Pagefind
-    bundle now live inside each language root, so asserting them here would
-    demand files that correctly moved. What the apex owes instead is that it
-    exists and that no root is unreachable from it -- a language built, uploaded
-    and then absent from the entry is invisible to every reader who does not
+    This is the REACHABILITY half of what the apex owes, and only that half: it
+    exists and no root is unreachable from it. A language built, uploaded and
+    then absent from the entry is invisible to every reader who does not
     already know its URL, and nothing else in the pipeline would notice.
+
+    The apex's own artifact set -- its sitemap, 404 page and Pagefind bundle,
+    which it still carries as the English full-scope site -- is required by
+    :func:`_validate_site_artifacts` inside the shared composition, not here.
+    Every language root carries its own copies too, so neither check is the
+    other's substitute.
     """
     entry = html_root / "index.html"
     if not entry.is_file():
@@ -961,7 +964,17 @@ def _build_site_roots(repo_root: Path) -> Path:
 
 
 def _validate_built_site(html_root: Path) -> None:
-    """Run every validation a publish runs against the built tree before uploading."""
+    """Run every validation a publish runs against the built tree before uploading.
+
+    The apex is validated here as a root in its own right, not only as the
+    language entry. It carries the English full-scope site — the API tree lives
+    nowhere else — and its own Pagefind bundle, which
+    :func:`_verify_published_search_index` demands back from the served site
+    AFTER the upload and the cache invalidation. Checking it only there means a
+    publish that cannot succeed still writes to the live destination first, so
+    the same artifact set is required before a byte moves.
+    """
+    _validate_site_artifacts(html_root)
     _validate_language_entry(html_root)
     _validate_language_roots(html_root)
 
