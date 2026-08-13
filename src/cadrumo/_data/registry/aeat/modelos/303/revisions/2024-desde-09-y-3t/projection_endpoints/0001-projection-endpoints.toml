@@ -613,7 +613,7 @@ projection_kind = "m303_regimen_simplificado_module"
 cohort = "no_agricola"
 slot = 1
 module_order = 1
-value = "off_form_result"
+value = "cuota_devengada"
 
 [[revisions."2024-desde-09-y-3t".projection_endpoints]]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -633,7 +633,7 @@ projection_kind = "m303_regimen_simplificado_module"
 cohort = "no_agricola"
 slot = 1
 module_order = 2
-value = "off_form_result"
+value = "cuota_devengada"
 
 [[revisions."2024-desde-09-y-3t".projection_endpoints]]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -653,7 +653,7 @@ projection_kind = "m303_regimen_simplificado_module"
 cohort = "no_agricola"
 slot = 1
 module_order = 3
-value = "off_form_result"
+value = "cuota_devengada"
 
 [[revisions."2024-desde-09-y-3t".projection_endpoints]]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -673,7 +673,7 @@ projection_kind = "m303_regimen_simplificado_module"
 cohort = "no_agricola"
 slot = 1
 module_order = 4
-value = "off_form_result"
+value = "cuota_devengada"
 
 [[revisions."2024-desde-09-y-3t".projection_endpoints]]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -693,7 +693,7 @@ projection_kind = "m303_regimen_simplificado_module"
 cohort = "no_agricola"
 slot = 1
 module_order = 5
-value = "off_form_result"
+value = "cuota_devengada"
 
 [[revisions."2024-desde-09-y-3t".projection_endpoints]]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -713,7 +713,7 @@ projection_kind = "m303_regimen_simplificado_module"
 cohort = "no_agricola"
 slot = 1
 module_order = 6
-value = "off_form_result"
+value = "cuota_devengada"
 
 [[revisions."2024-desde-09-y-3t".projection_endpoints]]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -733,7 +733,7 @@ projection_kind = "m303_regimen_simplificado_module"
 cohort = "no_agricola"
 slot = 1
 module_order = 7
-value = "off_form_result"
+value = "cuota_devengada"
 
 [[revisions."2024-desde-09-y-3t".projection_endpoints]]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -780,7 +780,7 @@ projection_kind = "m303_regimen_simplificado_module"
 cohort = "no_agricola"
 slot = 2
 module_order = 1
-value = "off_form_result"
+value = "cuota_devengada"
 
 [[revisions."2024-desde-09-y-3t".projection_endpoints]]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -800,7 +800,7 @@ projection_kind = "m303_regimen_simplificado_module"
 cohort = "no_agricola"
 slot = 2
 module_order = 2
-value = "off_form_result"
+value = "cuota_devengada"
 
 [[revisions."2024-desde-09-y-3t".projection_endpoints]]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -820,7 +820,7 @@ projection_kind = "m303_regimen_simplificado_module"
 cohort = "no_agricola"
 slot = 2
 module_order = 3
-value = "off_form_result"
+value = "cuota_devengada"
 
 [[revisions."2024-desde-09-y-3t".projection_endpoints]]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -840,7 +840,7 @@ projection_kind = "m303_regimen_simplificado_module"
 cohort = "no_agricola"
 slot = 2
 module_order = 4
-value = "off_form_result"
+value = "cuota_devengada"
 
 [[revisions."2024-desde-09-y-3t".projection_endpoints]]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -860,7 +860,7 @@ projection_kind = "m303_regimen_simplificado_module"
 cohort = "no_agricola"
 slot = 2
 module_order = 5
-value = "off_form_result"
+value = "cuota_devengada"
 
 [[revisions."2024-desde-09-y-3t".projection_endpoints]]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -880,7 +880,7 @@ projection_kind = "m303_regimen_simplificado_module"
 cohort = "no_agricola"
 slot = 2
 module_order = 6
-value = "off_form_result"
+value = "cuota_devengada"
 
 [[revisions."2024-desde-09-y-3t".projection_endpoints]]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -900,7 +900,7 @@ projection_kind = "m303_regimen_simplificado_module"
 cohort = "no_agricola"
 slot = 2
 module_order = 7
-value = "off_form_result"
+value = "cuota_devengada"
 
 [[revisions."2024-desde-09-y-3t".projection_endpoints]]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

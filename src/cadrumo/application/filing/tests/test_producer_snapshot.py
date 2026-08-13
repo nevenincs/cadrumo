@@ -188,8 +188,8 @@ def _m303_filing_facts_payload(
     return payload
 
 
-def _m303_filing_facts(*, period_code: str = "4T") -> M303FilingFacts:
-    period = Period.from_year_and_code(2026, period_code)
+def _m303_filing_facts(*, filing_year: int = 2026, period_code: str = "4T") -> M303FilingFacts:
+    period = Period.from_year_and_code(filing_year, period_code)
     register, bienes_register, regularisation = _empty_m303_export_arrivals(period.filing_year)
     evidence = _m303_instance_evidence(period)
     return M303FilingFacts(

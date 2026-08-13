@@ -926,7 +926,6 @@ application:
           legal ni sus fuentes.
         binding_row_key_not_positive_integer: La clave de fila de una entrada de binding
           debe ser un entero positivo.
-        binding_source_not_typed: El binding del registro declara un origen sin tipar.
         binding_text_value_invalid: El valor de texto del binding no corresponde al
           tipo de dato declarado en el registro.
         binding_value_not_boolean: El valor de entrada del binding no es un sí o no
@@ -69855,44 +69854,6 @@ modelo:
             '99':
               help: null
               label: null
-            modulos-iva-1-unidades:
-              help: null
-              label: 'Módulo 1 (Personal empleado): número de unidades'
-            modulos-iva-2-unidades:
-              help: null
-              label: 'Módulo 2 (unidad actividad-específica: distancia recorrida,
-                carga vehículos o superficie del local): número de unidades'
-            modulos-iva-3-unidades:
-              help: null
-              label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
-                u otra): número de unidades'
-            modulos-iva-4-unidades:
-              help: null
-              label: 'Módulo 4 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-5-unidades:
-              help: null
-              label: 'Módulo 5 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-6-unidades:
-              help: null
-              label: 'Módulo 6 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-7-unidades:
-              help: null
-              label: 'Módulo 7 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-cuota-derivada:
-              help: null
-              label: Cuota derivada del régimen simplificado (mayor de cuota devengada
-                neta de deducibles/forfait, o cuota mínima)
-            modulos-iva-cuota-devengada:
-              help: null
-              label: Cuota devengada por operaciones corrientes (Σ unidades módulo
-                × cuota devengada anual por unidad)
-            modulos-iva-orden-id:
-              help: null
-              label: Epígrafe IAE de la actividad en régimen simplificado de IVA (módulos)
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: null
@@ -70520,44 +70481,6 @@ modelo:
             '99':
               help: null
               label: null
-            modulos-iva-1-unidades:
-              help: null
-              label: 'Módulo 1 (Personal empleado): número de unidades'
-            modulos-iva-2-unidades:
-              help: null
-              label: 'Módulo 2 (unidad actividad-específica: distancia recorrida,
-                carga vehículos o superficie del local): número de unidades'
-            modulos-iva-3-unidades:
-              help: null
-              label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
-                u otra): número de unidades'
-            modulos-iva-4-unidades:
-              help: null
-              label: 'Módulo 4 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-5-unidades:
-              help: null
-              label: 'Módulo 5 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-6-unidades:
-              help: null
-              label: 'Módulo 6 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-7-unidades:
-              help: null
-              label: 'Módulo 7 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-cuota-derivada:
-              help: null
-              label: Cuota derivada del régimen simplificado (mayor de cuota devengada
-                neta de deducibles/forfait, o cuota mínima)
-            modulos-iva-cuota-devengada:
-              help: null
-              label: Cuota devengada por operaciones corrientes (Σ unidades módulo
-                × cuota devengada anual por unidad)
-            modulos-iva-orden-id:
-              help: null
-              label: Epígrafe IAE de la actividad en régimen simplificado de IVA (módulos)
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: null
@@ -71185,44 +71108,6 @@ modelo:
             '99':
               help: null
               label: null
-            modulos-iva-1-unidades:
-              help: null
-              label: 'Módulo 1 (Personal empleado): número de unidades'
-            modulos-iva-2-unidades:
-              help: null
-              label: 'Módulo 2 (unidad actividad-específica: distancia recorrida,
-                carga vehículos o superficie del local): número de unidades'
-            modulos-iva-3-unidades:
-              help: null
-              label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
-                u otra): número de unidades'
-            modulos-iva-4-unidades:
-              help: null
-              label: 'Módulo 4 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-5-unidades:
-              help: null
-              label: 'Módulo 5 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-6-unidades:
-              help: null
-              label: 'Módulo 6 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-7-unidades:
-              help: null
-              label: 'Módulo 7 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-cuota-derivada:
-              help: null
-              label: Cuota derivada del régimen simplificado (mayor de cuota devengada
-                neta de deducibles/forfait, o cuota mínima)
-            modulos-iva-cuota-devengada:
-              help: null
-              label: Cuota devengada por operaciones corrientes (Σ unidades módulo
-                × cuota devengada anual por unidad)
-            modulos-iva-orden-id:
-              help: null
-              label: Epígrafe IAE de la actividad en régimen simplificado de IVA (módulos)
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: null
@@ -71850,44 +71735,6 @@ modelo:
             '99':
               help: null
               label: null
-            modulos-iva-1-unidades:
-              help: null
-              label: 'Módulo 1 (Personal empleado): número de unidades'
-            modulos-iva-2-unidades:
-              help: null
-              label: 'Módulo 2 (unidad actividad-específica: distancia recorrida,
-                carga vehículos o superficie del local): número de unidades'
-            modulos-iva-3-unidades:
-              help: null
-              label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
-                u otra): número de unidades'
-            modulos-iva-4-unidades:
-              help: null
-              label: 'Módulo 4 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-5-unidades:
-              help: null
-              label: 'Módulo 5 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-6-unidades:
-              help: null
-              label: 'Módulo 6 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-7-unidades:
-              help: null
-              label: 'Módulo 7 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-cuota-derivada:
-              help: null
-              label: Cuota derivada del régimen simplificado (mayor de cuota devengada
-                neta de deducibles/forfait, o cuota mínima)
-            modulos-iva-cuota-devengada:
-              help: null
-              label: Cuota devengada por operaciones corrientes (Σ unidades módulo
-                × cuota devengada anual por unidad)
-            modulos-iva-orden-id:
-              help: null
-              label: Epígrafe IAE de la actividad en régimen simplificado de IVA (módulos)
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: null
@@ -72587,45 +72434,6 @@ modelo:
               help: null
               label: Operaciones realizadas en el ejercicio - Entregas de bienes de
                 inversión
-            modulos-iva-1-unidades:
-              help: null
-              label: 'Módulo 1 (Personal empleado): número de unidades'
-            modulos-iva-2-unidades:
-              help: null
-              label: 'Módulo 2 (unidad actividad-específica: distancia recorrida,
-                carga vehículos o superficie del local): número de unidades'
-            modulos-iva-3-unidades:
-              help: null
-              label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
-                u otra): número de unidades'
-            modulos-iva-4-unidades:
-              help: null
-              label: 'Módulo 4 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-5-unidades:
-              help: null
-              label: 'Módulo 5 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-6-unidades:
-              help: null
-              label: 'Módulo 6 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-7-unidades:
-              help: null
-              label: 'Módulo 7 (unidad actividad-específica adicional): número de
-                unidades'
-            modulos-iva-cuota-derivada:
-              help: null
-              label: Cuota derivada del régimen simplificado (mayor de cuota devengada
-                neta de deducibles/forfait, o cuota mínima)
-            modulos-iva-cuota-devengada:
-              help: null
-              label: Cuota devengada por operaciones corrientes (Σ unidades módulo
-                × cuota devengada anual por unidad)
-            modulos-iva-orden-id:
-              help: null
-              label: Identificador canónico de la actividad de la Orden anual (régimen
-                simplificado de IVA)
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la autoliquidacion

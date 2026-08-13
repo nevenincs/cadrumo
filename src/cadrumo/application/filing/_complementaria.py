@@ -53,7 +53,6 @@ from ...domain.filing import (
     ModeloValueKind,
     make_amendment_id,
 )
-from ...domain.iva import M303RegimenSimplificadoScopeDecision
 
 _logger = get_logger(__name__)
 
@@ -83,7 +82,6 @@ def build_complementaria(
     updated_inputs: CasillaInputs,
     *,
     schema_provider: CasillaSchemaProvider,
-    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None,
 ) -> ModeloComplementaria:
     """Build, persist, and return the :class:`ModeloComplementaria` for a submitted filing."""
     original_submission = _submitted_original(original)
@@ -112,7 +110,6 @@ def build_complementaria(
         ),
         inputs=merged_inputs,
         schema_provider=schema_provider,
-        m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
     )
     delta = _delta(original_draft, amended_draft)
     if not delta:

@@ -255,7 +255,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "a4c99c3f7171e150f0e33e8d66475aba46b199b9543ce219a9b81a7605d25f4e"
+          "value": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88"
         }
       ],
       "envelope": {
@@ -300,7 +300,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a4c99c3f7171e150f0e33e8d66475aba46b199b9543ce219a9b81a7605d25f4e",
+          "calculation_revision_id": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -448,17 +448,7 @@
             "iva.resultado": "105.00",
             "iva.resultado-regimen-general": "105.00",
             "iva.soportado.importaciones": "0",
-            "iva.soportado.interiores": "105",
-            "modulos-iva-1-unidades": "0",
-            "modulos-iva-2-unidades": "0",
-            "modulos-iva-3-unidades": "0",
-            "modulos-iva-4-unidades": "0",
-            "modulos-iva-5-unidades": "0",
-            "modulos-iva-6-unidades": "0",
-            "modulos-iva-7-unidades": "0",
-            "modulos-iva-cuota-derivada": "0.00",
-            "modulos-iva-cuota-devengada": "0.00",
-            "modulos-iva-orden-id": "0"
+            "iva.soportado.interiores": "105"
           },
           "created_at": "2026-04-01T09:00:00+00:00",
           "deadline": {
@@ -3725,188 +3715,6 @@
                 "aeat-dr-303-2026"
               ],
               "value": "105"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-1-unidades",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-37-1992:art-122",
-                "ley-37-1992:art-123"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-2-unidades",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-37-1992:art-122",
-                "ley-37-1992:art-123"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-3-unidades",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-37-1992:art-122",
-                "ley-37-1992:art-123"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-4-unidades",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-37-1992:art-122",
-                "ley-37-1992:art-123"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-5-unidades",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-37-1992:art-122",
-                "ley-37-1992:art-123"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-6-unidades",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-37-1992:art-122",
-                "ley-37-1992:art-123"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-7-unidades",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-37-1992:art-122",
-                "ley-37-1992:art-123"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-cuota-derivada",
-              "formula_id": "modelo-303-2026-modulos-iva-cuota-derivada",
-              "legal_refs": [
-                "ley-37-1992:art-123"
-              ],
-              "op": "max",
-              "operand_casilla_refs": [
-                "modulos-iva-cuota-devengada",
-                "modulos-iva-cuota-devengada",
-                "modulos-iva-cuota-devengada"
-              ],
-              "operand_refs": [
-                "modulos-iva-cuota-devengada",
-                "modulos-iva-cuota-devengada",
-                "m303-modulos-iva-dificil-justificacion-forfait",
-                "modulos-iva-cuota-devengada"
-              ],
-              "operand_values": [
-                "0.00",
-                "0.00",
-                "1",
-                "0.00"
-              ],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0.00"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-cuota-devengada",
-              "formula_id": "modelo-303-2026-modulos-iva-cuota-devengada",
-              "legal_refs": [
-                "ley-37-1992:art-123"
-              ],
-              "op": "m303_resolve_modulos_iva_cuota_devengada",
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0.00"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-orden-id",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-37-1992:art-122",
-                "ley-37-1992:art-123"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0"
             }
           ],
           "operation": "modelo.work.calculate",
@@ -3992,7 +3800,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision a4c99c3f7171e150f0e33e8d66475aba46b199b9543ce219a9b81a7605d25f4e (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision a4c99c3f7171e150f0e33e8d66475aba46b199b9543ce219a9b81a7605d25f4e`.",
+          "saved_confirmation": "Saved as draft calculation revision 252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88`.",
           "source_provenance": [
             {
               "binding_source": "ledger_iva_aggregation",
@@ -4041,7 +3849,7 @@
         "modelo",
         "work",
         "verify",
-        "a4c99c3f7171e150f0e33e8d66475aba46b199b9543ce219a9b81a7605d25f4e"
+        "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88"
       ],
       "captures": [],
       "envelope": {
@@ -4092,14 +3900,14 @@
               "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
               "severity": "warning",
               "source_kind_code": "output_iva_evidence",
-              "source_refs": "aeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form, boe-orden-hac-1425-2025-iva-authority"
+              "source_refs": "aeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form"
             },
             "message": "An output transaction has no supporting evidence.",
             "severity": "warning"
           }
         ],
         "result": {
-          "calculation_revision_id": "a4c99c3f7171e150f0e33e8d66475aba46b199b9543ce219a9b81a7605d25f4e",
+          "calculation_revision_id": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4148,8 +3956,7 @@
               "source_refs": [
                 "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
-                "boe-modelo-303-2008-form",
-                "boe-orden-hac-1425-2025-iva-authority"
+                "boe-modelo-303-2008-form"
               ]
             }
           ],
@@ -4158,7 +3965,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "a2dfefbdf4777eb662c24bce154fa819af6fb1d37a85d4d8b28f83225b41320d",
+          "verification_report_id": "ad42793fd3e8c9d909427312a5a688838f8146f88b3cf40993813ce49ac2d693",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -4230,7 +4037,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a4c99c3f7171e150f0e33e8d66475aba46b199b9543ce219a9b81a7605d25f4e",
+          "calculation_revision_id": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -4378,17 +4185,7 @@
             "iva.resultado": "105.00",
             "iva.resultado-regimen-general": "105.00",
             "iva.soportado.importaciones": "0",
-            "iva.soportado.interiores": "105",
-            "modulos-iva-1-unidades": "0",
-            "modulos-iva-2-unidades": "0",
-            "modulos-iva-3-unidades": "0",
-            "modulos-iva-4-unidades": "0",
-            "modulos-iva-5-unidades": "0",
-            "modulos-iva-6-unidades": "0",
-            "modulos-iva-7-unidades": "0",
-            "modulos-iva-cuota-derivada": "0.00",
-            "modulos-iva-cuota-devengada": "0.00",
-            "modulos-iva-orden-id": "0"
+            "iva.soportado.interiores": "105"
           },
           "created_at": "2026-04-01T09:00:00+00:00",
           "detail_rows": [],
@@ -7649,188 +7446,6 @@
                 "aeat-dr-303-2026"
               ],
               "value": "105"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-1-unidades",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-37-1992:art-122",
-                "ley-37-1992:art-123"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-2-unidades",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-37-1992:art-122",
-                "ley-37-1992:art-123"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-3-unidades",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-37-1992:art-122",
-                "ley-37-1992:art-123"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-4-unidades",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-37-1992:art-122",
-                "ley-37-1992:art-123"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-5-unidades",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-37-1992:art-122",
-                "ley-37-1992:art-123"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-6-unidades",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-37-1992:art-122",
-                "ley-37-1992:art-123"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-7-unidades",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-37-1992:art-122",
-                "ley-37-1992:art-123"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-cuota-derivada",
-              "formula_id": "modelo-303-2026-modulos-iva-cuota-derivada",
-              "legal_refs": [
-                "ley-37-1992:art-123"
-              ],
-              "op": "max",
-              "operand_casilla_refs": [
-                "modulos-iva-cuota-devengada",
-                "modulos-iva-cuota-devengada",
-                "modulos-iva-cuota-devengada"
-              ],
-              "operand_refs": [
-                "modulos-iva-cuota-devengada",
-                "modulos-iva-cuota-devengada",
-                "m303-modulos-iva-dificil-justificacion-forfait",
-                "modulos-iva-cuota-devengada"
-              ],
-              "operand_values": [
-                "0.00",
-                "0.00",
-                "1",
-                "0.00"
-              ],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0.00"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-cuota-devengada",
-              "formula_id": "modelo-303-2026-modulos-iva-cuota-devengada",
-              "legal_refs": [
-                "ley-37-1992:art-123"
-              ],
-              "op": "m303_resolve_modulos_iva_cuota_devengada",
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0.00"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "modulos-iva-orden-id",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-37-1992:art-122",
-                "ley-37-1992:art-123"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-orden-hac-1425-2025-iva-authority"
-              ],
-              "value": "0"
             }
           ],
           "operation": "modelo.work.revision",
@@ -8023,11 +7638,11 @@
           "aeat_accepted": false,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "a4c99c3f7171e150f0e33e8d66475aba46b199b9543ce219a9b81a7605d25f4e",
+          "calculation_revision_id": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "1beaa9e18af669244bc26dca7468c7a0adaa13f675a166e5838106accef27928",
+          "filing_record_id": "590d6e1bec6397235008ae8f59566a76007f3cedec719df01efc7ed21d97519b",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,

@@ -48,10 +48,9 @@ from pathlib import Path
 
 from ...adapters.persistence.profile.submission import SubmissionRepository
 from ...application.auth import select_provider
-from ...core import AuthProviderKind, Modelo, Period
+from ...core import AuthProviderKind, Period
 from ...core.config import Settings, load_settings
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile, resolve_filing_window
-from ...domain.iva import M303RegimenSimplificadoScopeDecision
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ...domain.submission import DeadlineWindowChecker, ModeloDraftStatus, SubmissionEngine
 from ...domain.transactions import TransactionCatalogue
@@ -72,9 +71,7 @@ from ..workflow import (
     WorkflowRunRepository,
     WorkflowStage,
 )
-from ._action_errors import M303FilingEvidenceError, ModeloWorkflowGateError
-from ._m303_filing_evidence import m303_filing_evidence_failure
-from ._revision_persistence import require_filing_instance_evidence_for_work_unit
+from ._action_errors import ModeloWorkflowGateError
 from ._revision_replay_inputs import revision_filing_replay_inputs
 
 
@@ -193,10 +190,6 @@ class _RevisionDraftBuilder:
             profile=filing_profile_from_taxpayer(profile),
             inputs=inputs,
             schema_provider=self._schema_provider,
-            m303_regimen_simplificado_scope=_revision_m303_regimen_simplificado_scope(
-                revision=self._revision,
-                work_unit=self._work_unit,
-            ),
             fail_on_warning=fail_on_warning,
         )
         if draft.status is not ModeloDraftStatus.LISTO_PARA_PRESENTAR:
@@ -209,25 +202,6 @@ class _RevisionDraftBuilder:
             transaction_catalogue=TransactionCatalogue(),
             approved_at=self._clock,
         )
-
-
-def _revision_m303_regimen_simplificado_scope(
-    *,
-    revision: CalculationRevision,
-    work_unit: WorkUnit,
-) -> M303RegimenSimplificadoScopeDecision | None:
-    """Replay the scope captured with the immutable M303 filing evidence."""
-    if work_unit.modelo != Modelo.M303:
-        return None
-    evidence = require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=revision)
-    if evidence is None:
-        raise M303FilingEvidenceError(
-            precondition_failure=m303_filing_evidence_failure(
-                "missing",
-                {"modelo": str(work_unit.modelo), "evidence_present": False},
-            ),
-        )
-    return evidence.m303.regimen_simplificado.scope_decision
 
 
 class _RevisionDeadlineWindowChecker:

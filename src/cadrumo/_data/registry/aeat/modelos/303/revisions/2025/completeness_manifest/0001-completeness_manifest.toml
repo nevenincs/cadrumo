@@ -314,50 +314,6 @@ number = "07"
 casilla_id = "28"
 number = "28"
 
-# Régimen-simplificado de IVA módulos engine inputs. The epígrafe IAE plus the
-# three módulo unit-count casillas are operator-declared manual inputs to the
-# modulos-IVA cuota-devengada computation (LIVA art. 123.Dos.1 + Orden
-# HAC/1347/2024 Anexo I instrucciones apartado 2.1). They enter the calculation
-# closure as expression operands of the modulos formulas, so — like the M131
-# estimación-objetiva modulos-*-unidades inputs — they belong in the
-# completeness manifest.
-# The two internal_only computed casillas they feed (modulos-iva-cuota-devengada /
-# -derivada) are correctly absent: derive_calculation_completeness_casillas drops
-# internal_only casillas from the single-segment manifest, matching the export
-# gate that omits them as advisory-support figures absent from the AEAT Diseño.
-[[revisions.2025.completeness_manifest.casillas]]
-casilla_id = "modulos-iva-orden-id"
-number = "modulos-iva-orden-id"
-
-[[revisions.2025.completeness_manifest.casillas]]
-casilla_id = "modulos-iva-1-unidades"
-number = "modulos-iva-1-unidades"
-
-[[revisions.2025.completeness_manifest.casillas]]
-casilla_id = "modulos-iva-2-unidades"
-number = "modulos-iva-2-unidades"
-
-[[revisions.2025.completeness_manifest.casillas]]
-casilla_id = "modulos-iva-3-unidades"
-number = "modulos-iva-3-unidades"
-
-[[revisions.2025.completeness_manifest.casillas]]
-casilla_id = "modulos-iva-4-unidades"
-number = "modulos-iva-4-unidades"
-
-[[revisions.2025.completeness_manifest.casillas]]
-casilla_id = "modulos-iva-5-unidades"
-number = "modulos-iva-5-unidades"
-
-[[revisions.2025.completeness_manifest.casillas]]
-casilla_id = "modulos-iva-6-unidades"
-number = "modulos-iva-6-unidades"
-
-[[revisions.2025.completeness_manifest.casillas]]
-casilla_id = "modulos-iva-7-unidades"
-number = "modulos-iva-7-unidades"
-
-
 # Deducción regularización cuota casillas (43 regularización bienes de inversión,
 # LIVA art. 107-110; 44 regularización prorrata por porcentaje definitivo, LIVA
 # art. 104-105). Manual-input official record-file boxes referenced as operands of

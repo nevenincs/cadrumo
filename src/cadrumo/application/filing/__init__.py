@@ -71,8 +71,9 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
+from typing import NamedTuple
 
 from ...core import STR_KEYED_MAPPING_ADAPTER
 from ...core import BindingSourceKind as _BindingSourceKind
@@ -87,6 +88,9 @@ from ...domain.calculations.registry import (
     BindingId as _BindingId,
 )
 from ...domain.calculations.registry import (
+    CasillaDefinition as _CasillaDefinition,
+)
+from ...domain.calculations.registry import (
     DataBindingDefinition as _DataBindingDefinition,
 )
 from ...domain.calculations.registry import (
@@ -94,6 +98,12 @@ from ...domain.calculations.registry import (
 )
 from ...domain.calculations.registry import (
     LegalRefId as _LegalRefId,
+)
+from ...domain.calculations.registry import (
+    RegistryCalculationEntry as _RegistryCalculationEntry,
+)
+from ...domain.calculations.registry import (
+    RegistryCalculationResult as _RegistryCalculationResult,
 )
 from ...domain.calculations.registry import (
     RegistrySnapshot as _RegistrySnapshot,
@@ -139,6 +149,9 @@ from ...domain.calculations.registry import (
 )
 from ...domain.calculations.registry import (
     validate_registry_text_scalar as _validate_registry_text_scalar,
+)
+from ...domain.filing import (
+    CasillaCollection as _CasillaCollection,
 )
 from ...domain.filing import (
     CasillaSchemaProvider as _CasillaSchemaProvider,
@@ -187,9 +200,6 @@ from ...domain.filing import (
 )
 from ...domain.filing import (
     registry_schema_version as _registry_schema_version,
-)
-from ...domain.iva import (
-    M303RegimenSimplificadoScopeDecision as _M303RegimenSimplificadoScopeDecision,
 )
 from ...domain.period import calculation_filing_date as _calculation_filing_date
 from ...domain.submission import ModeloDraftStatus as _ModeloDraftStatus
@@ -267,7 +277,6 @@ def build_draft(
     profile: _ModeloProfile,
     inputs: _ModeloInputs,
     schema_provider: _CasillaSchemaProvider,
-    m303_regimen_simplificado_scope: _M303RegimenSimplificadoScopeDecision | None,
     deadline_checker: _DeadlineChecker | None = None,
     fail_on_warning: bool = False,
 ) -> _ModeloDraft:
@@ -282,8 +291,6 @@ def build_draft(
         inputs: Raw :class:`ModeloInputs`.
         schema_provider: Registry-backed
             :class:`CasillaSchemaProvider`.
-        m303_regimen_simplificado_scope: Closed IVA-profile scope decision for
-            Modelo 303; omitted for every other modelo.
         deadline_checker: Optional
             :class:`DeadlineChecker`.
         fail_on_warning: Raise when validation produces any warning or error.
@@ -319,6 +326,52 @@ def build_draft(
                 "revision_id": snapshot.revision.id,
             },
         )
+    input_channels = _draft_input_channels(snapshot, inputs)
+    result = _calculate_draft_result(
+        snapshot=snapshot,
+        period=period,
+        input_channels=input_channels,
+    )
+    value_tuple = _draft_values(
+        snapshot=snapshot,
+        collection=collection,
+        result=result,
+        input_channels=input_channels,
+    )
+    created_at = _utc_now()
+    draft = _draft_record(
+        modelo=modelo,
+        period=period,
+        profile=profile,
+        snapshot_ref=snapshot_ref,
+        values=value_tuple,
+        binding_values=input_channels.filing_binding_values,
+        casilla_provenance=_draft_casilla_provenance(snapshot),
+        created_at=created_at,
+        schema_version=collection.schema_version,
+    )
+    return _validate_built_draft(
+        draft,
+        schema_provider=schema_provider,
+        deadline_checker=deadline_checker,
+        fail_on_warning=fail_on_warning,
+    )
+
+
+class _DraftInputChannels(NamedTuple):
+    casilla_inputs: dict[_CasillaId, Decimal]
+    text_casilla_inputs: dict[_CasillaId, str]
+    binding_inputs: dict[_BindingId, Decimal]
+    enum_binding_inputs: dict[_BindingId, str]
+    date_binding_inputs: dict[_BindingId, date]
+    relation_inputs: dict[_RelationId, Decimal]
+    filing_binding_values: list[_ModeloBindingValue]
+
+
+def _draft_input_channels(
+    snapshot: _RegistrySnapshot,
+    inputs: _ModeloInputs,
+) -> _DraftInputChannels:
     casilla_ids = set(_declared_casilla_ids(snapshot.revision))
     text_casilla_data_types = _text_casilla_data_types(snapshot)
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
@@ -334,35 +387,43 @@ def build_draft(
         accepted_ids=casilla_ids | set(bindings) | relation_ids,
         snapshot=snapshot,
     )
-    casilla_inputs = _decimal_inputs_for_ids(inputs, casilla_ids - set(text_casilla_data_types))
-    text_casilla_inputs = _text_inputs_for_ids(inputs, text_casilla_data_types)
-    binding_inputs = _decimal_inputs_for_ids(inputs, decimal_binding_ids)
-    enum_binding_inputs = _string_inputs_for_ids(inputs, enum_binding_ids)
     # Date bindings (e.g. taxpayer birth_date for age_at_year_end) and period
     # relations (e.g. prior pagos fraccionados) travel on dedicated engine
     # channels, not the Decimal binding channel. Replay callers merge the
     # calculation revision's BindingId and RelationId snapshots into this flat
     # input map; extract them here by their registry id-sets and route them.
-    date_binding_inputs = _date_inputs_for_ids(inputs, date_binding_ids)
-    relation_inputs = _decimal_inputs_for_ids(inputs, relation_ids)
-    filing_binding_values = _filing_binding_values(
-        inputs,
-        bindings,
-        enum_binding_ids,
-        frozenset(date_binding_ids),
+    return _DraftInputChannels(
+        casilla_inputs=_decimal_inputs_for_ids(inputs, casilla_ids - set(text_casilla_data_types)),
+        text_casilla_inputs=_text_inputs_for_ids(inputs, text_casilla_data_types),
+        binding_inputs=_decimal_inputs_for_ids(inputs, decimal_binding_ids),
+        enum_binding_inputs=_string_inputs_for_ids(inputs, enum_binding_ids),
+        date_binding_inputs=_date_inputs_for_ids(inputs, date_binding_ids),
+        relation_inputs=_decimal_inputs_for_ids(inputs, relation_ids),
+        filing_binding_values=_filing_binding_values(
+            inputs,
+            bindings,
+            enum_binding_ids,
+            frozenset(date_binding_ids),
+        ),
     )
+
+
+def _calculate_draft_result(
+    *,
+    snapshot: _RegistrySnapshot,
+    period: _Period,
+    input_channels: _DraftInputChannels,
+) -> _RegistryCalculationResult:
     try:
-        result = _calculate_registry_snapshot(
+        return _calculate_registry_snapshot(
             snapshot,
-            inputs=casilla_inputs,
+            inputs=input_channels.casilla_inputs,
             date_context={"filing_period": _filing_period_date(period)},
-            binding_values=binding_inputs,
-            enum_binding_values=enum_binding_inputs or None,
-            relation_values=relation_inputs or None,
-            date_binding_values=date_binding_inputs or None,
-            text_inputs=text_casilla_inputs or None,
-            m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
-            m303_annual_orden=None,
+            binding_values=input_channels.binding_inputs,
+            enum_binding_values=input_channels.enum_binding_inputs or None,
+            relation_values=input_channels.relation_inputs or None,
+            date_binding_values=input_channels.date_binding_inputs or None,
+            text_inputs=input_channels.text_casilla_inputs or None,
         )
     except _RegistryValidationError as exc:
         raise _ModeloBuilderError(
@@ -373,7 +434,15 @@ def build_draft(
                 "registry_error_type": type(exc).__name__,
             },
         ) from exc
-    entries = {entry.target_casilla_id: entry for entry in result.entries}
+
+
+def _draft_values(
+    *,
+    snapshot: _RegistrySnapshot,
+    collection: _CasillaCollection,
+    result: _RegistryCalculationResult,
+    input_channels: _DraftInputChannels,
+) -> tuple[_ModeloValue, ...]:
     # A computed casilla's formula_trace_casilla_ids documents the static casilla inputs its
     # formula declares (the validator checks the trace against
     # ``CasillaSchema.formula_input_casilla_ids``). It must NOT be the branch-dependent
@@ -388,67 +457,75 @@ def build_draft(
         for schema in collection.all()
         if schema.formula is not None
     }
-    values: list[_ModeloValue] = []
-    for casilla in snapshot.revision.casillas:
-        if casilla.id in entries:
-            entry = entries[casilla.id]
-            trace = formula_input_casilla_ids_by_casilla.get(casilla.id)
-            if trace is None:
-                trace = entry.operand_casilla_refs
-            values.append(
-                _ModeloValue(
-                    casilla_id=casilla.id,
-                    value=result.values[casilla.id],
-                    kind=_ModeloValueKind.COMPUTED,
-                    source=f"registry formula {entry.formula_id}",
-                    formula_trace_casilla_ids=trace,
-                ),
-            )
-            continue
-        if casilla.input_kind == _InputKind.BOUND:
-            value = result.values.get(casilla.id)
-            if value is not None:
-                values.append(
-                    _ModeloValue(
-                        casilla_id=casilla.id,
-                        value=value,
-                        kind=_ModeloValueKind.INHERITED,
-                        source=f"registry binding {casilla.binding}",
-                    ),
-                )
-                continue
-        if casilla.id in casilla_inputs:
-            values.append(
-                _ModeloValue(
-                    casilla_id=casilla.id,
-                    value=casilla_inputs[casilla.id],
-                    kind=_ModeloValueKind.LITERAL,
-                    source="registry input",
-                ),
-            )
-            continue
-        if casilla.id in text_casilla_inputs:
-            values.append(
-                _ModeloValue(
-                    casilla_id=casilla.id,
-                    value=text_casilla_inputs[casilla.id],
-                    kind=_ModeloValueKind.LITERAL,
-                    source="registry input",
-                ),
-            )
-            continue
-        values.append(
-            _ModeloValue(
-                casilla_id=casilla.id,
-                value=None,
-                kind=_ModeloValueKind.EMPTY,
-                source="registry schema",
-            ),
+    entries = {entry.target_casilla_id: entry for entry in result.entries}
+    values = (
+        _draft_value_for_casilla(
+            casilla=casilla,
+            entries=entries,
+            result=result,
+            formula_input_casilla_ids_by_casilla=formula_input_casilla_ids_by_casilla,
+            input_channels=input_channels,
         )
-    created_at = _utc_now()
-    value_tuple = tuple(sorted(values, key=lambda value: value.casilla_id))
-    binding_value_tuple = tuple(sorted(filing_binding_values, key=lambda value: value.binding_id))
-    casilla_provenance = tuple(
+        for casilla in snapshot.revision.casillas
+    )
+    return tuple(sorted(values, key=lambda value: value.casilla_id))
+
+
+def _draft_value_for_casilla(
+    *,
+    casilla: _CasillaDefinition,
+    entries: Mapping[_CasillaId, _RegistryCalculationEntry],
+    result: _RegistryCalculationResult,
+    formula_input_casilla_ids_by_casilla: Mapping[_CasillaId, tuple[_CasillaId, ...]],
+    input_channels: _DraftInputChannels,
+) -> _ModeloValue:
+    if casilla.id in entries:
+        entry = entries[casilla.id]
+        trace = formula_input_casilla_ids_by_casilla.get(casilla.id)
+        if trace is None:
+            trace = entry.operand_casilla_refs
+        return _ModeloValue(
+            casilla_id=casilla.id,
+            value=result.values[casilla.id],
+            kind=_ModeloValueKind.COMPUTED,
+            source=f"registry formula {entry.formula_id}",
+            formula_trace_casilla_ids=trace,
+        )
+    if casilla.input_kind == _InputKind.BOUND:
+        value = result.values.get(casilla.id)
+        if value is not None:
+            return _ModeloValue(
+                casilla_id=casilla.id,
+                value=value,
+                kind=_ModeloValueKind.INHERITED,
+                source=f"registry binding {casilla.binding}",
+            )
+    if casilla.id in input_channels.casilla_inputs:
+        return _ModeloValue(
+            casilla_id=casilla.id,
+            value=input_channels.casilla_inputs[casilla.id],
+            kind=_ModeloValueKind.LITERAL,
+            source="registry input",
+        )
+    if casilla.id in input_channels.text_casilla_inputs:
+        return _ModeloValue(
+            casilla_id=casilla.id,
+            value=input_channels.text_casilla_inputs[casilla.id],
+            kind=_ModeloValueKind.LITERAL,
+            source="registry input",
+        )
+    return _ModeloValue(
+        casilla_id=casilla.id,
+        value=None,
+        kind=_ModeloValueKind.EMPTY,
+        source="registry schema",
+    )
+
+
+def _draft_casilla_provenance(
+    snapshot: _RegistrySnapshot,
+) -> tuple[_ModeloCasillaProvenance, ...]:
+    return tuple(
         _ModeloCasillaProvenance(
             casilla_id=casilla.id,
             formula_id=casilla.formula,
@@ -457,18 +534,33 @@ def build_draft(
         )
         for casilla in sorted(snapshot.revision.casillas, key=lambda item: item.id)
     )
+
+
+def _draft_record(
+    *,
+    modelo: str,
+    period: _Period,
+    profile: _ModeloProfile,
+    snapshot_ref: _RegistrySnapshotRef,
+    values: tuple[_ModeloValue, ...],
+    binding_values: list[_ModeloBindingValue],
+    casilla_provenance: tuple[_ModeloCasillaProvenance, ...],
+    created_at: datetime,
+    schema_version: str,
+) -> _ModeloDraft:
+    binding_value_tuple = tuple(sorted(binding_values, key=lambda value: value.binding_id))
     # Propagate identity from the validated profile substrate into the
     # draft. ``profile.tax_id`` is already validated against the AEAT
     # checksum via ``SubjectTaxId`` on the profile model, so the
     # post-validation result type-checks at the ModeloDraft boundary
     # and survives every downstream encrypted-persistence roundtrip.
-    draft = _ModeloDraft(
+    return _ModeloDraft(
         draft_id=_compute_modelo_draft_id(
             modelo=modelo,
             period=period,
             profile_tax_id=profile.tax_id,
             snapshot_ref=snapshot_ref,
-            values=value_tuple,
+            values=values,
             binding_values=binding_value_tuple,
         ),
         modelo=modelo,
@@ -477,13 +569,22 @@ def build_draft(
         subject_tax_id=profile.tax_id,
         snapshot_ref=snapshot_ref,
         status=_ModeloDraftStatus.BORRADOR,
-        values=value_tuple,
+        values=values,
         binding_values=binding_value_tuple,
         casilla_provenance=casilla_provenance,
         created_at=created_at,
         updated_at=created_at,
-        schema_version=collection.schema_version,
+        schema_version=schema_version,
     )
+
+
+def _validate_built_draft(
+    draft: _ModeloDraft,
+    *,
+    schema_provider: _CasillaSchemaProvider,
+    deadline_checker: _DeadlineChecker | None,
+    fail_on_warning: bool,
+) -> _ModeloDraft:
     validator = _ModeloValidator(schema_provider=schema_provider, deadline_checker=deadline_checker)
     findings = validator.validate(draft)
     if fail_on_warning and findings:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
@@ -26,6 +27,9 @@ from ...iva import (
     validate_regimen_simplificado_rows,
 )
 from ._errors import RegistryValidationError
+
+if TYPE_CHECKING:
+    from ...modelos import M303RegimenSimplificadoCalculationResult
 
 type _RegimenSimplificadoProjectionRef = (
     M303RegimenSimplificadoActivityProjectionRef
@@ -59,9 +63,10 @@ def project_m303_regimen_simplificado_rows(
     orden: tuple[ActividadOrdenAnual, ...],
     agricultural_authority: AutoridadAgricolaOrdenAnualNoResuelta,
     applicable: bool,
+    calculation_result: M303RegimenSimplificadoCalculationResult | None,
     censo_iae_epigraphs: frozenset[str],
 ) -> tuple[M303RegimenSimplificadoRecordProjection, ...]:
-    """Project canonical rows through exact authored references without source-text inference."""
+    """Select exact authored fields from immutable evidence and calculated results."""
     validate_regimen_simplificado_rows(
         rows,
         orden=orden,
@@ -87,6 +92,7 @@ def project_m303_regimen_simplificado_rows(
                         agricultural=agricultural[record_index * 2 : record_index * 2 + 2],
                         non_agricultural=non_agricultural[record_index * 2 : record_index * 2 + 2],
                         by_annual_id=by_annual_id,
+                        calculation_result=calculation_result,
                     ),
                 )
                 for ref in projection_refs
@@ -109,6 +115,7 @@ def _project_ref(
     agricultural: tuple[ActividadAgricolaSimplificado, ...],
     non_agricultural: tuple[ActividadNoAgricolaSimplificado, ...],
     by_annual_id: dict[str, ActividadOrdenAnual],
+    calculation_result: M303RegimenSimplificadoCalculationResult | None,
 ) -> str | Decimal | None:
     row = _select_row(ref, agricultural=agricultural, non_agricultural=non_agricultural)
     if row is None:
@@ -118,7 +125,7 @@ def _project_ref(
     annual = by_annual_id[row.orden_id]
     if isinstance(ref, M303RegimenSimplificadoFactProjectionRef):
         return _project_fact_ref(ref, row, annual)
-    return _project_module_ref(ref, row)
+    return _project_module_ref(ref, row, calculation_result)
 
 
 def _select_row(
@@ -134,7 +141,7 @@ def _select_row(
 def _project_activity_ref(
     ref: M303RegimenSimplificadoActivityProjectionRef,
     row: RegimenSimplificadoActivity,
-) -> str:
+) -> str | None:
     if ref.field is M303RegimenSimplificadoActivityField.ACTIVITY_CODE:
         if not isinstance(row, ActividadAgricolaSimplificado):
             raise RegistryValidationError("agricultural activity-code reference resolved a non-agricultural row")
@@ -169,6 +176,7 @@ def _project_fact_ref(
 def _project_module_ref(
     ref: M303RegimenSimplificadoModuleProjectionRef,
     row: RegimenSimplificadoActivity,
+    calculation_result: M303RegimenSimplificadoCalculationResult | None,
 ) -> Decimal | None:
     if not isinstance(row, ActividadNoAgricolaSimplificado):
         raise RegistryValidationError("annual-Orden module reference resolved an agricultural row")
@@ -177,9 +185,51 @@ def _project_module_ref(
     entry = row.modulos[ref.module_order - 1]
     if ref.value is M303RegimenSimplificadoModuleValue.DECLARED_QUANTITY:
         return entry.declared_quantity
-    if ref.value is M303RegimenSimplificadoModuleValue.OFF_FORM_RESULT:
-        return entry.off_form_result
+    if ref.value is M303RegimenSimplificadoModuleValue.CUOTA_DEVENGADA:
+        if calculation_result is None:
+            raise RegistryValidationError(
+                "calculated module cuota projection requires the immutable calculation result"
+            )
+        return _select_calculated_module_cuota(
+            row=row,
+            module_order=ref.module_order,
+            calculation_result=calculation_result,
+        )
     raise RegistryValidationError(f"unsupported regimen-simplificado module value {ref.value!r}")
+
+
+def _select_calculated_module_cuota(
+    *,
+    row: ActividadNoAgricolaSimplificado,
+    module_order: int,
+    calculation_result: M303RegimenSimplificadoCalculationResult,
+) -> Decimal:
+    """Select one matching computed module cuota with no alternate result source."""
+    matching_activities = tuple(item for item in calculation_result.activities if item.activity_id == row.activity_id)
+    if len(matching_activities) != 1:
+        raise RegistryValidationError(
+            f"activity {row.activity_id!r} must have exactly one simplified-regime calculation result",
+        )
+    activity_result = matching_activities[0]
+    if activity_result.orden_id != row.orden_id:
+        raise RegistryValidationError(
+            f"activity {row.activity_id!r} calculated result disagrees with its annual Orden identity",
+        )
+    if module_order > len(activity_result.module_results):
+        raise RegistryValidationError(
+            f"activity {row.activity_id!r} calculated result is missing module ordinal {module_order}",
+        )
+    module_result = activity_result.module_results[module_order - 1]
+    expected_module = row.modulos[module_order - 1]
+    if module_result.module_identity != expected_module.module_identity:
+        raise RegistryValidationError(
+            f"activity {row.activity_id!r} calculated module identity disagrees at ordinal {module_order}",
+        )
+    if module_result.declared_quantity != expected_module.declared_quantity:
+        raise RegistryValidationError(
+            f"activity {row.activity_id!r} calculated module quantity disagrees at ordinal {module_order}",
+        )
+    return module_result.cuota_devengada
 
 
 __all__ = [

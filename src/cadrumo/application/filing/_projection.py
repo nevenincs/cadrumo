@@ -31,7 +31,7 @@ from ...domain.calculations.registry import (
 from ...domain.filing import FilingExportValidationError
 from ...domain.iva import ActividadNoAgricolaSimplificado
 from ._m303_exonerado_390 import project_m303_exonerado_390_value_arrival
-from ._producer_snapshot import FilingProducerSnapshot
+from ._producer_snapshot import FilingProducerSnapshot, M303FilingFacts
 
 type _RegimenSimplificadoProjectionRef = (
     M303RegimenSimplificadoActivityProjectionRef
@@ -94,6 +94,27 @@ def build_m303_filing_projection_plan(
     producer_snapshot: FilingProducerSnapshot,
 ) -> FilingProjectionPlan:
     """Project every M303 repeated-row family from one selected snapshot and layout."""
+    _validate_m303_projection_request(
+        registry_snapshot=registry_snapshot,
+        layout=layout,
+        producer_snapshot=producer_snapshot,
+    )
+    _require_regimen_snapshot_matches_registry(registry_snapshot, producer_snapshot)
+    contexts, values = _project_layout_records(
+        registry_snapshot=registry_snapshot,
+        layout=layout,
+        producer_snapshot=producer_snapshot,
+    )
+    return FilingProjectionPlan(contexts=contexts, values=values)
+
+
+def _validate_m303_projection_request(
+    *,
+    registry_snapshot: RegistrySnapshot,
+    layout: ExportLayoutDefinition,
+    producer_snapshot: FilingProducerSnapshot,
+) -> M303FilingFacts:
+    """Validate the shared snapshot/layout boundary before projecting rows."""
     facts = producer_snapshot.m303_filing_facts
     if producer_snapshot.modelo.value != "303" or registry_snapshot.modelo.id != "303" or facts is None:
         raise FilingExportValidationError("M303 filing projection requires one complete Modelo 303 snapshot")
@@ -104,8 +125,16 @@ def build_m303_filing_projection_plan(
         raise FilingExportValidationError("M303 filing projection snapshot does not match the filing period")
     if not any(candidate is layout for candidate in registry_snapshot.revision.export_layouts):
         raise FilingExportValidationError("M303 filing projection layout is not owned by the selected snapshot")
-    _require_regimen_snapshot_matches_registry(registry_snapshot, producer_snapshot)
+    return facts
 
+
+def _project_layout_records(
+    *,
+    registry_snapshot: RegistrySnapshot,
+    layout: ExportLayoutDefinition,
+    producer_snapshot: FilingProducerSnapshot,
+) -> tuple[tuple[FilingRecordRenderContext, ...], tuple[FilingProjectionValue, ...]]:
+    """Project each layout record that admits a typed projection family."""
     contexts: list[FilingRecordRenderContext] = []
     values: list[FilingProjectionValue] = []
     for record in layout.records:
@@ -119,13 +148,20 @@ def build_m303_filing_projection_plan(
             refs=refs,
             producer_snapshot=producer_snapshot,
         )
-        if not record_contexts and record.required:
-            raise FilingExportValidationError(
-                f"required projection record {record.id!r} has no applicable emitted occurrence",
-            )
+        _require_required_projection_occurrence(record, record_contexts)
         contexts.extend(record_contexts)
         values.extend(record_values)
-    return FilingProjectionPlan(contexts=tuple(contexts), values=tuple(values))
+    return tuple(contexts), tuple(values)
+
+
+def _require_required_projection_occurrence(
+    record: ExportRecordDefinition,
+    contexts: tuple[FilingRecordRenderContext, ...],
+) -> None:
+    if not contexts and record.required:
+        raise FilingExportValidationError(
+            f"required projection record {record.id!r} has no applicable emitted occurrence",
+        )
 
 
 def _record_projection_refs(record: ExportRecordDefinition) -> tuple[FilingProjectionRef, ...]:
@@ -144,30 +180,24 @@ def _project_record(
     refs: tuple[FilingProjectionRef, ...],
     producer_snapshot: FilingProducerSnapshot,
 ) -> tuple[tuple[FilingRecordRenderContext, ...], tuple[FilingProjectionValue, ...]]:
-    facts = producer_snapshot.m303_filing_facts
-    if facts is None:
-        raise FilingExportValidationError("M303 projection record requires complete filing facts")
+    facts = _require_m303_projection_facts(producer_snapshot)
     ref_types = {type(ref) for ref in refs}
     if ref_types == {M303ProrrataActivityProjectionRef}:
-        _require_nonrepeated_projection_record(record)
-        projected = project_m303_prorrata_activity_rows(
-            projection_refs=tuple(ref for ref in refs if isinstance(ref, M303ProrrataActivityProjectionRef)),
-            register=facts.prorrata_register,
-            ejercicio=facts.period.filing_year,
+        return _project_prorrata_record(
+            registry_snapshot=registry_snapshot,
+            layout=layout,
+            record=record,
+            refs=refs,
+            facts=facts,
         )
-        fields = tuple(endpoint for row in projected for endpoint in row.endpoints)
-        return _single_occurrence_projection(registry_snapshot, layout, record, fields)
     if ref_types == {M303DifferentiatedDeductionProjectionRef}:
-        _require_nonrepeated_projection_record(record)
-        projected = project_m303_differentiated_deduction_rows(
-            projection_refs=tuple(ref for ref in refs if isinstance(ref, M303DifferentiatedDeductionProjectionRef)),
-            register=facts.prorrata_register,
-            ejercicio=facts.period.filing_year,
-            contributions=facts.differentiated_contributions,
-            regularisation_result=facts.regularisation_result,
+        return _project_differentiated_record(
+            registry_snapshot=registry_snapshot,
+            layout=layout,
+            record=record,
+            refs=refs,
+            facts=facts,
         )
-        fields = tuple(endpoint for row in projected for endpoint in row.endpoints)
-        return _single_occurrence_projection(registry_snapshot, layout, record, fields)
     if ref_types.issubset(
         {
             M303RegimenSimplificadoActivityProjectionRef,
@@ -175,48 +205,128 @@ def _project_record(
             M303RegimenSimplificadoModuleProjectionRef,
         },
     ):
-        if record.repeat != "projection_rows":
-            raise FilingExportValidationError("regimen-simplificado projection record must repeat projection_rows")
-        evidence = facts.regimen_simplificado
-        projected = project_m303_regimen_simplificado_rows(
-            projection_refs=tuple(ref for ref in refs if isinstance(ref, _REGIMEN_REF_TYPES)),
-            rows=evidence.rows,
-            orden=evidence.regimen_snapshot.orden.activities,
-            agricultural_authority=evidence.regimen_snapshot.orden.agricultural_authority,
-            applicable=not evidence.scope_decision.is_not_claimed,
-            censo_iae_epigraphs=frozenset(
-                row.iae_epigrafe for row in evidence.rows.activities if isinstance(row, ActividadNoAgricolaSimplificado)
-            ),
-        )
-        contexts = tuple(_context(registry_snapshot, layout, record, row.record) for row in projected)
-        values = tuple(
-            FilingProjectionValue(
-                projection_ref=field.projection_ref,
-                record_id=record.id,
-                occurrence=row.record,
-                value=field.value,
-            )
-            for row in projected
-            for field in row.fields
-        )
-        return contexts, values
-    if ref_types.issubset({M303Exonerado390ActivityProjectionRef, M303Exonerado390OperacionesTercerosProjectionRef}):
-        _require_nonrepeated_projection_record(record)
-        evidence = facts.regimen_simplificado.regimen_snapshot
-        projected = project_m303_exonerado_390_value_arrival(
+        return _project_regimen_record(
             registry_snapshot=registry_snapshot,
-            projection_refs=tuple(ref for ref in refs if isinstance(ref, _EXONERADO_REF_TYPES)),
-            evidence=facts.exonerado_390,
-            record_design=evidence.record_design,
+            layout=layout,
+            record=record,
+            refs=refs,
+            facts=facts,
         )
-        return _single_occurrence_projection(
-            registry_snapshot,
-            layout,
-            record,
-            () if projected is None else projected.fields,
+    if ref_types.issubset({M303Exonerado390ActivityProjectionRef, M303Exonerado390OperacionesTercerosProjectionRef}):
+        return _project_exonerado_record(
+            registry_snapshot=registry_snapshot,
+            layout=layout,
+            record=record,
+            refs=refs,
+            facts=facts,
         )
     raise FilingExportValidationError(
         f"projection record {record.id!r} mixes or uses an unsupported projection-reference family",
+    )
+
+
+def _require_m303_projection_facts(producer_snapshot: FilingProducerSnapshot) -> M303FilingFacts:
+    facts = producer_snapshot.m303_filing_facts
+    if facts is None:
+        raise FilingExportValidationError("M303 projection record requires complete filing facts")
+    return facts
+
+
+def _project_prorrata_record(
+    *,
+    registry_snapshot: RegistrySnapshot,
+    layout: ExportLayoutDefinition,
+    record: ExportRecordDefinition,
+    refs: tuple[FilingProjectionRef, ...],
+    facts: M303FilingFacts,
+) -> tuple[tuple[FilingRecordRenderContext, ...], tuple[FilingProjectionValue, ...]]:
+    _require_nonrepeated_projection_record(record)
+    projected = project_m303_prorrata_activity_rows(
+        projection_refs=tuple(ref for ref in refs if isinstance(ref, M303ProrrataActivityProjectionRef)),
+        register=facts.prorrata_register,
+        ejercicio=facts.period.filing_year,
+    )
+    fields = tuple(endpoint for row in projected for endpoint in row.endpoints)
+    return _single_occurrence_projection(registry_snapshot, layout, record, fields)
+
+
+def _project_differentiated_record(
+    *,
+    registry_snapshot: RegistrySnapshot,
+    layout: ExportLayoutDefinition,
+    record: ExportRecordDefinition,
+    refs: tuple[FilingProjectionRef, ...],
+    facts: M303FilingFacts,
+) -> tuple[tuple[FilingRecordRenderContext, ...], tuple[FilingProjectionValue, ...]]:
+    _require_nonrepeated_projection_record(record)
+    projected = project_m303_differentiated_deduction_rows(
+        projection_refs=tuple(ref for ref in refs if isinstance(ref, M303DifferentiatedDeductionProjectionRef)),
+        register=facts.prorrata_register,
+        ejercicio=facts.period.filing_year,
+        contributions=facts.differentiated_contributions,
+        regularisation_result=facts.regularisation_result,
+    )
+    fields = tuple(endpoint for row in projected for endpoint in row.endpoints)
+    return _single_occurrence_projection(registry_snapshot, layout, record, fields)
+
+
+def _project_regimen_record(
+    *,
+    registry_snapshot: RegistrySnapshot,
+    layout: ExportLayoutDefinition,
+    record: ExportRecordDefinition,
+    refs: tuple[FilingProjectionRef, ...],
+    facts: M303FilingFacts,
+) -> tuple[tuple[FilingRecordRenderContext, ...], tuple[FilingProjectionValue, ...]]:
+    if record.repeat != "projection_rows":
+        raise FilingExportValidationError("regimen-simplificado projection record must repeat projection_rows")
+    evidence = facts.regimen_simplificado
+    projected = project_m303_regimen_simplificado_rows(
+        projection_refs=tuple(ref for ref in refs if isinstance(ref, _REGIMEN_REF_TYPES)),
+        rows=evidence.rows,
+        orden=evidence.regimen_snapshot.orden.activities,
+        agricultural_authority=evidence.regimen_snapshot.orden.agricultural_authority,
+        applicable=not evidence.scope_decision.is_not_claimed,
+        calculation_result=facts.regimen_simplificado_result,
+        censo_iae_epigraphs=frozenset(
+            row.iae_epigrafe for row in evidence.rows.activities if isinstance(row, ActividadNoAgricolaSimplificado)
+        ),
+    )
+    contexts = tuple(_context(registry_snapshot, layout, record, row.record) for row in projected)
+    values = tuple(
+        FilingProjectionValue(
+            projection_ref=field.projection_ref,
+            record_id=record.id,
+            occurrence=row.record,
+            value=field.value,
+        )
+        for row in projected
+        for field in row.fields
+    )
+    return contexts, values
+
+
+def _project_exonerado_record(
+    *,
+    registry_snapshot: RegistrySnapshot,
+    layout: ExportLayoutDefinition,
+    record: ExportRecordDefinition,
+    refs: tuple[FilingProjectionRef, ...],
+    facts: M303FilingFacts,
+) -> tuple[tuple[FilingRecordRenderContext, ...], tuple[FilingProjectionValue, ...]]:
+    _require_nonrepeated_projection_record(record)
+    evidence = facts.regimen_simplificado.regimen_snapshot
+    projected = project_m303_exonerado_390_value_arrival(
+        registry_snapshot=registry_snapshot,
+        projection_refs=tuple(ref for ref in refs if isinstance(ref, _EXONERADO_REF_TYPES)),
+        evidence=facts.exonerado_390,
+        record_design=evidence.record_design,
+    )
+    return _single_occurrence_projection(
+        registry_snapshot,
+        layout,
+        record,
+        () if projected is None else projected.fields,
     )
 
 

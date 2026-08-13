@@ -42,7 +42,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, NamedTuple
 
 from pydantic import BaseModel, Field
 
@@ -212,6 +212,17 @@ class ModeloIvaWalletDecisionProvenance(BaseModel):
     target_period: Period
     authority_source_kinds: tuple[str, ...] = Field(default_factory=tuple)
     authority_source_refs: tuple[_Sha256Ref, ...] = Field(default_factory=tuple)
+
+
+class _PreparedModeloExport(NamedTuple):
+    """Validated inputs shared by draft approval and export persistence."""
+
+    work_unit: WorkUnit
+    revision: CalculationRevision
+    period: Period
+    schema_provider: RegistrySchemaAccessor
+    iva_wallet_provenance: ModeloIvaWalletDecisionProvenance | None
+    prior_domiciliation_election: PriorDomiciliationElectionProjection
 
 
 class ModeloExportCrossBucketRefusedError(ModeloError):
@@ -608,11 +619,6 @@ def _approve_export_draft(
             profile=filing_profile_from_taxpayer(workflow_profile),
             inputs=inputs,
             schema_provider=schema_provider,
-            m303_regimen_simplificado_scope=(
-                revision.filing_instance_evidence.m303.regimen_simplificado.scope_decision
-                if revision.filing_instance_evidence is not None
-                else None
-            ),
         )
         approved = approve_draft(
             draft,
@@ -1141,6 +1147,129 @@ def _emit_export_event(
         raise
 
 
+def _raise_if_deductible_iva_evidence_missing(revision: CalculationRevision) -> None:
+    """Refuse legacy revisions whose deductible IVA evidence is incomplete."""
+    deductible_gap_transaction_ids = deductible_iva_evidence_gap_transaction_ids(revision)
+    if not deductible_gap_transaction_ids:
+        return
+    raise ModeloExportEvidenceMissingError(
+        translated_message="application.modelo.errors.deductible_iva_evidence_missing",
+        context={
+            "calculation_revision_id": revision.calculation_revision_id,
+            "transaction_ids": list(deductible_gap_transaction_ids),
+            "reason": "deductible_iva_evidence_missing",
+        },
+        precondition_failure=build_modelo_precondition_failure(
+            subject_leaf_key="modelo.export",
+            condition_id="modelo.export.deductible_iva_evidence.present",
+            scenario_id="modelo.export.deductible_iva_evidence.missing",
+            evidence_id="modelo.export.deductible_iva_evidence",
+            evidence_values={
+                "calculation_revision_id": revision.calculation_revision_id,
+                "work_unit_id": revision.work_unit_id,
+                "transaction_count": len(deductible_gap_transaction_ids),
+                "transaction_ids": "|".join(deductible_gap_transaction_ids),
+            },
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        ),
+    )
+
+
+def _prepare_modelo_export(
+    command: ModeloExportCommand,
+    *,
+    active_bucket_id: str,
+    workflow_profile: TaxpayerProfile,
+    work_unit_repository: WorkUnitCatalogueRepository,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    calculation_observation_repository: CalculationObservationRepository,
+    iva_compensation_decision_repository: IvaWalletDecisionRepository | None,
+    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
+) -> _PreparedModeloExport:
+    """Load and validate every persisted authority required before export bytes."""
+    revision = _load_revision_for_export(command.calculation_revision_id, repo=calculation_repository)
+    _raise_if_ledger_export_evidence_missing(revision)
+    _raise_if_deductible_iva_evidence_missing(revision)
+    work_unit = work_unit_repository.load().get(revision.work_unit_id)
+    if work_unit is None:
+        raise WorkUnitNotFoundError(
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": revision.work_unit_id},
+        )
+    try:
+        require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=revision)
+    except ModeloError as exc:
+        raise ModeloExportError(
+            translated_message="application.modelo.errors.export_draft_write_failed",
+            context={
+                "calculation_revision_id": command.calculation_revision_id,
+                "cause_type": type(exc).__name__,
+            },
+        ) from exc
+    if work_unit.bucket_id != active_bucket_id:
+        raise ModeloExportCrossBucketRefusedError(
+            translated_message="application.modelo.errors.export_cross_bucket_refused",
+            context={"work_unit_id": work_unit.work_unit_id},
+        )
+
+    period = _resolve_work_unit_period(work_unit)
+    schema_provider = build_runtime_schema_provider(
+        filing_year=period.filing_year,
+        period=period,
+        modelos=(work_unit.modelo,),
+    )
+    _raise_if_export_layout_unsupported(work_unit=work_unit, schema_provider=schema_provider)
+    from ._profile_readiness_gate import require_profile_ready_for_work_unit
+
+    require_profile_ready_for_work_unit(work_unit)
+    _require_persisted_required_bindings_resolved(work_unit=work_unit, revision=revision, action="export")
+    iva_wallet_decision = require_persisted_iva_compensation_decision_matches_revision(
+        work_unit,
+        revision,
+        repository=iva_compensation_decision_repository,
+    )
+    require_cross_period_clean_state(
+        work_unit,
+        observation_repository=calculation_observation_repository,
+        filing_repository=filing_repository,
+        calculation_repository=calculation_repository,
+        verification_repository=verification_repository,
+        iva_compensation_decision=iva_wallet_decision,
+        expected_member_sets=cross_period_expected_member_sets_from_profile(
+            workflow_profile,
+            cross_period_expected_member_sets,
+        ),
+        taxpayer_tax_id=workflow_profile.tax_id,
+        activity_start_date=workflow_profile.activity_start_date,
+        modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
+        taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
+        workflow_profile=workflow_profile,
+        target_revision=revision,
+    )
+    prior_domiciliation_election = resolve_prior_domiciliation_election(
+        election=command.prior_domiciliation_election,
+        work_unit=work_unit,
+        revision=revision,
+        filing_repository=filing_repository,
+        observation_repository=calculation_observation_repository,
+    )
+    _require_prior_domiciliation_marker_layout(
+        work_unit=work_unit,
+        prior_domiciliation_election=prior_domiciliation_election,
+        schema_provider=schema_provider,
+    )
+    return _PreparedModeloExport(
+        work_unit=work_unit,
+        revision=revision,
+        period=period,
+        schema_provider=schema_provider,
+        iva_wallet_provenance=_iva_wallet_decision_export_provenance(iva_wallet_decision),
+        prior_domiciliation_election=prior_domiciliation_election,
+    )
+
+
 def export_modelo_revision(
     command: ModeloExportCommand,
     *,
@@ -1213,109 +1342,24 @@ def export_modelo_revision(
     obs_repo = calculation_observation_repository or CalculationObservationRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 
-    revision = _load_revision_for_export(command.calculation_revision_id, repo=cr_repo)
-    _raise_if_ledger_export_evidence_missing(revision)
-    deductible_gap_transaction_ids = deductible_iva_evidence_gap_transaction_ids(revision)
-    if deductible_gap_transaction_ids:
-        # Defence in depth over a state verify no longer lets form: the deductible
-        # evidence gap now BLOCKS the verified-complete transition, so a revision
-        # cannot reach export carrying one. Reaching here means a revision finalized
-        # before that gate existed, or a gap that appeared after it was frozen --
-        # both recoverable by re-verifying, because a blocked verify captures no
-        # bundle and leaves the draft open.
-        raise ModeloExportEvidenceMissingError(
-            translated_message="application.modelo.errors.deductible_iva_evidence_missing",
-            context={
-                "calculation_revision_id": revision.calculation_revision_id,
-                "transaction_ids": list(deductible_gap_transaction_ids),
-                "reason": "deductible_iva_evidence_missing",
-            },
-            precondition_failure=build_modelo_precondition_failure(
-                subject_leaf_key="modelo.export",
-                condition_id="modelo.export.deductible_iva_evidence.present",
-                scenario_id="modelo.export.deductible_iva_evidence.missing",
-                evidence_id="modelo.export.deductible_iva_evidence",
-                evidence_values={
-                    "calculation_revision_id": revision.calculation_revision_id,
-                    "work_unit_id": revision.work_unit_id,
-                    "transaction_count": len(deductible_gap_transaction_ids),
-                    "transaction_ids": "|".join(deductible_gap_transaction_ids),
-                },
-                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
-            ),
-        )
-    work_unit = wu_repo.load().get(revision.work_unit_id)
-    if work_unit is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": revision.work_unit_id},
-        )
-    try:
-        require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=revision)
-    except ModeloError as exc:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": command.calculation_revision_id,
-                "cause_type": type(exc).__name__,
-            },
-        ) from exc
-    if work_unit.bucket_id != active_bucket_id:
-        raise ModeloExportCrossBucketRefusedError(
-            translated_message="application.modelo.errors.export_cross_bucket_refused",
-            context={"work_unit_id": work_unit.work_unit_id},
-        )
-    export_period = _resolve_work_unit_period(work_unit)
-    schema_provider = build_runtime_schema_provider(
-        filing_year=export_period.filing_year,
-        period=export_period,
-        modelos=(work_unit.modelo,),
-    )
-    _raise_if_export_layout_unsupported(work_unit=work_unit, schema_provider=schema_provider)
-    from ._profile_readiness_gate import require_profile_ready_for_work_unit
-
-    require_profile_ready_for_work_unit(work_unit)
-    _require_persisted_required_bindings_resolved(
-        work_unit=work_unit,
-        revision=revision,
-        action="export",
-    )
-    iva_wallet_decision = require_persisted_iva_compensation_decision_matches_revision(
-        work_unit,
-        revision,
-        repository=iva_compensation_decision_repository,
-    )
-    require_cross_period_clean_state(
-        work_unit,
-        observation_repository=obs_repo,
-        filing_repository=fr_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        iva_compensation_decision=iva_wallet_decision,
-        expected_member_sets=cross_period_expected_member_sets_from_profile(
-            workflow_profile,
-            cross_period_expected_member_sets,
-        ),
-        taxpayer_tax_id=workflow_profile.tax_id,
-        activity_start_date=workflow_profile.activity_start_date,
-        modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
-        taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
+    prepared = _prepare_modelo_export(
+        command,
+        active_bucket_id=active_bucket_id,
         workflow_profile=workflow_profile,
-        target_revision=revision,
-    )
-    iva_wallet_provenance = _iva_wallet_decision_export_provenance(iva_wallet_decision)
-    prior_domiciliation_provenance = resolve_prior_domiciliation_election(
-        election=command.prior_domiciliation_election,
-        work_unit=work_unit,
-        revision=revision,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
         filing_repository=fr_repo,
-        observation_repository=obs_repo,
+        verification_repository=vr_repo,
+        calculation_observation_repository=obs_repo,
+        iva_compensation_decision_repository=iva_compensation_decision_repository,
+        cross_period_expected_member_sets=cross_period_expected_member_sets,
     )
-    _require_prior_domiciliation_marker_layout(
-        work_unit=work_unit,
-        prior_domiciliation_election=prior_domiciliation_provenance,
-        schema_provider=schema_provider,
-    )
+    work_unit = prepared.work_unit
+    revision = prepared.revision
+    export_period = prepared.period
+    schema_provider = prepared.schema_provider
+    iva_wallet_provenance = prepared.iva_wallet_provenance
+    prior_domiciliation_provenance = prepared.prior_domiciliation_election
 
     now = clock or _utc_now()
     export_period, approved = _approve_export_draft(

@@ -137,14 +137,14 @@ def test_compiler_constructs_the_required_module_shape_without_defaults() -> Non
             "cohort": "no_agricola",
             "slot": 1,
             "module_order": 7,
-            "value": "off_form_result",
+            "value": "cuota_devengada",
         },
     ) == M303RegimenSimplificadoModuleProjectionRef(
         projection_kind="m303_regimen_simplificado_module",
         cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
         slot=1,
         module_order=7,
-        value=M303RegimenSimplificadoModuleValue.OFF_FORM_RESULT,
+        value=M303RegimenSimplificadoModuleValue.CUOTA_DEVENGADA,
     )
 
 
@@ -196,6 +196,13 @@ def test_fact_identity_model_refuses_instead_of_normalizing_whitespace() -> None
             "slot": 1,
             "module_identity": "modulo-1",
             "value": "declared_quantity",
+        },
+        {
+            "projection_kind": "m303_regimen_simplificado_module",
+            "cohort": "no_agricola",
+            "slot": 1,
+            "module_order": 1,
+            "value": "off_form_result",
         },
     ],
 )

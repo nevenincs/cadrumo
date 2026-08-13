@@ -106,11 +106,10 @@ def is_translatable(
 
     This is the honest ``translate_formula`` would-succeed probe: it
     attempts the full closed-form compilation against the same layout and
-    reports failure iff a :class:`TranslationError` is raised (an
-    unsupported op such as the M303 régimen-simplificado
-    ``m303_resolve_modulos_iva_cuota_devengada`` custom runtime dispatch,
-    or a leaf the layout has not materialised). It never re-implements the
-    supported-op set, so it cannot drift from the real translator.
+    reports failure iff a :class:`TranslationError` is raised (for an
+    unsupported op or a leaf the layout has not materialised). It never
+    re-implements the supported-op set, so it cannot drift from the real
+    translator.
     """
     try:
         _translate(expression, layout=layout)

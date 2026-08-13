@@ -61,6 +61,7 @@ def test_non_applicable_projection_retains_the_typed_contract_without_source_tex
         orden=(),
         agricultural_authority=annual_orden.agricultural_authority,
         applicable=False,
+        calculation_result=None,
         censo_iae_epigraphs=frozenset(),
     )
 
@@ -77,6 +78,7 @@ def test_projection_rejects_missing_or_duplicate_typed_references() -> None:
             orden=(),
             agricultural_authority=annual_orden.agricultural_authority,
             applicable=False,
+            calculation_result=None,
             censo_iae_epigraphs=frozenset(),
         )
     with pytest.raises(RegistryValidationError, match="duplicate"):
@@ -86,6 +88,7 @@ def test_projection_rejects_missing_or_duplicate_typed_references() -> None:
             orden=(),
             agricultural_authority=annual_orden.agricultural_authority,
             applicable=False,
+            calculation_result=None,
             censo_iae_epigraphs=frozenset(),
         )
 
@@ -100,7 +103,7 @@ def test_projection_identity_never_uses_json_serialisation() -> None:
     assert "json.dumps" not in source
 
 
-def test_module_projection_uses_the_exact_annual_orden_ordinal() -> None:
+def test_declared_quantity_projection_uses_the_exact_annual_orden_ordinal() -> None:
     annual_orden = _resolved_annual_orden_for_2026()
     annual_activity = annual_orden.activities[0]
     assert annual_activity.kind == "no_agricola"
@@ -112,17 +115,16 @@ def test_module_projection_uses_the_exact_annual_orden_ordinal() -> None:
         ejercicio=annual_activity.ejercicio,
         activity_id="test-s60-actividad",
         iae_epigrafe=annual_activity.iae_epigrafe,
+        auxiliary_activity_indicator=annual_activity.auxiliary_activity_indicator,
         modulos=tuple(
             EntradaModuloSimplificado(
                 module_identity=module.identity,
                 declared_quantity=declared_quantity,
-                off_form_result=off_form_result,
                 evidence_reference=evidence,
             )
-            for module, declared_quantity, off_form_result in zip(
+            for module, declared_quantity in zip(
                 annual_activity.modulos,
                 (Decimal("10"), Decimal("20"), Decimal("30")),
-                (Decimal("100"), Decimal("200"), Decimal("300")),
                 strict=True,
             )
         ),
@@ -146,22 +148,16 @@ def test_module_projection_uses_the_exact_annual_orden_ordinal() -> None:
                 module_order=2,
                 value=M303RegimenSimplificadoModuleValue.DECLARED_QUANTITY,
             ),
-            M303RegimenSimplificadoModuleProjectionRef(
-                projection_kind="m303_regimen_simplificado_module",
-                cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
-                slot=1,
-                module_order=3,
-                value=M303RegimenSimplificadoModuleValue.OFF_FORM_RESULT,
-            ),
         ),
         rows=RegimenSimplificadoFilingRows(ejercicio=annual_activity.ejercicio, activities=(activity,)),
         orden=annual_orden.activities,
         agricultural_authority=annual_orden.agricultural_authority,
         applicable=True,
+        calculation_result=None,
         censo_iae_epigraphs=frozenset({annual_activity.iae_epigrafe}),
     )
 
-    assert tuple(field.value for field in projected[0].fields) == (Decimal("20"), Decimal("300"))
+    assert tuple(field.value for field in projected[0].fields) == (Decimal("20"),)
 
 
 def test_agricultural_projection_refuses_without_official_code_crosswalk() -> None:
@@ -190,6 +186,7 @@ def test_agricultural_projection_refuses_without_official_code_crosswalk() -> No
             orden=annual_orden.activities,
             agricultural_authority=agricultural_authority,
             applicable=True,
+            calculation_result=None,
             censo_iae_epigraphs=frozenset(),
         )
 

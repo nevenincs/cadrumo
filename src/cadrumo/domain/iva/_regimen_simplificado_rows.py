@@ -147,6 +147,38 @@ class DificilJustificacionOrdenAnual(BaseModel):
     source_refs: tuple[_Token, ...] = Field(min_length=1)
 
 
+class ReduccionLorcaOrdenAnual(BaseModel):
+    """The 2022 Annex-II Lorca IVA reduction before any activity calculation."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    ejercicio: Literal[2022] = 2022
+    municipality: Literal["Lorca"] = "Lorca"
+    annex_scope: Literal["ANEXO II"] = "ANEXO II"
+    percentage: _NonNegative
+    calculation_periods: tuple[Literal["trimestral", "anual"], Literal["trimestral", "anual"]] = (
+        "trimestral",
+        "anual",
+    )
+    legal_refs: tuple[_Token, ...] = Field(min_length=1, max_length=1)
+    source_refs: tuple[_Token, ...] = Field(min_length=1, max_length=1)
+    source_content_digest: _Token
+
+    @model_validator(mode="after")
+    def _is_the_exact_lorca_2022_reduction(self) -> ReduccionLorcaOrdenAnual:
+        if self.percentage != Decimal("20"):
+            raise IvaValidationError("the Lorca 2022 annual Orden reduction must be exactly 20 percent")
+        if self.calculation_periods != ("trimestral", "anual"):
+            raise IvaValidationError("the Lorca 2022 reduction must cover quarterly and annual calculations")
+        if self.legal_refs != ("orden-hfp-1335-2021:da-4-lorca-2022-reduction:lorca-2022-reduction",):
+            raise IvaValidationError("the Lorca 2022 reduction must retain its exact HFP/1335 legal reference")
+        if self.source_refs != ("boe-orden-hfp-1335-2021-iva-authority",):
+            raise IvaValidationError("the Lorca 2022 reduction must retain its exact HFP/1335 source reference")
+        if self.source_content_digest != "3fda96dcf2dcb3b3f0863bc07b0eabd45e21c6850d4b611e635627befb450c46":
+            raise IvaValidationError("the Lorca 2022 reduction must retain its exact HFP/1335 source digest")
+        return self
+
+
 class AutoridadAgricolaOrdenAnualNoResuelta(BaseModel):
     """Published agricultural axes whose official two-digit filing-code crosswalk is absent."""
 
@@ -155,6 +187,11 @@ class AutoridadAgricolaOrdenAnualNoResuelta(BaseModel):
     status: Literal["official_code_crosswalk_unavailable"] = "official_code_crosswalk_unavailable"
     quota_indexes: tuple[IndiceCuotaDevengadaAgricolaOrdenAnual, ...] = Field(min_length=1)
     ingreso_a_cuenta_percentages: tuple[PorcentajeIngresoCuentaAgricolaOrdenAnual, ...] = Field(min_length=1)
+    annual_orden_source_ref: _Token
+    record_design_source_ref: _Token
+    record_design_source_content_digest: _Token
+    filing_record: Literal["DP30302"] = "DP30302"
+    filing_code_digits: Literal[2] = 2
     refusal_reason: Literal["annual_orden_does_not_publish_dp30302_two_digit_agricultural_crosswalk"] = (
         "annual_orden_does_not_publish_dp30302_two_digit_agricultural_crosswalk"
     )
@@ -200,13 +237,12 @@ class HechoActividadSimplificado(BaseModel):
 
 
 class EntradaModuloSimplificado(BaseModel):
-    """Taxpayer quantity and evidence-backed off-form result for one module."""
+    """One taxpayer-declared module quantity and its filing evidence."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     module_identity: _Token
     declared_quantity: _NonNegative
-    off_form_result: _NonNegative
     evidence_reference: FilingEvidenceReference
 
 
@@ -379,7 +415,9 @@ def _validate_non_agricultural_activity(
         raise IvaValidationError(f"activity {row.activity_id!r} IAE conflicts with its annual Orden identity")
     resolved = _resolve_non_agricultural_orden_activity(row, orden)
     if resolved.orden_id != annual.orden_id:
-        raise IvaValidationError(f"activity {row.activity_id!r} Orden identity conflicts with its exact IAE discriminator")
+        raise IvaValidationError(
+            f"activity {row.activity_id!r} Orden identity conflicts with its exact IAE discriminator"
+        )
     if row.iae_epigrafe not in censo_iae_epigraphs:
         raise IvaValidationError(f"IAE epigraph {row.iae_epigrafe!r} conflicts with censo")
     actual = tuple(module.module_identity for module in row.modulos)
@@ -394,7 +432,13 @@ def _resolve_non_agricultural_orden_activity(
     row: ActividadNoAgricolaSimplificado,
     orden: tuple[ActividadOrdenAnual, ...],
 ) -> ActividadOrdenAnual:
-    candidates = tuple(activity for activity in orden if activity.kind == "no_agricola" and activity.iae_epigrafe == row.iae_epigrafe and activity.auxiliary_activity_indicator == row.auxiliary_activity_indicator)
+    candidates = tuple(
+        activity
+        for activity in orden
+        if activity.kind == "no_agricola"
+        and activity.iae_epigrafe == row.iae_epigrafe
+        and activity.auxiliary_activity_indicator == row.auxiliary_activity_indicator
+    )
     if len(candidates) != 1:
         raise IvaValidationError(f"activity {row.activity_id!r} does not resolve to exactly one annual Orden activity")
     return candidates[0]
@@ -422,6 +466,7 @@ __all__ = [
     "ModuloOrdenAnual",
     "PorcentajeIngresoCuentaAgricolaOrdenAnual",
     "PorcentajeIngresoCuentaIaeOrdenAnual",
+    "ReduccionLorcaOrdenAnual",
     "RegimenSimplificadoActivity",
     "RegimenSimplificadoFilingRows",
     "validate_regimen_simplificado_rows",

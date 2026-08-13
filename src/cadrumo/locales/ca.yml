@@ -920,8 +920,6 @@ application:
           legal ni les seves fonts.
         binding_row_key_not_positive_integer: La clau de fila d'una entrada de binding
           ha de ser un enter positiu.
-        binding_source_not_typed: El binding del registre declara un origen sense
-          tipar.
         binding_text_value_invalid: El valor de text del binding no correspon al tipus
           de dada declarat al registre.
         binding_value_not_boolean: El valor d'entrada del binding no és un sí o no
@@ -67460,36 +67458,6 @@ modelo:
             '99':
               help: null
               label: null
-            modulos-iva-1-unidades:
-              help: null
-              label: null
-            modulos-iva-2-unidades:
-              help: null
-              label: null
-            modulos-iva-3-unidades:
-              help: null
-              label: null
-            modulos-iva-4-unidades:
-              help: null
-              label: null
-            modulos-iva-5-unidades:
-              help: null
-              label: null
-            modulos-iva-6-unidades:
-              help: null
-              label: null
-            modulos-iva-7-unidades:
-              help: null
-              label: null
-            modulos-iva-cuota-derivada:
-              help: null
-              label: null
-            modulos-iva-cuota-devengada:
-              help: null
-              label: null
-            modulos-iva-orden-id:
-              help: null
-              label: null
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: null
@@ -68113,36 +68081,6 @@ modelo:
               help: null
               label: null
             '99':
-              help: null
-              label: null
-            modulos-iva-1-unidades:
-              help: null
-              label: null
-            modulos-iva-2-unidades:
-              help: null
-              label: null
-            modulos-iva-3-unidades:
-              help: null
-              label: null
-            modulos-iva-4-unidades:
-              help: null
-              label: null
-            modulos-iva-5-unidades:
-              help: null
-              label: null
-            modulos-iva-6-unidades:
-              help: null
-              label: null
-            modulos-iva-7-unidades:
-              help: null
-              label: null
-            modulos-iva-cuota-derivada:
-              help: null
-              label: null
-            modulos-iva-cuota-devengada:
-              help: null
-              label: null
-            modulos-iva-orden-id:
               help: null
               label: null
             x-chim6r1ecll6asj3d5hmiro:
@@ -68770,36 +68708,6 @@ modelo:
             '99':
               help: null
               label: null
-            modulos-iva-1-unidades:
-              help: null
-              label: null
-            modulos-iva-2-unidades:
-              help: null
-              label: null
-            modulos-iva-3-unidades:
-              help: null
-              label: null
-            modulos-iva-4-unidades:
-              help: null
-              label: null
-            modulos-iva-5-unidades:
-              help: null
-              label: null
-            modulos-iva-6-unidades:
-              help: null
-              label: null
-            modulos-iva-7-unidades:
-              help: null
-              label: null
-            modulos-iva-cuota-derivada:
-              help: null
-              label: null
-            modulos-iva-cuota-devengada:
-              help: null
-              label: null
-            modulos-iva-orden-id:
-              help: null
-              label: null
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: null
@@ -69423,36 +69331,6 @@ modelo:
               help: null
               label: null
             '99':
-              help: null
-              label: null
-            modulos-iva-1-unidades:
-              help: null
-              label: null
-            modulos-iva-2-unidades:
-              help: null
-              label: null
-            modulos-iva-3-unidades:
-              help: null
-              label: null
-            modulos-iva-4-unidades:
-              help: null
-              label: null
-            modulos-iva-5-unidades:
-              help: null
-              label: null
-            modulos-iva-6-unidades:
-              help: null
-              label: null
-            modulos-iva-7-unidades:
-              help: null
-              label: null
-            modulos-iva-cuota-derivada:
-              help: null
-              label: null
-            modulos-iva-cuota-devengada:
-              help: null
-              label: null
-            modulos-iva-orden-id:
               help: null
               label: null
             x-chim6r1ecll6asj3d5hmiro:
@@ -70181,36 +70059,6 @@ modelo:
               help: null
               label: null
             '99':
-              help: null
-              label: null
-            modulos-iva-1-unidades:
-              help: null
-              label: null
-            modulos-iva-2-unidades:
-              help: null
-              label: null
-            modulos-iva-3-unidades:
-              help: null
-              label: null
-            modulos-iva-4-unidades:
-              help: null
-              label: null
-            modulos-iva-5-unidades:
-              help: null
-              label: null
-            modulos-iva-6-unidades:
-              help: null
-              label: null
-            modulos-iva-7-unidades:
-              help: null
-              label: null
-            modulos-iva-cuota-derivada:
-              help: null
-              label: null
-            modulos-iva-cuota-devengada:
-              help: null
-              label: null
-            modulos-iva-orden-id:
               help: null
               label: null
             x-chim6r1ecll6asj3d5hmiro:

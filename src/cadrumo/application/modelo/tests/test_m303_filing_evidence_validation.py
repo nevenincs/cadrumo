@@ -207,7 +207,6 @@ def _simplified_evidence(period: Period) -> FilingInstanceEvidence:
                     EntradaModuloSimplificado(
                         module_identity=module.identity,
                         declared_quantity=Decimal("1") if index == 0 else Decimal("0"),
-                        off_form_result=module.coefficient,
                         evidence_reference=reference,
                     )
                     for index, module in enumerate(annual.modulos)

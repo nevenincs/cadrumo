@@ -239,8 +239,6 @@ FormulaOperator = Literal[
     "m131_resolve_modulos_pequena_dimension_ignorado_flag",
     "m131_resolve_modulos_temporada_inicio_conflicto_flag",
     "m100_resolve_eo_agraria_indices_correctores",
-    "m303_resolve_modulos_iva_cuota_devengada",
-    "m303_resolve_modulos_iva_cuota_minima_pct",
 ]
 
 

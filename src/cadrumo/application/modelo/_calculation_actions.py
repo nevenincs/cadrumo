@@ -65,7 +65,6 @@ from ...domain.buckets import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
     BindingId,
     InputKind,
-    M303AnnualOrdenSnapshot,
     ModeloRevision,
     RegistryCalculationResult,
     RelationId,
@@ -77,7 +76,6 @@ from ...domain.calculations.registry import (
     resolve_available_bound_inputs_by_casilla_id,
     validated_text_input_casilla_ids,
 )
-from ...domain.iva import M303RegimenSimplificadoScopeDecision
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -150,7 +148,6 @@ from ._calculation_source_staging import (
 )
 from ._m210_agrupacion_renta import validate_m210_agrupacion_renta_rows_for_calculation
 from ._m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
-from ._m303_regimen_simplificado_scope import resolve_m303_regimen_simplificado_scope
 from ._m349_ledger_guard import (
     raise_if_m349_intracom_ledger_rows_need_operator_rows as _raise_if_m349_intracom_ledger_rows_need_operator_rows,
 )
@@ -196,7 +193,6 @@ class _BucketAggregationPreparation:
 
     work_unit: WorkUnit
     snapshot: RegistrySnapshot
-    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None
     casilla_inputs: Mapping[CasillaId, Decimal]
     source_casilla_inputs: Mapping[CasillaId, Decimal] | None
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None
@@ -388,7 +384,6 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     source_provenance: tuple[CalculationSourceRef, ...] = (),
     source_issues: tuple[CalculationSourceIssue, ...] = (),
     filing_instance_evidence: FilingInstanceEvidence | None = None,
-    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None = None,
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Calculate with source evidence produced by the in-module source mesh only.
@@ -456,7 +451,6 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         borrador_snapshot_repository=borrador_snapshot_repository,
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
-        m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
     )
     work_units = prepared.work_units
     work_unit = prepared.work_unit
@@ -495,8 +489,6 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
         date_binding_values=prepared.channels.date_bindings,
-        m303_regimen_simplificado_scope=prepared.m303_regimen_simplificado_scope,
-        filing_instance_evidence=filing_instance_evidence,
     )
 
     replay_payloads = _build_calculation_replay_payloads(
@@ -577,8 +569,6 @@ def _calculate_prepared_registry_snapshot(
     unresolved_relation_ids: tuple[RelationId, ...],
     unresolved_binding_ids: tuple[BindingId, ...],
     date_binding_values: Mapping[BindingId, date],
-    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None,
-    filing_instance_evidence: FilingInstanceEvidence | None,
 ) -> RegistryCalculationResult:
     """Evaluate the registry after application channels have been resolved."""
     return calculate_registry_snapshot(
@@ -592,21 +582,7 @@ def _calculate_prepared_registry_snapshot(
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
         date_binding_values=date_binding_values or None,
-        m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
-        m303_annual_orden=_m303_annual_orden_from_filing_evidence(filing_instance_evidence),
     )
-
-
-def _m303_annual_orden_from_filing_evidence(
-    filing_instance_evidence: FilingInstanceEvidence | None,
-) -> M303AnnualOrdenSnapshot | None:
-    """Return accepted annual-Orden authority only for a claimed M303 scope."""
-    if filing_instance_evidence is None:
-        return None
-    regimen_simplificado = filing_instance_evidence.m303.regimen_simplificado
-    if regimen_simplificado.scope_decision.is_not_claimed:
-        return None
-    return regimen_simplificado.regimen_snapshot.orden
 
 
 def calculate_modelo_revision_from_bucket_aggregation(
@@ -704,8 +680,6 @@ def _resolve_bucket_source_mesh(
     date_binding_values: Mapping[BindingId, date] | None = None,
     relation_values: Mapping[RelationId, Decimal] | None = None,
     filing_period_date: date | None = None,
-    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None = None,
-    m303_annual_orden: M303AnnualOrdenSnapshot | None = None,
 ) -> CalculationSourceResolution:
     """Resolve the live source mesh for a bucket-aggregation calculation.
 
@@ -876,8 +850,6 @@ def _resolve_bucket_source_mesh(
         date_binding_values=date_binding_values,
         relation_values=relation_values,
         filing_period_date=filing_period_date,
-        m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
-        m303_annual_orden=m303_annual_orden,
         prorrata_register_repository=prorrata_register_repository,
         observation_repository=CalculationObservationRepository(bucket_id=work_unit.bucket_id),
     )
@@ -1109,7 +1081,6 @@ def _prepare_bucket_aggregation_calculation(
     return _BucketAggregationPreparation(
         work_unit=work_unit,
         snapshot=snapshot,
-        m303_regimen_simplificado_scope=resolve_m303_regimen_simplificado_scope(work_unit),
         casilla_inputs=validated_casilla_inputs,
         source_casilla_inputs=casilla_inputs if casilla_inputs is None else validated_casilla_inputs,
         m210_gross_income_source_mode=resolved_m210_gross_income_source_mode,
@@ -1150,7 +1121,6 @@ def _resolve_bucket_aggregation_source_resolution(
     m210_official_tipo_renta_code: str | None,
     enum_binding_values: Mapping[BindingId, str] | None,
     filing_period_date: date | None,
-    filing_instance_evidence: FilingInstanceEvidence | None,
 ) -> CalculationSourceResolution:
     """Resolve the mesh, then enforce its final exclusive ownership set."""
     source_resolution = _resolve_bucket_source_mesh(
@@ -1167,8 +1137,6 @@ def _resolve_bucket_aggregation_source_resolution(
         enum_binding_values=enum_binding_values,
         relation_values=preparation.source_relation_values,
         filing_period_date=filing_period_date,
-        m303_regimen_simplificado_scope=preparation.m303_regimen_simplificado_scope,
-        m303_annual_orden=_m303_annual_orden_from_filing_evidence(filing_instance_evidence),
     )
     _reject_caller_overrides_of_source_bindings(
         revision=preparation.snapshot.revision,
@@ -1313,7 +1281,6 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         enum_binding_values=enum_binding_values,
         filing_period_date=filing_period_date,
-        filing_instance_evidence=filing_instance_evidence,
     )
     channels = _bucket_aggregation_channels(
         preparation=preparation,
@@ -1344,7 +1311,6 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         source_provenance=_source_provenance_refs(channels.source_resolution),
         source_issues=_unrouted_source_issues(channels.reconciliation.source_diagnostics),
         filing_instance_evidence=filing_instance_evidence,
-        m303_regimen_simplificado_scope=preparation.m303_regimen_simplificado_scope,
         filing_period_date=filing_period_date,
         work_unit_repository=wu_repo,
         calculation_repository=calculation_repository,
