@@ -252,7 +252,7 @@ msgstr ""
 
 #: ../../how-to/onboarding.md:92
 msgid ""
-"Finish with: [Upload your exported modelo at the AEAT portal](file-at-"
+"Finish with: [File your modelo at the AEAT portal](file-at-"
 "aeat.md), then [How to reconcile a filed modelo against its "
 "justificante](reconcile.md)."
 msgstr ""

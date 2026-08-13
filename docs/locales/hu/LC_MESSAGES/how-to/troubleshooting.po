@@ -255,7 +255,7 @@ msgstr "Egy benyújtás rögzítése elutasít, mert a benyújtási ablak nincs 
 #: ../../how-to/troubleshooting.md:117
 msgid ""
 "This refusal applies to `aeat app modelo work file` only - exporting works "
-"at any time. See [Upload your exported modelo at the AEAT portal](file-at-"
+"at any time. See [File your modelo at the AEAT portal](file-at-"
 "aeat.md) for the recording workflow and [Plan your filing calendar](filing-"
 "calendar.md) for when each window opens."
 msgstr ""

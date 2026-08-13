@@ -169,7 +169,7 @@ stored record.
 - [Import, export, and evidence](../reference/import-export-and-evidence.md) -
   understand what the justificante proves and what a complete audit handoff
   still requires.
-- [Upload your exported modelo at the AEAT portal](file-at-aeat.md) - the
+- [File your modelo at the AEAT portal](file-at-aeat.md) - the
   filing handoff that produces the justificante.
 - [Quickstart](quickstart.md) - the end-to-end filing workflow.
 - [Review and supply calculation inputs](review-calculation-values.md) - amend

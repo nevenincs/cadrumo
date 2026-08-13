@@ -1,17 +1,25 @@
-# Upload your exported modelo at the AEAT portal
+# File your modelo at the AEAT portal
 
-This page covers the handoff from a verified draft to a real filing at AEAT,
-as an ordered checklist: export the file, upload it yourself at the portal,
-save the justificante, and record the filing locally. You prepare and export a {term}`modelo` with `aeat`, but the tool never submits anything to
-AEAT. You upload the exported file at the AEAT portal yourself, signed with
-your own credentials. The `work file` command at the end records a local marker
-only; it does not and cannot file on your behalf.
+This page covers the handoff from a verified draft to a real filing at AEAT, as
+an ordered checklist: present the figures yourself at the portal, save the
+justificante, and record the filing locally. You prepare and check a
+{term}`modelo` with `aeat`, but the tool never submits anything to AEAT. You
+file at the portal yourself, signed with your own credentials. The `work file`
+command at the end records a local marker only; it does not and cannot file on
+your behalf.
+
+How you present depends on the modelo. Some carry an official fichero-BOE
+record layout, and for those you upload a file. Modelo 303 and Modelo 130 do
+not: the registry withdraws a layout whenever some field it contains cannot yet
+be produced from checked values, because a partial layout can under-declare
+without saying so. For those, `export` refuses and you key the calculated box
+values into the portal form.
 
 ## Before you start
 
 You need:
 
-- An active taxpayer profile carrying `--name` and `--surnames`, or the export
+- An active taxpayer profile carrying `--name` and `--surnames`, or filing
   refuses because it cannot stamp the operator name. Create one with
   `aeat config profile create`; see
   [Set up your taxpayer profile](profile-setup.md).
@@ -34,43 +42,45 @@ If you're new to the workflow as a whole, start with the
 
 The sequence below runs the machine half of the filing end to end: it prepares a
 classified, evidenced Modelo 303 for the first quarter of 2026, verifies it,
-confirms the verified revision, exports the fichero, and records the local filed
-marker. Between the export and the marker, you upload the file at the AEAT portal
-yourself (steps 2 to 4 below). The final frame is the reconcile command you run
-once you have AEAT's justificante on disk; it is shown but not run here, because
-it needs your real receipt:
+confirms the verified revision, shows `export` refusing, and records the local
+filed marker. Between the refusal and the marker, you present the figures at the
+AEAT portal yourself (steps 2 to 4 below). The final frame is the reconcile
+command you run once you have AEAT's justificante on disk; it is shown but not
+run here, because it needs your real receipt:
 
 ```{cli-sequence} file-at-aeat-chain
-:verify: Confirm the verified draft exports a file and records the local marker.
+:verify: Confirm the verified draft refuses export and records the local marker.
 ```
 
 The rest of this page walks each step of that chain in order.
 
-## Step 1: confirm the draft is verified, then export
+## Step 1: confirm the draft is verified
 
 If no verified calculation exists, `work revision --select latest-verified`
-refuses; run verification first, because the export refuses an unverified draft.
-See [verification reports](verification-reports.md).
+refuses; run verification first. See
+[verification reports](verification-reports.md).
 
-The exported `.boe` file is a fixed-width text file in the official BOE
-(Boletín Oficial del Estado) record layout, not a PDF or a spreadsheet. The
-export runs entirely on your machine and never contacts AEAT.
+Read the verified figures back with `aeat app modelo work revision`. These are
+the values you present at the portal, box by box.
 
-The command prints the written file's path, its size in bytes, and its SHA-256
-checksum. Record the checksum. It is a fingerprint of the file's exact
-contents (change a single digit and the code changes completely), so if a
-question ever comes up about which version you filed, re-derive the checksum
-from the file on disk and compare: matching codes mean it is the same file.
+For a modelo that does carry a layout, `export` writes a `.boe` file: a
+fixed-width text file in the official BOE (Boletín Oficial del Estado) record
+layout, not a PDF or a spreadsheet. It runs entirely on your machine and never
+contacts AEAT, and it prints the file's path, size and SHA-256 checksum. Record
+that checksum: it fingerprints the file's exact contents, so if a question ever
+comes up about which version you filed, re-derive it from the file on disk and
+compare.
 
-## Step 2: upload the file at the AEAT portal yourself
+## Step 2: present the figures at the AEAT portal yourself
 
 This step happens entirely outside `aeat`, in your browser. Log in with your
 own certificate or Cl@ve. Do not expect the tool to do any part of this step
 for you.
 
 1. Log in at AEAT's Sede Electrónica.
-2. Choose the file-upload presentation page for your modelo and period.
-3. Import the exported `.boe` file.
+2. Choose the presentation page for your modelo and period.
+3. Enter the calculated box values in the form. If your modelo carries a
+   fichero-BOE layout and you exported one, import that file instead.
 4. Review the figures the portal shows against your verified calculation.
 5. Sign and submit.
 
@@ -99,7 +109,7 @@ If the command refuses, the usual causes are:
 
 - The filing window gate: the period's filing window isn't open. A window that
   has already closed cannot be reopened. The refusal message suggests what to
-  do instead, and export keeps working either way. See the
+  do instead. See the
   [filing calendar](filing-calendar.md) for window dates.
 - The verification state: the saved calculation isn't verified.
 
@@ -126,22 +136,22 @@ See [Pull and store the justificante](reconcile.md#pull-and-store-the-justifican
 
 ## If something goes wrong at the portal
 
-If the upload was rejected or interrupted, or you uploaded the wrong file, do
-not record the local filed marker. The marker describes only a submission that
-succeeded at the portal.
+If the submission was rejected or interrupted, or you presented the wrong
+figures, do not record the local filed marker. The marker describes only a
+submission that succeeded at the portal.
 
 Instead:
 
 1. Fix the draft in `aeat`.
 2. Re-verify the calculation.
-3. Re-export the filing file.
-4. Retry the upload at the portal.
+3. Read the corrected figures back with `aeat app modelo work revision`.
+4. Retry the presentation at the portal.
 
-Before retrying, use the checksum printed at export to confirm which file is
-on disk. If it matches the one you recorded, you have the same file you
-uploaded before.
+If you filed by uploading a `.boe` file, re-export it and use the checksum
+printed at export to confirm which file is on disk. If it matches the one you
+recorded, you have the same file you presented before.
 
-If the portal rejected the file itself, consult AEAT or your advisor. The
+If the portal rejected the submission itself, consult AEAT or your advisor. The
 rejection happened on AEAT's side, and their message is the authoritative
 explanation.
 
@@ -159,7 +169,7 @@ DNI, NIE, or NII.
   distinguish the local upload file from official AEAT filing proof.
 - [Reconcile a filing](reconcile.md) - read verdicts and resolve mismatches.
 - [Verification reports](verification-reports.md) - understand what "verified"
-  means before you export.
+  means before you file.
 - [Filing calendar](filing-calendar.md) - see when each period's filing window
   opens and closes.
 - [Check AEAT notifications](check-aeat-notifications.md) - read AEAT's view

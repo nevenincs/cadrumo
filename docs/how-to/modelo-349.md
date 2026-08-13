@@ -106,5 +106,5 @@ the declarations. See [Prepare a Modelo 303 IVA filing](modelo-303.md).
 - [Manage invoices](manage-invoices.md)
 - [Prepare a Modelo 303 IVA filing](modelo-303.md)
 - [Plan your filing calendar](filing-calendar.md)
-- [Upload your exported modelo at the AEAT portal](file-at-aeat.md)
+- [File your modelo at the AEAT portal](file-at-aeat.md)
 - [Reconcile a filing](reconcile.md)

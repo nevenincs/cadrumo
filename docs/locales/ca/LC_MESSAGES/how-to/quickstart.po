@@ -439,7 +439,7 @@ msgstr ""
 #: ../../how-to/quickstart.md:215
 msgid ""
 "The full handoff checklist, including what to do when the upload goes "
-"wrong, is in [Upload your exported modelo at the AEAT portal](file-at-"
+"wrong, is in [File your modelo at the AEAT portal](file-at-"
 "aeat.md)."
 msgstr ""
 "La llista de comprovació completa del traspàs, inclòs què fer quan la "

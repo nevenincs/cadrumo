@@ -114,7 +114,7 @@ Exports only work from a calculation that passed verification. Run the verificat
 
 ## Recording a filing refuses because the filing window is not open
 
-This refusal applies to `aeat app modelo work file` only - exporting works at any time. See [Upload your exported modelo at the AEAT portal](file-at-aeat.md) for the recording workflow and [Plan your filing calendar](filing-calendar.md) for when each window opens.
+This refusal applies to `aeat app modelo work file` only - exporting works at any time. See [File your modelo at the AEAT portal](file-at-aeat.md) for the recording workflow and [Plan your filing calendar](filing-calendar.md) for when each window opens.
 
 ## Output appears in the wrong language
 

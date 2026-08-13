@@ -3,13 +3,13 @@
 This page covers one full IRPF year for an example taxpayer: four quarterly
 Modelo 130 instalments, each building on the ones before it, closing with
 the annual Modelo 100 Renta declaration that gathers the whole year. You
-start from an empty store; by the end you have prepared and exported every
+start from an empty store; by the end you have prepared and filed every
 IRPF filing the year asks of a self-employed consultant.
 
 Cadrumo (the `aeat` command) prepares local files for Spanish tax forms. It
 does not submit them to the Agencia Estatal de Administración Tributaria
-(AEAT). At each filing you upload the exported file yourself through the
-AEAT portal.
+(AEAT). Modelo 130 has no fichero-BOE layout, so at each filing you enter the
+calculated box values yourself through the AEAT portal.
 
 Meet the persona this run-through follows: Ana García López, a consultant
 (*consultoría*) who started her activity on January 1, 2026, invoices her
@@ -37,8 +37,8 @@ sandbox provisions its own profile, so this create is shown as a display frame:
 ```{cli-sequence} irpf-lifecycle-profile
 ```
 
-The `--name` and `--surnames` are required: the export step refuses without
-an operator name. The `--activity-start-date` marks when the activity began,
+The `--name` and `--surnames` are required: filing refuses without an
+operator name. The `--activity-start-date` marks when the activity began,
 so `aeat` does not look for a filing from before your first period. The
 sample `--tax-id` has the shape of a Spanish citizen's NIF; use your own
 NIF, CIF, DNI, or NIE for a real profile.
@@ -61,7 +61,7 @@ is the gross total (taxable base plus IVA), and an expense row needs a
 
 Register the supplier's invoice for that expense, and link it to the expense
 row before you calculate. An expense row that claims deductible IVA cannot be
-exported or filed without its invoice. A draft bundles its evidence at the
+filed without its invoice. A draft bundles its evidence at the
 moment you verify it, so an invoice linked after that never reaches the
 filing. The invoice registration and the two `ledger add` commands appear as
 the collapsed preparation of the sequence below.
@@ -70,11 +70,11 @@ Create and calculate the first instalment. Modelo 130 is cumulative, and a
 true first period has no history, so the three prior-period carries are
 passed as zeros - this is the only quarter where you do this. The sequence
 below records the quarter's two rows, creates and calculates the draft,
-verifies it, and exports the fichero-BOE file; the file and reconcile
-commands that close the quarter are shown after the exported result:
+verifies it, and shows the export refusing; the file and reconcile commands
+that close the quarter are shown after it:
 
 ```{cli-sequence} irpf-lifecycle-q1
-:verify: Confirm the first instalment exports to a fichero-BOE file once it verifies.
+:verify: Confirm the first instalment verifies and the export refuses.
 ```
 
 The key figures show the year so far: 1000 earned, 500 spent, and an
@@ -90,18 +90,18 @@ key_figure	19	0.00	Resultado final
 absorbs the whole instalment - casilla 13 in the output shows it.)
 
 Verify reports `completeness_status complete` and
-`granted_verificado_completo true` (the sequence above asserts this). Export
-writes the fichero-BOE file and prints its path, size, and SHA-256 checksum -
-note the checksum; it identifies exactly which file you upload.
+`granted_verificado_completo true` (the sequence above asserts this). `export`
+refuses: Modelo 130 carries no fichero-BOE layout, so there is no upload file to
+produce.
 
-Upload the file at the AEAT portal (the checklist is
-[Upload your exported modelo at the AEAT portal](file-at-aeat.md)), then record
+Enter the calculated figures at the AEAT portal (the checklist is
+[File your modelo at the AEAT portal](file-at-aeat.md)), then record
 the filing locally with `aeat app modelo work file` while the presentation
 window is open. `work file` saves a local marker only - it does not submit
 anything. The marker is what lets the next quarter's carries resolve from this
 one. Finally, pull the justificante with `aeat app modelo reconcile pull` so the
 official receipt is on record. Both commands (file, reconcile pull) are shown
-after the exported result in the sequence above.
+after the refusal in the sequence above.
 
 ## Stage 3: the second and third quarters
 
@@ -111,10 +111,10 @@ invoice to that expense row here too, before you calculate. Now the cumulative
 behaviour shows itself: the second-quarter draft calculates with NO `--binding`
 zeros, resolving the carries from the filed first quarter. The sequence below
 prepares and files that first quarter in its collapsed preparation, then runs
-the whole second quarter through to its exported file:
+the whole second quarter through to its filed marker:
 
 ```{cli-sequence} irpf-lifecycle-q2
-:verify: Confirm the second quarter verifies and exports with its carries resolved from the filed first quarter.
+:verify: Confirm the second quarter verifies with its carries resolved from the filed first quarter.
 ```
 
 Read the revision and compare it with the first quarter's:

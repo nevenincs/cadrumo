@@ -8,8 +8,8 @@ annual Modelo 390 summary that must reconcile with the four quarters.
 
 Cadrumo (the `aeat` command) prepares local files for Spanish tax forms. It
 does not submit them to the Agencia Estatal de Administración Tributaria
-(AEAT). At each filing you upload the exported file yourself through the
-AEAT portal.
+(AEAT). Modelo 303 has no fichero-BOE layout, so at each filing you enter the
+calculated box values yourself through the AEAT portal.
 
 The persona and the ledger continue from the income-tax run-through: Ana García
 López, consultant, activity started January 1, 2026. The same sale and
@@ -67,11 +67,12 @@ would want it locked.
 ## Stage 2: the first quarterly return
 
 The first quarter's rows are already recorded and classified with their IVA
-detail (the sequence seeds them). Create, calculate, verify, file, and export
-Modelo 303 for the quarter:
+detail (the sequence seeds them). Create, calculate, verify and file Modelo
+303 for the quarter; the export step refuses, because the modelo has no
+fichero-BOE layout:
 
 ```{cli-sequence} iva-lifecycle-q1
-:verify: Confirm the first quarter's IVA return verifies, files, and exports.
+:verify: Confirm the first quarter's IVA return verifies, files, and the export refuses.
 ```
 
 Calculation routes the classified rows into the IVA boxes: the sale's 210 of
@@ -104,7 +105,7 @@ Record the equipment purchase, then run the same chain as the first quarter:
 The commands from `work calculate` onwards each read the filed first quarter the
 credit carries from, so they are shown as display frames. Link the equipment
 supplier's invoice to the ledger row before you calculate: a quarter that claims
-deductible IVA cannot be exported or filed until every deductible row carries
+deductible IVA cannot be filed until every deductible row carries
 its invoice. [Attach invoices and receipts](ledger-evidence.md) walks through it.
 
 In the third quarter the carry shows itself: the same chain with `3T` brings the

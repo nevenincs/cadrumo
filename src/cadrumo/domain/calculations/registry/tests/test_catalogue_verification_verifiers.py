@@ -15,7 +15,7 @@ from .....core.config import Settings
 from .._citation_blocklist import KnownBadCitation, _fold_diacritics, find_known_bad, known_bad_citations
 from .._corpus_catalogue import verify_source_catalogue, verify_source_file
 from .._errors import RegistryValidationError
-from .._legal import verify_legal_catalogue
+from .._legal import assert_legal_ref_ids_resolve, verify_legal_catalogue
 from .._schema import LegalReference, RegistryCatalogues, SourceCitation, SourceReference
 from .._validate import RegistryValidator
 from .._validate_evidence import EvidenceValidator
@@ -902,3 +902,41 @@ def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> No
     _write_extracted_unit(section_path, anchor="sec1", text="Seccion 1")
 
     verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
+
+
+def test_assert_legal_ref_ids_resolve_refuses_an_id_absent_from_the_catalogue() -> None:
+    """A declared id that resolves to no catalogue entry is refused, naming the id and its subject."""
+    catalogue = _catalogues().legal
+
+    with pytest.raises(RegistryValidationError, match=r"eligibility-rule advisory.*not-a-real-provision") as exc_info:
+        assert_legal_ref_ids_resolve(
+            ("not-a-real-provision",),
+            legal=catalogue,
+            subject="eligibility-rule advisory",
+        )
+
+    assert "not-a-real-provision" in str(exc_info.value)
+
+
+def test_assert_legal_ref_ids_resolve_accepts_ids_the_catalogue_carries() -> None:
+    """A declared id that resolves cleanly does not fire, and passes silently."""
+    catalogue = _catalogues().legal
+    real_id = next(iter(catalogue))
+
+    assert assert_legal_ref_ids_resolve((real_id,), legal=catalogue, subject="eligibility-rule advisory") is None
+
+
+def test_assert_legal_ref_ids_resolve_reports_every_missing_id_at_once() -> None:
+    """A multi-id declaration names every absent id in one refusal, not just the first."""
+    catalogue = _catalogues().legal
+
+    with pytest.raises(RegistryValidationError) as exc_info:
+        assert_legal_ref_ids_resolve(
+            (next(iter(catalogue)), "bogus-one", "bogus-two"),
+            legal=catalogue,
+            subject="eligibility-rule advisory",
+        )
+
+    message = str(exc_info.value)
+    assert "bogus-one" in message
+    assert "bogus-two" in message

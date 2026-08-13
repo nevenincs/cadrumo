@@ -3,12 +3,12 @@
 This page covers your first quarterly Modelo 130 filing, end to end: bring a
 quarter of transactions into the ledger, classify them as business income and
 deductible expenses, prepare the draft, and check that it passed verification
-before you export it. It is written for a self-employed taxpayer with a NIF,
+before you file it. It is written for a self-employed taxpayer with a NIF,
 CIF, NIE, or other filing identity who is running Cadrumo for the first time.
 
 Cadrumo never submits a return to the Agencia Estatal de Administración
-Tributaria (AEAT). Every command below builds and checks a local file. You
-upload the exported file yourself through the official AEAT channel.
+Tributaria (AEAT). Modelo 130 has no fichero-BOE layout, so you enter the
+calculated box values yourself through the official AEAT channel.
 
 The commands on this page run live at build time in a fresh, synthetic sandbox.
 The transactions, amounts, and taxpayer are invented. Run the same commands
@@ -67,7 +67,7 @@ draft, calculates it, and verifies it. Modelo 130 is the IRPF payment on
 account for self-employed activity under estimación directa.
 
 ```{cli-sequence} modelo-130-first-quarter
-:verify: Confirm the draft passed verification before you export it.
+:verify: Confirm the draft passed verification before you file it.
 ```
 
 Read the frames in order:
@@ -83,19 +83,21 @@ Read the frames in order:
   `--binding ...=0` values are the prior-period carries a true first quarter
   does not have.
 - Verify the draft. The result reads `granted_verificado_completo` true, so the
-  draft is complete and ready to export.
+  draft is complete and ready to file.
 
-## Check the figures and export
+## Check the figures and record the filing
 
-The verification result is the signal that the draft is ready. When
-`granted_verificado_completo` reads true, export the file. Export refuses until
-every deductible-expense row carries linked purchase-invoice evidence, so this
-example registers the supplier invoice and attaches it before it calculates.
-Attach in that order: a draft bundles its evidence when you verify it, so an
-invoice attached afterwards does not reach the filing.
+The verification result is the signal that the draft is ready. Verification
+refuses until every deductible-expense row carries linked purchase-invoice
+evidence, so this example registers the supplier invoice and attaches it before
+it calculates. Attach in that order: a draft bundles its evidence when you
+verify it, so an invoice attached afterwards does not reach the filing.
+
+The sequence below shows `export` refusing - Modelo 130 has no fichero-BOE
+layout - and then the local filed marker recording.
 
 ```{cli-sequence} first-quarter-export-file
-:verify: Confirm the export writes a local fichero and the filing stays local.
+:verify: Confirm the export refuses and the filing stays local.
 ```
 
 A later quarter builds on this one: leave the three prior-period bindings unset
@@ -108,4 +110,4 @@ year-to-date behaviour.
 - [Prepare a Modelo 130 IRPF instalment](modelo-130.md)
 - [Classify transactions](classify-transactions.md)
 - [The filing workflow](filing-spine.md)
-- [Upload your exported modelo at the AEAT portal](file-at-aeat.md)
+- [File your modelo at the AEAT portal](file-at-aeat.md)

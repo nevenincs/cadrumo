@@ -5,7 +5,7 @@ reading the saved report, and acting on each kind of finding. Verification
 checks your saved calculation locally against the official form rules and
 saves a report of what it found. Nothing is sent to AEAT; everything happens
 on your computer. The order is always the same: calculate, then verify, then
-export or record the filing.
+record the filing.
 
 The check asks three things: does every required box have a value; do the
 sums add up consistently, with no box contradicting another; and does
@@ -55,7 +55,7 @@ for months - see [Period tokens and dates](filing-calendar.md#period-tokens-and-
 
 With the profile and draft above, this first-period Modelo 303 passes: the
 report reads `granted_verificado_completo` `true` and a `completeness_status`
-of `complete` - the saved calculation is now verified and ready to export.
+of `complete` - the saved calculation is now verified and ready to file.
 
 When the draft does not pass, the report reads `granted_verificado_completo`
 `false` and a `completeness_status` of `incomplete` or `blocked`, and the saved
@@ -107,7 +107,7 @@ findings name a legal reference - a cross-period dependency, for example, cites
 the law behind the prior-filing carry. A few purely structural checks, such as
 an unresolved registry snapshot, have none, so those fields are empty for them.
 
-Blocking findings prevent the draft from becoming verified, and export needs a
+Blocking findings prevent the draft from becoming verified, and filing needs a
 verified calculation. Warnings do not block; read them, decide whether they
 apply to you, and move on.
 
@@ -147,7 +147,7 @@ input workflow, including where values come from and how to check them, see
 ## The report says blocked
 
 Blocked means at least one blocking finding stands between your draft and a
-verified calculation. You cannot export the draft until you resolve every
+verified calculation. You cannot file the draft until you resolve every
 blocking finding.
 
 Read each finding's suggested next action first; it tells you what the tool
@@ -171,18 +171,20 @@ expects you to do. The common kinds of blocking finding:
 
 After each fix, [re-run verification](#after-any-fix-re-run-verification).
 
-## Export refuses because no verified calculation exists
+## Export refuses
 
-Export needs a verified (or locally-filed) saved calculation. It refuses a plain
-draft with a message such as "current revision is still draft; verify it before
-exporting" or "no exportable verified or filed revision exists". If the saved
-calculation is still a draft, verify it first, as in
-[After any fix: re-run verification](#after-any-fix-re-run-verification). Check
-where the filing stands, then retry the export once verification grants
-verified-complete:
+Export refuses a plain draft, with a message such as "current revision is still
+draft; verify it before exporting" or "no exportable verified or filed revision
+exists". Verify the draft first, as in
+[After any fix: re-run verification](#after-any-fix-re-run-verification).
+
+Verified-complete is necessary but not sufficient. Modelo 303 has no
+fichero-BOE layout, so the export refuses even after verification grants, with
+`REFUSED_MODELO_EXPORT_UNSUPPORTED`. Check where the filing stands, then read
+the verified figures back and enter them at the AEAT portal:
 
 ```{cli-sequence} verification-reports-export-check
-:verify: Confirm the export succeeds once the saved calculation is verified.
+:verify: Confirm the export refuses even once the saved calculation is verified.
 ```
 
 ## More than one filing matches
@@ -227,7 +229,7 @@ NII.
 
 ## Next steps
 
-- [File at AEAT](file-at-aeat.md): upload the exported file at the AEAT portal.
+- [File at AEAT](file-at-aeat.md): enter the verified figures at the AEAT portal.
 - [Review your calculation values](review-calculation-values.md): check and correct the inputs behind each casilla.
 - [The filing workflow](filing-spine.md): how filings, saved calculations, and reports fit together.
 - [CLI reference](../cli/index.rst): every command and option.

@@ -112,7 +112,7 @@ The filing exporter explicitly writes a local file and never contacts AEAT. It
 can reread the output and detect drift from the approved draft for
 parser-covered casillas. It reports any unchecked casillas separately. This
 remains pre-filing verification. Follow
-[Upload your exported modelo at the AEAT portal](../how-to/file-at-aeat.md) to
+[File your modelo at the AEAT portal](../how-to/file-at-aeat.md) to
 complete the operator-controlled filing steps.
 
 The application labels local exports as

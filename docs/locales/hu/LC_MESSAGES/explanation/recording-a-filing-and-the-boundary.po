@@ -122,7 +122,7 @@ msgstr ""
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:25
 msgid ""
-"For the steps, see [Upload your exported modelo at the AEAT portal"
+"For the steps, see [File your modelo at the AEAT portal"
 "](../how-to/file-at-aeat.md)."
 msgstr ""
 "A lépésekhez lásd [Töltse fel az exportált modelóját az AEAT portálján"

@@ -254,6 +254,6 @@ msgid "[The filing workflow](filing-spine.md)"
 msgstr "[El flujo de presentación](filing-spine.md)"
 
 #: ../../how-to/first-quarterly-filing.md:111
-msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
+msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Subir tu modelo exportado en el portal de la AEAT](file-at-aeat.md)"
 

@@ -438,7 +438,7 @@ msgstr ""
 
 #: ../../how-to/reconcile.md:171
 msgid ""
-"[Upload your exported modelo at the AEAT portal](file-at-aeat.md) - the "
+"[File your modelo at the AEAT portal](file-at-aeat.md) - the "
 "filing handoff that produces the justificante."
 msgstr ""
 "[Puja el teu modelo exportat al portal de l'AEAT](file-at-aeat.md) - el "
