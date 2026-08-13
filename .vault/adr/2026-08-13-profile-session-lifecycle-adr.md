@@ -41,7 +41,7 @@ related:
      - NEVER reference file paths in the body. If you must name a source file,
        class, or function, use inline backtick code: `src/module.py`. -->
 
-# `profile-session-lifecycle` adr: `authenticated profile session lifecycle` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
+# `profile-session-lifecycle` adr: `authenticated profile session lifecycle` | (**status:** `accepted`)
 
 <!-- DOCUMENT BOUNDARY:
      This record owns the decision and only the decision. Grounding evidence
@@ -52,16 +52,24 @@ related:
 
 ## Problem Statement
 
+The application still needs one explicit active-profile session lifecycle after session-key custody moves to the roll-up.
+
 <!-- The problem and why a decision is needed now, in this record's own
      terms. Do not re-narrate the research's evidence; cite it. -->
 
 ## Considerations
+
+- Cryptographic session creation, deadlines, handover ordering, and keyring acceleration belong to `2026-08-13-profile-password-custody-adr`.
+- UI and command surfaces must project application session truth.
 
 <!-- Only the forces that bear on the choice, each a terse line citing its
      grounding by stem or locator. Nothing the research already
      establishes is re-argued here. -->
 
 ## Considered options
+
+- Let each entrypoint own session state: rejected because state and cleanup diverge.
+- Keep one application lifecycle owner: accepted.
 
 <!-- Name each alternative evaluated, compared at the same level of abstraction, with its
 key pros and cons and why it was kept or rejected. Naming the rejected options - not only
@@ -71,6 +79,8 @@ Rationale. -->
 
 ## Constraints
 
+Presentation cannot synthesize authentication, revive a retired session, or convert a keyring failure into profile failure.
+
 <!-- Technical limitations, e.g.: depends on non-mature library, frontier feature, requires rigorous research. 'Frontier' risk, e.g. technology is new and falls outside the implementing model's training cutoff.
 
 List out the blocking constraints, and features, gaps needed for reliable implementation. Must explicitly evaluate how stable 'parent' features are if this adr
@@ -78,11 +88,15 @@ relies on another feature. -->
 
 ## Implementation
 
+One application service owns active-session observation, explicit close, inactivity events, process shutdown cleanup, and operator-safe status projection. Entrypoints request transitions and render typed outcomes. They do not manipulate keys or session files. Failed candidate authentication leaves the current application session unchanged; the custody roll-up defines the underlying atomic handover.
+
 <!-- A high-level overview (not a plan!) of HOW and WHAT will be implemented. Focus on condensed but clear prose that describes functionality layering.
 
 Do not add code; code references must be persisted in a separate `{reference}` document. Important `{reference}` snippets must be summarized and referenced explicitly. -->
 
 ## Rationale
+
+One lifecycle owner gives every CLI and TUI surface the same active-profile truth without duplicating custody.
 
 <!-- Why this option wins against the drivers: a knockout criterion or a
      clear edge over the alternatives. Cite `{research}` findings and
@@ -90,5 +104,7 @@ Do not add code; code references must be persisted in a separate `{reference}` d
      surfacing here first belongs in the grounding document. -->
 
 ## Consequences
+
+Operator surfaces remain consistent. The service depends on, but does not restate, the custody session contract.
 
 <!-- Gains, but framed honestly. Difficulties. Pathways this feature opens. Pitfalls. -->

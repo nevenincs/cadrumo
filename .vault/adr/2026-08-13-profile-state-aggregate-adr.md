@@ -41,7 +41,7 @@ related:
      - NEVER reference file paths in the body. If you must name a source file,
        class, or function, use inline backtick code: `src/module.py`. -->
 
-# `profile-state-aggregate` adr: `non-authoritative profile state projection` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
+# `profile-state-aggregate` adr: `non-authoritative profile state projection` | (**status:** `accepted`)
 
 <!-- DOCUMENT BOUNDARY:
      This record owns the decision and only the decision. Grounding evidence
@@ -52,16 +52,24 @@ related:
 
 ## Problem Statement
 
+Profile views need a coherent aggregate without turning copied custody fields into authority.
+
 <!-- The problem and why a decision is needed now, in this record's own
      terms. Do not re-narrate the research's evidence; cite it. -->
 
 ## Considerations
+
+- The password envelope and independent recovery record are authoritative only in their owners.
+- Projection drift must not block valid password login.
 
 <!-- Only the forces that bear on the choice, each a terse line citing its
      grounding by stem or locator. Nothing the research already
      establishes is re-argued here. -->
 
 ## Considered options
+
+- Mirror custody facts into the aggregate as gates: rejected.
+- Project non-secret status with provenance: accepted.
 
 <!-- Name each alternative evaluated, compared at the same level of abstraction, with its
 key pros and cons and why it was kept or rejected. Naming the rejected options - not only
@@ -71,6 +79,8 @@ Rationale. -->
 
 ## Constraints
 
+The aggregate contains no password KDF, wrapped DEK, recovery wrap, session key, or backend selector.
+
 <!-- Technical limitations, e.g.: depends on non-mature library, frontier feature, requires rigorous research. 'Frontier' risk, e.g. technology is new and falls outside the implementing model's training cutoff.
 
 List out the blocking constraints, and features, gaps needed for reliable implementation. Must explicitly evaluate how stable 'parent' features are if this adr
@@ -78,11 +88,15 @@ relies on another feature. -->
 
 ## Implementation
 
+The profile aggregate projects immutable UUID, label, current-format presence, local data summary, and typed non-secret lifecycle status from canonical owners. Every projected value carries provenance or a typed unavailable state. Custody generation or recovery enrollment may be displayed only when explicitly obtained from the relevant owner; copied manifest values never select keys or authorize actions. Projection repair follows committed authority and remains idempotent.
+
 <!-- A high-level overview (not a plan!) of HOW and WHAT will be implemented. Focus on condensed but clear prose that describes functionality layering.
 
 Do not add code; code references must be persisted in a separate `{reference}` document. Important `{reference}` snippets must be summarized and referenced explicitly. -->
 
 ## Rationale
+
+A read model serves UI and CLI needs without becoming a second semantic home.
 
 <!-- Why this option wins against the drivers: a knockout criterion or a
      clear edge over the alternatives. Cite `{research}` findings and
@@ -90,5 +104,7 @@ Do not add code; code references must be persisted in a separate `{reference}` d
      surfacing here first belongs in the grounding document. -->
 
 ## Consequences
+
+Some views may report unavailable status instead of guessing. Valid password custody remains independent of stale projections.
 
 <!-- Gains, but framed honestly. Difficulties. Pathways this feature opens. Pitfalls. -->

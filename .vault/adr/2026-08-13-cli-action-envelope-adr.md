@@ -41,7 +41,7 @@ related:
      - NEVER reference file paths in the body. If you must name a source file,
        class, or function, use inline backtick code: `src/module.py`. -->
 
-# `cli-action-envelope` adr: `profile custody action envelope grammar` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
+# `cli-action-envelope` adr: `profile custody action envelope grammar` | (**status:** `accepted`)
 
 <!-- DOCUMENT BOUNDARY:
      This record owns the decision and only the decision. Grounding evidence
@@ -52,16 +52,24 @@ related:
 
 ## Problem Statement
 
+The superseded CLI authority record mixed backend ownership with general command-cost and action-envelope rules. Custody needs canonical verbs without forking the accepted application-owned action-envelope architecture.
+
 <!-- The problem and why a decision is needed now, in this record's own
      terms. Do not re-narrate the research's evidence; cite it. -->
 
 ## Considerations
+
+- `2026-08-09-cli-action-envelope-hardening-adr` remains authoritative for application verdicts and schema-resolved action chains.
+- Custody semantics belong to `2026-08-13-profile-password-custody-adr`.
 
 <!-- Only the forces that bear on the choice, each a terse line citing its
      grounding by stem or locator. Nothing the research already
      establishes is re-argued here. -->
 
 ## Considered options
+
+- Restate the action-envelope contract here: rejected as semantic duplication.
+- Bind custody verbs to the existing owner and retain only command mapping: accepted.
 
 <!-- Name each alternative evaluated, compared at the same level of abstraction, with its
 key pros and cons and why it was kept or rejected. Naming the rejected options - not only
@@ -71,6 +79,8 @@ Rationale. -->
 
 ## Constraints
 
+Entrypoints render typed application outcomes and cannot infer storage backend, author security decisions, or carry secrets in argv or environment.
+
 <!-- Technical limitations, e.g.: depends on non-mature library, frontier feature, requires rigorous research. 'Frontier' risk, e.g. technology is new and falls outside the implementing model's training cutoff.
 
 List out the blocking constraints, and features, gaps needed for reliable implementation. Must explicitly evaluate how stable 'parent' features are if this adr
@@ -78,11 +88,15 @@ relies on another feature. -->
 
 ## Implementation
 
+The canonical commands are `aeat config profile restore`, `aeat config profile restore-recover`, and `aeat config profile delete`. The existing action-envelope hardening ADR owns request/result schema, action-chain resolution, refusal rendering, output formats, and authority checks. The custody roll-up owns operation semantics and secret-FD requirements. This successor owns only their command-tree mapping and delegation boundary.
+
 <!-- A high-level overview (not a plan!) of HOW and WHAT will be implemented. Focus on condensed but clear prose that describes functionality layering.
 
 Do not add code; code references must be persisted in a separate `{reference}` document. Important `{reference}` snippets must be summarized and referenced explicitly. -->
 
 ## Rationale
+
+Delegation preserves one CLI envelope authority while removing backend-shaped command semantics.
 
 <!-- Why this option wins against the drivers: a knockout criterion or a
      clear edge over the alternatives. Cite `{research}` findings and
@@ -90,5 +104,7 @@ Do not add code; code references must be persisted in a separate `{reference}` d
      surfacing here first belongs in the grounding document. -->
 
 ## Consequences
+
+Future custody verbs must extend the existing action-envelope schema before exposure; they cannot introduce a parallel envelope.
 
 <!-- Gains, but framed honestly. Difficulties. Pathways this feature opens. Pitfalls. -->

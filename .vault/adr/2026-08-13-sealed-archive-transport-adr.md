@@ -41,7 +41,7 @@ related:
      - NEVER reference file paths in the body. If you must name a source file,
        class, or function, use inline backtick code: `src/module.py`. -->
 
-# `sealed-archive-transport` adr: `sealed archive transport boundary` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
+# `sealed-archive-transport` adr: `sealed archive transport boundary` | (**status:** `accepted`)
 
 <!-- DOCUMENT BOUNDARY:
      This record owns the decision and only the decision. Grounding evidence
@@ -52,16 +52,24 @@ related:
 
 ## Problem Statement
 
+Archive framing and hostile-input handling remain distinct from the custody content root and restore authorization.
+
 <!-- The problem and why a decision is needed now, in this record's own
      terms. Do not re-narrate the research's evidence; cite it. -->
 
 ## Considerations
+
+- Restorative custody contents and restore modes belong to `2026-08-13-profile-password-custody-adr`.
+- Transport must be deterministic and safe before decryption.
 
 <!-- Only the forces that bear on the choice, each a terse line citing its
      grounding by stem or locator. Nothing the research already
      establishes is re-argued here. -->
 
 ## Considered options
+
+- Let archive transport define custody members: rejected because recovery coupling reappears.
+- Keep transport mechanics independent: accepted.
 
 <!-- Name each alternative evaluated, compared at the same level of abstraction, with its
 key pros and cons and why it was kept or rejected. Naming the rejected options - not only
@@ -71,6 +79,8 @@ Rationale. -->
 
 ## Constraints
 
+Transport parsing is bounded, duplicate-free, traversal-safe, and no-follow. It may not autodiscover recovery artifacts.
+
 <!-- Technical limitations, e.g.: depends on non-mature library, frontier feature, requires rigorous research. 'Frontier' risk, e.g. technology is new and falls outside the implementing model's training cutoff.
 
 List out the blocking constraints, and features, gaps needed for reliable implementation. Must explicitly evaluate how stable 'parent' features are if this adr
@@ -78,11 +88,15 @@ relies on another feature. -->
 
 ## Implementation
 
+The archive adapter owns canonical header encoding, deterministic member order and metadata, streaming digests, size and count ceilings, duplicate refusal, path normalization, and staging cleanup. It yields validated current-format members to the restore application service. The custody roll-up exclusively defines the mandatory content root, password-only restore, explicit restore-recover grammar, collision refusal, and capsule publication.
+
 <!-- A high-level overview (not a plan!) of HOW and WHAT will be implemented. Focus on condensed but clear prose that describes functionality layering.
 
 Do not add code; code references must be persisted in a separate `{reference}` document. Important `{reference}` snippets must be summarized and referenced explicitly. -->
 
 ## Rationale
+
+Transport safety can remain stable while custody formats change through explicit successor decisions.
 
 <!-- Why this option wins against the drivers: a knockout criterion or a
      clear edge over the alternatives. Cite `{research}` findings and
@@ -90,5 +104,7 @@ Do not add code; code references must be persisted in a separate `{reference}` d
      surfacing here first belongs in the grounding document. -->
 
 ## Consequences
+
+Optional recovery never changes archive completeness. Transport code cannot choose an unlock mechanism.
 
 <!-- Gains, but framed honestly. Difficulties. Pathways this feature opens. Pitfalls. -->

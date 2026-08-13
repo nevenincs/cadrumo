@@ -41,7 +41,7 @@ related:
      - NEVER reference file paths in the body. If you must name a source file,
        class, or function, use inline backtick code: `src/module.py`. -->
 
-# `profile-bucket-lifecycle` adr: `current-format profile capsule lifecycle` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
+# `profile-bucket-lifecycle` adr: `current-format profile capsule lifecycle` | (**status:** `accepted`)
 
 <!-- DOCUMENT BOUNDARY:
      This record owns the decision and only the decision. Grounding evidence
@@ -52,16 +52,25 @@ related:
 
 ## Problem Statement
 
+Profile naming, discovery, selection, and local data ownership remain necessary after custody moves to the profile-password roll-up. This successor preserves only those independent lifecycle facts.
+
 <!-- The problem and why a decision is needed now, in this record's own
      terms. Do not re-narrate the research's evidence; cite it. -->
 
 ## Considerations
+
+- Custody and atomic capsule publication belong to `2026-08-13-profile-password-custody-adr`.
+- A display label is mutable presentation; the immutable UUID is identity.
+- Discovery must not infer profiles from arbitrary directories.
 
 <!-- Only the forces that bear on the choice, each a terse line citing its
      grounding by stem or locator. Nothing the research already
      establishes is re-argued here. -->
 
 ## Considered options
+
+- Preserve the mixed lifecycle-and-custody ADR: rejected because it leaves two authorities.
+- Retain only non-custody lifecycle facts here: accepted.
 
 <!-- Name each alternative evaluated, compared at the same level of abstraction, with its
 key pros and cons and why it was kept or rejected. Naming the rejected options - not only
@@ -71,6 +80,8 @@ Rationale. -->
 
 ## Constraints
 
+The profile repository remains the canonical owner of label-to-UUID resolution and selected-profile projection. It may not unwrap keys or infer retired formats.
+
 <!-- Technical limitations, e.g.: depends on non-mature library, frontier feature, requires rigorous research. 'Frontier' risk, e.g. technology is new and falls outside the implementing model's training cutoff.
 
 List out the blocking constraints, and features, gaps needed for reliable implementation. Must explicitly evaluate how stable 'parent' features are if this adr
@@ -78,11 +89,15 @@ relies on another feature. -->
 
 ## Implementation
 
+Profiles are addressed internally by immutable UUID. Labels remain mutable, non-secret presentation with collision-safe validation. Listing and selection project only committed current-format capsules. Profile-scoped application services resolve UUID before opening data. Capsule publication, password custody, pointer compare-and-swap, restore, and local deletion delegate exclusively to `2026-08-13-profile-password-custody-adr`.
+
 <!-- A high-level overview (not a plan!) of HOW and WHAT will be implemented. Focus on condensed but clear prose that describes functionality layering.
 
 Do not add code; code references must be persisted in a separate `{reference}` document. Important `{reference}` snippets must be summarized and referenced explicitly. -->
 
 ## Rationale
+
+Separating identity and discovery from cryptographic custody preserves useful lifecycle ownership without restating the superseded provider design.
 
 <!-- Why this option wins against the drivers: a knockout criterion or a
      clear edge over the alternatives. Cite `{research}` findings and
@@ -90,5 +105,7 @@ Do not add code; code references must be persisted in a separate `{reference}` d
      surfacing here first belongs in the grounding document. -->
 
 ## Consequences
+
+The repository can evolve labels and projections independently. It cannot introduce another activation, key, restore, or deletion protocol.
 
 <!-- Gains, but framed honestly. Difficulties. Pathways this feature opens. Pitfalls. -->

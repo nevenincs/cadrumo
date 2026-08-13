@@ -41,7 +41,7 @@ related:
      - NEVER reference file paths in the body. If you must name a source file,
        class, or function, use inline backtick code: `src/module.py`. -->
 
-# `profile-portability` adr: `structured profile portability boundary` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
+# `profile-portability` adr: `structured profile portability boundary` | (**status:** `accepted`)
 
 <!-- DOCUMENT BOUNDARY:
      This record owns the decision and only the decision. Grounding evidence
@@ -52,16 +52,24 @@ related:
 
 ## Problem Statement
 
+User-reviewed structured transfer remains useful but must not masquerade as restorative backup or preserve custody identity.
+
 <!-- The problem and why a decision is needed now, in this record's own
      terms. Do not re-narrate the research's evidence; cite it. -->
 
 ## Considerations
+
+- Restorative archives preserve UUID, DEK, and custody under `2026-08-13-profile-password-custody-adr`.
+- Portable transfer represents selected logical data, not encrypted storage internals.
 
 <!-- Only the forces that bear on the choice, each a terse line citing its
      grounding by stem or locator. Nothing the research already
      establishes is re-argued here. -->
 
 ## Considered options
+
+- Reuse the restorative archive: rejected because transfer and recovery have different identity semantics.
+- Keep a separate structured export/import: accepted.
 
 <!-- Name each alternative evaluated, compared at the same level of abstraction, with its
 key pros and cons and why it was kept or rejected. Naming the rejected options - not only
@@ -71,6 +79,8 @@ Rationale. -->
 
 ## Constraints
 
+Portable imports target a newly enrolled profile with a new UUID, password envelope, DEK, and `dek_epoch`. No legacy custody is adopted.
+
 <!-- Technical limitations, e.g.: depends on non-mature library, frontier feature, requires rigorous research. 'Frontier' risk, e.g. technology is new and falls outside the implementing model's training cutoff.
 
 List out the blocking constraints, and features, gaps needed for reliable implementation. Must explicitly evaluate how stable 'parent' features are if this adr
@@ -78,11 +88,15 @@ relies on another feature. -->
 
 ## Implementation
 
+The portability owner defines a versioned, reviewable logical-data bundle with provenance, completeness declarations, collision policy, and explicit import selection. Export excludes password envelopes, DEKs, recovery records, sessions, keyring state, and storage implementation artifacts. Import validates the bundle, presents intended changes, and writes only through current profile application owners after new-profile enrollment.
+
 <!-- A high-level overview (not a plan!) of HOW and WHAT will be implemented. Focus on condensed but clear prose that describes functionality layering.
 
 Do not add code; code references must be persisted in a separate `{reference}` document. Important `{reference}` snippets must be summarized and referenced explicitly. -->
 
 ## Rationale
+
+Logical portability remains understandable and host-independent without becoming a second backup or custody format.
 
 <!-- Why this option wins against the drivers: a knockout criterion or a
      clear edge over the alternatives. Cite `{research}` findings and
@@ -90,5 +104,7 @@ Do not add code; code references must be persisted in a separate `{reference}` d
      surfacing here first belongs in the grounding document. -->
 
 ## Consequences
+
+Transfer cannot restore the original cryptographic identity or serve as disaster recovery.
 
 <!-- Gains, but framed honestly. Difficulties. Pathways this feature opens. Pitfalls. -->
