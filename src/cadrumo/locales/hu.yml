@@ -122,6 +122,13 @@ adapters:
     pdf:
       errors:
         hash_failed: Nem sikerült kiszámítani a PDF ellenőrzőösszegét.
+  notificacion:
+    errors:
+      sancion_does_not_reconcile: A szankciós dokumentumon nyomtatott összegek nem
+        egyeznek, ezért a beolvasás elutasításra került. Ellenőrizze a dokumentumot
+        kézzel.
+      sancion_incomplete: A szankciós dokumentumot nem sikerült teljesen beolvasni.
+        Nyissa meg a székhelyen és ellenőrizze kézzel.
   outbound:
     storage:
       factory:
@@ -6475,6 +6482,7 @@ errors:
       nem sikerült menteni vagy betölteni.
     fail_modelo_work_unit_persistence: A munkajegység-katalógust nem sikerült menteni
       vagy olvasni
+    fail_notificacion_parse: Az AEAT értesítési dokumentumát nem sikerült elemezni.
     fail_observability_run_trace_persistence: A futási nyomkövetési tároló nem tudott
       fájlrendszer-műveletet elvégezni.
     fail_outbound_storage: Tárhelyszolgáltatói hiba történt.
@@ -6484,6 +6492,10 @@ errors:
       el. Várjon néhány percet, és próbálja újra.
     fail_repair_decision_not_found: A kért javítási döntés nem létezik.
     fail_review_source_load: A forrásfájl jelen van, de nem elemezhető.
+    fail_sancion_arithmetic: A szankciós dokumentumon nyomtatott összegek nem egyeztethetők
+      össze egymással.
+    fail_sancion_parse: A szankciós dokumentumot nem sikerült teljesen beolvasni;
+      részleges rekord nem kerül visszaadásra.
     fail_secure_storage: Biztonságos tárhelyhiba történt.
     fail_sede_justificante_fetch: A bizonylat PDF letöltése az AEAT Sede-ről meghiúsult,
       vagy a fájl hibás.

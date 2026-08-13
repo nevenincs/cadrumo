@@ -129,6 +129,12 @@ adapters:
     pdf:
       errors:
         hash_failed: No se pudo calcular la huella del PDF.
+  notificacion:
+    errors:
+      sancion_does_not_reconcile: Los importes impresos en el documento de sanción
+        no cuadran, por lo que se rechazó la lectura. Compruebe el documento a mano.
+      sancion_incomplete: El documento de sanción no se pudo leer por completo. Ábralo
+        en la sede y compruébelo a mano.
   outbound:
     storage:
       factory:
@@ -6636,6 +6642,8 @@ errors:
       de informes de verificación.
     fail_modelo_work_unit_persistence: No se pudo guardar o leer el catálogo de unidades
       de trabajo.
+    fail_notificacion_parse: No se pudo interpretar el documento de la notificación
+      de la AEAT.
     fail_observability_run_trace_persistence: El almacén de trazas de ejecución no
       pudo completar una operación del sistema de archivos.
     fail_outbound_storage: Se produjo un error en el proveedor de almacenamiento.
@@ -6645,6 +6653,10 @@ errors:
       no disponible. Espera unos minutos y vuelve a intentarlo.
     fail_repair_decision_not_found: No se encontró la decisión de reparación solicitada.
     fail_review_source_load: El archivo de origen existe pero no se pudo interpretar.
+    fail_sancion_arithmetic: Los importes impresos en el documento de sanción no cuadran
+      entre sí.
+    fail_sancion_parse: El documento de sanción no se pudo leer por completo; no se
+      devuelve ningún registro parcial.
     fail_secure_storage: Se produjo un error en el almacenamiento seguro.
     fail_sede_justificante_fetch: La descarga del justificante en PDF desde la Sede
       de la AEAT falló o el archivo no es válido.

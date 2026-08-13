@@ -129,6 +129,12 @@ adapters:
     pdf:
       errors:
         hash_failed: No s'ha pogut calcular l'empremta del PDF.
+  notificacion:
+    errors:
+      sancion_does_not_reconcile: Els imports impresos al document de sanció no quadren,
+        per la qual cosa s'ha rebutjat la lectura. Comproveu el document a mà.
+      sancion_incomplete: El document de sanció no s'ha pogut llegir completament.
+        Obriu-lo a la seu i comproveu-lo a mà.
   outbound:
     storage:
       factory:
@@ -6583,6 +6589,8 @@ errors:
       d'informes de verificació.
     fail_modelo_work_unit_persistence: No s'ha pogut desar o llegir el catàleg d'unitats
       de treball.
+    fail_notificacion_parse: No s'ha pogut interpretar el document de la notificació
+      de l'AEAT.
     fail_observability_run_trace_persistence: El magatzem de traces d'execució no
       ha pogut completar una operació del sistema de fitxers.
     fail_outbound_storage: S'ha produït un error en el proveïdor d'emmagatzematge.
@@ -6592,6 +6600,10 @@ errors:
       temporalment. Espera uns minuts i torna-ho a provar.
     fail_repair_decision_not_found: No s'ha trobat la decisió de reparació sol.licitada.
     fail_review_source_load: El fitxer d'origen existeix però no s'ha pogut interpretar.
+    fail_sancion_arithmetic: Els imports impresos al document de sanció no quadren
+      entre ells.
+    fail_sancion_parse: El document de sanció no s'ha pogut llegir completament; no
+      es retorna cap registre parcial.
     fail_secure_storage: S'ha produït un error en l'emmagatzematge segur.
     fail_sede_justificante_fetch: La descàrrega del justificant en PDF des de la Seu
       de l'AEAT ha fallat o el fitxer no és vàlid.
