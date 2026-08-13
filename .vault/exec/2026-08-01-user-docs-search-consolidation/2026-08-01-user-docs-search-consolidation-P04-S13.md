@@ -112,4 +112,3 @@ The entry above flagged the recurring sequence-golden divergences as unverified.
 So the honest state of this class is UNMEASURED UNDER LOAD, not red. No failing signature is named here, because none was observed, and restating the earlier record's divergences as current would be an inherited claim rather than a measurement. If a later run returns a verdict it belongs in this record with its signature and its owning surface.
 
 The distinction matters for exactly one reason: the other precondition this row's history named, the missing API stubs, is now definitively CLEAR. Nothing technical is known to be blocking a publish. That is not the same as knowing nothing is, and the dry-run verb remains the way to settle it without writing anything outward.
-
