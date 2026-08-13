@@ -13,6 +13,8 @@ hook-dedupe rationale, and the timeout rationale).
 
 from __future__ import annotations
 
+import itertools
+import re
 from pathlib import Path
 
 import pytest
@@ -51,4 +53,61 @@ def test_localized_user_scope_build_is_nitpicky_clean(tmp_path: Path, language: 
         f"nitpicky {language} user-scope build reported warnings or errors:\n"
         + (result.stdout or "")[-6000:]
         + (result.stderr or "")[-6000:]
+    )
+
+
+#: The repository root, three levels up from ``dev/docs/tests``.
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+
+#: One localized build line in the ``docs-langs`` recipe: the catalogue it
+#: selects and the root it renders into, captured separately so the gate below
+#: can require them to name the SAME language.
+_LOCALIZED_BUILD_LINE_RE = re.compile(
+    r"--scope\s+user\s+--language\s+(?P<language>[a-z-]+)\s+--out-dir\s+docs/_build/html/(?P<root>[a-z-]+)",
+)
+
+
+def _justfile_recipe(name: str) -> str:
+    """Return one recipe's body from the repository justfile."""
+    lines = (_REPO_ROOT / "justfile").read_text(encoding="utf-8").splitlines()
+    for index, line in enumerate(lines):
+        if not line.startswith(f"{name}:"):
+            continue
+        body = list(itertools.takewhile(lambda following: following.startswith((" ", "\t")), lines[index + 1 :]))
+        return "\n".join(body)
+    pytest.fail(f"the justfile declares no {name!r} recipe")
+
+
+def test_the_localized_build_recipe_covers_every_translation_target_in_its_own_root() -> None:
+    """``docs-langs`` builds exactly the translation set, each into its own site root.
+
+    Two failures this pins, both of which have already cost this project real
+    time. A hand-listed language set silently falls short of the catalogue set
+    when a translation target is added, so a root nobody built looks merely
+    absent. And ``--language`` alone only selects the catalogue: without a
+    matching ``--out-dir`` the localized pages render into the canonical
+    English root, which produced a tree carrying no language root at all while
+    the recipe appeared to build three.
+
+    English is deliberately absent: it is the msgid source with no catalogue to
+    select, and the deploy's own command builder documents that passing the
+    flag for it would force the user scope and drop the API tree.
+    """
+    matched = list(_LOCALIZED_BUILD_LINE_RE.finditer(_justfile_recipe("docs-langs")))
+
+    assert [match["language"] for match in matched] == list(TARGET_LANGUAGES), (
+        "docs-langs does not build exactly the translation targets "
+        f"{TARGET_LANGUAGES}: it builds {[match['language'] for match in matched]}"
+    )
+    mismatched = [match["language"] for match in matched if match["root"] != match["language"]]
+    assert not mismatched, f"docs-langs renders {mismatched} into a root that is not its own language"
+
+
+def test_the_single_language_build_recipe_renders_into_that_language_root() -> None:
+    """``docs-lang LANG`` puts its build in ``LANG``'s own root, not the English one."""
+    body = _justfile_recipe("docs-lang LANG")
+
+    assert "--language {{LANG}}" in body, f"docs-lang no longer selects a catalogue: {body}"
+    assert "--out-dir docs/_build/html/{{LANG}}" in body, (
+        f"docs-lang renders into the canonical English root instead of its own language root: {body}"
     )
