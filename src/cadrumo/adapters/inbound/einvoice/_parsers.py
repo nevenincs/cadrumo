@@ -27,6 +27,7 @@ to the nearest slot and mint an invoice whose cuota disagrees with its face.
 from __future__ import annotations
 
 from decimal import Decimal
+from enum import StrEnum
 from xml.etree.ElementTree import Element
 
 from ....core import DocumentShape
@@ -34,7 +35,7 @@ from ....core.decimal import coerce_decimal
 from ._shape import iter_pdf_embedded_files, probe_document_shape
 from ._xml import EInvoiceXmlParseError, parse_hardened_xml
 
-__all__ = ["ParsedEInvoice", "ParsedEInvoiceLine", "parse_einvoice_document"]
+__all__ = ["FacturaeInvoiceClass", "ParsedEInvoice", "ParsedEInvoiceLine", "parse_einvoice_document"]
 
 # Tax-scheme identifiers that mark an element as carrying an IVA number rather
 # than some other national registration. EN16931 uses schemeID="VA"; Facturae
@@ -57,6 +58,17 @@ _UNTDID_CATEGORY: dict[str, str] = {
     "O": "operacion_no_sujeta",
     "B": "recargo_equivalencia",
 }
+
+
+class FacturaeInvoiceClass(StrEnum):
+    """Class code stated by Facturae's ``InvoiceHeader/InvoiceClass``."""
+
+    ORIGINAL = "OO"
+    ORIGINAL_CORRECTIVE = "OR"
+    ORIGINAL_SUMMARY = "OC"
+    COPY = "CO"
+    COPY_CORRECTIVE = "CR"
+    COPY_SUMMARY = "CC"
 
 
 class ParsedEInvoiceLine:
