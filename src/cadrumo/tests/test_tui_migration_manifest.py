@@ -51,11 +51,7 @@ def _literal_exports(path: Path) -> Counter[tuple[str, str, int]]:
 def _manifest_counter(
     rows: tuple[TuiMigrationRow, ...], kind: TuiMigrationRowKind
 ) -> Counter[tuple[str, str | None, str]]:
-    return Counter(
-        (row.legacy_module, row.symbol, row.locator)
-        for row in rows
-        if row.kind is kind
-    )
+    return Counter((row.legacy_module, row.symbol, row.locator) for row in rows if row.kind is kind)
 
 
 def _synthetic_tree(tmp_path: Path) -> tuple[Path, Path, Path]:
@@ -74,9 +70,7 @@ def test_generated_manifest_matches_real_module_and_export_multiplicity() -> Non
     """Direct filesystem and AST facts must exactly equal generated declarations."""
     rows = generate_tui_migration_manifest()
     production_modules = [
-        path
-        for path in LEGACY_TUI_ROOT.rglob("*.py")
-        if "tests" not in path.relative_to(LEGACY_TUI_ROOT).parts
+        path for path in LEGACY_TUI_ROOT.rglob("*.py") if "tests" not in path.relative_to(LEGACY_TUI_ROOT).parts
     ]
     direct_modules = Counter(
         (_module_name(path, SRC_ROOT), None, f"{path.relative_to(REPO_ROOT).as_posix()}:1")
@@ -144,8 +138,7 @@ def test_duplicate_semantic_row_changes_the_accepted_digest(tmp_path: Path) -> N
     )
     accepted = _tui_migration_identity_sha256(baseline)
     consumer.write_text(
-        f"from {LEGACY_TUI_PACKAGE} import Existing; "
-        f"from {LEGACY_TUI_PACKAGE} import Existing\n",
+        f"from {LEGACY_TUI_PACKAGE} import Existing; from {LEGACY_TUI_PACKAGE} import Existing\n",
         encoding="utf-8",
     )
 
