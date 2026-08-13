@@ -13,6 +13,7 @@ from .. import (
     OperationCapabilities,
     OperationExecutorContext,
     OperationInteractionRequest,
+    OperationPersistedSnapshot,
     OperationRegistry,
     OperationRequest,
 )
@@ -34,6 +35,7 @@ def test_facade_exports_only_declared_public_generic_symbols() -> None:
 def test_representative_contracts_resolve_from_public_facade() -> None:
     assert OperationCapabilities.__module__.endswith("._capabilities")
     assert OperationRequest.__module__.endswith("._models")
+    assert OperationPersistedSnapshot.__module__.endswith("._journal")
     assert "OperationEvent" in public_names
     assert OperationExecutorContext.__module__.endswith("._executor")
     assert OperationInteractionRequest.__module__.endswith("._interactions")

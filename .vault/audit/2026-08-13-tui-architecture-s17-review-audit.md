@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:35d32d39e91c20697b1e6353244353914314e4065e84f8c06b085cfc1edaa5b5'
+body_hash: 'sha256:4d0d6768661f1c042a271a1c88aa4cba130c627f1416d530fd8ccd518e3eee01'
 related: []
 ---
 
@@ -75,6 +75,22 @@ All port methods are invoked with production models, and keyword-bearing signatu
 
 Final verdict: FAIL. Two HIGH findings remain; no CRITICAL or MEDIUM findings remain.
 
+## Persisted-ordering final review
+
+### terminal-event-order-closure | low | Terminal settlement is now the final atomic event
+
+Terminal snapshots require exactly one terminal event and require it at `events[-1]`, with its exact receipt still bound to the persisted terminal receipt. A planted phase-after-terminal mutation is refused. The terminal-order HIGH is closed.
+
+### phase-and-time-binding-closure | low | Persisted phase and time now derive from the ordered batch
+
+Nonempty batches require nondecreasing UTC event timestamps and bind `updated_at` to the final event timestamp. `phase_code` equals the latest phase event, while a batch without phase events carries no phase code; `started_at` is UTC-aware and cannot follow `updated_at`. Direct tests plant phase drift, final-time drift, reversed timestamps, pre-start updates, and phase-without-event mutations. The phase/time HIGH is closed.
+
+### ordering-gates | low | Focused implementation and test evidence is green
+
+The execution record reports 12 direct journal tests passing, Ruff and format checks clean, and basedpyright with zero errors, warnings, or notes. Prior safe-shape, lease, replay, facade, and port invariants remain intact.
+
+Final verdict: PASS. No CRITICAL, HIGH, or MEDIUM findings remain.
+
 ## Exact-correlation re-review
 
 ### lease-result-correlation-closure | low | Disposition-specific identity and timing rules close the lease HIGH
@@ -100,3 +116,23 @@ The result model requires `restart_cursor` to be strictly greater than `requeste
 The execution record reports the exact focused suite at 11 passing with Ruff clean and basedpyright at zero errors, warnings, and notes.
 
 Final verdict: PASS. No CRITICAL, HIGH, or MEDIUM findings remain.
+
+## Reopened persisted-contract review
+
+### persisted-safe-shape | low | Schema-v1 storage separates runtime payloads from credential-free facts
+
+The new strict frozen record carries a canonical `ContentDigest` request reference and closed lifecycle/event facts only. The journal port now loads and commits this persisted type, while the secure-reference port remains the only runtime `BaseModel` operand channel. Serialization tests prove the concrete operand value and payload/request fields are absent, and schema drift or injected runtime request data is refused.
+
+### terminal-event-order | high | A terminal event need not be the final event in its atomic batch
+
+Terminal persisted snapshots require exactly one terminal event and bind its receipt exactly, but validation does not require that event to be `events[-1]`. A terminal event followed by a phase, progress, log, effect, notice, or diagnostic event remains valid as long as sequences are contiguous and the cursor points at the later event. That contradicts terminal settlement finality and permits facts after the exact terminal receipt.
+
+### phase-and-time-binding | high | Persisted snapshot phase and update time are not bound to the event batch
+
+Event identity, revision, contiguous sequence, and final cursor are checked, but `phase_code` can disagree with the last phase event and `updated_at` can precede or otherwise disagree with the last committed event timestamp. Thus an atomic snapshot-plus-events record can persist two conflicting authoritative views of current phase/time. Direct mutations cover identity/revision/sequence/cursor and receipt, but omit phase and last-event-time drift.
+
+### prior-invariants | low | Lease and replay protections remain intact
+
+The earlier disposition-specific lease evidence, forward-only replay statuses, typed runtime ports, signature pins, and facade boundary remain present. Recorded focused evidence is 14 tests passing with clean Ruff and basedpyright, but it does not exercise the two exact-binding gaps above.
+
+Final verdict: FAIL. Two HIGH findings remain; no CRITICAL or MEDIUM findings remain.
