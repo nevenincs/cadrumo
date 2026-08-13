@@ -30,7 +30,7 @@ from typing import Literal, Self
 from pydantic import Field, model_validator
 
 from ...application.overview import DataPrepStepId, DataPrepStepState, ModeloReadinessState
-from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, WorkUnitId
+from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, ProfileId, SnapshotId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedNoticeAction, register_schema
 from ...core.parsing import require_iso8601_date
 from ...domain.calculations.registry import RevisionId
@@ -150,7 +150,7 @@ class OverviewCalendarFilingEvidencePayload(OutputSchema):
     aeat_submission_state: Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"]
     aeat_submitted_at: str | None = None
     aeat_reference_id: str | None = None
-    aeat_snapshot_id: str | None = None
+    aeat_snapshot_id: SnapshotId | None = None
     aeat_evidence_kind: str | None = None
     aeat_evidence_conflict_reference_ids: list[str] = []
     verified_justificante_csv: AeatCsv | None = None
@@ -191,7 +191,7 @@ class OverviewCalendarEventPayload(OutputSchema):
     source: str
     summary: str
     reference_id: str
-    snapshot_id: str | None = None
+    snapshot_id: SnapshotId | None = None
     modelo: str | None = None
     filing_year: int | None = None
     period: str | None = None
@@ -360,7 +360,7 @@ class OverviewCalendarProfilePayload(OutputSchema):
     window's start, absent when the profile has none in range.
     """
 
-    profile_id: str
+    profile_id: ProfileId
     label: str
     entry_count: int
     event_count: int
@@ -543,7 +543,7 @@ class OverviewPipelineModeloPayload(OutputSchema):
     """
 
     modelo: str
-    work_unit_id: str | None = None
+    work_unit_id: WorkUnitId | None = None
     state: ModeloReadinessState
     blocking_finding_count: int = Field(default=0, ge=0)
     warning_finding_count: int = Field(default=0, ge=0)

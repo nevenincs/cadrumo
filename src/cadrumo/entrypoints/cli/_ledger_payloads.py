@@ -40,7 +40,15 @@ from pydantic import Field, field_validator, model_validator
 
 from ...core import LinkInconsistencyDirection, Period
 from ...core.decimal import try_parse_canonical_decimal
-from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, SnapshotId, TransactionId, WorkUnitId
+from ...core.identity import (
+    BucketId,
+    CalculationRevisionId,
+    FilingRecordId,
+    InvoiceId,
+    SnapshotId,
+    TransactionId,
+    WorkUnitId,
+)
 from ...core.json_contract import OutputRootSchema, OutputSchema, register_schema
 from ._ledger_business_payloads import (
     EvidenceAddResult,
@@ -376,8 +384,8 @@ class _LedgerMutationResult(OutputSchema):
     own schema path.
     """
 
-    bucket_id: str
-    transaction_id: str
+    bucket_id: BucketId
+    transaction_id: TransactionId
     bucket_event_ids: list[str]
     review_status: str
     transaction: TransactionPayload
@@ -474,7 +482,7 @@ class LedgerDocLinkPullFolderResult(OutputSchema):
     scope-upgrade decision.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     folder_id: str
     total_documents: int
     fetched_count: int
@@ -518,8 +526,8 @@ class LedgerRemoveResult(OutputSchema):
     still cite the removed transaction and should be recalculated.
     """
 
-    bucket_id: str
-    transaction_id: str
+    bucket_id: BucketId
+    transaction_id: TransactionId
     removed: bool = False
     dry_run: bool = False
     actor: str
@@ -538,7 +546,7 @@ class LedgerResetResult(OutputSchema):
     Mirrors ``LedgerCatalogueResetReport.model_dump(mode='json')``.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     removed_transaction_ids: list[str] = []
     reset: bool = False
     dry_run: bool = False
@@ -563,8 +571,8 @@ class LedgerSplitResult(OutputSchema):
     actually persisted.
     """
 
-    bucket_id: str
-    parent_transaction_id: str
+    bucket_id: BucketId
+    parent_transaction_id: TransactionId
     split_group_id: str | None = None
     child_transaction_ids: list[str] = []
     # Persisted child ids in full + short form so the operator can copy them
@@ -587,10 +595,10 @@ class LedgerSplitResult(OutputSchema):
 class LedgerMergeResult(OutputSchema):
     """JSON envelope for ``aeat app ledger merge``."""
 
-    bucket_id: str
+    bucket_id: BucketId
     split_group_id: str
-    parent_transaction_id: str
-    merged_transaction_id: str
+    parent_transaction_id: TransactionId
+    merged_transaction_id: TransactionId
     source_child_ids: list[str]
     bucket_event_id: str
 
@@ -614,7 +622,7 @@ class LedgerListRowPayload(OutputSchema):
     # Identity / display
     full_id: str
     display_id: str
-    transaction_id: str
+    transaction_id: TransactionId
     # Core read projection (mirrors LedgerTransactionReviewPayload)
     date: str
     booked_date: str
@@ -669,7 +677,7 @@ class LedgerListResult(OutputSchema):
     silently capped — the consumer can always see that more rows exist.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     rows: list[LedgerListRowPayload]
     total: int = 0
     shown: int = 0
@@ -685,8 +693,8 @@ class LedgerViewResult(OutputSchema):
     Mirrors ``LedgerTransactionResultPayload``.
     """
 
-    bucket_id: str
-    transaction_id: str
+    bucket_id: BucketId
+    transaction_id: TransactionId
     review_status: str
     transaction: TransactionPayload
 
@@ -731,7 +739,7 @@ class LedgerHistoryEventPayload(OutputSchema):
     """
 
     event_id: str
-    bucket_id: str
+    bucket_id: BucketId
     event_type: str
     occurred_at: str
     actor: str
@@ -745,8 +753,8 @@ class LedgerHistoryEventPayload(OutputSchema):
 class LedgerHistoryResult(OutputSchema):
     """JSON envelope for ``aeat app ledger history``."""
 
-    bucket_id: str
-    transaction_id: str
+    bucket_id: BucketId
+    transaction_id: TransactionId
     event_count: int
     events: list[LedgerHistoryEventPayload]
 
@@ -937,7 +945,7 @@ class LedgerTransactionParticipationPayload(OutputSchema):
     any finalized declaration" answer, not a lookup failure.
     """
 
-    transaction_id: str
+    transaction_id: TransactionId
     participations: list[LedgerTransactionParticipationEntryPayload]
 
 
@@ -985,7 +993,7 @@ class LedgerTrackingEditPayload(OutputSchema):
     JSON dump; ``edited_at`` is the ISO-8601 timestamp.
     """
 
-    previous_transaction_id: str
+    previous_transaction_id: TransactionId
     actor: str
     source_command: str
     edited_at: str
@@ -1018,7 +1026,7 @@ class LedgerTrackingPayload(OutputSchema):
     :class:`LedgerTrackResult`.
     """
 
-    transaction_id: str
+    transaction_id: TransactionId
     created_event_id: str | None = None
     evidence_provenance: list[LedgerTrackingProvenancePayload] = []
     edit_lineage: list[LedgerTrackingEditPayload] = []
@@ -1037,7 +1045,7 @@ class LedgerTrackResult(OutputSchema):
     complements the transaction's own evidence/edit/lifecycle lineage.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     transaction: TransactionPayload
     tracking: LedgerTrackingPayload
     participated_in: list[LedgerTransactionParticipationEntryPayload] | None = None
@@ -1115,7 +1123,7 @@ class LedgerPreflightIssuePayload(OutputSchema):
     fact blocks or warns before modelo calculation.
     """
 
-    transaction_id: str
+    transaction_id: TransactionId
     reason: str
     detail: str = Field(min_length=1, max_length=512)
 
@@ -1138,7 +1146,7 @@ class LedgerLinkInconsistencyPayload(OutputSchema):
     """
 
     invoice_id: str
-    transaction_id: str
+    transaction_id: TransactionId
     direction: LinkInconsistencyDirection
 
 
@@ -1159,7 +1167,7 @@ class LedgerCheckResult(OutputSchema):
     association untrustworthy just as a missing fact does.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     periods: list[str]
     checked_transaction_count: int
     issues: list[LedgerPreflightIssuePayload]
@@ -1180,7 +1188,7 @@ class LedgerPreflightResult(OutputSchema):
     rows, and ``ready`` is the computed no-issues verdict.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     period: LedgerPeriodPayload
     checked_transaction_count: int
     issues: list[LedgerPreflightIssuePayload]
@@ -1197,9 +1205,9 @@ class LedgerLinkResult(OutputSchema):
     """
 
     operation: str
-    bucket_id: str
-    transaction_id: str
-    invoice_id: str
+    bucket_id: BucketId
+    transaction_id: TransactionId
+    invoice_id: InvoiceId
     actor: str
 
 

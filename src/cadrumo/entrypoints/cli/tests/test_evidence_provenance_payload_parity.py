@@ -84,7 +84,7 @@ def test_the_confirm_envelope_body_carries_the_drafts_provenance() -> None:
         "evidence_id": "e",
         "attachment_id": None,
         "created": True,
-        "invoice_id": "inv-1",
+        "invoice_id": "a" * 64,
         "kind": "received",
         "invoice_number": "0042",
         "issued_at": "2026-03-14",

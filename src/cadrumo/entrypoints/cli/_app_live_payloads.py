@@ -38,7 +38,16 @@ from ...application.live import (
 )
 from ...core import IvaCompensationStateProvenance, Modelo, Period
 from ...core.errors import CoreValidationError
-from ...core.identity import AeatExpedienteId, BucketId, ContentDigest, SnapshotId
+from ...core.identity import (
+    AeatCertificadoId,
+    AeatClaveLiquidacion,
+    AeatCsv,
+    AeatExpedienteId,
+    BucketId,
+    ContentDigest,
+    FilingRecordId,
+    SnapshotId,
+)
 from ...core.json_contract import OutputSchema, register_schema
 from ...core.time import validate_utc_aware
 from ...domain.calculations.registry import BindingId
@@ -76,7 +85,7 @@ class FiledListingRowPayload(OutputSchema):
     modelo: str
     year: int
     period: str
-    expediente_id: str
+    expediente_id: AeatExpedienteId
     status: str
     presented_at: str
     has_submitted_file: bool
@@ -106,7 +115,7 @@ class FiledCaptureFailurePayload(OutputSchema):
     modelo: str
     year: int
     period: str | None = None
-    expediente_id: str | None = None
+    expediente_id: AeatExpedienteId | None = None
     error_type: str
     message: str
 
@@ -552,7 +561,7 @@ class NotificationRowPayload(OutputSchema):
     does not acknowledge, mark, or mutate a notification in AEAT.
     """
 
-    certificado_id: str
+    certificado_id: AeatCertificadoId
     tipo: str
     concepto: str
     titular_nif: str
@@ -661,8 +670,8 @@ class SancionReadingPayload(OutputSchema):
     reducción AEAT did not grant is not a reducción it granted at zero.
     """
 
-    certificado_id: str
-    clave_liquidacion: str
+    certificado_id: AeatCertificadoId
+    clave_liquidacion: AeatClaveLiquidacion
     referencia: str
     nif: str
     objeto_tributario: str
@@ -692,7 +701,7 @@ class NotificationDocumentPayload(OutputSchema):
     """
 
     bucket_id: BucketId
-    certificado_id: str
+    certificado_id: AeatCertificadoId
     attachment_id: ContentDigest
     document_sha256: ContentDigest
     byte_size: int = Field(ge=1)
@@ -831,7 +840,7 @@ class ExpedienteSnapshotSummaryPayload(OutputSchema):
     detail remains on :class:`ExpedientesViewResult`.
     """
 
-    snapshot_id: str
+    snapshot_id: SnapshotId
     captured_at: str
     source_url: str
     declaration_count: int
@@ -864,8 +873,8 @@ class ExpedientesCaptureResult(OutputSchema):
     """
 
     mode: Literal["single", "bulk"] = "single"
-    bucket_id: str
-    snapshot_id: str | None = None
+    bucket_id: BucketId
+    snapshot_id: SnapshotId | None = None
     captured_at: str | None = None
     persisted_at: str | None = None
     declaration_count: int
@@ -888,7 +897,7 @@ class ExpedientesListResult(OutputSchema):
     :class:`ExpedientesViewResult` for per-declaration detail.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     count: int
     rows: list[ExpedienteSnapshotSummaryPayload]
 
@@ -902,8 +911,8 @@ class ExpedientesViewResult(OutputSchema):
     :class:`ExpedienteDeclarationPayload`.
     """
 
-    bucket_id: str
-    snapshot_id: str
+    bucket_id: BucketId
+    snapshot_id: SnapshotId
     captured_at: str
     source_url: str
     declaration_count: int
@@ -920,8 +929,8 @@ class ExpedientesLatestResult(OutputSchema):
     the payload shape stable for JSON clients.
     """
 
-    bucket_id: str
-    snapshot_id: str | None
+    bucket_id: BucketId
+    snapshot_id: SnapshotId | None
     captured_at: str | None = None
     source_url: str | None = None
     declaration_count: int | None = None
@@ -945,7 +954,7 @@ class DeudaRowPayload(OutputSchema):
     Direction lives on ``direccion``, never in the sign of the amount.
     """
 
-    clave_liquidacion: str
+    clave_liquidacion: AeatClaveLiquidacion
     objeto_tributario: str
     importe_pendiente: str
     direccion: str
@@ -962,7 +971,7 @@ class DeudaSnapshotSummaryPayload(OutputSchema):
     :class:`DeudasViewResult`.
     """
 
-    snapshot_id: str
+    snapshot_id: SnapshotId
     captured_at: str
     source_url: str
     deuda_count: int
@@ -977,7 +986,7 @@ class DeudasListResult(OutputSchema):
     :class:`DeudasViewResult` for per-liability detail.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     count: int
     rows: list[DeudaSnapshotSummaryPayload]
 
@@ -991,8 +1000,8 @@ class DeudasViewResult(OutputSchema):
     :class:`DeudaRowPayload`.
     """
 
-    bucket_id: str
-    snapshot_id: str
+    bucket_id: BucketId
+    snapshot_id: SnapshotId
     captured_at: str
     source_url: str
     deuda_count: int
@@ -1010,8 +1019,8 @@ class DeudasLatestResult(OutputSchema):
     empty rather than triggering a live AEAT read.
     """
 
-    bucket_id: str
-    snapshot_id: str | None
+    bucket_id: BucketId
+    snapshot_id: SnapshotId | None
     captured_at: str | None = None
     source_url: str | None = None
     deuda_count: int | None = None
@@ -1031,7 +1040,7 @@ class VerifyObservationPayload(OutputSchema):
     matched the live verdict.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     observation_id: str
     surface: str
     nif: str
@@ -1060,12 +1069,12 @@ class JustificanteCaptureResult(OutputSchema):
     """
 
     bucket_id: BucketId
-    snapshot_id: str = Field(min_length=1, max_length=128)
+    snapshot_id: SnapshotId
     modelo: Modelo
     filing_year: int = Field(ge=1900, le=9999)
     period: JustificantePeriodToken
-    expediente_id: str = Field(min_length=12, max_length=32)
-    csv: str = Field(min_length=8, max_length=32)
+    expediente_id: AeatExpedienteId
+    csv: AeatCsv
     pdf_sha256: ContentDigest
     source_kind: ObservationSourceKind
     state: SnapshotLifecycleState
@@ -1074,7 +1083,7 @@ class JustificanteCaptureResult(OutputSchema):
     calendar_evidence_available: bool
     modelo_filing_record_required: bool
     filing_evidence_stamped: bool
-    filing_record_id: str | None = None
+    filing_record_id: FilingRecordId | None = None
 
 
 class JustificanteSnapshotSummaryPayload(OutputSchema):
@@ -1084,7 +1093,7 @@ class JustificanteSnapshotSummaryPayload(OutputSchema):
     :class:`JustificanteCaptureSnapshotService`.
     """
 
-    snapshot_id: str = Field(min_length=1, max_length=128)
+    snapshot_id: SnapshotId
     modelo: Modelo
     filing_year: int = Field(ge=1900, le=9999)
     period: JustificantePeriodToken
@@ -1104,7 +1113,7 @@ class JustificanteListResult(OutputSchema):
     official receipt without exposing the encrypted PDF bytes.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     count: int
     rows: list[JustificanteSnapshotSummaryPayload]
 
@@ -1120,12 +1129,12 @@ class JustificanteViewResult(OutputSchema):
     """
 
     bucket_id: BucketId
-    snapshot_id: str = Field(min_length=1, max_length=128)
+    snapshot_id: SnapshotId
     modelo: Modelo
     filing_year: int = Field(ge=1900, le=9999)
     period: JustificantePeriodToken
-    expediente_id: str = Field(min_length=12, max_length=32)
-    csv: str = Field(min_length=8, max_length=32)
+    expediente_id: AeatExpedienteId
+    csv: AeatCsv
     pdf_sha256: ContentDigest
     source_kind: ObservationSourceKind
     state: SnapshotLifecycleState
@@ -1158,7 +1167,7 @@ class VerifyListResult(OutputSchema):
     through :class:`VerifyService`; the command does not contact AEAT.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     count: int
     rows: list[VerifyObservationSummaryPayload]
 
@@ -1182,7 +1191,7 @@ class VerifyLatestResult(OutputSchema):
     lookup, and every observation-derived field is ``None``.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     observation_id: str | None
     surface: str
     nif: str

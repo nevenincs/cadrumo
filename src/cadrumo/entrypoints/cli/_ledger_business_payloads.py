@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING, Annotated
 
 from pydantic import AfterValidator, Field
 
-from ...core.identity import TaxIdIdentityToken
+from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken
 from ...core.json_contract import OutputSchema, register_schema
 from ...domain.contribuyente.inventory import INVENTORY_SCHEMA_VERSION, MovementKind, ValuationMethod
 from ._decimal_wire import bounded_decimal_wire_text
@@ -123,7 +123,7 @@ class InventoryListRowPayload(InventoryLedgerPayload):
 class InventoryListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger inventory list``."""
 
-    bucket_id: str
+    bucket_id: BucketId
     rows: list[InventoryListRowPayload]
     count: int
 
@@ -188,7 +188,7 @@ class EvidenceRecordPayload(OutputSchema):
     """
 
     evidence_id: str
-    bucket_id: str
+    bucket_id: BucketId
     source_path: str
     source_sha256: str
     attachment_id: str | None = None
@@ -229,7 +229,7 @@ class EvidenceRemoveResult(EvidenceRecordPayload):
 class EvidenceListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger evidence list``."""
 
-    bucket_id: str
+    bucket_id: BucketId
     count: int
     rows: list[EvidenceRecordPayload]
 
@@ -264,7 +264,7 @@ class EvidenceConsentListResult(OutputSchema):
     on this surface that must never be missed.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     transmitted_bytes_are_unrecallable: bool
     consented_dispatches: list[ConsentedDispatchPayload]
     cloud_derived_artefacts: list[CloudDerivedArtefactPayload]
@@ -279,7 +279,7 @@ class EvidenceConsentRederiveResult(OutputSchema):
     records a new derivation rather than a relabelling of the old one.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     evidence_reference: str
     previous_provenance_stamp: str
     provenance_stamp: str
@@ -399,7 +399,7 @@ class EvidenceExtractResult(OutputSchema):
     invoice record is created.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     evidence_id: str | None = None
     attachment_id: str | None = None
     supplier_tax_id: TaxIdIdentityToken | None = None
@@ -515,11 +515,11 @@ class EvidenceConfirmResult(OutputSchema):
     guarded retry.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     evidence_id: str | None = None
     attachment_id: str | None = None
     created: bool
-    invoice_id: str
+    invoice_id: InvoiceId
     kind: str
     invoice_number: str
     issued_at: str
@@ -648,7 +648,7 @@ class EvidenceReviewListResult(OutputSchema):
     is an honest empty queue rather than a claim that nothing is pending.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     filters: list[str] = []
     rows: list[EvidenceReviewRowPayload] = []
 
@@ -667,7 +667,7 @@ class EvidenceReviewShowResult(OutputSchema):
     readability and is never the thing a consumer should parse for provenance.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     evidence_reference: str
     extractor: str
     drafted_at: str

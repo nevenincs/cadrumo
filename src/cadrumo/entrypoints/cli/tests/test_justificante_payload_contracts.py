@@ -36,13 +36,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "26262626-2626-4626-8626-262626262626"
 _PDF_SHA256 = "a3f1" * 16
+_SNAPSHOT_ID = "b4e2" * 16
 _CAPTURED_AT = datetime(2026, 5, 1, 10, 0, tzinfo=UTC)
 
 
 def _capture_fields(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "bucket_id": _BUCKET_ID,
-        "snapshot_id": "snapshot-1",
+        "snapshot_id": _SNAPSHOT_ID,
         "modelo": Modelo.M130,
         "filing_year": 2026,
         "period": "1T",
@@ -79,7 +80,7 @@ def _view_fields(**overrides: object) -> dict[str, object]:
 
 def _summary_fields(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
-        "snapshot_id": "snapshot-1",
+        "snapshot_id": _SNAPSHOT_ID,
         "modelo": Modelo.M130,
         "filing_year": 2026,
         "period": "1T",
