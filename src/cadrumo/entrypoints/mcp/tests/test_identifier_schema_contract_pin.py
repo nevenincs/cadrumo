@@ -331,31 +331,102 @@ def _mcp_result_leaves(command: str) -> tuple[dict[str, object], ...]:
     )
 
 
-@pytest.mark.parametrize(
-    ("command", "family"),
-    [
-        ("overview.calendar", "aeat_csv"),
-        ("app.live.expedientes.view", "aeat_expediente_id"),
-        ("app.live.borrador.100.latest", "hex64"),
-        ("app.live.borrador.100.latest", "bucket_id"),
-        ("config.profile.preflight", "profile_id"),
-    ],
-)
-def test_mcp_output_schema_publishes_the_pinned_identifier_shape(command: str, family: str) -> None:
-    """The MCP descriptor advertises the pinned constraint object literally.
+def _mcp_commands_by_reachable_model() -> dict[type[BaseModel], tuple[str, ...]]:
+    """Map each registered-result projection model to every exposing MCP command.
 
-    Asserting presence of the exact pinned object, rather than a family label
-    derived from the pinned table, is what keeps this non-tautological: an MCP
-    surface that loosened or dropped the constraint would no longer contain it.
+    The map begins at the production ``SCHEMA_REGISTRY`` rather than at a test
+    allowlist, then follows the same resolved annotations as the CLI sweep.
+    This keeps nested rows tied to their actual command envelope and includes a
+    thinned command: thinning changes the advertised result schema, it does not
+    make its still-present identifier fields exempt from the pin.
     """
-    assert is_exposable_command(command), f"{command} is no longer exposed over MCP"
-    leaves = _mcp_result_leaves(command)
-    assert leaves, f"{command} advertised no string leaf at all over MCP"
-    expected = dict(_PINNED_SCHEMAS[family])
-    assert expected in leaves, (
-        f"{command} does not advertise the pinned {family} shape {expected!r} over MCP; "
-        f"advertised leaves: {sorted(map(repr, set(map(str, leaves))))}"
+    commands_by_model: dict[type[BaseModel], set[str]] = {}
+    for command, schema in SCHEMA_REGISTRY.items():
+        models: set[type[BaseModel]] = set()
+        _reachable_models(schema, models)
+        if not is_exposable_command(command):
+            continue
+        for model in models:
+            commands_by_model.setdefault(model, set()).add(command)
+    return {model: tuple(sorted(commands)) for model, commands in commands_by_model.items()}
+
+
+def _mcp_model_field_leaves(
+    command: str,
+    model: type[BaseModel],
+    field: str,
+) -> tuple[dict[str, object], ...]:
+    """Return the advertised leaves for one exact model field on one MCP result.
+
+    The success envelope in :func:`_output_schema_for` carries its registered
+    root inline and nested payload models under ``$defs``.  Looking up the
+    concrete model's own property prevents a matching hex or bucket field
+    elsewhere in the same command from standing in for this field.
+    """
+    output_schema = _output_schema_for(command)
+    definitions_value = output_schema.get("$defs")
+    assert isinstance(definitions_value, Mapping), f"{command} MCP schema has no definitions mapping"
+    definitions = definitions_value
+    one_of = output_schema.get("oneOf")
+    assert isinstance(one_of, list) and one_of, f"{command} has no MCP success envelope"
+    success = one_of[0]
+    assert isinstance(success, Mapping), f"{command} has no object-shaped MCP success envelope"
+    properties = success.get("properties")
+    assert isinstance(properties, Mapping), f"{command} MCP success envelope has no properties"
+    result = properties.get("result")
+    assert isinstance(result, Mapping), f"{command} MCP success envelope has no result schema"
+
+    model_schema: Mapping[object, object]
+    if SCHEMA_REGISTRY[command] is model:
+        model_schema = result
+    else:
+        nested = definitions.get(model.__name__)
+        assert isinstance(nested, Mapping), (
+            f"{command} has no MCP definition for reachable {model.__module__}.{model.__name__}"
+        )
+        model_schema = nested
+    field_schemas = model_schema.get("properties")
+    assert isinstance(field_schemas, Mapping) and field in field_schemas, (
+        f"{command} MCP schema omits {model.__module__}.{model.__name__}.{field}"
     )
+    return tuple(_string_leaves(field_schemas[field], definitions, frozenset(), follow_refs=False))
+
+
+def test_every_mcp_output_schema_advertises_each_enrolled_identifier_field() -> None:
+    """Every reachable identifier field has its literal pin on its actual MCP path.
+
+    This is deliberately per-model-field, rather than a representative command
+    per alias family or a set comparison over a whole result.  An unrelated
+    same-shaped field cannot therefore conceal a missing or loosened bound, and
+    thinned verbs remain covered for every identifier field they still expose.
+    """
+    models: set[type[BaseModel]] = set()
+    for schema in SCHEMA_REGISTRY.values():
+        _reachable_models(schema, models)
+    models_by_key = {(model.__module__, model.__name__): model for model in models}
+    commands_by_model = _mcp_commands_by_reachable_model()
+
+    divergent: list[str] = []
+    for module, cls, field, family, _ in _alias_typed_sites():
+        model = models_by_key.get((module, cls))
+        if model is None:
+            divergent.append(f"registry walk lost {module}.{cls}.{field} [{family}]")
+            continue
+        commands = commands_by_model.get(model, ())
+        if not commands:
+            divergent.append(f"{module}.{cls}.{field} [{family}] has no MCP-exposable command")
+            continue
+        expected = _PINNED_SCHEMAS[family]
+        for command in commands:
+            leaves = _mcp_model_field_leaves(command, model, field)
+            if not leaves:
+                divergent.append(f"{command} omits a string leaf for {module}.{cls}.{field} [{family}]")
+            for leaf in leaves:
+                if leaf != expected:
+                    divergent.append(
+                        f"{command} {module}.{cls}.{field} [{family}] advertises {leaf!r}, pinned {expected!r}",
+                    )
+    assert not divergent, "MCP identifier constraints diverged from the pin:\n" + "\n".join(divergent)
 
 
 def test_cli_and_mcp_advertise_the_same_constrained_string_shapes() -> None:
