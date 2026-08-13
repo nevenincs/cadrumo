@@ -1004,6 +1004,8 @@ application:
           buit.
         certificado_id_blank: L'identificador de certificat de la notificació no pot
           estar buit.
+        document_conflict: 'Ja hi ha desat un document diferent per a aquesta notificació;
+          no s''ha sobreescrit res. Discrepen: {diverging_fields}.'
         document_not_found: Cap document desat correspon a aquesta notificació. Descarregueu-lo
           primer.
         document_prefix_ambiguous: Aquest prefix de certificat correspon a diversos

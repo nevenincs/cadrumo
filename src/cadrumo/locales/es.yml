@@ -1010,6 +1010,8 @@ application:
           vacío.
         certificado_id_blank: El identificador de certificado de la notificación no
           puede estar vacío.
+        document_conflict: 'Ya hay guardado un documento distinto para esa notificación;
+          no se ha sobrescrito nada. Discrepan: {diverging_fields}.'
         document_not_found: Ningún documento guardado corresponde a esa notificación.
           Descárguelo primero.
         document_prefix_ambiguous: Ese prefijo de certificado corresponde a varios

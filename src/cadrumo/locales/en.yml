@@ -903,6 +903,8 @@ application:
       errors:
         bucket_id_blank: Notifications bucket id must not be blank.
         certificado_id_blank: The notification certificado id must not be blank.
+        document_conflict: 'A different document is already stored for that notification;
+          nothing was overwritten. Diverging: {diverging_fields}.'
         document_not_found: No stored document matches that notification. Pull it
           first.
         document_prefix_ambiguous: That certificado prefix matches several stored

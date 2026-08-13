@@ -38,7 +38,7 @@ See Also:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, Field
 
@@ -89,6 +89,26 @@ log = get_logger(__name__)
 _PDF_MIME_TYPE = "application/pdf"
 _SOURCE_COMMAND = "app.live.notifications.document.pull"
 
+#: Persisted fields the CALLER supplies on every store. These are the match: a
+#: re-store of a certificado already in custody must agree with the stored row
+#: on every one of them, and a divergence refuses rather than overwrites. The
+#: silent-drop failure this guards is subtler than the obvious one — a re-store
+#: carrying a NEW value that the no-op discards looks successful and loses data.
+_CALLER_SUPPLIED_FIELDS: Final[frozenset[str]] = frozenset(
+    {"certificado_id", "bucket_id", "document_sha256", "byte_size", "source_url"},
+)
+
+#: Persisted fields derived deterministically from the document BYTES. Equal
+#: bytes imply equal values, and ``document_sha256`` — which IS the bytes'
+#: identity — is compared above, so these are covered transitively. Re-deriving
+#: them to compare would re-run the very reading the no-op exists to skip.
+_BYTE_DERIVED_FIELDS: Final[frozenset[str]] = frozenset({"attachment_id", "sancion", "parse_refusal"})
+
+#: Persisted fields deliberately OUTSIDE the match. ``fetched_at`` is a
+#: last-seen body field, never identity: folding the clock in would make every
+#: retry diverge from itself. ``mode`` is a single-value structural marker.
+_NON_IDENTITY_FIELDS: Final[frozenset[str]] = frozenset({"fetched_at", "mode"})
+
 
 class NotificationDocumentNotFoundError(SnapshotNotFoundError):
     """Raised when no stored document record matches the requested certificado."""
@@ -104,8 +124,8 @@ class NotificationDocumentRecord(BaseModel):
 
     Attributes:
         certificado_id: The notification the document was served under. Also
-            the record's storage key, so re-pulling the same notification
-            rewrites one row rather than accumulating duplicates.
+            the record's storage key, so one notification owns exactly one row
+            and a retried pull neither duplicates it nor rewrites it.
         bucket_id: The profile bucket that owns both this record and the bytes.
         attachment_id: The stored bytes' content address in the encrypted
             attachment store.
@@ -144,8 +164,8 @@ class NotificationDocumentRecord(BaseModel):
 
         The secure-object repository addresses every payload by a
         ``snapshot_id``; here that address is the certificado itself, so one
-        notification owns exactly one row and a re-pull rewrites it rather than
-        accumulating near-duplicates of the same served document.
+        notification owns exactly one row rather than accumulating
+        near-duplicates of the same served document.
         """
         return str(self.certificado_id)
 
@@ -189,6 +209,54 @@ def _document_repository(
     )
 
 
+def _record_in_custody(
+    repository: SecureSnapshotRepository[NotificationDocumentRecord],
+    certificado_id: str,
+) -> NotificationDocumentRecord | None:
+    """Return the record already in custody for ``certificado_id``, or ``None``.
+
+    ``load`` addresses the row by its exact key rather than by prefix, so a miss
+    here means nothing is stored under this certificado — never that several
+    rows were ambiguous.
+    """
+    try:
+        return repository.load(certificado_id)
+    except NotificationDocumentNotFoundError:
+        return None
+
+
+def _diverging_persisted_fields(
+    existing: NotificationDocumentRecord,
+    *,
+    bucket_id: str,
+    row: RemoteNotification,
+    document: NotificationDocument,
+) -> tuple[str, ...]:
+    """Return every caller-supplied field on which a re-store disagrees with custody.
+
+    The incoming mapping is keyed off :data:`_CALLER_SUPPLIED_FIELDS` rather
+    than iterated from itself, so adding a field to the match set without
+    supplying its incoming value raises here instead of narrowing the match
+    silently.
+    """
+    incoming: dict[str, object] = {
+        "certificado_id": str(row.certificado_id),
+        "bucket_id": str(bucket_id),
+        "document_sha256": document.pdf_sha256,
+        "byte_size": len(document.pdf_bytes),
+        "source_url": str(document.source_url),
+    }
+    diverging: list[str] = []
+    for name in sorted(_CALLER_SUPPLIED_FIELDS):
+        stored = getattr(existing, name)
+        candidate = incoming[name]
+        if isinstance(candidate, str):
+            stored = str(stored)
+        if stored != candidate:
+            diverging.append(name)
+    return tuple(diverging)
+
+
 class NotificationDocumentService:
     """Bucket-scoped custody and read surface over fetched notification documents.
 
@@ -227,6 +295,16 @@ class NotificationDocumentService:
         without a browser: everything below the wire — encryption, the
         content-addressed write, the reading, the record — runs here.
 
+        **Re-storing a certificado already in custody is a content-addressed
+        no-op.** The operator here is an autonomous agent that retries, and the
+        AEAT document behind one certificado is immutable — the act was served
+        once. So a retry carrying the same bytes returns the record that is
+        already stored: no second attachment write, no re-run of the reading,
+        no re-stamped ``fetched_at``, and no second secure-object write. A
+        retry that carries DIFFERENT content refuses instead, because either
+        the stored row or the incoming one is wrong about a taxpayer's served
+        act and overwriting silently would destroy the evidence of which.
+
         Args:
             bucket_id: The profile bucket taking custody.
             row: The notification the document belongs to. Re-checked against
@@ -234,13 +312,15 @@ class NotificationDocumentService:
             document: The fetched bytes, held in memory.
 
         Returns:
-            The persisted :class:`NotificationDocumentRecord`.
+            The persisted :class:`NotificationDocumentRecord`, which is the
+            record already in custody when this call was a no-op.
 
         Raises:
             SedeNavigationError: When ``row`` is not a notification AEAT has
                 already recorded as read.
             LiveApplicationInputError: When the document does not belong to the
-                supplied row.
+                supplied row, or when a document is already in custody for this
+                certificado and the incoming one disagrees with it.
         """
         assert_notification_content_readable(row)
         if str(document.certificado_id) != str(row.certificado_id):
@@ -259,6 +339,31 @@ class NotificationDocumentService:
                     },
                 ),
             )
+
+        repository = _document_repository(self._settings, bucket_id)
+        existing = _record_in_custody(repository, str(row.certificado_id))
+        if existing is not None:
+            diverging = _diverging_persisted_fields(
+                existing,
+                bucket_id=bucket_id,
+                row=row,
+                document=document,
+            )
+            if diverging:
+                raise LiveApplicationInputError(
+                    translated_message="application.live.notifications.errors.document_conflict",
+                    context={
+                        "certificado_id": str(row.certificado_id),
+                        "diverging_fields": ", ".join(diverging),
+                        "stored_document_sha256": existing.document_sha256,
+                        "incoming_document_sha256": document.pdf_sha256,
+                    },
+                )
+            log.info(
+                "notification document already in custody, storing nothing: certificado=%s",
+                row.certificado_id,
+            )
+            return existing
 
         attachment = add_attachment(
             resolve_attachment_store(self._attachment_store),
@@ -291,7 +396,7 @@ class NotificationDocumentService:
             sancion=sancion,
             parse_refusal=refusal,
         )
-        _document_repository(self._settings, bucket_id).save(record)
+        repository.save(record)
         log.info(
             "notification document stored: certificado=%s bytes=%d parsed=%s",
             row.certificado_id,

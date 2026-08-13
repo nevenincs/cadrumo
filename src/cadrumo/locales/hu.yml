@@ -938,6 +938,8 @@ application:
       errors:
         bucket_id_blank: A notifications bucket azonosítója nem lehet üres.
         certificado_id_blank: Az értesítés tanúsítványazonosítója nem lehet üres.
+        document_conflict: 'Ehhez az értesítéshez már egy másik dokumentum van tárolva;
+          semmi sem íródott felül. Eltérés: {diverging_fields}.'
         document_not_found: Egyetlen tárolt dokumentum sem felel meg ennek az értesítésnek.
           Töltse le előbb.
         document_prefix_ambiguous: Ez a tanúsítványelőtag több tárolt dokumentumra

@@ -23,135 +23,55 @@ refused row produces no bytes, no attachment and no record.
 from __future__ import annotations
 
 import json as _json
-from datetime import UTC, date, datetime
+from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
-from sqlalchemy import select
 
-from ....adapters.outbound.aeat.sede import (
-    NotificationDocument,
-    RemoteNotification,
-    SedeNavigationError,
-)
+from ....adapters.outbound.aeat.sede import SedeNavigationError
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.crypto import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
     secure_object_payload_aad,
 )
-from ....adapters.persistence.storage.sql import SecureObjectRow
-from ....adapters.persistence.storage.sql.session import session_scope
 from ....core.hashing import sha256_hex
 from ....domain.attachments import AttachmentKind, load_attachment
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._errors import LiveApplicationInputError
 from .._notification_documents import (
     NotificationDocumentNotFoundError,
     NotificationDocumentService,
-    notification_document_object_key,
+)
+from ._notification_document_support import (
+    BUCKET_ID as _BUCKET_ID,
+)
+from ._notification_document_support import (
+    CERT_READ as _CERT_READ,
+)
+from ._notification_document_support import (
+    CERT_UNREAD as _CERT_UNREAD,
+)
+from ._notification_document_support import (
+    DETAIL_URL as _DETAIL_URL,
+)
+from ._notification_document_support import (
+    read_row as _read_row,
+)
+from ._notification_document_support import (
+    sancion_pdf_bytes as _pdf_bytes,
+)
+from ._notification_document_support import (
+    served_document as _document,
+)
+from ._notification_document_support import (
+    stored_document_row,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_BUCKET_ID = "61616161-6161-4161-8161-616161616161"
-_NAMESPACE = "cadrumo.application.live.notification_document"
-_CERT_READ = "2699101808461"
-_CERT_UNREAD = "2596230606502"
-_DETAIL_URL = "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/DetalleSede?ncc=2699101808461"
-
-# A minimal but structurally real PDF carrying a text layer, built here rather
-# than committed as a fixture: the bytes AEAT serves are the taxpayer's own
-# sanción, and this repository is not a home for them.
-_SANCION_TEXT_LINES = (
-    "Clave de liquidacion: A2860024500012345",
-    "Referencia: 2024/0001234",
-    "N.I.F.: 12345678Z",
-    "Base sobre la que se liquida la sancion 3.687,12euros",
-    "Porcentaje minimo de sancion 50,00%",
-    "Sancion resultante 1.843,56euros",
-    "Reduccion del 30% 553,07euros",
-    "Reduccion del 40% 516,20euros",
-    "Diferencia 774,29euros",
-)
-
-
-def _pdf_bytes(lines: tuple[str, ...] = _SANCION_TEXT_LINES) -> bytes:
-    """Render ``lines`` into a real single-page PDF with an extractable text layer.
-
-    Built through the same pdfium the production extractor reads with, so the
-    text this test asserts on is text a real extractor genuinely recovers, not
-    a string the test handed to itself.
-    """
-    import pypdfium2 as pdfium
-
-    content = "BT /F1 10 Tf 40 780 Td 12 TL\n"
-    for line in lines:
-        escaped = line.replace("\\", r"\\").replace("(", r"\(").replace(")", r"\)")
-        content += f"({escaped}) Tj T*\n"
-    content += "ET"
-    stream = content.encode("latin-1")
-
-    objects = [
-        b"<< /Type /Catalog /Pages 2 0 R >>",
-        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] "
-        b"/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
-        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
-        b"<< /Length " + str(len(stream)).encode("ascii") + b" >>\nstream\n" + stream + b"\nendstream",
-    ]
-    out = bytearray(b"%PDF-1.4\n")
-    offsets = []
-    for index, body in enumerate(objects, start=1):
-        offsets.append(len(out))
-        out += f"{index} 0 obj\n".encode("ascii") + body + b"\nendobj\n"
-    xref_at = len(out)
-    out += f"xref\n0 {len(objects) + 1}\n".encode("ascii") + b"0000000000 65535 f \n"
-    for offset in offsets:
-        out += f"{offset:010d} 00000 n \n".encode("ascii")
-    out += (
-        f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref_at}\n".encode("ascii") + b"%%EOF\n"
-    )
-    data = bytes(out)
-    # Prove the bytes really carry the text layer before any test relies on it.
-    document = pdfium.PdfDocument(data)
-    try:
-        recovered = "\n".join(document[0].get_textpage().get_text_range().splitlines())
-        assert lines[0] in recovered
-    finally:
-        document.close()
-    return data
-
-
-def _read_row(*, certificado_id: str = _CERT_READ) -> RemoteNotification:
-    """Build a notification AEAT reports as READ, with every optional field set."""
-    return RemoteNotification(
-        certificado_id=certificado_id,
-        tipo="notificacion",
-        concepto="Acuerdo de resolucion de procedimiento sancionador",
-        titular_nif="12345678Z",
-        titular_nombre="PERSONA PRUEBA UNO",
-        destinatario_nif="12345678Z",
-        destinatario_nombre="PERSONA PRUEBA UNO",
-        fecha_emision=date(2026, 2, 3),
-        fecha_notificacion=date(2026, 2, 13),
-        modo_notificacion="Comparecencia en sede electronica",
-        leida=True,
-        source_url=_DETAIL_URL,
-    )
-
-
-def _document(*, certificado_id: str = _CERT_READ, data: bytes | None = None) -> NotificationDocument:
-    payload = data if data is not None else _pdf_bytes()
-    return NotificationDocument(
-        certificado_id=certificado_id,
-        pdf_bytes=payload,
-        pdf_sha256=sha256_hex(payload),
-        source_url=_DETAIL_URL,
-    )
-
 
 # ── Custody roundtrip ──────────────────────────────────────────────────────
 
@@ -202,15 +122,24 @@ def test_the_document_bytes_land_in_the_encrypted_attachment_store(tmp_path: Pat
         assert store.read_bytes(record.attachment_id) == document.pdf_bytes
 
 
-def test_re_pulling_one_notification_rewrites_its_single_row(tmp_path: Path) -> None:
-    """A retried pull is one document, not two near-duplicate custody rows."""
+def test_re_pulling_one_notification_stores_nothing_and_returns_what_is_held(tmp_path: Path) -> None:
+    """A retried pull is a no-op against real custody, not a rewrite.
+
+    Asserted here against the real encrypted adapters because that is where the
+    claim has to hold: the operator of this CLI is an autonomous agent that
+    retries, and the AEAT act behind one certificado was served once and cannot
+    change. ``fetched_at`` is the field that betrays a rewrite — it is stamped
+    from the clock on every genuine store, so an equal value across two calls
+    is proof the second call never built a record at all.
+    """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         service = NotificationDocumentService()
 
         first = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
         second = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
 
-        assert first.attachment_id == second.attachment_id
+        assert second == first
+        assert second.fetched_at == first.fetched_at
         assert len(service.list_documents(bucket_id=_BUCKET_ID)) == 1
 
 
@@ -233,7 +162,7 @@ def test_an_unread_notification_is_refused_before_any_byte_is_stored(tmp_path: P
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         service = NotificationDocumentService()
 
-        with pytest.raises(SedeNavigationError, match="comparecencia|read"):
+        with pytest.raises(SedeNavigationError, match=r"comparecencia|read"):
             service.persist_document(
                 bucket_id=_BUCKET_ID,
                 row=unread,
@@ -354,18 +283,16 @@ def test_an_unreadable_document_keeps_its_bytes_and_records_the_refusal(tmp_path
 # ── Anti-tautology proofs ──────────────────────────────────────────────────
 
 
-def _mutate_stored_payload(profile: object, *, mutate: object) -> None:
+def _mutate_stored_payload(
+    profile: TestRuntimeProfile,
+    *,
+    mutate: Callable[[dict[str, Any]], None],
+) -> None:
     """Decrypt the stored record, apply ``mutate`` to it, and re-encrypt in place."""
-    object_key = notification_document_object_key(_BUCKET_ID, _CERT_READ)
-    with session_scope(profile.repository._engine) as session:  # type: ignore[attr-defined]
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == _NAMESPACE,
-            SecureObjectRow.object_key == object_key,
-        )
-        row = session.execute(stmt).scalar_one()
+    with stored_document_row(profile) as row:
         aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
         decoded = _json.loads(decrypt_secure_object_payload(bytes(row.payload), associated_data=aad).decode("utf-8"))
-        mutate(decoded)  # type: ignore[operator]
+        mutate(decoded)
         row.payload = encrypt_secure_object_payload(_json.dumps(decoded).encode("utf-8"), associated_data=aad)
 
 
@@ -381,7 +308,7 @@ def test_deleting_the_attachment_id_on_disk_makes_the_load_refuse(tmp_path: Path
         service = NotificationDocumentService()
         service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
 
-        def _drop(decoded: dict[str, object]) -> None:
+        def _drop(decoded: dict[str, Any]) -> None:
             payload = decoded["payload"]
             assert "attachment_id" in payload, (  # type: ignore[operator]
                 "fixture must serialise attachment_id for this proof to mean anything"
@@ -404,11 +331,9 @@ def test_dropping_a_figure_from_the_nested_reading_makes_the_load_refuse(tmp_pat
         service = NotificationDocumentService()
         service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
 
-        def _drop(decoded: dict[str, object]) -> None:
+        def _drop(decoded: dict[str, Any]) -> None:
             sancion = decoded["payload"]["sancion"]  # type: ignore[index]
-            assert "importe_a_ingresar" in sancion, (
-                "fixture must serialise the payable for this proof to mean anything"
-            )
+            assert "importe_a_ingresar" in sancion, "fixture must serialise the payable for this proof to mean anything"
             del sancion["importe_a_ingresar"]
 
         _mutate_stored_payload(profile, mutate=_drop)
@@ -423,7 +348,7 @@ def test_a_zero_byte_size_on_disk_makes_the_load_refuse(tmp_path: Path) -> None:
         service = NotificationDocumentService()
         service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
 
-        def _zero(decoded: dict[str, object]) -> None:
+        def _zero(decoded: dict[str, Any]) -> None:
             decoded["payload"]["byte_size"] = 0  # type: ignore[index]
 
         _mutate_stored_payload(profile, mutate=_zero)
