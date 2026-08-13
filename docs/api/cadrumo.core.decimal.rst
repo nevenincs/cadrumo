@@ -17,3 +17,4 @@ Submodules
    cadrumo.core.decimal._fixed_width
    cadrumo.core.decimal._format
    cadrumo.core.decimal._grammar
+   cadrumo.core.decimal._printed

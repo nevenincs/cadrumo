@@ -19,10 +19,11 @@ Layout robustness rests on three independent guards rather than on trusting one
 template:
 
 * **Anchored value shapes.** Money must match the AEAT two-decimal
-  comma-tailed shape end to end (:data:`_STRICT_AEAT_MONEY_RE`, the house
-  pattern shared with the IVA compensation wallet reader), never merely contain
-  one. A template that begins printing whole euros surfaces as the shape change
-  it is instead of being silently reinterpreted as a thousands-grouped integer.
+  comma-tailed shape end to end (:func:`~core.decimal.is_aeat_printed_money`,
+  the one house grammar, which the IVA compensation wallet reader consults
+  too), never merely contain one. A template that begins printing whole euros
+  surfaces as the shape change it is instead of being silently reinterpreted as
+  a thousands-grouped integer.
 * **Conflicting-repeat detection.** AEAT repeats labels across page headers and
   summary blocks. A label repeated with the SAME value is a repeat; a label
   repeated with DIFFERENT values is genuinely ambiguous and refuses, because no
@@ -51,19 +52,13 @@ from typing import Final, Literal
 from pydantic import BaseModel, Field
 
 from ....core import STRICT_FROZEN_CONFIG
+from ....core.decimal import is_aeat_printed_money
 from ....core.i18n import tr
 from ....core.identity import AeatCertificadoId, AeatClaveLiquidacion
 from ._errors import SancionArithmeticError, SancionParseError
 
 _CENT: Final = Decimal("0.01")
 _ZERO: Final = Decimal("0.00")
-
-_STRICT_AEAT_MONEY_RE: Final[re.Pattern[str]] = re.compile(r"^-?\d{1,3}(?:\.\d{3})*,\d{2}$|^-?\d+,\d{2}$")
-"""Anchored AEAT money shape: dot-grouped thousands, mandatory two-decimal comma tail.
-
-The house pattern, shared verbatim with the IVA compensation wallet reader. The
-figure must BE this shape end to end rather than contain one.
-"""
 
 _STRICT_PERCENTAGE_RE: Final[re.Pattern[str]] = re.compile(r"^\d{1,3}(?:,\d{1,2})?$")
 """Anchored percentage shape, comma-decimal, at most two decimals."""
@@ -308,7 +303,7 @@ def _strip_leaders(raw: str) -> str:
 def _parse_money(raw: str) -> Decimal:
     """Parse one AEAT money token, refusing anything that is not the exact shape."""
     cleaned = _CURRENCY_SUFFIX_RE.sub("", _strip_leaders(raw)).strip()
-    if not _STRICT_AEAT_MONEY_RE.match(cleaned):
+    if not is_aeat_printed_money(cleaned):
         raise SancionParseError(f"not an AEAT money shape: {raw!r}", malformed=("amount",))
     try:
         return Decimal(cleaned.replace(".", "").replace(",", ".")).quantize(_CENT)

@@ -14,6 +14,9 @@ Public surface
 * :func:`try_parse_canonical_decimal` — validate hand-typed text against the
   one canonical strict grammar, returning ``None`` rather than raising so each
   boundary supplies its own localised refusal.
+* :func:`is_aeat_printed_money` — the anchored shape check for AEAT's own
+  printed-money rendering, consulted as a gate before a printed token is
+  parsed.
 
 Two postures
 ------------
@@ -24,6 +27,10 @@ AEAT PDF extraction). :func:`try_parse_canonical_decimal` is *strict*: it exists
 to refuse anything outside one canonical form, because the text it validates was
 typed by a human whose intent cannot be guessed. Pick by input provenance, not
 by convenience.
+
+:func:`is_aeat_printed_money` belongs to the strict side but answers a different
+question: not "can a human have meant this" but "did AEAT print this". It
+validates rather than parses, so it composes with either posture.
 """
 
 from __future__ import annotations
@@ -32,6 +39,7 @@ from ._coerce import coerce_decimal, coerce_decimal_strict, coerce_finite_europe
 from ._fixed_width import coerce_fixed_width_decimal
 from ._format import format_decimal
 from ._grammar import european_thousands_reading_is_ambiguous, try_parse_canonical_decimal
+from ._printed import is_aeat_printed_money
 
 __all__ = [
     "coerce_decimal",
@@ -40,6 +48,7 @@ __all__ = [
     "coerce_fixed_width_decimal",
     "european_thousands_reading_is_ambiguous",
     "format_decimal",
+    "is_aeat_printed_money",
     "normalize_decimal_separators",
     "try_parse_canonical_decimal",
 ]
