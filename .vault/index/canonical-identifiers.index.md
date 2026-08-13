@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:fc48fa10faf7c85c7a5675c41b089a3a6030134b2c3d6e2f4e431ed72c7e0c54'
+body_hash: 'sha256:fbe5e874de1d1678bfa20a8cc67d01d4c5e5c0f15575890eb10dee4fdb230c5f'
 related:
   - '[[2026-08-07-canonical-identifiers-W01-P01-S01]]'
   - '[[2026-08-07-canonical-identifiers-W01-P01-S02]]'
@@ -20,6 +20,9 @@ related:
   - '[[2026-08-07-canonical-identifiers-W02-P02-S08]]'
   - '[[2026-08-07-canonical-identifiers-W02-P02-S09]]'
   - '[[2026-08-07-canonical-identifiers-W02-P02-S10]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P02-S11]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P02-S12]]'
+  - '[[2026-08-07-canonical-identifiers-W03-P04-S64]]'
   - '[[2026-08-07-canonical-identifiers-W04-P06-S29]]'
   - '[[2026-08-07-canonical-identifiers-W04-P06-S30]]'
   - '[[2026-08-07-canonical-identifiers-W04-P06-S31]]'
@@ -53,6 +56,7 @@ related:
   - '[[2026-08-10-canonical-identifiers-expediente-provenance-reference]]'
   - '[[2026-08-10-canonical-identifiers-revision-id-adjudication-reference]]'
   - '[[2026-08-13-canonical-identifiers-s10-provenance-roundtrip-audit]]'
+  - '[[2026-08-13-canonical-identifiers-s11-contract-audit]]'
 ---
 
 # `canonical-identifiers` feature index
@@ -69,6 +73,7 @@ Auto-generated index of all documents tagged with `#canonical-identifiers`.
 ### audit
 
 - `2026-08-13-canonical-identifiers-s10-provenance-roundtrip-audit` - `canonical-identifiers` audit: `s10 provenance roundtrip`
+- `2026-08-13-canonical-identifiers-s11-contract-audit` - `canonical-identifiers` audit: `s11 contract`
 
 ### exec
 
@@ -90,6 +95,9 @@ Auto-generated index of all documents tagged with `#canonical-identifiers`.
 - `2026-08-07-canonical-identifiers-W05-P07-S36` - retype every site adjudicated in `W05.P07.S35` onto `CalculationRevisionId` or the canonical `RevisionId` per its recorded disposition. DO NOT MINT `RegistryRevisionId`. This row previously instructed creating it and that instruction was superseded on 2026-08-11: the concept already has a canonical home as `type RevisionId` in the registry ids module, exported from the registry facade and carrying 16 users at HEAD, so minting a second alias beside it fragments a canonical type and is precisely the criticality this campaign exists to close. It would also have shipped green, because a faithfully-implemented wrong specification passes every gate and produces an honest exec record. Substitutability is measured and constrains the retype: `RevisionId` carries min_length, max_length and a pattern where a bare `str` carries none, so every retype NARROWS its site and is correct ONLY where the adjudication recorded a genuine registry revision slug
 - `2026-08-07-canonical-identifiers-W02-P02-S09` - Discriminate IVA-compensation provenance from AEAT register status
 - `2026-08-07-canonical-identifiers-W02-P02-S10` - Add the strict roundtrip and anti-tautology proof for the discriminated pair. Populate every defaultable field on IvaCompensationPeriodState non-default, push it through the real encrypted repository and assert strict model equality on load. For the anti-tautology proof delete the persisted provenance field from the on-disk payload, reload through the real production read path, and assert refusal rather than a silent re-default. Add a companion case proving the cross-field validator refuses both impossible pairs, an operator-seeded row carrying an expediente and an AEAT-capture row carrying none
+- `2026-08-07-canonical-identifiers-W02-P02-S11` - retype `ExpedienteDeclarationPayload.expediente_id` from unconstrained bare `str` onto `AeatExpedienteId`, closing the fourth (loosest) divergence sighted on the operator-facing wire contract
+- `2026-08-07-canonical-identifiers-W02-P02-S12` - add a golden-schema pinning test capturing `ExpedienteDeclarationPayload`'s advertised `model_json_schema()` before and after `W02.P02.S11`, so the CLI/MCP contract change is a visible reviewed diff rather than a silent constraint shift
+- `2026-08-07-canonical-identifiers-W03-P04-S64` - Decide whether resolve_identifier_namespace is enrolled or dropped, and record the outcome before S24 executes. Search production for a site holding an AEAT identifier value whose namespace is UNKNOWN at the point of use. A semantic sweep run for the 2026-08-10 ADR amendment found none, returning only the enum's own module, its own test and an in-flight census tool. The disconfirming observation that decides this row: a genuine consumer holds a value whose namespace cannot be read off its own field type. If every candidate turns out to hold a value whose namespace is already fixed by its field type, record that the resolver is DROPPED and retire IdentifierNamespace with it rather than leaving an exported concept nothing uses. Do not manufacture a caller to justify the symbol
 - `2026-08-07-canonical-identifiers-W04-P06-S29` - retype classified transaction-id pydantic model fields onto `TransactionId` in `application/ledger/`
 - `2026-08-07-canonical-identifiers-W04-P06-S30` - retype classified transaction-id pydantic model fields onto `TransactionId` in `application/aggregation/`
 - `2026-08-07-canonical-identifiers-W04-P06-S31` - adjudicate `bucket_id` in `adapters/persistence/profile/` — zero model fields, row's premise does not survive contact
