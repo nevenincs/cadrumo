@@ -390,6 +390,15 @@
         "reason": "White-box test of the CLI-internal evidence-record-ref payload shape, a rendering-layer contract scoped to the modelo auxiliary CLI surface, not a cross-package production API."
       },
       {
+        "importer_path": "src/cadrumo/application/filing/tests/test_m303_export_applicability_internal.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.application.modelo._m303_regimen_simplificado_scope",
+        "imported_names": [
+          "m303_regimen_simplificado_scope_for_profile"
+        ],
+        "reason": "White-box identity gate, and the reach is the assertion. This module proves that the Modelo 303 regimen-simplificado scope has NO caller-authored override boundary: scope derives from the secured taxpayer profile alone, never from an export-side input. `test_canonical_profile_scope_mapper_is_required_by_calculation_and_export` asserts that the mapper bound inside `application.modelo._m303_filing_evidence` and the one bound inside `application.modelo._export` are the SAME object as the canonical definition -- an `is` comparison that must name the defining private module to have anything to compare against. Deliberately NOT promoted: the symbol has zero cross-package production consumers (its only callers are `_export`, `_m303_filing_evidence`, and its own module's `resolve_m303_regimen_simplificado_scope`), and minting it onto `application.modelo`'s public facade would create precisely the caller-reachable scope-override door this module exists to prove does not exist. Promotion here would make the gate assert the absence of a surface the promotion itself had just added."
+      },
+      {
         "importer_path": "src/cadrumo/application/flows/tests/test_validation_context_redaction.py",
         "occurrence": 1,
         "target_mod": "cadrumo.application.wizard._widgets",

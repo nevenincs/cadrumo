@@ -45,8 +45,7 @@ from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import CalculationObservationRepository
-from ...calculations._observations_repository import ResultDispositionProjection
+from ...calculations import CalculationObservationRepository, ResultDispositionProjection
 from .._calculation_actions import _resolve_bucket_source_mesh
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
