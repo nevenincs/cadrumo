@@ -13,7 +13,8 @@ from __future__ import annotations
 import json
 import re
 from collections import Counter, defaultdict
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
+from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from typing import Final, Literal
@@ -21,12 +22,20 @@ from typing import Final, Literal
 import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.domain.calculations.registry import ModeloId, RegistryValidationError, SourceReference, SourceRefId
+from cadrumo.domain.calculations.registry import (
+    ModeloId,
+    RegistryValidationError,
+    SourceRefId,
+    ValidatedRegistryAuthority,
+)
 
-from ._record_design_ir import RecordDesignIntermediateField, load_record_design_intermediate
+from ._record_design_ir import RecordDesignIntermediate, RecordDesignIntermediateField, load_record_design_intermediate
+from ._semantic_map_validation import validate_snapshot_source_authority
 
 __all__ = [
     "DP30302_EPOCHS",
+    "DP30302_EPOCH_COORDINATES",
+    "DP30302EpochCoordinate",
     "DP30302EpochFieldMatrix",
     "DP30302FieldMatrix",
     "DP30302FieldPartition",
@@ -35,20 +44,31 @@ __all__ = [
     "classify_dp30302_field_description",
     "dp30302_activity_slot",
     "generalize_dp30302_field_description",
+    "load_dp30302_epoch_intermediates",
     "load_dp30302_field_matrix",
     "measure_dp30302_field_matrix",
     "resolve_dp30302_module_sub_indices",
 ]
 
-DP30302_EPOCHS: Final[tuple[str, ...]] = ("2023", "2024-early", "2024-late", "2025", "2026")
 
-_DP30302_SOURCES: Final[tuple[tuple[str, int, str], ...]] = (
-    ("aeat-dr-303-2023", 2023, "2023"),
-    ("aeat-dr-303-2024-early", 2024, "2024-early"),
-    ("aeat-dr-303-2024-late", 2024, "2024-late"),
-    ("aeat-dr-303-2025", 2025, "2025"),
-    ("aeat-dr-303-2026", 2026, "2026"),
+@dataclass(frozen=True, slots=True)
+class DP30302EpochCoordinate:
+    """One M303 filing coordinate whose selected snapshot admits one DP30302 design."""
+
+    source_ref: SourceRefId
+    filing_year: int
+    period: str
+    epoch: str
+
+
+DP30302_EPOCH_COORDINATES: Final[tuple[DP30302EpochCoordinate, ...]] = (
+    DP30302EpochCoordinate("aeat-dr-303-2023", 2023, "4T", "2023"),
+    DP30302EpochCoordinate("aeat-dr-303-2024-early", 2024, "2T", "2024-early"),
+    DP30302EpochCoordinate("aeat-dr-303-2024-late", 2024, "3T", "2024-late"),
+    DP30302EpochCoordinate("aeat-dr-303-2025", 2025, "4T", "2025"),
+    DP30302EpochCoordinate("aeat-dr-303-2026", 2026, "4T", "2026"),
 )
+DP30302_EPOCHS: Final[tuple[str, ...]] = tuple(coordinate.epoch for coordinate in DP30302_EPOCH_COORDINATES)
 
 _RESERVE_DESCRIPTION: Final[str] = "Reservado para la AEAT"
 _CONSTANT_DESCRIPTIONS: Final[frozenset[str]] = frozenset(
@@ -164,18 +184,19 @@ class DP30302EpochFieldMatrix(_StrictModel):
     total: int = Field(gt=0)
     agricola: int = Field(ge=0)
     no_agricola: int = Field(ge=0)
+    simplified: int = Field(gt=0)
     numbered: int = Field(ge=0)
     constant: int = Field(ge=0)
     reserve: int = Field(ge=0)
     producer: int = Field(ge=0)
 
-    @property
-    def simplified(self) -> int:
-        """The derived simplified-regime total: agrícola plus no agrícola."""
-        return self.agricola + self.no_agricola
-
     @model_validator(mode="after")
     def _require_exhaustive_disjoint_partition(self) -> DP30302EpochFieldMatrix:
+        if self.simplified != self.agricola + self.no_agricola:
+            raise ValueError(
+                f"DP30302 {self.epoch} simplified count {self.simplified} must equal agrícola plus no agrícola "
+                f"({self.agricola + self.no_agricola})",
+            )
         partition_sum = self.agricola + self.no_agricola + self.numbered + self.constant + self.reserve + self.producer
         if partition_sum != self.total:
             raise ValueError(
@@ -234,57 +255,98 @@ class DP30302FieldMatrix(_StrictModel):
         return self
 
 
-def measure_dp30302_field_matrix(
-    root: Path,
-    sources: Mapping[str, SourceReference],
-) -> DP30302FieldMatrix:
-    """Recompute the complete DP30302 matrix from the five hash-pinned official binaries.
+def load_dp30302_epoch_intermediates(
+    authority: ValidatedRegistryAuthority,
+) -> tuple[RecordDesignIntermediate, ...]:
+    """Load the five DP30302 designs only through their selected validated snapshots."""
+    intermediates: list[RecordDesignIntermediate] = []
+    for coordinate in DP30302_EPOCH_COORDINATES:
+        snapshot = authority.snapshot(
+            "303",
+            filing_year=coordinate.filing_year,
+            period=coordinate.period,
+        )
+        intermediate = load_record_design_intermediate(
+            authority.source_root,
+            snapshot.sources,
+            source_ref=coordinate.source_ref,
+            filing_year=coordinate.filing_year,
+            design_epoch=coordinate.epoch,
+        )
+        validate_snapshot_source_authority(intermediate, snapshot)
+        intermediates.append(intermediate)
+    return tuple(intermediates)
 
-    Reads coordinates and text exclusively through :func:`load_record_design_intermediate`;
-    it neither reads a directory listing nor infers a registry authority.
+
+def _measure_dp30302_epoch(
+    intermediate: RecordDesignIntermediate,
+    *,
+    epoch: str,
+) -> tuple[DP30302EpochFieldMatrix, set[str], dict[str, set[int]]]:
+    sheet = next((sheet for sheet in intermediate.sheets if sheet.record_identity == "DP30302"), None)
+    if sheet is None:
+        raise RegistryValidationError(f"official design {intermediate.source.source_ref!r} carries no DP30302 sheet")
+
+    counts: Counter[DP30302FieldPartition] = Counter()
+    distinct_semantics: set[str] = set()
+    family_cardinality: dict[str, set[int]] = defaultdict(set)
+    slot_groups: dict[tuple[int, str], int] = defaultdict(int)
+    for field in sheet.fields:
+        counts[classify_dp30302_field_description(field.normalized_description)] += 1
+        generalized = generalize_dp30302_field_description(field.normalized_description)
+        distinct_semantics.add(generalized)
+        slot = dp30302_activity_slot(field.normalized_description)
+        if slot is not None:
+            slot_groups[(slot, generalized)] += 1
+
+    for (_slot, generalized), count in slot_groups.items():
+        family_cardinality[generalized].add(count)
+    agricola = counts[DP30302FieldPartition.AGRICOLA]
+    no_agricola = counts[DP30302FieldPartition.NO_AGRICOLA]
+    return (
+        DP30302EpochFieldMatrix(
+            epoch=epoch,
+            source_ref=intermediate.source.source_ref,
+            source_sha256=intermediate.source.source_sha256,
+            total=len(sheet.fields),
+            agricola=agricola,
+            no_agricola=no_agricola,
+            simplified=agricola + no_agricola,
+            numbered=counts[DP30302FieldPartition.NUMBERED],
+            constant=counts[DP30302FieldPartition.CONSTANT],
+            reserve=counts[DP30302FieldPartition.RESERVE],
+            producer=counts[DP30302FieldPartition.PRODUCER],
+        ),
+        distinct_semantics,
+        family_cardinality,
+    )
+
+
+def measure_dp30302_field_matrix(authority: ValidatedRegistryAuthority) -> DP30302FieldMatrix:
+    """Recompute the complete DP30302 matrix from five validated source snapshots.
+
+    Each parsed binary is admitted by its filing-context-selected
+    :class:`ValidatedRegistryAuthority` snapshot before measurement.  This
+    neither reads a directory listing nor admits catalogue rows outside the
+    selected revision authority.
     """
     epoch_matrices: list[DP30302EpochFieldMatrix] = []
     distinct_semantics: set[str] = set()
     family_cardinality: dict[str, dict[str, set[int]]] = defaultdict(lambda: defaultdict(set))
 
-    for source_ref, filing_year, epoch in _DP30302_SOURCES:
-        intermediate = load_record_design_intermediate(
-            root,
-            sources,
-            source_ref=source_ref,
-            filing_year=filing_year,
-            design_epoch=epoch,
+    for coordinate, intermediate in zip(
+        DP30302_EPOCH_COORDINATES,
+        load_dp30302_epoch_intermediates(authority),
+        strict=True,
+    ):
+        epoch_matrix, epoch_semantics, epoch_family_cardinality = _measure_dp30302_epoch(
+            intermediate,
+            epoch=coordinate.epoch,
         )
-        sheet = next((sheet for sheet in intermediate.sheets if sheet.record_identity == "DP30302"), None)
-        if sheet is None:
-            raise RegistryValidationError(f"official design {source_ref!r} carries no DP30302 sheet")
-
-        counts: Counter[DP30302FieldPartition] = Counter()
-        slot_groups: dict[tuple[int, str], int] = defaultdict(int)
-        for field in sheet.fields:
-            counts[classify_dp30302_field_description(field.normalized_description)] += 1
-            distinct_semantics.add(generalize_dp30302_field_description(field.normalized_description))
-            slot = dp30302_activity_slot(field.normalized_description)
-            if slot is not None:
-                key = (slot, generalize_dp30302_field_description(field.normalized_description))
-                slot_groups[key] += 1
-
-        epoch_matrices.append(
-            DP30302EpochFieldMatrix(
-                epoch=epoch,
-                source_ref=intermediate.source.source_ref,
-                source_sha256=intermediate.source.source_sha256,
-                total=len(sheet.fields),
-                agricola=counts[DP30302FieldPartition.AGRICOLA],
-                no_agricola=counts[DP30302FieldPartition.NO_AGRICOLA],
-                numbered=counts[DP30302FieldPartition.NUMBERED],
-                constant=counts[DP30302FieldPartition.CONSTANT],
-                reserve=counts[DP30302FieldPartition.RESERVE],
-                producer=counts[DP30302FieldPartition.PRODUCER],
-            ),
-        )
-        for (_slot, generalized), count in slot_groups.items():
-            family_cardinality[generalized][epoch].add(count)
+        epoch_matrices.append(epoch_matrix)
+        distinct_semantics.update(epoch_semantics)
+        for generalized, cardinalities in epoch_family_cardinality.items():
+            family_cardinality[generalized][coordinate.epoch].update(cardinalities)
 
     families: list[DP30302RepeatingModuleFamily] = []
     for generalized in sorted(family_cardinality):

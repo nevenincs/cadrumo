@@ -2,22 +2,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     RegistryValidationError,
-    SourceReference,
-    SourceRefId,
-    load_catalogue_file,
+    bundled_authority,
 )
 
 from .. import _dp30302_field_matrix
 from .._dp30302_field_matrix import (
+    DP30302_EPOCH_COORDINATES,
     DP30302_EPOCHS,
     DP30302EpochFieldMatrix,
     DP30302FieldPartition,
@@ -26,42 +23,24 @@ from .._dp30302_field_matrix import (
     classify_dp30302_field_description,
     dp30302_activity_slot,
     generalize_dp30302_field_description,
+    load_dp30302_epoch_intermediates,
     load_dp30302_field_matrix,
     measure_dp30302_field_matrix,
     resolve_dp30302_module_sub_indices,
 )
-from .._record_design_ir import RecordDesignIntermediateField, load_record_design_intermediate
+from .._record_design_ir import RecordDesignIntermediateField
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _ARTEFACT_PATH = Path(__file__).resolve().parent.parent / "dp30302_field_matrix.toml"
 
 
-def _iva_sources() -> Mapping[SourceRefId, SourceReference]:
-    return load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml")).sources
-
-
 def _dp30302_sheets() -> dict[str, tuple[RecordDesignIntermediateField, ...]]:
-    """Load every epoch's real DP30302 field set through the shipped parser."""
-    source_root = bundled_path()
-    sources = _iva_sources()
+    """Load every epoch's real DP30302 field set through validated snapshots."""
     out: dict[str, tuple[RecordDesignIntermediateField, ...]] = {}
-    for source_ref, filing_year, epoch in (
-        ("aeat-dr-303-2023", 2023, "2023"),
-        ("aeat-dr-303-2024-early", 2024, "2024-early"),
-        ("aeat-dr-303-2024-late", 2024, "2024-late"),
-        ("aeat-dr-303-2025", 2025, "2025"),
-        ("aeat-dr-303-2026", 2026, "2026"),
-    ):
-        intermediate = load_record_design_intermediate(
-            source_root,
-            sources,
-            source_ref=source_ref,
-            filing_year=filing_year,
-            design_epoch=epoch,
-        )
+    for intermediate in load_dp30302_epoch_intermediates(bundled_authority()):
         sheet = next(sheet for sheet in intermediate.sheets if sheet.record_identity == "DP30302")
-        out[epoch] = sheet.fields
+        out[intermediate.source.design_epoch] = sheet.fields
     return out
 
 
@@ -143,8 +122,20 @@ def test_resolve_module_sub_indices_refuses_a_duplicate_ordinal_within_one_group
 def test_persisted_matrix_matches_a_fresh_measurement_of_the_five_binaries() -> None:
     """The checked-in artefact must still describe the live hash-pinned binaries."""
     persisted = load_dp30302_field_matrix(_ARTEFACT_PATH)
-    live = measure_dp30302_field_matrix(bundled_path(), _iva_sources())
+    live = measure_dp30302_field_matrix(bundled_authority())
     assert persisted == live
+
+
+def test_every_epoch_measurement_uses_its_selected_validated_registry_snapshot() -> None:
+    """The parser may read only the source the selected M303 revision admits."""
+    authority = bundled_authority()
+    intermediates = load_dp30302_epoch_intermediates(authority)
+    assert len(intermediates) == len(DP30302_EPOCH_COORDINATES)
+    for coordinate, intermediate in zip(DP30302_EPOCH_COORDINATES, intermediates, strict=True):
+        snapshot = authority.snapshot("303", filing_year=coordinate.filing_year, period=coordinate.period)
+        assert intermediate.source.source_ref == coordinate.source_ref
+        assert intermediate.source.source_ref in snapshot.revision.source_refs
+        assert snapshot.sources[coordinate.source_ref].sha256 == intermediate.source.source_sha256
 
 
 def test_persisted_matrix_reflects_the_two_corrected_constants() -> None:
@@ -166,29 +157,41 @@ def test_persisted_matrix_carries_a_family_whose_cardinality_transitions_across_
     assert any(len(set(cardinalities.values())) > 1 for cardinalities in cardinalities_by_family)
 
 
-def test_a_reclassified_anchor_would_desynchronise_the_persisted_matrix(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Simulating a re-partitioned anchor must make the live measurement diverge from the artefact."""
+def test_a_repartitioned_real_anchor_desynchronises_the_persisted_matrix() -> None:
+    """A changed real input anchor must produce an observable persisted-matrix mismatch."""
     persisted = load_dp30302_field_matrix(_ARTEFACT_PATH)
-
-    real_classify = _dp30302_field_matrix.classify_dp30302_field_description
-
-    def _misclassify_one_no_agricola_field_as_constant(description: str) -> DP30302FieldPartition:
-        if description == ("Liquidación (3) - RS - (B) Actividades en RS (exc. a, g y f) - Actividad 1 - Epigrafe IAE"):
-            return DP30302FieldPartition.CONSTANT
-        return real_classify(description)
-
-    monkeypatch.setattr(
-        _dp30302_field_matrix,
-        "classify_dp30302_field_description",
-        _misclassify_one_no_agricola_field_as_constant,
+    intermediate = next(
+        item for item in load_dp30302_epoch_intermediates(bundled_authority()) if item.source.design_epoch == "2023"
     )
-
-    live_with_reclassification = measure_dp30302_field_matrix(bundled_path(), _iva_sources())
-    assert live_with_reclassification != persisted
-    reclassified_epoch = next(epoch for epoch in live_with_reclassification.epochs if epoch.epoch == "2023")
+    sheet = next(item for item in intermediate.sheets if item.record_identity == "DP30302")
+    anchor = next(
+        field
+        for field in sheet.fields
+        if field.normalized_description
+        == "Liquidación (3) - RS - (B) Actividades en RS (exc. a, g y f) - Actividad 1 - Epigrafe IAE"
+    )
+    repartitioned_anchor = anchor.model_copy(update={"normalized_description": "Reservado para la AEAT"})
+    repartitioned_sheet = sheet.model_copy(
+        update={
+            "fields": tuple(
+                repartitioned_anchor if field.ordinal == anchor.ordinal else field for field in sheet.fields
+            ),
+        },
+    )
+    repartitioned_intermediate = intermediate.model_copy(
+        update={
+            "sheets": tuple(
+                repartitioned_sheet if item.record_identity == "DP30302" else item for item in intermediate.sheets
+            ),
+        },
+    )
+    reclassified_epoch, _, _ = _dp30302_field_matrix._measure_dp30302_epoch(
+        repartitioned_intermediate,
+        epoch="2023",
+    )
     persisted_epoch = next(epoch for epoch in persisted.epochs if epoch.epoch == "2023")
     assert reclassified_epoch.no_agricola == persisted_epoch.no_agricola - 1
-    assert reclassified_epoch.constant == persisted_epoch.constant + 1
+    assert reclassified_epoch.reserve == persisted_epoch.reserve + 1
 
 
 # --- schema invariants (bite-provable structurally, no real binary needed) --
@@ -203,10 +206,28 @@ def test_epoch_matrix_refuses_a_partition_sum_that_does_not_equal_the_total() ->
             total=153,
             agricola=20,
             no_agricola=114,
+            simplified=134,
             numbered=12,
             constant=5,
             reserve=1,
             producer=0,  # deliberately wrong: sums to 152, not 153
+        )
+
+
+def test_epoch_matrix_refuses_a_simplified_count_that_is_not_its_two_cohort_total() -> None:
+    with pytest.raises(ValidationError, match="must equal agrícola plus no agrícola"):
+        DP30302EpochFieldMatrix(
+            epoch="2023",
+            source_ref="aeat-dr-303-2023",
+            source_sha256="0" * 64,
+            total=153,
+            agricola=20,
+            no_agricola=114,
+            simplified=133,
+            numbered=12,
+            constant=5,
+            reserve=1,
+            producer=1,
         )
 
 
