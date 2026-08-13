@@ -444,6 +444,15 @@ def test_modelo_390_declares_annual_compensation_result_fields() -> None:
     assert "modelo-390-rel-303-compensacion-ultimo-periodo" not in relations
     assert "modelo-390-rel-303-compensacion-generada-ejercicio-no-97" not in relations
 
+    from .. import iva_compensation_annual_partition_requirement
+
+    requirement = iva_compensation_annual_partition_requirement(revision)
+    assert requirement is not None
+    assert requirement.binding_ids == tuple(sorted((box_97_binding.id, box_662_binding.id)))
+    assert requirement.last_period_amount_binding_id == box_97_binding.id
+    assert requirement.generated_not_in_last_amount_binding_id == box_662_binding.id
+    assert requirement.dependency_treatment == "direct_annual_settlement"
+
 
 def test_modelo_390_declares_prorrata_regularizacion_annual_field() -> None:
     modelo, _ = _load_modelo_390()

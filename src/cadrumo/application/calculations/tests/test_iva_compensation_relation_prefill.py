@@ -161,6 +161,10 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
     assert resolution.relation_values == {}
     assert not resolution.unresolved_binding_ids
     assert resolution.binding_values[_BOX_97_BINDING] + resolution.binding_values[_BOX_662_BINDING] == _4t_disponible
+    assert resolution.provenance
+    assert {item.dependency_treatment for item in resolution.provenance} == {"direct_annual_settlement"}
+    assert {item.binding_source for item in resolution.provenance} == {"iva_compensation_annual_partition"}
+    assert {item.source_modelo for item in resolution.provenance} == {"303"}
 
 
 def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_path: Path) -> None:
