@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:fbe5e874de1d1678bfa20a8cc67d01d4c5e5c0f15575890eb10dee4fdb230c5f'
+body_hash: 'sha256:3c1b2db7279cfae6e6dc88724fddee0e3faa5d2141d9ccbbc3926644310c7d91'
 related:
   - '[[2026-08-07-canonical-identifiers-W01-P01-S01]]'
   - '[[2026-08-07-canonical-identifiers-W01-P01-S02]]'
@@ -22,6 +22,7 @@ related:
   - '[[2026-08-07-canonical-identifiers-W02-P02-S10]]'
   - '[[2026-08-07-canonical-identifiers-W02-P02-S11]]'
   - '[[2026-08-07-canonical-identifiers-W02-P02-S12]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P02-S65]]'
   - '[[2026-08-07-canonical-identifiers-W03-P04-S64]]'
   - '[[2026-08-07-canonical-identifiers-W04-P06-S29]]'
   - '[[2026-08-07-canonical-identifiers-W04-P06-S30]]'
@@ -43,6 +44,7 @@ related:
   - '[[2026-08-07-canonical-identifiers-W05-P08-S69]]'
   - '[[2026-08-07-canonical-identifiers-W06-P09-S45]]'
   - '[[2026-08-07-canonical-identifiers-W06-P09-S62]]'
+  - '[[2026-08-07-canonical-identifiers-W06-P09-S70]]'
   - '[[2026-08-07-canonical-identifiers-W06-P10-S46]]'
   - '[[2026-08-07-canonical-identifiers-W06-P10-S47]]'
   - '[[2026-08-07-canonical-identifiers-W06-P10-S63]]'
@@ -97,6 +99,7 @@ Auto-generated index of all documents tagged with `#canonical-identifiers`.
 - `2026-08-07-canonical-identifiers-W02-P02-S10` - Add the strict roundtrip and anti-tautology proof for the discriminated pair. Populate every defaultable field on IvaCompensationPeriodState non-default, push it through the real encrypted repository and assert strict model equality on load. For the anti-tautology proof delete the persisted provenance field from the on-disk payload, reload through the real production read path, and assert refusal rather than a silent re-default. Add a companion case proving the cross-field validator refuses both impossible pairs, an operator-seeded row carrying an expediente and an AEAT-capture row carrying none
 - `2026-08-07-canonical-identifiers-W02-P02-S11` - retype `ExpedienteDeclarationPayload.expediente_id` from unconstrained bare `str` onto `AeatExpedienteId`, closing the fourth (loosest) divergence sighted on the operator-facing wire contract
 - `2026-08-07-canonical-identifiers-W02-P02-S12` - add a golden-schema pinning test capturing `ExpedienteDeclarationPayload`'s advertised `model_json_schema()` before and after `W02.P02.S11`, so the CLI/MCP contract change is a visible reviewed diff rather than a silent constraint shift
+- `2026-08-07-canonical-identifiers-W02-P02-S65` - Measure the legitimate population before closing the discriminated-pair rows, and treat this row rather than the new refusal as their close condition. Load and construct through the wallet-balance projection, the binding-prefill resolver and the M303 carry-ingress path and confirm every legitimate row still constructs and still loads. Assert against the NEW provenance field, never against status. This row previously admitted a vacuous pass: with status still carrying provenance an implementer could satisfy the clause below by reading provenance off status, which is a control passing against the wrong field. So it now carries a second assertion only the ruled design can satisfy, that status is None on every non-AEAT path. The disconfirming observation stands: if any of those three paths carries a row whose provenance is not one of the five enum members, the enum is incomplete and S09 must be reopened rather than the row forced into an approximate member. Record the count of rows exercised per path, because a control exercising zero rows reads identically to one that passes
 - `2026-08-07-canonical-identifiers-W03-P04-S64` - Decide whether resolve_identifier_namespace is enrolled or dropped, and record the outcome before S24 executes. Search production for a site holding an AEAT identifier value whose namespace is UNKNOWN at the point of use. A semantic sweep run for the 2026-08-10 ADR amendment found none, returning only the enum's own module, its own test and an in-flight census tool. The disconfirming observation that decides this row: a genuine consumer holds a value whose namespace cannot be read off its own field type. If every candidate turns out to hold a value whose namespace is already fixed by its field type, record that the resolver is DROPPED and retire IdentifierNamespace with it rather than leaving an exported concept nothing uses. Do not manufacture a caller to justify the symbol
 - `2026-08-07-canonical-identifiers-W04-P06-S29` - retype classified transaction-id pydantic model fields onto `TransactionId` in `application/ledger/`
 - `2026-08-07-canonical-identifiers-W04-P06-S30` - retype classified transaction-id pydantic model fields onto `TransactionId` in `application/aggregation/`
@@ -115,6 +118,7 @@ Auto-generated index of all documents tagged with `#canonical-identifiers`.
 - `2026-08-07-canonical-identifiers-W05-P08-S69` - adjudicate `CasillaDefinition.number` as its own identifier population, separate from `AeatBoxNumber`
 - `2026-08-07-canonical-identifiers-W06-P09-S45` - self and profile-owned tax identity: `tax_id`, `spouse_tax_id`, `profile_tax_id` onto `SubjectTaxId`
 - `2026-08-07-canonical-identifiers-W06-P09-S62` - cross-field tax-identity consistency audit for every model `W06.P09.S45` retyped
+- `2026-08-07-canonical-identifiers-W06-P09-S70` - cross-object taxpayer-identity guard on `build_complementaria`
 - `2026-08-07-canonical-identifiers-W06-P10-S46` - counterparty-facing tax identity: `supplier_tax_id`, `customer_tax_id`, `party_tax_id`, `donor_tax_id` onto `TaxIdIdentityToken`
 - `2026-08-07-canonical-identifiers-W06-P10-S47` - a roundtrip regression proving a non-Spanish-shaped counterparty tax id validates under `TaxIdIdentityToken`
 - `2026-08-07-canonical-identifiers-W06-P10-S63` - cross-field tax-identity consistency audit for every model `W06.P10.S46` retyped
