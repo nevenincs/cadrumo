@@ -47,6 +47,7 @@ from ....tests.user_profile import register_minimal_profile
 from ...user_profile import profile_create_storage_span, set_active_fields
 from ...workflow import workflow_state_repository
 from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from .._minimo_descendientes_advisory import collect_minimo_descendientes_undeclared_diagnostics
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -221,3 +222,21 @@ def test_the_coordinator_stays_quiet_when_no_collector_has_anything_to_say() -> 
     assert _UNDECLARED not in kinds
     assert _PRORRATA_INFERRED not in kinds
     assert _COUNT_DESYNC not in kinds
+
+
+def test_the_undeclared_advisory_grounds_from_the_casilla_it_addresses() -> None:
+    """Casilla-derived: this advisory's subject IS casilla 0513's own zero.
+
+    Population A in the grounding reference's own terms -- the casilla already
+    carries the exact provision the message names (plain "Art. 58"), so the
+    correct disposition is the casilla-derived path, not a minted assertion.
+    """
+    diagnostics = collect_minimo_descendientes_undeclared_diagnostics(
+        _revision(),
+        {_ESTATAL_CASILLA: Decimal("0")},
+        modelo=Modelo.M100.value,
+        bucket_id=_BUCKET_ID,
+    )
+    assert len(diagnostics) == 1
+    assert diagnostics[0].legal_refs == ("ley-35-2006:art-56", "ley-35-2006:art-58", "ley-35-2006:art-61")
+    assert diagnostics[0].asserted_legal_refs == ()

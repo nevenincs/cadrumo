@@ -37,6 +37,8 @@ from decimal import Decimal
 import pytest
 
 from ....core import validated_casilla_id
+from ....core.resources import resources
+from ....domain.calculations.registry import ModeloRevision
 from ...aggregation import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
 from .._minimo_descendientes_advisory import (
     _count_desync_advisory,
@@ -104,6 +106,17 @@ def _elision_marker() -> str:
     return marker
 
 
+def _headroom_revision() -> ModeloRevision:
+    """A real M100 revision, fetched once, for the casilla-derived advisory builders.
+
+    Only the presence of casilla ``0513`` in the revision matters here -- these
+    tests measure message length, not grounding -- so any committed M100
+    revision serves; the resident registry authority is real rather than a
+    hand-built stub.
+    """
+    return resources().modelos.authority.snapshot("100", filing_year=2024, period="0A").revision
+
+
 def _advisory_builders() -> list[tuple[str, Callable[[], CalculationSourceDiagnostic]]]:
     """Every shipped advisory in this module, built at its worst case.
 
@@ -114,10 +127,11 @@ def _advisory_builders() -> list[tuple[str, Callable[[], CalculationSourceDiagno
     casilla = validated_casilla_id("0513")
     guarderia = validated_casilla_id("0613")
     indices = _worst_case_indices()
+    revision = _headroom_revision()
     return [
-        ("undeclared", lambda: _undeclared_advisory(casilla)),
-        ("prorrata_inferred", lambda: _prorrata_inferred_advisory(indices, casilla)),
-        ("rentas_undeclared", lambda: _rentas_undeclared_advisory(indices, casilla)),
+        ("undeclared", lambda: _undeclared_advisory(revision, casilla)),
+        ("prorrata_inferred", lambda: _prorrata_inferred_advisory(revision, indices, casilla)),
+        ("rentas_undeclared", lambda: _rentas_undeclared_advisory(revision, indices, casilla)),
         ("entry_date_missing", lambda: _entry_date_missing_advisory(indices, casilla)),
         ("guarderia_shape", lambda: _guarderia_shape_advisory(indices, guarderia)),
         ("guarderia_madre_meses", lambda: _guarderia_madre_meses_advisory(indices, guarderia)),
