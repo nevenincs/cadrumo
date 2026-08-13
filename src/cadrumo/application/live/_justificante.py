@@ -71,7 +71,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import content_hash_hex, sha256_hex
-from ...core.identity import BucketId, ContentDigest, tax_id_identity_token
+from ...core.identity import AeatCsv, BucketId, ContentDigest, tax_id_identity_token
 from ..calculations import ObservationSourceKind
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
@@ -114,7 +114,7 @@ class JustificanteCaptureSnapshot(BaseModel):
     filing_year: int = Field(ge=1900, le=9999)
     period: Period
     expediente_id: str = Field(min_length=12, max_length=32)
-    csv: str = Field(min_length=8, max_length=32)
+    csv: AeatCsv
     pdf_sha256: ContentDigest
     pdf_base64: str = Field(min_length=1)
     source_kind: ObservationSourceKind = Field(default=JUSTIFICANTE_CAPTURE_SOURCE_KIND)
@@ -353,7 +353,7 @@ class _JustificanteCaptureRequest(BaseModel):
     filing_year: int
     period: Period
     expediente_id: str
-    csv: str
+    csv: AeatCsv
     pdf_bytes: bytes
     pdf_sha256: str
     captured_at: datetime
