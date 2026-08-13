@@ -119,6 +119,7 @@ from ._models import (
 )
 from ._plazo import resolve_filing_closes_on, resolve_filing_window
 from ._profiles import (
+    MODELO_IVA_BLOCK_CLAIMING_PATHS,
     MODELO_IVA_BLOCK_REQUIRED_PATHS,
     modelo_iva_profile_required_paths,
     profile_claims_modelo_iva_block,
@@ -134,6 +135,7 @@ from ._recargo import (
 
 __all__ = [
     "MODELOS_WITHOUT_SHIFT",
+    "MODELO_IVA_BLOCK_CLAIMING_PATHS",
     "MODELO_IVA_BLOCK_REQUIRED_PATHS",
     "CalendarCCAA",
     "ChargeAccount",

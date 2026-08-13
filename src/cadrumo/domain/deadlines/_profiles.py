@@ -313,7 +313,15 @@ def _resolve_m303_tax_territory(raw: str) -> M303TaxTerritory:
         ) from exc
 
 
-_MODELO_IVA_PROFILE_PATHS = frozenset(
+#: Every profile path whose presence claims the Modelo IVA block.
+#:
+#: The claiming set and :data:`MODELO_IVA_BLOCK_REQUIRED_PATHS` are one
+#: family read from both directions: declaring any path here obliges every
+#: path there. Consumers that gate a surface on the block -- the wizard's
+#: question visibility, profile completeness -- need the membership set
+#: itself, not only the mapping-shaped
+#: :func:`profile_claims_modelo_iva_block` predicate over it.
+MODELO_IVA_BLOCK_CLAIMING_PATHS: frozenset[str] = frozenset(
     {
         "iva.regime",
         "iva.roi_enrolled",
@@ -364,7 +372,7 @@ def profile_claims_modelo_iva_block(values: Mapping[str, object]) -> bool:
     enrolment still claims the block, because declining a regime is a
     declaration about IVA. Only an absent or blank path leaves it unclaimed.
     """
-    return any(_declared(values.get(path)) for path in _MODELO_IVA_PROFILE_PATHS)
+    return any(_declared(values.get(path)) for path in MODELO_IVA_BLOCK_CLAIMING_PATHS)
 
 
 def modelo_iva_profile_required_paths(values: Mapping[str, object]) -> tuple[str, ...]:

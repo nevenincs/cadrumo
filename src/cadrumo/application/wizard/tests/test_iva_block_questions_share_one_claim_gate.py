@@ -12,8 +12,10 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.deadlines import MODELO_IVA_BLOCK_REQUIRED_PATHS
-from ....domain.deadlines._profiles import _MODELO_IVA_PROFILE_PATHS
+from ....domain.deadlines import (
+    MODELO_IVA_BLOCK_CLAIMING_PATHS,
+    MODELO_IVA_BLOCK_REQUIRED_PATHS,
+)
 from .._catalogue import _IVA_BLOCK_CLAIMED, SETUP_FLOW
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -28,7 +30,7 @@ def test_every_block_claiming_question_sits_behind_the_claim_gate() -> None:
     offenders = {
         question.id: question.visible_when
         for question in _questions()
-        if question.profile_key in _MODELO_IVA_PROFILE_PATHS
+        if question.profile_key in MODELO_IVA_BLOCK_CLAIMING_PATHS
         and question.profile_key != "iva.regime"
         and question.visible_when != _IVA_BLOCK_CLAIMED
     }
