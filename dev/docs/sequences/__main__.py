@@ -55,7 +55,13 @@ from ._golden_store import (
     write_golden,
 )
 from ._parser import parse_sequence
-from ._runner import SequenceTranscript, execute_page_sequences, execute_sequence
+from ._runner import (
+    SequenceTranscript,
+    _PROGRESS_JOURNAL_ENV,
+    _sequence_progress_scope,
+    execute_page_sequences,
+    execute_sequence,
+)
 from ._schema import ParsedSequence, SequenceId
 
 _UTF_8: Final[str] = "utf-8"
@@ -351,7 +357,8 @@ def refresh_sequences(
         if not item.sequence.executed_frames:
             continue  # all-@static: nothing runs, so there is no golden to write
         try:
-            transcript = _execute_in_fresh_sandbox(item.sequence)
+            with _sequence_progress_scope(item.page):
+                transcript = _execute_in_fresh_sandbox(item.sequence)
         except SequenceEngineError as exc:
             all_problems.append(f"page {item.page!r}: {exc}")
             continue
@@ -393,7 +400,8 @@ def check_sequences(
             all_problems.append(str(exc))
             continue
         try:
-            transcript = _execute_in_fresh_sandbox(item.sequence)
+            with _sequence_progress_scope(item.page):
+                transcript = _execute_in_fresh_sandbox(item.sequence)
         except SequenceEngineError as exc:
             all_problems.append(f"page {item.page!r}: {exc}")
             continue
@@ -416,6 +424,32 @@ def _english_pinned_env() -> dict[str, str]:
     return environment
 
 
+def _timeout_progress_diagnostic(journal: Path, *, timeout: float) -> str:
+    """Render the last frame recorded by a timed-out check child.
+
+    The runner writes only runtime-derived data immediately before each actual
+    CLI invocation.  A missing or malformed journal is itself useful evidence:
+    the child did not reach a frame before the supplied supervisor deadline.
+    """
+    try:
+        payload = json.loads(journal.read_text(encoding=_UTF_8))
+    except (OSError, json.JSONDecodeError):
+        return f"timeout after {timeout}s before the child recorded an executing frame"
+    if not isinstance(payload, dict):
+        return f"timeout after {timeout}s before the child recorded an executing frame"
+    required = ("page", "sequence_id", "frame_index", "frame_source", "frame_line", "argv")
+    if any(key not in payload for key in required):
+        return f"timeout after {timeout}s before the child recorded an executing frame"
+    argv = payload["argv"]
+    if not isinstance(argv, list) or not all(isinstance(token, str) for token in argv):
+        return f"timeout after {timeout}s before the child recorded an executing frame"
+    return (
+        f"timeout after {timeout}s while executing page {payload['page']!r} "
+        f"sequence {payload['sequence_id']!r} frame {payload['frame_index']} "
+        f"({payload['frame_source']} line {payload['frame_line']}): {' '.join(argv)}"
+    )
+
+
 def _run_check_child(command: list[str], *, timeout: float) -> tuple[str, ...]:
     """Run one check child; return its report tuple (empty on a clean pass).
 
@@ -423,16 +457,23 @@ def _run_check_child(command: list[str], *, timeout: float) -> tuple[str, ...]:
         SequenceEngineError: When the child cannot run the check surface
             (any exit other than 0 or 1).
     """
-    result = subprocess.run(  # noqa: S603 - fixed interpreter and module entrypoint.
-        command,
-        cwd=Path(__file__).resolve().parents[3],
-        env=_english_pinned_env(),
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
-        timeout=timeout,
-        check=False,
-    )
+    with TemporaryDirectory(prefix="cli-sequence-progress-", ignore_cleanup_errors=True) as tmp:
+        journal = Path(tmp) / "last-frame.json"
+        environment = _english_pinned_env()
+        environment[_PROGRESS_JOURNAL_ENV] = str(journal)
+        try:
+            result = subprocess.run(  # noqa: S603 - fixed interpreter and module entrypoint.
+                command,
+                cwd=Path(__file__).resolve().parents[3],
+                env=environment,
+                capture_output=True,
+                text=True,
+                encoding=_UTF_8,
+                timeout=timeout,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise SequenceEngineError(_timeout_progress_diagnostic(journal, timeout=timeout)) from exc
     if result.returncode == 0:
         return ()
     report = "\n".join(part.strip() for part in (result.stdout, result.stderr) if part.strip())
@@ -635,11 +676,12 @@ def check_page_coherence(
         executable = [item for item in items if item.sequence.executed_frames]
         try:
             with TemporaryDirectory(prefix="cli-sequence-page-", ignore_cleanup_errors=True) as tmp:
-                transcripts = execute_page_sequences(
-                    [item.sequence for item in executable],
-                    label=docname,
-                    sandbox_root=Path(tmp),
-                )
+                with _sequence_progress_scope(docname):
+                    transcripts = execute_page_sequences(
+                        [item.sequence for item in executable],
+                        label=docname,
+                        sandbox_root=Path(tmp),
+                    )
                 for item, transcript in zip(executable, transcripts, strict=True):
                     all_problems.extend(
                         f"{COHERENCE_TIER_PREFIX}: {problem}"

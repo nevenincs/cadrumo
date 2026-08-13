@@ -54,6 +54,7 @@ import shutil
 import time
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import chdir, contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -171,6 +172,13 @@ _TRANSIENT_REGISTRY_RACE_MARKERS: tuple[str, ...] = (
     "references unknown source id",
 )
 _TRANSIENT_RETRY_ATTEMPTS: int = 8
+
+#: An optional child-process handoff path.  The parent check supervisor owns
+#: its lifetime; the runner only records the last frame that actually started.
+#: It deliberately does not use a ``CADRUMO_*`` name because sandbox execution
+#: correctly scrubs that operator-facing namespace.
+_PROGRESS_JOURNAL_ENV: str = "CLI_SEQUENCE_PROGRESS_JOURNAL"
+_SEQUENCE_PROGRESS_PAGE: ContextVar[str | None] = ContextVar("sequence_progress_page", default=None)
 
 #: A captured value must be a non-null JSON scalar: it interpolates into a
 #: later frame's argv, where an object, array, or null has no faithful text.
@@ -326,6 +334,49 @@ def _frame_at(frame: SequenceFrame) -> str:
     if frame.source == "body":
         return f"line {frame.line_number}"
     return f"{frame.source} line {frame.line_number}"
+
+
+@contextmanager
+def _sequence_progress_scope(page: str) -> Iterator[None]:
+    """Bind the owning docs page while its sequences execute.
+
+    The binding is invocation-scoped, so a child interpreter that checks more
+    than one page cannot report a stale page after a prior sequence returns.
+    """
+    token = _SEQUENCE_PROGRESS_PAGE.set(page)
+    try:
+        yield
+    finally:
+        _SEQUENCE_PROGRESS_PAGE.reset(token)
+
+
+def _record_frame_progress(
+    sequence: ParsedSequence,
+    frame: SequenceFrame,
+    *,
+    frame_index: int,
+    argv: tuple[str, ...],
+) -> None:
+    """Persist the dynamically-derived last-started frame for a supervising child.
+
+    Diagnostics stay outside :class:`SequenceTranscript`: the journal is a
+    parent/child supervision aid, never sequence or golden data.  A single
+    child executes frames serially, so replacing the sole record is sufficient
+    and avoids accumulating an unbounded diagnostic log.
+    """
+    journal = os.environ.get(_PROGRESS_JOURNAL_ENV)
+    page = _SEQUENCE_PROGRESS_PAGE.get()
+    if journal is None or page is None:
+        return
+    payload = {
+        "page": page,
+        "sequence_id": sequence.sequence_id,
+        "frame_index": frame_index,
+        "frame_source": frame.source,
+        "frame_line": frame.line_number,
+        "argv": list(argv),
+    }
+    Path(journal).write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def _live_aeat_tokens(frame: SequenceFrame) -> tuple[str, ...]:
@@ -917,9 +968,12 @@ def _execute_frame(
     sequence: ParsedSequence,
     frame: SequenceFrame,
     captures: dict[str, CapturedScalar],
+    *,
+    frame_index: int,
 ) -> FrameExecution:
     """Execute one frame, enforce its exit code, and thread its captures."""
     argv = _resolved_argv(frame, captures)
+    _record_frame_progress(sequence, frame, frame_index=frame_index, argv=argv)
     result = _invoke_frame(argv[1:])
     # The runner records the two streams separately: ``Result.output`` under
     # this Click version is the COMBINED capture, so read the split
@@ -1032,7 +1086,10 @@ def _execute_in_root(
         captures: dict[str, CapturedScalar] = {}
         # @static frames are display-only: they never run, so they never enter
         # the transcript (and therefore never the golden).
-        frames = tuple(_execute_frame(sequence, frame, captures) for frame in sequence.executed_frames)
+        frames = tuple(
+            _execute_frame(sequence, frame, captures, frame_index=frame_index)
+            for frame_index, frame in enumerate(sequence.executed_frames)
+        )
     return SequenceTranscript(
         sequence_id=sequence.sequence_id,
         profile_id=sandbox.profile_id,
@@ -1113,7 +1170,10 @@ def _execute_page_in_root(
             if not sequence.executed_frames:
                 continue  # all-@static: nothing runs, so no transcript
             captures: dict[str, CapturedScalar] = {}
-            frames = tuple(_execute_frame(sequence, frame, captures) for frame in sequence.executed_frames)
+            frames = tuple(
+                _execute_frame(sequence, frame, captures, frame_index=frame_index)
+                for frame_index, frame in enumerate(sequence.executed_frames)
+            )
             transcripts.append(
                 SequenceTranscript(
                     sequence_id=sequence.sequence_id,
