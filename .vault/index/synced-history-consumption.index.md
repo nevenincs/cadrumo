@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:ad7f90622d7b4cfb8bae7d886164909dad1ce18cbdf7bbcc398eeb4bcbc723e1'
+body_hash: 'sha256:42fc15ab850c8e1afbfc284ecfcbbd022ba6565cc3ea2dbe9fa9d4e5627feebb'
 related:
   - '[[2026-08-08-synced-history-consumption-P01-S01]]'
   - '[[2026-08-08-synced-history-consumption-P01-S02]]'
@@ -45,6 +45,13 @@ related:
   - '[[2026-08-08-synced-history-consumption-P02-S35]]'
   - '[[2026-08-08-synced-history-consumption-P02-S36]]'
   - '[[2026-08-08-synced-history-consumption-P03-S37]]'
+  - '[[2026-08-08-synced-history-consumption-P03-S38]]'
+  - '[[2026-08-08-synced-history-consumption-P03-S39]]'
+  - '[[2026-08-08-synced-history-consumption-P03-S40]]'
+  - '[[2026-08-08-synced-history-consumption-P03-S41]]'
+  - '[[2026-08-08-synced-history-consumption-P03-S42]]'
+  - '[[2026-08-08-synced-history-consumption-P03-S43]]'
+  - '[[2026-08-08-synced-history-consumption-P03-summary]]'
   - '[[2026-08-08-synced-history-consumption-adr]]'
   - '[[2026-08-08-synced-history-consumption-plan]]'
   - '[[2026-08-08-synced-history-consumption-pulled-fact-classification-reference]]'
@@ -53,6 +60,7 @@ related:
   - '[[2026-08-13-synced-history-consumption-audit]]'
   - '[[2026-08-13-synced-history-consumption-p02-s35-audit]]'
   - '[[2026-08-13-synced-history-consumption-s18-code-review-audit]]'
+  - '[[2026-08-13-synced-history-consumption-s40-remediation-audit]]'
 ---
 
 # `synced-history-consumption` feature index
@@ -70,6 +78,7 @@ Auto-generated index of all documents tagged with `#synced-history-consumption`.
 - `2026-08-13-synced-history-consumption-audit` - `synced-history-consumption` audit: final canonicalization closure review
 - `2026-08-13-synced-history-consumption-p02-s35-audit` - `synced-history-consumption` audit: `p02 s35`
 - `2026-08-13-synced-history-consumption-s18-code-review-audit` - `synced-history-consumption` audit: `s18 code review`
+- `2026-08-13-synced-history-consumption-s40-remediation-audit` - `synced-history-consumption` audit: `S40 progress diagnostics remediation`
 
 ### exec
 
@@ -110,6 +119,13 @@ Auto-generated index of all documents tagged with `#synced-history-consumption`.
 - `2026-08-08-synced-history-consumption-P02-S35` - Ground Modelo 353 group-regime carry treatment in the legal catalogue before declaring it. Add only corpus-grounded legal entries for LIVA arts. 163 quinquies, sexies and nonies, with their reviewed provenance, then declare the Modelo 322 source classification from those entries. Gate: the legal refs resolve against official corpus text, each 353 carry has its declared treatment, and the loaded registry validates.
 - `2026-08-08-synced-history-consumption-P02-S36` - Reuse one invocation-scoped live-surface reconciliation for every operator notice action, preserving typed action schema derivation and proving repeated overview notices are equivalent without repeated descriptor construction.
 - `2026-08-08-synced-history-consumption-P03-S37` - Measure the real overview-status notice-action path, inventory each invocation's reconciliation and MCP descriptor construction, and set a regression bound from the sequence sandbox.
+- `2026-08-08-synced-history-consumption-P03-S38` - Implement invocation-scoped operator-surface reconciliation reuse at the canonical CLI action-resolution boundary without process-global caching or weaker typed actions and notices.
+- `2026-08-08-synced-history-consumption-P03-S39` - Prove repeated overview notices retain their exact text, envelope, action, and provenance while one invocation performs bounded live descriptor and reconciliation construction.
+- `2026-08-08-synced-history-consumption-P03-S40` - Add bounded canonical sequence-runner progress and timeout diagnostics that identify page, sequence, and frame without changing golden or sequence semantics.
+- `2026-08-08-synced-history-consumption-P03-S41` - Rerun the fourteen affected isolated sequence goldens and five owning-page coherence gates after the performance and diagnostic proofs pass, preserving CLI-owned goldens.
+- `2026-08-08-synced-history-consumption-P03-S42` - Close P02.S18, P03, and the plan only after every current-tree gate and matching execution record passes, then scaffold the required phase summary through VaultSpec.
+- `2026-08-08-synced-history-consumption-P03-S43` - Make page-coherence seed execution once-per-page with verified seed identity, immutable seed captures, and actionable fail-closed diagnostics while preserving isolated sequence semantics.
+- `2026-08-08-synced-history-consumption-P03-summary` - `synced-history-consumption` `P03` summary
 
 ### plan
 

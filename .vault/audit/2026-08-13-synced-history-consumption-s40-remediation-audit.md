@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:eec9d3280e36869dd32f1d9eebaf96b0766e929cc2a0f0539e688aff0fba2a4a'
+body_hash: 'sha256:e9dfd2419cb70f7a71f03421477a5681160c94bef37e04238d23b0c1532d8058'
 related:
   - "[[2026-08-08-synced-history-consumption-plan]]"
 ---
@@ -48,11 +48,15 @@ The deleted `test_progress_diagnostics.py` was the duplicate synthetic child tha
 
 The proof now scopes a discovered owning page with a 30-second bound and accepts whichever discovered sequence and frame is actually executing. Its docstring still says that a twenty-second deadline expires after the first lifecycle overview frame, which is no longer the test's contract.
 
+### timeout-proof-description-resolution | low | Resolved: the description now matches the discovery-derived page proof
+
+The docstring now describes a bounded public check over the discovered lifecycle page and explicitly states that the assertion resolves whichever real frame scheduling reaches before expiry. It no longer names a superseded duration or assumes a fixed sequence or frame.
+
 ## Recommendations
 
 1. `lifecycle-timeout-proof` is resolved by the page-scoped, production-discovered public proof. Retain this route and its discovered-frame assertions when the selected page evolves.
 
 2. `progress-receipt-atomicity` is resolved by canonical atomic receipt publication. Keep the receipt outside golden data and retain the strict parsing boundary.
 
-3. For `timeout-proof-description`, update the test docstring to describe the current page-scoped, discovery-derived contract and current bound.
+3. `timeout-proof-description` is resolved. Keep the prose duration-neutral and derive runtime coordinates from production discovery.
 
