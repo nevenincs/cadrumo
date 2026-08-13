@@ -822,6 +822,18 @@ docs-langs:
     uv run --no-sync python -m dev.docs.build --scope user --language ca
     uv run --no-sync python -m dev.docs.build --scope user --language hu
 
+# Build every published site root exactly as a publish builds it and run every
+# pre-upload validation against the result. It belongs in this group and not in
+# `deploy`: it needs no AWS session, writes nothing outward, and its entire
+# subject is the built tree. Its value is that the per-root artifact, sitemap
+# and record-index checks used to be reachable only through the publish itself,
+# so a root that would land incomplete could not be caught before bytes went to
+# the live destination.
+[doc('Build every published site root and run every pre-upload validation, uploading nothing.')]
+[group('docs')]
+docs-site-dry-run:
+    uv run --no-sync python -m dev.deploy.docs_static_site dry-run
+
 # Run docstring structure and Sphinx build checks. Quiet pytest progress.
 # `workers` bounds the pytest-xdist lane: CI passes 8 (machine-aware sizing,
 # .github/ci-control-plane.md — the 24-core box is shared with other
