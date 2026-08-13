@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core import (
+from ....core import (
     M303DifferentiatedDeductionProjectionField,
     M303DifferentiatedDeductionProjectionRef,
     M303ProrrataActivityProjectionField,
@@ -13,15 +13,14 @@ from cadrumo.core import (
     Modelo,
     ResultDisposition,
 )
-from cadrumo.domain.calculations.registry import (
+from ....domain.calculations.registry import (
     CasillaFieldKind,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
     bundled_authority,
 )
-from cadrumo.domain.filing import FilingExportValidationError
-
+from ....domain.filing import FilingExportValidationError
 from .. import build_filing_producer_snapshot
 from .._export import _preflight_projection_plan
 from .._projection import (
