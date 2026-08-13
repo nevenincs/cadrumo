@@ -111,7 +111,11 @@ def test_unknown_relation_override_error_names_revision_relation_ids() -> None:
     assert error.context is not None
     assert error.context["key"] == "Bad Relation"
     assert accepted_relation in str(error.context["accepted"])
-    assert "Bad Relation" in str(error)
+    # The rejected token rides on context, never in the exception's own text:
+    # str(exc) prefers a positional argument over the registered key, so an
+    # authored sentence here would reach tracebacks and logs in English in
+    # every locale while this test stayed green on the key above.
+    assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
 
 
 def test_revision_pick_error_is_typed_registered_and_localized() -> None:
