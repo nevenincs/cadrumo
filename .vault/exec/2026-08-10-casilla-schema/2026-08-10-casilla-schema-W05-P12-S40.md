@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:e09ccf4cb8a59a5fddc91521e2807ece620e49ec0a91fbe256f6307043a3d666'
+body_hash: 'sha256:9885d574ee0e19713f8f57aa0ed1ef1b6e82569755607d907814802d4733bfe8'
 step_id: 'S40'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -32,8 +32,26 @@ The subsequent delivery audit rejected that working-copy-only state as completio
 
 Current feature evidence remains substantive: the S88, S91 and S92 focused lanes pass 15, 22 and 2 tests respectively; registry verification passes; locale scaffold parity passes; and the feature-scoped VaultSpec check passes all dimensions. Repository-wide completion does not: five of six fast static gates are red on concurrent shared-tree work, global VaultSpec exits non-zero on a peer-owned plan schema error, and normal Git commit is blocked by the frozen `.git/index.lock`.
 
+**Third close observation, 2026-08-13 - ACCEPTED.** The condition this record set for reopening is discharged, and the campaign is declared structurally complete.
+
+The reopening was correct and its bar was the right one: artefacts had to be *reachable from `HEAD`*, not merely present in a working copy. That bar is now met, and it was verified per Step rather than in aggregate - S83 at `ed05a92be1`, S88 at `e03e201d9f` and `3241d5a173`, S90 by identical `HEAD`-versus-worktree Modelo 303 label counts with no casilla-label keys in the dirty locale diff, S91 and S92 at `e03e201d9f`, S87 and the S36 honesty review at `bced74f746`, S39 at `f06e68dd3c`. None of those paths is dirty in the working tree. The `.git/index.lock` holder that blocked the second attempt is gone; it was never deleted, moved, truncated or renamed by any agent.
+
+Enumeration through the owning status verb: 52 of 52 Steps checked, `exec-mapping` clean, so every closed Step resolves to a matching execution record. P11 holds no open Steps, which is the plan's own criterion for that phase - empty rather than declared done. The feature-scoped `vault check all` passes all nineteen dimensions. The S87 index was regenerated through its owning verb and returned an identical document list.
+
+**Completion measured against the four ADRs' decision statements, not a paraphrase.** All four surfaces were re-verified at `HEAD` this session: the four facade-exported registry derivations including the amended ledger-IVA invariant gate carrying its own non-vacuity assertion; `OperatorActionAxis` with its total import-asserted projections and exactly one surviving discrepancy enum; `ModeloWorkReview` with the three origin layers side by side, the two-member anomaly enum, one `BlockerRef` shape at both grains, and a ratio-token gate that walks the whole JSON schema recursively and bars `float`; and all four dead-surface dispositions, with `verify_export` wired as the post-write self-check and zero references to the three deleted symbols.
+
+**Carry-forward, triaged and peer-owned.** The registry suite is red at `HEAD` - 157 deterministic failures across nine root causes, diagnosed in `2026-08-13-registry-suite-red-at-head-audit` and carried by `2026-08-13-registry-suite-red-at-head-plan`. Owner triage places none of it on a casilla-schema surface: the causes are the M100 maternidad binding harness sweep, the IVA deduction-authority fixture sweep, the `_IvaLedgerSelector` required-field sweep, four registry-data gaps, and the critical finding that CI has not completed a unit-lane run since 2026-08-07. The plan's own global gate is serial full-tree *collection*, which is clean at 32,665 tests. This campaign closes on owner-surface green with the tree-wide red referenced rather than absorbed, per the owner ruling of 2026-08-13.
+
+That distinction is the honest one and should not be read as broader than it is: **campaign complete is not tree healthy.** The same audit records that the AEAT-grounded oracles for M322, M353 and M390 do not currently execute, so the engine's grouped-entity and annual-summary IVA figures are unverified rather than proven correct. Nothing in this campaign's scope caused that and nothing in its scope fixes it.
+
 ## Notes
 
 No alternate index, `commit-tree`, or other plumbing workaround is authorised or used. The lock is not deleted, moved, truncated or renamed. The reopened Steps stay open until their exact path groups can land through the normal shared index, the final index can be regenerated after those landings, and S36/S39/S40 can be re-reviewed against reachable commits and current repository-wide gates.
 
 No plan checkbox is treated as a substitute for a commit. No data loss and no destructive Git operation occurred.
+
+**Scope exclusion recorded at close, 2026-08-13.** The owner ruled that no TUI campaign will land. Two records were amended in the same action as this close rather than left to contradict the tree: `2026-08-10-casilla-schema-read-model-adr` now rules the review screen's home at `src/cadrumo/adapters/inbound/tui/` **permanent** rather than transitional, and the retirement note on `2026-08-12-casilla-schema-s34-tui-architecture-curation-audit` retires its `plan-gap` finding and recommendations 3-5, all of which instructed a `tui-architecture` authority that will not execute.
+
+What the standing goal still asks for that this excludes: the canonical frontend-topology consolidation - relocating the screen to `cadrumo.entrypoints.tui.modelo.view` and deleting `cadrumo.adapters.inbound.tui` without a compatibility facade - does not happen. Those are `2026-08-11-tui-architecture-adr` D10/D12 mandates and are now unreachable rather than outstanding. No decision of the four governing casilla-schema ADRs depended on them; the cost is that a Textual screen permanently sits outside the root an accepted ADR designates, which a future frontend effort inherits as pre-existing debt rather than as a scheduled migration row. Whether those two accepted TUI records are themselves retired is a decision for their own authority and is not claimed here.
+
+No checkbox in this plan was treated as a substitute for a commit, in this attempt either.

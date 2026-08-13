@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:43d6fc16f2494cc99dc77ca7670492803e8a1cbc2976b69b45b66ff8e994f5e5'
+body_hash: 'sha256:1edcf8e3e6e35495cf1b174c0d525ec5d953713251b87f1732c3fd49f0e58d54'
 step_id: 'S90'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -56,3 +56,7 @@ Verification that the rebuild is correct: every Modelo 303 revision resolves eve
 **Do not "finish" the three empty locales.** A reader inspecting `en`, `ca` and `hu` will find all 84 continuity keys still `None` and may take that for incomplete work. It is deliberate. Those nulls are the scaffolded-untranslated state the resolver's own contract exempts from the honesty ratchet, and the requested locale falls through to the mandatory Spanish source by documented design - which is exactly how the fully-localised `2026-y-siguientes` revision already behaves, carrying real values in Spanish alone. Writing the Spanish strings into the other three catalogues would present Spanish as a translation, trip the ratchet, and destroy the signal that these strings are awaiting real translation. Integrity re-verified at handover: the Spanish keys carry real official text, and `en`, `ca` and `hu` return `None`.
 
 A residual duplication is left deliberately and recorded rather than silently resolved. The `2026-y-siguientes` revision still carries its own revision-specific copy of the same 84 labels, which now also exist in the shared continuity tier. Collapsing the duplicate would mean clearing that revision's leaves, and clearing a leaf in one catalogue risks the key-set parity gate, so it was judged out of scope for a Step whose action is to populate the shared tier. No data loss and no destructive Git operation occurred.
+
+**Closed 2026-08-13.** The "NOT closed / UNCOMMITTED" note above is superseded: the lock holder is gone and the label work landed. Reachability was proven positively rather than assumed - the Modelo 303 casilla-label key count is identical at `HEAD` and in the working tree, and the dirty locale diff carries no casilla-label keys at all, so the 84 continuity labels are committed rather than surviving only in a working copy.
+
+The standing instruction above still holds and is repeated because closing this Step is exactly when someone will be tempted to breach it: do NOT populate the `en`, `ca` and `hu` continuity leaves. Their nulls are deliberate, and writing the Spanish strings across them would present Spanish as a translation and trip the honesty ratchet.

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:380754995577ef65e0b33d32c4130776917de25fabdda6f8075ab27dfaf7c50d'
+body_hash: 'sha256:ea00b07a9fba3e9bfb6348bc32e32e22aa2e2b26ef714e715f6c3b3510ee12ff'
 step_id: 'S36'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -42,3 +42,7 @@ The first review's `iva-stem-gate-prose` finding named two lines. The gate repor
 A peer's uncommitted previous-filing coverage validator transiently reddened whole-tree registry validation on Modelo 130 and Modelo 720 during this pass. The peer reverted it and validation recovered; every figure was re-measured afterwards, and the episode is recorded in the audit so a reader comparing timestamps does not see two contradictory verdicts without an explanation.
 
 This record and the audit were authored through the VaultSpec owning verbs. No plan structure was changed by the review itself. No data loss and no destructive Git operation occurred.
+
+**Carry-forward discharged 2026-08-13.** The single environmental carry-forward this review recorded - the campaign's final commits not having landed behind a dead `.git/index.lock` holder - is resolved. The lock is absent and every artefact this review measured in the working tree is now reachable from `HEAD`, verified per Step rather than in aggregate: S83 at `ed05a92be1`, S88 at `e03e201d9f` and `3241d5a173`, S90 by identical `HEAD`-versus-worktree label counts, S91 and S92 at `e03e201d9f`, S87 and this audit at `bced74f746`, S39 at `f06e68dd3c`. The review's PASS verdict therefore stands on reachable commits, which is the condition it made its own completeness claim conditional on.
+
+No finding of this review was reopened by the discharge, and no expectation was moved to reach it.

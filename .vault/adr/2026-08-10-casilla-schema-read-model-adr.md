@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#casilla-schema'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:ac57928e4fb7324dfafd7ddc28b6bbf50fcf215aa0d9fd47772e843dacfc8ace'
+body_hash: 'sha256:ad08caf61f0668a690152a75880842e4ce88b8bbf172ca53b6d0b2019c3af204'
 related:
   - "[[2026-08-10-casilla-schema-research]]"
   - "[[2026-05-21-state-read-projection-adr]]"
@@ -56,3 +56,11 @@ Application ownership is the only placement the layer contracts permit that both
 ## Consequences
 
 Gains: one truthful record; the TUI review screen becomes a rendering exercise; readiness and verification stop disagreeing by construction. Costs: a facade promotion, a findings-attribution sweep, and the record is blocked behind two sibling ADRs - by design, so it cannot fossilise today's duplicates. The owner ruled (2026-08-10) that N-of-M counts are permitted under the named-denominator guardrails, so the progress column ships with the record rather than waiting. Pitfall to watch: the record must not grow write-side behaviour; it is pure read.
+
+**Amendment, 2026-08-13 - the review screen's home is permanent, not transitional.** The owner ruled that no TUI campaign will land. That ruling changes the status of one artefact this record's plan delivered, and it is recorded here rather than carried in an execution record because a carry-forward does not reach the next implementer and this record does.
+
+The review screen delivered under W04.P10 lives at `src/cadrumo/adapters/inbound/tui/_modelo_work_review_screen.py`. `2026-08-12-casilla-schema-s34-tui-architecture-curation-audit` sanctioned that location as **transitional**, explicitly conditional on a later absorption into `cadrumo.entrypoints.tui.modelo.view` by the `tui-architecture` campaign, and stated the placement "must not survive TUI architecture closure". With that campaign retired unexecuted, the premise is void: the location is now the screen's permanent home, and the relocation is not a pending obligation of this record or its plan. The `2026-08-11-tui-architecture-adr` D10/D12 mandates - the canonical `entrypoints/tui` root and the deletion of `cadrumo.adapters.inbound.tui` without a compatibility facade - are unreachable rather than outstanding. Whether those accepted records are themselves retired or amended is a decision for their own authority, not this one.
+
+**What this excludes from the standing goal**, stated per the campaign-close discipline rather than left implicit: the canonical-frontend-topology consolidation the TUI records describe does not happen. Nothing in THIS record's decision depended on it. The decision was application ownership of one assembled read record consumed by CLI and TUI alike, and it holds unchanged - the screen remains a read-only consumer of the public `application.modelo` facade, `ModeloWorkReview` remains the single assembled authority, and the CLI `modelo.work.review` envelope remains the first-class agent-facing projection. What is lost is only the eventual package relocation, which was always a topology concern owned elsewhere.
+
+One consequence does become permanent and should be read as a cost rather than a neutrality: a Textual screen now lives outside the root an accepted ADR designates, so any future frontend consolidation inherits it as pre-existing debt rather than as a scheduled migration row.

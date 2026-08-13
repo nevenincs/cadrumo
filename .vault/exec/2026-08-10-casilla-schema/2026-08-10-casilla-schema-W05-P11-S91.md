@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:344e84663713e4706e0607a5b2fb59d7318906547b1c0328c63fda3bdff3eedc'
+body_hash: 'sha256:7925df9bdfd57cc3e47db65ca17b9aed35e4fcbff42759c054419ef5f14d20da'
 step_id: 'S91'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -51,3 +51,5 @@ The blast radius was wider than the Step's scope. The sibling bucket-aggregation
 The zero was diagnosed rather than guessed. The prorrata no-volume-data branch was compared across all six Modelo 303 revisions and is identical, so the revision split was excluded; the recent supply-nature and recipient-condition classification work was excluded because the output leg of the same fixture still folded correctly; and the verify-time evidence gate was excluded because it reads a different field. The candidate validator names the requirement outright - input IVA facts require exact deduction authority - and the transaction-level gate returns the typed issue.
 
 This Step's commit could not land in-session: `.git/index.lock` has been held since 19:31:00 with a frozen mtime and no HEAD movement, a dead holder that blocks every staging operation in this worktree. Removing anything under `.git/` is absolutely forbidden, so it is reported rather than worked around. No data loss and no destructive Git operation occurred.
+
+**Closed 2026-08-13.** The could-not-land note above is discharged. Both adjudicated modules are reachable from `HEAD` at `e03e201d9f`, clean in the working tree, and both pass. The adjudication recorded above - aggregation gates the deduction CLASSIFICATION, verify gates the attached invoice DOCUMENT, neither displacing the other - is unchanged by the closure and remains the contract those modules test.

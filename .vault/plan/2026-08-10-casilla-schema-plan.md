@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-13'
-body_hash: 'sha256:2095029285826753b60bc7b03296bb561e2700e23b0286bb14b6cef124234ca7'
+body_hash: 'sha256:e37c417c8541d91109c309737f93001ae7a13b74980ef84fa152a2831ccf79c3'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -154,19 +154,19 @@ Open-ended by design: every mid-campaign discovery lands here as an appended Ste
 - [x] `W05.P11.S84` - remove the five retired application.verification.errors locale leaves from all four catalogues through dev.locales and prove no deleted-package key remains; `src/cadrumo/locales/`.
 - [x] `W05.P11.S85` - replace the relation-handoff applicability hard counts with count-free semantic invariants and a bite proof, making the complete owning module green; `src/cadrumo/domain/calculations/registry/tests/test_relation_handoff_inventory.py`.
 - [x] `W05.P11.S86` - correct the two S33 audit IVA-stem violations and fill the checked S02 execution Description through VaultSpec CLI, then pass the IVA-stem and feature body-section gates; ` .vault/audit/2026-08-12-casilla-schema-s33-readiness-mapping-audit.md and .vault/exec/2026-08-10-casilla-schema/2026-08-10-casilla-schema-W01-P01-S02.md`.
-- [ ] `W05.P11.S87` - regenerate the casilla-schema feature index through the owning VaultSpec CLI after all other close findings settle and require the feature check to pass; `.vault/index/casilla-schema.index.md`.
+- [x] `W05.P11.S87` - regenerate the casilla-schema feature index through the owning VaultSpec CLI after all other close findings settle and require the feature check to pass; `.vault/index/casilla-schema.index.md`.
 - [x] `W05.P11.S88` - retire every stale Modelo 303 reference to the deleted revision id and tighten the cutover gate's modelo attribution so a sibling modelo's legitimate identically-named revision is not flagged, making the cutover gate, the registry diff module and the reconcile verb green - EXCLUDES the two M303 application modules whose deducible-IVA fold changed underneath them, which the standing goal still requires and which S91 now carries; `src/cadrumo/application/registry/tests/test_diff.py and src/cadrumo/entrypoints/cli/tests/test_modelo_reconcile_verb.py and src/cadrumo/domain/calculations/registry/tests/test_m303_retired_revision_cutover.py`.
-- [ ] `W05.P11.S90` - populate the 84 shared M303 continuity casilla-label keys the revision split left unresolved so the four currently-filing revisions render every casilla label in all four catalogues through dev.locales; `src/cadrumo/locales/`.
-- [ ] `W05.P11.S91` - adjudicate where the Modelo 303 deducible-IVA evidence gate binds - the ledger-to-casilla aggregation fold or the verify grant - since an unevidenced purchase now folds to zero at calculate while two committed modules still contract for the fold-then-block shape, then repair those modules against the adjudicated contract; `src/cadrumo/application/modelo/tests/test_modelo_303_deductible_evidence_gate.py and src/cadrumo/application/modelo/tests/test_modelo_303_official_box_under_declaration.py and src/cadrumo/application/aggregation/`.
-- [ ] `W05.P11.S92` - add a tree-wide gate asserting every casilla label resolves in the mandatory Spanish source for every modelo and every revision, measured through resolve_modelo_localization and the production resolver chain and never by reading catalogue YAML, because the resolver walks an ordered key chain whose first entry is only the revision-specific tier and a YAML read therefore reports 201 missing labels per revision where the resolver reports the true 84, and prove the gate bites - it lands green today because the tree-wide sweep found zero mandatory-Spanish casilla-label gaps across all 73 modelos; `src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W05.P11.S90` - populate the 84 shared M303 continuity casilla-label keys the revision split left unresolved so the four currently-filing revisions render every casilla label in all four catalogues through dev.locales; `src/cadrumo/locales/`.
+- [x] `W05.P11.S91` - adjudicate where the Modelo 303 deducible-IVA evidence gate binds - the ledger-to-casilla aggregation fold or the verify grant - since an unevidenced purchase now folds to zero at calculate while two committed modules still contract for the fold-then-block shape, then repair those modules against the adjudicated contract; `src/cadrumo/application/modelo/tests/test_modelo_303_deductible_evidence_gate.py and src/cadrumo/application/modelo/tests/test_modelo_303_official_box_under_declaration.py and src/cadrumo/application/aggregation/`.
+- [x] `W05.P11.S92` - add a tree-wide gate asserting every casilla label resolves in the mandatory Spanish source for every modelo and every revision, measured through resolve_modelo_localization and the production resolver chain and never by reading catalogue YAML, because the resolver walks an ordered key chain whose first entry is only the revision-specific tier and a YAML read therefore reports 201 missing labels per revision where the resolver reports the true 84, and prove the gate bites - it lands green today because the tree-wide sweep found zero mandatory-Spanish casilla-label gaps across all 73 modelos; `src/cadrumo/domain/calculations/registry/tests/`.
 
 ### Phase `W05.P12` - campaign close
 
 The close gates: honesty review, rule retirement, and the final all-steps-accounted check.
 
-- [ ] `W05.P12.S36` - run the fresh-context honesty review of the campaign close and record it as a vault audit with every finding actioned or deferred; `.vault/audit/`.
-- [ ] `W05.P12.S39` - retire the casilla-schema-buildout campaign rule and sync the provider copies in the same action as the closing review; `.vaultspec/rules/casilla-schema-buildout.md`.
-- [ ] `W05.P12.S40` - confirm every step in this plan is checked with an exec record or formally deferred with a follow-up reference, and only then declare the campaign structurally complete; `.vault/plan/2026-08-10-casilla-schema-plan.md`.
+- [x] `W05.P12.S36` - run the fresh-context honesty review of the campaign close and record it as a vault audit with every finding actioned or deferred; `.vault/audit/`.
+- [x] `W05.P12.S39` - retire the casilla-schema-buildout campaign rule and sync the provider copies in the same action as the closing review; `.vaultspec/rules/casilla-schema-buildout.md`.
+- [x] `W05.P12.S40` - confirm every step in this plan is checked with an exec record or formally deferred with a follow-up reference, and only then declare the campaign structurally complete; `.vault/plan/2026-08-10-casilla-schema-plan.md`.
 
 ## Parallelization
 

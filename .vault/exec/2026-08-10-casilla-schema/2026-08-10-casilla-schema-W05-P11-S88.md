@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:690928a88bef6bb00c03b8b2652f04d8430ca76d572642eba48aa0dbf14289ab'
+body_hash: 'sha256:63bdff658ef6f12f1f197722d275f5187b03e74e00b3de9f84d7b4ca0802a796'
 step_id: 'S88'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -47,3 +47,7 @@ Work landed here reduced those two modules from ten failures to three by wiring 
 A peer landed the fixture repoint for the two application modules and the reconcile verb as `3241d5a173` while this Step was in flight; that half is theirs and was not re-authored.
 
 **Blocked at commit.** `.git/index.lock` has been held since 19:31:00 with a frozen mtime and no HEAD movement for over half an hour - a dead holder. Removing anything under `.git/` is absolutely forbidden, so this Step's commit could not land in-session. No data loss and no destructive Git operation occurred.
+
+**Closed 2026-08-13.** The blocked-at-commit note above is discharged. The lock holder is gone, and this Step's three scope modules are reachable from `HEAD` - the cutover gate and the registry diff module at `e03e201d9f`, the reconcile verb at `3241d5a173`, none of them dirty in the working tree. All three re-measured green.
+
+One measurement caveat worth preserving, because it would mislead the next reader who re-runs this lane. The first sequential run of the diff module reported two failures, both `RegistryLoadError: registry directory changed during cache fingerprinting`. That is the documented concurrent-registry-write race on this share, not a regression in the Step's scope: a peer was writing registry TOML during the run. The re-run reported 14 passed. The local-execution rule's instruction to re-run before blaming the code is what separated those two readings.

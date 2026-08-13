@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:bf292199cb9b1d3e1d3e3f298623a7f0cddb6b1dffc92e62559577e8840a868c'
+body_hash: 'sha256:f041e8a2564677c5a280357d618ee8af0cd8fce7cbd2cd4e148b286a4d3a492c'
 related:
   - "[[2026-08-11-tui-interface-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -62,3 +62,15 @@ Commit `0c5fb5253d` adds the read-only screen, tests, facade exports, and locale
 4. Make the new migration step a prerequisite of migration-manifest closure S88, legacy deletion S89, fixed-point gates S102, and final review S103. S89 remains the package-wide deletion proof; the inserted step is the explicit destination/parity proof required by the interface ADR's receipt.
 5. Do not delete or relocate commit `0c5fb5253d` now. Defer physical relocation to the newly explicit TUI architecture step after casilla S40 closes and the architecture dependency gate opens. If the owner rejects transitional delivery, that is a judgment change to the accepted sequencing and requires an ADR amendment before any plan or code action.
 6. Treat `legacy-tui-placement` in `2026-08-12-casilla-schema-s34-tui-review-audit` as corrected by this audit. Retain its other findings and its overall FAIL until those functional/proof defects are resolved; placement alone is not a valid blocker under the accepted sequence.
+
+## Retirement note, 2026-08-13
+
+The owner ruled that no TUI campaign will land. Three of the six recommendations above, and one finding, are retired by that ruling; the rest stand.
+
+**Retired: the `plan-gap` finding, and recommendations 3, 4 and 5.** All four are instructions to the `tui-architecture` authority and plan - amend the ADR to make Modelo absorption explicit, insert a migration step before relocation parity and legacy deletion, make it a prerequisite of S88/S89/S102/S103, and defer physical relocation until after casilla S40 opens the dependency gate. None of them has an executing campaign, so they are retired rather than carried as open items that no one owns. Recommendation 3's condition ("with author approval") was never met and is now moot.
+
+**Stood down as satisfied: recommendations 1, 2 and 6.** S34 and S35 stayed in place, were executed and closed in their transitional scope, and the `legacy-tui-placement` finding of `2026-08-12-casilla-schema-s34-tui-review-audit` remains corrected by this audit.
+
+**Superseded in premise, retained as history: `locator-classification` and `decision-versus-code`.** Both classified the legacy path as an *intentional transitional source* pending later absorption. The classification was correct when written and is preserved as the record of why the screen shipped there, but its premise no longer holds: the placement is permanent. That is ruled in the amendment to `2026-08-10-casilla-schema-read-model-adr` dated 2026-08-13, which is the authority for the screen's home. The sentence in `decision-versus-code` that commit `0c5fb5253d` "must not survive TUI architecture closure" is void, not pending.
+
+**`authority-ordering` stands unchanged.** Its reasoning - that an audit cannot override an accepted cluster's explicit dependency order - was never contingent on the order being executed.

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:3885de8c2fb5d76a9e342dbc25d97e298a85541c60a01fb0962309cabf6751a8'
+body_hash: 'sha256:a8d325d050469f8dba4885db5bc4608cc9ff3b5af3fbd46efc15fd7c68820c4d'
 step_id: 'S87'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -31,3 +31,5 @@ The two dimensions the close review recorded as campaign-owned gaps - the radica
 ## Notes
 
 The index was regenerated after the P11 vault-surface findings settled, as the Step requires. Nothing under `.vault/index/` was hand-edited. No destructive Git operation occurred.
+
+**Closed 2026-08-13.** The reopening condition is discharged: the `.git/index.lock` holder is gone and this Step's artefact is reachable from `HEAD` at `bced74f746`. The index was regenerated through its owning verb (`vaultspec-core vault feature index --feature casilla-schema`) and the document list came back identical - only the CLI-owned `date:` and `modified:` stamps moved, confirming the committed index was already content-complete rather than stale in substance. The feature-scoped `vault check all` passes all nineteen dimensions.

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:28be1b01a0723389bb59219758e0672ebe49eabb703b3b13e01ddf6ec605ab51'
+body_hash: 'sha256:229a546f37cf1b1468e7a27fb835d94e2018f3f23e83c6ed5c1d65fab572bcb3'
 step_id: 'S92'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -39,3 +39,5 @@ The gate deliberately does not enumerate a count. It asserts the property - ever
 Spanish is the mandatory source and the last backstop: every other catalogue falls through to it, so a Spanish miss is the one miss that reaches an operator as a refusal rather than as a foreign-language string. The three non-Spanish catalogues are deliberately not swept, because their scaffolded nulls are exempt by the resolver's own contract and asserting on them would contradict the untranslated-string honesty ratchet.
 
 This Step's commit could not land in-session: `.git/index.lock` has been held since 19:31:00 with a frozen mtime and no HEAD movement, a dead holder blocking every staging operation in this worktree. Removing anything under `.git/` is absolutely forbidden. No data loss and no destructive Git operation occurred.
+
+**Closed 2026-08-13.** The could-not-land note above is discharged. The tree-wide gate is reachable from `HEAD` at `e03e201d9f`, clean in the working tree, and passes. It continues to measure through `resolve_modelo_localization` and never by reading catalogue YAML, for the ordered-key-chain reason recorded in the Outcome.
