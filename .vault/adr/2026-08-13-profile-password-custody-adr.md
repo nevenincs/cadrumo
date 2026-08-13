@@ -10,52 +10,11 @@ related:
   - "[[2026-08-13-profile-password-custody-research]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #adr) and one feature tag.
-     Replace profile-password-custody with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     Status convention: the H1 status value is one of proposed, accepted,
-     rejected, superseded, or deprecated. A new ADR starts as proposed; it
-     moves to accepted or rejected when the decision is made; it becomes
-     superseded when a later ADR replaces it (set by vault adr supersede,
-     which also records superseded_by); and deprecated when it is retired
-     without a direct successor.
-
-     Amend vs supersede: refinements and concretization rewrite the accepted
-     record's body in place (modified: carries the revision); a new ADR with
-     supersession is only for a major pivot. One accepted record per
-     decision.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
-
-<!-- DOCUMENT BOUNDARY:
-     This record owns the decision and only the decision. Grounding evidence
-     lives in the related research/reference documents and is cited by stem
-     (e.g. `2026-02-04-editor-demo-research`), never restated - a restated
-     fact forks and goes stale. A fact this record needs but the grounding
-     lacks is added to the grounding first, then cited. -->
 
 ## Problem Statement
 
 Normal unlock is exactly: select an existing profile, enter its password, and unlock it. Runtime provider availability, a shared master key, or optional recovery material must not replace or obstruct that authority. The incident and option space are grounded in `2026-08-13-profile-password-custody-research`.
-
-<!-- The problem and why a decision is needed now, in this record's own
-     terms. Do not re-narrate the research's evidence; cite it. -->
 
 ## Considerations
 
@@ -66,22 +25,12 @@ Normal unlock is exactly: select an existing profile, enter its password, and un
 - Password envelopes permit offline guessing; online controls cannot claim otherwise.
 - The current configured format is cut over destructively. No legacy reader, inference, adoption, or migration survives.
 
-<!-- Only the forces that bear on the choice, each a terse line citing its
-     grounding by stem or locator. Nothing the research already
-     establishes is re-argued here. -->
-
 ## Considered options
 
 - **Runtime-selected shared master key:** rejected because provider drift can strand profiles and a profile password is not independently sufficient.
 - **Shared root key wrapped by each profile password:** rejected because root loss and compromise retain a cross-profile blast radius.
 - **Password-derived data encryption:** rejected because password and KDF rotation would require complete data re-encryption.
 - **Random per-profile DEK wrapped by the profile password:** accepted because it matches the unlock contract and isolates profiles while allowing wrapper rotation.
-
-<!-- Name each alternative evaluated, compared at the same level of abstraction, with its
-key pros and cons and why it was kept or rejected. Naming the rejected options - not only
-the chosen one - is what lets a future reader reconstruct the decision. Keep each option
-to a terse claim-first line or two; the chosen option's full reasoning belongs under
-Rationale. -->
 
 ## Constraints
 
@@ -90,11 +39,6 @@ Rationale. -->
 - A coherent offline rollback of every capsule artifact cannot be detected without an external monotonic witness. The product must state this limit.
 - Current Argon2 and authenticated-encryption dependencies are stable. Process supervision requires a canonical adapter over Windows Job Objects and POSIX process controls.
 - Normal commands never read retired content. Old artifacts cause refusal and permit only explicit destructive reset or re-enrollment.
-
-<!-- Technical limitations, e.g.: depends on non-mature library, frontier feature, requires rigorous research. 'Frontier' risk, e.g. technology is new and falls outside the implementing model's training cutoff.
-
-List out the blocking constraints, and features, gaps needed for reliable implementation. Must explicitly evaluate how stable 'parent' features are if this adr
-relies on another feature. -->
 
 ## Implementation
 
@@ -156,21 +100,10 @@ Profile deletion is journaled, crash-resumable, symlink/reparse-safe, and local-
 
 Deletion performs no AEAT or external write, token revocation, certificate revocation, cloud deletion, remote-registration deletion, or backup deletion. It reports retained remote state and external backup/recovery artifacts. External mutation requires a separate explicitly authorized operation, grammar, authentication, confirmation, journal, owner, and receipt.
 
-<!-- A high-level overview (not a plan!) of HOW and WHAT will be implemented. Focus on condensed but clear prose that describes functionality layering.
-
-Do not add code; code references must be persisted in a separate `{reference}` document. Important `{reference}` snippets must be summarized and referenced explicitly. -->
-
 ## Rationale
 
 The selected model is the only option that makes the supplied profile password independently sufficient while containing compromise and rotation to one immutable profile UUID. Separate recovery, session, projection, transport, and external-operation owners prevent optional or unavailable mechanisms from becoming competing custody authorities. The transaction and capsule rules make every visible state attributable after a crash.
 
-<!-- Why this option wins against the drivers: a knockout criterion or a
-     clear edge over the alternatives. Cite `{research}` findings and
-     grounding `{reference}` by stem; do not restate them. A new fact
-     surfacing here first belongs in the grounding document. -->
-
 ## Consequences
 
 Every profile carries its own password envelope and DEK proof. Shared master-key and provider-fallback code must be removed rather than retained as compatibility. Recovery becomes optional without weakening disaster recovery. Backup is host-independent. KDF work gains an explicit denial-of-service and supervision boundary. The hard cutover requires destructive reset for current retired stores, DEK rotation remains unavailable, and coherent full-capsule rollback remains outside guarantees without an external witness.
-
-<!-- Gains, but framed honestly. Difficulties. Pathways this feature opens. Pitfalls. -->

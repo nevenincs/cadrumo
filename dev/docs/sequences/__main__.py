@@ -33,6 +33,7 @@ review-visible, but the advisory keeps dead bindings from accumulating.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import subprocess
@@ -56,8 +57,8 @@ from ._golden_store import (
 )
 from ._parser import parse_sequence
 from ._runner import (
-    SequenceTranscript,
     _PROGRESS_JOURNAL_ENV,
+    SequenceTranscript,
     _sequence_progress_scope,
     execute_page_sequences,
     execute_sequence,
