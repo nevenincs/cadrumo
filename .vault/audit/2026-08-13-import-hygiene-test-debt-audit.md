@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:cceccb0748d96ad52da7eeff61be535470d1800281744b62e5cb7c887f3b8afd'
+body_hash: 'sha256:616012c831f618a4056b06bcc0192d3578fa5f3c2bcfba583840110567135018'
 related: []
 ---
 
@@ -45,6 +45,22 @@ merely by finishing, without ever seeing the failure attributed to them.
 The site was deliberately left alone. Editing the file would have entangled unrelated
 work in progress, and writing an allowlist entry for a reach that exists only in a working
 copy would record speculative state as a durable decision.
+
+**The reproduction, verifiable in two commands.** Take the calculations test module that
+the gate names, and count the two private symbols it is reported as reaching. Against the
+committed blob the count is zero; against the working copy it is four, on a single import
+line. The file is modified but uncommitted, and it stayed that way across every
+measurement in this session while the branch tip advanced underneath it. So the gate
+fails three of its tests at a commit where the offending import does not exist in the
+commit at all.
+
+That is a sharper demonstration than the count churn, because it is one named site rather
+than a moving aggregate, and because the two counts disagree at the same instant on the
+same machine. It also isolates the mechanism cleanly: the disagreement is not caused by
+timing, parallelism, caching or the registry-fingerprint race that produces transient
+collection errors elsewhere in this tree. It is caused solely by which bytes the scanner
+chose to read. Anyone re-verifying this finding later should compare the committed blob
+against the working copy first, before reaching for any of those other explanations.
 
 ### gate-is-red-with-three-signatures | critical | all three failures are one site, and none is a stale entry
 
