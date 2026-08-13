@@ -227,7 +227,15 @@ jobs:
         # decorative-non-blocking-forever decay this repository has already
         # documented for the integration and dev-tooling steps above; a
         # tracked follow-up row owns re-measuring and flipping it.
-        run: just test-per-push-integration-gates
+        #
+        # -n 8, never the recipe's local `auto` default: this machine's 24
+        # logical CPUs are shared with co-resident runners from other
+        # repositories (machine-aware sizing, .github/ci-control-plane.md), and
+        # the step above in this same job pins the identical count. The
+        # override rides the calling line rather than the recipe so the
+        # recipe keeps a workstation-friendly default, the same split the
+        # unit job already uses.
+        run: CADRUMO_PYTEST_WORKERS=8 just test-per-push-integration-gates
         continue-on-error: true
 
   cadrumo-unit:
