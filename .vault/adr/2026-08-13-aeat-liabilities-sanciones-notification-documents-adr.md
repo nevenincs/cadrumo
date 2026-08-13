@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:3f79e929f8115638697b0d16367b8f08d608feae01802fb1467c88c1be4ae151'
+body_hash: 'sha256:c3318f8e30e2b3d2ed61342f900dadfdf0cc8db5156f97197f0f83f96dd004b8'
 related:
   - "[[2026-08-07-aeat-liabilities-sanciones-adr]]"
   - "[[2026-08-12-aeat-liabilities-sanciones-p05-p06-closeout-honesty-audit]]"
@@ -212,11 +212,12 @@ diferencia — each optional, each accompanied by whether its label matched. A
 document in which no label matches is reported unparsed and refuses to persist a
 zeroed record.
 
-**Operator surface.** Two leaves are added to the existing `app live
-notifications` group: a fetch leaf taking the certificado id as a positional
-argument, and a read-back leaf reading only what is already persisted with no
-AEAT contact. The fetch leaf is named with the `pull` stem the CLI contract
-requires and is enrolled in `PROFILE_BOUND_WRITE_VERB_PATHS` in the same change,
+**Operator surface.** A `document` subgroup is added to the existing `app live
+notifications` group, carrying a `pull` verb that fetches and takes the
+certificado id as a positional argument, a `view` verb that reads only what is
+already persisted with no AEAT contact, and a `history` verb for the bounded
+readout — the exact names fixed by the naming ruling below. The fetch verb
+is enrolled in `PROFILE_BOUND_WRITE_VERB_PATHS` in the same change,
 with the operator-orientation harness document swept in the same commit. Every
 diagnostic — the refusal reason, an unparsed document, a re-fetch no-op — rides
 the typed `Notice` channel; none becomes a bespoke result field. Help and label
@@ -232,13 +233,49 @@ paid, appealed, reduced or superseded is not stated on the document and is
 therefore not stated by the application.
 
 **Naming.** The domain types and their fields take Spanish stems, matching the
-AEAT surface one-to-one as `aeat-naming` requires. The two CLI leaves attach to
-the pre-existing English-named `notifications` family, which the governing
+AEAT surface one-to-one as `aeat-naming` requires. The operator surface attaches
+to the pre-existing English-named `notifications` family, which the governing
 record already identified as the rule's carve-out for already-public pre-rule
-identifiers; they are verbs on that family rather than a new family, so no new
-English-named domain family is created. This is the one naming call in this
-record a reviewer might reasonably revisit, and it is recorded rather than
-assumed.
+identifiers, so no new English-named domain family is created. This record
+originally proposed two leaf verbs on that family — `pull-document` and
+`document` — and flagged the call as the one a reviewer might reasonably
+revisit. A reviewer did, and it moved; see the ruling below.
+
+**Naming ruling (2026-08-13, operator).** The surface is a `document` subgroup,
+not a pair of leaf verbs:
+
+- `aeat app live notifications document pull <certificado-id>` — the AEAT fetch.
+- `aeat app live notifications document view <certificado-id>` — reads back from
+  storage, no AEAT contact.
+- `aeat app live notifications document history` — the bounded readout.
+
+The reasoning, recorded because the outcome alone would not tell a later reader
+why it moved off the original proposal:
+
+1. **The CLI contract's hardest requirement is that the AEAT-fetch verb IS named
+   `pull`.** The subgroup gives literally `pull`. `pull-document` only resembles
+   it, and a rule that is satisfied by resemblance is not being satisfied.
+2. **The `pull-all` / `pull-sources` precedent is real but does not cover this
+   case.** Those are variants of the same fetch over the same subject. Here the
+   SUBJECT changes — a snapshot versus a document — and a subgroup is the
+   construct that expresses a change of subject. The original proposal read the
+   precedent one level too shallowly.
+3. **It reuses the family's existing `view` with the same meaning one level
+   down**, instead of introducing a bare noun leaf (`notifications document
+   <id>`) that reads as a noun among siblings that are all verbs. That noun leaf
+   was the weakest part of the original proposal and this removes it rather than
+   defending it.
+4. **The depth is precedented.** `aeat config profile censo pull` is the CLI
+   contract's own worked example of a subgroup carrying `pull`, so the shape
+   needs no novel justification.
+5. **`document` stays English**, consistent with the operator-facing
+   `notifications` and `invoice` precedent, while the domain types keep their
+   Spanish stems. The carve-out is applied, not widened.
+
+Every downstream row naming the superseded verbs — the CLI rows, the harness
+sweep, the history rows and the documentation rows — is corrected to these three
+names in the same action as this ruling, since a ruling on code is not
+self-executing.
 
 ## Rationale
 
