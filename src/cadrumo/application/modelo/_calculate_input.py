@@ -1342,6 +1342,11 @@ def _dt12_window_decision(
                 "ejercicio for 2011–2014). Re-run with --contingencia-year to confirm the window."
             ),
             casilla_id=reduccion_casilla_id,
+            # No casilla carries DT 12ª's own grounding (the reducción casilla's
+            # legal_refs describe the reducción itself, not the transitional
+            # time-window rule this advisory is about), so the provision is
+            # declared rather than read off a registry object.
+            asserted_legal_refs=("ley-35-2006:dt-12",),
         )
     if eligibility.eligible:
         return True, None
@@ -1357,6 +1362,7 @@ def _dt12_window_decision(
             "(under-declaration of tax); it is withheld as the legally correct result."
         ),
         casilla_id=reduccion_casilla_id,
+        asserted_legal_refs=("ley-35-2006:dt-12",),
     )
 
 
@@ -1373,6 +1379,7 @@ def _dt12_parcial_guidance_advisory(reduccion_casilla_id: CasillaId) -> Calculat
             "prestación must be received en forma de capital)."
         ),
         casilla_id=reduccion_casilla_id,
+        asserted_legal_refs=("ley-35-2006:dt-12",),
     )
 
 

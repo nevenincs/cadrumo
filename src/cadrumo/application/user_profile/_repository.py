@@ -456,7 +456,7 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
         try:
             envelope = Envelope[UserProfileRecord].model_validate_json(record.payload.decode("utf-8"))
         except ValidationError as exc:
-            raise StoredProfileDriftError(profile_id, exc) from exc
+            raise StoredProfileDriftError(profile_id=profile_id, error=exc) from exc
         if not inner_envelope_classification_is_expected(envelope.classification, _USER_PROFILE_VALUE_SENSITIVITY):
             raise ClassificationError(
                 _PROFILE_CLASSIFICATION_MISMATCH_MESSAGE,
@@ -659,7 +659,7 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
             try:
                 envelope = Envelope[UserProfileRecord].model_validate_json(raw.payload.decode("utf-8"))
             except ValidationError as exc:
-                raise StoredProfileDriftError(self._bucket_id, exc) from exc
+                raise StoredProfileDriftError(profile_id=self._bucket_id, error=exc) from exc
             # Keys are stored hashed, so the row cannot be asked which profile
             # it was filed under; the payload's own claim is the only identity
             # available here, and it must be this bucket's.

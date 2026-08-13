@@ -74,6 +74,7 @@ if TYPE_CHECKING:
         expedientes_snapshot_object_key,
     )
     from ._notification_documents import (
+        NotificationDocumentCustody,
         NotificationDocumentNotFoundError,
         NotificationDocumentRecord,
         NotificationDocumentService,
@@ -289,8 +290,8 @@ async def capture_expedientes_bulk(
     """Live-walk AEAT declaration-register rows and return an :class:`ExpedientesBulkCaptureReport`."""
     if year_from > year_to:
         raise LiveApplicationInputError(
+            message="from-year must be less than or equal to to-year",
             translated_message="live.errors.year_range_invalid",
-            context={"year_from": year_from, "year_to": year_to},
         )
 
     from ._expedientes import ExpedientesCapture, ExpedientesService
@@ -385,6 +386,84 @@ async def capture_notifications(*, bucket_id: str):
         authenticated_identity=session.identity_nif,
     )
     return persisted
+
+
+def resolve_notification_row(*, bucket_id: str, certificado_id: str):
+    """Find one notification row by certificado across the bucket's stored snapshots.
+
+    The document fetch needs the ROW, not just the id, because the row carries
+    the ``leida`` fact the comparecencia guard turns on. Resolving it from a
+    locally-captured snapshot rather than accepting operator-supplied flags is
+    deliberate: the guard must key on what AEAT reported, and a caller-supplied
+    "yes it is read" would be exactly the override that makes an agent serve a
+    notification on the taxpayer's behalf.
+
+    The newest snapshot mentioning the certificado wins, so a re-pull that
+    observed the row becoming read is the reading that governs.
+
+    Args:
+        bucket_id: The active profile bucket to search.
+        certificado_id: AEAT's número de certificado for the notification.
+
+    Returns:
+        The most recently captured matching
+        :class:`~adapters.outbound.aeat.sede.RemoteNotification`.
+
+    Raises:
+        LiveApplicationInputError: When no captured snapshot mentions the
+            certificado. The refusal names the pull that would fix it rather
+            than reaching for AEAT on the operator's behalf.
+    """
+    from ._errors import LiveApplicationInputError
+    from ._notifications import NotificationsService
+
+    wanted = certificado_id.strip()
+    snapshots = sorted(
+        NotificationsService().list_snapshots(bucket_id=bucket_id),
+        key=lambda snapshot: snapshot.captured_at,
+        reverse=True,
+    )
+    for snapshot in snapshots:
+        for row in snapshot.rows:
+            if str(row.certificado_id) == wanted:
+                return row
+    raise LiveApplicationInputError(
+        translated_message="application.live.notifications.errors.certificado_not_in_any_snapshot",
+        context={"certificado_id": wanted, "snapshots_searched": str(len(snapshots))},
+    )
+
+
+async def pull_notification_document(*, bucket_id: str, certificado_id: str):
+    """Fetch one already-read notification's document and take encrypted custody.
+
+    The one application-layer door onto a notification's content. It gates
+    through ``_active_verified_session`` exactly as the other live reads do,
+    resolves the row locally so the comparecencia guard keys on AEAT's own
+    ``leida`` report, and hands off to
+    :class:`NotificationDocumentService`, which refuses anything AEAT does not
+    already record as read before a request is issued.
+
+    Args:
+        bucket_id: The active profile bucket taking custody.
+        certificado_id: AEAT's número de certificado for the notification.
+
+    Returns:
+        The ``NotificationDocumentCustody`` outcome: the persisted record, and
+        whether the certificado was already held so the store was a no-op.
+
+    Raises:
+        SedeNavigationError: When the notification is not already read.
+        LiveApplicationInputError: When no captured snapshot mentions it.
+    """
+    from ._notification_documents import NotificationDocumentService
+
+    row = resolve_notification_row(bucket_id=bucket_id, certificado_id=certificado_id)
+    session, settings = await _active_verified_session()
+    return await NotificationDocumentService(settings=settings).pull_document(
+        bucket_id=bucket_id,
+        session=session,
+        row=row,
+    )
 
 
 #: Operation label forwarded to the auth service for the censal read, so a
@@ -538,6 +617,7 @@ def __getattr__(name: str):
         return getattr(_impl_mod, name)
     if name in (
         "NotificationDocumentService",
+        "NotificationDocumentCustody",
         "NotificationDocumentRecord",
         "NotificationDocumentNotFoundError",
         "notification_document_object_key",
@@ -625,6 +705,7 @@ __all__ = [
     "LiveIvaReadStatus",
     "LiveIvaReadSurface",
     "LiveIvaSurfaceTimeoutError",
+    "NotificationDocumentCustody",
     "NotificationDocumentNotFoundError",
     "NotificationDocumentRecord",
     "NotificationDocumentService",
@@ -688,10 +769,12 @@ __all__ = [
     "persist_iva_remote_state_acquisition_report",
     "pull_censal_datos",
     "pull_filed_history",
+    "pull_notification_document",
     "recapture_divergence_notices",
     "reconcile_capture",
     "register_capture_as_filing_evidence",
     "register_capture_justificante_metadata",
+    "resolve_notification_row",
     "resolve_period_expediente",
     "select_declarations_for_capture",
     "stamp_capture_evidence_if_filed",

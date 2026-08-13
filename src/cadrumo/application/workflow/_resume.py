@@ -59,7 +59,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...core import HEX_PATTERN_16, HEX_PATTERN_64, STRICT_FROZEN_CONFIG, Period
-from ...core.identity import CalculationRevisionId
+from ...core.identity import CalculationRevisionId, WorkUnitId
 from ...domain.calculations.registry import RevisionId
 from ._errors import WorkflowError
 from ._models import WorkflowAbortReason, WorkflowObligationFacts, WorkflowResult, WorkflowStage
@@ -121,7 +121,7 @@ class WorkflowResumeRunCandidate(BaseModel):
     aborted_reason: str | None = None
     started_at: datetime
     short_work_unit_id: str | None = None
-    work_unit_id: str | None = None
+    work_unit_id: WorkUnitId | None = None
 
 
 class WorkflowResumeTargetResolution(BaseModel):
@@ -142,7 +142,7 @@ class WorkflowResumeTargetResolution(BaseModel):
     modelo: str | None = None
     period: Period | None = None
     filing_year: int | None = None
-    work_unit_id: str | None = None
+    work_unit_id: WorkUnitId | None = None
     short_work_unit_id: str | None = None
     calculation_revision_id: CalculationRevisionId | None = None
     short_calculation_revision_id: str | None = None

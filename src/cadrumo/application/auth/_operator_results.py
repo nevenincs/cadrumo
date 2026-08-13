@@ -28,6 +28,7 @@ from pydantic import BaseModel, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CadrumoError
+from ...core.identity import BucketId
 from ..operator_actions import PreconditionVerdict
 from ._catalogue import AuthProviderListing
 from ._probe_result import ProviderProbeResult
@@ -267,7 +268,7 @@ class AuthLogoutResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str
+    bucket_id: BucketId
     providers: tuple[str, ...]
     removed_sessions: int
     cleared_session_state: bool
@@ -278,7 +279,7 @@ class AuthResetResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str
+    bucket_id: BucketId
     providers: tuple[str, ...]
     removed_sessions: int
     cleared_provider_configuration: bool

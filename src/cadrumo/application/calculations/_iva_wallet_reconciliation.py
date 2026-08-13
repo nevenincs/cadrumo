@@ -105,14 +105,31 @@ class IvaWalletDecisionSourceResolver:
         decision = self._decision
         if decision.target_year != context.filing_year or decision.target_period != context.period:
             raise IvaCompensationReconciliationInputError(
-                "IVA wallet reconciliation decision target does not match the Modelo 303 work unit",
+                translated_message="application.calculations.iva_wallet.errors.decision_target_mismatch",
+                context={
+                    "decision_target_year": decision.target_year,
+                    "decision_target_period": str(decision.target_period),
+                    "context_filing_year": context.filing_year,
+                    "context_period": str(context.period),
+                },
             )
         if decision.blocked:
             raise IvaCompensationReconciliationInputError(
-                f"IVA wallet reconciliation blocks automatic Modelo 303 calculation: {decision.divergence}",
+                translated_message="application.calculations.iva_wallet.errors.decision_blocks_calculation",
+                context={
+                    "divergence": str(decision.divergence),
+                    "target_year": decision.target_year,
+                    "target_period": str(decision.target_period),
+                },
             )
         if decision.selected_amount is None:
-            raise IvaCompensationReconciliationInputError("IVA wallet reconciliation decision has no selected amount")
+            raise IvaCompensationReconciliationInputError(
+                translated_message="application.calculations.iva_wallet.errors.decision_no_selected_amount",
+                context={
+                    "target_year": decision.target_year,
+                    "target_period": str(decision.target_period),
+                },
+            )
         fingerprint = f"sha256:{sha256_hex(decision.model_dump_json().encode('utf-8'))}"
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
@@ -155,8 +172,8 @@ def _resolve_reconciliation_repositories(
         and decision_repo.secure_object_repository.engine is not repo.secure_object_repository.engine
     ):
         raise IvaCompensationReconciliationInputError(
-            "IVA wallet decision repository must use the same encrypted storage backend "
-            "as the calculation observation repository",
+            translated_message="application.calculations.iva_wallet.errors.decision_repository_backend_split",
+            context={"persist": persist, "decision_repository_supplied": True},
         )
     return repo, decision_repo
 
@@ -247,7 +264,8 @@ def reconcile_modelo_303_iva_compensation(
     """
     if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != Modelo.M303.value:
         raise IvaCompensationReconciliationInputError(
-            "IVA compensation wallet reconciliation only applies to Modelo 303",
+            translated_message="application.calculations.iva_wallet.errors.modelo_303_only",
+            context={"modelo": str(getattr(snapshot.modelo, "id", snapshot.modelo))},
         )
     snapshot_period = Period.from_year_and_code(snapshot.filing_year, snapshot.period)
     if wallet is not None:

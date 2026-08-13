@@ -29,6 +29,7 @@ from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.identity import BucketId
 from ...core.time import now as utc_now
 from ...domain.buckets import (
     BucketEvent,
@@ -59,7 +60,7 @@ class WorkflowStateResetFingerprint(BaseModel):
     written_at: datetime | None = None
     byte_length: int | None = Field(default=None, ge=0)
     reason_class: str = Field(min_length=1, max_length=64)
-    recovered_bucket_id: str | None = Field(default=None, min_length=1, max_length=128)
+    recovered_bucket_id: BucketId | None = None
 
 
 class WorkflowStateResetEvent(BaseModel):

@@ -153,7 +153,7 @@ class ProjectionActiveProfile(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile_id: str | None = None
+    profile_id: ProfileId | None = None
     label: str | None = None
     health_status: str = ""
     registered_bucket: bool = False

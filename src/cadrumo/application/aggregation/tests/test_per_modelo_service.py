@@ -455,12 +455,24 @@ def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenanc
 
 
 def test_command_rejects_observations_from_non_selected_provider_family() -> None:
-    with pytest.raises(ValidationError, match="foreign_assets"):
+    """The rejected family rides the machine facts, not an authored sentence.
+
+    The refusal names the offending provider family in its context rather than
+    in its message, so a Catalan, Spanish or Hungarian session keeps the same
+    detail an English reader gets.
+    """
+    with pytest.raises(
+        ValidationError,
+        match=r"aggregation\.service\.errors\.observations_mismatch",
+    ) as exc_info:
         PerModeloAggregationCommand(
             modelo="111",
             period=_P_2025_Q1,
             foreign_asset_observations=(_asset_obs(),),
         )
+
+    cause = exc_info.value.errors()[0]["ctx"]["error"]
+    assert cause.context == {"names": "foreign_assets", "modelo": "111"}
 
 
 def test_unsupported_modelo_uses_registered_aggregation_error() -> None:
@@ -497,7 +509,7 @@ def test_result_contract_rejects_incoherent_envelope_payload() -> None:
         ),
     ).aggregation
 
-    with pytest.raises(ValidationError, match="does not match result modelo"):
+    with pytest.raises(ValidationError, match=r"aggregation\.service\.errors\.envelope_modelo_mismatch"):
         PerModeloAggregationResult(
             modelo="349",
             period=_P_2025_ANNUAL,
@@ -524,7 +536,10 @@ def test_result_contract_rejects_provider_payload_mismatch() -> None:
         ),
     ).aggregation
 
-    with pytest.raises(ValidationError, match="does not match aggregation payload"):
+    with pytest.raises(
+        ValidationError,
+        match=r"aggregation\.service\.errors\.envelope_provider_payload_mismatch",
+    ):
         PerModeloAggregationResult(
             modelo="111",
             period=_P_2025_Q1,

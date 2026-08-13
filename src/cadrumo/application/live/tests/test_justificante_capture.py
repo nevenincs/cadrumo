@@ -114,7 +114,12 @@ def test_capture_rejects_pdf_hash_that_does_not_match_decoded_bytes() -> None:
         match=r"application\.live\.justificante\.errors\.pdf_sha256_mismatch",
     ):
         JustificanteCaptureSnapshot(
-            snapshot_id="snapshot-hash-mismatch",
+            snapshot_id=derive_justificante_capture_snapshot_id(
+                modelo=Modelo.M130.value,
+                filing_year=2026,
+                period=_PERIOD_2T,
+                pdf_sha256=_OTHER_PDF_SHA256,
+            ),
             bucket_id="renta-2026-bucket",
             modelo=Modelo.M130.value,
             filing_year=2026,

@@ -100,7 +100,7 @@ def test_signed_rectification_with_one_corrected_fact_is_accepted_once() -> None
     )
 
     assert aggregation.observations[0].iva_amount == Decimal("-21.00")
-    with pytest.raises(ValueError, match="rectified only once"):
+    with pytest.raises(ValueError, match=r"aggregation\.iva_ledger\.errors\.rectification_consumed_more_than_once"):
         aggregate_iva_ledger_candidates(
             (rectification, rectification.model_copy(update={"ledger_id": "rectification-002"})),
             period=Period.from_year_and_code(2026, "2T"),

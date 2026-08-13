@@ -481,7 +481,7 @@ def test_export_journal_directory_is_owner_only_on_posix(tmp_path: Path) -> None
     operation = ProfileBundleExportOperation(
         operation_id="a" * 64,
         status=ProfileBundleExportOperationStatus.PREPARED,
-        profile_id="bucket-1",
+        profile_id="11111111-1111-4111-8111-111111111111",
         display_name="Example Filer",
         target_identity="portable.json",
         destination="portable.json",

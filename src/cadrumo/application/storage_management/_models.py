@@ -28,6 +28,7 @@ from ...core import (
     StorageOverridePolicy,
     StorageScope,
 )
+from ...core.identity import BucketId
 
 
 class StorageAreaDisposition(StrEnum):
@@ -87,7 +88,7 @@ class StorageInventoryRow(_StorageReport):
     fingerprint_participation: FingerprintParticipation
     settings_field: str | None = None
     path: Path | None = None
-    bucket_id: str | None = None
+    bucket_id: BucketId | None = None
     occupancy: StorageOccupancy
     entry_count: int = Field(default=0, ge=0)
     reclaimable: bool
@@ -97,7 +98,7 @@ class StorageInventoryReport(_StorageReport):
     """Every declared location resolved against the current settings."""
 
     storage_root: Path
-    active_bucket_id: str | None = None
+    active_bucket_id: BucketId | None = None
     rows: tuple[StorageInventoryRow, ...]
 
 

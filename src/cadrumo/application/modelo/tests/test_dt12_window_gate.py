@@ -121,6 +121,8 @@ def test_out_of_window_withholds_the_reduccion(tmp_path: Path) -> None:
     closed = next(d for d in bundle.shortcut_diagnostics if str(d.reason) == "dt12_regime_window_closed")
     assert closed.casilla_id == reduccion_casilla_id
     assert "2020" in closed.message and "2022" in closed.message
+    # Advisory-asserted: no casilla in reach carries DT 12ª's own grounding.
+    assert closed.asserted_legal_refs == ("ley-35-2006:dt-12",)
 
 
 def test_in_window_injects_the_reduccion_without_advisory(tmp_path: Path) -> None:
@@ -158,6 +160,8 @@ def test_absent_contingencia_year_injects_with_unverified_advisory(tmp_path: Pat
 
     assert bundle.casilla_inputs[reduccion_casilla_id] == _EXPECTED_REDUCCION
     assert "dt12_regime_window_unverified" in _reasons(bundle)
+    unverified = next(d for d in bundle.shortcut_diagnostics if str(d.reason) == "dt12_regime_window_unverified")
+    assert unverified.asserted_legal_refs == ("ley-35-2006:dt-12",)
 
 
 def test_parcial_type_adds_guidance_advisory(tmp_path: Path) -> None:
@@ -175,6 +179,8 @@ def test_parcial_type_adds_guidance_advisory(tmp_path: Path) -> None:
     # the reducción still injects.
     assert bundle.casilla_inputs[reduccion_casilla_id] == _EXPECTED_REDUCCION
     assert _reasons(bundle) == ["dt12_parcial_rescate_guidance"]
+    guidance = bundle.shortcut_diagnostics[0]
+    assert guidance.asserted_legal_refs == ("ley-35-2006:dt-12",)
 
 
 def test_total_type_adds_no_guidance_advisory(tmp_path: Path) -> None:

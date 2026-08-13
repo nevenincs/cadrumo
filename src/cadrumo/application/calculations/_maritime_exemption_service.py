@@ -147,7 +147,11 @@ def resolve_maritime_exemption(
     if art_7p_eligible(facts):
         if annual_salary is None or qualifying_days is None:
             raise RentaValidationError(
-                "annual_salary and qualifying_days are required when Art. 7.p) eligibility applies",
+                translated_message="application.calculations.maritime_exemption.errors.art_7p_inputs_required",
+                context={
+                    "annual_salary_supplied": annual_salary is not None,
+                    "qualifying_days_supplied": qualifying_days is not None,
+                },
             )
         obs = calculate_art_7p_exemption(
             annual_salary=annual_salary,
@@ -158,7 +162,10 @@ def resolve_maritime_exemption(
 
     if rebeca_eligible(facts):
         if gross_navigation_income is None:
-            raise RentaValidationError("gross_navigation_income is required when REBECA eligibility applies")
+            raise RentaValidationError(
+                translated_message="application.calculations.maritime_exemption.errors.rebeca_input_required",
+                context={"gross_navigation_income_supplied": False},
+            )
         obs = calculate_rebeca_exemption(
             gross_navigation_income=gross_navigation_income,
             facts=facts,

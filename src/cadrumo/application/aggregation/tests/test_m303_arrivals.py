@@ -82,7 +82,10 @@ def test_supplier_regime_arrival_uses_only_in_period_canonical_iva_observations(
 def test_supplier_regime_arrival_refuses_mismatched_or_out_of_period_canonical_evidence() -> None:
     aggregation = IvaLedgerAggregation(period=_Q1_2026, observations=(_observation("supplier-regime"),))
 
-    with pytest.raises(AggregationValidationError, match="do not match the requested filing period"):
+    with pytest.raises(
+        AggregationValidationError,
+        match=r"aggregation\.m303_arrivals\.errors\.supplier_regime_aggregation_period_mismatch",
+    ):
         resolve_m303_supplier_regime_arrival(period=_Q2_2026, iva_aggregation=aggregation)
 
     malformed_aggregation = IvaLedgerAggregation(
@@ -95,7 +98,10 @@ def test_supplier_regime_arrival_refuses_mismatched_or_out_of_period_canonical_e
             ),
         ),
     )
-    with pytest.raises(AggregationValidationError, match="outside the requested filing period"):
+    with pytest.raises(
+        AggregationValidationError,
+        match=r"aggregation\.m303_arrivals\.errors\.supplier_regime_observations_outside_period",
+    ):
         resolve_m303_supplier_regime_arrival(period=_Q1_2026, iva_aggregation=malformed_aggregation)
 
 
@@ -280,7 +286,10 @@ def test_prorrata_transition_arrival_requires_complete_current_year_register_cov
         ),
     )
 
-    with pytest.raises(AggregationValidationError, match="complete explicit current-year declaration"):
+    with pytest.raises(
+        AggregationValidationError,
+        match=r"aggregation\.m303_arrivals\.errors\.prorrata_register_incomplete_current_year_declaration",
+    ):
         resolve_m303_prorrata_transition_arrival(period=_Q4_2026, prorrata_register=register)
 
     assert resolve_m303_prorrata_transition_arrival(period=_Q1_2026, prorrata_register=register).transition is None
@@ -309,7 +318,10 @@ def test_prorrata_transition_arrival_requires_complete_current_year_register_cov
 
 
 def test_prorrata_transition_arrival_refuses_an_empty_final_period_register() -> None:
-    with pytest.raises(AggregationValidationError, match="complete explicit current-year declaration"):
+    with pytest.raises(
+        AggregationValidationError,
+        match=r"aggregation\.m303_arrivals\.errors\.prorrata_register_incomplete_current_year_declaration",
+    ):
         resolve_m303_prorrata_transition_arrival(period=_Q4_2026, prorrata_register=ProrrataRegister())
 
 

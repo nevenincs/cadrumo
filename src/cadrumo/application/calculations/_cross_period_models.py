@@ -10,7 +10,7 @@ from typing import Protocol, Self
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, OperatorActionAxis, Period
-from ...core.identity import CalculationRevisionId, FilingRecordId
+from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId
 from ...domain.calculations.registry import LegalRefId, RegistryModeloObservation, RevisionId, SourceRefId
 from ...domain.modelos import (
     CalculationRevisionState,
@@ -479,7 +479,7 @@ class CrossPeriodCleanStateVerdict(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     target_modelo: str = Field(min_length=1, max_length=8)
     target_filing_year: int = Field(ge=2000, le=2099)
     target_period: Period

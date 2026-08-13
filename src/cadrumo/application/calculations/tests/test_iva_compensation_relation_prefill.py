@@ -280,12 +280,16 @@ def test_relation_prefill_fifo_state_refuses_printed_number_compensation_referen
     )
     invalid_envelope = envelope.model_copy(update={"observation": observation})
 
-    with pytest.raises(RegistryValidationError, match=r"canonical casilla\.id"):
+    with pytest.raises(RegistryValidationError) as excinfo:
         resolve_iva_compensation_annual_partition_binding_values(
             snapshot.revision,
             (invalid_envelope,),
             filing_year=2026,
         )
+
+    assert str(excinfo.value) == (
+        "application.calculations.iva_compensation.errors.annual_partition_casilla_ids_noncanonical"
+    )
 
 
 def test_annual_partition_reader_refuses_a_persisted_available_generated_pair_mismatch(tmp_path: Path) -> None:

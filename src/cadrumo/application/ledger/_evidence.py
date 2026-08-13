@@ -378,7 +378,8 @@ def _resolve_media_kind(source_path: Path) -> MediaKind:
         return MediaKind.IMAGE
     accepted = ", ".join(sorted(_PDF_EXTENSIONS | _STRUCTURED_EXTENSIONS | _IMAGE_EXTENSIONS))
     raise PurchaseInvoiceEvidenceInputError(
-        f"source path {source_path!s} has unsupported extension {suffix!r}; accepted extensions are: {accepted}",
+        translated_message="errors.refused.refused_ledger_evidence_input",
+        context={"suffix": suffix, "accepted_extensions": accepted},
         precondition_verdict=ledger_no_recovery_verdict(
             LedgerPreconditionCondition.EVIDENCE_FILE_EXTENSION_SUPPORTED,
             facts={"extension_supported": False},
@@ -589,7 +590,7 @@ class PurchaseInvoiceEvidenceService:
         resolved = Path(source_path).expanduser().resolve()
         if not resolved.is_file():
             raise PurchaseInvoiceEvidenceInputError(
-                f"source path {source_path!s} does not resolve to a readable file (resolved to {resolved!s})",
+                translated_message="errors.refused.refused_ledger_evidence_input",
                 context={"source_path": str(source_path), "resolved_path": str(resolved)},
                 precondition_verdict=ledger_no_recovery_verdict(
                     LedgerPreconditionCondition.EVIDENCE_FILE_READABLE,
@@ -640,9 +641,7 @@ class PurchaseInvoiceEvidenceService:
                 )
                 if divergent:
                     raise PurchaseInvoiceEvidenceInputError(
-                        f"idempotency key {idempotency_key!r} already names evidence {keyed_id} whose "
-                        f"content differs on: {', '.join(divergent)}. Re-adding the same key with "
-                        "different content would silently drop the new values.",
+                        translated_message="errors.refused.refused_ledger_evidence_input",
                         precondition_verdict=ledger_no_recovery_verdict(
                             LedgerPreconditionCondition.EVIDENCE_IDEMPOTENCY_KEY_UNIQUE,
                             facts={"idempotency_key_matches_existing_record": False},
@@ -725,7 +724,7 @@ class PurchaseInvoiceEvidenceService:
             if record.evidence_id == evidence_id:
                 return record
         raise PurchaseInvoiceEvidenceNotFoundError(
-            f"no purchase invoice evidence record with id {evidence_id!r} in bucket {bucket_id!r}",
+            translated_message="errors.refused.refused_ledger_evidence_not_found",
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
                 facts={"evidence_record_present": False},
@@ -798,7 +797,7 @@ class PurchaseInvoiceEvidenceService:
             )
             return PurchaseInvoiceEvidenceResult(record=updated, bucket_event_ids=(event_id,))
         raise PurchaseInvoiceEvidenceNotFoundError(
-            f"no purchase invoice evidence record with id {evidence_id!r} in bucket {bucket_id!r}",
+            translated_message="errors.refused.refused_ledger_evidence_not_found",
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
                 facts={"evidence_record_present": False},
@@ -849,7 +848,7 @@ class PurchaseInvoiceEvidenceService:
                 )
                 return PurchaseInvoiceEvidenceResult(record=removed, bucket_event_ids=(event_id,))
         raise PurchaseInvoiceEvidenceNotFoundError(
-            f"no purchase invoice evidence record with id {evidence_id!r} in bucket {bucket_id!r}",
+            translated_message="errors.refused.refused_ledger_evidence_not_found",
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
                 facts={"evidence_record_present": False},

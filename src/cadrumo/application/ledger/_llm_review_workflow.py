@@ -32,7 +32,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings
-from ...core.identity import TransactionId
+from ...core.identity import BucketId, TransactionId
 from ...core.time import now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions import (
@@ -130,7 +130,7 @@ class LlmReviewRequest(BaseModel):
 
     invocation_origin: LlmReviewInvocationOrigin
     decision: LlmReviewDecision
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     transaction_id: TransactionId
     actor: str = Field(default="operator", min_length=1)
     reason: str = ""
@@ -195,7 +195,7 @@ class InvoiceDraftDeclineResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     evidence_reference: str = Field(min_length=1)
     bucket_event_id: str = Field(min_length=1)
     provenance: str = Field(min_length=1)

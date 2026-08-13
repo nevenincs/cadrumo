@@ -178,13 +178,22 @@ class InvoiceRetencionProjection(BaseModel):
         """Refuse a verdict that is neither clearly routed nor clearly excluded."""
         if (self.observation is None) != bool(self.defects):
             raise AggregationValidationError(
-                t(
-                    "an invoice retención projection carries either an observation or defects, "
-                    "never both and never neither"
-                ),
+                t("aggregation.invoice_retencion.errors.projection_outcome_ambiguous"),
+                context={
+                    "invoice_id": self.invoice_id,
+                    "has_observation": self.observation is not None,
+                    "defect_count": len(self.defects),
+                },
             )
         if len(set(self.defects)) != len(self.defects):
-            raise AggregationValidationError(t("defects must not repeat"))
+            raise AggregationValidationError(
+                t("aggregation.invoice_retencion.errors.projection_defects_repeat"),
+                context={
+                    "invoice_id": self.invoice_id,
+                    "defect_count": len(self.defects),
+                    "distinct_defect_count": len(set(self.defects)),
+                },
+            )
         return self
 
     @property
@@ -255,10 +264,14 @@ def project_received_invoice_retencion(
     # Both are non-None here: an unresolved conversion and an absent retención
     # are defects, so neither reaches this branch.
     if base is None or retencion is None:  # pragma: no cover - guarded by the defect sweep
-        raise AggregationValidationError(t("euro figures are unavailable on an invoice that passed the defect sweep"))
+        raise AggregationValidationError(
+            t("aggregation.invoice_retencion.errors.euro_figures_unavailable_after_defect_sweep"),
+            context={"invoice_id": invoice.invoice_id},
+        )
     if invoice.counterparty_tax_id is None:  # pragma: no cover - guarded by the defect sweep
         raise AggregationValidationError(
-            t("perceptor tax id is unavailable on an invoice that passed the defect sweep")
+            t("aggregation.invoice_retencion.errors.perceptor_tax_id_unavailable_after_defect_sweep"),
+            context={"invoice_id": invoice.invoice_id},
         )
     return InvoiceRetencionProjection(
         invoice_id=invoice.invoice_id,

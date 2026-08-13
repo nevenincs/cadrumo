@@ -29,6 +29,11 @@ from ...domain.iva_compensation import (
     M303CompensationAvailableDerivation,
     derive_m303_compensation_available_from_casillas,
 )
+from ._errors import (
+    CalculationPreconditionErrorMixin,
+    CalculationRefusalPrecondition,
+    calculation_no_recovery_verdict,
+)
 from ._observations_repository import (
     ObservationEnvelopePayload,
     ObservationSourceKind,
@@ -68,8 +73,15 @@ _POSITIVE_DISPOSITIONS = frozenset(
 _ZERO = Decimal("0")
 
 
-class M303CarryIngressError(CoreValidationError):
-    """Modelo 303 carry evidence was insufficient or internally contradictory."""
+class M303CarryIngressError(CalculationPreconditionErrorMixin, CoreValidationError):
+    """Modelo 303 carry evidence was insufficient or internally contradictory.
+
+    A refusal reporting two sources of the same declared amount that disagree
+    attaches a SAFETY :class:`~application.operator_actions.PreconditionVerdict`,
+    because choosing either side silently changes the compensación the taxpayer
+    carries forward. An evidence-incomplete refusal carries no verdict: the
+    operator fixes it by supplying the missing evidence.
+    """
 
 
 def normalize_m303_carry_observation_envelope(
@@ -117,13 +129,13 @@ def validate_normalized_m303_carry_observation_envelope(
     """
     if str(envelope.observation.modelo) != Modelo.M303.value:
         raise M303CarryIngressError(
-            "Modelo 303 carry history received a non-Modelo 303 observation envelope",
+            translated_message="application.calculations.m303_carry.errors.non_m303_envelope",
             context={"modelo": envelope.observation.modelo},
         )
     normalized = normalize_m303_carry_observation_envelope(envelope)
     if normalized != envelope:
         raise M303CarryIngressError(
-            "Modelo 303 carry history requires an already-normalized disposition-aware available/generated pair",
+            translated_message="application.calculations.m303_carry.errors.envelope_not_normalized",
             context={
                 "has_result_disposition": envelope.result_disposition is not None,
                 "m303_compensation_basis": envelope.m303_compensation_basis,
@@ -140,42 +152,62 @@ def _resolve_result_disposition(envelope: ObservationEnvelopePayload) -> ResultD
     if envelope.source_kind.is_official_aeat:
         if header_projection is None:
             raise M303CarryIngressError(
-                "official Modelo 303 carry evidence requires exactly one declaration_type source header",
+                translated_message=(
+                    "application.calculations.m303_carry.errors.official_declaration_type_header_required"
+                ),
                 context={"source_kind": envelope.source_kind, "header_key": M303_DECLARATION_TYPE_HEADER_KEY},
             )
         if supplied is not None and supplied.disposition is not header_projection.disposition:
             raise M303CarryIngressError(
-                "official Modelo 303 typed disposition disagrees with the declaration_type source header",
+                translated_message=(
+                    "application.calculations.m303_carry.errors.official_disposition_header_disagreement"
+                ),
                 context={
                     "typed_disposition": supplied.disposition,
                     "header_disposition": header_projection.disposition,
                 },
+                precondition_verdict=calculation_no_recovery_verdict(
+                    CalculationRefusalPrecondition.M303_CARRY_DISPOSITION_CONSISTENT,
+                    facts={
+                        "source_kind": str(envelope.source_kind),
+                        "typed_disposition": str(supplied.disposition),
+                        "header_disposition": str(header_projection.disposition),
+                    },
+                ),
             )
         return header_projection
 
     if envelope.source_kind is ObservationSourceKind.APP_FILING:
         if supplied is None:
             raise M303CarryIngressError(
-                "local Modelo 303 filing carry evidence requires the filing-boundary result disposition",
+                translated_message="application.calculations.m303_carry.errors.local_filing_disposition_required",
                 context={"source_kind": envelope.source_kind},
             )
         if supplied.provenance_kind != "app_filing":
             raise M303CarryIngressError(
-                "local Modelo 303 filing disposition must retain app_filing provenance",
+                translated_message="application.calculations.m303_carry.errors.local_filing_provenance_required",
                 context={"provenance_kind": supplied.provenance_kind},
             )
         if header_projection is not None and supplied.disposition is not header_projection.disposition:
             raise M303CarryIngressError(
-                "local Modelo 303 typed disposition disagrees with the declaration_type source header",
+                translated_message="application.calculations.m303_carry.errors.local_disposition_header_disagreement",
                 context={
                     "typed_disposition": supplied.disposition,
                     "header_disposition": header_projection.disposition,
                 },
+                precondition_verdict=calculation_no_recovery_verdict(
+                    CalculationRefusalPrecondition.M303_CARRY_DISPOSITION_CONSISTENT,
+                    facts={
+                        "source_kind": str(envelope.source_kind),
+                        "typed_disposition": str(supplied.disposition),
+                        "header_disposition": str(header_projection.disposition),
+                    },
+                ),
             )
         return supplied
 
     raise M303CarryIngressError(
-        "Modelo 303 carry normalization accepts only official AEAT or app_filing provenance",
+        translated_message="application.calculations.m303_carry.errors.unsupported_provenance",
         context={"source_kind": envelope.source_kind},
     )
 
@@ -187,7 +219,7 @@ def _header_projection(envelope: ObservationEnvelopePayload) -> ResultDispositio
         return None
     if len(facts) != 1:
         raise M303CarryIngressError(
-            "Modelo 303 carry evidence has duplicate declaration_type source headers",
+            translated_message="application.calculations.m303_carry.errors.duplicate_declaration_type_headers",
             context={"header_count": len(facts), "header_key": M303_DECLARATION_TYPE_HEADER_KEY},
         )
     fact = facts[0]
@@ -195,12 +227,12 @@ def _header_projection(envelope: ObservationEnvelopePayload) -> ResultDispositio
         disposition = ResultDisposition(fact.value)
     except ValueError as exc:
         raise M303CarryIngressError(
-            "Modelo 303 declaration_type source header has an invalid result-disposition code",
+            translated_message="application.calculations.m303_carry.errors.declaration_type_code_invalid",
             context={"value": fact.value, "source_locator": fact.source_locator},
         ) from exc
     if disposition not in _M303_DISPOSITIONS:
         raise M303CarryIngressError(
-            "Modelo 303 declaration_type source header uses a code not admitted by the Modelo 303 diseño",
+            translated_message="application.calculations.m303_carry.errors.declaration_type_code_not_admitted",
             context={"value": fact.value, "source_locator": fact.source_locator},
         )
     return ResultDispositionProjection(
@@ -218,7 +250,7 @@ def _assert_result_sign_compatible(
     resultado = envelope.observation.casilla_values.get(M303_COMPENSATION_RESULTADO_CASILLA)
     if resultado is None:
         raise M303CarryIngressError(
-            "Modelo 303 carry normalization requires the filed resultado casilla",
+            translated_message="application.calculations.m303_carry.errors.resultado_casilla_required",
             context={"casilla_id": M303_COMPENSATION_RESULTADO_CASILLA},
         )
     compatible = (
@@ -228,8 +260,16 @@ def _assert_result_sign_compatible(
     )
     if not compatible:
         raise M303CarryIngressError(
-            "Modelo 303 declaration disposition is incompatible with the filed resultado sign",
+            translated_message="application.calculations.m303_carry.errors.disposition_resultado_sign_incompatible",
             context={"disposition": disposition, "resultado": str(resultado)},
+            precondition_verdict=calculation_no_recovery_verdict(
+                CalculationRefusalPrecondition.M303_CARRY_DISPOSITION_CONSISTENT,
+                facts={
+                    "disposition": str(disposition),
+                    "resultado": str(resultado),
+                    "casilla_id": str(M303_COMPENSATION_RESULTADO_CASILLA),
+                },
+            ),
         )
 
 
@@ -246,7 +286,10 @@ def _normalize_carry_observation(
     from ...domain.calculations.registry import RegistryModeloObservation
 
     if not isinstance(observation, RegistryModeloObservation):
-        raise M303CarryIngressError("Modelo 303 carry ingress received an invalid registry observation")
+        raise M303CarryIngressError(
+            translated_message="application.calculations.m303_carry.errors.invalid_registry_observation",
+            context={"observed_type": type(observation).__name__},
+        )
 
     values = dict(observation.casilla_values)
     values.setdefault(M303_COMPENSATION_POSTERIOR_CASILLA, _ZERO)
@@ -262,7 +305,7 @@ def _normalize_carry_observation(
     )
     if derivation is None:
         raise M303CarryIngressError(
-            "Modelo 303 carry normalization has incomplete supported operands",
+            translated_message="application.calculations.m303_carry.errors.incomplete_supported_operands",
             context={"casilla_ids": sorted(str(casilla_id) for casilla_id in values)},
         )
 
@@ -323,12 +366,20 @@ def _require_supplied_pair_matches_derivation(
     """
     if current_available is not None and current_available != derivation.available and not available_was_calculated:
         raise M303CarryIngressError(
-            "Modelo 303 supplied available compensation contradicts the disposition-aware derivation",
+            translated_message=("application.calculations.m303_carry.errors.supplied_available_contradicts_derivation"),
             context={
                 "supplied_available": str(current_available),
                 "derived_available": str(derivation.available),
                 "basis": derivation.basis,
             },
+            precondition_verdict=calculation_no_recovery_verdict(
+                CalculationRefusalPrecondition.M303_CARRY_DERIVATION_CONSISTENT,
+                facts={
+                    "supplied_available": str(current_available),
+                    "derived_available": str(derivation.available),
+                    "basis": str(derivation.basis),
+                },
+            ),
         )
     if (
         current_available is not None
@@ -337,13 +388,22 @@ def _require_supplied_pair_matches_derivation(
         and not available_was_calculated
     ):
         raise M303CarryIngressError(
-            "Modelo 303 supplied available/generated pair contradicts the disposition-aware derivation",
+            translated_message="application.calculations.m303_carry.errors.supplied_pair_contradicts_derivation",
             context={
                 "supplied_available": str(current_available),
                 "supplied_generated": str(current_generated),
                 "derived_generated": str(derivation.generated),
                 "basis": derivation.basis,
             },
+            precondition_verdict=calculation_no_recovery_verdict(
+                CalculationRefusalPrecondition.M303_CARRY_DERIVATION_CONSISTENT,
+                facts={
+                    "supplied_available": str(current_available),
+                    "supplied_generated": str(current_generated),
+                    "derived_generated": str(derivation.generated),
+                    "basis": str(derivation.basis),
+                },
+            ),
         )
 
 
@@ -363,16 +423,28 @@ def _resolve_available_compensation_formula_id(
     )
     if formula is None:
         raise M303CarryIngressError(
-            "Modelo 303 registry has no formula for the generated-basis available compensation projection",
+            translated_message="application.calculations.m303_carry.errors.available_compensation_formula_missing",
+            context={
+                "revision_id": revision.id,
+                "target_casilla_id": str(M303_COMPENSATION_AVAILABLE_CASILLA),
+            },
         )
     expected_operands = expression_casilla_refs(formula.expression)
     if derivation.operand_refs != expected_operands:
         raise M303CarryIngressError(
-            "Modelo 303 generated-basis carry operands disagree with the registry formula",
+            translated_message="application.calculations.m303_carry.errors.carry_operands_disagree_with_formula",
             context={
                 "derivation_operands": derivation.operand_refs,
                 "registry_operands": expected_operands,
             },
+            precondition_verdict=calculation_no_recovery_verdict(
+                CalculationRefusalPrecondition.M303_CARRY_MATCHES_REGISTRY_FORMULA,
+                facts={
+                    "formula_id": str(formula.id),
+                    "derivation_operands": ",".join(str(item) for item in derivation.operand_refs),
+                    "registry_operands": ",".join(str(item) for item in expected_operands),
+                },
+            ),
         )
     return formula.id
 

@@ -53,7 +53,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from ...adapters.persistence.storage.master_key import (
     BucketSession,
@@ -78,6 +78,7 @@ from ...adapters.persistence.storage.master_key import (
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BucketPointer, ProfileSessionRefusalReason, resolve_active_bucket_id
 from ...core.config import SecretStoreBackend, load_settings
+from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...core.paths import effective_storage_root
 from ...core.time import now as _now
@@ -136,7 +137,7 @@ class ProfileLoginOutcome(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     label: str
     backend_kind: SecretStoreBackend
     authenticated_at: datetime
@@ -144,7 +145,7 @@ class ProfileLoginOutcome(BaseModel):
     absolute_deadline: datetime
     session_persisted: bool
     already_authenticated: bool
-    closed_previous_bucket_id: str | None = None
+    closed_previous_bucket_id: BucketId | None = None
 
 
 def _backend_kind(provider: MasterKeyProvider) -> SecretStoreBackend:

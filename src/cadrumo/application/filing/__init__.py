@@ -129,9 +129,6 @@ from ...domain.calculations.registry import (
     expression_binding_refs as _expression_binding_refs,
 )
 from ...domain.calculations.registry import (
-    format_noncanonical_casilla_reference as _format_noncanonical_casilla_reference,
-)
-from ...domain.calculations.registry import (
     registry_scalar_value_type as _registry_scalar_value_type,
 )
 from ...domain.calculations.registry import (
@@ -311,8 +308,13 @@ def build_draft(
     )
     if collection.schema_version != expected_schema_version:
         raise _ModeloBuilderError(
-            f"schema provider version {collection.schema_version!r} does not match registry snapshot "
-            f"{snapshot.revision.id!r}",
+            translated_message="application.filing.build_draft.errors.schema_version_snapshot_mismatch",
+            context={
+                "modelo": snapshot.modelo.id,
+                "provider_schema_version": collection.schema_version,
+                "expected_schema_version": expected_schema_version,
+                "revision_id": snapshot.revision.id,
+            },
         )
     casilla_ids = set(_declared_casilla_ids(snapshot.revision))
     text_casilla_data_types = _text_casilla_data_types(snapshot)
@@ -360,7 +362,14 @@ def build_draft(
             m303_annual_orden=None,
         )
     except _RegistryValidationError as exc:
-        raise _ModeloBuilderError(f"registry calculation failed: {exc}") from exc
+        raise _ModeloBuilderError(
+            translated_message="application.filing.build_draft.errors.registry_calculation_failed",
+            context={
+                "modelo": snapshot.modelo.id,
+                "revision_id": snapshot.revision.id,
+                "registry_error_type": type(exc).__name__,
+            },
+        ) from exc
     entries = {entry.target_casilla_id: entry for entry in result.entries}
     # A computed casilla's formula_trace_casilla_ids documents the static casilla inputs its
     # formula declares (the validator checks the trace against
@@ -475,7 +484,14 @@ def build_draft(
     validator = _ModeloValidator(schema_provider=schema_provider, deadline_checker=deadline_checker)
     findings = validator.validate(draft)
     if fail_on_warning and findings:
-        raise _ModeloBuilderError("draft validation produced findings under fail_on_warning")
+        raise _ModeloBuilderError(
+            translated_message="application.filing.build_draft.errors.findings_under_fail_on_warning",
+            context={
+                "modelo": draft.modelo,
+                "finding_count": len(findings),
+                "codes": tuple(finding.code for finding in findings),
+            },
+        )
     return _apply_validation(draft, findings)
 
 
@@ -507,14 +523,21 @@ def _load_registry_snapshot(*, modelo: str, period: _Period) -> _RegistrySnapsho
         )
     except _RegistrySnapshotError as exc:
         raise _ModeloBuilderError(
-            f"registry snapshot is not available for modelo={modelo} period={period}: {exc}",
+            translated_message="application.filing.build_draft.errors.registry_snapshot_unavailable",
+            context={
+                "modelo": modelo,
+                "filing_year": filing_year,
+                "period": registry_period,
+                "registry_error_type": type(exc).__name__,
+            },
         ) from exc
 
 
 def _registry_period(period: object) -> tuple[int, str]:
     if not isinstance(period, _Period):
         raise _ModeloBuilderError(
-            "filing period must be an cadrumo.core.Period built from a filing year and bare registry token",
+            translated_message="application.filing.build_draft.errors.period_type_invalid",
+            context={"observed_type": type(period).__name__},
         )
     return period.filing_year, period.registry_token
 
@@ -586,36 +609,46 @@ def _validate_filing_input_keys(
     non_string = tuple(repr(key) for key in inputs if type(key) is not str)
     if non_string:
         raise _ModeloBuilderError(
-            "filing input keys must be string registry ids; "
-            f"non-string keys are not accepted: {', '.join(sorted(non_string))}",
+            translated_message="application.filing.build_draft.errors.input_key_not_string",
+            context={"offending_count": len(non_string), "input_keys": tuple(sorted(non_string))},
         )
 
     padded = tuple(key for key in inputs if key != key.strip())
     if padded:
         raise _ModeloBuilderError(
-            "filing input keys must be exact registry ids without leading or trailing whitespace: "
-            f"{', '.join(repr(key) for key in sorted(padded))}",
+            translated_message="application.filing.build_draft.errors.input_key_padded",
+            context={"offending_count": len(padded), "input_keys": tuple(sorted(padded))},
         )
 
     noncanonical_tokens = _casilla_noncanonical_reference_tokens(snapshot.revision)
     supplied_noncanonical = tuple(key for key in inputs if key in noncanonical_tokens)
     if supplied_noncanonical:
-        details = "; ".join(
-            _format_noncanonical_casilla_reference(key, noncanonical_tokens[key])
-            for key in sorted(supplied_noncanonical)
-        )
         raise _ModeloBuilderError(
-            "filing input keys must use canonical casilla.id values; "
-            f"non-canonical casilla reference tokens are not accepted: {details}",
+            translated_message="application.filing.build_draft.errors.input_key_noncanonical_casilla",
+            context={
+                "modelo": snapshot.modelo.id,
+                "offending_count": len(supplied_noncanonical),
+                "input_keys": tuple(sorted(supplied_noncanonical)),
+                "noncanonical_references": tuple(
+                    {"token": key, "canonical_casilla_ids": tuple(noncanonical_tokens[key])}
+                    for key in sorted(supplied_noncanonical)
+                ),
+            },
         )
 
     unknown = tuple(key for key in inputs if key not in accepted_ids)
     if unknown:
         raise _ModeloBuilderError(
-            "filing input keys must be declared casilla.id, binding, or relation ids for "
-            f"{_registry_schema_version(modelo=snapshot.modelo.id, revision_id=snapshot.revision.id)}; "
-            "unknown keys: "
-            f"{', '.join(repr(key) for key in sorted(unknown))}",
+            translated_message="application.filing.build_draft.errors.input_key_unknown",
+            context={
+                "modelo": snapshot.modelo.id,
+                "schema_version": _registry_schema_version(
+                    modelo=snapshot.modelo.id,
+                    revision_id=snapshot.revision.id,
+                ),
+                "offending_count": len(unknown),
+                "input_keys": tuple(sorted(unknown)),
+            },
         )
 
 
@@ -633,9 +666,15 @@ def _date_inputs_for_ids(inputs: _ModeloInputs, input_ids: set[_BindingId]) -> d
             try:
                 parsed = _parse_iso8601_date(value)
             except ValueError as exc:
-                raise _ModeloBuilderError(f"date binding {binding_id!r} has a non-ISO date value {value!r}") from exc
+                raise _ModeloBuilderError(
+                    translated_message="application.filing.build_draft.errors.date_binding_not_iso",
+                    context={"binding_id": binding_id, "supplied_value": value},
+                ) from exc
             if parsed is None:
-                raise _ModeloBuilderError(f"date binding {binding_id!r} has a non-ISO date value {value!r}")
+                raise _ModeloBuilderError(
+                    translated_message="application.filing.build_draft.errors.date_binding_not_iso",
+                    context={"binding_id": binding_id, "supplied_value": value},
+                )
             date_inputs[binding_id] = parsed
     return date_inputs
 
@@ -660,11 +699,25 @@ def _text_inputs_for_ids(inputs: _ModeloInputs, input_data_types: Mapping[_Casil
         if value is None:
             continue
         if not isinstance(value, str):
-            raise _ModeloBuilderError(f"text casilla input {input_id!r} must be a string")
+            raise _ModeloBuilderError(
+                translated_message="application.filing.build_draft.errors.text_casilla_not_string",
+                context={
+                    "casilla_id": input_id,
+                    "data_type": data_type,
+                    "observed_type": type(value).__name__,
+                },
+            )
         try:
             text_inputs[input_id] = _validate_registry_text_scalar(data_type, value)
         except _RegistryValidationError as exc:
-            raise _ModeloBuilderError(f"text casilla input {input_id!r} is invalid: {exc}") from exc
+            raise _ModeloBuilderError(
+                translated_message="application.filing.build_draft.errors.text_casilla_invalid",
+                context={
+                    "casilla_id": input_id,
+                    "data_type": data_type,
+                    "registry_error_type": type(exc).__name__,
+                },
+            ) from exc
     return text_inputs
 
 
@@ -697,14 +750,23 @@ def _binding_provenance(
     source = getattr(binding, "source", None)
     if not isinstance(source, _BindingSourceKind):
         raise _ModeloBuilderError(
-            f"registry binding {getattr(binding, 'id', binding)!r} carries a non-typed "
-            f"source {source!r}; expected a BindingSourceKind member",
+            translated_message="application.filing.build_draft.errors.binding_source_not_typed",
+            context={
+                "binding_id": str(getattr(binding, "id", binding)),
+                "observed_source_type": type(source).__name__,
+            },
         )
     legal_refs = tuple(getattr(binding, "legal_refs", ()) or ())
     source_refs = tuple(getattr(binding, "source_refs", ()) or ())
     if not legal_refs or not source_refs:
         raise _ModeloBuilderError(
-            f"registry binding {getattr(binding, 'id', binding)!r} requires legal_refs/source_refs provenance",
+            translated_message="application.filing.build_draft.errors.binding_provenance_missing",
+            context={
+                "binding_id": str(getattr(binding, "id", binding)),
+                "source": source.value,
+                "legal_ref_count": len(legal_refs),
+                "source_ref_count": len(source_refs),
+            },
         )
     return source, legal_refs, source_refs
 
@@ -769,20 +831,32 @@ def _filing_binding_values(
     return values
 
 
+def _refuse_binding_row_index(binding_id: _BindingId, row_key: object) -> _ModeloBuilderError:
+    """Return the refusal for a row key that is not a positive integer."""
+    return _ModeloBuilderError(
+        translated_message="application.filing.build_draft.errors.binding_row_key_not_positive_integer",
+        context={
+            "binding_id": binding_id,
+            "observed_type": type(row_key).__name__,
+            "minimum_row_key": 1,
+        },
+    )
+
+
 def _binding_row_index(binding_id: _BindingId, row_key: object) -> int:
     if isinstance(row_key, bool):
-        raise _ModeloBuilderError(f"binding input {binding_id!r} row key must be a positive integer")
+        raise _refuse_binding_row_index(binding_id, row_key)
     if isinstance(row_key, int):
         index = row_key
     elif isinstance(row_key, str):
         try:
             index = int(row_key)
         except ValueError as exc:
-            raise _ModeloBuilderError(f"binding input {binding_id!r} row key must be a positive integer") from exc
+            raise _refuse_binding_row_index(binding_id, row_key) from exc
     else:
-        raise _ModeloBuilderError(f"binding input {binding_id!r} row key must be a positive integer")
+        raise _refuse_binding_row_index(binding_id, row_key)
     if index < 1:
-        raise _ModeloBuilderError(f"binding input {binding_id!r} row key must be a positive integer")
+        raise _refuse_binding_row_index(binding_id, row_key)
     return index
 
 
@@ -834,7 +908,10 @@ def _binding_input(binding_id: _BindingId, value: object, binding: object) -> _M
     try:
         family = _registry_scalar_value_type(data_type)
     except _RegistryValidationError as exc:
-        raise _ModeloBuilderError(f"binding input {binding_id!r} declares unsupported data type {data_type!r}") from exc
+        raise _ModeloBuilderError(
+            translated_message="application.filing.build_draft.errors.binding_data_type_unsupported",
+            context={"binding_id": binding_id, "data_type": data_type},
+        ) from exc
     if family == "str":
         # Coerce first so the generic ``text`` channel keeps accepting a
         # non-string scalar (an integer ``rectified_year``); the canonical
@@ -843,33 +920,51 @@ def _binding_input(binding_id: _BindingId, value: object, binding: object) -> _M
         try:
             return _validate_registry_text_scalar(data_type, str(value))
         except _RegistryValidationError as exc:
-            raise _ModeloBuilderError(f"binding input {binding_id!r} is invalid: {exc}") from exc
+            raise _ModeloBuilderError(
+                translated_message="application.filing.build_draft.errors.binding_text_value_invalid",
+                context={
+                    "binding_id": binding_id,
+                    "data_type": data_type,
+                    "registry_error_type": type(exc).__name__,
+                },
+            ) from exc
     if family == "int":
         decimal_value = _decimal_input(binding_id, value)
         if decimal_value != decimal_value.to_integral_value():
-            raise _ModeloBuilderError(f"binding input {binding_id!r} must be an integer value")
+            raise _ModeloBuilderError(
+                translated_message="application.filing.build_draft.errors.binding_value_not_integer",
+                context={"binding_id": binding_id, "data_type": data_type},
+            )
         return int(decimal_value)
     if family == "bool":
         return _boolean_input(binding_id, value)
     if family == "decimal":
         return _decimal_input(binding_id, value)
     raise _ModeloBuilderError(
-        f"binding input {binding_id!r} declares data type {data_type!r}, whose {family!r} family "
-        "has no filing input channel",
+        translated_message="application.filing.build_draft.errors.binding_family_has_no_input_channel",
+        context={"binding_id": binding_id, "data_type": data_type, "value_family": family},
+    )
+
+
+def _refuse_decimal_input(input_id: str, value: object) -> _ModeloBuilderError:
+    """Return the refusal for an input that cannot carry a Decimal amount."""
+    return _ModeloBuilderError(
+        translated_message="application.filing.build_draft.errors.input_not_decimal",
+        context={"input_id": input_id, "observed_type": type(value).__name__},
     )
 
 
 def _decimal_input(input_id: str, value: object) -> Decimal:
     if isinstance(value, bool):
-        raise _ModeloBuilderError(f"input {input_id!r} must be a Decimal value")
+        raise _refuse_decimal_input(input_id, value)
     if isinstance(value, Decimal):
         return value
     if isinstance(value, int | str):
         try:
             return Decimal(value)
         except (InvalidOperation, ValueError, TypeError) as exc:
-            raise _ModeloBuilderError(f"input {input_id!r} must be a Decimal value") from exc
-    raise _ModeloBuilderError(f"input {input_id!r} must be a Decimal value")
+            raise _refuse_decimal_input(input_id, value) from exc
+    raise _refuse_decimal_input(input_id, value)
 
 
 def _boolean_input(input_id: str, value: object) -> bool:
@@ -888,7 +983,10 @@ def _boolean_input(input_id: str, value: object) -> bool:
         parsed = _parse_bool(value)
         if parsed is not None:
             return parsed
-    raise _ModeloBuilderError(f"binding input {input_id!r} must be a boolean value")
+    raise _ModeloBuilderError(
+        translated_message="application.filing.build_draft.errors.binding_value_not_boolean",
+        context={"binding_id": input_id, "observed_type": type(value).__name__},
+    )
 
 
 def validate_draft(
@@ -964,7 +1062,13 @@ def iter_findings(
     try:
         threshold = _SEVERITY_RANK[_BaseSeverity[severity_at_least]]
     except KeyError as exc:
-        raise ModeloCalculateError(f"Unknown severity {severity_at_least!r}; expected INFO, WARNING, or ERROR") from exc
+        raise ModeloCalculateError(
+            translated_message="application.filing.errors.unknown_severity_threshold",
+            context={
+                "severity_at_least": severity_at_least,
+                "accepted_severities": tuple(member.name for member in _BaseSeverity),
+            },
+        ) from exc
     for finding in draft.findings:
         if _SEVERITY_RANK[finding.severity] >= threshold:
             yield finding

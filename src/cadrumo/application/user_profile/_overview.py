@@ -45,6 +45,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core import ClaveMovilRoute
 from ...core.classification import SensitivityClass
 from ...core.i18n import tr
+from ...core.identity import ProfileId
 from ...core.json_contract import Notice
 from ...core.redaction import ALWAYS_REDACT_KEY_TERMS
 
@@ -305,7 +306,7 @@ class ProfileOverview(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    profile_id: str
+    profile_id: ProfileId
     label: str
     status: UserProfileStatus
     sections: tuple[ProfileSectionView, ...]

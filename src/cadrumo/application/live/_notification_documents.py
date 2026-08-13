@@ -170,6 +170,34 @@ class NotificationDocumentRecord(BaseModel):
         return str(self.certificado_id)
 
 
+class NotificationDocumentCustody(BaseModel):
+    """One custody attempt's outcome: the record, and whether it was already held.
+
+    The record alone cannot answer whether the attempt stored anything. A retry
+    against a certificado already in custody returns the row that was there
+    before, byte-identical to a first store's return, so a caller holding only
+    the record has no way to tell an ingest from a no-op — and the CLI contract
+    requires a guarded no-op to say so, both in its result shape and on the
+    notices channel.
+
+    Carrying the answer on the return value rather than re-deriving it at the
+    caller is what keeps ONE authority for the decision: the service compares
+    the caller-supplied fields and decides, and every surface reads that
+    decision instead of asking custody a second question of its own.
+
+    Attributes:
+        record: The persisted record — the row already in custody when this
+            attempt was a no-op, the newly written one otherwise.
+        already_in_custody: Whether the attempt stored nothing because the
+            certificado was already held with agreeing content.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    record: NotificationDocumentRecord
+    already_in_custody: bool
+
+
 def notification_document_object_key(bucket_id: str, certificado_id: str) -> str:
     """Build the secure-object key for one bucket's notification-document record."""
     trimmed_bucket = bucket_id.strip()
@@ -288,7 +316,7 @@ class NotificationDocumentService:
         bucket_id: str,
         row: RemoteNotification,
         document: NotificationDocument,
-    ) -> NotificationDocumentRecord:
+    ) -> NotificationDocumentCustody:
         """Take custody of already-fetched document bytes and record the binding.
 
         Split from :meth:`pull_document` so the custody boundary is exercisable
@@ -312,8 +340,9 @@ class NotificationDocumentService:
             document: The fetched bytes, held in memory.
 
         Returns:
-            The persisted :class:`NotificationDocumentRecord`, which is the
-            record already in custody when this call was a no-op.
+            A :class:`NotificationDocumentCustody` carrying the persisted
+            record — the one already in custody when this call was a no-op —
+            and the flag saying which of the two happened.
 
         Raises:
             SedeNavigationError: When ``row`` is not a notification AEAT has
@@ -363,7 +392,7 @@ class NotificationDocumentService:
                 "notification document already in custody, storing nothing: certificado=%s",
                 row.certificado_id,
             )
-            return existing
+            return NotificationDocumentCustody(record=existing, already_in_custody=True)
 
         attachment = add_attachment(
             resolve_attachment_store(self._attachment_store),
@@ -403,7 +432,7 @@ class NotificationDocumentService:
             len(document.pdf_bytes),
             sancion is not None,
         )
-        return record
+        return NotificationDocumentCustody(record=record, already_in_custody=False)
 
     async def pull_document(
         self,
@@ -411,7 +440,7 @@ class NotificationDocumentService:
         bucket_id: str,
         session: AeatSession,
         row: RemoteNotification,
-    ) -> NotificationDocumentRecord:
+    ) -> NotificationDocumentCustody:
         """Fetch one already-read notification's document and take custody of it.
 
         The guard runs twice on this path — here, and again inside
@@ -427,7 +456,10 @@ class NotificationDocumentService:
                 read.
 
         Returns:
-            The persisted :class:`NotificationDocumentRecord`.
+            The :class:`NotificationDocumentCustody` outcome. A second pull of
+            the same certificado re-fetches the served bytes — AEAT's own
+            record of a redisplay is not this application's to suppress — but
+            stores nothing and reports ``already_in_custody``.
 
         Raises:
             SedeNavigationError: When ``row`` is anything other than already
@@ -493,6 +525,7 @@ class NotificationDocumentService:
 
 
 __all__ = [
+    "NotificationDocumentCustody",
     "NotificationDocumentNotFoundError",
     "NotificationDocumentRecord",
     "NotificationDocumentService",

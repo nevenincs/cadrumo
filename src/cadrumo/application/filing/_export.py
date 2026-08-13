@@ -591,11 +591,25 @@ def export_draft(
     subview = provider.get_subview(draft.modelo)
     registry_snapshot = provider.get_snapshot(draft.modelo)
     if draft.schema_version != subview.schema_version:
-        raise FilingExportError("declaration export requires a draft built from the active registry snapshot")
+        raise FilingExportError(
+            translated_message="application.filing.export.errors.draft_snapshot_stale",
+            context={
+                "modelo": draft.modelo,
+                "draft_schema_version": draft.schema_version,
+                "active_schema_version": subview.schema_version,
+            },
+        )
     if draft.status is not ModeloDraftStatus.APROBADO:
-        raise FilingExportError("declaration export requires an approved draft")
+        raise FilingExportError(
+            translated_message="application.filing.export.errors.draft_not_approved",
+            context={
+                "modelo": draft.modelo,
+                "draft_status": draft.status.value,
+                "required_status": ModeloDraftStatus.APROBADO.value,
+            },
+        )
     if not subview.export_layout_ids:
-        raise FilingExportError(_missing_export_layout_message(draft.modelo))
+        raise _export_layout_not_renderable_error(draft.modelo, None)
     layout = sorted(registry_snapshot.revision.export_layouts, key=lambda item: item.id)[0]
     if draft.modelo == "303":
         validate_m303_export_applicability(
@@ -619,7 +633,14 @@ def export_draft(
         registry_snapshot=registry_snapshot,
     )
     if not payload:
-        raise FilingExportError(f"modelo {draft.modelo!r} export layout {layout.id!r} rendered an empty payload")
+        raise FilingExportError(
+            translated_message="application.filing.export.errors.rendered_payload_empty",
+            context={
+                "modelo": draft.modelo,
+                "layout_id": layout.id,
+                "layout_format": layout.format.value,
+            },
+        )
     casilla_provenance = _exported_casilla_provenance(layout, draft=draft, schema_provider=provider)
     # Unconditional, unlike the manifest gate below: a layout without a
     # completeness manifest still must not write a declaration missing its
@@ -704,56 +725,107 @@ def assert_export_artifact_matches_receipt(
         digest, byte_size = hash_file(artifact_path)
     except OSError as exc:
         raise FilingExportError(
-            f"declaration export receipt names an unreadable artefact {str(artifact_path)!r}: {exc}",
+            translated_message="application.filing.export.errors.receipt_artefact_unreadable",
+            context={
+                "artifact_path": str(artifact_path),
+                "os_error_type": type(exc).__name__,
+            },
         ) from exc
     if byte_size != receipt.byte_size:
         raise FilingExportError(
-            f"declaration export receipt declares byte size {receipt.byte_size} "
-            f"but artefact {str(artifact_path)!r} holds {byte_size} bytes",
+            translated_message="application.filing.export.errors.receipt_byte_size_mismatch",
+            context={
+                "artifact_path": str(artifact_path),
+                "declared_byte_size": receipt.byte_size,
+                "observed_byte_size": byte_size,
+            },
         )
     if digest != receipt.file_sha256:
         raise FilingExportError(
-            f"declaration export receipt declares sha256 {receipt.file_sha256} "
-            f"but artefact {str(artifact_path)!r} hashes to {digest}",
+            translated_message="application.filing.export.errors.receipt_digest_mismatch",
+            context={
+                "artifact_path": str(artifact_path),
+                "declared_sha256": receipt.file_sha256,
+                "observed_sha256": digest,
+            },
         )
+
+
+class ExportLayoutRenderabilityReason(StrEnum):
+    """Closed machine reasons a registry layout cannot render declaration bytes.
+
+    This enum is the single decision authority for export renderability. The
+    prose projection below exists only to serve consumers outside this package
+    that still read a rendered sentence; it maps this vocabulary and never
+    decides anything itself.
+    """
+
+    NO_COMPLETE_EXPORT_LAYOUTS = "no_complete_export_layouts"
+    XML_DICTIONARY_SOURCE_ABSENT = "xml_dictionary_source_absent"
+    UNSUPPORTED_LAYOUT_FORMAT = "unsupported_layout_format"
+    NO_EXPORT_RECORDS = "no_export_records"
+
+
+def export_layout_renderability_reason_code(
+    layout: ExportLayoutDefinition | None,
+) -> ExportLayoutRenderabilityReason | None:
+    """Return the closed reason ``layout`` cannot produce local declaration bytes."""
+    if layout is None:
+        return ExportLayoutRenderabilityReason.NO_COMPLETE_EXPORT_LAYOUTS
+    if layout.format is ExportLayoutFormat.XML_DICTIONARY:
+        if layout.dictionary_source_ref is None:
+            return ExportLayoutRenderabilityReason.XML_DICTIONARY_SOURCE_ABSENT
+        return None
+    if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
+        return ExportLayoutRenderabilityReason.UNSUPPORTED_LAYOUT_FORMAT
+    if not layout.records:
+        return ExportLayoutRenderabilityReason.NO_EXPORT_RECORDS
+    return None
 
 
 def export_layout_renderability_reason(
     modelo: str,
     layout: ExportLayoutDefinition | None,
 ) -> str | None:
-    """Return why ``layout`` cannot currently produce local declaration bytes."""
-    if layout is None:
-        return "the registry snapshot has no complete export_layouts definition"
-    if layout.format is ExportLayoutFormat.XML_DICTIONARY:
-        if layout.dictionary_source_ref is None:
-            return f"XML dictionary export layout {layout.id!r} declares no dictionary source"
+    """Return why ``layout`` cannot currently produce local declaration bytes.
+
+    Retained as a rendered projection of
+    :func:`export_layout_renderability_reason_code` for consumers outside this
+    package that place the sentence in an operator payload. Those consumers are
+    the remaining reason this projection exists.
+    """
+    code = export_layout_renderability_reason_code(layout)
+    if code is None:
         return None
-    if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
-        return f"export layout {layout.id!r} uses unsupported format {layout.format!r}"
-    if not layout.records:
-        return f"export layout {layout.id!r} declares no export records"
-    return None
+    if code is ExportLayoutRenderabilityReason.NO_COMPLETE_EXPORT_LAYOUTS:
+        return "the registry snapshot has no complete export_layouts definition"
+    if code is ExportLayoutRenderabilityReason.XML_DICTIONARY_SOURCE_ABSENT:
+        return f"XML dictionary export layout {layout.id!r} declares no dictionary source"  # type: ignore[union-attr]
+    if code is ExportLayoutRenderabilityReason.UNSUPPORTED_LAYOUT_FORMAT:
+        return f"export layout {layout.id!r} uses unsupported format {layout.format!r}"  # type: ignore[union-attr]
+    return f"export layout {layout.id!r} declares no export records"  # type: ignore[union-attr]
+
+
+def _export_layout_not_renderable_error(
+    modelo: str,
+    layout: ExportLayoutDefinition | None,
+) -> FilingExportError:
+    """Return the typed refusal for a layout that cannot render declaration bytes."""
+    code = export_layout_renderability_reason_code(layout)
+    assert code is not None
+    context: dict[str, object] = {"modelo": modelo, "reason_code": code.value}
+    if layout is not None:
+        context["layout_id"] = layout.id
+        context["layout_format"] = layout.format.value
+    return FilingExportError(
+        translated_message="application.filing.export.errors.layout_not_renderable",
+        context=context,
+    )
 
 
 def _raise_if_export_layout_not_renderable(modelo: str, layout: ExportLayoutDefinition) -> None:
-    reason = export_layout_renderability_reason(modelo, layout)
-    if reason is not None:
-        raise FilingExportError(_export_layout_not_renderable_message(modelo, reason))
-
-
-def _missing_export_layout_message(modelo: str) -> str:
-    reason = export_layout_renderability_reason(modelo, None)
-    assert reason is not None
-    return _export_layout_not_renderable_message(modelo, reason)
-
-
-def _export_layout_not_renderable_message(modelo: str, reason: str) -> str:
-    return (
-        f"modelo {modelo!r} local declaration export is unsupported: {reason}. "
-        "Calculation, verification, and local filing surfaces may exist for this modelo, "
-        "but this command cannot produce an AEAT-compatible export file and does not certify legal correctness."
-    )
+    if export_layout_renderability_reason_code(layout) is not None:
+        raise _export_layout_not_renderable_error(modelo, layout)
 
 
 def verify_export(
@@ -785,7 +857,14 @@ def verify_export(
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
     if draft.schema_version != subview.schema_version:
-        raise FilingExportError("declaration verify requires a draft built from the active registry snapshot")
+        raise FilingExportError(
+            translated_message="application.filing.export.errors.verify_draft_snapshot_stale",
+            context={
+                "modelo": draft.modelo,
+                "draft_schema_version": draft.schema_version,
+                "active_schema_version": subview.schema_version,
+            },
+        )
     if not subview.export_layout_ids:
         try:
             digest = sha256_file(file_path) if file_path.exists() else None
@@ -912,15 +991,14 @@ def _verify_written_export(
     )
     if verification.verdict is DeclaracionVerifyVerdict.MATCH:
         return
-    details: list[str] = []
-    if verification.mismatched_casilla_ids:
-        details.append(f"casillas={','.join(verification.mismatched_casilla_ids)}")
-    if verification.mismatched_root_fields:
-        details.append(f"root_fields={','.join(verification.mismatched_root_fields)}")
-    detail_suffix = f" ({'; '.join(details)})" if details else ""
     raise FilingExportError(
-        "declaration export post-write verification refused "
-        f"{verification.verdict.value} artefact {str(file_path)!r}{detail_suffix}",
+        translated_message="application.filing.export.errors.post_write_verification_refused",
+        context={
+            "artifact_path": str(file_path),
+            "verdict": verification.verdict.value,
+            "mismatched_casilla_ids": tuple(verification.mismatched_casilla_ids),
+            "mismatched_root_fields": tuple(verification.mismatched_root_fields),
+        },
     )
 
 

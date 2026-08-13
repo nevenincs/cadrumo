@@ -24,21 +24,21 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.live import (
+from ....core import NoRecoveryOutcome
+from .. import (
     Borrador100SnapshotRepository,
     LiveApplicationError,
     LiveApplicationInputError,
 )
-from cadrumo.application.live._borrador_100 import BorradorSnapshotNotFoundError
-from cadrumo.application.live._errors import (
+from .._borrador_100 import BorradorSnapshotNotFoundError
+from .._errors import (
     LiveReadPrecondition,
     live_read_no_recovery_verdict,
 )
-from cadrumo.application.live._snapshot_base import (
+from .._snapshot_base import (
     SnapshotLifecycleState,
     enforce_snapshot_state_invariants,
 )
-from cadrumo.core import NoRecoveryOutcome
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -174,7 +174,7 @@ def test_snapshot_state_invariant_refusal_renders_as_its_key() -> None:
 
 
 def test_borrador_object_key_refusal_renders_as_its_key() -> None:
-    from cadrumo.application.live._borrador_100 import borrador_100_snapshot_object_key
+    from .._borrador_100 import borrador_100_snapshot_object_key
 
     with pytest.raises(LiveApplicationInputError) as excinfo:
         borrador_100_snapshot_object_key("  ", "snapshot")

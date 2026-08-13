@@ -86,7 +86,7 @@ def test_a_captured_document_survives_the_encrypted_roundtrip(tmp_path: Path) ->
         service = NotificationDocumentService()
         document = _document()
 
-        persisted = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=document)
+        persisted = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=document).record
         loaded = service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
 
         assert profile.paths.database_file.is_file()
@@ -117,7 +117,7 @@ def test_the_document_bytes_land_in_the_encrypted_attachment_store(tmp_path: Pat
         service = NotificationDocumentService()
         document = _document()
 
-        record = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=document)
+        record = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=document).record
 
         store = AttachmentStore()
         manifest = load_attachment(store, record.attachment_id)
@@ -142,8 +142,10 @@ def test_re_pulling_one_notification_stores_nothing_and_returns_what_is_held(tmp
         first = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
         second = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
 
-        assert second == first
-        assert second.fetched_at == first.fetched_at
+        assert first.already_in_custody is False
+        assert second.already_in_custody is True
+        assert second.record == first.record
+        assert second.record.fetched_at == first.record.fetched_at
         assert len(service.list_documents(bucket_id=_BUCKET_ID)) == 1
 
 
@@ -281,7 +283,7 @@ def test_an_unreadable_document_keeps_its_bytes_and_records_the_refusal(tmp_path
             bucket_id=_BUCKET_ID,
             row=_read_row(),
             document=_document(data=truncated),
-        )
+        ).record
         loaded = service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
 
         assert loaded == record
@@ -372,7 +374,7 @@ def test_deleting_the_parse_refusal_on_disk_silently_loses_it(tmp_path: Path) ->
             bucket_id=_BUCKET_ID,
             row=_read_row(),
             document=_document(data=truncated),
-        )
+        ).record
         assert persisted.parse_refusal is not None
 
         def _drop(decoded: dict[str, Any]) -> None:
@@ -430,7 +432,7 @@ def test_the_stored_record_is_not_readable_as_plaintext_on_disk(tmp_path: Path) 
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         service = NotificationDocumentService()
-        record = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
+        record = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document()).record
 
         raw = profile.paths.database_file.read_bytes()
         assert b"A2860024500012345" not in raw
@@ -457,7 +459,7 @@ def test_no_file_anywhere_under_the_profile_root_carries_the_plaintext_document(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         service = NotificationDocumentService()
         document = _document()
-        record = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=document)
+        record = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=document).record
 
         files = [path for path in tmp_path.rglob("*") if path.is_file()]
         # Anti-vacuity: the walk must find the real artefacts this cycle

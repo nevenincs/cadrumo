@@ -18,8 +18,7 @@ from collections.abc import Iterable
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
-from ...core.errors import CadrumoError
-from ...core.i18n import tr
+from ...core.errors import CadrumoError, get_registered_error_code
 from ...domain.modelos import ModeloCode
 from ...domain.portals import (
     PORTAL_REGISTRY,
@@ -30,7 +29,28 @@ from ...domain.portals import (
 
 
 class PortalNotFoundError(CadrumoError):
-    """Raised when portal lookup targets a :class:`Portal` absent from the registry."""
+    """Raised when portal lookup targets a :class:`Portal` absent from the registry.
+
+    The refusal carries the class's registered locale key and the rejected
+    identifier as a machine fact; it authors no sentence and names no command.
+    Resolving the refusal means listing the catalogued portals, but that step is
+    an operator-surface concern: the producer states the failed fact and the CLI
+    boundary owns whichever action the catalogue can resolve for it.
+
+    The key is read from the central error-code registry rather than repeated
+    here, so this class carries no second spelling that could drift.
+
+    Attributes:
+        portal: The rejected portal identifier as supplied by the caller.
+    """
+
+    def __init__(self, *, portal: str) -> None:
+        """Initialise from the rejected portal identifier alone."""
+        super().__init__(
+            context={"portal": portal},
+            translated_message=get_registered_error_code(type(self)).message_key,
+        )
+        self.portal = portal
 
 
 class PortalRow(BaseModel):
@@ -122,10 +142,7 @@ class PortalsService:
         """
         metadata = self._registry.get(portal)
         if metadata is None:
-            raise PortalNotFoundError(
-                f"portal {portal!r} is not registered in PORTAL_REGISTRY",
-                translated_message=tr("application.portals.errors.portal_not_found"),
-            )
+            raise PortalNotFoundError(portal=portal.value)
         return _portal_to_row(metadata)
 
 

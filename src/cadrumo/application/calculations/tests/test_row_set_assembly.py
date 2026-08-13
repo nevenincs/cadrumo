@@ -163,8 +163,11 @@ def test_assemble_foreign_asset_refuses_a_row_with_no_country() -> None:
         RowSetCellEdit(binding="modelo-720-asset-row-valuation", row_index=1, value=Decimal("120000")),
     )
 
-    with pytest.raises(RegistryValidationError, match="country_code"):
+    with pytest.raises(RegistryValidationError) as excinfo:
         assemble_foreign_asset_observations(cells, revision, filing_year=2025)
+
+    assert str(excinfo.value) == "application.calculations.row_set.errors.row_assembly_failed"
+    assert "country_code" in str((excinfo.value.context or {})["validation_error_detail"])
 
 
 def test_assemble_atribucion_caps_share_percentage_at_validation() -> None:
@@ -177,8 +180,11 @@ def test_assemble_atribucion_caps_share_percentage_at_validation() -> None:
         RowSetCellEdit(binding="modelo-184-member-row-base-assigned", row_index=1, value=Decimal("1000")),
     )
 
-    with pytest.raises(RegistryValidationError, match=r"share_percentage must be within \[0, 100\]"):
+    with pytest.raises(RegistryValidationError) as excinfo:
         assemble_atribucion_observations(cells, revision, filing_year=2025)
+
+    assert str(excinfo.value) == "application.calculations.row_set.errors.row_assembly_failed"
+    assert "share_percentage must be within [0, 100]" in str((excinfo.value.context or {})["validation_error_detail"])
 
 
 def test_assemble_related_party_reads_operation_kind_and_method() -> None:
@@ -234,8 +240,11 @@ def test_assemble_related_party_refuses_a_row_with_no_country() -> None:
     """
     revision = _modelo("232", "2018-y-siguientes")
 
-    with pytest.raises(RegistryValidationError, match="country_code"):
+    with pytest.raises(RegistryValidationError) as excinfo:
         assemble_related_party_observations(_related_party_cells(country=None), revision, filing_year=2025)
+
+    assert str(excinfo.value) == "application.calculations.row_set.errors.row_assembly_failed"
+    assert "country_code" in str((excinfo.value.context or {})["validation_error_detail"])
 
 
 def test_assemble_related_party_carries_a_tax_haven_country_through() -> None:
@@ -367,13 +376,16 @@ def test_assemble_observations_for_grouping_dispatches_foreign_asset() -> None:
 
 def test_assemble_observations_for_grouping_rejects_unknown_grouping() -> None:
     revision = _modelo("190", "2024-y-siguientes")
-    with pytest.raises(RegistryValidationError, match="has no application-layer assembler"):
+    with pytest.raises(RegistryValidationError) as excinfo:
         assemble_observations_for_grouping(
             "operator_clave",  # invoice/counterpart grouping; no assembler
             (),
             revision,
             filing_year=2025,
         )
+
+    assert str(excinfo.value) == "application.calculations.row_set.errors.grouping_has_no_assembler"
+    assert (excinfo.value.context or {})["grouping"] == "operator_clave"
 
 
 # ---------------------------------------------------------------------------
@@ -406,8 +418,11 @@ def test_assemble_withholding_missing_nif_raises_not_fabricates() -> None:
         RowSetCellEdit(binding="modelo-190-perceptor-row-percibido-dinerario", row_index=1, value=Decimal("10000")),
     )
 
-    with pytest.raises(RegistryValidationError, match="perceptor_tax_id"):
+    with pytest.raises(RegistryValidationError) as excinfo:
         assemble_withholding_observations(cells, revision, filing_year=2025)
+
+    assert str(excinfo.value) == "application.calculations.row_set.errors.row_assembly_failed"
+    assert "perceptor_tax_id" in str((excinfo.value.context or {})["validation_error_detail"])
 
 
 def test_assemble_withholding_refuses_a_row_without_clave() -> None:
@@ -426,8 +441,10 @@ def test_assemble_withholding_refuses_a_row_without_clave() -> None:
         RowSetCellEdit(binding="modelo-190-perceptor-row-percibido-dinerario", row_index=1, value=Decimal("10000")),
         RowSetCellEdit(binding="modelo-190-perceptor-row-retencion-practicada", row_index=1, value=Decimal("1500")),
     )
-    with pytest.raises(RegistryValidationError, match="no clave"):
+    with pytest.raises(RegistryValidationError) as excinfo:
         assemble_withholding_observations(cells, revision, filing_year=2025)
+
+    assert str(excinfo.value) == "application.calculations.row_set.errors.percepcion_clave_missing"
 
 
 # -- absence reaches the model, which is not the same as the literal being gone

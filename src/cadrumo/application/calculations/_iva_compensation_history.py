@@ -412,7 +412,8 @@ def persist_observation_envelope_and_iva_history(
         from ._m303_carry_ingress import M303CarryIngressError
 
         raise M303CarryIngressError(
-            "Modelo 303 observation and IVA history repositories must share one secure-object backend",
+            translated_message="application.calculations.iva_compensation.errors.repository_backend_split",
+            context={"taxpayer_nif_supplied": bool(taxpayer_nif)},
         )
     state = iva_compensation_state_from_observation_envelope(
         envelope,
@@ -590,14 +591,13 @@ def _validate_observed_casilla_ids(observation: FiledDeclaracionObservationProto
     if not invalid:
         return
     raise IvaCompensationCasillaReferenceError(
-        "IVA compensation observations must be keyed by canonical casilla.id values declared by the registry",
         context={
             "modelo": observation.modelo,
             "revision": snapshot.revision.id,
             "period": observation.period.registry_token,
             "casilla_ids": invalid,
         },
-        translated_message="errors.refused.refused_calculations_casilla_constraint",
+        translated_message="application.calculations.iva_compensation.errors.observed_casilla_ids_noncanonical",
     )
 
 

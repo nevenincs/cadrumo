@@ -39,6 +39,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core import NIST_PASSPHRASE_MIN_LENGTH, PassphraseStrength, assess_passphrase_strength
 from ...core.errors import CadrumoError
 from ...core.i18n import clear_output_language_cache
+from ...core.identity import BucketId, ProfileId
 from ...domain.user_profile import UserProfileStatus, new_profile_id
 from ..workflow import workflow_state_repository
 from ._login_session import login_profile
@@ -100,8 +101,8 @@ class ProfileRegistrationOutcome(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    profile_id: str
-    bucket_id: str
+    profile_id: ProfileId
+    bucket_id: BucketId
     label: str
     status: UserProfileStatus
 

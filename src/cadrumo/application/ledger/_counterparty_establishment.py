@@ -255,8 +255,7 @@ class ConfirmedCounterpartyFacts(BaseModel):
         token = _canonical_identity_token(tax_identifier, country_code=country_code)
         if token is None:
             raise ConfirmedCounterpartyFactsInputError(
-                f"the identifier {tax_identifier!r} does not verify, so an establishment fact "
-                f"confirmed against it could not be found again on a later document",
+                translated_message="errors.refused.refused_ledger_counterparty_establishment_input",
                 context={"tax_identifier": tax_identifier, "country_code": country_code},
                 precondition_verdict=ledger_no_recovery_verdict(
                     LedgerPreconditionCondition.COUNTERPARTY_IDENTIFIER_VALID,
@@ -495,9 +494,7 @@ def record_confirmed_counterparty_facts(
             and existing.territorial_scope is not fact.territorial_scope
         ):
             raise CounterpartyEstablishmentConflictError(
-                f"{existing.canonical_tax_identifier} is already confirmed as established in "
-                f"{existing.territorial_scope.value}, and this assertion says "
-                f"{fact.territorial_scope.value}; withdraw the confirmed fact before replacing it",
+                translated_message="errors.refused.refused_ledger_counterparty_establishment_conflict",
                 context={
                     "canonical_tax_identifier": existing.canonical_tax_identifier,
                     "confirmed_scope": existing.territorial_scope.value,
@@ -510,9 +507,7 @@ def record_confirmed_counterparty_facts(
             and existing.identification_state is not fact.identification_state
         ):
             raise CounterpartyEstablishmentConflictError(
-                f"{existing.canonical_tax_identifier} is already confirmed as IVA-identified in "
-                f"{existing.identification_state.value}, and this assertion says "
-                f"{fact.identification_state.value}; withdraw the confirmed fact before replacing it",
+                translated_message="errors.refused.refused_ledger_counterparty_establishment_conflict",
                 context={
                     "canonical_tax_identifier": existing.canonical_tax_identifier,
                     "confirmed_identification_state": existing.identification_state.value,

@@ -408,11 +408,20 @@ def assert_export_mirrors_manifest(
     if not missing:
         return
     metadata = {casilla.casilla_id: (casilla.number, casilla.segmento) for casilla in manifest.casillas}
-    rendered_missing = "; ".join(_format_missing_casilla(casilla_id, metadata[casilla_id]) for casilla_id in missing)
     raise FilingExportError(
-        f"fichero-BOE export for modelo {draft.modelo!r} would omit {len(missing)} required "
-        f"casilla(s) the official record files, rendering them as blank slots (structurally-thin "
-        f"filing): {rendered_missing}. Every required casilla must be declared in the draft before export.",
+        translated_message="application.filing.export_parity.errors.required_casillas_omitted",
+        context={
+            "modelo": draft.modelo,
+            "missing_count": len(missing),
+            "missing_casillas": tuple(
+                {
+                    "casilla_id": casilla_id,
+                    "number": metadata[casilla_id][0],
+                    "segmento": metadata[casilla_id][1],
+                }
+                for casilla_id in missing
+            ),
+        },
     )
 
 
@@ -466,24 +475,25 @@ def assert_rate_boxes_account_for_total(
     shortfalls = rate_box_coverage_shortfalls(partitions, numeric)
     if not shortfalls:
         return
-    rendered = "; ".join(
-        f"{shortfall.partition.total_casilla_id} ({'/'.join(shortfall.partition.rate_kinds)} "
-        f"{shortfall.partition.fact}) declares {shortfall.total} but rate boxes "
-        f"{', '.join(shortfall.partition.box_casilla_ids)} account for {shortfall.boxes_total}, "
-        f"leaving {shortfall.shortfall} unaccounted"
-        for shortfall in shortfalls
-    )
     raise FilingExportError(
-        f"export for modelo {draft.modelo!r} would file a rate breakdown that does not account for its "
-        f"own declared total in {len(shortfalls)} tier(s): {rendered}. Those amounts come from ledger rows "
-        f"recording a cuota without the rate charged, so no official box may assert a rate for them. "
-        f"Record the rate on those rows and recalculate before exporting.",
+        translated_message="application.filing.export_parity.errors.rate_boxes_understate_total",
+        context={
+            "modelo": draft.modelo,
+            "shortfall_count": len(shortfalls),
+            "shortfalls": tuple(
+                {
+                    "total_casilla_id": shortfall.partition.total_casilla_id,
+                    "rate_kinds": tuple(shortfall.partition.rate_kinds),
+                    "fact": shortfall.partition.fact,
+                    "declared_total": str(shortfall.total),
+                    "box_casilla_ids": tuple(shortfall.partition.box_casilla_ids),
+                    "boxes_total": str(shortfall.boxes_total),
+                    "unaccounted": str(shortfall.shortfall),
+                }
+                for shortfall in shortfalls
+            ),
+        },
     )
-
-
-def _segmento_phrase(segmento: str | None) -> str:
-    """Render a segmento clause for a fidelity-drift enumeration, blank when unset."""
-    return "" if segmento is None else f" within segmento {segmento!r}"
 
 
 def _assert_record_order_fidelity(
@@ -521,25 +531,32 @@ def _assert_record_order_fidelity(
     orders = [record.order for record in declared]
     duplicate_orders = sorted({order for order in orders if orders.count(order) > 1})
     if duplicate_orders:
-        rendered = ", ".join(str(order) for order in duplicate_orders)
         raise FilingExportError(
-            f"fichero-BOE export for modelo {modelo!r} declares export records that share an emit "
-            f"order ({rendered}), so the rendered record sequence is ambiguous "
-            f"(structural-fidelity drift). Each rendered record must declare a distinct order so the "
-            f"exported record sequence mirrors the official modelo-revision structure.",
+            translated_message="application.filing.export_parity.errors.record_emit_order_duplicated",
+            context={
+                "modelo": modelo,
+                "duplicate_order_count": len(duplicate_orders),
+                "duplicate_orders": tuple(duplicate_orders),
+            },
         )
     emitted = tuple(sorted(declared, key=lambda record: record.order))
     if [record.id for record in emitted] != [record.id for record in declared]:
-        drifts = "; ".join(
-            f"position {index}: registry declares record {declared[index].id!r} "
-            f"but the .boe would emit {emitted[index].id!r}"
+        order_drifts = tuple(
+            {
+                "position": index,
+                "registry_record_id": declared[index].id,
+                "emitted_record_id": emitted[index].id,
+            }
             for index in range(len(declared))
             if declared[index].id != emitted[index].id
         )
         raise FilingExportError(
-            f"fichero-BOE export for modelo {modelo!r} would emit its records out of the "
-            f"registry-declared record order (structural-fidelity drift): {drifts}. The rendered "
-            f"record sequence must follow the official modelo-revision structure.",
+            translated_message="application.filing.export_parity.errors.record_emit_order_drift",
+            context={
+                "modelo": modelo,
+                "drift_count": len(order_drifts),
+                "order_drifts": order_drifts,
+            },
         )
 
 
@@ -565,7 +582,7 @@ def _assert_casilla_metadata_fidelity(
     from the official modelo-revision structure behind a valid digest.
     """
     registry_by_id = {meta.casilla_id: meta for meta in casilla_metadata}
-    drifts: list[str] = []
+    drifts: list[dict[str, object]] = []
     for manifest_casilla in manifest.casillas:
         casilla_id = manifest_casilla.casilla_id
         if casilla_id not in representable:
@@ -573,31 +590,35 @@ def _assert_casilla_metadata_fidelity(
         registry_meta = registry_by_id.get(casilla_id)
         if registry_meta is None:
             drifts.append(
-                f"{casilla_id} (manifest declares number {manifest_casilla.number!r}"
-                f"{_segmento_phrase(manifest_casilla.segmento)} but the registry does not declare this casilla)",
+                {
+                    "casilla_id": casilla_id,
+                    "registry_declares_casilla": False,
+                    "manifest_number": manifest_casilla.number,
+                    "manifest_segmento": manifest_casilla.segmento,
+                },
             )
             continue
         if (manifest_casilla.number, manifest_casilla.segmento) != (registry_meta.number, registry_meta.segmento):
             drifts.append(
-                f"{casilla_id} (registry declares number {registry_meta.number!r}"
-                f"{_segmento_phrase(registry_meta.segmento)} but the .boe would file it as number "
-                f"{manifest_casilla.number!r}{_segmento_phrase(manifest_casilla.segmento)})",
+                {
+                    "casilla_id": casilla_id,
+                    "registry_declares_casilla": True,
+                    "registry_number": registry_meta.number,
+                    "registry_segmento": registry_meta.segmento,
+                    "manifest_number": manifest_casilla.number,
+                    "manifest_segmento": manifest_casilla.segmento,
+                },
             )
     if not drifts:
         return
     raise FilingExportError(
-        f"fichero-BOE export for modelo {modelo!r} would render {len(drifts)} casilla(s) whose "
-        f"number/segmento drifts from the registry-declared record-design metadata "
-        f"(structural-fidelity drift): {'; '.join(drifts)}. The exported casilla numbering and "
-        f"segmento must mirror the official modelo-revision structure.",
+        translated_message="application.filing.export_parity.errors.casilla_metadata_drift",
+        context={
+            "modelo": modelo,
+            "drift_count": len(drifts),
+            "casilla_drifts": tuple(drifts),
+        },
     )
-
-
-def _format_missing_casilla(casilla_id: CasillaId, metadata: tuple[str, str | None]) -> str:
-    number, segmento = metadata
-    if segmento is not None:
-        return f"{casilla_id} (segmento {segmento}, casilla {number})"
-    return f"{casilla_id} (casilla {number})"
 
 
 did_page_required = _did_page_required
@@ -642,16 +663,14 @@ def assert_xml_declaration_aux_declared(layout: ExportLayoutDefinition) -> None:
     ]
     if not undeclared:
         return
-    missing = ", ".join(undeclared)
     raise FilingExportError(
-        f"export layout {layout.id!r} cannot write the declaration's mandatory Aux block: "
-        f"{missing} is not declared on the layout. Every AEAT XSD for this modelo declares Aux "
-        "with minOccurs=1 as the first element of Declaracion, and its Idioma and VERSION children "
-        "are mandatory too, so a partial block is invalid and an omitted one fails at the first "
-        "element. No bundled AEAT dictionary declares these rows and no bundled source carries an "
-        "authoritative VERSION, so the value cannot be derived and is not invented: an invented "
-        "token would satisfy the schema while asserting something unverified. Declare "
-        f"{missing} on the export layout once AEAT's value is known.",
+        translated_message="application.filing.export_parity.errors.aux_block_undeclared",
+        context={
+            "layout_id": layout.id,
+            "layout_format": layout.format.value,
+            "undeclared_count": len(undeclared),
+            "undeclared_fields": tuple(undeclared),
+        },
     )
 
 

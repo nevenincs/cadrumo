@@ -16,7 +16,12 @@ from ....domain.calculations.registry import (
 )
 from ....domain.deadlines import ObligationStatus
 from ....domain.modelos import ExternalEvidenceKind
-from ...live import JustificanteCaptureSnapshot, PersistedExpedientesSnapshot, SnapshotLifecycleState
+from ...live import (
+    JustificanteCaptureSnapshot,
+    PersistedExpedientesSnapshot,
+    SnapshotLifecycleState,
+    derive_justificante_capture_snapshot_id,
+)
 from .. import (
     OverviewAeatSubmissionState,
     OverviewCalendarEntry,
@@ -66,19 +71,25 @@ def _justificante_capture_snapshot(
     modelo: str = "303",
     filing_year: int = 2025,
     period: Period = _PERIOD_2025_1T,
-    expediente_id: str = "EXPEDIENTE3031T2025",
+    expediente_id: str = "20253031T2025",
     state: SnapshotLifecycleState = SnapshotLifecycleState.ACTIVE,
 ) -> JustificanteCaptureSnapshot:
     pdf_bytes = f"{csv}-pdf".encode()
+    pdf_sha256 = sha256_hex(pdf_bytes)
     return JustificanteCaptureSnapshot(
-        snapshot_id=f"snapshot-{csv}",
+        snapshot_id=derive_justificante_capture_snapshot_id(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            pdf_sha256=pdf_sha256,
+        ),
         bucket_id=_BUCKET_ID,
         modelo=modelo,
         filing_year=filing_year,
         period=period,
         expediente_id=expediente_id,
         csv=csv,
-        pdf_sha256=sha256_hex(pdf_bytes),
+        pdf_sha256=pdf_sha256,
         pdf_base64=base64.b64encode(pdf_bytes).decode("ascii"),
         captured_at=datetime(filing_year, 4, 16, 12, 0, tzinfo=UTC),
         state=state,

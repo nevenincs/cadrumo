@@ -416,7 +416,7 @@ def test_iva_history_observation_refuses_missing_registry_casilla_provenance() -
     }
     formulas = {item.target_casilla_id: item for item in snapshot.revision.formulas}
 
-    with pytest.raises(IvaCompensationCasillaReferenceError, match=r"without legal_refs/source_refs"):
+    with pytest.raises(IvaCompensationCasillaReferenceError) as excinfo:
         _iva_compensation_history_observation(
             snapshot=snapshot,
             casillas=casillas_without_resultado,
@@ -424,6 +424,8 @@ def test_iva_history_observation_refuses_missing_registry_casilla_provenance() -
             casilla_id=_M303_RESULTADO_CASILLA,
             value=Decimal("1.00"),
         )
+
+    assert str(excinfo.value) == "application.calculations.iva_compensation.errors.history_casilla_undeclared"
 
 
 def test_iva_history_observation_only_claims_formula_provenance_for_exact_casilla_projection() -> None:
@@ -474,7 +476,7 @@ def test_iva_history_observation_rejects_mismatched_formula_operand_projection()
     casillas = {item.id: item for item in snapshot.revision.casillas}
     formulas = {item.target_casilla_id: item for item in snapshot.revision.formulas}
 
-    with pytest.raises(IvaCompensationCasillaReferenceError, match=r"projects to"):
+    with pytest.raises(IvaCompensationCasillaReferenceError) as excinfo:
         _iva_compensation_history_observation(
             snapshot=snapshot,
             casillas=casillas,
@@ -484,6 +486,10 @@ def test_iva_history_observation_rejects_mismatched_formula_operand_projection()
             operand_refs=(_M303_POSTERIOR_CASILLA, _M303_RESULTADO_CASILLA),
             operand_values=(Decimal("75.00"), Decimal("75.00")),
         )
+
+    assert str(excinfo.value) == (
+        "application.calculations.iva_compensation.errors.history_operand_refs_diverge_from_formula"
+    )
 
 
 def test_binding_prefill_type_error_is_registered_in_error_registry() -> None:

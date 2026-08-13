@@ -52,6 +52,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
 _BUCKET = "bucket-reject"
+_UNKNOWN_TRANSACTION_ID = "f" * 64
 
 
 @pytest.fixture
@@ -183,7 +184,7 @@ def test_reject_unknown_transaction_raises(
     repository, events, _objects = repositories
     with pytest.raises(TransactionNotFoundError):
         reject_llm_suggestion(
-            _classification_suggestion("tx_does_not_exist"),
+            _classification_suggestion(_UNKNOWN_TRANSACTION_ID),
             bucket_id=_BUCKET,
             source_command="aeat app ledger classify --llm --reject",
             transaction_repository=repository,

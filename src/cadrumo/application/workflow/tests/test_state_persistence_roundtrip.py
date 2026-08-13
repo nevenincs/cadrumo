@@ -61,15 +61,15 @@ def _populated_workflow_state() -> WorkflowState:
             ),
         },
         invoice_reviews={
-            "invoice-2024-001": InvoiceReviewRecord(
-                invoice_id="invoice-2024-001",
+            "a" * 64: InvoiceReviewRecord(
+                invoice_id="a" * 64,
                 fields={"note": "follow up IVA split"},
                 updated_at=_WORKFLOW_TIMESTAMP,
             ),
         },
         ledger_reviews={
-            "transaction-2024-abc": LedgerReviewRecord(
-                transaction_id="transaction-2024-abc",
+            "b" * 64: LedgerReviewRecord(
+                transaction_id="b" * 64,
                 updated_at=_WORKFLOW_TIMESTAMP,
             ),
         },
@@ -125,14 +125,14 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
         assert len(loaded.bucket_events) == 1
         assert loaded.bucket_events[0].action == "profile.bucket.created"
         assert loaded.bucket_events[0].bucket_id == "b" * 32
-        assert set(loaded.invoice_reviews) == {"invoice-2024-001"}
-        loaded_invoice = loaded.invoice_reviews["invoice-2024-001"]
+        assert set(loaded.invoice_reviews) == {"a" * 64}
+        loaded_invoice = loaded.invoice_reviews["a" * 64]
         assert isinstance(loaded_invoice, InvoiceReviewRecord)
         assert loaded_invoice.fields == {"note": "follow up IVA split"}
-        assert set(loaded.ledger_reviews) == {"transaction-2024-abc"}
-        loaded_ledger = loaded.ledger_reviews["transaction-2024-abc"]
+        assert set(loaded.ledger_reviews) == {"b" * 64}
+        loaded_ledger = loaded.ledger_reviews["b" * 64]
         assert isinstance(loaded_ledger, LedgerReviewRecord)
-        assert loaded_ledger.transaction_id == "transaction-2024-abc"
+        assert loaded_ledger.transaction_id == "b" * 64
 
 
 def test_workflow_state_absent_load_returns_empty_state(

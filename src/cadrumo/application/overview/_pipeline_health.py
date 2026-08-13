@@ -52,6 +52,7 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.i18n import tr
+from ...core.identity import BucketId, WorkUnitId
 from ...domain.modelos import (
     CalculationRevisionState,
     ModeloVerificationFindingSeverity,
@@ -114,7 +115,7 @@ class ModeloHealthRow(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str
-    work_unit_id: str | None = None
+    work_unit_id: WorkUnitId | None = None
     state: ModeloReadinessState
     blocking_finding_count: int = Field(default=0, ge=0)
     warning_finding_count: int = Field(default=0, ge=0)
@@ -153,7 +154,7 @@ class PipelineHealthReport(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str
+    bucket_id: BucketId
     filing_year: int
     period: str
     ledger: LedgerStatusReport

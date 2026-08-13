@@ -9,7 +9,7 @@ the export refusal required before a target file can exist.
 
 from __future__ import annotations
 
-from ...core import Period
+from ...core import Modelo, Period
 from ...domain.filing import FilingExportError
 from ...domain.prorrata_register import ProrrataRegister
 
@@ -30,8 +30,14 @@ def assert_m303_prorrata_activity_rows_complete(
         return
     if not register.activity_rows_complete_for(period.filing_year):
         raise FilingExportError(
-            "modelo 303 per-activity prorrata rows are incomplete for "
-            f"ejercicio {period.filing_year}: required fixed slots 1-5",
+            translated_message="application.filing.m303_prorrata_activity_rows.errors.activity_rows_incomplete",
+            context={
+                "modelo": Modelo.M303.value,
+                "filing_year": period.filing_year,
+                "period": period.registry_token,
+                "required_slot_first": 1,
+                "required_slot_last": 5,
+            },
         )
 
 

@@ -92,7 +92,6 @@ class PerModeloAggregationContributorContract(BaseModel):
     def _modelos_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(value) != len(set(value)):
             raise AggregationConfigError(
-                "provider modelos must be unique",
                 translated_message="aggregation.service.errors.provider_modelos_not_unique",
             )
         return value
@@ -146,13 +145,11 @@ class PerModeloAggregationContract(BaseModel):
         providers = tuple(provider.provider for provider in value)
         if len(providers) != len(set(providers)):
             raise AggregationConfigError(
-                "per-modelo aggregation providers must be unique",
                 translated_message="aggregation.service.errors.per_modelo_providers_not_unique",
             )
         modelos = tuple(modelo for provider in value for modelo in provider.modelos)
         if len(modelos) != len(set(modelos)):
             raise AggregationConfigError(
-                "per-modelo aggregation modelos must be owned by exactly one provider",
                 translated_message="aggregation.service.errors.per_modelo_modelos_not_unique",
             )
         return value
@@ -162,7 +159,6 @@ class PerModeloAggregationContract(BaseModel):
     def _source_kinds_are_exact(cls, value: tuple[BindingSourceKind, ...]) -> tuple[BindingSourceKind, ...]:
         if value != ACCEPTED_SOURCE_KINDS:
             raise AggregationConfigError(
-                "source kinds must match the accepted four-kind taxonomy",
                 translated_message="aggregation.service.errors.source_kinds_mismatch",
             )
         return value
@@ -194,7 +190,6 @@ class PerModeloAggregationCommand(BaseModel):
         if invalid:
             names = ", ".join(candidate.value for candidate in invalid)
             raise AggregationConfigError(
-                f"observations for {names} cannot be supplied for modelo {self.modelo}",
                 translated_message="aggregation.service.errors.observations_mismatch",
                 context={"names": names, "modelo": self.modelo},
             )
@@ -230,7 +225,6 @@ class PerModeloAggregationResult(BaseModel):
     def _source_kinds_are_unique(cls, value: tuple[BindingSourceKind, ...]) -> tuple[BindingSourceKind, ...]:
         if len(value) != len(set(value)):
             raise AggregationConfigError(
-                "result source_kinds must be unique",
                 translated_message="aggregation.service.errors.result_source_kinds_not_unique",
             )
         return value
@@ -239,13 +233,11 @@ class PerModeloAggregationResult(BaseModel):
     def _envelope_matches_payload(self) -> PerModeloAggregationResult:
         if self.aggregation.modelo != self.modelo:
             raise AggregationConfigError(
-                f"aggregation modelo {self.aggregation.modelo!r} does not match result modelo {self.modelo!r}",
                 translated_message="aggregation.service.errors.envelope_modelo_mismatch",
                 context={"aggregation_modelo": self.aggregation.modelo, "result_modelo": self.modelo},
             )
         if self.aggregation.period != self.period:
             raise AggregationConfigError(
-                f"aggregation period {self.aggregation.period!r} does not match result period {self.period!r}",
                 translated_message="aggregation.service.errors.envelope_period_mismatch",
                 context={"aggregation_period": self.aggregation.period, "result_period": self.period},
             )
@@ -265,8 +257,6 @@ class PerModeloAggregationResult(BaseModel):
         )
         if not provider_matches_payload:
             raise AggregationConfigError(
-                f"provider {self.provider.value!r} does not match aggregation payload "
-                f"{type(self.aggregation).__name__!r}",
                 translated_message="aggregation.service.errors.envelope_provider_payload_mismatch",
                 context={
                     "provider": self.provider.value,

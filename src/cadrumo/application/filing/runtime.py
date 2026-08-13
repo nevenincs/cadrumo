@@ -156,7 +156,6 @@ class RegistryCasillaCollection:
         duplicates = tuple(sorted(casilla_id for casilla_id, count in Counter(ids).items() if count > 1))
         if duplicates:
             raise ModeloBuilderError(
-                "runtime casilla schema contains duplicate casilla.id values; registry projection is ambiguous",
                 translated_message="application.filing.runtime.errors.ambiguous_casilla_schema",
                 context={"schema_version": self.schema_version, "casilla_ids": ",".join(duplicates)},
             )
@@ -178,7 +177,6 @@ class RegistryCasillaCollection:
                 for casilla_id, missing in sorted(dangling_formula_input_casilla_ids.items())
             )
             raise ModeloBuilderError(
-                "runtime casilla schema formula inputs must reference canonical casilla.id values in the same schema",
                 translated_message="application.filing.runtime.errors.ambiguous_casilla_schema",
                 context={"schema_version": self.schema_version, "casilla_ids": details},
             )
@@ -312,13 +310,11 @@ class RegistrySchemaAccessor:
         snapshot_ids = frozenset(self.snapshots)
         if not snapshot_ids:
             raise ModeloBuilderError(
-                "runtime registry accessor requires at least one exact registry snapshot",
                 translated_message="application.filing.runtime.errors.registry_empty",
                 context={"reason": "snapshot-free-accessor"},
             )
         if frozenset(self.collections) != snapshot_ids or frozenset(self.subviews) != snapshot_ids:
             raise ModeloBuilderError(
-                "runtime registry accessor collections, subviews, and snapshots must address the same modelos",
                 translated_message="application.filing.runtime.errors.ambiguous_casilla_schema",
                 context={"modelos": ", ".join(sorted(snapshot_ids))},
             )
@@ -331,7 +327,6 @@ class RegistrySchemaAccessor:
                 or collection.schema_version != subview.schema_version
             ):
                 raise ModeloBuilderError(
-                    f"runtime registry accessor has inconsistent snapshot authority for modelo {modelo_id!r}",
                     translated_message="application.filing.runtime.errors.ambiguous_casilla_schema",
                     context={"modelo": modelo_id},
                 )
@@ -351,7 +346,6 @@ class RegistrySchemaAccessor:
             return self.collections[modelo]
         except KeyError as exc:
             raise ModeloBuilderError(
-                f"modelo {modelo!r} is not present in the calculation registry",
                 translated_message="application.filing.runtime.errors.modelo_not_in_registry",
                 context={"modelo": modelo},
             ) from exc
@@ -362,7 +356,6 @@ class RegistrySchemaAccessor:
             return self.subviews[modelo]
         except KeyError as exc:
             raise ModeloBuilderError(
-                f"modelo {modelo!r} is not present in the calculation registry",
                 translated_message="application.filing.runtime.errors.modelo_not_in_registry",
                 context={"modelo": modelo},
             ) from exc
@@ -373,7 +366,6 @@ class RegistrySchemaAccessor:
             return self.snapshots[modelo]
         except KeyError as exc:
             raise ModeloBuilderError(
-                f"modelo {modelo!r} has no retained registry snapshot",
                 translated_message="application.filing.runtime.errors.modelo_not_in_registry",
                 context={"modelo": modelo},
             ) from exc
@@ -440,7 +432,6 @@ def load_default_filing_profile(
         profile = load_active_taxpayer_profile(state)
     except WizardStatusError as exc:
         raise ModeloBuilderError(
-            "active filing profile could not be loaded",
             translated_message="application.filing.runtime.errors.active_profile_load_failed",
             context={"reason": exc.__class__.__name__},
         ) from exc
@@ -509,7 +500,6 @@ def _build_runtime_schema_provider_cached(
     loaded_modelos = authority.modelos
     if not loaded_modelos:
         raise ModeloBuilderError(
-            "registry root has no modelo definitions",
             translated_message="application.filing.runtime.errors.registry_empty",
             context={"registry_root_name": root.name},
         )
@@ -519,7 +509,6 @@ def _build_runtime_schema_provider_cached(
         missing = sorted(selected_ids.difference(by_id))
         if missing:
             raise ModeloBuilderError(
-                f"registry root is missing requested modelo definitions: {missing!r}",
                 translated_message="application.filing.runtime.errors.registry_missing_requested_modelos",
                 context={"modelos": ", ".join(missing)},
             )
@@ -539,7 +528,6 @@ def _build_runtime_schema_provider_cached(
             continue
     if not snapshots:
         raise ModeloBuilderError(
-            f"registry root has no modelo definitions for year={filing_year} period={period!r}",
             translated_message="application.filing.runtime.errors.registry_empty_for_period",
             context={"filing_year": str(filing_year), "period": str(period)},
         )
@@ -610,7 +598,6 @@ def _normalize_modelo_selection(modelos: Sequence[str] | None) -> set[str] | Non
     selected = {modelo.strip() for modelo in modelos}
     if "" in selected:
         raise ModeloBuilderError(
-            "requested modelo selection must not contain blank modelo ids",
             translated_message="application.filing.runtime.errors.blank_modelo_selection",
         )
     return selected
@@ -621,18 +608,15 @@ def _validate_period_arguments(*, filing_year: int | None, period: object | None
         return None
     if filing_year is None or period is None:
         raise ModeloBuilderError(
-            "filing_year and period must be supplied together",
             translated_message="application.filing.runtime.errors.filing_year_period_pair",
         )
     if not isinstance(period, Period):
         raise ModeloBuilderError(
-            "runtime schema provider requires period as cadrumo.core.Period",
             translated_message="application.filing.runtime.errors.period_type",
             context={"period_type": type(period).__name__},
         )
     if filing_year != period.filing_year:
         raise ModeloBuilderError(
-            "filing_year must match the supplied Period",
             translated_message="application.filing.runtime.errors.filing_year_period_mismatch",
             context={"filing_year": str(filing_year), "period": str(period)},
         )
@@ -653,7 +637,6 @@ def _snapshot_for_provider(
     provider_year = selector.years[0] if selector.years else selector.year_from
     if provider_year is None:
         raise ModeloBuilderError(
-            f"modelo {modelo.id!r} revision {revision.id!r} has no provider year",
             translated_message="application.filing.runtime.errors.provider_year_missing",
             context={"modelo": modelo.id, "revision": revision.id},
         )
@@ -670,7 +653,6 @@ def _current_provider_revision(modelo: ModeloDefinition) -> ModeloRevision:
     candidates = open_revisions or tuple(modelo.revisions.values())
     if not candidates:
         raise ModeloBuilderError(
-            f"modelo {modelo.id!r} has no revisions",
             translated_message="application.filing.runtime.errors.modelo_revision_missing",
             context={"modelo": modelo.id},
         )
@@ -701,8 +683,6 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
     identity_failures = revision_reference_identity_failures(f"runtime schema {schema_version}", revision)
     if identity_failures:
         raise ModeloBuilderError(
-            "runtime schema revision identity is ambiguous; registry projection cannot continue:\n"
-            + "\n".join(f" - {failure}" for failure in identity_failures),
             translated_message="application.filing.runtime.errors.ambiguous_casilla_schema",
             context={
                 "schema_version": schema_version,
@@ -821,9 +801,8 @@ def registry_value_type(data_type: str) -> str:
         return registry_scalar_value_type(data_type)
     except RegistryValidationError as exc:
         raise ModeloBuilderError(
-            str(exc),
             translated_message="application.filing.runtime.errors.unsupported_casilla_data_type",
-            context={"data_type": data_type},
+            context={"data_type": data_type, "registry_error_type": type(exc).__name__},
         ) from exc
 
 

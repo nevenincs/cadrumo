@@ -91,9 +91,7 @@ def test_an_ordinary_document_states_no_correction() -> None:
     """
     corpus = _RECTIFICATIVA.parent
     ordinary = next(
-        path
-        for path in sorted(corpus.glob("*.xml"))
-        if "<Corrective>" not in path.read_text(encoding="utf-8")
+        path for path in sorted(corpus.glob("*.xml")) if "<Corrective>" not in path.read_text(encoding="utf-8")
     )
 
     assert parse_einvoice_document(ordinary.read_bytes()).rectifies_invoice_number is None

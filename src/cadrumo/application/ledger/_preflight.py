@@ -35,7 +35,7 @@ from ...adapters.persistence.profile.usage_ratios import load_usage_ratios_with_
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ElidedProse, OperatorActionAxis, Period
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.identity import BucketId
+from ...core.identity import BucketId, TransactionId
 from ...domain.categories import SpendingCategory, SpendingCategoryFamily, family_for
 from ...domain.iva import IvaCategory
 from ...domain.transactions import (
@@ -116,7 +116,7 @@ class LedgerPreflightIssue(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1, max_length=128)
+    transaction_id: TransactionId
     reason: LedgerPreflightIssueReason
     detail: _IssueDetail
 

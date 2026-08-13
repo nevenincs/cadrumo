@@ -46,13 +46,13 @@ def test_aggregation_config_error_is_in_error_registry() -> None:
 
 
 def test_aggregation_config_error_registered_code_accessible_from_instance() -> None:
-    exc = AggregationConfigError("provider modelos must be unique")
+    exc = AggregationConfigError(translated_message="aggregation.service.errors.provider_modelos_not_unique")
     registered = get_registered_error_code(exc)
     assert registered.code == "ERROR_AGGREGATION_CONFIG"
 
 
 def test_aggregation_config_error_round_trips_through_build_error_envelope() -> None:
-    exc = AggregationConfigError("per-modelo aggregation providers must be unique")
+    exc = AggregationConfigError(translated_message="aggregation.service.errors.per_modelo_providers_not_unique")
     envelope = build_error_envelope(exc)
     assert envelope.code == "ERROR_AGGREGATION_CONFIG"
     assert envelope.category == "ERROR"

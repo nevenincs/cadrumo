@@ -19,29 +19,81 @@ def validate_m303_export_applicability(
     try:
         FilingProducerSnapshot.model_validate(dict(producer_snapshot))
     except ValueError as exc:
-        raise FilingExportError(f"modelo 303 filing producer snapshot is incomplete: {exc}") from exc
+        raise FilingExportError(
+            translated_message="application.filing.m303_export_applicability.errors.producer_snapshot_incomplete",
+            context={
+                "modelo": Modelo.M303.value,
+                "period": period.registry_token,
+                "filing_year": period.filing_year,
+                "validation_error_type": type(exc).__name__,
+            },
+        ) from exc
     if producer_snapshot.modelo is not Modelo.M303:
-        raise FilingExportError("Modelo 303 applicability received a non-303 producer snapshot")
+        raise FilingExportError(
+            translated_message="application.filing.m303_export_applicability.errors.producer_snapshot_wrong_modelo",
+            context={
+                "expected_modelo": Modelo.M303.value,
+                "actual_modelo": producer_snapshot.modelo.value,
+            },
+        )
     filing_facts = producer_snapshot.m303_filing_facts
     if filing_facts is None:
-        raise FilingExportError("modelo 303 export requires internally assembled filing facts")
+        raise FilingExportError(
+            translated_message="application.filing.m303_export_applicability.errors.filing_facts_absent",
+            context={
+                "modelo": Modelo.M303.value,
+                "period": period.registry_token,
+                "filing_year": period.filing_year,
+            },
+        )
     if filing_facts.period != period:
-        raise FilingExportError("modelo 303 filing facts do not match the export period")
+        raise FilingExportError(
+            translated_message="application.filing.m303_export_applicability.errors.filing_facts_period_mismatch",
+            context={
+                "modelo": Modelo.M303.value,
+                "export_period": period.registry_token,
+                "filing_facts_period": filing_facts.period.registry_token,
+            },
+        )
     if (
         registry_snapshot.modelo.id != "303"
         or registry_snapshot.filing_year != period.filing_year
         or registry_snapshot.period != period.registry_token
     ):
-        raise FilingExportError("modelo 303 applicability snapshot does not match the export period")
+        raise FilingExportError(
+            translated_message="application.filing.m303_export_applicability.errors.snapshot_period_mismatch",
+            context={
+                "expected_modelo": Modelo.M303.value,
+                "snapshot_modelo": registry_snapshot.modelo.id,
+                "export_period": period.registry_token,
+                "snapshot_period": registry_snapshot.period,
+                "export_filing_year": period.filing_year,
+                "snapshot_filing_year": registry_snapshot.filing_year,
+            },
+        )
     if not any(candidate is layout for candidate in registry_snapshot.revision.export_layouts):
-        raise FilingExportError("modelo 303 applicability layout is not owned by the selected snapshot")
+        raise FilingExportError(
+            translated_message="application.filing.m303_export_applicability.errors.layout_not_snapshot_owned",
+            context={
+                "modelo": Modelo.M303.value,
+                "layout_id": layout.id,
+                "snapshot_layout_count": len(registry_snapshot.revision.export_layouts),
+            },
+        )
     try:
         assert_m303_regularisation_result_matches_bienes_register(
             bienes_register=filing_facts.bienes_register,
             regularisation_result=filing_facts.regularisation_result,
         )
     except ValueError as exc:
-        raise FilingExportError(f"modelo 303 regularisation result is not canonical: {exc}") from exc
+        raise FilingExportError(
+            translated_message="application.filing.m303_export_applicability.errors.regularisation_result_not_canonical",
+            context={
+                "modelo": Modelo.M303.value,
+                "period": period.registry_token,
+                "validation_error_type": type(exc).__name__,
+            },
+        ) from exc
 
 
 __all__ = ["validate_m303_export_applicability"]

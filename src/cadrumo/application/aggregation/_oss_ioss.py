@@ -175,7 +175,7 @@ def validate_oss_ioss_observation(
     # cent the rounding produced, not a threshold this module chose.
     if abs(persisted - expected) > CENT:
         raise AggregationValidationError(
-            t("oss_ioss_iva_amount_mismatches_destination_rate"),
+            t("aggregation.oss_ioss.errors.iva_amount_mismatches_destination_rate"),
             context={
                 "ledger_id": candidate.ledger_id,
                 "destination_member_state": candidate.destination_member_state.value,

@@ -690,13 +690,19 @@ def test_each_input_routes_to_its_own_sector_percentage(tmp_path: Path) -> None:
     assert values[_DEVENGADO_CUOTA_BINDING] == Decimal("21.00")
 
     sector_input = next(row for row in aggregation.observations if row.prorrata_sector_id == "comercio")
-    with pytest.raises(AggregationValidationError, match="missing explicit sector identity"):
+    with pytest.raises(
+        AggregationValidationError,
+        match=r"aggregation\.iva_ledger\.errors\.sectorized_input_missing_sector_identity",
+    ):
         resolve_iva_ledger_binding_values(
             revision,
             (sector_input.model_copy(update={"prorrata_sector_id": None, "input_classification": None}),),
             prorrata_apportionment=apportionment,
         )
-    with pytest.raises(AggregationValidationError, match="unknown sector"):
+    with pytest.raises(
+        AggregationValidationError,
+        match=r"aggregation\.iva_ledger\.errors\.sectorized_input_unknown_sector",
+    ):
         resolve_iva_ledger_binding_values(
             revision,
             (sector_input.model_copy(update={"prorrata_sector_id": "unknown"}),),
@@ -707,18 +713,18 @@ def test_each_input_routes_to_its_own_sector_percentage(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     ("sector_entry", "message"),
     (
-        (None, "has no filing-year register entry"),
+        (None, "aggregation.iva_ledger.errors.differentiated_sector_without_filing_year_entry"),
         (
             ProrrataRegisterEntry(
                 ejercicio=2026, sector_id="comercio", regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None
             ),
-            "is inactive for the filing year",
+            "aggregation.iva_ledger.errors.differentiated_sector_inactive_for_filing_year",
         ),
         (
             ProrrataRegisterEntry(
                 ejercicio=2026, sector_id="comercio", regime=ProrrataRegisterRegime.GENERAL, especial_transition=None
             ),
-            "has no resolved provisional percentage",
+            "aggregation.iva_ledger.errors.differentiated_sector_without_provisional_percentage",
         ),
     ),
 )
