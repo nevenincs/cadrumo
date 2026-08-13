@@ -58,6 +58,8 @@ from ...domain.modelos import (
     VerificationCompletenessStatus,
 )
 from ..ledger import LedgerStatusReport
+from ..operator_actions import DeclaredNextAction
+from ._next_actions import declare_next_action
 
 if TYPE_CHECKING:
     from ...domain.modelos import CalculationRevision, VerificationReport, WorkUnit
@@ -104,8 +106,9 @@ class ModeloHealthRow(BaseModel):
         warning_finding_count: Count of ``WARNING`` severity (advisory)
             findings from the same report.
         summary: Human-readable one-line progress summary.
-        next_command: The exact next ``aeat`` command to run to advance this
-            modelo, or resolve its current gap.
+        next_action: The catalogue action that advances this modelo, or
+            resolves its current gap, carrying the work unit or modelo this
+            row already identifies.
     """
 
     model_config = _STRICT_FROZEN
@@ -116,7 +119,7 @@ class ModeloHealthRow(BaseModel):
     blocking_finding_count: int = Field(default=0, ge=0)
     warning_finding_count: int = Field(default=0, ge=0)
     summary: str
-    next_command: str
+    next_action: DeclaredNextAction | None = None
 
 
 class PipelineHealthReport(BaseModel):
@@ -160,6 +163,11 @@ class PipelineHealthReport(BaseModel):
     ready: bool = Field(default=False)
 
 
+def _verify_action(work_unit: WorkUnit) -> DeclaredNextAction:
+    """Declare the verification re-run bound to this row's own work unit."""
+    return declare_next_action("operator.modelo.work.verify", work_unit_id=work_unit.work_unit_id)
+
+
 def _modelo_health_row(
     *,
     modelo: str,
@@ -173,7 +181,10 @@ def _modelo_health_row(
             work_unit_id=work_unit.work_unit_id,
             state=ModeloReadinessState.NOT_STARTED,
             summary=f"Modelo {modelo} work unit '{work_unit.name}' has no calculation revision yet.",
-            next_command=f"aeat app modelo work calculate {work_unit.work_unit_id}",
+            next_action=declare_next_action(
+                "operator.modelo.work.calculate",
+                work_unit_id=work_unit.work_unit_id,
+            ),
         )
 
     blocking = 0
@@ -192,7 +203,7 @@ def _modelo_health_row(
             state=ModeloReadinessState.FILED,
             warning_finding_count=warning,
             summary=f"Modelo {modelo}: filed.",
-            next_command=f"aeat app modelo filing-record list --modelo {modelo}",
+            next_action=declare_next_action("operator.modelo.filing_record.list", modelo=modelo),
         )
 
     if revision.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO:
@@ -202,7 +213,10 @@ def _modelo_health_row(
             state=ModeloReadinessState.FILED,
             warning_finding_count=warning,
             summary=f"Modelo {modelo}: filed (superseded by a later revision).",
-            next_command=f"aeat app modelo work revisions {work_unit.work_unit_id}",
+            next_action=declare_next_action(
+                "operator.modelo.work.revisions",
+                work_unit_id=work_unit.work_unit_id,
+            ),
         )
 
     if latest_report is None:
@@ -211,7 +225,7 @@ def _modelo_health_row(
             work_unit_id=work_unit.work_unit_id,
             state=ModeloReadinessState.CALCULATED,
             summary=f"Modelo {modelo}: calculated, not yet verified.",
-            next_command=f"aeat app modelo work verify {work_unit.work_unit_id}",
+            next_action=_verify_action(work_unit),
         )
 
     if (
@@ -224,7 +238,10 @@ def _modelo_health_row(
             state=ModeloReadinessState.VERIFIED,
             warning_finding_count=warning,
             summary=f"Modelo {modelo}: verified, not yet filed.",
-            next_command=f"aeat app modelo work file {work_unit.work_unit_id}",
+            next_action=declare_next_action(
+                "operator.modelo.work.file",
+                work_unit_id=work_unit.work_unit_id,
+            ),
         )
 
     if latest_report.completeness_status is VerificationCompletenessStatus.INCOMPLETE:
@@ -235,7 +252,7 @@ def _modelo_health_row(
             blocking_finding_count=blocking,
             warning_finding_count=warning,
             summary=tr("cli.overview.pipeline.summary.incompleto", modelo=modelo),
-            next_command=f"aeat app modelo work verify {work_unit.work_unit_id}",
+            next_action=_verify_action(work_unit),
         )
 
     return ModeloHealthRow(
@@ -245,7 +262,7 @@ def _modelo_health_row(
         blocking_finding_count=blocking,
         warning_finding_count=warning,
         summary=f"Modelo {modelo}: {blocking} blocking finding(s) on the current revision.",
-        next_command=f"aeat app modelo work verify {work_unit.work_unit_id}",
+        next_action=_verify_action(work_unit),
     )
 
 

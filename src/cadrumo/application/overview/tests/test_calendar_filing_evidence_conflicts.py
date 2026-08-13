@@ -122,7 +122,12 @@ def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disag
     assert row.aeat_evidence_conflict_reference_ids == (remote_ref, local_ref)
     warning = next(item for item in calendar.warnings if item.code == "filing.aeat_evidence_conflict")
     assert warning.affected_modelos == ("303",)
-    assert warning.fix_command == "aeat app live filed pull --modelo 303 --year 2025 --period 1T"
+    assert warning.fix_action.action.action_id == "operator.live.filed.pull"
+    assert {binding.argument_name: binding.value for binding in warning.fix_action.argument_bindings} == {
+        "modelos": "303",
+        "year": 2025,
+        "period": "1T",
+    }
 
 
 def test_calendar_does_not_conflict_live_capture_csv_with_matching_filed_history_csv() -> None:

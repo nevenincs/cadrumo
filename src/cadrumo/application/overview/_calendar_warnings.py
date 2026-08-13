@@ -7,9 +7,14 @@ warnings about censo provenance, missing justificante verification, and
 conflicting AEAT evidence only describe gaps in the local projection.
 
 :func:`application.overview.build_overview_calendar` appends these warnings
-after legal deadline rows and additive events have already been projected. The
-fix commands point operators at existing profile-edit, censo-read, or
-filed-history pull surfaces; this module never starts those operations.
+after legal deadline rows and additive events have already been projected. Each
+warning names the catalogue action that answers it - profile edit, filed-history
+pull, or modelo description - rather than a command string; this module never
+starts those operations.
+
+See Also:
+    :mod:`~application.overview._next_actions`
+        Owns the shared declaration helper these remedies are built with.
 """
 
 from __future__ import annotations
@@ -27,6 +32,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.deadlines import IrpfEstimationRegime as _IrpfEstimationRegime
 from ...domain.deadlines import IVARegime as _IVARegime
+from ..operator_actions import DeclaredNextAction
 from ._calendar_models import (
     CalendarCompleteness,
     CalendarWarning,
@@ -36,35 +42,39 @@ from ._calendar_models import (
     OverviewCalendarEventType,
     OverviewCensoEnrolmentState,
 )
+from ._next_actions import declare_next_action
 
-_PROFILE_EDIT_FIX_COMMAND = "aeat config profile edit"
+#: Every profile-fact gap this module reports is answered by one surface, so the
+#: warnings name that surface's catalogue action rather than nine copies of a
+#: command string.
+_PROFILE_EDIT_ACTION_ID = "operator.profile.edit"
 
 _PROFILE_FIELD_WARNING_META: MappingProxyType[str, tuple[str, str]] = MappingProxyType(
     {
-        "has_employees": ("cli.overview.warning.has_employees_unset", _PROFILE_EDIT_FIX_COMMAND),
+        "has_employees": ("cli.overview.warning.has_employees_unset", _PROFILE_EDIT_ACTION_ID),
         "pays_professionals_with_retencion": (
             "cli.overview.warning.retencion_profesionales_unset",
-            _PROFILE_EDIT_FIX_COMMAND,
+            _PROFILE_EDIT_ACTION_ID,
         ),
         "art109_activity_income_withholding_ge_70pct": (
             "cli.overview.warning.art109_activity_income_withholding_ge_70pct_unset",
-            _PROFILE_EDIT_FIX_COMMAND,
+            _PROFILE_EDIT_ACTION_ID,
         ),
         "pays_rent_with_retencion": (
             "cli.overview.warning.retencion_arrendamientos_unset",
-            _PROFILE_EDIT_FIX_COMMAND,
+            _PROFILE_EDIT_ACTION_ID,
         ),
         "pays_capital_income_with_retencion": (
             "cli.overview.warning.retencion_capital_unset",
-            _PROFILE_EDIT_FIX_COMMAND,
+            _PROFILE_EDIT_ACTION_ID,
         ),
-        "does_intracomunitario": ("cli.overview.warning.intracomunitario_unset", _PROFILE_EDIT_FIX_COMMAND),
+        "does_intracomunitario": ("cli.overview.warning.intracomunitario_unset", _PROFILE_EDIT_ACTION_ID),
         "third_party_transactions_above_347_threshold": (
             "cli.overview.warning.terceros_threshold_unset",
-            _PROFILE_EDIT_FIX_COMMAND,
+            _PROFILE_EDIT_ACTION_ID,
         ),
-        "irpf.estimation_regime": ("cli.overview.warning.estimacion_objetiva_unset", _PROFILE_EDIT_FIX_COMMAND),
-        "iva.regime": ("cli.overview.warning.iva_regime_unset", _PROFILE_EDIT_FIX_COMMAND),
+        "irpf.estimation_regime": ("cli.overview.warning.estimacion_objetiva_unset", _PROFILE_EDIT_ACTION_ID),
+        "iva.regime": ("cli.overview.warning.iva_regime_unset", _PROFILE_EDIT_ACTION_ID),
     },
 )
 
@@ -202,16 +212,15 @@ _CENSO_ENROLMENT_PROFILE_KEYS = frozenset(
 
 _CENSO_ENROLMENT_WARNING_CODE = "censo.enrolment_unverified"
 _CENSO_ENROLMENT_WARNING_MESSAGE = "cli.overview.warning.censo_enrolment_unverified"
-_CENSO_ENROLMENT_FIX_COMMAND = "aeat config profile edit"
+_CENSO_ENROLMENT_ACTION_ID = "operator.profile.edit"
 _JUSTIFICANTE_UNVERIFIED_WARNING_CODE = "filing.justificante_unverified"
 _JUSTIFICANTE_UNVERIFIED_WARNING_MESSAGE = "cli.overview.warning.justificante_unverified"
-_JUSTIFICANTE_UNVERIFIED_FIX_COMMAND = "aeat app live filed pull --modelo MODELO --year YEAR --period PERIOD"
+_FILED_PULL_ACTION_ID = "operator.live.filed.pull"
 _AEAT_EVIDENCE_CONFLICT_WARNING_CODE = "filing.aeat_evidence_conflict"
 _AEAT_EVIDENCE_CONFLICT_WARNING_MESSAGE = "cli.overview.warning.aeat_evidence_conflict"
-_AEAT_EVIDENCE_CONFLICT_FIX_COMMAND = "aeat app live filed pull --modelo MODELO --year YEAR --period PERIOD"
 _M303_SIMPLIFICADO_FORFAIT_WARNING_CODE = "iva.regime.m303_simplificado_forfait_unavailable"
 _M303_SIMPLIFICADO_FORFAIT_WARNING_LOCALE_KEY = "cli.overview.warning.m303_simplificado_forfait_unavailable"
-_M303_SIMPLIFICADO_FORFAIT_FIX_COMMAND = "aeat app modelo describe 303"
+_M303_SIMPLIFICADO_FORFAIT_ACTION_ID = "operator.modelo.describe"
 
 
 def calendar_censo_enrolment_profile_keys() -> tuple[str, ...]:
@@ -270,7 +279,7 @@ def _calendar_censo_reconciliation_warnings(
         CalendarWarning(
             code=_CENSO_ENROLMENT_WARNING_CODE,
             message=_CENSO_ENROLMENT_WARNING_MESSAGE,
-            fix_command=_CENSO_ENROLMENT_FIX_COMMAND,
+            fix_action=declare_next_action(_CENSO_ENROLMENT_ACTION_ID),
             affected_modelos=tuple(sorted(affected_modelos)),
         ),
     )
@@ -303,12 +312,11 @@ def _calendar_unverified_justificante_warnings(
     """Return warnings for AEAT-observed filings lacking justificante proof.
 
     Both entry-level ``OverviewCalendarEntry.filing_evidence`` rows and filing
-    :class:`OverviewCalendarEvent` rows are scanned. Period-specific
-    remediation is used only when all affected rows collapse to one
-    ``aeat app live filed pull`` command.
+    :class:`OverviewCalendarEvent` rows are scanned. Scope-specific remediation
+    is used only when all affected rows collapse to one filed-history pull.
     """
     affected_modelos: set[str] = set()
-    fix_commands: set[str] = set()
+    fix_actions: list[DeclaredNextAction] = []
     unresolved_states = {
         OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
         OverviewAeatSubmissionState.ACCEPTED,
@@ -317,12 +325,11 @@ def _calendar_unverified_justificante_warnings(
         evidence = entry.filing_evidence
         if evidence.aeat_submission_state in unresolved_states and not evidence.justificante_verified:
             affected_modelos.add(entry.modelo)
-            fix_commands.add(
-                _filed_pull_command(
+            fix_actions.append(
+                _filed_pull_action(
                     modelo=entry.modelo,
                     filing_year=entry.filing_year,
                     period=entry.period,
-                    fallback=_JUSTIFICANTE_UNVERIFIED_FIX_COMMAND,
                 ),
             )
     for event in events:
@@ -330,12 +337,11 @@ def _calendar_unverified_justificante_warnings(
             continue
         if event.aeat_submission_state in unresolved_states and event.justificante_verified is not True:
             affected_modelos.add(event.modelo)
-            fix_commands.add(
-                _filed_pull_command(
+            fix_actions.append(
+                _filed_pull_action(
                     modelo=event.modelo,
                     filing_year=event.filing_year,
                     period=event.period,
-                    fallback=_JUSTIFICANTE_UNVERIFIED_FIX_COMMAND,
                 ),
             )
     if not affected_modelos:
@@ -344,7 +350,7 @@ def _calendar_unverified_justificante_warnings(
         CalendarWarning(
             code=_JUSTIFICANTE_UNVERIFIED_WARNING_CODE,
             message=_JUSTIFICANTE_UNVERIFIED_WARNING_MESSAGE,
-            fix_command=_single_fix_command_or_fallback(fix_commands, fallback=_JUSTIFICANTE_UNVERIFIED_FIX_COMMAND),
+            fix_action=_single_fix_action_or_unscoped_pull(fix_actions),
             affected_modelos=tuple(sorted(affected_modelos)),
         ),
     )
@@ -356,17 +362,16 @@ def _calendar_aeat_evidence_conflict_warnings(
 ) -> tuple[CalendarWarning, ...]:
     """Return warnings for conflicting AEAT references on calendar entries."""
     affected_modelos: set[str] = set()
-    fix_commands: set[str] = set()
+    fix_actions: list[DeclaredNextAction] = []
     for entry in entries:
         if not entry.filing_evidence.aeat_evidence_conflict_reference_ids:
             continue
         affected_modelos.add(entry.modelo)
-        fix_commands.add(
-            _filed_pull_command(
+        fix_actions.append(
+            _filed_pull_action(
                 modelo=entry.modelo,
                 filing_year=entry.filing_year,
                 period=entry.period,
-                fallback=_AEAT_EVIDENCE_CONFLICT_FIX_COMMAND,
             ),
         )
     if not affected_modelos:
@@ -375,7 +380,7 @@ def _calendar_aeat_evidence_conflict_warnings(
         CalendarWarning(
             code=_AEAT_EVIDENCE_CONFLICT_WARNING_CODE,
             message=_AEAT_EVIDENCE_CONFLICT_WARNING_MESSAGE,
-            fix_command=_single_fix_command_or_fallback(fix_commands, fallback=_AEAT_EVIDENCE_CONFLICT_FIX_COMMAND),
+            fix_action=_single_fix_action_or_unscoped_pull(fix_actions),
             affected_modelos=tuple(sorted(affected_modelos)),
         ),
     )
@@ -395,31 +400,47 @@ def _calendar_regime_incompatibility_warnings(
         CalendarWarning(
             code=_M303_SIMPLIFICADO_FORFAIT_WARNING_CODE,
             message=_M303_SIMPLIFICADO_FORFAIT_WARNING_LOCALE_KEY,
-            fix_command=_M303_SIMPLIFICADO_FORFAIT_FIX_COMMAND,
+            fix_action=declare_next_action(
+                _M303_SIMPLIFICADO_FORFAIT_ACTION_ID,
+                modelo=_Modelo.M303.value,
+            ),
             affected_modelos=(_Modelo.M303.value,),
         ),
     )
 
 
-def _filed_pull_command(
+def _filed_pull_action(
     *,
     modelo: str,
     filing_year: int | None,
     period: _Period | None,
-    fallback: str,
-) -> str:
-    """Return the period-specific filed-history pull command when possible."""
+) -> DeclaredNextAction:
+    """Declare the filed-history pull, scoped when the row states its scope.
+
+    A row that states no year or no period cannot narrow the pull, so the
+    declaration keeps the modelo alone rather than inventing a scope.
+    """
     if filing_year is None or period is None:
-        return fallback
-    return f"aeat app live filed pull --modelo {modelo} --year {filing_year} --period {period.registry_token}"
+        return declare_next_action(_FILED_PULL_ACTION_ID, modelos=modelo)
+    return declare_next_action(
+        _FILED_PULL_ACTION_ID,
+        modelos=modelo,
+        year=filing_year,
+        period=period.registry_token,
+    )
 
 
-def _single_fix_command_or_fallback(commands: set[str], *, fallback: str) -> str:
-    """Return one concrete remediation command, otherwise the generic fallback."""
-    commands.discard(fallback)
-    if len(commands) == 1:
-        return next(iter(commands))
-    return fallback
+def _single_fix_action_or_unscoped_pull(actions: list[DeclaredNextAction]) -> DeclaredNextAction:
+    """Return the one shared remediation, otherwise the unscoped pull.
+
+    Affected rows may name different scopes. Handing the operator one of them
+    would silently drop the others, so a divergent set collapses to the
+    unscoped pull, which reaches every affected row.
+    """
+    distinct = {action.model_dump_json(): action for action in actions}
+    if len(distinct) == 1:
+        return next(iter(distinct.values()))
+    return declare_next_action(_FILED_PULL_ACTION_ID)
 
 
 def _build_completeness_and_warnings(
@@ -438,7 +459,7 @@ def _build_completeness_and_warnings(
     defaulted: list[str] = []
     warnings: list[CalendarWarning] = []
     defaulted_modelos: set[str] = set()
-    for key, (affected_modelos, message_key, fix_command) in _gating_fields().items():
+    for key, (affected_modelos, message_key, action_id) in _gating_fields().items():
         raw = raw_values.get(key)
         if raw is not None and str(raw).strip():
             explicitly_set.append(key)
@@ -448,7 +469,7 @@ def _build_completeness_and_warnings(
             CalendarWarning(
                 code=key,
                 message=message_key,
-                fix_command=fix_command,
+                fix_action=declare_next_action(action_id),
                 affected_modelos=affected_modelos,
             ),
         )

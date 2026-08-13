@@ -1,20 +1,34 @@
-"""Text rendering and notice projection for ``overview status``.
+"""Text rendering and notice projection for the ``overview`` command family.
 
-This module consumes an application-built
-:class:`OverviewStatusReport` and turns it into
+This module consumes application-built overview read models and turns them into
 localized text lines plus :class:`Notice` objects for the
-:class:`SchemaEnvelope` notice channel.  It is
-presentation-only: active-profile discovery, storage reads, and status assembly
-stay upstream in the application overview layer and :mod:`._overview`.
+:class:`SchemaEnvelope` notice channel.  It is presentation-only: active-profile
+discovery, storage reads, and status assembly stay upstream in the application
+overview layer and :mod:`._overview`.
+
+Forward guidance has exactly ONE projection here.  A producer declares a
+catalogue action; :func:`resolve_notice_action` resolves it once against the
+live command tree; the resulting
+:class:`~core.json_contract.ResolvedNoticeAction` is then the single object
+carried by the payload row, by the envelope notice, and - through
+:func:`~._common._action_text_lines` - by the executable text line.  Text and
+JSON therefore cannot state different advice, because there is only one thing
+to state.
+
+Guidance used to be an ``aeat ...`` sentence stored in four locale catalogues:
+the text surface printed the sentence, and the JSON surface recovered a message
+from it by splitting on ``" - "``.  Two renderers, one string, and a verb rename
+broke both silently.
 """
 
 from __future__ import annotations
 
 from collections.abc import Sequence
 
-from ...application.operator_actions import ActionReference
+from ...application.operator_actions import ActionReference, DeclaredNextAction
 from ...application.overview import (
     NO_AEAT_HISTORY_NOTICE_CODE,
+    CalendarWarning,
     CoverageAdviceReason,
     ModeloReadinessState,
     ObligationCoverageReport,
@@ -22,8 +36,11 @@ from ...application.overview import (
     OverviewCalendarEntry,
     OverviewCalendarEvent,
     OverviewCalendarRange,
+    OverviewStatusNextStep,
+    OverviewStatusNextStepId,
     OverviewStatusReport,
     actionable_post_filing_events,
+    build_overview_status_next_steps,
 )
 from ...application.overview import (
     DataPrepStepState as _DataPrepStepState,
@@ -31,7 +48,6 @@ from ...application.overview import (
 from ...core import (
     ActionArgumentSource,
     ActionArgumentStatus,
-    Modelo,
     NotificacionEstadoServicio,
 )
 from ...core.i18n import tr
@@ -39,6 +55,7 @@ from ...core.json_contract import (
     Notice,
     NoticeSeverity,
     ResolvedActionArgument,
+    ResolvedNoticeAction,
     strict_round_trip,
 )
 from ._common import resolve_notice_action
@@ -53,43 +70,100 @@ from ._overview_payloads import (
     OverviewPrepareStepPayload,
 )
 
+_NEXT_STEP_NOTICE_CODE = "overview.status.next_step"
 
-def overview_next_step_notices(report: OverviewStatusReport) -> list[Notice]:
-    """Surface the workspace-state next-step guidance as :class:`Notice` values.
 
-    Mirrors the text-mode ``_next_step_lines`` guidance so JSON consumers
-    receive the same forward guidance the text surface already shows,
-    through the uniform envelope ``notices`` channel rather than a bespoke
-    payload field. Info severity keeps the envelope ``status`` at
-    ``success``.
+def _next_step_message(step_id: OverviewStatusNextStepId) -> str:
+    """Return the localized explanation for one forward-guidance row.
+
+    Each key is spelled as a literal argument to :func:`tr` so the locale
+    scanner can see it; a key held only in a lookup table is invisible to the
+    catalogue-parity gate and rots unnoticed.
+
+    The prose explains, and only explains.  The executable half of the row is
+    the resolved action, so a renamed verb can never leave a stale instruction
+    stranded in four translated catalogues.
+    """
+    if step_id is OverviewStatusNextStepId.CREATE_PROFILE:
+        return tr("cli.overview.status.next_step.create_profile")
+    if step_id is OverviewStatusNextStepId.RESUME_WORK_UNIT:
+        return tr("cli.overview.status.next_step.resume_work_unit")
+    if step_id is OverviewStatusNextStepId.START_ANOTHER_WORK_UNIT:
+        return tr("cli.overview.status.next_step.start_another_work_unit")
+    if step_id is OverviewStatusNextStepId.START_WORK_UNIT_FROM_LEDGER:
+        return tr("cli.overview.status.next_step.start_work_unit_from_ledger")
+    if step_id is OverviewStatusNextStepId.MODELO_210_SEDE_ONLY:
+        return tr("cli.overview.status.next_step.modelo_210_sede_only")
+    if step_id is OverviewStatusNextStepId.REVIEW_LEDGER:
+        return tr("cli.overview.status.next_step.review_ledger")
+    if step_id is OverviewStatusNextStepId.IMPORT_TRANSACTIONS:
+        return tr("cli.overview.status.next_step.import_transactions")
+    if step_id is OverviewStatusNextStepId.REPAIR_STORAGE:
+        return tr("cli.overview.status.next_step.repair_storage")
+    return tr("cli.overview.status.next_step.command_guide")
+
+
+def _next_step_notice(step: OverviewStatusNextStep) -> Notice:
+    """Project one declared guidance row onto the envelope notice channel.
+
+    The message carries the localized explanation and the action carries the
+    executable identity.  Nothing here reads or rebuilds the other, so the two
+    halves cannot disagree.
+    """
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code=_NEXT_STEP_NOTICE_CODE,
+        message=_next_step_message(step.step_id),
+        action=_resolved_action(step.next_action),
+        context={"step": step.step_id.value},
+    )
+
+
+def _resolved_action(declaration: DeclaredNextAction | None) -> ResolvedNoticeAction | None:
+    """Resolve one producer declaration against the live command surface.
+
+    Returns ``None`` for a row that declared no continuation, which is how a
+    producer states that the next move needs input it cannot supply.
+    """
+    if declaration is None:
+        return None
+    return resolve_notice_action(
+        action=declaration.action,
+        argument_bindings=tuple(
+            ResolvedActionArgument.model_validate(binding.model_dump()) for binding in declaration.argument_bindings
+        ),
+    )
+
+
+def overview_calendar_warning_notices(warnings: Sequence[CalendarWarning]) -> list[Notice]:
+    """Project profile-completeness and evidence warnings onto the notice channel.
+
+    A calendar warning always names a remedy, and that remedy is now the one
+    resolved action every surface shares.  The text line beside it states only
+    the localized explanation, because the executable form is rendered from
+    this notice by the shared envelope rather than formatted a second time
+    here.
+
+    Severity is ``warning``: each of these rows means an obligation projection
+    ran on a defaulted or unproven fact, which is exactly the case an operator
+    must not scroll past.
+
+    Args:
+        warnings: The application-built warning rows for one query.
+
+    Returns:
+        One notice per warning, in the order the builder produced them.
     """
     return [
         Notice(
-            severity=NoticeSeverity.INFO,
-            code="overview.status.next_step",
-            message=_next_step_notice_message(line),
+            severity=NoticeSeverity.WARNING,
+            code=warning.code,
+            message=tr(warning.message),
+            action=_resolved_action(warning.fix_action),
+            context={"affected_modelos": ",".join(warning.affected_modelos)} if warning.affected_modelos else None,
         )
-        for line in _next_step_lines(report)
-        if line.strip()
+        for warning in warnings
     ]
-
-
-def _next_step_notice_message(line: str) -> str:
-    """Keep executable guidance in text rendering, not in notice prose.
-
-    The overview text rows intentionally start with the concrete command and
-    then a human explanation separated by ``" - "``.  The command remains in
-    the text surface, while the envelope notice carries only that localized
-    explanation; executable identity belongs to ``Notice.action`` as catalogue
-    coverage expands, never to ``Notice.message``.
-    """
-    _command, separator, explanation = line.strip().partition(" - ")
-    if separator and explanation:
-        return explanation
-    return tr(
-        "cli.overview.status.next_step_available",
-        default="A recommended next step is available in the overview output.",
-    )
 
 
 _COVERAGE_NOTICE_CODE = "overview.coverage.incomplete"
@@ -196,7 +270,7 @@ def overview_deemed_served_notification_notices(events: Sequence[OverviewCalenda
     """Surface notifications the law already deems served, whatever their procedural kind.
 
     A DEHu notification left unopened for the
-    :data:`~cadrumo.core.DEHU_RECHAZO_TACITO_DIAS_NATURALES` window is *rechazada*
+    :data:`~cadrumo.core.external_constants.DEHU_RECHAZO_TACITO_DIAS_NATURALES` window is *rechazada*
     under Ley 39/2015 art. 43.2 — served, with every downstream plazo already
     running, even though the taxpayer never read it. That consequence attaches to
     the notification's delivery state, not to its
@@ -278,8 +352,9 @@ def overview_calendar_output(
             f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}"
             f"\t{_calendar_entry_work_unit_text_fields(entry)}",
         )
-    for warning in cal.warnings:
-        lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
+    warning_notices = overview_calendar_warning_notices(cal.warnings)
+    for warning, warning_notice in zip(cal.warnings, warning_notices, strict=True):
+        lines.append(f"warning\t{warning.code}\t{warning_notice.message}")
     for event in cal.events:
         lines.append(_calendar_event_text_line(event))
     if cal.completeness.computable_modelos:
@@ -303,7 +378,7 @@ def overview_calendar_output(
     for notice in deemed_served_notices:
         context = notice.context or {}
         lines.append(f"notificacion_rechazo_tacito\t{context.get('count', '')}\t{notice.message}")
-    calendar_notices = [*coverage_notices, *post_filing_notices, *deemed_served_notices]
+    calendar_notices = [*warning_notices, *coverage_notices, *post_filing_notices, *deemed_served_notices]
     for evidence_notice in evidence_notices:
         notice = _calendar_evidence_notice_with_action(evidence_notice)
         lines.append(f"{notice.code}\t{notice.message}")
@@ -339,8 +414,9 @@ def overview_calendar_profile_output(
             f"warning\tINCOMPLETE_TAXPAYER_MODEL\t"
             f"{cal.incomplete_reason or tr('cli.overview.taxpayer_model_undeclared')}",
         )
-    for warning in cal.warnings:
-        lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
+    profile_warning_notices = overview_calendar_warning_notices(cal.warnings)
+    for warning, warning_notice in zip(cal.warnings, profile_warning_notices, strict=True):
+        lines.append(f"warning\t{warning.code}\t{warning_notice.message}")
     for event in cal.events:
         lines.append(_calendar_event_text_line(event))
     for suppressed in cal.suppressed_entries:
@@ -349,7 +425,10 @@ def overview_calendar_profile_output(
             f"\tverdict={suppressed.verdict.value}"
             f"\treason={suppressed.reason[:80]}",
         )
-    notices: list[Notice] = []
+    notices: list[Notice] = [
+        notice.model_copy(update={"context": {**(notice.context or {}), "profile": label}})
+        for notice in profile_warning_notices
+    ]
     for notice in overview_coverage_notices(cal.coverage):
         tagged = notice.model_copy(update={"context": {**(notice.context or {}), "profile": label}})
         notices.append(tagged)
@@ -415,12 +494,13 @@ def overview_agenda_output(agenda) -> tuple[OverviewAgendaResult, list[str], lis
     lines.append(f"overdue\t{len(agenda.overdue)}")
     for entry in agenda.overdue:
         lines.append(f"  {entry.modelo}\t{entry.period}\t{entry.adjusted_closes_on.isoformat()}")
-    for warning in agenda.warnings:
-        lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
+    warning_notices = overview_calendar_warning_notices(agenda.warnings)
+    for warning, warning_notice in zip(agenda.warnings, warning_notices, strict=True):
+        lines.append(f"warning\t{warning.code}\t{warning_notice.message}")
     coverage_notices = overview_coverage_notices(agenda.coverage)
     for notice in coverage_notices:
         lines.append(f"coverage_advised\t{len(agenda.coverage.advised)}\t{notice.message}")
-    return typed_agenda, lines, coverage_notices
+    return typed_agenda, lines, [*warning_notices, *coverage_notices]
 
 
 def overview_backlog_output(
@@ -441,12 +521,13 @@ def overview_backlog_output(
             f"{entry.modelo}\t{entry.period}\tcloses={entry.adjusted_closes_on.isoformat()}"
             f"\t{_calendar_entry_work_unit_text_fields(entry)}",
         )
-    for warning in backlog.warnings:
-        lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
+    warning_notices = overview_calendar_warning_notices(backlog.warnings)
+    for warning, warning_notice in zip(backlog.warnings, warning_notices, strict=True):
+        lines.append(f"warning\t{warning.code}\t{warning_notice.message}")
     coverage_notices = overview_coverage_notices(backlog.coverage)
     for notice in coverage_notices:
         lines.append(f"coverage_advised\t{len(backlog.coverage.advised)}\t{notice.message}")
-    backlog_notices = [*coverage_notices]
+    backlog_notices = [*warning_notices, *coverage_notices]
     if work_units_notice is not None:
         lines.append(f"work_units_degraded\t{work_units_notice.message}")
         backlog_notices.append(work_units_notice)
@@ -475,6 +556,7 @@ def overview_explain_output(result) -> tuple[OverviewExplainResult, list[str]]:
 
 def overview_prepare_output(walkthrough) -> tuple[OverviewPrepareResult, list[str], list[Notice]]:
     """Project a data-prep walkthrough into payload, text lines, and notices."""
+    resolved_by_step = {step.step_id: _resolved_action(step.next_action) for step in walkthrough.steps}
     typed_result = OverviewPrepareResult(
         modelo=walkthrough.modelo,
         filing_year=walkthrough.filing_year,
@@ -484,7 +566,7 @@ def overview_prepare_output(walkthrough) -> tuple[OverviewPrepareResult, list[st
                 step_id=step.step_id,
                 state=step.state,
                 summary=step.summary,
-                next_command=step.next_command,
+                next_action=resolved_by_step[step.step_id],
             )
             for step in walkthrough.steps
         ],
@@ -499,21 +581,27 @@ def overview_prepare_output(walkthrough) -> tuple[OverviewPrepareResult, list[st
     notices: list[Notice] = []
     for index, step in enumerate(walkthrough.steps, start=1):
         lines.append(f"{index}. [{step.state.value}] {step.summary}")
-        lines.append(f"   next: {step.next_command}")
-        if step.state is not _DataPrepStepState.DONE:
-            notices.append(
-                Notice(
-                    severity=NoticeSeverity.INFO,
-                    code=f"overview.prepare.next_step.{step.step_id.value}",
-                    message=step.summary,
-                    context={"state": step.state.value},
-                ),
-            )
+        resolved = resolved_by_step[step.step_id]
+        # One notice per row that has somewhere to go, whatever its state: the
+        # notice is what carries the executable line onto the text surface, so
+        # emitting it selectively would show JSON an action text never sees.
+        if resolved is None and step.state is _DataPrepStepState.DONE:
+            continue
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code=f"overview.prepare.next_step.{step.step_id.value}",
+                message=step.summary,
+                action=resolved,
+                context={"state": step.state.value},
+            ),
+        )
     return typed_result, lines, notices
 
 
 def overview_pipeline_output(report, *, ledger) -> tuple[OverviewPipelineResult, list[str], list[Notice]]:
     """Project a pipeline-health report into payload, text lines, and notices."""
+    resolved_by_modelo = {row.modelo: _resolved_action(row.next_action) for row in report.modelos}
     typed_result = OverviewPipelineResult(
         filing_year=report.filing_year,
         period=report.period,
@@ -526,7 +614,7 @@ def overview_pipeline_output(report, *, ledger) -> tuple[OverviewPipelineResult,
                 blocking_finding_count=row.blocking_finding_count,
                 warning_finding_count=row.warning_finding_count,
                 summary=row.summary,
-                next_command=row.next_command,
+                next_action=resolved_by_modelo[row.modelo],
             )
             for row in report.modelos
         ],
@@ -556,17 +644,16 @@ def overview_pipeline_output(report, *, ledger) -> tuple[OverviewPipelineResult,
         lines.append(f"  {no_units_message}")
     for row in report.modelos:
         lines.append(f"  [{row.state.value}] Modelo {row.modelo}: {row.summary}")
-        lines.append(f"    next: {row.next_command}")
-        if row.state is not ModeloReadinessState.FILED:
-            severity = NoticeSeverity.WARNING if row.state is ModeloReadinessState.BLOCKED else NoticeSeverity.INFO
-            notices.append(
-                Notice(
-                    severity=severity,
-                    code=f"overview.pipeline.modelo.{row.state.value}",
-                    message=row.summary,
-                    context={"modelo": row.modelo, "state": row.state.value},
-                ),
-            )
+        severity = NoticeSeverity.WARNING if row.state is ModeloReadinessState.BLOCKED else NoticeSeverity.INFO
+        notices.append(
+            Notice(
+                severity=severity,
+                code=f"overview.pipeline.modelo.{row.state.value}",
+                message=row.summary,
+                action=resolved_by_modelo[row.modelo],
+                context={"modelo": row.modelo, "state": row.state.value},
+            ),
+        )
     lines.append("")
     lines.append(
         f"{tr('cli.overview.pipeline.labels.findings_section', default='Findings:')} "
@@ -575,13 +662,23 @@ def overview_pipeline_output(report, *, ledger) -> tuple[OverviewPipelineResult,
     return typed_result, lines, notices
 
 
-def render_cli_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...]:
-    """Render :class:`OverviewStatusReport` as operator-facing CLI text.
+def overview_status_output(report: OverviewStatusReport) -> tuple[list[str], list[Notice]]:
+    """Project :class:`OverviewStatusReport` into text lines and notices.
 
-    The renderer preserves the same next-step decisions used by
-    :func:`overview_next_step_notices`,
-    so text and JSON-envelope notice output stay aligned.
+    Both halves are built from one pass over
+    :func:`~application.overview.build_overview_status_next_steps`: the text
+    lines carry each row's localized explanation, the notices carry the same
+    explanation plus the resolved action, and the shared envelope renders the
+    executable text line from that same action.  There is no second decision
+    procedure for either surface to drift from.
+
+    Args:
+        report: The assembled workspace status read model.
+
+    Returns:
+        The operator-facing text lines and the notices for the envelope.
     """
+    next_step_notices = [_next_step_notice(step) for step in build_overview_status_next_steps(report)]
     lines: list[str] = [
         tr("cli.overview.status.title"),
         "",
@@ -590,74 +687,13 @@ def render_cli_overview_status_lines(report: OverviewStatusReport) -> tuple[str,
         _invoices_line(report),
         _drafts_line(report),
         _work_units_line(report),
-        *_storage_lines(report),
+        _storage_line(report),
         *_filing_obligation_lines(report),
         "",
         tr("cli.overview.status.next_heading"),
-        *_next_step_lines(report),
+        *(f"  {notice.message}" for notice in next_step_notices),
     ]
-    return tuple(lines)
-
-
-def _next_step_lines(report: OverviewStatusReport) -> tuple[str, ...]:
-    """Return next-step guidance that reflects the actual workspace state.
-
-    A workspace with ledger data already recorded must not be told to
-    "import a bank statement" — that step is done. The guidance walks
-    the operator forward: import when the ledger is empty, classify /
-    work-modelo when transactions exist, continue the modelo flow when
-    work units are already in progress. Unsupported
-    :class:`Modelo` work-unit creation is diverted to discovery
-    guidance instead of a dead command.
-    """
-    if report.work_units > 0:
-        return (
-            tr(
-                "cli.overview.status.next_work_calculate_command",
-                default="  aeat app modelo work list - resume an in-progress modelo work unit.",
-            ),
-            _modelo_work_create_guidance_line(report),
-            tr("cli.overview.status.next_landing_command"),
-        )
-    if report.transactions > 0 or report.invoices > 0:
-        return (
-            tr(
-                "cli.overview.status.next_review_command",
-            ),
-            _modelo_work_from_ledger_guidance_line(report),
-            tr("cli.overview.status.next_landing_command"),
-        )
-    return (
-        tr("cli.overview.status.next_import_command"),
-        tr("cli.overview.status.next_review_command"),
-        tr("cli.overview.status.next_landing_command"),
-    )
-
-
-def _modelo_210_unsupported_guidance_line(report: OverviewStatusReport) -> str | None:
-    if Modelo.M210.value in report.unsupported_work_create_modelos:
-        return tr(
-            "cli.overview.status.next_modelo_210_unsupported_command",
-            default=(
-                "  aeat app modelo describe 210 - Modelo 210 is visible for IRNR discovery, "
-                "but local work-unit creation is not supported yet; file through AEAT Sede G320."
-            ),
-        )
-    return None
-
-
-def _modelo_work_create_guidance_line(report: OverviewStatusReport) -> str:
-    return _modelo_210_unsupported_guidance_line(report) or tr(
-        "cli.overview.status.next_work_create_command",
-        default="  aeat app modelo work create - start a work unit for another modelo.",
-    )
-
-
-def _modelo_work_from_ledger_guidance_line(report: OverviewStatusReport) -> str:
-    return _modelo_210_unsupported_guidance_line(report) or tr(
-        "cli.overview.status.next_modelo_work_command",
-        default="  aeat app modelo work create - start a modelo declaration from your ledger data.",
-    )
+    return lines, next_step_notices
 
 
 def _work_units_line(report: OverviewStatusReport) -> str:
@@ -727,13 +763,17 @@ def _drafts_line(report: OverviewStatusReport) -> str:
     return tr("cli.overview.status.drafts_present", count=report.drafts)
 
 
-def _storage_lines(report: OverviewStatusReport) -> tuple[str, ...]:
+def _storage_line(report: OverviewStatusReport) -> str:
+    """State the local-storage readability finding.
+
+    The remedy is not stated here: unreadable rows raise a
+    :attr:`~application.overview.OverviewStatusNextStepId.REPAIR_STORAGE`
+    guidance row, which carries the diagnostics action through the same one
+    projection every other row uses.
+    """
     if report.unreadable_rows == 0:
-        return (tr("cli.overview.status.storage_ok"),)
-    return (
-        tr("cli.overview.status.storage_warning", count=report.unreadable_rows),
-        tr("cli.overview.status.integrity_next"),
-    )
+        return tr("cli.overview.status.storage_ok")
+    return tr("cli.overview.status.storage_warning", count=report.unreadable_rows)
 
 
 def _filing_obligation_lines(report: OverviewStatusReport) -> tuple[str, ...]:
@@ -838,11 +878,12 @@ __all__ = [
     "overview_backlog_output",
     "overview_calendar_output",
     "overview_calendar_profile_output",
+    "overview_calendar_warning_notices",
     "overview_coverage_notices",
     "overview_deemed_served_notification_notices",
     "overview_explain_output",
     "overview_pipeline_output",
     "overview_post_filing_event_notices",
     "overview_prepare_output",
-    "render_cli_overview_status_lines",
+    "overview_status_output",
 ]

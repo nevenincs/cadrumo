@@ -5589,9 +5589,6 @@ cli:
         d'un pagador, amb més de 1.500 € dels pagadors secundaris, redueix el límit
         de l'obligació de declarar (art. 96.3 LIRPF); podeu estar obligat a presentar
         el Model 100 si el total de rendiments del treball el supera.
-      integrity_next: Executeu `aeat config repair` per veure el detall. No poseu
-        files en quarantena tret que vulgueu arxivar deliberadament dades locals antigues
-        illegibles.
       invoices_empty: No hi ha factures emeses ni rebudes al registre de factures.
         És un magatzem diferent del llibre bancari i no compta les transaccions del
         llibre classificades. Un registre de factures buit és normal si només uses
@@ -5599,24 +5596,21 @@ cli:
       invoices_present: '%{count} factura(es) emesa(es)/rebuda(es) al registre de
         factures (un magatzem diferent del llibre bancari).'
       next_heading: Que escriure ara
-      next_import_command: '  aeat app ledger import <extracte-bancari.csv> --provider
-        csv - importar moviments bancaris.'
-      next_landing_command: '  aeat --help - tornar a la guia de comandes.'
-      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - El Modelo
-        210 és visible per descobriment IRNR, però la creació local de treballs encara
-        no està suportada; presenta per AEAT Sede G320.'
-      next_modelo_work_command: '  aeat app modelo work create - iniciar una declaració
-        de model a partir de les dades del teu llibre.'
-      next_review_command: '  aeat app ledger review - revisar files importades.'
-      next_step_available: Hi ha un pas següent recomanat disponible a la sortida
-        del resum.
-      next_work_calculate_command: '  aeat app modelo work list - reprendre una unitat
-        de treball de model en curs.'
-      next_work_create_command: '  aeat app modelo work create - iniciar una unitat
-        de treball per a un altre model.'
+      next_step:
+        command_guide: Torna a la guia de comandes.
+        import_transactions: Importa un extracte bancari per registrar els teus moviments.
+        modelo_210_sede_only: El Modelo 210 és visible per a descobriment IRNR, però
+          la creació local d'unitats de treball encara no està suportada; presenta
+          per AEAT Sede G320.
+        repair_storage: Executa el diagnòstic d'emmagatzematge per veure el detall.
+          No posis files en quarantena tret que vulguis arxivar deliberadament dades
+          locals antigues il·legibles.
+        review_ledger: Revisa les files importades.
+        start_work_unit_from_ledger: Inicia una declaració de model a partir de les
+          dades del teu llibre.
       profile_active: Esteu treballant al perfil `%{profile}`.
-      profile_missing: No hi ha cap perfil actiu configurat. Executeu aeat config
-        profile create NAME abans d'importar dades.
+      profile_missing: No hi ha cap perfil actiu configurat. Crea'n un abans d'importar
+        dades.
       storage_ok: L'emmagatzematge local xifrat es pot llegir amb la clau mestra actual.
       storage_warning: '%{count} fila(es) xifrades de l''emmagatzematge local no es
         poden llegir amb la clau mestra actual. No són files del teu extracte bancari;
@@ -5627,11 +5621,10 @@ cli:
       transactions_present: '%{count} moviment(s) bancaris estan disponibles al llibre.'
       work_units_empty: Encara no s'ha iniciat cap unitat de treball de models.
       work_units_present: '%{count} unitat(s) de treball de models en curs en aquest
-        emmagatzematge local; la teva feina de models està desada, reprèn-la amb `aeat
-        app modelo work list`.'
+        emmagatzematge local; la teva feina de models està desada i pots reprendre-la.'
       work_units_present_with_discarded: '%{count} unitat(s) de treball de models
         actives (%{discarded} descartada(es)) en aquest emmagatzematge local; la teva
-        feina de models activa està desada, reprèn-la amb `aeat app modelo work list`.'
+        feina de models activa està desada i pots reprendre-la.'
     status_help: Mostrar l'estat del perfil, llibre, factures i declaracions
     taxpayer_model_undeclared: El perfil actiu no declara aquest model fiscal; actualitza
       el perfil o torna a executar amb l'anul·lació de perfil incomplet.

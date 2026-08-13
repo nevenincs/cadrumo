@@ -5223,8 +5223,6 @@ cli:
         with over EUR 1,500 from the secondary pagadores, lowers your IRPF filing-exemption
         limit to the reduced Art. 96.3 LIRPF threshold; you may be obliged to file
         Modelo 100 if your total work income exceeds it.
-      integrity_next: Run `aeat config repair` for detail. Do not quarantine rows
-        unless you intentionally want to archive unreadable old local data.
       invoices_empty: No sales or purchase invoices are stored in the invoice register.
         This is a separate store from your bank ledger - it does not count classified
         ledger transactions. An empty invoice register is normal if you only use the
@@ -5232,23 +5230,17 @@ cli:
       invoices_present: '%{count} sales/purchase invoice(s) are stored in the invoice
         register (a separate store from the bank ledger).'
       next_heading: What to type next
-      next_import_command: '  aeat app ledger import <bank-statement.csv> --provider
-        csv - import bank transactions.'
-      next_landing_command: '  aeat --help - return to the command guide.'
-      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - Modelo
-        210 is visible for IRNR discovery, but local work-unit creation is not supported
-        yet; file through AEAT Sede G320.'
-      next_modelo_work_command: '  aeat app modelo work create - start a modelo declaration
-        from your ledger data.'
-      next_review_command: '  aeat app ledger review - review imported rows.'
-      next_step_available: A recommended next step is available in the overview output.
-      next_work_calculate_command: '  aeat app modelo work list - resume an in-progress
-        modelo work unit.'
-      next_work_create_command: '  aeat app modelo work create - start a work unit
-        for another modelo.'
+      next_step:
+        command_guide: Return to the command guide.
+        import_transactions: Import a bank statement to record your transactions.
+        modelo_210_sede_only: Modelo 210 is visible for IRNR discovery, but local
+          work-unit creation is not supported yet; file through AEAT Sede G320.
+        repair_storage: Run storage diagnostics for detail. Do not quarantine rows
+          unless you intentionally want to archive unreadable old local data.
+        review_ledger: Review imported rows.
       profile_active: You are working in profile `%{profile}`.
-      profile_missing: No active profile is configured. Run `aeat config profile create
-        NAME` before importing data.
+      profile_missing: No active profile is configured. Create one before importing
+        data.
       storage_ok: Local encrypted storage is readable with the current master key.
       storage_warning: '%{count} encrypted local storage row(s) cannot be read with
         the current master key. These are not rows from your bank statement; you can
@@ -5259,11 +5251,10 @@ cli:
       transactions_present: '%{count} bank transaction(s) are available in the ledger.'
       work_units_empty: No modelo work units have been started yet.
       work_units_present: '%{count} modelo work unit(s) are in progress in this local
-        storage - your modelo work is saved; resume it with `aeat app modelo work
-        list`.'
+        storage - your modelo work is saved and can be resumed.'
       work_units_present_with_discarded: '%{count} active modelo work unit(s) (%{discarded}
-        discarded) in this local storage - your active modelo work is saved; resume
-        it with `aeat app modelo work list`.'
+        discarded) in this local storage - your active modelo work is saved and can
+        be resumed.'
     status_help: Show profile, ledger, and modelo readiness
     taxpayer_model_undeclared: The active profile does not declare this taxpayer model;
       update the profile or rerun with the incomplete-profile override.

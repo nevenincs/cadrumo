@@ -46,7 +46,10 @@ def test_calendar_warns_when_m303_simplificado_forfait_engine_is_unavailable() -
     assert len(warnings) == 1
     warning = warnings[0]
     assert warning.affected_modelos == ("303",)
-    assert warning.fix_command == "aeat app modelo describe 303"
+    assert warning.fix_action.action.action_id == "operator.modelo.describe"
+    assert {binding.argument_name: binding.value for binding in warning.fix_action.argument_bindings} == {
+        "modelo": "303"
+    }
 
 
 def test_calendar_does_not_emit_simplificado_forfait_warning_for_general_regime() -> None:

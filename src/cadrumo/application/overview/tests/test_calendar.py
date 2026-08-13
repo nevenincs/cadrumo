@@ -938,7 +938,7 @@ def test_calendar_emits_warning_when_iva_regime_unset() -> None:
     entries under those defaults without signalling the assumption.
     The contract verified here: when raw_values omits iva.regime, the
     aggregator emits a CalendarWarning whose code names the missing
-    key, fix_command supplies the literal aeat config profile edit
+    key, fix_action supplies the canonical profile-edit action
     command, and affected_modelos lists 303/390.
     """
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
@@ -950,7 +950,8 @@ def test_calendar_emits_warning_when_iva_regime_unset() -> None:
     warning = iva_warnings[0]
     assert "303" in warning.affected_modelos
     assert "390" in warning.affected_modelos
-    assert warning.fix_command == "aeat config profile edit"
+    assert warning.fix_action.action.action_id == "operator.profile.edit"
+    assert warning.fix_action.argument_bindings == ()
 
 
 def test_calendar_completeness_lists_uncomputable_with_reason() -> None:

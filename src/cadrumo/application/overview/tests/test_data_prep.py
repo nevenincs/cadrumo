@@ -200,7 +200,7 @@ def _walkthrough(
     )
 
 
-def test_fresh_bucket_shows_import_step_pending_with_next_command(
+def test_fresh_bucket_declares_no_import_action_and_a_concrete_work_create_action(
     _tx_repository: TransactionCatalogueRepository,
 ) -> None:
     """A brand-new profile with no ledger data: step 1 is pending and every
@@ -212,14 +212,23 @@ def test_fresh_bucket_shows_import_step_pending_with_next_command(
     import_step = steps_by_id[DataPrepStepId.IMPORT_TRANSACTIONS]
     assert import_step.state is DataPrepStepState.PENDING
     assert "0 transaction" in import_step.summary
-    assert "aeat app ledger import" in import_step.next_command
+    # Importing needs a statement file and a provider the walkthrough cannot
+    # know, so the row declares no executable action rather than a
+    # placeholder command.
+    assert import_step.next_action is None
     assert walkthrough.ready_for_calculation is False
 
     # The final step correctly reflects "no work unit yet" and names the
     # exact create command for THIS modelo/period.
     work_step = steps_by_id[DataPrepStepId.START_MODELO_WORK]
     assert work_step.state is DataPrepStepState.PENDING
-    assert work_step.next_command == "aeat app modelo work create --modelo 130 --year 2026 --period 1T"
+    assert work_step.next_action is not None
+    assert work_step.next_action.action.action_id == "operator.modelo.work.create"
+    assert {binding.argument_name: binding.value for binding in work_step.next_action.argument_bindings} == {
+        "modelo": "130",
+        "year": 2026,
+        "period": "1T",
+    }
 
 
 def test_import_step_advances_once_a_transaction_is_recorded(
@@ -241,7 +250,8 @@ def test_import_step_advances_once_a_transaction_is_recorded(
     # Classification has not happened yet, so the next step is not done.
     classify_step = steps_by_id[DataPrepStepId.CLASSIFY_TRANSACTIONS]
     assert classify_step.state is DataPrepStepState.PENDING
-    assert "aeat app ledger classify" in classify_step.next_command
+    assert classify_step.next_action is not None
+    assert classify_step.next_action.action.action_id == "operator.ledger.classify"
 
 
 def test_out_of_period_transaction_does_not_satisfy_import_step(
@@ -299,7 +309,8 @@ def test_evidence_step_flags_business_expense_with_no_attached_evidence(
     evidence_step = next(s for s in walkthrough.steps if s.step_id is DataPrepStepId.ATTACH_EVIDENCE)
     assert evidence_step.state is DataPrepStepState.PENDING
     assert "1 of 1" in evidence_step.summary
-    assert "aeat app ledger evidence add" in evidence_step.next_command
+    # Attaching evidence needs a document path only the operator has.
+    assert evidence_step.next_action is None
 
 
 def test_evidence_step_does_not_count_incoming_business_income_as_expense(
@@ -339,8 +350,11 @@ def test_work_unit_step_resolves_matching_unit_and_names_calculate_command(
     work_step = next(s for s in walkthrough.steps if s.step_id is DataPrepStepId.START_MODELO_WORK)
 
     assert work_step.state is DataPrepStepState.DONE
-    assert unit.work_unit_id in work_step.next_command
-    assert work_step.next_command.startswith("aeat app modelo work calculate ")
+    assert work_step.next_action is not None
+    assert work_step.next_action.action.action_id == "operator.modelo.work.calculate"
+    assert {binding.argument_name: binding.value for binding in work_step.next_action.argument_bindings} == {
+        "work_unit_id": unit.work_unit_id
+    }
 
 
 def test_ready_for_calculation_true_only_when_every_step_is_done(

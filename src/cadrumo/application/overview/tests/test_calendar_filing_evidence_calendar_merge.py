@@ -115,7 +115,12 @@ def test_calendar_warns_when_aeat_submission_lacks_verified_justificante() -> No
 
     warning = next(item for item in calendar.warnings if item.code == "filing.justificante_unverified")
     assert warning.affected_modelos == ("303",)
-    assert warning.fix_command == "aeat app live filed pull --modelo 303 --year 2025 --period 1T"
+    assert warning.fix_action.action.action_id == "operator.live.filed.pull"
+    assert {binding.argument_name: binding.value for binding in warning.fix_action.argument_bindings} == {
+        "modelos": "303",
+        "year": 2025,
+        "period": "1T",
+    }
 
 
 def test_calendar_uses_generic_justificante_fix_when_multiple_periods_need_pull() -> None:
@@ -160,7 +165,8 @@ def test_calendar_uses_generic_justificante_fix_when_multiple_periods_need_pull(
 
     warning = next(item for item in calendar.warnings if item.code == "filing.justificante_unverified")
     assert warning.affected_modelos == ("303",)
-    assert warning.fix_command == "aeat app live filed pull --modelo MODELO --year YEAR --period PERIOD"
+    assert warning.fix_action.action.action_id == "operator.live.filed.pull"
+    assert warning.fix_action.argument_bindings == ()
 
 
 def test_calendar_clears_justificante_warning_when_filed_history_verifies_receipt() -> None:

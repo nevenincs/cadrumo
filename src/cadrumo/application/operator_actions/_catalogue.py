@@ -169,6 +169,10 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.diagnostics.repair",
+            target_command_key="config.repair",
+        ),
+        ActionCatalogueEntry(
             action_id="operator.diagnostics.workflow.reset_progress",
             target_command_key="config.repair.reset_progress",
             argument_specifications=(
@@ -276,6 +280,109 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.ledger.evidence.review.list",
             target_command_key="ledger.evidence.review.list",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.classify",
+            target_command_key="ledger.classify",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.review",
+            target_command_key="ledger.review",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.preflight",
+            target_command_key="ledger.preflight",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="year",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.live.filed.pull",
+            target_command_key="app.live.filed.pull",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="modelos",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="modelos",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="year",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.filing_record.list",
+            target_command_key="modelo.filing_record.list",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="modelo",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="modelo",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.list",
+            target_command_key="modelo.work.list",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.create",
+            target_command_key="modelo.work.create",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="modelo",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="modelo",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="year",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.file",
+            target_command_key="modelo.work.file",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.revisions",
+            target_command_key="modelo.work.revisions",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
         ),
         ActionCatalogueEntry(
             action_id="operator.live.filed.pull_all",

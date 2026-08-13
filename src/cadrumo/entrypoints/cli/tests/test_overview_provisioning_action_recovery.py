@@ -269,6 +269,41 @@ def _overview_console_matrix(cohort: _InstalledCohort) -> dict[str, dict[str, ob
     return matrix
 
 
+def _assert_overview_notices_state_guidance_once(document: Mapping[str, object], *, locale: str) -> int:
+    """Assert every overview notice carries guidance in exactly one honest form.
+
+    An installed console in any locale must never state an executable command as
+    prose: the localized message explains, and the executable identity lives on
+    the resolved action with its live CLI path and materialised arguments. This
+    is the installed-product half of the one-projection contract the unit-level
+    rendering proof pins in-process.
+
+    Returns:
+        The number of notices carrying a fully resolved action.
+    """
+    notices = document.get("notices")
+    if not isinstance(notices, list):
+        return 0
+    resolved_count = 0
+    for item in notices:
+        notice = _object(item, label=f"{locale} overview notice")
+        message = notice["message"]
+        assert isinstance(message, str) and message.strip(), f"{locale}: empty notice message"
+        assert "aeat " not in message, f"{locale}: notice message states a command as prose: {message!r}"
+        action = notice.get("action")
+        if action is None:
+            continue
+        resolved = _object(action, label=f"{locale} notice action")
+        reference = _object(resolved["action"], label=f"{locale} notice action reference")
+        assert isinstance(reference["action_id"], str)
+        assert isinstance(reference["target_command_key"], str)
+        cli_path = reference["cli_path"]
+        assert isinstance(cli_path, list) and cli_path, f"{locale}: notice action carries no live CLI path"
+        assert all(isinstance(token, str) and not token.startswith("-") for token in cli_path)
+        resolved_count += 1
+    return resolved_count
+
+
 def _overview_precondition(document: Mapping[str, object]) -> str | None:
     """Return a preceding typed console gate, if overview is not reached."""
     error = document.get("error")
@@ -335,6 +370,7 @@ def test_real_optional_extra_outcomes_reach_config_json_and_text_without_an_over
     assert set(overview) == set(SUPPORTED_OUTPUT_LANGUAGES)
     provisioning_conditions = set(expected_absent_conditions)
     overview_baseline: tuple[object, object] | None = None
+    resolved_action_counts: set[int] = set()
     for locale in SUPPORTED_OUTPUT_LANGUAGES:
         row = overview[locale]
         document = _object(row["json"], label="overview JSON envelope")
@@ -348,3 +384,10 @@ def test_real_optional_extra_outcomes_reach_config_json_and_text_without_an_over
             overview_baseline = structural
         else:
             assert structural == overview_baseline
+        resolved_action_counts.add(_assert_overview_notices_state_guidance_once(document, locale=locale))
+
+    # Prose is translated; executable identity is not. The count of fully
+    # resolved actions is therefore a locale-invariant of the installed
+    # product: a locale that resolved fewer would be one whose guidance had
+    # decayed back into untranslatable command prose.
+    assert len(resolved_action_counts) == 1

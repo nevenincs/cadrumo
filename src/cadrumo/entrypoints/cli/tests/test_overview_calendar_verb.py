@@ -477,7 +477,14 @@ def test_calendar_strict_mode_refuses_unverified_aeat_filing() -> None:
     warnings = json.loads(lax.output)["result"]["warnings"]
     warning = next(item for item in warnings if item["code"] == "filing.justificante_unverified")
     assert warning["affected_modelos"] == ["303"]
-    assert warning["fix_command"] == "aeat app live filed pull --modelo 303 --year 2025 --period 1T"
+    fix_action = warning["fix_action"]
+    assert fix_action["action"]["action_id"] == "operator.live.filed.pull"
+    assert fix_action["action"]["cli_path"] == ["app", "live", "filed", "pull"]
+    assert {binding["argument_name"]: binding["value"] for binding in fix_action["argument_bindings"]} == {
+        "modelos": "303",
+        "year": 2025,
+        "period": "1T",
+    }
 
 
 def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> None:
@@ -550,7 +557,14 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> 
     assert evidence["aeat_evidence_conflict_reference_ids"] == [remote_ref, local_ref]
     warning = next(item for item in result["warnings"] if item["code"] == "filing.aeat_evidence_conflict")
     assert warning["affected_modelos"] == ["303"]
-    assert warning["fix_command"] == "aeat app live filed pull --modelo 303 --year 2025 --period 1T"
+    fix_action = warning["fix_action"]
+    assert fix_action["action"]["action_id"] == "operator.live.filed.pull"
+    assert fix_action["action"]["cli_path"] == ["app", "live", "filed", "pull"]
+    assert {binding["argument_name"]: binding["value"] for binding in fix_action["argument_bindings"]} == {
+        "modelos": "303",
+        "year": 2025,
+        "period": "1T",
+    }
 
     lax_text = _invoke(
         [
@@ -707,7 +721,14 @@ def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante
     assert evidence["justificante_verified"] is False
     warning = next(item for item in result["warnings"] if item["code"] == "filing.justificante_unverified")
     assert warning["affected_modelos"] == ["303"]
-    assert warning["fix_command"] == "aeat app live filed pull --modelo 303 --year 2025 --period 1T"
+    fix_action = warning["fix_action"]
+    assert fix_action["action"]["action_id"] == "operator.live.filed.pull"
+    assert fix_action["action"]["cli_path"] == ["app", "live", "filed", "pull"]
+    assert {binding["argument_name"]: binding["value"] for binding in fix_action["argument_bindings"]} == {
+        "modelos": "303",
+        "year": 2025,
+        "period": "1T",
+    }
 
 
 def test_calendar_text_output_names_verified_aeat_evidence() -> None:
