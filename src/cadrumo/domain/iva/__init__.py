@@ -78,7 +78,11 @@ from ._components import (
     cuota_less_m303_categories_from_table,
 )
 from ._corpus import load_iva_rules_from_manual
-from ._deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
+from ._deduction_facts import (
+    IvaDeductionClassificationProvenance,
+    required_deduction_evidence_authority,
+    validate_iva_deduction_fact,
+)
 from ._errors import (
     IvaCatalogueError,
     IvaCategoryNotFoundError,
@@ -404,6 +408,7 @@ __all__ = [
     "refund_disposition_available",
     "refund_eligibility_reason",
     "regime_allows_deduction",
+    "required_deduction_evidence_authority",
     "regime_legend_phrases",
     "required_supply_nature_for_rule",
     "requires_sectoral_separation",
