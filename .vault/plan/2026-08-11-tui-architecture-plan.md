@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-13'
-body_hash: 'sha256:9ee63469df9485c341f1116bea2871e4dfef27fb990a603666067611a917634a'
+body_hash: 'sha256:0b63f0c0a5c8bdaf5f9ac148f858e96e2c0bcf50d501ead81959de5729779919'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -51,7 +51,7 @@ Define the closed lifecycle axes, capability declarations, envelopes, events, in
 - [x] `W01.P02.S09` - Define ordered phase, progress, safe-log, effect, notice, diagnostic, and terminal event contracts; `src/cadrumo/application/operations/_events.py`.
 - [x] `W01.P02.S10` - Define revision-bound interaction requests, single-use response tokens, proposal digests, and apply or reject responses; `src/cadrumo/application/operations/_interactions.py`.
 - [x] `W01.P02.S11` - Expose the sole public operation-platform API without leaking private models or frontend types; `src/cadrumo/application/operations/__init__.py`.
-- [ ] `W01.P02.S12` - Prove state-axis independence, capability validation, exact response binding, and event redaction invariants; `src/cadrumo/application/operations/tests`.
+- [x] `W01.P02.S12` - Prove state-axis independence, capability validation, exact response binding, and event redaction invariants; `src/cadrumo/application/operations/tests`.
 
 ## Wave `W02` - Durable operation supervision
 
