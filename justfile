@@ -813,7 +813,7 @@ docs-gettext:
 # Build the user-scope documentation in one language (es/en/ca/hu) into that
 # language's own root. `--out-dir` is what puts a build in a per-language
 # subdirectory; `--language` alone only selects the catalogue, so without it the
-# localized pages land in — and clear — the canonical English root, leaving no
+# localized pages render into the canonical English root itself, leaving no
 # language root at all and an English root full of translated pages.
 [doc('Build the user-scope documentation in one language into that language own root.')]
 [group('docs')]

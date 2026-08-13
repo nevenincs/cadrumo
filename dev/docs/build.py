@@ -346,6 +346,15 @@ _ORPHAN_SPECIAL_PAGES = {"genindex.html", "search.html", "404.html", "py-modinde
 #: Asset and infrastructure directories that carry no docname-addressed pages.
 _ORPHAN_SKIP_DIRS = {"_static", "_sources", "_images", "_downloads", "_sphinx_design_static", "pagefind"}
 
+#: Per-language site roots living beside the English root inside the same HTML
+#: tree. Their pages are docname-addressed against the SAME ``docs/`` sources,
+#: one directory level down, so the sweep below would resolve ``es/index.html``
+#: to a ``docs/es/index.md`` that never existed and delete every page of every
+#: localized root. Derived from :class:`OutputLanguage` rather than imported
+#: from the module that names the deploy root set, because that module imports
+#: this one.
+_ORPHAN_SKIP_SITE_ROOTS = frozenset(member.value for member in OutputLanguage)
+
 
 def remove_orphan_pages(docs_root: Path, html_root: Path, repo_root: Path) -> int:
     """Delete built pages whose source document no longer exists.
@@ -359,6 +368,10 @@ def remove_orphan_pages(docs_root: Path, html_root: Path, repo_root: Path) -> in
     which are written to disk before Sphinx reads the tree — and ``_modules``
     viewcode pages map back to ``src/`` modules.
 
+    A per-language site root nested in the same tree is exempt: its pages carry
+    the same docnames one directory down, so resolving them against ``docs/``
+    finds nothing and an apex build would empty every localized root beside it.
+
     Returns:
         The number of orphaned pages removed.
     """
@@ -368,6 +381,8 @@ def remove_orphan_pages(docs_root: Path, html_root: Path, repo_root: Path) -> in
     for page in html_root.rglob("*.html"):
         rel = page.relative_to(html_root)
         if rel.as_posix() in _ORPHAN_SPECIAL_PAGES or rel.parts[0] in _ORPHAN_SKIP_DIRS:
+            continue
+        if rel.parts[0] in _ORPHAN_SKIP_SITE_ROOTS and len(rel.parts) > 1:
             continue
         docname = rel.with_suffix("")
         if rel.parts[0] == "_modules":

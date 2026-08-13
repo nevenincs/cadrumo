@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import ast
 import contextlib
 import gzip
 import http.server
+import inspect
 import json
+import textwrap
 import threading
 from collections.abc import Iterator
 from pathlib import Path
@@ -288,6 +291,36 @@ def test_validate_language_roots_refuses_an_empty_pagefind_index(tmp_path: Path)
         chunk.write_bytes(b"")
     with pytest.raises(SystemExit, match="no substantive generated index data"):
         _validate_language_roots(tmp_path)
+
+
+def _direct_calls(function: object) -> list[str]:
+    """Return the plain-name calls a function makes, in source order."""
+    tree = ast.parse(textwrap.dedent(inspect.getsource(function)))  # type: ignore[arg-type]
+    return [node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)]
+
+
+def test_the_publish_reaches_upload_through_the_composition_the_dry_run_runs() -> None:
+    """Publish and dry run share ONE build-and-validate prefix, and nothing may re-inline it.
+
+    The dry run is only worth running if its verdict is the publish's verdict.
+    That holds today because both go through ``_build_site_roots`` and
+    ``_validate_built_site``, but "holds by construction" is not a gate: the
+    exact shape that existed before this composition was extracted -- the
+    validation calls written out inline in the publish -- would reintroduce a
+    dry run that passes where a publish refuses, with a green suite. So the
+    inlined form is refused here by name.
+    """
+    calls = _direct_calls(_docs_static_site._publish)
+    assert calls.index("_build_site_roots") < calls.index("_validate_built_site") < calls.index("_sync_site"), (
+        f"the publish no longer builds, then validates, then uploads: {calls}"
+    )
+    inlined = sorted(
+        {"_build_language_roots", "_write_language_entry", "_validate_language_entry", "_validate_language_roots"}
+        & set(calls)
+    )
+    assert not inlined, f"the publish re-inlines {inlined} instead of sharing the dry run's composition"
+
+    assert inspect.signature(_dry_run).parameters["build"].default is _docs_static_site._build_site_roots
 
 
 def test_dry_run_validates_a_complete_built_site_and_uploads_nothing(tmp_path: Path) -> None:
