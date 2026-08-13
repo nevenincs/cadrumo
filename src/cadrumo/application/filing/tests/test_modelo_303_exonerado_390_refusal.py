@@ -35,6 +35,7 @@ from ....domain.modelos import (
 )
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.submission import ModeloDraftStatus
+from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
 from .. import (
     FilingElectionFacts,
@@ -115,7 +116,8 @@ def _exonerado_evidence() -> M303Exonerado390FilingEvidence:
 
 def _regimen_evidence(period: Period) -> M303RegimenSimplificadoFilingEvidence:
     scope = _general_m303_scope()
-    return M303RegimenSimplificadoFilingEvidence(
+    return regimen_simplificado_filing_evidence(
+        period=period,
         scope_decision=scope,
         rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
         regimen_snapshot=resolve_m303_regimen_simplificado_snapshot(
@@ -126,6 +128,7 @@ def _regimen_evidence(period: Period) -> M303RegimenSimplificadoFilingEvidence:
             ),
             scope_decision=scope,
         ),
+        dana_2024_eligibility=None,
     )
 
 
@@ -161,6 +164,7 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
         ),
     )
     bienes_register = BienesInversionIvaRegister()
+    regimen_evidence = _regimen_evidence(period)
     producer_snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M303,
         taxpayer_tax_id="12345678Z",
@@ -198,7 +202,8 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
             joint_return_elected=False,
             insolvency=None,
             exonerado_390=_exonerado_evidence(),
-            regimen_simplificado=_regimen_evidence(period),
+            regimen_simplificado=regimen_evidence,
+            regimen_simplificado_result=regimen_evidence.calculation_result,
             period=period,
             supplier_regime=M303SupplierRegimeArrival(
                 period=period,

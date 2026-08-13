@@ -53,13 +53,13 @@ from ....domain.modelos import (
     M303Exonerado390EndpointEvidence,
     M303Exonerado390FilingEvidence,
     M303FilingInstanceEvidence,
-    M303RegimenSimplificadoFilingEvidence,
 )
 from ....domain.prorrata_register import (
     ProrrataEspecialTransitionEvidence,
     ProrrataRegister,
     ProrrataRegisterEntry,
 )
+from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...aggregation import (
     M303ProrrataTransitionArrival,
     M303SupplierRegimeArrival,
@@ -191,11 +191,13 @@ def _m303_filing_facts_payload(
 def _m303_filing_facts(*, period_code: str = "4T") -> M303FilingFacts:
     period = Period.from_year_and_code(2026, period_code)
     register, bienes_register, regularisation = _empty_m303_export_arrivals(period.filing_year)
+    evidence = _m303_instance_evidence(period)
     return M303FilingFacts(
         joint_return_elected=False,
         insolvency=None,
         exonerado_390=_m303_exonerado_evidence(applicable=False),
-        regimen_simplificado=_m303_instance_evidence(period).regimen_simplificado,
+        regimen_simplificado=evidence.regimen_simplificado,
+        regimen_simplificado_result=evidence.regimen_simplificado.calculation_result,
         period=period,
         supplier_regime=M303SupplierRegimeArrival(
             period=period,
@@ -262,10 +264,12 @@ def _m303_instance_evidence(period: Period) -> M303FilingInstanceEvidence:
         joint_return_elected=False,
         insolvency=None,
         exonerado_390=_m303_exonerado_evidence(applicable=False),
-        regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
+        regimen_simplificado=regimen_simplificado_filing_evidence(
+            period=period,
             scope_decision=scope,
             rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
             regimen_snapshot=snapshot,
+            dana_2024_eligibility=None,
         ),
     )
 
@@ -310,6 +314,7 @@ def _m303_foral_snapshot(
     period = prorrata_transition.period
     default_register, bienes_register, regularisation = _empty_m303_export_arrivals(period.filing_year)
     register = default_register if prorrata_register is None else prorrata_register
+    evidence = _m303_instance_evidence(period)
     facts = M303FilingFacts(
         joint_return_elected=True,
         insolvency=M303InsolvencyFilingFact(
@@ -317,7 +322,8 @@ def _m303_foral_snapshot(
             subtype=M303InsolvencyFilingSubtype.POST_ORDER,
         ),
         exonerado_390=_m303_exonerado_evidence(applicable=True),
-        regimen_simplificado=_m303_instance_evidence(period).regimen_simplificado,
+        regimen_simplificado=evidence.regimen_simplificado,
+        regimen_simplificado_result=evidence.regimen_simplificado.calculation_result,
         period=period,
         supplier_regime=M303SupplierRegimeArrival(
             period=period,
@@ -653,13 +659,15 @@ def test_m303_insolvency_fact_projects_coupled_date_and_official_subtype_code(
 def test_m303_filing_facts_refuse_annual_and_non_official_filing_periods(period_code: str) -> None:
     period = Period.from_year_and_code(2026, period_code)
     register, bienes_register, regularisation = _empty_m303_export_arrivals(period.filing_year)
+    evidence = _m303_instance_evidence(period)
 
     with pytest.raises(ValidationError, match="official quarterly or monthly period"):
         M303FilingFacts(
             joint_return_elected=False,
             insolvency=None,
             exonerado_390=_m303_exonerado_evidence(applicable=False),
-            regimen_simplificado=_m303_instance_evidence(period).regimen_simplificado,
+            regimen_simplificado=evidence.regimen_simplificado,
+            regimen_simplificado_result=evidence.regimen_simplificado.calculation_result,
             period=period,
             supplier_regime=M303SupplierRegimeArrival(
                 period=period,

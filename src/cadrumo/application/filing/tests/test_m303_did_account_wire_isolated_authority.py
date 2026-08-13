@@ -39,6 +39,7 @@ from ....domain.modelos import M303Exonerado390FilingEvidence, M303RegimenSimpli
 from ....domain.prorrata_register import ProrrataRegister
 from ....domain.submission import ModeloDraftStatus
 from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
+from ...calculations import calculate_m303_regimen_simplificado_result
 from .. import (
     FilingElectionFacts,
     FilingProducerSnapshotError,
@@ -224,6 +225,30 @@ def _m303_filing_facts(period: Period) -> M303FilingFacts:
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
     )
     bienes_register = BienesInversionIvaRegister()
+    authority = bundled_authority()
+    regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=authority.snapshot(
+            "303",
+            filing_year=period.filing_year,
+            period=period.code,
+        ),
+        scope_decision=scope,
+    )
+    regimen_rows = RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=())
+    regimen_evidence = M303RegimenSimplificadoFilingEvidence(
+        scope_decision=scope,
+        rows=regimen_rows,
+        regimen_snapshot=regimen_snapshot,
+        dana_2024_eligibility=None,
+        calculation_result=calculate_m303_regimen_simplificado_result(
+            period=period,
+            scope_decision=scope,
+            rows=regimen_rows,
+            regimen_snapshot=regimen_snapshot,
+            dana_2024_eligibility=None,
+            catalogues=authority.catalogues,
+        ),
+    )
     return M303FilingFacts(
         joint_return_elected=False,
         insolvency=None,
@@ -236,18 +261,8 @@ def _m303_filing_facts(period: Period) -> M303FilingFacts:
             operaciones_terceros_declarables=None,
             operaciones_terceros_reference=None,
         ),
-        regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
-            scope_decision=scope,
-            rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
-            regimen_snapshot=resolve_m303_regimen_simplificado_snapshot(
-                registry_snapshot=bundled_authority().snapshot(
-                    "303",
-                    filing_year=period.filing_year,
-                    period=period.code,
-                ),
-                scope_decision=scope,
-            ),
-        ),
+        regimen_simplificado=regimen_evidence,
+        regimen_simplificado_result=regimen_evidence.calculation_result,
         supplier_regime=M303SupplierRegimeArrival(
             period=period,
             recipient_of_cash_accounting_operations=False,

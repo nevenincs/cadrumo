@@ -51,9 +51,9 @@ from .....domain.modelos import (
     FilingInstanceEvidence,
     M303Exonerado390FilingEvidence,
     M303FilingInstanceEvidence,
-    M303RegimenSimplificadoFilingEvidence,
     derive_calculation_revision_id,
 )
+from .....tests.filing_evidence import regimen_simplificado_filing_evidence
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage import SensitivityClass
 from ..modelos_calculation import (
@@ -107,10 +107,12 @@ def _filing_instance_evidence() -> FilingInstanceEvidence:
                 operaciones_terceros_declarables=None,
                 operaciones_terceros_reference=None,
             ),
-            regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
+            regimen_simplificado=regimen_simplificado_filing_evidence(
+                period=period,
                 scope_decision=scope,
                 rows=RegimenSimplificadoFilingRows(ejercicio=2026, activities=()),
                 regimen_snapshot=snapshot,
+                dana_2024_eligibility=None,
             ),
         ),
     )

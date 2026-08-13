@@ -14,6 +14,9 @@ from ....domain.calculations.registry import resolve_m303_regimen_simplificado_s
 from ....domain.deadlines import M303RegimeComposition
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
+    ActividadNoAgricolaSimplificado,
+    EntradaModuloSimplificado,
+    HechoActividadSimplificado,
     M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
@@ -24,14 +27,16 @@ from ....domain.modelos import (
     M303Exonerado390EndpointEvidence,
     M303Exonerado390FilingEvidence,
     M303FilingInstanceEvidence,
-    M303RegimenSimplificadoFilingEvidence,
+    M303RegimenSimplificadoActivityCalculationResult,
+    M303RegimenSimplificadoCalculationResult,
     WorkUnit,
     derive_work_unit_id,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._action_errors import M303FilingEvidenceError
 from .._m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 
@@ -127,20 +132,26 @@ def _evidence(period: Period) -> FilingInstanceEvidence:
                 operaciones_terceros_declarables=None,
                 operaciones_terceros_reference=None,
             ),
-            regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
+            regimen_simplificado=regimen_simplificado_filing_evidence(
+                period=period,
                 scope_decision=scope,
                 rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
                 regimen_snapshot=resolve_m303_regimen_simplificado_snapshot(
                     registry_snapshot=registry_snapshot,
                     scope_decision=scope,
                 ),
+                dana_2024_eligibility=None,
             ),
         ),
     )
 
 
-def _store_profile(*, composition: M303RegimeComposition = M303RegimeComposition.GENERAL) -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
+def _store_profile(
+    *,
+    composition: M303RegimeComposition = M303RegimeComposition.GENERAL,
+    iae_epigraph: str | None = None,
+) -> None:
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="M303 filing evidence validation",
@@ -154,9 +165,85 @@ def _store_profile(*, composition: M303RegimeComposition = M303RegimeComposition
                     path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
                     value=False,
                 ),
+                *(
+                    (UserProfileFact(path="activities.iae_epigraph", value=iae_epigraph),)
+                    if iae_epigraph is not None
+                    else ()
+                ),
             ),
             created_at=_CLOCK,
             updated_at=_CLOCK,
+        ),
+    )
+
+
+def _simplified_evidence(period: Period) -> FilingInstanceEvidence:
+    scope = M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+    )
+    registry_snapshot = resources().modelos.authority.snapshot(
+        "303",
+        filing_year=period.filing_year,
+        period=period.code,
+    )
+    regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=registry_snapshot,
+        scope_decision=scope,
+    )
+    annual = regimen_snapshot.orden.activities[0]
+    assert annual.kind == "no_agricola"
+    assert annual.iae_epigrafe is not None
+    reference = FilingEvidenceReference(reference="test:validation:simplified-regime")
+    rows = RegimenSimplificadoFilingRows(
+        ejercicio=period.filing_year,
+        activities=(
+            ActividadNoAgricolaSimplificado(
+                orden_id=annual.orden_id,
+                ejercicio=period.filing_year,
+                activity_id=annual.orden_id,
+                iae_epigrafe=annual.iae_epigrafe,
+                auxiliary_activity_indicator=annual.auxiliary_activity_indicator,
+                modulos=tuple(
+                    EntradaModuloSimplificado(
+                        module_identity=module.identity,
+                        declared_quantity=Decimal("1") if index == 0 else Decimal("0"),
+                        off_form_result=module.coefficient,
+                        evidence_reference=reference,
+                    )
+                    for index, module in enumerate(annual.modulos)
+                ),
+                facts=tuple(
+                    HechoActividadSimplificado(
+                        identity=identity,
+                        value=Decimal("1"),
+                        evidence_reference=reference,
+                    )
+                    for identity in annual.applicable_fact_identities
+                ),
+                evidence_reference=reference,
+            ),
+        ),
+    )
+    return FilingInstanceEvidence(
+        m303=M303FilingInstanceEvidence(
+            period=period,
+            joint_return_elected=False,
+            insolvency=None,
+            exonerado_390=M303Exonerado390FilingEvidence(
+                applicable=False,
+                applicability_reference=reference,
+                endpoints=(),
+                activity_rows=(),
+                operaciones_terceros_declarables=None,
+                operaciones_terceros_reference=None,
+            ),
+            regimen_simplificado=regimen_simplificado_filing_evidence(
+                period=period,
+                scope_decision=scope,
+                rows=rows,
+                regimen_snapshot=regimen_snapshot,
+                dana_2024_eligibility=None,
+            ),
         ),
     )
 
@@ -297,6 +384,54 @@ def test_evidence_for_another_work_period_refuses_before_persistence(tmp_path: P
         assert failure is not None, "the refusal must carry its declared precondition failure"
         assert failure.verdict.failed_condition_id == "modelo.work.calculate.m303_filing_evidence.valid"
         assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.period_mismatch"
+
+
+def test_structurally_valid_noncanonical_simplified_result_refuses_before_persistence(tmp_path: Path) -> None:
+    """The persisted result must be the calculator replay, not merely well-formed evidence."""
+    period = Period.from_year_and_code(2026, "1T")
+    canonical_evidence = _simplified_evidence(period)
+    regimen = canonical_evidence.m303.regimen_simplificado
+    canonical_result = regimen.calculation_result
+    canonical_activity = canonical_result.activities[0]
+    divergent_activity = M303RegimenSimplificadoActivityCalculationResult.model_validate(
+        {
+            **canonical_activity.model_dump(mode="python"),
+            "source_refs": (*canonical_activity.source_refs, regimen.regimen_snapshot.record_design.id),
+        },
+    )
+    divergent_result_payload = canonical_result.model_dump(mode="python", exclude={"digest"})
+    divergent_result_payload["period"] = canonical_result.period
+    divergent_result_payload["activities"] = (divergent_activity,)
+    divergent_result = M303RegimenSimplificadoCalculationResult.calculated(**divergent_result_payload)
+    divergent_regimen = regimen.model_copy(update={"calculation_result": divergent_result})
+    evidence = canonical_evidence.model_copy(
+        update={
+            "m303": canonical_evidence.m303.model_copy(
+                update={"regimen_simplificado": divergent_regimen},
+            ),
+        },
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        activity = regimen.rows.activities[0]
+        assert isinstance(activity, ActividadNoAgricolaSimplificado)
+        _store_profile(
+            composition=M303RegimeComposition.SIMPLIFIED,
+            iae_epigraph=activity.iae_epigrafe,
+        )
+        with pytest.raises(M303FilingEvidenceError) as raised_divergent_result:
+            validate_m303_filing_instance_evidence_for_revision(
+                work_unit=_work_unit(period),
+                registry_snapshot=resources().modelos.authority.snapshot("303", filing_year=2026, period="1T"),
+                evidence=evidence,
+                casilla_values={},
+                observations=(),
+            )
+
+    failure = raised_divergent_result.value.precondition_failure
+    assert failure is not None, "the replay refusal must carry its declared precondition failure"
+    assert failure.verdict.failed_condition_id == "modelo.work.calculate.m303_filing_evidence.valid"
+    assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.simplified_calculation_result_divergence"
 
 
 def test_final_period_exonerado_evidence_covers_every_a28_endpoint_and_observation(tmp_path: Path) -> None:

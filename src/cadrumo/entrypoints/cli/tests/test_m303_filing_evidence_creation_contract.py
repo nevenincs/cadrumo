@@ -23,8 +23,8 @@ from ....domain.modelos import (
     M303FilingInstanceEvidence,
     M303InsolvencyFilingFact,
     M303InsolvencyFilingSubtype,
-    M303RegimenSimplificadoFilingEvidence,
 )
+from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from .._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -58,10 +58,12 @@ def _write_evidence(path: Path, period: Period, *, joint_return_elected: bool = 
                 operaciones_terceros_declarables=None,
                 operaciones_terceros_reference=None,
             ),
-            regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
+            regimen_simplificado=regimen_simplificado_filing_evidence(
+                period=period,
                 scope_decision=scope,
                 rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
                 regimen_snapshot=snapshot,
+                dana_2024_eligibility=None,
             ),
         ),
     )

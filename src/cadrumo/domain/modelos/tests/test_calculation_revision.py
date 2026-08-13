@@ -13,6 +13,7 @@ from pydantic import ValidationError
 
 from ....core import CasillaId, M210GrossIncomeSourceMode, Period, validated_casilla_id
 from ....core.resources import resources
+from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...calculations.registry import RelationId, resolve_m303_regimen_simplificado_snapshot
 from ...filing_evidence import FilingEvidenceReference
 from ...iva import (
@@ -30,7 +31,6 @@ from .._calculation_revision import (
     M303FilingInstanceEvidence,
     M303InsolvencyFilingFact,
     M303InsolvencyFilingSubtype,
-    M303RegimenSimplificadoFilingEvidence,
     derive_calculation_revision_id,
 )
 from .._errors import ModeloValidationError
@@ -89,10 +89,12 @@ def _general_m303_filing_evidence(period: Period) -> M303FilingInstanceEvidence:
             operaciones_terceros_declarables=None,
             operaciones_terceros_reference=None,
         ),
-        regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
+        regimen_simplificado=regimen_simplificado_filing_evidence(
+            period=period,
             scope_decision=scope,
             rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
             regimen_snapshot=snapshot,
+            dana_2024_eligibility=None,
         ),
     )
 

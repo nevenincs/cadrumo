@@ -43,7 +43,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal, override
+from typing import Annotated, Literal, Self, override
 
 from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, ValidationError, field_validator, model_validator
 
@@ -57,18 +57,27 @@ from ...core import (
 )
 from ...core.aggregation import BindingSourceKind
 from ...core.hashing import content_hash_hex
-from ...core.identity import CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId
+from ...core.identity import CalculationRevisionId, ContentDigest, FilingRecordId, SnapshotId, WorkUnitId
 from ...core.time import validate_utc_aware
 from .._identifiers import canonical_decimal_string as _canonical_decimal
 from ..calculations.registry import (
     BindingId,
     CasillaObservation,
+    LegalRefId,
     M303RegimenSimplificadoSnapshot,
     RegistryCalculationUnresolvedOutcome,
     RelationId,
+    RevisionId,
+    SourceRefId,
 )
 from ..filing_evidence import FilingEvidenceReference
-from ..iva import M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
+from ..iva import (
+    ActividadNoAgricolaSimplificado,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoActivity,
+    RegimenSimplificadoFilingRows,
+    is_last_filing_period_of_year,
+)
 from ._errors import ModeloError, ModeloValidationError
 from ._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
 from ._row_models import (
@@ -223,6 +232,158 @@ def _validate_non_applicable_m303_exonerado_evidence(evidence: M303Exonerado390F
         )
 
 
+class M303DANA2024EligibilityEvidence(BaseModel):
+    """Attested DANA eligibility without transcribing the mutable municipal anexo."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    eligible: bool
+    evidence_reference: FilingEvidenceReference
+
+
+class M303RegimenSimplificadoModuleCalculationResult(BaseModel):
+    """One annual-Orden module calculation and its input/source evidence."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    module_identity: str
+    declared_quantity: Decimal = Field(ge=Decimal("0"))
+    coefficient: Decimal = Field(gt=Decimal("0"))
+    cuota_devengada: Decimal = Field(ge=Decimal("0"))
+    evidence_reference: FilingEvidenceReference
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+
+
+class M303DANA2024ReductionResult(BaseModel):
+    """The annually-applied DANA reduction for one evidenced activity."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    eligible: bool
+    rate: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
+    amount: Decimal = Field(ge=Decimal("0"))
+    evidence_reference: FilingEvidenceReference
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _ineligible_reduction_is_zero(self) -> M303DANA2024ReductionResult:
+        if not self.eligible and self.amount != Decimal("0"):
+            raise ModeloValidationError("an ineligible DANA reduction must be zero")
+        return self
+
+
+class M303RegimenSimplificadoActivityCalculationResult(BaseModel):
+    """One immutable no-agricultural activity result for an annual Orden row."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    activity_id: str
+    orden_id: str
+    module_results: tuple[M303RegimenSimplificadoModuleCalculationResult, ...] = Field(min_length=1, max_length=7)
+    evidence_references: tuple[FilingEvidenceReference, ...] = Field(min_length=1)
+    cuota_devengada_operaciones_corrientes: Decimal = Field(ge=Decimal("0"))
+    cuota_devengada_tras_dana_2024: Decimal = Field(ge=Decimal("0"))
+    deduccion_dificil_justificacion: Decimal = Field(ge=Decimal("0"))
+    cuota_minima: Decimal = Field(ge=Decimal("0"))
+    dana_2024_reduction: M303DANA2024ReductionResult | None
+    cuota_resultante: Decimal = Field(ge=Decimal("0"))
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _amounts_form_one_closed_activity_result(self) -> M303RegimenSimplificadoActivityCalculationResult:
+        module_ids = tuple(item.module_identity for item in self.module_results)
+        if len(set(module_ids)) != len(module_ids):
+            raise ModeloValidationError("M303 simplified calculation result contains duplicate modules")
+        reduction = self.dana_2024_reduction.amount if self.dana_2024_reduction is not None else Decimal("0")
+        if self.cuota_devengada_tras_dana_2024 != self.cuota_devengada_operaciones_corrientes - reduction:
+            raise ModeloValidationError("M303 simplified activity result has an incoherent DANA annual cuota")
+        if self.cuota_resultante != max(
+            self.cuota_devengada_tras_dana_2024 - self.deduccion_dificil_justificacion,
+            self.cuota_minima,
+        ):
+            raise ModeloValidationError("M303 simplified activity result has an incoherent annual cuota")
+        return self
+
+
+class M303RegimenSimplificadoCalculationResult(BaseModel):
+    """Content-addressed annual-Orden result retained beside immutable filing rows."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    ejercicio: int = Field(ge=2000, le=2099)
+    registry_revision_id: RevisionId
+    period: Period
+    orden_source_ref: SourceRefId
+    orden_source_content_digest: ContentDigest
+    record_design_source_ref: SourceRefId
+    record_design_content_digest: ContentDigest
+    record_design_epoch: str = Field(min_length=1)
+    activities: tuple[M303RegimenSimplificadoActivityCalculationResult, ...]
+    digest: ContentDigest
+
+    @classmethod
+    def calculated(
+        cls,
+        *,
+        ejercicio: int,
+        registry_revision_id: RevisionId,
+        period: Period,
+        orden_source_ref: SourceRefId,
+        orden_source_content_digest: str,
+        record_design_source_ref: SourceRefId,
+        record_design_content_digest: str,
+        record_design_epoch: str,
+        activities: tuple[M303RegimenSimplificadoActivityCalculationResult, ...],
+    ) -> Self:
+        """Build a result with the deterministic digest of its typed payload."""
+        unsigned = cls.model_construct(
+            ejercicio=ejercicio,
+            registry_revision_id=registry_revision_id,
+            period=period,
+            orden_source_ref=orden_source_ref,
+            orden_source_content_digest=orden_source_content_digest,
+            record_design_source_ref=record_design_source_ref,
+            record_design_content_digest=record_design_content_digest,
+            record_design_epoch=record_design_epoch,
+            activities=activities,
+            digest="",
+        )
+        return cls(
+            ejercicio=ejercicio,
+            registry_revision_id=registry_revision_id,
+            period=period,
+            orden_source_ref=orden_source_ref,
+            orden_source_content_digest=orden_source_content_digest,
+            record_design_source_ref=record_design_source_ref,
+            record_design_content_digest=record_design_content_digest,
+            record_design_epoch=record_design_epoch,
+            activities=activities,
+            digest=_m303_regimen_simplificado_result_digest(unsigned),
+        )
+
+    @model_validator(mode="after")
+    def _is_content_addressed_and_period_scoped(self) -> M303RegimenSimplificadoCalculationResult:
+        if self.period.filing_year != self.ejercicio:
+            raise ModeloValidationError("M303 simplified calculation result period must use its annual Orden year")
+        activity_ids = tuple(item.activity_id for item in self.activities)
+        if len(set(activity_ids)) != len(activity_ids):
+            raise ModeloValidationError("M303 simplified calculation result contains duplicate activities")
+        expected_digest = _m303_regimen_simplificado_result_digest(self)
+        if self.digest != expected_digest:
+            raise ModeloValidationError(
+                "M303 simplified calculation result digest does not match its immutable payload",
+            )
+        return self
+
+
+def _m303_regimen_simplificado_result_digest(result: M303RegimenSimplificadoCalculationResult) -> str:
+    """Return the clock-free content identity for one result payload."""
+    return content_hash_hex(result.model_dump(mode="json", exclude={"digest"}))
+
+
 class M303RegimenSimplificadoFilingEvidence(BaseModel):
     """Taxpayer rows bound to the exact S59 Orden and record-design snapshot."""
 
@@ -231,6 +392,8 @@ class M303RegimenSimplificadoFilingEvidence(BaseModel):
     scope_decision: M303RegimenSimplificadoScopeDecision
     rows: RegimenSimplificadoFilingRows
     regimen_snapshot: M303RegimenSimplificadoSnapshot
+    dana_2024_eligibility: M303DANA2024EligibilityEvidence | None
+    calculation_result: M303RegimenSimplificadoCalculationResult
 
     @model_validator(mode="after")
     def _rows_match_scope_and_snapshot(self) -> M303RegimenSimplificadoFilingEvidence:
@@ -238,12 +401,95 @@ class M303RegimenSimplificadoFilingEvidence(BaseModel):
             raise ModeloValidationError("M303 simplified-regime evidence scope disagrees with its S59 snapshot")
         if self.rows.ejercicio != self.regimen_snapshot.orden.ejercicio:
             raise ModeloValidationError("M303 simplified-regime evidence year disagrees with its S59 snapshot")
+        _validate_m303_regimen_simplificado_result_coordinate(self)
         if self.scope_decision.is_not_claimed:
             if self.rows.activities:
                 raise ModeloValidationError("general M303 scope must not carry simplified-regime activity evidence")
         elif not self.rows.activities:
             raise ModeloValidationError("simplified or mixed M303 scope requires activity evidence")
         return self
+
+
+def _validate_m303_regimen_simplificado_result_coordinate(
+    evidence: M303RegimenSimplificadoFilingEvidence,
+) -> None:
+    """Require the retained result to name exactly these rows and S59 coordinate."""
+    _validate_m303_result_snapshot_coordinate(evidence)
+    _validate_m303_result_activity_order(evidence)
+    _validate_m303_result_activity_evidence(evidence)
+
+
+def _validate_m303_result_snapshot_coordinate(evidence: M303RegimenSimplificadoFilingEvidence) -> None:
+    result = evidence.calculation_result
+    orden = evidence.regimen_snapshot.orden
+    record_design = evidence.regimen_snapshot.record_design
+    if (
+        result.ejercicio,
+        result.registry_revision_id,
+        result.orden_source_ref,
+        result.orden_source_content_digest,
+        result.record_design_source_ref,
+        result.record_design_content_digest,
+        result.record_design_epoch,
+    ) != (
+        orden.ejercicio,
+        orden.registry_revision_id,
+        orden.source_ref,
+        orden.source_content_digest,
+        record_design.id,
+        record_design.sha256,
+        record_design.record_design_epoch,
+    ):
+        raise ModeloValidationError("M303 simplified calculation result disagrees with its S59 coordinate")
+
+
+def _validate_m303_result_activity_order(evidence: M303RegimenSimplificadoFilingEvidence) -> None:
+    result = evidence.calculation_result
+    row_activities = tuple(evidence.rows.activities)
+    if tuple(item.activity_id for item in result.activities) != tuple(item.activity_id for item in row_activities):
+        raise ModeloValidationError("M303 simplified calculation result must retain every filing activity in row order")
+    if tuple(item.orden_id for item in result.activities) != tuple(item.orden_id for item in row_activities):
+        raise ModeloValidationError("M303 simplified calculation result Orden identities disagree with filing rows")
+
+
+def _validate_m303_result_activity_evidence(evidence: M303RegimenSimplificadoFilingEvidence) -> None:
+    row_activities = tuple(evidence.rows.activities)
+    for row, activity_result in zip(row_activities, evidence.calculation_result.activities, strict=True):
+        _validate_m303_result_activity_row(activity_result, row)
+
+
+def _validate_m303_result_activity_row(
+    activity_result: M303RegimenSimplificadoActivityCalculationResult,
+    row: RegimenSimplificadoActivity,
+) -> None:
+    if not isinstance(row, ActividadNoAgricolaSimplificado):
+        raise ModeloValidationError("M303 simplified calculation result cannot resolve agricultural activity rows")
+    expected_evidence = _m303_regimen_simplificado_activity_evidence_references(row)
+    if activity_result.evidence_references != expected_evidence:
+        raise ModeloValidationError(
+            "M303 simplified calculation result evidence references disagree with filing rows",
+        )
+    if tuple(item.module_identity for item in activity_result.module_results) != tuple(
+        item.module_identity for item in row.modulos
+    ):
+        raise ModeloValidationError("M303 simplified calculation result modules disagree with filing rows")
+    if tuple(item.evidence_reference for item in activity_result.module_results) != tuple(
+        item.evidence_reference for item in row.modulos
+    ):
+        raise ModeloValidationError("M303 simplified calculation result module evidence disagrees with filing rows")
+
+
+def _m303_regimen_simplificado_activity_evidence_references(
+    row: RegimenSimplificadoActivity,
+) -> tuple[FilingEvidenceReference, ...]:
+    """Return the ordered immutable evidence identity carried by one filing row."""
+    if not isinstance(row, ActividadNoAgricolaSimplificado):
+        return (row.evidence_reference, *(item.evidence_reference for item in row.facts))
+    return (
+        row.evidence_reference,
+        *(item.evidence_reference for item in row.modulos),
+        *(item.evidence_reference for item in row.facts),
+    )
 
 
 class M303FilingInstanceEvidence(BaseModel):
@@ -261,6 +507,19 @@ class M303FilingInstanceEvidence(BaseModel):
     def _all_evidence_uses_the_filing_year(self) -> M303FilingInstanceEvidence:
         if self.regimen_simplificado.rows.ejercicio != self.period.filing_year:
             raise ModeloValidationError("M303 filing evidence must use the work-period filing year")
+        result = self.regimen_simplificado.calculation_result
+        if result.period != self.period:
+            raise ModeloValidationError("M303 simplified calculation result must use the filing period")
+        eligibility = self.regimen_simplificado.dana_2024_eligibility
+        requires_dana_eligibility = (
+            self.period.filing_year == 2024
+            and is_last_filing_period_of_year(self.period)
+            and not self.regimen_simplificado.scope_decision.is_not_claimed
+        )
+        if requires_dana_eligibility != (eligibility is not None):
+            raise ModeloValidationError(
+                "M303 DANA eligibility evidence is valid only for the 2024 annual simplified result",
+            )
         return self
 
 

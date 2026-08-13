@@ -6,19 +6,18 @@ from collections.abc import Mapping, Sequence
 from decimal import Decimal
 
 from ...core import ActionEvidenceProvenance, CasillaId, Modelo
+from ...core.resources import resources
 from ...domain.calculations.registry import (
     CasillaObservation,
     RegistrySnapshot,
     resolve_m303_regimen_simplificado_snapshot,
 )
-from ...domain.deadlines import TaxpayerProfile
 from ...domain.iva import is_last_filing_period_of_year, validate_regimen_simplificado_rows
 from ...domain.modelos import FilingInstanceEvidence, M303FilingInstanceEvidence, WorkUnit
-from ...domain.user_profile import ProfileNotFoundError, UserProfileStatus
-from ..user_profile import UserProfileLifecycleRepository, projection_for_taxpayer
-from ._action_errors import M303FilingEvidenceError, ModeloProfileReadinessError
+from ..calculations import calculate_m303_regimen_simplificado_result
+from ._action_errors import M303FilingEvidenceError
 from ._m303_regimen_simplificado_scope import (
-    m303_profile_readiness_failure,
+    active_taxpayer_profile,
     m303_regimen_simplificado_scope_for_profile,
 )
 from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
@@ -119,7 +118,7 @@ def _validate_m303_simplified_filing_evidence(
                 {"snapshot_matches_scope_decision": False},
             ),
         )
-    profile = _active_taxpayer_profile(work_unit)
+    profile = active_taxpayer_profile(work_unit)
     if regimen.scope_decision != m303_regimen_simplificado_scope_for_profile(profile):
         raise M303FilingEvidenceError(
             precondition_failure=m303_filing_evidence_failure(
@@ -135,6 +134,21 @@ def _validate_m303_simplified_filing_evidence(
         applicable=not regimen.scope_decision.is_not_claimed,
         censo_iae_epigraphs=censo_iae_epigraphs,
     )
+    expected_result = calculate_m303_regimen_simplificado_result(
+        period=evidence.period,
+        scope_decision=regimen.scope_decision,
+        rows=regimen.rows,
+        regimen_snapshot=regimen.regimen_snapshot,
+        dana_2024_eligibility=regimen.dana_2024_eligibility,
+        catalogues=resources().modelos.authority.catalogues,
+    )
+    if regimen.calculation_result != expected_result:
+        raise M303FilingEvidenceError(
+            precondition_failure=m303_filing_evidence_failure(
+                "simplified_calculation_result_divergence",
+                {"calculation_result_matches_annual_orden": False},
+            ),
+        )
 
 
 def _validate_m303_exonerado_filing_evidence(
@@ -212,23 +226,6 @@ def _validate_m303_exonerado_applicable_values(
                 {"values_match_observations": False, "endpoint_count": len(actual_values)},
             ),
         )
-
-
-def _active_taxpayer_profile(work_unit: WorkUnit) -> TaxpayerProfile:
-    try:
-        record = UserProfileLifecycleRepository(bucket_id=work_unit.bucket_id).load(work_unit.bucket_id)
-    except ProfileNotFoundError as exc:
-        raise ModeloProfileReadinessError(
-            precondition_failure=m303_profile_readiness_failure("profile_absent", {"profile_present": False}),
-        ) from exc
-    if record.status is not UserProfileStatus.ACTIVE:
-        raise ModeloProfileReadinessError(
-            precondition_failure=m303_profile_readiness_failure(
-                "profile_inactive",
-                {"profile_present": True, "profile_status": str(record.status)},
-            ),
-        )
-    return projection_for_taxpayer(record)
 
 
 __all__ = ["m303_filing_evidence_failure", "validate_m303_filing_instance_evidence_for_revision"]

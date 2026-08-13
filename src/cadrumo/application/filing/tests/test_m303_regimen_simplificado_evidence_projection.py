@@ -6,6 +6,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....application.calculations import calculate_m303_regimen_simplificado_result
 from ....core import (
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,
@@ -58,6 +59,7 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -
                 ejercicio=2026,
                 activity_id=annual_activity.orden_id,
                 iae_epigrafe=annual_activity.iae_epigrafe,
+                auxiliary_activity_indicator=annual_activity.auxiliary_activity_indicator,
                 modulos=tuple(
                     EntradaModuloSimplificado(
                         module_identity=module.identity,
@@ -83,6 +85,15 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -
         scope_decision=scope,
         rows=rows,
         regimen_snapshot=regimen_snapshot,
+        dana_2024_eligibility=None,
+        calculation_result=calculate_m303_regimen_simplificado_result(
+            period=period,
+            scope_decision=scope,
+            rows=rows,
+            regimen_snapshot=regimen_snapshot,
+            dana_2024_eligibility=None,
+            catalogues=resources().modelos.authority.catalogues,
+        ),
     )
 
     assert evidence.rows.ejercicio == period.filing_year

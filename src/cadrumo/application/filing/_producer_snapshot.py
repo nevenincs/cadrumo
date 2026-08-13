@@ -36,6 +36,7 @@ from ...domain.modelos import (
     M303Exonerado390FilingEvidence,
     M303InsolvencyFilingFact,
     M303InsolvencyFilingSubtype,
+    M303RegimenSimplificadoCalculationResult,
     M303RegimenSimplificadoFilingEvidence,
 )
 from ...domain.prorrata_register import ProrrataRegister
@@ -217,6 +218,7 @@ class M303FilingFacts(BaseModel):
     insolvency: M303InsolvencyFilingFact | None
     exonerado_390: M303Exonerado390FilingEvidence
     regimen_simplificado: M303RegimenSimplificadoFilingEvidence
+    regimen_simplificado_result: M303RegimenSimplificadoCalculationResult
     period: Period
     supplier_regime: M303SupplierRegimeArrival
     prorrata_transition: M303ProrrataTransitionArrival
@@ -230,6 +232,10 @@ class M303FilingFacts(BaseModel):
         _require_m303_official_filing_period(self.period)
         if self.period != self.supplier_regime.period or self.period != self.prorrata_transition.period:
             raise ValueError("M303 filing facts and arrivals must share one filing period")
+        if self.regimen_simplificado_result != self.regimen_simplificado.calculation_result:
+            raise ValueError("M303 filing facts must retain the exact simplified-regime calculation result")
+        if self.regimen_simplificado_result.period != self.period:
+            raise ValueError("M303 filing facts and simplified-regime result must share one filing period")
         if self.regularisation_result.regularizacion_year != self.period.filing_year:
             raise ValueError("M303 regularisation result must use the filing year")
         assert_m303_regularisation_result_matches_bienes_register(
@@ -264,6 +270,7 @@ def resolve_m303_filing_facts(
         insolvency=m303.insolvency,
         exonerado_390=m303.exonerado_390,
         regimen_simplificado=m303.regimen_simplificado,
+        regimen_simplificado_result=m303.regimen_simplificado.calculation_result,
         period=m303.period,
         supplier_regime=supplier_regime,
         prorrata_transition=prorrata_transition,

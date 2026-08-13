@@ -47,7 +47,6 @@ from ....domain.modelos import (
     FilingInstanceEvidence,
     M303Exonerado390FilingEvidence,
     M303FilingInstanceEvidence,
-    M303RegimenSimplificadoFilingEvidence,
 )
 from ....domain.transactions import (
     BusinessClassification,
@@ -59,6 +58,7 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .envelope_helpers import unwrap_envelope_notices as _notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -188,10 +188,12 @@ def _write_m303_filing_evidence(path: Path) -> None:
                 operaciones_terceros_declarables=None,
                 operaciones_terceros_reference=None,
             ),
-            regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
+            regimen_simplificado=regimen_simplificado_filing_evidence(
+                period=period,
                 scope_decision=scope,
                 rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
                 regimen_snapshot=snapshot,
+                dana_2024_eligibility=None,
             ),
         ),
     )
