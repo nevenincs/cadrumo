@@ -334,8 +334,10 @@ def member_observation_key_for_token(
     base = observation_key_for_token(modelo, filing_year, period_token)
     if member_nif is None:
         return base
-    safe_repository_id(member_nif, context="member_nif")
-    return f"{base}:{member_nif}"
+    member_token = tax_id_identity_token(member_nif)
+    if not member_token:
+        raise ObservationKeyError("member_nif must be non-empty")
+    return f"{base}:{sha256_hex(member_token.encode(UTF_8_ENCODING))}"
 
 
 def member_observation_key(modelo: str, period: Period, member_nif: str | None) -> str:
@@ -344,9 +346,20 @@ def member_observation_key(modelo: str, period: Period, member_nif: str | None) 
     When ``member_nif`` is ``None`` the key is the single-filer
     ``observation_key`` unchanged, so every existing consumer (the default
     previous_filing path, the multi-year resolver) keys identically. When set,
-    the member NIF is appended so two members' filings for the same
+    a member segment is appended so two members' filings for the same
     ``(modelo, filing_year, period)`` persist as distinct rows — the cross-member
     fan-in the 353<-322 ``per_grupo_member`` aggregation enumerates and sums.
+
+    That segment is the sha256 of the member's
+    :func:`~core.identity.tax_id_identity_token`, the same normalise-then-digest
+    step every other identifier-bearing object key in the registry takes. The
+    normalisation is the load-bearing half: appending the declared value
+    verbatim made two spellings of ONE member address two rows, so a member
+    whose identifier arrived lower-cased in one capture and space-padded in the
+    next was counted twice by the very fan-in this widening exists to serve.
+    The digest is the hygiene half -- it keeps a real identifier out of the
+    natural-key surface, which is addressing metadata rather than encrypted
+    payload.
     """
     filing_period = _require_observation_period(period)
     return member_observation_key_for_token(
