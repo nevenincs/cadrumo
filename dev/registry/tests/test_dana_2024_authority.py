@@ -43,6 +43,7 @@ from urllib.parse import urlsplit
 
 import pytest
 
+from cadrumo.core import normalise_corpus_text, resolve_anchored_extracted_unit
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     LegalReference,
@@ -73,6 +74,25 @@ CORRECTION_REF = "correccion-errores-rdl-6-2024"
 
 #: The numeric parameter the measure compiles down to.
 REDUCTION_PARAMETER = "rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada-2024"
+
+#: Distinct anexo municipality names inside one authored registry value that
+#: make it an enumeration rather than a word collision. See
+#: :func:`test_no_registry_value_enumerates_the_anexo_instead_of_citing_it` for
+#: the measurement behind the boundary.
+_ENUMERATION_THRESHOLD = 3
+
+#: The anexo must parse to substantially its published length or the scan is
+#: measuring nothing. The published list carries 78 entries; the floor sits
+#: below that so a lawful amendment does not force an edit here.
+_ANEXO_ANTI_VACUITY_FLOOR = 50
+
+#: ``required_text`` is the sanctioned place to quote anexo lines, so it is cut
+#: out before scanning. Non-greedy to the first closing bracket: these arrays
+#: hold only quoted phrases, never nested brackets.
+_REQUIRED_TEXT_ARRAY = re.compile(r"required_text\s*=\s*\[.*?\]", re.DOTALL)
+
+#: One authored TOML string value, basic or multi-line, with escapes honoured.
+_TOML_STRING = re.compile(r'"""(?:.|\n)*?"""|"(?:[^"\\]|\\.)*"')
 
 DANA_LEGAL_REFS = (
     GEOGRAPHY_REF,
@@ -354,17 +374,116 @@ def test_the_geography_is_cited_rather_than_transcribed() -> None:
         f"{REDUCTION_REF} no longer defers to the RDL 6/2024 anexo for its scope, so the geography it "
         "applies to would have to come from somewhere this catalogue does not control"
     )
-    assert reduction.document_id != geography.document_id, (
-        "the reduction and the geography are expected to live in different norms; a single-norm reading "
-        "would mean the deferral above is no longer what it appears to be"
+    assert geography.consolidated_as_of is not None, (
+        f"{GEOGRAPHY_REF} answers 'which municipalities' without an as-of date, so the deferral above "
+        "buys nothing: the reduction would point at an undated list the Consejo de Ministros may since "
+        "have amended"
     )
 
 
 @pytest.mark.parametrize("ref", DANA_LEGAL_REFS)
 def test_every_dana_citation_is_backed_by_exactly_one_pinned_source(ref: str) -> None:
-    """A citation's bytes are pinned once, so drift has one place to show."""
+    """A citation's bytes are pinned once, and that pin names the same document.
+
+    The exactly-one half is asserted by :func:`_source_pinning`. What remains
+    here is the half a same-artefact pin can still get wrong: the pin's own
+    provenance URL must name the BOE document the citation claims. A pin whose
+    URL was copied from a neighbouring entry keeps pointing at the right file
+    on disk while recording where the WRONG bytes came from, and every
+    sha-and-artefact check in this module passes over it.
+
+    Deliberately not asserted: ``source.review_status``. It is typed
+    ``Literal["reviewed"]``, so no other value is representable and the
+    comparison could not fail. ``_legal.verify_legal_reference`` had the same
+    dead branch removed for the same reason; re-adding it here as a test would
+    reintroduce it one layer up.
+    """
     authority = dana_authority()
+    reference = authority.legal[ref]
 
-    source = _source_pinning(authority, authority.legal[ref])
+    source = _source_pinning(authority, reference)
 
-    assert source.review_status == "reviewed"
+    assert reference.document_id in source.source_url, (
+        f"{ref} claims document {reference.document_id!r} but the source pinning its bytes was fetched "
+        f"from {source.source_url!r}, which names a different document; the pin records the provenance "
+        "of the wrong bytes"
+    )
+
+
+def _anexo_municipalities(authority: DanaAuthority) -> tuple[str, ...]:
+    """Return the anexo's municipality names, read from the bundled corpus.
+
+    Derived from the cited corpus unit rather than transcribed here, because a
+    list hardcoded into the test that refuses transcription would be the very
+    thing it refuses. The anexo renders as alternating number and name lines,
+    each name terminated by a full stop.
+    """
+    reference = authority.legal[GEOGRAPHY_REF]
+    path, _, anchor = reference.corpus_ref.partition("#")
+    text = resolve_anchored_extracted_unit(
+        authority.source_root / (path + ".extracted.json"),
+        anchor=anchor,
+        include_title=True,
+    )
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    return tuple(
+        lines[index + 1].rstrip(".")
+        for index, line in enumerate(lines[:-1])
+        if line.isdigit() and lines[index + 1].endswith(".")
+    )
+
+
+def test_no_registry_value_enumerates_the_anexo_instead_of_citing_it() -> None:
+    """The registry may cite the anexo; it may never reproduce the list.
+
+    The refusal this whole authority exists for, asserted where it can actually
+    be broken: across the WHOLE registry authoring tree, not just the DANA
+    slice, because a transcription would most plausibly appear in a modelo
+    construct or a parameter note rather than beside the citation it replaces.
+
+    ``required_text`` is excluded by construction. Quoting anexo lines there is
+    the sanctioned mechanism -- those phrases are the anchor that pins WHICH
+    redaction of the list is meant, and the geography entry depends on them.
+
+    Detection is on list SHAPE, not on name membership, and that is forced by
+    the data: three of the 78 names ("Real", "Silla", "Mira") are ordinary
+    Spanish words, so a membership scan flags most of the tree. Measured over
+    the current tree at FILE granularity -- deliberately the more permissive
+    measurement, since a file's name set contains every one of its values' --
+    17,033 of 17,151 registry files name no municipality, 117 name exactly
+    one, and a single file names two. Nothing reaches three. Three distinct
+    names inside ONE authored value is therefore not a word collision; it is
+    the beginning of a list. The boundary describes the shape of an
+    enumeration rather than counting current sites, so adding entries or prose
+    cannot walk the tree into it.
+
+    The file-level pass is a pure speed prefilter and cannot hide an offender:
+    a value's names are a subset of its file's, so a file under the threshold
+    has no value over it.
+    """
+    authority = dana_authority()
+    municipalities = _anexo_municipalities(authority)
+
+    assert len(municipalities) >= _ANEXO_ANTI_VACUITY_FLOOR, (
+        f"only {len(municipalities)} municipalities parsed out of the anexo; the probe is not reaching "
+        "the list, so every assertion below would hold vacuously"
+    )
+    named_anywhere = re.compile(
+        r"\b(?:" + "|".join(re.escape(normalise_corpus_text(name)) for name in municipalities) + r")\b",
+    )
+
+    offenders: list[str] = []
+    for toml_path in sorted(bundled_path("registry", "aeat").rglob("*.toml")):
+        body = _REQUIRED_TEXT_ARRAY.sub(" ", toml_path.read_text(encoding="utf-8"))
+        if len(set(named_anywhere.findall(normalise_corpus_text(body)))) < _ENUMERATION_THRESHOLD:
+            continue
+        for value in _TOML_STRING.finditer(body):
+            named = set(named_anywhere.findall(normalise_corpus_text(value.group(0))))
+            if len(named) >= _ENUMERATION_THRESHOLD:
+                offenders.append(f"{toml_path.name}: names {sorted(named)[:6]}")
+
+    assert not offenders, (
+        "registry values enumerate anexo municipalities instead of citing the anexo; the list is "
+        "amendable by Acuerdo de Consejo de Ministros, so a copy in the registry is a snapshot that "
+        "silently stops matching the law:\n" + "\n".join(offenders[:10])
+    )

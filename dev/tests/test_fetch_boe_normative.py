@@ -16,13 +16,17 @@ distinguish a per-fieldset invariant from a document-wide one.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from http import HTTPStatus
 from pathlib import Path
 from typing import Final
 
+import httpx
 import pytest
 
 from dev.corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
+    assert_boe_holds_no_consolidated_text,
     assert_served_by_the_requested_endpoint,
     assert_serves_the_published_document,
     assert_serves_the_text_in_force,
@@ -220,6 +224,80 @@ def test_a_consolidated_payload_is_refused_by_the_as_published_arm() -> None:
     """
     with pytest.raises(NormativeAcquisitionError, match="canonical URL"):
         assert_serves_the_published_document(_payload(_MULTI_BLOCK), document_id="BOE-A-2024-12944")
+
+
+def _boe_endpoint(routes: dict[str, tuple[int, bytes]]) -> Callable[..., list[bytes]]:
+    """Return a WSGI endpoint serving ``routes`` keyed by request path.
+
+    A real HTTP endpoint handler, not a test double: it is mounted under a real
+    :class:`httpx.Client` and answers real requests, so redirect following,
+    status handling and ``response.url`` resolution are httpx's own. That is
+    the point -- the guard under test reads the FINAL url after redirects, and
+    a substitute that returned a canned response object would assert the
+    substitute's redirect logic rather than the client's.
+
+    A ``302`` route's body is the ``Location`` header.
+    """
+
+    def endpoint(environ: dict[str, object], start_response: Callable[..., object]) -> list[bytes]:
+        path = str(environ["PATH_INFO"])
+        status, body = routes[path]
+        if status == HTTPStatus.FOUND:
+            start_response("302 Found", [("Location", body.decode("ascii"))])
+            return [b""]
+        start_response("200 OK", [("Content-Type", "text/html; charset=utf-8")])
+        return [body]
+
+    return endpoint
+
+
+def _boe_client(routes: dict[str, tuple[int, bytes]]) -> httpx.Client:
+    """A real httpx client whose transport runs the in-process BOE endpoint."""
+    return httpx.Client(
+        transport=httpx.WSGITransport(app=_boe_endpoint(routes)),
+        follow_redirects=True,
+        base_url="https://www.boe.es",
+    )
+
+
+def test_a_redirect_away_from_the_consolidated_endpoint_certifies_no_consolidated_text() -> None:
+    """The one answer that positively establishes the absence, so the guard returns.
+
+    This is how BOE says "there is no consolidated text for this id": the
+    request for the consolidated view lands somewhere else. Driven with the
+    real corrección de errores bytes, which is the document the guard exists
+    to let through.
+    """
+    routes = {
+        "/buscar/act.php": (HTTPStatus.FOUND, b"https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24097"),
+        "/buscar/doc.php": (HTTPStatus.OK, _payload(_AS_PUBLISHED).encode("utf-8")),
+    }
+    with _boe_client(routes) as client:
+        assert_boe_holds_no_consolidated_text(document_id="BOE-A-2024-24097", client=client)
+
+
+def test_consolidated_text_served_for_the_id_is_refused() -> None:
+    """A version selector at the consolidated endpoint proves consolidated text exists.
+
+    Driven with the real multi-block consolidated payload, so the selector the
+    guard reads is BOE's own markup rather than an imagined shape.
+    """
+    routes = {"/buscar/act.php": (HTTPStatus.OK, _payload(_MULTI_BLOCK).encode("utf-8"))}
+    with _boe_client(routes) as client, pytest.raises(NormativeAcquisitionError, match="serves consolidated text"):
+        assert_boe_holds_no_consolidated_text(document_id="BOE-A-2024-12944", client=client)
+
+
+def test_an_unredirected_answer_with_no_version_selector_is_refused_rather_than_passed() -> None:
+    """The ambiguous shape must refuse: this guard's unrecognised case is not a pass.
+
+    ``act.php`` answering for itself with no selector is equally the shape of a
+    BOE error page returned at 200 and of a selector markup change this parser
+    no longer recognises. Passing it would hand the caller an as-published
+    redaction of an amended norm, which is the whole defect the guard prevents.
+    """
+    routes = {"/buscar/act.php": (HTTPStatus.OK, _payload(_AS_PUBLISHED).encode("utf-8"))}
+    with _boe_client(routes) as client, pytest.raises(NormativeAcquisitionError, match="cannot establish"):
+        assert_boe_holds_no_consolidated_text(document_id="BOE-A-2024-24097", client=client)
 
 
 def test_canonicalisation_normalises_crlf_and_leaves_legal_text_alone() -> None:

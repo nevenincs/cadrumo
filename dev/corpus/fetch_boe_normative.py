@@ -631,8 +631,6 @@ def fetch_article(
 def assert_serves_the_published_document(payload: str, *, document_id: str) -> None:
     """Refuse a payload that is not this document's own single-document view.
 
-    Two refusals, both reading the payload alone:
-
     One refusal, and deliberately only one: the server-emitted ``rel="canonical"``
     link must name this endpoint and this id. It is preferred over the id echoed
     into the page body, which any view of the document satisfies, and it is the
@@ -678,15 +676,29 @@ def assert_boe_holds_no_consolidated_text(*, document_id: str, client: httpx.Cli
     request for the consolidated view that is still served BY the consolidated
     view, and that carries a version selector, proves consolidated text exists.
 
-    A redirect away from ``act.php`` is the expected, accepted answer -- it is
-    exactly how BOE says "there is no consolidated text for this id".
+    A redirect away from ``act.php`` is the expected, accepted answer -- and it
+    is the ONLY accepted answer. It is exactly how BOE says "there is no
+    consolidated text for this id", and it is the single observation that
+    positively establishes the absence this function is asked to certify.
+
+    Every other outcome refuses, including the case where ``act.php`` answers
+    for itself and the payload carries no version selector. That combination
+    says nothing: it is equally the shape of an id with no consolidated text
+    served through an unredirected route, of a BOE error or maintenance page
+    returned at 200, and of a selector markup change this parser no longer
+    recognises. Returning on it would let the third case silently hand the
+    caller an as-published redaction of an amended norm -- the exact defect
+    this guard exists to prevent -- so the ambiguity is refused and the
+    operator re-checks the id by hand. A guard whose unrecognised case is a
+    pass is not a guard.
 
     Args:
         document_id: The BOE identifier being acquired as-published.
         client: The HTTP client to probe with, shared with the caller's fetch.
 
     Raises:
-        NormativeAcquisitionError: If BOE serves consolidated text for the id.
+        NormativeAcquisitionError: If BOE serves consolidated text for the id,
+            or if the probe cannot positively establish that it does not.
     """
     response = client.get(_ACT_URL, params={"id": document_id})
     response.raise_for_status()
@@ -694,11 +706,16 @@ def assert_boe_holds_no_consolidated_text(*, document_id: str, client: httpx.Cli
     wanted = urlsplit(_ACT_URL)
     if (served.scheme, served.netloc, served.path) != (wanted.scheme, wanted.netloc, wanted.path):
         return
-    if not version_selections(response.content.decode("utf-8", errors="replace")):
-        return
+    if version_selections(response.content.decode("utf-8", errors="replace")):
+        raise NormativeAcquisitionError(
+            f"BOE serves consolidated text for {document_id}, so the as-published view would bundle the "
+            "original redaction of a norm that may since have been amended; use fetch_normative instead"
+        )
     raise NormativeAcquisitionError(
-        f"BOE serves consolidated text for {document_id}, so the as-published view would bundle the "
-        "original redaction of a norm that may since have been amended; use fetch_normative instead"
+        f"the consolidated endpoint answered for {document_id} without redirecting away and without a "
+        "version selector, so this probe cannot establish that BOE holds no consolidated text for it; "
+        "only a redirect away from the consolidated endpoint establishes that. Re-check the id by hand "
+        "before bundling the as-published view"
     )
 
 
