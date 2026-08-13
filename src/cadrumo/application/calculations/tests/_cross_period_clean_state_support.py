@@ -196,7 +196,7 @@ def _seed_member_322_filing(
             "aeat_register_status": "ALTA",
             "aeat_expediente_id": f"EXP-322-{_M353_YEAR}-{_M353_PERIOD}-{member_nif}",
             "authenticated_identity": member_nif,
-            "aeat_justificante_csv": f"JUST-322-{member_nif}",
+            "aeat_justificante_csv": f"JUST322{member_nif}",
         }
     values = _member_source_values(member_nif, source_casilla_ids)
     work_unit_id = hashlib.sha256(f"322:{_M353_YEAR}:{_M353_PERIOD}:{member_nif}".encode()).hexdigest()
@@ -232,7 +232,7 @@ def _seed_member_322_filing(
         CalculationRevisionCatalogue(revisions={**dict(calculation_catalogue.revisions), revision_id: revision}),
     )
 
-    evidence_reference_id = f"JUST-322-{member_nif}"
+    evidence_reference_id = f"JUST322{member_nif}"
     _persist_justificante_metadata(
         evidence_reference_id,
         modelo="322",
@@ -372,7 +372,7 @@ def _seed_official_303_source_filings(
 
     for period, source_casilla_ids in sorted(source_casilla_ids_by_period.items()):
         evidence_kind = evidence_kind_by_period.get(period, ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF)
-        evidence_reference_id = f"JUST-{period}"
+        evidence_reference_id = f"JUST0000{period}"
         if (
             evidence_kind
             in {

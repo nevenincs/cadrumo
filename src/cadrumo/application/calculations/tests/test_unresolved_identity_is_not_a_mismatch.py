@@ -43,7 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "39039039-0390-4390-8390-390390390391"
 _OWNER_NIF = "X1234567L"
 _OTHER_NIF = "B12345678"
-_CSV = "JUST-IDENTITY-1T"
+_CSV = "JUSTIDENTITY1T"
 _YEAR = 2025
 _PERIOD = "1T"
 _CLOCK = datetime(2025, 4, 15, 9, 0, tzinfo=UTC)

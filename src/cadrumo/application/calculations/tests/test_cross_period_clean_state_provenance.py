@@ -171,7 +171,7 @@ def test_cross_period_clean_state_blocks_missing_aeat_register_reference(tmp_pat
                 "1T": {
                     "aeat_register_status": "ALTA",
                     "authenticated_identity": "X1234567L",
-                    "aeat_justificante_csv": "JUST-1T",
+                    "aeat_justificante_csv": "JUST00001T",
                 },
             },
         )
@@ -396,7 +396,7 @@ def test_cross_period_clean_state_blocks_mismatched_justificante_metadata(tmp_pa
             observation_repository=observation_repository,
             omit_justificante_metadata_periods={"1T"},
         )
-        _persist_justificante_metadata("JUST-1T", modelo="303", period="2T", filing_year=_M390_YEAR)
+        _persist_justificante_metadata("JUST00001T", modelo="303", period="2T", filing_year=_M390_YEAR)
 
         verdict = evaluate_cross_period_clean_state(
             _snapshot_390(),
