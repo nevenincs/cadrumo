@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:c92d6c916ae5449cdc677f9d7c39313548d0e192b78ac8d40f0c133c46ad6d65'
+body_hash: 'sha256:31ab79764648d9d001e5ecbf0d81b12a8363188d550d270e39f72f26d52595ac'
 step_id: 'S112'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -36,6 +36,9 @@ related:
 - Both producers now additionally assert the absence rather than the identity, mirroring the form proven on the sibling invoices Step: with no authored message `str(exc)` degrades to the key. Re-running the same out-of-repo mutation now fails two tests at exit 1, each naming the exact re-introduced sentence, so the tests discriminate and are not tautological.
 - The two migrations invalidated their own census fingerprints in the recovery rehoming ledger, since the ledger keys ownership entries by normalised AST digest and the migrations changed both ASTs. Both entries were re-pointed at the recomputed digests with their diagnostic locators corrected to the current spans. The digests were recomputed with the ledger's own normaliser rather than transcribed. The ledger writer was not run.
 - Eight tests pass in the owning module, in the default per-push lane rather than behind an integration marker. Ruff check and format are clean across the package.
+- A second review found the separate-key decision above only half-implemented, and closed it. Giving the empty-catalogue condition its own locale key while still raising `TopicNotFoundError` left the envelope emitting `REFUSED_TOPIC_NOT_FOUND` for a packaging defect, and pointed `translated_message` at `core.topics.errors.catalogue_empty`, which is not the registered key of the class raised — so the divergence the Step set out to remove survived at the code axis while looking closed at the text axis.
+- The condition now carries its own class, `TopicCatalogueEmptyError`, registered as `REFUSED_TOPIC_CATALOGUE_EMPTY` against `errors.refused.refused_topic_catalogue_empty`, with `topic_count` beside the catalogue root so the fact set states the observation rather than only the location. The hand-picked `core.topics.errors.catalogue_empty` leaf was removed from all four catalogues through the locale CLI, and the new key set through `set-batch`; `scaffold --check` reports all four clean.
+- The empty-catalogue test now asserts the registered code alongside the key, the facts and the `str(exc)` absence proof, so a future re-merge of the two identities fails rather than passing on the shared class.
 
 ## Notes
 

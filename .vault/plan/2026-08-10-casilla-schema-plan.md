@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-13'
-body_hash: 'sha256:f2290aebcb0fdd708d5855f282017588ff6f3708faea912ea2b6e4da4730d59c'
+body_hash: 'sha256:89689a2f621c9eba5fc8f0db30ebcc7ce2751448c101aca0f5094ce16c362f5b'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -150,7 +150,7 @@ Open-ended by design: every mid-campaign discovery lands here as an appended Ste
 - [x] `W05.P11.S41` - correct this plan's standing collect gate to name the selection it actually measures - a bare `pytest --collect-only -q` inherits the unit-lane marker expression from pyproject.toml addopts, deselects 4334 tests and never reaches three of the 21 rule-named gates, so the gate must either pass an empty marker expression or state in terms that it measures the unit lane only; `.vault/plan/2026-08-10-casilla-schema-plan.md`.
 - [x] `W05.P11.S80` - reconcile the invalid S08 manifest worklist against canonical calculation closure, retire false-positive steps S42-S79, correct plan prose, S08 execution, research A-09, and the exact-count test, and prove absent manifests remain canonical for empty closures; `.vault/plan/2026-08-10-casilla-schema-plan.md and .vault/exec/2026-08-10-casilla-schema/2026-08-10-casilla-schema-W01-P02-S08.md and .vault/research/2026-08-10-casilla-schema-research.md and src/cadrumo/domain/calculations/registry/tests/test_record_design_completeness.py`.
 - [x] `W05.P11.S82` - destructively rename the OfficialBoxStatus, official_box_status, and classify_official_boxes family to one Spanish casilla-stem authority, sweep every consumer, and prove zero English-name references without aliases or compatibility exports; `src/cadrumo/core/ and src/cadrumo/domain/calculations/registry/_export.py and src/cadrumo/application/modelo/ and src/cadrumo/adapters/inbound/tui/`.
-- [ ] `W05.P11.S83` - repair the real M303-quarter-to-M390 end-to-end suite to law-select each live split M303 revision and make all four scenarios pass without restoring or tolerating the retired revision id; `src/cadrumo/application/modelo/tests/test_e2e_ledger_m303_quarters_to_m390_annual.py`.
+- [x] `W05.P11.S83` - repair the real M303-quarter-to-M390 end-to-end suite to law-select each live split M303 revision and make all four scenarios pass without restoring or tolerating the retired revision id; `src/cadrumo/application/modelo/tests/test_e2e_ledger_m303_quarters_to_m390_annual.py`.
 - [x] `W05.P11.S84` - remove the five retired application.verification.errors locale leaves from all four catalogues through dev.locales and prove no deleted-package key remains; `src/cadrumo/locales/`.
 - [x] `W05.P11.S85` - replace the relation-handoff applicability hard counts with count-free semantic invariants and a bite proof, making the complete owning module green; `src/cadrumo/domain/calculations/registry/tests/test_relation_handoff_inventory.py`.
 - [x] `W05.P11.S86` - correct the two S33 audit IVA-stem violations and fill the checked S02 execution Description through VaultSpec CLI, then pass the IVA-stem and feature body-section gates; ` .vault/audit/2026-08-12-casilla-schema-s33-readiness-mapping-audit.md and .vault/exec/2026-08-10-casilla-schema/2026-08-10-casilla-schema-W01-P01-S02.md`.
