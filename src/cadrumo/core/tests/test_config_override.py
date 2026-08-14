@@ -18,12 +18,20 @@ itself.
 
 from __future__ import annotations
 
+import os
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from ..config import coerce_output_language_setting, load_settings, override_settings
+from ..config import (
+    coerce_output_language_setting,
+    load_settings,
+    override_settings,
+    reset_settings_cache,
+)
 from ..external_constants import OutputLanguage
 from ..paths import resolve_project_path
 
@@ -132,11 +140,53 @@ def test_override_settings_preserves_explicit_fields_set_signal() -> None:
         assert "cadrumo_cert_warn_days" not in overridden.model_fields_set
 
 
+@contextmanager
+def _absent_env_var(name: str) -> Iterator[None]:
+    """Remove ``name`` from the process environment for the scope, then restore it.
+
+    A local context manager rather than the pytest ``monkeypatch`` fixture, per
+    this package's no-monkeypatch discipline.
+
+    ``_constructed_settings`` is lru_cached, so settings built earlier in this
+    process would answer from before the removal and the variable would look
+    inert; the cache is dropped on both edges. ``override_settings`` is
+    deliberately NOT used to establish the absence — it would prove the
+    override mechanism, which is the very thing under test, instead of the
+    ambient state the assertions read.
+    """
+    previous = os.environ.get(name)
+    os.environ.pop(name, None)
+    reset_settings_cache()
+    try:
+        yield
+    finally:
+        if previous is not None:
+            os.environ[name] = previous
+        reset_settings_cache()
+
+
 def test_override_settings_carries_secretstr_through_validation() -> None:
     """The master-key passphrase override travels as a real SecretStr —
     Pydantic accepts a bare string and coerces; the override path must
-    produce the same shape callers get from .env."""
+    produce the same shape callers get from .env.
 
+    The absent-passphrase baseline is established rather than assumed. The
+    pytest harness bridges the operator's local ``env/.env`` into the process
+    environment so integration paths see real configuration, and that file
+    carries a real ``CADRUMO_SECRET_PASSPHRASE`` on a developer machine. This
+    test inherited it, so its two "restored to absent" assertions failed
+    locally and passed on CI — the gate meant different things in the two
+    places. The variable is isolated here, at the test, rather than by
+    narrowing what the harness bridges, which would trade this red for a
+    silent loss of coverage on the paths that need the real value.
+    """
+
+    with _absent_env_var("CADRUMO_SECRET_PASSPHRASE"):
+        _assert_secretstr_override_round_trip()
+
+
+def _assert_secretstr_override_round_trip() -> None:
+    """Assert the override installs a real SecretStr and restores absence."""
     baseline = load_settings()
     assert baseline.cadrumo_secret_passphrase is None
 
