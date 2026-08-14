@@ -70,7 +70,6 @@ _RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES = frozenset(
         "cadrumo.application.auth._sessions",
         "cadrumo.application.bienes_inversion",
         "cadrumo.application.bucket_maintenance._manifest_digest",
-        "cadrumo.application.bucket_maintenance._sandbox",
         "cadrumo.application.bucket_maintenance._service",
         "cadrumo.application.calculations._cross_period_clean_state",
         "cadrumo.application.calculations._iva_compensation_annual_partition",
@@ -172,11 +171,9 @@ _RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES = frozenset(
         "cadrumo.application.user_profile._bundle",
         "cadrumo.application.user_profile._bundle_encryption",
         "cadrumo.application.user_profile._capabilities",
-        "cadrumo.application.user_profile._custody",
         "cadrumo.application.user_profile._custody_carry",
         "cadrumo.application.user_profile._language_resolver",
         "cadrumo.application.user_profile._login_session",
-        "cadrumo.application.user_profile._orchestration",
         "cadrumo.application.user_profile._profile_repository",
         "cadrumo.application.user_profile._repository",
         "cadrumo.application.workflow._adapters",
@@ -187,7 +184,11 @@ _RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES = frozenset(
         "cadrumo.application.workflow._profile_health",
     },
 )
-_DOMAIN_TO_ADAPTERS_BASELINE = 2  # reconciled live ceiling for test-only carveouts; may only decrease
+# The sanctioned pairs below ARE the ceiling. A tally sat here too, and it
+# could only ever have caught a sanctioned pair pinned twice -- duplicate noise,
+# not a widened boundary -- while training every reader to raise the number on a
+# red run. The pair set decides what may exist; the staleness assertion decides
+# that each one still earns its place.
 _SANCTIONED_DOMAIN_TO_ADAPTERS_TEST_PAIRS = frozenset(
     {
         ("cadrumo.domain.tests.**", "cadrumo.adapters.**"),
@@ -345,7 +346,13 @@ def test_domain_to_adapters_pin_count_does_not_grow(layered_edges: tuple[IgnoreE
     unexpected_pairs = observed_pairs - _SANCTIONED_DOMAIN_TO_ADAPTERS_TEST_PAIRS
 
     assert not unexpected_pairs, f"unexpected layered domain -> adapters ignore pairs: {sorted(unexpected_pairs)}"
-    assert len(domain_adapter_edges) <= _DOMAIN_TO_ADAPTERS_BASELINE
+
+    stale_pairs = sorted(_SANCTIONED_DOMAIN_TO_ADAPTERS_TEST_PAIRS - observed_pairs)
+    assert stale_pairs == [], (
+        "sanctioned domain -> adapters pair(s) no longer pin any edge; the carve-out was removed, so "
+        f"drop them from _SANCTIONED_DOMAIN_TO_ADAPTERS_TEST_PAIRS and let the ratchet record the win: {stale_pairs}"
+    )
+    assert domain_adapter_edges, "the domain -> adapters edge scan found nothing; the ledger parse collapsed"
 
 
 def test_zero_production_domain_to_adapters_edges(ignore_edges: tuple[IgnoreEdge, ...]) -> None:
