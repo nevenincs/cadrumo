@@ -44,9 +44,9 @@ import pytest
 
 from cadrumo.application.user_profile import UserProfileLifecycleRepository
 from cadrumo.domain.user_profile import (
+    ProfileSetupState,
     UserProfileFact,
     UserProfileRecord,
-    UserProfileStatus,
     load_user_profile_schema,
 )
 from cadrumo.tests.cli_envelope import require_schema_envelope
@@ -101,8 +101,7 @@ def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile) -> None:
         schema_id=schema.id,
         schema_version=schema.version,
         profile_id=_PROFILE_ID,
-        display_name="Under-declaration golden-eval test profile",
-        status=UserProfileStatus.ACTIVE,
+        setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.name", value="Under Declaration Operator"),
             UserProfileFact(path="identity.legal_name", value="Under Declaration Operator SL"),
