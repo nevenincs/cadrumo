@@ -749,6 +749,12 @@ convention = "google"
 # heuristic cannot prove the argv is fixed because it is derived from a
 # runtime path, not a static literal list.
 "src/cadrumo/domain/calculations/registry/tests/test_loader_cache_isolation.py" = ["S603"]
+# The production-regime half of the mutable-tree invalidation proof needs a
+# child interpreter without the pytest env markers, so it runs the trusted
+# `sys.executable -c <module-level literal>` driver with the tree coordinates
+# carried in the environment; ruff's S603 heuristic flags the call regardless of
+# the argv being fixed.
+"src/cadrumo/domain/calculations/registry/tests/test_mutable_tree_fingerprint_invalidation.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/master_key/_master_key.py" = ["S105"]
 "src/cadrumo/adapters/outbound/aeat/browser/tests/test_live_evasion.py" = ["S603"]
 # `SECRET`/`DEFER_TOKEN` are widget-kind and canonical-answer tokens, not

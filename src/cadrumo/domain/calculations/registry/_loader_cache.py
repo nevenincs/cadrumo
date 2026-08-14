@@ -2,10 +2,10 @@
 
 This module centralizes the small policy decisions that keep registry loading
 fast without hiding live TOML edits. Bundled registry roots receive a short
-fingerprint TTL, mutable authoring roots keep the stricter window, and under
-pytest the cross-process disk pickle is shared only for the immutable
-bundled root -- a mutable/synthetic root always keeps it disabled so xdist
-workers cannot share a stale compiled registry from a tree the run itself
+fingerprint TTL, mutable authoring roots are fingerprinted afresh on every
+call, and under pytest the cross-process disk pickle is shared only for the
+immutable bundled root -- a mutable/synthetic root always keeps it disabled so
+xdist workers cannot share a stale compiled registry from a tree the run itself
 can edit.
 
 See Also:
@@ -50,9 +50,9 @@ REGISTRY_DISK_CACHE_DIR_ENV_VAR = "CADRUMO_REGISTRY_DISK_CACHE_DIR"
 # selecting on it being unset.
 _REGISTRY_DISK_CACHE_RELATIVE_PATH = storage_location(StorageCategory.REGISTRY_DISK_CACHE).relative_path()
 
-# The bundled tree gets a longer fingerprint TTL than a mutable authoring
-# tree, but NOT a process-lifetime one: under an editable install (the
-# routine development mode) "bundled" resolves to the literal in-tree
+# The bundled tree is the only tree whose fingerprints are cached at all, and
+# its window is bounded rather than process-lifetime: under an editable install
+# (the routine development mode) "bundled" resolves to the literal in-tree
 # ``src/cadrumo/_data/registry/aeat`` source directory, which can be edited
 # live during a session. A TTL that
 # never re-checks would silently serve stale registry TOML to a long-running
@@ -359,11 +359,13 @@ def is_bundled_registry_root(resolved: Path) -> bool:
     editable install, force-included from the in-tree ``registry/aeat``
     directory) rather than passed explicitly as a mutable authoring tree
     (e.g. a test's ``tmp_path`` fixture building a synthetic registry).
-    Comparing the resolved path against the bundled root lets the
-    fingerprint cache apply :data:`BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS`
-    to the bundled tree alone without weakening invalidation for any
-    mutable tree, which always keeps the strict
-    :data:`MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS` window.
+    Comparing the resolved path against the bundled root lets the fingerprint
+    cache apply :data:`BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS` to the bundled
+    tree alone. It is also the whole of what admits a tree to that cache: a
+    mutable tree's fingerprint rows carry content digests that only re-reading
+    the files can validate, so such a tree is fingerprinted afresh on every call
+    rather than served from a window whose freshness check cannot speak for its
+    file content.
     """
     try:
         return resolved == _bundled_registry_root()
