@@ -23,7 +23,7 @@ from collections.abc import Callable
 import pytest
 
 from .....application import wizard as _wizard  # noqa: F401  -- side-effect import: registers profile keys
-from .._authority import ValidatedRegistryAuthority
+from .....core import RegistryAuthorityGrade
 from .._schema import RegistrySnapshot
 from ._formula_runtime_support import (
     _committed_modelo_130_snapshot,
@@ -33,27 +33,33 @@ from ._formula_runtime_support import (
 
 @pytest.fixture
 def committed_modelo_130_snapshot(
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+    registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
     return _committed_modelo_130_snapshot(registry_snapshot)
 
 
 @pytest.fixture
 def committed_modelo_180_snapshot(
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+    registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
     return _committed_modelo_180_snapshot(registry_snapshot)
 
 
 @pytest.fixture
 def m100_2024_snapshot(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
-    return registry_authority.snapshot("100", filing_year=2024, period="0A")
+    """M100/2024 at calculation grade.
+
+    These tests assert settlement-chain arithmetic, never filing eligibility,
+    so they must not fail on the revision-review, filing-capability or
+    legal-review attestation gates.
+    """
+    return registry_snapshot("100", 2024, "0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
 @pytest.fixture
 def m100_2025_snapshot(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
-    return registry_authority.snapshot("100", filing_year=2025, period="0A")
+    return registry_snapshot("100", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)

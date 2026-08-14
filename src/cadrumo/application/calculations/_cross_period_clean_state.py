@@ -574,7 +574,11 @@ def _requirements_from_previous_filing(
     *,
     snapshot: RegistrySnapshot,
 ) -> Iterable[CrossPeriodDependencyRequirement]:
-    grouped_keys = per_grupo_member_requirement_keys(snapshot)
+    grouped_keys = per_grupo_member_requirement_keys(
+        snapshot.revision,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    )
     source_period = requirement.periods[0]
     yield CrossPeriodDependencyRequirement(
         source_modelo=requirement.source_modelo,

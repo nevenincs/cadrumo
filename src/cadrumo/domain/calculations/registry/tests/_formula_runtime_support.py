@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from .....core import validated_casilla_id
+from .....core import RegistryAuthorityGrade, validated_casilla_id
 from .....core.resources import bundled_path
-from .._authority import ValidatedRegistryAuthority
-from .._schema import CasillaId, DataBindingDefinition, RegistrySnapshot
+from .._schema import CasillaId, DataBindingDefinition, ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from .._snapshot import build_snapshot
 
 _PREVIOUS_YEAR_NET_INCOME_BINDING = "irpf.previous_year_economic_activity_net_income"
@@ -40,31 +39,47 @@ _M100_RESULTADO_AUTOLIQUIDACION_CASILLA: CasillaId = validated_casilla_id("1577"
 
 
 def _committed_modelo_130_snapshot(
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+    registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
-    return registry_snapshot("130", 2026, "1T")
+    """The formula-runtime engine's own calculation claim, never a filing one.
+
+    Every consumer of this fixture asserts computed casilla arithmetic
+    (dependency-order evaluation, constraint violations, signed intermediate
+    results), so it must not fail on the revision-review, filing-capability or
+    legal-review attestation gates that belong to a filing question.
+    """
+    return registry_snapshot("130", 2026, "1T", grade=RegistryAuthorityGrade.CALCULATION)
 
 
 def _committed_modelo_180_snapshot(
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+    registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
-    return registry_snapshot("180", 2026, "0A")
+    return registry_snapshot("180", 2026, "0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
 def _modelo_180_snapshot_with_inactive_relation_period(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> RegistrySnapshot:
-    modelo = registry_authority.modelo("180")
+    """A calculation-grade check of the runtime's relation-activity guard.
+
+    Built from the compile-only registry tree, not ``registry_authority``:
+    the authority validates every modelo in the tree before returning, so a
+    filing-capability gap on an unrelated modelo would break this M180-only
+    calculation claim for a reason that has nothing to do with it.
+    """
+    modelos, catalogues = registry_tree
+    modelo = next(item for item in modelos if item.id == "180")
     revision = modelo.revisions["2023-y-siguientes"]
     selector = revision.period_selector.model_copy(update={"periods": ("0A", "1T")})
     widened_revision = revision.model_copy(update={"period_selector": selector})
     widened_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: widened_revision}})
     return build_snapshot(
         widened_modelo,
-        registry_authority.catalogues,
+        catalogues,
         source_root=bundled_path(),
         filing_year=2026,
         period="1T",
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
 
 
