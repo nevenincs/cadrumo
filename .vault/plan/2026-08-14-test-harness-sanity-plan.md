@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-14'
-body_hash: 'sha256:96c465f8af645b94a895c0547dbff19a8f0966a3e23ee4010cd6950ea037d1c9'
+body_hash: 'sha256:c4bf50ecfae23e573a7be4c2c37e7255b0d76c89f64b80659a60d2b255f41ce3'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -101,7 +101,7 @@ Complete root source development and packaging census remediation with no unclas
 - [x] `W07.P21.S66` - Adjudicate and canonicalize every remaining source-tree fixture cluster in the census; `src/cadrumo`.
 - [x] `W07.P21.S67` - Adjudicate and canonicalize every remaining development fixture cluster in the census; `dev`.
 - [x] `W07.P21.S68` - Adjudicate and canonicalize every remaining packaging fixture cluster in the census; `packaging`.
-- [ ] `W07.P21.S69` - Adjudicate root conftest and explicit-import support factories and remove substitute owners; `conftest.py, src/cadrumo/tests`.
+- [x] `W07.P21.S69` - Adjudicate root conftest and explicit-import support factories and remove substitute owners; `conftest.py, src/cadrumo/tests`.
 - [ ] `W07.P21.S70` - Make census drift fail on any unclassified or substitutable duplicate fixture; `dev/quality/tests/test_fixture_census.py`.
 
 ### Phase `W07.P22` - unify marker and live-import enforcement
