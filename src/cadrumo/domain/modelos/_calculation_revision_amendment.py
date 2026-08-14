@@ -1,0 +1,111 @@
+"""Immutable calculation-revision amendment identity and M303 motive authority."""
+
+from __future__ import annotations
+
+from enum import StrEnum
+
+from pydantic import BaseModel, model_validator
+
+from ...core import STRICT_FROZEN_CONFIG
+from ...core.identity import FilingRecordId
+from ..calculations.registry import RegistryRevisionInspection, RevisionId, SourceReference
+from ._errors import ModeloValidationError
+
+
+class CalculationRevisionAmendmentKind(StrEnum):
+    """Closed catalogue of amendment kinds a calculation revision may carry."""
+
+    COMPLEMENTARIA = "complementaria"
+    SUSTITUTIVA = "sustitutiva"
+    RECTIFICATIVA = "rectificativa"
+
+
+class M303RectificativaMotive(StrEnum):
+    """The two mutually-exclusive motives admitted by the M303 record design."""
+
+    RECTIFICACIONES = "rectificaciones"
+    DISCREPANCIA_CRITERIO_ADMINISTRATIVO = "discrepancia_criterio_administrativo"
+
+
+class CalculationRevisionAmendmentIdentity(BaseModel):
+    """The sole content-addressed amendment identity carried by a revision."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    kind: CalculationRevisionAmendmentKind
+    amends_filing_record_id: FilingRecordId
+    m303_rectificativa_motive: M303RectificativaMotive | None
+
+    @model_validator(mode="after")
+    def _motive_requires_rectificativa_kind(self) -> CalculationRevisionAmendmentIdentity:
+        if (
+            self.m303_rectificativa_motive is not None
+            and self.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA
+        ):
+            raise ModeloValidationError("an M303 rectificativa motive is valid only for amendment kind rectificativa")
+        return self
+
+
+_M303_RECTIFICATIVA_RECORD_DESIGNS: frozenset[tuple[RevisionId, str, str, str]] = frozenset(
+    {
+        (
+            "2024-desde-09-y-3t",
+            "aeat-dr-303-2024-late",
+            "2095dd633413f4aed28053bc88402461d80865f454156c01ebc4a2ab68cb76a8",
+            "2024-late",
+        ),
+        (
+            "2025",
+            "aeat-dr-303-2025",
+            "6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6",
+            "2025",
+        ),
+        (
+            "2026-y-siguientes",
+            "aeat-dr-303-2026",
+            "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b",
+            "2026",
+        ),
+    },
+)
+
+
+def m303_rectificativa_motive_is_applicable(
+    *,
+    registry_revision_id: RevisionId,
+    record_design: SourceReference,
+) -> bool:
+    """Return whether the exact reviewed revision/source coordinate admits a motive."""
+    return (
+        registry_revision_id,
+        record_design.id,
+        record_design.sha256,
+        record_design.record_design_epoch or "",
+    ) in _M303_RECTIFICATIVA_RECORD_DESIGNS
+
+
+def m303_rectificativa_record_design_from_inspection(
+    inspection: RegistryRevisionInspection,
+) -> SourceReference | None:
+    """Resolve the sole admitted record-design source owned by one inspection."""
+    candidates = tuple(
+        source
+        for source in inspection.sources.values()
+        if source.id in inspection.revision_source_refs
+        and m303_rectificativa_motive_is_applicable(
+            registry_revision_id=inspection.revision_id,
+            record_design=source,
+        )
+    )
+    if len(candidates) > 1:
+        raise ModeloValidationError("M303 revision owns more than one admitted rectificativa record design")
+    return candidates[0] if candidates else None
+
+
+__all__ = [
+    "CalculationRevisionAmendmentIdentity",
+    "CalculationRevisionAmendmentKind",
+    "M303RectificativaMotive",
+    "m303_rectificativa_motive_is_applicable",
+    "m303_rectificativa_record_design_from_inspection",
+]

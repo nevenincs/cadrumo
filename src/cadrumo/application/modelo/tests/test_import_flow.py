@@ -83,7 +83,7 @@ def test_import_persists_filed_calculation_revision(repos: _Repos) -> None:
     _, cr_repo, _, _, _ = repos
     revision = get_calculation_revision(outcome.filing.calculation_revision_id, calculation_repository=cr_repo)
     assert revision.state is CalculationRevisionState.PRESENTADO
-    assert revision.amendment_kind is None  # import is not an amendment
+    assert revision.amendment_identity is None  # import is not an amendment
 
 
 def test_import_persists_registry_grounded_casilla_observations(repos: _Repos) -> None:

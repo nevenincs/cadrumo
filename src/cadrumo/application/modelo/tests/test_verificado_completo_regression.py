@@ -53,10 +53,10 @@ from ....domain.modelos import (
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.env_scope import ready_clave_settings
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, cross_period_dependency_requirements
-from ...user_profile import ProfileRecordRepository
 from .. import (
     StoredCalculationDriftError,
     calculate_modelo_revision,
@@ -116,10 +116,9 @@ def _workflow_profile() -> TaxpayerProfile:
 
 
 def _seed_runtime_profile_record(bucket_id: str) -> None:
-    ProfileRecordRepository(bucket_id=bucket_id).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name=_PROFILE_LABEL,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="X1234567L"),
                 UserProfileFact(path="identity.name", value="Ana"),
@@ -496,8 +495,7 @@ def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
         discarded_at=original.discarded_at,
         discarded_by=original.discarded_by,
         discard_reason=original.discard_reason,
-        amendment_kind=original.amendment_kind,
-        amends_filing_record_id=original.amends_filing_record_id,
+        amendment_identity=original.amendment_identity,
         amendment_reason=original.amendment_reason,
     )
 

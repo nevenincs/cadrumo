@@ -369,6 +369,45 @@ def test_every_calculation_revision_constructor_declares_filing_evidence_explici
     assert omissions == []
 
 
+def test_production_revision_id_derivations_name_the_single_annual_summary_input_axis() -> None:
+    """Only the three creation boundaries may derive a revision id from fields.
+
+    Existing revisions must use ``derive_calculation_revision_id_from_revision``
+    instead.  Keeping that read-side projection singular prevents a new input
+    (such as the immutable 303/4T -> 390/0A handoff) from being omitted by an
+    independently maintained field list.
+    """
+    source_root = Path(__file__).parents[4]
+    direct_derivations: dict[str, list[ast.Call]] = {}
+    for path in source_root.rglob("*.py"):
+        relative = path.relative_to(source_root).as_posix()
+        if "/tests/" in relative:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        calls = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "derive_calculation_revision_id"
+        ]
+        if calls:
+            direct_derivations[relative] = calls
+
+    assert set(direct_derivations) == {
+        "cadrumo/application/modelo/_amendment_actions.py",
+        "cadrumo/application/modelo/_external_import_actions.py",
+        "cadrumo/application/modelo/_revision_persistence.py",
+    }
+    omissions = [
+        f"{path}:{call.lineno}"
+        for path, calls in direct_derivations.items()
+        for call in calls
+        if not any(keyword.arg == "m303_regimen_simplificado_annual_summary_handoff" for keyword in call.keywords)
+    ]
+    assert omissions == []
+
+
 def test_portable_revision_json_missing_filing_evidence_is_rejected() -> None:
     payload = {
         "calculation_revision_id": "a" * 64,

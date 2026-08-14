@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from types import SimpleNamespace
 
@@ -38,9 +40,14 @@ class Operand(BaseModel):
 
 class CancellationScope:
     cancellation_requested = False
+    cancellation_acknowledged = False
 
     async def acknowledge_cancellation(self) -> None:
-        self.cancellation_requested = True
+        self.cancellation_acknowledged = True
+
+    @asynccontextmanager
+    async def irreversible_section(self) -> AsyncGenerator[None]:
+        yield
 
 
 class DeadlineAccess:
@@ -129,7 +136,8 @@ def test_public_protocols_accept_complete_structural_implementations() -> None:
     asyncio.run(context.events.notice("profile.sync.done"))
     asyncio.run(context.events.diagnostic("sha256:0123456789ab"))
 
-    assert context.cancellation.cancellation_requested is True
+    assert context.cancellation.cancellation_requested is False
+    assert context.cancellation.cancellation_acknowledged is True
     assert operand.value == "sha256:" + "b" * 64
     assert context.cleanup.resource is resource
 

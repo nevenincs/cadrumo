@@ -115,6 +115,10 @@ class AmendmentEvidenceMissingError(ModeloError):
     """Raised when the modelo-amend path lacks imported official evidence."""
 
 
+class AmendmentM303RectificativaMotiveError(ModeloError):
+    """Raised when the closed M303 rectificativa motive is missing or inapplicable."""
+
+
 class AmendmentTargetStateError(ModeloError):
     """Raised when the modelo-amend path targets a non-current filing record."""
 

@@ -25,6 +25,10 @@ class FilingProducerKey(StrEnum):
     AMENDMENT_IS_RECTIFICATIVA = "amendment_evidence.is_rectificativa"
     AMENDMENT_IS_COMPLEMENTARIA = "amendment_evidence.is_complementaria"
     AMENDMENT_ORIGINAL_AEAT_RECEIPT = "amendment_evidence.original_aeat_receipt"
+    AMENDMENT_M303_MOTIVE_RECTIFICACIONES = "amendment_evidence.m303_motive.rectificaciones"
+    AMENDMENT_M303_MOTIVE_DISCREPANCIA_CRITERIO_ADMINISTRATIVO = (
+        "amendment_evidence.m303_motive.discrepancia_criterio_administrativo"
+    )
     SELECTED_ACCOUNT_IBAN = "selected_account.iban"
     SELECTED_ACCOUNT_SWIFT_BIC = "selected_account.swift_bic"
     SELECTED_ACCOUNT_BANK_NAME = "selected_account.bank_name"

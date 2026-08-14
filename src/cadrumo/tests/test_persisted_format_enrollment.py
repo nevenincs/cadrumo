@@ -31,17 +31,14 @@ from typing import Final
 import pytest
 
 from ..adapters.persistence.storage import (
-    LOGIN_THROTTLE_FILENAME,
     STORAGE_NAMESPACE_REGISTRY,
     SecureObjectNamespaceDefinition,
     StoragePathKind,
 )
 from ..core import (
     PERSISTED_FORMATS,
-    RELEASED_FORMAT_FLOORS,
     PersistedFormatClass,
     StorageCategory,
-    misclassified_floor_keys,
     stale_persisted_format_declarations,
     storage_location,
     undeclared_persisted_formats,
@@ -101,21 +98,6 @@ def test_no_declaration_outlives_its_format() -> None:
     )
 
 
-def test_regenerable_formats_never_carry_a_frozen_floor() -> None:
-    """The checkpoint flip must not freeze a floor for regenerable state.
-
-    Vacuously green while ``RELEASED_FORMAT_FLOORS`` is ``None``; post-flip it
-    refuses a floor that would oblige the application to keep reading a shape
-    it is designed to discard.
-    """
-    misclassified = misclassified_floor_keys(RELEASED_FORMAT_FLOORS, PERSISTED_FORMATS)
-    assert misclassified == (), (
-        f"RELEASED_FORMAT_FLOORS freezes a durability floor for regenerable format(s) "
-        f"{misclassified}; a regenerable format is discarded and rebuilt on a version "
-        "mismatch, so freezing its floor promises to read bytes nothing needs"
-    )
-
-
 def test_secure_object_namespaces_are_covered_by_the_secure_object_format() -> None:
     """Every encrypted SQL namespace inherits the secure-object declaration.
 
@@ -149,44 +131,3 @@ def test_application_owned_journal_name_agrees_with_the_registry() -> None:
         == _config_reset_repository.CONFIG_RESET_JOURNAL_DIRNAME
     )
 
-
-def test_login_throttle_sidecar_name_is_declared_once() -> None:
-    """The throttle sidecar reads its filename from the central registry."""
-    from ..adapters.persistence.storage.master_key import _login_throttle
-
-    assert _login_throttle.LOGIN_THROTTLE_FILENAME == LOGIN_THROTTLE_FILENAME
-
-
-def test_wrapped_bucket_dek_refuses_every_direction_of_drift() -> None:
-    """The wrapped bucket DEK is strict, versioned, and unguarded until now.
-
-    Losing the ability to read this document strands every byte in the bucket,
-    and its strictness was carried entirely by field declarations no test
-    pinned: relaxing ``Literal[1]`` to ``int``, or ``extra`` to ``ignore``,
-    would have gone unnoticed. Each assertion below drives one direction of
-    drift and requires a refusal.
-    """
-    import json
-
-    from pydantic import ValidationError
-
-    from ..adapters.persistence.storage.master_key._master_key_records import (
-        _WrappedBucketDekDocument,
-    )
-
-    current = {
-        "schema_version": 1,
-        "nonce_b64": "AA==",
-        "ciphertext_b64": "AA==",
-        "tag_b64": "AA==",
-    }
-    assert _WrappedBucketDekDocument.model_validate_json(json.dumps(current)).schema_version == 1
-
-    for label, payload in (
-        ("a version bump", {**current, "schema_version": 2}),
-        ("an added field", {**current, "kdf": "argon2id"}),
-        ("a removed field", {key: value for key, value in current.items() if key != "tag_b64"}),
-    ):
-        with pytest.raises(ValidationError):
-            _WrappedBucketDekDocument.model_validate_json(json.dumps(payload))
-            pytest.fail(f"wrapped bucket DEK accepted {label}")

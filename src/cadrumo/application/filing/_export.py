@@ -44,43 +44,37 @@ See Also:
 
 from __future__ import annotations
 
-from collections import Counter
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
+    AeatProductSoftwareIdentity,
     CasillaId,
     ExportLayoutFormat,
     FilingProducerKey,
-    FilingProjectionRef,
+    Modelo,
     Period,
     PriorDomiciliationElection,
-    ResultDisposition,
 )
 from ...core.atomic_write import atomic_write_bytes
-from ...core.decimal import coerce_decimal
 from ...core.hashing import hash_file, sha256_file, sha256_hex
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.calculations.registry import (
     BindingId,
     CasillaFieldKind,
-    ExportComputedKey,
-    ExportDraftAttribute,
-    ExportFieldDefinition,
     ExportLayoutDefinition,
-    ExportRecordDefinition,
+    M303EnvelopePrefixRole,
+    M303FilingEnvelopeDefinition,
     RecordId,
     RegistrySnapshot,
     RegistryValidationError,
-    export_fields_overlap,
     parse_export_payload,
     render_fixed_width_export_field,
     xml_dictionary_entries,
@@ -90,14 +84,13 @@ from ...domain.filing import (
     FilingExportValidationError,
     ModeloCasillaProvenance,
     ModeloDraft,
+    registry_schema_version,
 )
-from ...domain.iva import derive_sepa_marca
 from ...domain.submission import ModeloDraftStatus
 from ._export_parity import (
     assert_export_mirrors_manifest,
     assert_rate_boxes_account_for_total,
     assert_xml_declaration_aux_declared,
-    did_page_suppressed,
 )
 from ._export_producer import filing_producer_values as _filing_producer_values
 from ._export_xml_dictionary import (
@@ -107,15 +100,43 @@ from ._export_xml_dictionary import (
 )
 from ._m303_export_applicability import validate_m303_export_applicability
 from ._producer_snapshot import (
-    ChargeAccountSelection,
     FilingProducerSnapshot,
-    RefundAccountSelection,
 )
 from ._projection import (
     FilingProjectionPlan,
     FilingProjectionValue,
     FilingRecordRenderContext,
     build_m303_filing_projection_plan,
+)
+from ._record_renderer import (
+    RecordRenderRow as _RecordRenderRow,
+)
+from ._record_renderer import (
+    RenderedRecordOccurrence as _RenderedRecordOccurrence,
+)
+from ._record_renderer import (
+    format_field as _format_field,
+)
+from ._record_renderer import (
+    m303_complementaria_marker as _m303_complementaria_marker,
+)
+from ._record_renderer import (
+    m303_complementaria_page_marker as _m303_complementaria_page_marker,
+)
+from ._record_renderer import (
+    m303_no_activity_marker as _m303_no_activity_marker,
+)
+from ._record_renderer import (
+    preflight_projection_plan as _preflight_projection_plan,
+)
+from ._record_renderer import (
+    projection_field_value as _projection_field_value,
+)
+from ._record_renderer import (
+    render_layout_records as _render_layout_records,
+)
+from ._record_renderer import (
+    render_record as _render_record,
 )
 from .runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
 
@@ -125,10 +146,147 @@ _SHA256_HEX_LENGTH = 64
 """Length of a hex-encoded SHA-256 digest used by export receipts."""
 
 
-@dataclass(frozen=True)
-class _RecordRenderRow:
-    row_index: int | None
-    active_binding_ids: frozenset[BindingId]
+class M303FilingEnvelopeOccurrence(BaseModel):
+    """One source-ordered occurrence emitted through the canonical record renderer."""
+
+    model_config = _STRICT_FROZEN
+
+    record_id: RecordId
+    occurrence: int = Field(gt=0)
+    payload: bytes = Field(min_length=1)
+    payload_sha256: str = Field(min_length=_SHA256_HEX_LENGTH, max_length=_SHA256_HEX_LENGTH)
+
+    @model_validator(mode="after")
+    def _require_payload_digest(self) -> M303FilingEnvelopeOccurrence:
+        if self.payload_sha256 != sha256_hex(self.payload):
+            raise ValueError("M303 filing-envelope occurrence digest must be derived from its emitted bytes")
+        return self
+
+
+class M303FilingEnvelopeRenderRequest(BaseModel):
+    """Closed public authority required to render one DP30300 filing envelope.
+
+    Projection plans, body members, casilla maps, headers, and opaque bytes are
+    intentionally absent.  The renderer derives them internally from the
+    approved draft and snapshot-owned layout through the canonical resolver.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    registry_snapshot: RegistrySnapshot
+    layout: ExportLayoutDefinition
+    draft: ModeloDraft
+    producer_snapshot: FilingProducerSnapshot
+    prior_domiciliation_election: PriorDomiciliationElection
+    product_software_identity: AeatProductSoftwareIdentity
+
+    @model_validator(mode="after")
+    def _require_one_coherent_m303_filing_instance(self) -> M303FilingEnvelopeRenderRequest:
+        _validate_m303_filing_draft(self.draft)
+        snapshot = self.registry_snapshot
+        _validate_m303_filing_snapshot(self.draft, snapshot)
+        _validate_m303_filing_layout(self.layout, snapshot)
+        _validate_m303_filing_producer(self.draft, self.producer_snapshot, self.prior_domiciliation_election)
+        validate_m303_export_applicability(
+            period=self.draft.period,
+            registry_snapshot=snapshot,
+            layout=self.layout,
+            producer_snapshot=self.producer_snapshot,
+        )
+        return self
+
+
+def _validate_m303_filing_draft(draft: ModeloDraft) -> None:
+    if draft.modelo != Modelo.M303.value:
+        raise ValueError("M303 filing-envelope rendering requires a Modelo 303 draft")
+    if draft.status is not ModeloDraftStatus.APROBADO:
+        raise ValueError("M303 filing-envelope rendering requires an approved draft")
+
+
+def _validate_m303_filing_snapshot(draft: ModeloDraft, snapshot: RegistrySnapshot) -> None:
+    if snapshot.modelo.id != Modelo.M303.value or snapshot.filing_period is None:
+        raise ValueError("M303 filing-envelope rendering requires a concrete Modelo 303 registry snapshot period")
+    if snapshot.filing_period != draft.period:
+        raise ValueError("M303 filing-envelope draft period must match the selected registry snapshot")
+    if (
+        draft.snapshot_ref.modelo != snapshot.modelo.id
+        or draft.snapshot_ref.revision_id != snapshot.revision.id
+        or draft.snapshot_ref.modelo_year != snapshot.filing_year
+        or draft.snapshot_ref.period != snapshot.period
+    ):
+        raise ValueError("M303 filing-envelope draft snapshot reference must match the selected registry snapshot")
+    expected_schema_version = registry_schema_version(
+        modelo=snapshot.modelo.id,
+        revision_id=snapshot.revision.id,
+    )
+    if draft.schema_version != expected_schema_version:
+        raise ValueError("M303 filing-envelope draft schema marker must match the selected registry revision")
+
+
+def _validate_m303_filing_layout(layout: ExportLayoutDefinition, snapshot: RegistrySnapshot) -> None:
+    if not any(candidate is layout for candidate in snapshot.revision.export_layouts):
+        raise ValueError("M303 filing-envelope layout must be owned by the selected registry snapshot")
+    envelope = layout.m303_filing_envelope
+    if envelope is None:
+        raise ValueError("M303 filing-envelope layout must carry a typed DP30300 declaration")
+    if envelope.source_ref not in snapshot.revision.source_refs:
+        raise ValueError("M303 filing-envelope source must belong to the selected registry revision")
+    try:
+        source = snapshot.sources[envelope.source_ref]
+    except KeyError as exc:
+        raise ValueError("M303 filing-envelope source is absent from the selected registry snapshot") from exc
+    if source.sha256 != envelope.source_sha256:
+        raise ValueError("M303 filing-envelope source SHA-256 must match the selected registry snapshot source")
+
+
+def _validate_m303_filing_producer(
+    draft: ModeloDraft,
+    producer_snapshot: FilingProducerSnapshot,
+    prior_domiciliation_election: PriorDomiciliationElection,
+) -> None:
+    if producer_snapshot.modelo is not Modelo.M303:
+        raise ValueError("M303 filing-envelope producer snapshot must be Modelo 303")
+    if producer_snapshot.taxpayer_tax_id != draft.subject_tax_id:
+        raise ValueError("M303 filing-envelope producer taxpayer must match the approved draft subject")
+    if producer_snapshot.elections.prior_domiciliation is not prior_domiciliation_election:
+        raise ValueError("M303 filing-envelope election must match the immutable producer snapshot election")
+
+
+class M303FilingEnvelopeRenderResult(BaseModel):
+    """Measured bytes and ordered occurrence evidence for one DP30300 filing envelope."""
+
+    model_config = _STRICT_FROZEN
+
+    draft_id: str = Field(min_length=1)
+    revision_id: str = Field(min_length=1)
+    layout_id: str = Field(min_length=1)
+    period: Period
+    envelope: M303FilingEnvelopeDefinition
+    occurrences: tuple[M303FilingEnvelopeOccurrence, ...]
+    prefix: bytes = Field(min_length=1)
+    closer: bytes = Field(min_length=1)
+    payload: bytes = Field(min_length=1)
+    payload_sha256: str = Field(min_length=_SHA256_HEX_LENGTH, max_length=_SHA256_HEX_LENGTH)
+    total_length: int = Field(gt=0)
+
+    @model_validator(mode="after")
+    def _require_exact_envelope_byte_derivation(self) -> M303FilingEnvelopeRenderResult:
+        _require_m303_occurrence_order(self.envelope, self.occurrences)
+        if len(self.prefix) != 328:
+            raise ValueError("M303 filing-envelope prefix must retain its declared 328-byte extent")
+        expected_closer = (
+            f"</T{Modelo.M303.value}0{self.period.filing_year:04d}{self.period.registry_token}0000>".encode("ascii")
+        )
+        if self.closer != expected_closer:
+            raise ValueError("M303 filing-envelope closer must be derived from the selected filing period")
+        body = b"".join(item.payload for item in self.occurrences)
+        if self.payload != self.prefix + body + self.closer:
+            raise ValueError("M303 filing-envelope payload must be the exact prefix, occurrences, and closer bytes")
+        if self.payload_sha256 != sha256_hex(self.payload):
+            raise ValueError("M303 filing-envelope payload digest must be derived from emitted bytes")
+        if self.total_length != len(self.payload):
+            raise ValueError("M303 filing-envelope total must be derived from emitted bytes")
+        return self
 
 
 class DeclaracionExportFormat(StrEnum):
@@ -316,13 +474,218 @@ class DeclaracionVerifyResult(BaseModel):
         return value
 
 
+@dataclass(frozen=True, slots=True)
+class _PreparedExportDraft:
+    provider: RegistrySchemaAccessor
+    subview: RegistryModeloSubview
+    registry_snapshot: RegistrySnapshot
+    layout: ExportLayoutDefinition
+    producer_values: Mapping[FilingProducerKey, object]
+    prior_domiciliation_election: PriorDomiciliationElection
+    is_m303: bool
+
+
+def _require_current_export_schema(draft: ModeloDraft, subview: RegistryModeloSubview) -> None:
+    if draft.schema_version != subview.schema_version:
+        raise FilingExportError(
+            translated_message="application.filing.export.errors.draft_snapshot_stale",
+            context={
+                "modelo": draft.modelo,
+                "draft_schema_version": draft.schema_version,
+                "active_schema_version": subview.schema_version,
+            },
+        )
+
+
+def _require_approved_export_draft(draft: ModeloDraft) -> None:
+    if draft.status is not ModeloDraftStatus.APROBADO:
+        raise FilingExportError(
+            translated_message="application.filing.export.errors.draft_not_approved",
+            context={
+                "modelo": draft.modelo,
+                "draft_status": draft.status.value,
+                "required_status": ModeloDraftStatus.APROBADO.value,
+            },
+        )
+
+
+def _select_export_layout(
+    draft: ModeloDraft,
+    *,
+    subview: RegistryModeloSubview,
+    registry_snapshot: RegistrySnapshot,
+) -> ExportLayoutDefinition:
+    if not subview.export_layout_ids:
+        raise _export_layout_not_renderable_error(draft.modelo, None)
+    layout = sorted(registry_snapshot.revision.export_layouts, key=lambda item: item.id)[0]
+    _raise_if_export_layout_not_renderable(draft.modelo, layout)
+    return layout
+
+
+def _validate_export_options(
+    *,
+    is_m303: bool,
+    dictionary_values: Mapping[str, object] | None,
+    prior_domiciliation_election: PriorDomiciliationElection | None,
+    product_software_identity: AeatProductSoftwareIdentity | None,
+) -> PriorDomiciliationElection:
+    if is_m303:
+        if prior_domiciliation_election is None:
+            raise FilingExportValidationError("M303 export requires an explicit prior-domiciliation election")
+        if product_software_identity is None:
+            raise FilingExportValidationError("M303 export requires explicit product/software identity authority")
+        if dictionary_values is not None:
+            raise FilingExportValidationError("M303 export does not admit XML dictionary values")
+    elif product_software_identity is not None:
+        raise FilingExportValidationError(
+            "product/software identity is only admitted for the Modelo 303 filing envelope",
+        )
+    return prior_domiciliation_election or PriorDomiciliationElection.KEEP
+
+
+def _prepare_export_draft(
+    draft: ModeloDraft,
+    *,
+    producer_snapshot: FilingProducerSnapshot,
+    dictionary_values: Mapping[str, object] | None,
+    prior_domiciliation_election: PriorDomiciliationElection | None,
+    product_software_identity: AeatProductSoftwareIdentity | None,
+    schema_provider: RegistrySchemaAccessor | None,
+) -> _PreparedExportDraft:
+    provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
+    subview = provider.get_subview(draft.modelo)
+    registry_snapshot = provider.get_snapshot(draft.modelo)
+    _require_current_export_schema(draft, subview)
+    _require_approved_export_draft(draft)
+    layout = _select_export_layout(draft, subview=subview, registry_snapshot=registry_snapshot)
+    is_m303 = draft.modelo == Modelo.M303.value
+    resolved_prior_domiciliation_election = _validate_export_options(
+        is_m303=is_m303,
+        dictionary_values=dictionary_values,
+        prior_domiciliation_election=prior_domiciliation_election,
+        product_software_identity=product_software_identity,
+    )
+    if producer_snapshot.modelo.value != draft.modelo:
+        raise FilingExportValidationError("filing producer snapshot modelo does not match draft")
+    return _PreparedExportDraft(
+        provider=provider,
+        subview=subview,
+        registry_snapshot=registry_snapshot,
+        layout=layout,
+        producer_values=_filing_producer_values(producer_snapshot),
+        prior_domiciliation_election=resolved_prior_domiciliation_election,
+        is_m303=is_m303,
+    )
+
+
+def _render_prepared_export(
+    draft: ModeloDraft,
+    *,
+    prepared: _PreparedExportDraft,
+    producer_snapshot: FilingProducerSnapshot,
+    dictionary_values: Mapping[str, object] | None,
+    prior_domiciliation_election: PriorDomiciliationElection | None,
+    product_software_identity: AeatProductSoftwareIdentity | None,
+) -> bytes:
+    if prepared.is_m303:
+        assert prior_domiciliation_election is not None
+        assert product_software_identity is not None
+        return render_m303_filing_envelope(
+            M303FilingEnvelopeRenderRequest(
+                registry_snapshot=prepared.registry_snapshot,
+                layout=prepared.layout,
+                draft=draft,
+                producer_snapshot=producer_snapshot,
+                prior_domiciliation_election=prior_domiciliation_election,
+                product_software_identity=product_software_identity,
+            ),
+        ).payload
+    return _render_export_layout(
+        prepared.layout,
+        draft=draft,
+        headers=prepared.producer_values,
+        producer_snapshot=producer_snapshot,
+        dictionary_values=dictionary_values,
+        prior_domiciliation_election=prepared.prior_domiciliation_election,
+        schema_provider=prepared.provider,
+        registry_snapshot=prepared.registry_snapshot,
+    )
+
+
+def _validate_prepared_export(
+    draft: ModeloDraft,
+    *,
+    prepared: _PreparedExportDraft,
+    payload: bytes,
+) -> tuple[ModeloCasillaProvenance, ...]:
+    if not payload:
+        raise FilingExportError(
+            translated_message="application.filing.export.errors.rendered_payload_empty",
+            context={
+                "modelo": draft.modelo,
+                "layout_id": prepared.layout.id,
+                "layout_format": prepared.layout.format.value,
+            },
+        )
+    casilla_provenance = _exported_casilla_provenance(
+        prepared.layout,
+        draft=draft,
+        schema_provider=prepared.provider,
+    )
+    assert_xml_declaration_aux_declared(prepared.layout)
+    assert_rate_boxes_account_for_total(prepared.subview.rate_box_partitions, draft=draft)
+    if prepared.subview.completeness_manifest is not None:
+        assert_export_mirrors_manifest(
+            prepared.layout,
+            draft=draft,
+            headers=prepared.producer_values,
+            prior_domiciliation_election=prepared.prior_domiciliation_election,
+            schema_provider=prepared.provider,
+            manifest=prepared.subview.completeness_manifest,
+            casilla_metadata=prepared.subview.casilla_record_metadata,
+        )
+    return casilla_provenance
+
+
+def _write_prepared_export(
+    draft: ModeloDraft,
+    *,
+    output_path: Path,
+    prepared: _PreparedExportDraft,
+    payload: bytes,
+    casilla_provenance: tuple[ModeloCasillaProvenance, ...],
+) -> DeclaracionExportResult:
+    atomic_write_bytes(output_path, payload)
+    if not prepared.is_m303:
+        _verify_written_export(
+            draft,
+            file_path=output_path,
+            schema_provider=prepared.provider,
+        )
+    receipt = DeclaracionExportResult(
+        draft_id=draft.draft_id,
+        modelo=draft.modelo,
+        period=draft.period,
+        format=_declaracion_export_format(prepared.layout),
+        output_path=output_path,
+        byte_size=len(payload),
+        file_sha256=sha256_hex(payload),
+        exported_at=now(),
+        narrative="filing.export.written",
+        casilla_provenance=casilla_provenance,
+    )
+    assert_export_artifact_matches_receipt(receipt, artifact_path=output_path)
+    return receipt
+
+
 def export_draft(
     draft: ModeloDraft,
     *,
     output_path: Path,
     producer_snapshot: FilingProducerSnapshot,
     dictionary_values: Mapping[str, object] | None = None,
-    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
+    prior_domiciliation_election: PriorDomiciliationElection | None = None,
+    product_software_identity: AeatProductSoftwareIdentity | None = None,
     schema_provider: RegistrySchemaAccessor | None = None,
 ) -> DeclaracionExportResult:
     """Write an approved draft to a local fichero-BOE file and return a receipt.
@@ -343,7 +706,11 @@ def export_draft(
             format addressing fields that way; the fixed-width renderer resolves
             its fields from ``headers`` and the layout's record definitions.
         prior_domiciliation_election: Typed M303 page-three election used by
-            the shared Nota-3 DID page predicate.
+            the shared Nota-3 DID page predicate. Required for Modelo 303;
+            non-M303 exports carry no election authority.
+        product_software_identity: Explicit reviewed AEAT product authority.
+            Required for Modelo 303's DP30300 carrier and refused for every
+            other modelo.
         schema_provider: Optional registry schema provider override.
 
     Returns:
@@ -360,101 +727,30 @@ def export_draft(
         :func:`domain.calculations.registry.parse_export_payload`
             Registry parser used by the verification path.
     """
-    provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
-    subview = provider.get_subview(draft.modelo)
-    registry_snapshot = provider.get_snapshot(draft.modelo)
-    if draft.schema_version != subview.schema_version:
-        raise FilingExportError(
-            translated_message="application.filing.export.errors.draft_snapshot_stale",
-            context={
-                "modelo": draft.modelo,
-                "draft_schema_version": draft.schema_version,
-                "active_schema_version": subview.schema_version,
-            },
-        )
-    if draft.status is not ModeloDraftStatus.APROBADO:
-        raise FilingExportError(
-            translated_message="application.filing.export.errors.draft_not_approved",
-            context={
-                "modelo": draft.modelo,
-                "draft_status": draft.status.value,
-                "required_status": ModeloDraftStatus.APROBADO.value,
-            },
-        )
-    if not subview.export_layout_ids:
-        raise _export_layout_not_renderable_error(draft.modelo, None)
-    layout = sorted(registry_snapshot.revision.export_layouts, key=lambda item: item.id)[0]
-    if draft.modelo == "303":
-        validate_m303_export_applicability(
-            period=draft.period,
-            registry_snapshot=registry_snapshot,
-            layout=layout,
-            producer_snapshot=producer_snapshot,
-        )
-    _raise_if_export_layout_not_renderable(draft.modelo, layout)
-    if producer_snapshot.modelo.value != draft.modelo:
-        raise FilingExportValidationError("filing producer snapshot modelo does not match draft")
-    producer_values = _filing_producer_values(producer_snapshot)
-    payload = _render_export_layout(
-        layout,
-        draft=draft,
-        headers=producer_values,
+    prepared = _prepare_export_draft(
+        draft,
         producer_snapshot=producer_snapshot,
         dictionary_values=dictionary_values,
         prior_domiciliation_election=prior_domiciliation_election,
-        schema_provider=provider,
-        registry_snapshot=registry_snapshot,
+        product_software_identity=product_software_identity,
+        schema_provider=schema_provider,
     )
-    if not payload:
-        raise FilingExportError(
-            translated_message="application.filing.export.errors.rendered_payload_empty",
-            context={
-                "modelo": draft.modelo,
-                "layout_id": layout.id,
-                "layout_format": layout.format.value,
-            },
-        )
-    casilla_provenance = _exported_casilla_provenance(layout, draft=draft, schema_provider=provider)
-    # Unconditional, unlike the manifest gate below: a layout without a
-    # completeness manifest still must not write a declaration missing its
-    # mandatory identity block.
-    assert_xml_declaration_aux_declared(layout)
-    # Unconditional for the same reason, and transport-independent: a rate
-    # breakdown that does not reach its own declared total is false in either
-    # encoding, so this one is not scoped to the fixed-width blank-slot case
-    # below.
-    assert_rate_boxes_account_for_total(subview.rate_box_partitions, draft=draft)
-    if subview.completeness_manifest is not None:
-        assert_export_mirrors_manifest(
-            layout,
-            draft=draft,
-            headers=producer_values,
-            prior_domiciliation_election=prior_domiciliation_election,
-            schema_provider=provider,
-            manifest=subview.completeness_manifest,
-            casilla_metadata=subview.casilla_record_metadata,
-        )
-    atomic_write_bytes(output_path, payload)
-    _verify_written_export(
+    payload = _render_prepared_export(
         draft,
-        file_path=output_path,
-        schema_provider=provider,
+        prepared=prepared,
+        producer_snapshot=producer_snapshot,
+        dictionary_values=dictionary_values,
+        prior_domiciliation_election=prior_domiciliation_election,
+        product_software_identity=product_software_identity,
     )
-    digest = sha256_hex(payload)
-    receipt = DeclaracionExportResult(
-        draft_id=draft.draft_id,
-        modelo=draft.modelo,
-        period=draft.period,
-        format=_declaracion_export_format(layout),
+    casilla_provenance = _validate_prepared_export(draft, prepared=prepared, payload=payload)
+    return _write_prepared_export(
+        draft,
         output_path=output_path,
-        byte_size=len(payload),
-        file_sha256=digest,
-        exported_at=now(),
-        narrative="filing.export.written",
+        prepared=prepared,
+        payload=payload,
         casilla_provenance=casilla_provenance,
     )
-    assert_export_artifact_matches_receipt(receipt, artifact_path=output_path)
-    return receipt
 
 
 def assert_export_artifact_matches_receipt(
@@ -848,8 +1144,43 @@ def _render_layout(
     draft: ModeloDraft,
     headers: Mapping[FilingProducerKey, object],
     producer_snapshot: FilingProducerSnapshot,
-    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
+    prior_domiciliation_election: PriorDomiciliationElection,
 ) -> bytes:
+    if (
+        draft.modelo == Modelo.M303.value
+        and producer_snapshot.elections.prior_domiciliation is not prior_domiciliation_election
+    ):
+        raise FilingExportValidationError(
+            "M303 prior-domiciliation election must match the immutable producer snapshot election",
+        )
+    return b"".join(
+        occurrence.payload
+        for occurrence in _render_layout_occurrences(
+            layout,
+            registry_snapshot=registry_snapshot,
+            draft=draft,
+            headers=headers,
+            producer_snapshot=producer_snapshot,
+            prior_domiciliation_election=prior_domiciliation_election,
+        )
+    )
+
+
+def _render_layout_occurrences(
+    layout: ExportLayoutDefinition,
+    *,
+    registry_snapshot: RegistrySnapshot,
+    draft: ModeloDraft,
+    headers: Mapping[FilingProducerKey, object],
+    producer_snapshot: FilingProducerSnapshot,
+    prior_domiciliation_election: PriorDomiciliationElection,
+) -> tuple[_RenderedRecordOccurrence, ...]:
+    """Derive one projection plan and render every applicable record occurrence.
+
+    This is the sole application resolver bridge used by ordinary fixed-width
+    exports and by the DP30300 envelope facade.  It intentionally accepts no
+    caller-authored plan, member collection, field map, or bytes.
+    """
     if not any(candidate is layout for candidate in registry_snapshot.revision.export_layouts):
         raise FilingExportValidationError("filing renderer layout is not owned by the selected registry snapshot")
     projection_plan = _projection_plan_for_layout(
@@ -877,6 +1208,154 @@ def _render_layout(
     )
 
 
+def render_m303_filing_envelope(request: M303FilingEnvelopeRenderRequest) -> M303FilingEnvelopeRenderResult:
+    """Render DP30300 only from the closed, validated application request."""
+    envelope = request.layout.m303_filing_envelope
+    if envelope is None:  # The request validator makes this unreachable; retain type narrowing at the public boundary.
+        raise FilingExportValidationError("M303 filing-envelope layout declaration is absent")
+    headers = _filing_producer_values(request.producer_snapshot)
+    rendered_occurrences = _render_layout_occurrences(
+        request.layout,
+        registry_snapshot=request.registry_snapshot,
+        draft=request.draft,
+        headers=headers,
+        producer_snapshot=request.producer_snapshot,
+        prior_domiciliation_election=request.prior_domiciliation_election,
+    )
+    occurrences = tuple(
+        M303FilingEnvelopeOccurrence(
+            record_id=item.record_id,
+            occurrence=item.occurrence,
+            payload=item.payload,
+            payload_sha256=sha256_hex(item.payload),
+        )
+        for item in rendered_occurrences
+    )
+    _require_m303_required_occurrences(request.layout, occurrences)
+    prefix = _render_m303_envelope_prefix(
+        envelope,
+        period=request.draft.period,
+        product_software_identity=request.product_software_identity,
+    )
+    closer = _render_m303_envelope_closer(envelope, period=request.draft.period)
+    payload = prefix + b"".join(item.payload for item in occurrences) + closer
+    return M303FilingEnvelopeRenderResult(
+        draft_id=request.draft.draft_id,
+        revision_id=str(request.registry_snapshot.revision.id),
+        layout_id=str(request.layout.id),
+        period=request.draft.period,
+        envelope=envelope,
+        occurrences=occurrences,
+        prefix=prefix,
+        closer=closer,
+        payload=payload,
+        payload_sha256=sha256_hex(payload),
+        total_length=len(payload),
+    )
+
+
+def _require_m303_required_occurrences(
+    layout: ExportLayoutDefinition,
+    occurrences: tuple[M303FilingEnvelopeOccurrence, ...],
+) -> None:
+    present = {item.record_id for item in occurrences}
+    missing = tuple(str(record.id) for record in layout.records if record.required and record.id not in present)
+    if missing:
+        raise FilingExportValidationError(
+            f"M303 filing-envelope required record families have no emitted occurrence: {missing!r}",
+        )
+
+
+def _require_m303_occurrence_order(
+    envelope: M303FilingEnvelopeDefinition,
+    occurrences: tuple[M303FilingEnvelopeOccurrence, ...],
+) -> None:
+    """Preserve zero/one/many record families in reviewed layout order."""
+    declaration_order = {record_id: index for index, record_id in enumerate(envelope.body_record_ids)}
+    last_family = -1
+    next_occurrence: dict[RecordId, int] = {}
+    for item in occurrences:
+        try:
+            family = declaration_order[item.record_id]
+        except KeyError as exc:
+            raise ValueError(f"M303 filing-envelope emitted an undeclared record family {item.record_id!r}") from exc
+        if family < last_family:
+            raise ValueError("M303 filing-envelope occurrences must retain reviewed record-family order")
+        expected_occurrence = next_occurrence.get(item.record_id, 1)
+        if item.occurrence != expected_occurrence:
+            raise ValueError(
+                f"M303 filing-envelope occurrences for {item.record_id!r} must be positive, contiguous, "
+                "and uncollapsed",
+            )
+        next_occurrence[item.record_id] = expected_occurrence + 1
+        last_family = family
+
+
+def _render_m303_envelope_prefix(
+    envelope: M303FilingEnvelopeDefinition,
+    *,
+    period: Period,
+    product_software_identity: AeatProductSoftwareIdentity,
+) -> bytes:
+    """Derive the source-declared DP30300 prefix from filing-instance authority."""
+    parts = tuple(
+        _render_m303_prefix_field(
+            field.role,
+            length=field.length,
+            period=period,
+            product_software_identity=product_software_identity,
+        )
+        for field in envelope.prefix_fields
+    )
+    prefix = b"".join(parts)
+    if len(prefix) != 328:
+        raise FilingExportValidationError("M303 filing-envelope prefix must render to its declared 328-byte extent")
+    return prefix
+
+
+def _render_m303_prefix_field(
+    role: M303EnvelopePrefixRole,
+    *,
+    length: int,
+    period: Period,
+    product_software_identity: AeatProductSoftwareIdentity,
+) -> bytes:
+    values = {
+        M303EnvelopePrefixRole.OPENING_TAG: "<T",
+        M303EnvelopePrefixRole.MODELO: Modelo.M303.value,
+        M303EnvelopePrefixRole.DISCRIMINANT: "0",
+        M303EnvelopePrefixRole.FILING_YEAR: f"{period.filing_year:04d}",
+        M303EnvelopePrefixRole.PERIOD: period.registry_token,
+        M303EnvelopePrefixRole.RECORD_TYPE: "0000>",
+        M303EnvelopePrefixRole.AUX_OPENING_TAG: "<AUX>",
+        M303EnvelopePrefixRole.PRE_PROGRAM_FILLER: " " * length,
+        M303EnvelopePrefixRole.PROGRAM_IDENTIFIER: product_software_identity.program_identifier,
+        M303EnvelopePrefixRole.BETWEEN_IDENTITIES_FILLER: " " * length,
+        M303EnvelopePrefixRole.DEVELOPER_TAX_ID: str(product_software_identity.developer_tax_id),
+        M303EnvelopePrefixRole.POST_DEVELOPER_FILLER: " " * length,
+        M303EnvelopePrefixRole.AUX_CLOSING_TAG: "</AUX>",
+    }
+    value = values[role]
+    try:
+        payload = value.encode("ascii")
+    except UnicodeEncodeError as exc:
+        raise FilingExportValidationError(f"M303 filing-envelope prefix role {role.value!r} is not ASCII") from exc
+    if len(payload) != length:
+        raise FilingExportValidationError(
+            f"M303 filing-envelope prefix role {role.value!r} renders to {len(payload)} bytes, expected {length}",
+        )
+    return payload
+
+
+def _render_m303_envelope_closer(envelope: M303FilingEnvelopeDefinition, *, period: Period) -> bytes:
+    if envelope.closer_derivation != "m303-relative-closer-v1":
+        raise FilingExportValidationError("unsupported M303 filing-envelope closer derivation")
+    closer = f"</T{Modelo.M303.value}0{period.filing_year:04d}{period.registry_token}0000>".encode("ascii")
+    if len(closer) != 18:
+        raise FilingExportValidationError("M303 filing-envelope closer must render to the declared 18-byte extent")
+    return closer
+
+
 def _projection_plan_for_layout(
     layout: ExportLayoutDefinition,
     *,
@@ -884,561 +1363,13 @@ def _projection_plan_for_layout(
     draft: ModeloDraft,
     producer_snapshot: FilingProducerSnapshot,
 ) -> FilingProjectionPlan:
-    if draft.modelo == "303":
+    if draft.modelo == Modelo.M303.value:
         return build_m303_filing_projection_plan(
             registry_snapshot=registry_snapshot,
             layout=layout,
             producer_snapshot=producer_snapshot,
         )
     return FilingProjectionPlan(contexts=(), values=())
-
-
-def _render_layout_records(
-    layout: ExportLayoutDefinition,
-    *,
-    registry_snapshot: RegistrySnapshot,
-    draft: ModeloDraft,
-    headers: Mapping[FilingProducerKey, object],
-    producer_snapshot: FilingProducerSnapshot,
-    prior_domiciliation_election: PriorDomiciliationElection,
-    casilla_values: dict[CasillaId, object],
-    binding_values: dict[tuple[BindingId, int | None], object],
-    projection_plan: FilingProjectionPlan,
-    projection_values: dict[_ProjectionAddress, object],
-) -> bytes:
-    """Render admitted records after projection preflight has passed."""
-    chunks: list[bytes] = []
-    for record in sorted(layout.records, key=lambda item: item.order):
-        if did_page_suppressed(
-            record,
-            draft=draft,
-            headers=headers,
-            prior_domiciliation_election=prior_domiciliation_election,
-        ):
-            continue
-        for row, context in _render_rows_for_record(
-            record,
-            layout=layout,
-            registry_snapshot=registry_snapshot,
-            binding_values=binding_values,
-            projection_plan=projection_plan,
-        ):
-            _guard_record_export(record, casilla_values=casilla_values)
-            chunks.append(
-                _render_record_bytes(
-                    record,
-                    draft=draft,
-                    headers=headers,
-                    producer_snapshot=producer_snapshot,
-                    casilla_values=casilla_values,
-                    binding_values=binding_values,
-                    row=row,
-                    render_context=context,
-                    projection_values=projection_values,
-                ),
-            )
-    return b"".join(chunks)
-
-
-def _render_rows_for_record(
-    record: ExportRecordDefinition,
-    *,
-    layout: ExportLayoutDefinition,
-    registry_snapshot: RegistrySnapshot,
-    binding_values: dict[tuple[BindingId, int | None], object],
-    projection_plan: FilingProjectionPlan,
-) -> tuple[tuple[_RecordRenderRow, FilingRecordRenderContext], ...]:
-    if record.repeat == "projection_rows":
-        return tuple(
-            (_RecordRenderRow(row_index=None, active_binding_ids=frozenset()), context)
-            for context in projection_plan.contexts
-            if context.record is record
-        )
-    return tuple(
-        (
-            row,
-            FilingRecordRenderContext(
-                registry_snapshot=registry_snapshot,
-                layout=layout,
-                record=record,
-                occurrence=occurrence,
-            ),
-        )
-        for occurrence, row in enumerate(_record_render_rows(record, binding_values), 1)
-    )
-
-
-def _render_record_bytes(
-    record: ExportRecordDefinition,
-    *,
-    draft: ModeloDraft,
-    headers: Mapping[FilingProducerKey, object],
-    producer_snapshot: FilingProducerSnapshot,
-    casilla_values: dict[CasillaId, object],
-    binding_values: dict[tuple[BindingId, int | None], object],
-    row: _RecordRenderRow,
-    render_context: FilingRecordRenderContext,
-    projection_values: dict[_ProjectionAddress, object],
-) -> bytes:
-    text = _render_record(
-        record,
-        draft=draft,
-        producer_values=headers,
-        producer_snapshot=producer_snapshot,
-        casilla_values=casilla_values,
-        binding_values=binding_values,
-        row=row,
-        render_context=render_context,
-        projection_values=projection_values,
-    )
-    line_ending = {"crlf": "\r\n", "lf": "\n"}.get(record.line_ending, "")
-    return f"{text}{line_ending}".encode(record.encoding)
-
-
-def _record_render_rows(
-    record: ExportRecordDefinition,
-    binding_values: dict[tuple[BindingId, int | None], object],
-) -> tuple[_RecordRenderRow, ...]:
-    if record.repeat != "binding_rows":
-        return _single_record_render_row(record, binding_values)
-    return _binding_record_render_rows(record, binding_values)
-
-
-def _single_record_render_row(
-    record: ExportRecordDefinition,
-    binding_values: dict[tuple[BindingId, int | None], object],
-) -> tuple[_RecordRenderRow, ...]:
-    if record.binding_record is not None and not _record_has_binding_value(record, binding_values):
-        return ()
-    return (_RecordRenderRow(row_index=None, active_binding_ids=frozenset()),)
-
-
-def _binding_record_render_rows(
-    record: ExportRecordDefinition,
-    binding_values: dict[tuple[BindingId, int | None], object],
-) -> tuple[_RecordRenderRow, ...]:
-    binding_fields = _record_binding_fields(record)
-    row_indexes = _binding_row_indexes(binding_fields, binding_values)
-    return tuple(
-        row
-        for row_index in row_indexes
-        for row in _binding_record_rows_for_index(binding_fields, binding_values, row_index)
-    )
-
-
-def _binding_row_indexes(
-    binding_fields: tuple[ExportFieldDefinition, ...],
-    binding_values: dict[tuple[BindingId, int | None], object],
-) -> tuple[int, ...]:
-    return tuple(
-        sorted(
-            {
-                row_index
-                for binding_id, row_index in binding_values
-                if row_index is not None
-                and any(field.binding == binding_id for field in binding_fields)
-                and _is_active_binding_value(binding_values[(binding_id, row_index)])
-            },
-        ),
-    )
-
-
-def _binding_record_rows_for_index(
-    binding_fields: tuple[ExportFieldDefinition, ...],
-    binding_values: dict[tuple[BindingId, int | None], object],
-    row_index: int,
-) -> tuple[_RecordRenderRow, ...]:
-    active_fields = tuple(
-        field
-        for field in binding_fields
-        if field.binding is not None and _is_active_binding_value(binding_values.get((field.binding, row_index)))
-    )
-    return tuple(
-        _RecordRenderRow(
-            row_index=row_index,
-            active_binding_ids=frozenset(field.binding for field in group if field.binding is not None),
-        )
-        for group in _compatible_binding_field_groups(active_fields)
-    )
-
-
-type _ProjectionAddress = tuple[RecordId, int, FilingProjectionRef]
-
-
-def _preflight_projection_plan(plan: FilingProjectionPlan) -> dict[_ProjectionAddress, object]:
-    """Prove an exact admitted/produced projection bijection before any bytes."""
-    context_addresses = tuple((context.record.id, context.occurrence) for context in plan.contexts)
-    _raise_duplicate_projection_addresses(
-        context_addresses,
-        message="filing projection plan contains duplicate record occurrences",
-    )
-    expected_fields = _expected_projection_fields(plan.contexts)
-    produced_addresses = tuple((value.record_id, value.occurrence, value.projection_ref) for value in plan.values)
-    _raise_duplicate_projection_addresses(
-        produced_addresses,
-        message="filing projectors produced duplicate projection addresses",
-    )
-    expected = frozenset(expected_fields)
-    actual = frozenset(produced_addresses)
-    _require_exact_projection_addresses(expected, actual)
-    values: dict[_ProjectionAddress, object] = {
-        address: value.value for address, value in zip(produced_addresses, plan.values, strict=True)
-    }
-    _validate_projection_values(expected_fields, values)
-    return values
-
-
-def _duplicate_projection_addresses(addresses: tuple[object, ...]) -> tuple[object, ...]:
-    return tuple(address for address, count in Counter(addresses).items() if count > 1)
-
-
-def _raise_duplicate_projection_addresses(addresses: tuple[object, ...], *, message: str) -> None:
-    duplicates = _duplicate_projection_addresses(addresses)
-    if duplicates:
-        raise FilingExportValidationError(f"{message}: {duplicates!r}")
-
-
-def _expected_projection_fields(
-    contexts: tuple[FilingRecordRenderContext, ...],
-) -> dict[_ProjectionAddress, ExportFieldDefinition]:
-    expected_fields: dict[_ProjectionAddress, ExportFieldDefinition] = {}
-    for context in contexts:
-        for field in context.record.fields:
-            if field.kind is not CasillaFieldKind.PROJECTION or field.projection_ref is None:
-                continue
-            address = (context.record.id, context.occurrence, field.projection_ref)
-            if address in expected_fields:
-                raise FilingExportValidationError(f"filing layout admits duplicate projection address {address!r}")
-            expected_fields[address] = field
-    return expected_fields
-
-
-def _require_exact_projection_addresses(
-    expected: frozenset[_ProjectionAddress],
-    actual: frozenset[_ProjectionAddress],
-) -> None:
-    if actual != expected:
-        missing = tuple(sorted(repr(address) for address in expected - actual))
-        extraneous = tuple(sorted(repr(address) for address in actual - expected))
-        raise FilingExportValidationError(
-            f"filing projection plan is not an exact layout bijection; missing={missing!r}, extraneous={extraneous!r}",
-        )
-
-
-def _validate_projection_values(
-    expected_fields: dict[_ProjectionAddress, ExportFieldDefinition],
-    values: dict[_ProjectionAddress, object],
-) -> None:
-    for address, field in expected_fields.items():
-        _format_field(field, values[address])
-
-
-def _record_binding_fields(record: ExportRecordDefinition) -> tuple[ExportFieldDefinition, ...]:
-    return tuple(
-        field for field in record.fields if field.kind == CasillaFieldKind.BINDING and field.binding is not None
-    )
-
-
-def _is_active_binding_value(value: object) -> bool:
-    return value is not None and value != ""
-
-
-def _compatible_binding_field_groups(
-    fields: tuple[ExportFieldDefinition, ...],
-) -> tuple[tuple[ExportFieldDefinition, ...], ...]:
-    groups: list[list[ExportFieldDefinition]] = []
-    for field in sorted(fields, key=lambda item: (item.offset or 0, str(item.id))):
-        for group in groups:
-            if not any(export_fields_overlap(field, existing) for existing in group):
-                group.append(field)
-                break
-        else:
-            groups.append([field])
-    return tuple(tuple(group) for group in groups)
-
-
-def _record_has_binding_value(
-    record: ExportRecordDefinition,
-    binding_values: dict[tuple[BindingId, int | None], object],
-) -> bool:
-    binding_ids = {field.binding for field in _record_binding_fields(record)}
-    return any(
-        binding_id in binding_ids and value not in {None, ""} for (binding_id, _), value in binding_values.items()
-    )
-
-
-def _guard_record_export(record: ExportRecordDefinition, *, casilla_values: dict[CasillaId, object]) -> None:
-    if record.requires_positive_casilla_id is None:
-        return
-    raw = casilla_values.get(record.requires_positive_casilla_id)
-    amount = coerce_decimal(raw, default=Decimal("0")) or Decimal("0")
-    if amount <= 0:
-        raise FilingExportValidationError(
-            f"export record {record.id!r} requires positive casilla {record.requires_positive_casilla_id!r}",
-        )
-
-
-def _render_record(
-    record: ExportRecordDefinition,
-    *,
-    draft: ModeloDraft,
-    producer_values: Mapping[FilingProducerKey, object],
-    producer_snapshot: FilingProducerSnapshot,
-    casilla_values: dict[CasillaId, object],
-    binding_values: dict[tuple[BindingId, int | None], object],
-    row: _RecordRenderRow,
-    render_context: FilingRecordRenderContext | None,
-    projection_values: Mapping[_ProjectionAddress, object],
-) -> str:
-    positioned = all(field.offset is not None for field in record.fields)
-    if not positioned:
-        return "".join(
-            _render_field(
-                field,
-                draft=draft,
-                headers=producer_values,
-                producer_snapshot=producer_snapshot,
-                casilla_values=casilla_values,
-                binding_values=binding_values,
-                row_index=row.row_index,
-                render_context=render_context,
-                projection_values=projection_values,
-            )
-            for field in record.fields
-            if _field_is_active_for_row(field, row)
-        )
-    length = max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields)
-    buffer = [" "] * length
-    for field in sorted(record.fields, key=lambda item: item.offset or 0):
-        if not _field_is_active_for_row(field, row):
-            continue
-        if field.offset is None:
-            raise FilingExportValidationError(f"export field {field.id!r} must declare offset")
-        rendered = _render_field(
-            field,
-            draft=draft,
-            headers=producer_values,
-            producer_snapshot=producer_snapshot,
-            casilla_values=casilla_values,
-            binding_values=binding_values,
-            row_index=row.row_index,
-            render_context=render_context,
-            projection_values=projection_values,
-        )
-        start = field.offset - 1
-        end = start + len(rendered)
-        if any(char != " " for char in buffer[start:end]):
-            raise FilingExportError(f"export field {field.id!r} overlaps another field")
-        buffer[start:end] = rendered
-    return "".join(buffer)
-
-
-def _field_is_active_for_row(field: ExportFieldDefinition, row: _RecordRenderRow) -> bool:
-    if not row.active_binding_ids:
-        return True
-    if field.kind != CasillaFieldKind.BINDING:
-        return True
-    return field.binding in row.active_binding_ids
-
-
-def _render_field(
-    field: ExportFieldDefinition,
-    *,
-    draft: ModeloDraft,
-    headers: Mapping[FilingProducerKey, object],
-    producer_snapshot: FilingProducerSnapshot,
-    casilla_values: dict[CasillaId, object],
-    binding_values: dict[tuple[BindingId, int | None], object],
-    row_index: int | None,
-    render_context: FilingRecordRenderContext | None,
-    projection_values: Mapping[_ProjectionAddress, object],
-) -> str:
-    if field.length is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare length")
-    raw = _field_value(
-        field,
-        draft=draft,
-        headers=headers,
-        producer_snapshot=producer_snapshot,
-        casilla_values=casilla_values,
-        binding_values=binding_values,
-        row_index=row_index,
-        render_context=render_context,
-        projection_values=projection_values,
-    )
-    return _format_field(field, raw)
-
-
-def _field_value(
-    field: ExportFieldDefinition,
-    *,
-    draft: ModeloDraft,
-    headers: Mapping[FilingProducerKey, object],
-    producer_snapshot: FilingProducerSnapshot,
-    casilla_values: dict[CasillaId, object],
-    binding_values: dict[tuple[BindingId, int | None], object],
-    row_index: int | None,
-    render_context: FilingRecordRenderContext | None,
-    projection_values: Mapping[_ProjectionAddress, object],
-) -> object:
-    match field.kind:
-        case CasillaFieldKind.LITERAL:
-            return field.literal
-        case CasillaFieldKind.FILLER:
-            return ""
-        case CasillaFieldKind.CASILLA:
-            return _casilla_field_value(field, casilla_values)
-        case CasillaFieldKind.BINDING:
-            return _binding_field_value(field, binding_values, row_index)
-        case CasillaFieldKind.HEADER:
-            return _header_field_value(field, headers)
-        case CasillaFieldKind.PROJECTION:
-            return _projection_field_value(field, render_context, projection_values)
-        case CasillaFieldKind.DRAFT:
-            return _draft_value(field, draft)
-        case CasillaFieldKind.COMPUTED:
-            return _computed_field_value(field, draft, producer_snapshot)
-        case _:
-            raise FilingExportError(f"unsupported export field kind {field.kind!r}")
-
-
-def _casilla_field_value(field: ExportFieldDefinition, casilla_values: dict[CasillaId, object]) -> object:
-    if field.casilla_id is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare casilla_id")
-    return casilla_values.get(field.casilla_id)
-
-
-def _binding_field_value(
-    field: ExportFieldDefinition,
-    binding_values: dict[tuple[BindingId, int | None], object],
-    row_index: int | None,
-) -> object:
-    if field.binding is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare binding")
-    return binding_values.get((field.binding, row_index))
-
-
-def _projection_field_value(
-    field: ExportFieldDefinition,
-    context: FilingRecordRenderContext | None,
-    values: Mapping[_ProjectionAddress, object],
-) -> object:
-    if field.projection_ref is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare projection_ref")
-    if context is None:
-        raise FilingExportValidationError(
-            f"export field {field.id!r} requires a snapshot-owned render context to address its projection",
-        )
-    address = (context.record.id, context.occurrence, field.projection_ref)
-    try:
-        return values[address]
-    except KeyError as exc:
-        raise FilingExportValidationError(f"export projection address {address!r} has no preflighted value") from exc
-
-
-def _header_field_value(field: ExportFieldDefinition, headers: Mapping[FilingProducerKey, object]) -> object:
-    if field.producer_key is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare producer_key")
-    value = headers.get(field.producer_key)
-    if field.required and (value is None or (isinstance(value, str) and not value.strip())):
-        raise FilingExportValidationError(f"export producer {field.producer_key!r} is required")
-    return value.strip() if isinstance(value, str) else value
-
-
-def _envelope_closing_tag(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str:
-    del snapshot
-    year = str(draft.period.filing_year)
-    period_code = draft.period.registry_token
-    return f"</T{draft.modelo}0{year}{period_code}0000>"
-
-
-def _draft_filing_year(draft: ModeloDraft) -> str:
-    return str(draft.period.filing_year)
-
-
-def _draft_period_code(draft: ModeloDraft) -> str:
-    return draft.period.registry_token
-
-
-def _draft_period_start_date(draft: ModeloDraft) -> str:
-    return draft.period.start_date.strftime("%d%m%Y")
-
-
-def _draft_period_end_date(draft: ModeloDraft) -> str:
-    return draft.period.end_date.strftime("%d%m%Y")
-
-
-def _sepa_marca(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
-    del draft
-    selected = snapshot.selected_account
-    if isinstance(selected, ChargeAccountSelection):
-        return None
-    if not isinstance(selected, RefundAccountSelection):
-        raise FilingExportValidationError("SEPA marker requires a selected refund account")
-    return derive_sepa_marca(
-        iban=selected.account.iban,
-        bank_country_code=selected.account.bank_country_code,
-    ).value
-
-
-def _m303_complementaria_page_marker(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
-    """Render the official ``C`` page marker from amendment evidence alone."""
-    del draft
-    return "C" if snapshot.amendment_evidence and snapshot.amendment_evidence.is_complementaria else None
-
-
-def _m303_complementaria_marker(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
-    """Render the official binary amendment marker from immutable amendment evidence."""
-    del draft
-    return "X" if snapshot.amendment_evidence and snapshot.amendment_evidence.is_complementaria else None
-
-
-def _m303_no_activity_marker(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
-    """Render ``X`` only for the closed Modelo 303 no-activity disposition."""
-    del draft
-    return "X" if snapshot.elections.result_disposition is ResultDisposition.NEGATIVA else None
-
-
-_COMPUTED_VALUE_PRODUCERS: Mapping[
-    ExportComputedKey,
-    Callable[[ModeloDraft, FilingProducerSnapshot], str | None],
-] = {
-    ExportComputedKey.ENVELOPE_CLOSING_TAG: _envelope_closing_tag,
-    ExportComputedKey.SEPA_MARCA: _sepa_marca,
-    ExportComputedKey.M303_COMPLEMENTARIA_MARKER: _m303_complementaria_marker,
-    ExportComputedKey.M303_COMPLEMENTARIA_PAGE_MARKER: _m303_complementaria_page_marker,
-    ExportComputedKey.M303_NO_ACTIVITY_MARKER: _m303_no_activity_marker,
-}
-
-_DRAFT_VALUE_PRODUCERS: Mapping[ExportDraftAttribute, Callable[[ModeloDraft], str]] = {
-    ExportDraftAttribute.FILING_YEAR: _draft_filing_year,
-    ExportDraftAttribute.PERIOD_CODE: _draft_period_code,
-    ExportDraftAttribute.PERIOD_START_DATE: _draft_period_start_date,
-    ExportDraftAttribute.PERIOD_END_DATE: _draft_period_end_date,
-}
-
-
-def _computed_field_value(
-    field: ExportFieldDefinition,
-    draft: ModeloDraft,
-    producer_snapshot: FilingProducerSnapshot,
-) -> str | None:
-    if field.computed_key is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare computed_key")
-    return _COMPUTED_VALUE_PRODUCERS[field.computed_key](draft, producer_snapshot)
-
-
-def _draft_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
-    if field.draft_attribute is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare draft_attribute")
-    return _DRAFT_VALUE_PRODUCERS[field.draft_attribute](draft)
-
-
-def _format_field(field: ExportFieldDefinition, value: object) -> str:
-    try:
-        return render_fixed_width_export_field(field, value)
-    except RegistryValidationError as exc:
-        raise FilingExportValidationError(f"export field {field.id!r} cannot render its fixed-width value") from exc
 
 
 def _mismatched_casilla_ids(
@@ -1555,6 +1486,14 @@ __all__ = [
     "DeclaracionVerifyVerdict",
     "FilingProjectionValue",
     "FilingRecordRenderContext",
+    "_RecordRenderRow",
+    "_format_field",
+    "_m303_complementaria_marker",
+    "_m303_complementaria_page_marker",
+    "_m303_no_activity_marker",
+    "_preflight_projection_plan",
+    "_projection_field_value",
+    "_render_record",
     "assert_export_artifact_matches_receipt",
     "export_draft",
     "verify_export",

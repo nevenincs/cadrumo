@@ -217,12 +217,6 @@ def test_corpus_is_operating_scale() -> None:
     assert len(_BUILT) >= 500
 
 
-def test_every_row_classified_and_builds_strict_transaction() -> None:
-    # _build_transactions asserts rule-match and runs Transaction.model_validate
-    # for every row; reaching here means all 500+ rows produced valid records.
-    assert all(isinstance(tx, Transaction) for tx, _, _ in _BUILT)
-
-
 def test_foreign_currency_rows_carry_eur_conversion() -> None:
     foreign = [(tx, ccy) for tx, _, ccy in _BUILT if ccy != "EUR"]
     assert foreign, "corpus must contain foreign-currency rows"

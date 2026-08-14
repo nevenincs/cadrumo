@@ -1,7 +1,7 @@
 """Real public-surface tests for typed filing producer snapshots."""
 
 import json
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
@@ -30,7 +30,7 @@ from ....domain.bienes_inversion import (
     RegistroRegularizacionResult,
     compute_registro_regularizacion,
 )
-from ....domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry import RegistrySnapshotRef, resolve_m303_regimen_simplificado_snapshot
 from ....domain.deadlines import (
     ChargeAccount,
     IVARegime,
@@ -39,6 +39,11 @@ from ....domain.deadlines import (
     ModeloIVAProfile,
     RefundAccount,
     TaxpayerProfile,
+)
+from ....domain.filing import (
+    ModeloDraft,
+    compute_modelo_draft_id,
+    registry_schema_version,
 )
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
@@ -59,6 +64,7 @@ from ....domain.prorrata_register import (
     ProrrataRegister,
     ProrrataRegisterEntry,
 )
+from ....domain.submission import ModeloDraftStatus
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...aggregation import (
     M303ProrrataTransitionArrival,
@@ -87,7 +93,12 @@ from .. import (
     resolve_m303_filing_facts,
 )
 from .. import __init__ as filing
-from .._export import _filing_producer_values
+from .._export import (
+    _filing_producer_values,
+    _m303_complementaria_marker,
+    _m303_complementaria_page_marker,
+    _m303_no_activity_marker,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -136,6 +147,37 @@ def _m303_profile() -> ModeloIVAProfile:
         cash_accounting_regime_enrolled=False,
         voluntary_sii_enrolled=False,
         hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+    )
+
+
+def _marker_draft() -> ModeloDraft:
+    """Provide the typed draft context required by computed marker producers."""
+    period = Period.from_year_and_code(2025, "1T")
+    snapshot_ref = RegistrySnapshotRef(
+        modelo="303",
+        revision_id="2025-y-siguientes",
+        modelo_year=2025,
+        period="1T",
+    )
+    values = ()
+    return ModeloDraft(
+        draft_id=compute_modelo_draft_id(
+            modelo="303",
+            period=period,
+            profile_tax_id=_TAXPAYER_TAX_ID,
+            snapshot_ref=snapshot_ref,
+            values=values,
+        ),
+        modelo="303",
+        period=period,
+        profile_tax_id=_TAXPAYER_TAX_ID,
+        subject_tax_id=_TAXPAYER_TAX_ID,
+        snapshot_ref=snapshot_ref,
+        status=ModeloDraftStatus.BORRADOR,
+        values=values,
+        created_at=datetime(2026, 1, 1, tzinfo=UTC),
+        updated_at=datetime(2026, 1, 1, tzinfo=UTC),
+        schema_version=registry_schema_version(modelo="303", revision_id="2025-y-siguientes"),
     )
 
 
@@ -903,7 +945,7 @@ def test_amendment_evidence_requires_original_aeat_thirteen_digit_receipt(receip
     with pytest.raises(ValidationError, match="string_pattern_mismatch"):
         AmendmentEvidence(
             kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
-            motive="Corrección de la autoliquidación original",
+            m303_rectificativa_motive=None,
             original_aeat_receipt=receipt,
         )
 
@@ -911,13 +953,13 @@ def test_amendment_evidence_requires_original_aeat_thirteen_digit_receipt(receip
 def test_amendment_flags_are_derived_from_one_typed_kind() -> None:
     evidence = AmendmentEvidence(
         kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-        motive="Ingreso omitido en la declaración original",
+        m303_rectificativa_motive=None,
         original_aeat_receipt="1234567890123",
     )
     assert evidence.is_complementaria
     assert not evidence.is_sustitutiva
     assert not evidence.is_rectificativa
-    assert set(evidence.model_dump()) == {"kind", "motive", "original_aeat_receipt"}
+    assert set(evidence.model_dump()) == {"kind", "m303_rectificativa_motive", "original_aeat_receipt"}
 
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M111,
@@ -935,6 +977,47 @@ def test_amendment_flags_are_derived_from_one_typed_kind() -> None:
     assert values[FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA] is True
     assert values[FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA] is False
     assert values[FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT] == "1234567890123"
+
+
+def test_m303_source_markers_share_immutable_amendment_and_disposition_evidence() -> None:
+    """The 2023 X/C wire spellings do not introduce a second producer state."""
+    amendment = AmendmentEvidence(
+        kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+        m303_rectificativa_motive=None,
+        original_aeat_receipt="1234567890123",
+    )
+    complemented = build_filing_producer_snapshot(
+        modelo=Modelo.M303,
+        taxpayer_tax_id=_TAXPAYER_TAX_ID,
+        taxpayer_identity=_taxpayer_identity(),
+        presenter=_presenter(),
+        model_profile=_m303_profile(),
+        elections=_elections(ResultDisposition.NEGATIVA),
+        amendment_evidence=amendment,
+        refund_account=None,
+        charge_account=None,
+        m303_filing_facts=_m303_filing_facts(),
+    )
+    ordinary = build_filing_producer_snapshot(
+        modelo=Modelo.M303,
+        taxpayer_tax_id=_TAXPAYER_TAX_ID,
+        taxpayer_identity=_taxpayer_identity(),
+        presenter=_presenter(),
+        model_profile=_m303_profile(),
+        elections=_elections(ResultDisposition.INGRESO),
+        amendment_evidence=None,
+        refund_account=None,
+        charge_account=None,
+        m303_filing_facts=_m303_filing_facts(),
+    )
+
+    draft = _marker_draft()
+    assert _m303_complementaria_marker(draft, complemented) == "X"
+    assert _m303_complementaria_page_marker(draft, complemented) == "C"
+    assert _m303_no_activity_marker(draft, complemented) == "X"
+    assert _m303_complementaria_marker(draft, ordinary) is None
+    assert _m303_complementaria_page_marker(draft, ordinary) is None
+    assert _m303_no_activity_marker(draft, ordinary) is None
 
 
 def test_taxpayer_tax_id_is_a_distinct_producer_without_presenter_fallback() -> None:

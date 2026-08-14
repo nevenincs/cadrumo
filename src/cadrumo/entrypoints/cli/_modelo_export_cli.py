@@ -223,6 +223,8 @@ def register_export_commands(
         target_revision_id = selected_revision.calculation_revision_id
 
         try:
+            from ...adapters.persistence.profile.justificante import JustificanteRepository
+
             result = export_modelo_revision(
                 ModeloExportCommand(
                     calculation_revision_id=target_revision_id,
@@ -233,6 +235,7 @@ def register_export_commands(
                     prior_domiciliation_election=prior_domiciliation_election,
                 ),
                 workflow_profile=workflow_profile,
+                justificante_repository=JustificanteRepository(),
             )
         except (
             CalculationRevisionNotFoundError,

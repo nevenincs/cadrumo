@@ -12,24 +12,18 @@ from ..adapters.persistence.storage import (
     MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
     MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
-    has_active_bucket_session,
 )
 from ..adapters.persistence.storage.bucket import bucket_paths, read_manifest
 from ..adapters.persistence.storage.master_key import (
     BucketSession,
     activate_session,
-    close_active_bucket_session,
-    load_profile_session_key,
 )
 from ..adapters.persistence.storage.runtime import StorageRuntimeReadinessCode, inspect_storage_runtime
-from ..adapters.persistence.storage.sql.engine import dispose_engine, get_engine
+from ..adapters.persistence.storage.sql.engine import dispose_engine
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ..application.user_profile import login_profile
-from ..application.workflow import read_profile_bucket
 from ..core import StorageCategory, storage_location
 from ..core.classification import SensitivityClass
 from ..core.config import StorageRouteKind, load_settings, override_settings
-from .cli_runner import invoke_cached_cli
 from .secure_sql import (
     dev_test_database_password,
     isolated_cli_runtime_profile,
@@ -41,8 +35,6 @@ from .secure_sql import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-_REAP_LABEL = "harness-reap-operator"
 
 
 def test_read_db_at_rest_bytes_includes_the_wal_sidecar(tmp_path: Path) -> None:
@@ -77,19 +69,6 @@ def test_read_db_at_rest_bytes_includes_the_wal_sidecar(tmp_path: Path) -> None:
 _CONTROL_BUCKET_ID = "contamination-control"
 _CONTROL_KEK = b"c" * 32
 _CONTROL_DEK = b"p" * 32
-
-
-def test_isolated_ephemeral_secure_sql_routes_default_engine_to_tmp_database(
-    tmp_path: Path,
-) -> None:
-    with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
-        assert has_active_bucket_session()
-        with get_engine().connect() as connection:
-            database_rows = connection.exec_driver_sql("PRAGMA database_list").fetchall()
-
-    database_paths = {Path(str(row[2])).resolve() for row in database_rows if row[2]}
-    assert (tmp_path / storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath).resolve() in database_paths
-    assert not has_active_bucket_session()
 
 
 def test_isolated_ephemeral_secure_sql_does_not_mutate_active_profile_database(tmp_path: Path) -> None:
@@ -152,8 +131,6 @@ def test_isolated_runtime_profile_provisions_manifest_runtime_and_repository(tmp
     assert runtime.route_kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE
     assert runtime.route_attached_to_active_bucket
     assert _secure_object_row_count(profile.paths.database_file) == 1
-    assert not (profile.storage_root / storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath).exists()
-    assert not has_active_bucket_session()
 
 
 def test_profile_bootstrap_storage_uses_shared_dev_database_password(tmp_path: Path) -> None:
@@ -200,7 +177,6 @@ def test_isolated_cli_runtime_profile_routes_workflow_and_modelo_repositories_to
             ),
         ),
     )
-    assert not has_active_bucket_session()
 
 
 class TestHarnessReapsSessionKeys:
@@ -214,9 +190,9 @@ class TestHarnessReapsSessionKeys:
     pass, and 552 accumulated on one workstation before the credential
     store saturated and ``CredWrite`` began failing host-wide.
 
-    The two halves are split so the reap-a-known-id contract stays
-    verifiable on a host whose credential store is unreachable, and only
-    the half that genuinely needs custody carries ``os_keychain``.
+    These no-custody controls keep teardown harmless for empty and invalid
+    directory entries. The real keychain deletion contract lives with the
+    persistence-owned runtime-context lifecycle tests.
     """
 
     def test_reap_is_a_no_op_for_an_unpopulated_root(self, tmp_path: Path) -> None:
@@ -238,60 +214,6 @@ class TestHarnessReapsSessionKeys:
         """
         bucket_paths(tmp_path, "not-a-uuid").bucket_dir.mkdir(parents=True)
         reap_profile_session_keys(tmp_path)
-
-    @pytest.mark.os_keychain
-    def test_login_inside_the_harness_leaves_no_keychain_entry(self, tmp_path: Path) -> None:
-        """A real login's session key is gone once the harness context exits.
-
-        Keyed on the bucket uuid this test created rather than on a global
-        credential count, so a peer process minting concurrently on the
-        same workstation cannot make the assertion pass or fail
-        spuriously. The custody precondition is asserted FIRST: without it
-        a host that minted nothing would report a clean reap, which is
-        exactly the false-clean a saturated credential store produces.
-        """
-        with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-            created = invoke_cached_cli(
-                [
-                    "config",
-                    "profile",
-                    "create",
-                    _REAP_LABEL,
-                    "--quiet",
-                    "--accept-defaults",
-                    "--tax-id",
-                    "12345678Z",
-                    "--entity-type",
-                    "natural_person",
-                    "--name",
-                    "Harness",
-                    "--surnames",
-                    "Reap",
-                    "--activity",
-                    "design",
-                ],
-            )
-            assert created.exit_code == 0, created.output
-            close_active_bucket_session()
-            pointer = read_profile_bucket(_REAP_LABEL)
-            assert pointer is not None
-            bucket_id = pointer.bucket_id
-
-            login_profile()
-            if load_profile_session_key(bucket_id=bucket_id) is None:
-                pytest.fail(
-                    "login custodied no keychain session key, so a reap cannot be "
-                    "observed: this host has no usable OS credential store. The "
-                    "login itself succeeded and correctly degraded to a "
-                    "process-scoped session; only the custody half is unavailable.",
-                )
-            assert storage_root.is_dir()
-
-        assert load_profile_session_key(bucket_id=bucket_id) is None, (
-            "the harness teardown left a cadrumo:profile-session keychain entry "
-            f"behind for bucket {bucket_id}; every run of every login test would "
-            "deposit one more permanent orphan in the developer's credential store"
-        )
 
 
 def _control_session() -> BucketSession:

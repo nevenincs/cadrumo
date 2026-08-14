@@ -51,7 +51,9 @@ from .. import (
     LLMValidationError,
     transport_retry_permitted,
 )
-from .._client import reset_on_host_inference_arena
+from ._arena_fixtures import _fresh_arena
+
+__all__ = ["_fresh_arena"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -59,13 +61,6 @@ _OK_BODY: Mapping[str, object] = ollama_chat_reply(" local completion ")
 
 # Short enough to keep the suite quick, long enough that a wait is observable.
 _FAST_POLICY = LLMRetryPolicy(max_attempts=3, initial_backoff_s=0.02, max_backoff_s=0.1, budget_s=5.0)
-
-
-@pytest.fixture(autouse=True)
-def _fresh_arena() -> Iterator[None]:
-    reset_on_host_inference_arena()
-    yield
-    reset_on_host_inference_arena()
 
 
 @dataclass

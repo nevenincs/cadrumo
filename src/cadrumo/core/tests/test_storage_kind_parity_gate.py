@@ -41,8 +41,8 @@ from typing import Final
 
 import pytest
 
-from ..adapters.persistence.storage import StoragePathKind
-from ..core import StorageNodeKind
+from ...adapters.persistence.storage import StoragePathKind
+from .. import StorageNodeKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

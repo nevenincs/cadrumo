@@ -214,12 +214,17 @@ from ._export import (
     DeclaracionExportResult,
     DeclaracionVerifyResult,
     DeclaracionVerifyVerdict,
+    M303FilingEnvelopeOccurrence,
+    M303FilingEnvelopeRenderRequest,
+    M303FilingEnvelopeRenderResult,
     assert_export_artifact_matches_receipt,
     export_draft,
     export_layout_renderability_reason,
+    render_m303_filing_envelope,
     verify_export,
 )
 from ._export_parity import did_page_required, required_applicable_casilla_ids
+from ._export_producer import m303_rectificativa_motive_producer_values
 from ._history_models import ModeloHistory, ModeloHistoryEntry
 from ._history_repository import ModeloHistoryRepository
 from ._import import JustificanteImportResult, import_filing_from_justificante
@@ -625,7 +630,7 @@ def _load_registry_snapshot(*, modelo: str, period: _Period) -> _RegistrySnapsho
             filing_year=filing_year,
             period=registry_period,
         )
-    except _RegistrySnapshotError as exc:
+    except (_RegistrySnapshotError, _RegistryValidationError) as exc:
         raise _ModeloBuilderError(
             translated_message="application.filing.build_draft.errors.registry_snapshot_unavailable",
             context={
@@ -1202,6 +1207,9 @@ __all__ = [
     "GeneralFilingProfileFacts",
     "JustificanteImportResult",
     "M202UnsupportedProducerId",
+    "M303FilingEnvelopeOccurrence",
+    "M303FilingEnvelopeRenderRequest",
+    "M303FilingEnvelopeRenderResult",
     "M303FilingFacts",
     "M303InsolvencyFilingFact",
     "M303InsolvencyFilingSubtype",
@@ -1240,8 +1248,10 @@ __all__ = [
     "list_amendments",
     "load_amendment",
     "load_default_filing_profile",
+    "m303_rectificativa_motive_producer_values",
     "project_m303_exonerado_390_value_arrival",
     "refresh_review_status",
+    "render_m303_filing_envelope",
     "required_applicable_casilla_ids",
     "resolve_m303_filing_facts",
     "summarise_calculation",

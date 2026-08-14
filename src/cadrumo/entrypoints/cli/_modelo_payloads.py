@@ -69,6 +69,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.modelos import (
     ExternalEvidenceKind,
+    M303RectificativaMotive,
     ModeloCode,
     ModeloRecordStatus,
     ModeloVerificationFindingKind,
@@ -690,6 +691,7 @@ class WorkAmendResult(ModeloRecordPayload):
 
     operation: str = "modelo.work.amend"
     amendment_kind: str
+    m303_rectificativa_motive: M303RectificativaMotive | None
     amends_filing_record_id: FilingRecordId
 
 

@@ -79,6 +79,7 @@ from ._calculation_repository import CalculationRevisionPersistenceError, upsert
 from ._calculation_revision import (
     M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
     CalculationRevision,
+    CalculationRevisionAmendmentIdentity,
     CalculationRevisionAmendmentKind,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
@@ -93,6 +94,7 @@ from ._calculation_revision import (
     M303FilingInstanceEvidence,
     M303InsolvencyFilingFact,
     M303InsolvencyFilingSubtype,
+    M303RectificativaMotive,
     M303RegimenSimplificadoActivityCalculationResult,
     M303RegimenSimplificadoAnnualSummaryHandoff,
     M303RegimenSimplificadoCalculationResult,
@@ -103,6 +105,16 @@ from ._calculation_revision import (
     calculation_revision_identity_inputs_from_revision,
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
+)
+from ._calculation_revision_aggregate import (
+    CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
+    CalculationRevisionAggregateContext,
+    ValidatedM303RectificativaEvidence,
+    validate_calculation_revision_aggregate,
+)
+from ._calculation_revision_amendment import (
+    m303_rectificativa_motive_is_applicable,
+    m303_rectificativa_record_design_from_inspection,
 )
 from ._codes import ModeloCode
 from ._dt12_reduccion import (
@@ -197,10 +209,13 @@ from ._verification_repository import VerificationReportPersistenceError, upsert
 from ._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 
 __all__ = (
+    "CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY",
     "M232_MAX_RELATED_PARTY_ROWS",
     "M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS",
     "OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND",
     "CalculationRevision",
+    "CalculationRevisionAggregateContext",
+    "CalculationRevisionAmendmentIdentity",
     "CalculationRevisionAmendmentKind",
     "CalculationRevisionCatalogue",
     "CalculationRevisionCatalogueRepositoryProtocol",
@@ -225,6 +240,7 @@ __all__ = (
     "M303FilingInstanceEvidence",
     "M303InsolvencyFilingFact",
     "M303InsolvencyFilingSubtype",
+    "M303RectificativaMotive",
     "M303RegimenSimplificadoActivityCalculationResult",
     "M303RegimenSimplificadoAnnualSummaryHandoff",
     "M303RegimenSimplificadoCalculationResult",
@@ -263,6 +279,7 @@ __all__ = (
     "TransactionParticipationIndexRepositoryProtocol",
     "TransactionRevisionParticipation",
     "TransactionRevisionParticipationIndex",
+    "ValidatedM303RectificativaEvidence",
     "VerificationCompletenessStatus",
     "VerificationReport",
     "VerificationReportCatalogue",
@@ -289,6 +306,8 @@ __all__ = (
     "dt12_regime_window_eligibility",
     "is_justificante_backed_external_evidence",
     "m232_related_party_row_casilla_values",
+    "m303_rectificativa_motive_is_applicable",
+    "m303_rectificativa_record_design_from_inspection",
     "m349_nif_number_for_export",
     "raise_catalogue_integrity_error",
     "snapshot_fingerprint",
@@ -297,6 +316,7 @@ __all__ = (
     "upsert_transaction_participation",
     "upsert_verification_report",
     "upsert_work_unit",
+    "validate_calculation_revision_aggregate",
     "validate_m184_member_share_sum",
     "validate_m210_agrupacion_renta_rows",
     "validate_m347_threshold",

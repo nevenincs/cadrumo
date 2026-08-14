@@ -36,8 +36,10 @@ from ...domain.modelos import (
     M303Exonerado390FilingEvidence,
     M303InsolvencyFilingFact,
     M303InsolvencyFilingSubtype,
+    M303RectificativaMotive,
     M303RegimenSimplificadoCalculationResult,
     M303RegimenSimplificadoFilingEvidence,
+    m303_rectificativa_motive_is_applicable,
 )
 from ...domain.prorrata_register import ProrrataRegister
 from ..aggregation import (
@@ -47,7 +49,6 @@ from ..aggregation import (
 )
 
 _NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
-_AmendmentMotive = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
 _AeatReceiptNumber = Annotated[str, StringConstraints(pattern=r"^\d{13}$")]
 _CnaeCode = Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
 _M303_OFFICIAL_FILING_PERIODS: Final[frozenset[StandardPeriodCode]] = frozenset(
@@ -301,8 +302,17 @@ class AmendmentEvidence(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     kind: CalculationRevisionAmendmentKind
-    motive: _AmendmentMotive
+    m303_rectificativa_motive: M303RectificativaMotive | None
     original_aeat_receipt: _AeatReceiptNumber
+
+    @model_validator(mode="after")
+    def _motive_belongs_only_to_rectificativa(self) -> AmendmentEvidence:
+        if (
+            self.m303_rectificativa_motive is not None
+            and self.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA
+        ):
+            raise ValueError("M303 rectificativa motive is valid only for rectificativa evidence")
+        return self
 
     @property
     def is_complementaria(self) -> bool:
@@ -367,6 +377,12 @@ class FilingProducerSnapshot(BaseModel):
 def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
     if snapshot.modelo is not Modelo.M303 and snapshot.m303_filing_facts is not None:
         raise ValueError("M303FilingFacts are valid only for modelo 303")
+    if (
+        snapshot.modelo is not Modelo.M303
+        and snapshot.amendment_evidence is not None
+        and snapshot.amendment_evidence.m303_rectificativa_motive is not None
+    ):
+        raise ValueError("M303 rectificativa motive is valid only for modelo 303")
     if snapshot.modelo is Modelo.M111:
         _validate_modelo_111_snapshot(snapshot)
         return
@@ -398,6 +414,17 @@ def _validate_modelo_303_snapshot(snapshot: FilingProducerSnapshot) -> None:
         raise ValueError("modelo 303 requires the canonical ModeloIVAProfile")
     if snapshot.m303_filing_facts is None:
         raise ValueError("modelo 303 requires complete M303FilingFacts")
+    amendment = snapshot.amendment_evidence
+    motive_applicable = m303_rectificativa_motive_is_applicable(
+        registry_revision_id=snapshot.m303_filing_facts.regimen_simplificado.regimen_snapshot.orden.registry_revision_id,
+        record_design=snapshot.m303_filing_facts.regimen_simplificado.regimen_snapshot.record_design,
+    )
+    has_rectificativa = amendment is not None and amendment.is_rectificativa
+    has_motive = amendment is not None and amendment.m303_rectificativa_motive is not None
+    if motive_applicable and has_rectificativa != has_motive:
+        raise ValueError("applicable M303 rectificativa evidence requires exactly one canonical motive")
+    if not motive_applicable and has_motive:
+        raise ValueError("M303 rectificativa motive is prohibited outside the admitted record-design sources")
 
 
 def _validate_general_modelo_snapshot(snapshot: FilingProducerSnapshot) -> None:

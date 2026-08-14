@@ -44,7 +44,7 @@ class OperationPersistedSnapshot(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[2] = 2
+    schema_version: Literal[3] = 3
     identity: OperationIdentity
     request_reference: ContentDigest
     revision: OperationRevision
@@ -54,6 +54,10 @@ class OperationPersistedSnapshot(BaseModel):
     phase_code: OperationEventCode | None = None
     started_at: datetime
     updated_at: datetime
+    execution_deadline: datetime | None
+    cleanup_deadline: datetime | None
+    cancellation_requested_at: datetime | None
+    cancellation_acknowledged_at: datetime | None
     event_cursor: OperationEventCursor = 0
     terminal_receipt: OperationTerminalReceipt | None = None
     events: tuple[OperationEvent, ...] = ()
@@ -72,10 +76,51 @@ class OperationPersistedSnapshot(BaseModel):
         validate_utc_aware(self.updated_at)
         if self.updated_at < self.started_at:
             raise ValueError("persisted operation snapshot cannot update before it starts")
+        _validate_deadline_and_cancellation_state(self)
         _validate_terminal_state(self)
         _validate_checkpoint_state(self)
         _validate_events(self)
         return self
+
+
+def _validate_deadline_and_cancellation_state(snapshot: OperationPersistedSnapshot) -> None:
+    """Keep durable deadline and cooperative-stop facts ordered and correlated."""
+    execution_deadline = snapshot.execution_deadline
+    cleanup_deadline = snapshot.cleanup_deadline
+    requested_at = snapshot.cancellation_requested_at
+    acknowledged_at = snapshot.cancellation_acknowledged_at
+
+    for timestamp in (execution_deadline, cleanup_deadline, requested_at, acknowledged_at):
+        if timestamp is not None:
+            validate_utc_aware(timestamp)
+
+    if execution_deadline is not None and execution_deadline < snapshot.started_at:
+        raise ValueError("execution deadline cannot precede operation start")
+    if requested_at is None:
+        if cleanup_deadline is not None:
+            raise ValueError("cleanup deadline requires a cancellation request")
+        if acknowledged_at is not None:
+            raise ValueError("cancellation acknowledgement requires a cancellation request")
+        return
+    if requested_at < snapshot.started_at or requested_at > snapshot.updated_at:
+        raise ValueError("cancellation request must fall within the persisted operation timeline")
+    if cleanup_deadline is None or cleanup_deadline <= requested_at:
+        raise ValueError("cancellation request requires a later cleanup deadline")
+    if snapshot.lifecycle in {
+        OperationLifecycle.CREATED,
+        OperationLifecycle.QUEUED,
+        OperationLifecycle.RUNNING,
+        OperationLifecycle.WAITING_FOR_INTERACTION,
+        OperationLifecycle.WAITING_FOR_EXTERNAL,
+    }:
+        raise ValueError("cancellation request requires a cancellation or settlement lifecycle")
+    if acknowledged_at is not None:
+        if acknowledged_at < requested_at or acknowledged_at > snapshot.updated_at:
+            raise ValueError("cancellation acknowledgement must follow the request within the operation timeline")
+        if snapshot.lifecycle is OperationLifecycle.CANCELLATION_REQUESTED:
+            raise ValueError("cancellation acknowledgement requires settlement lifecycle")
+    if snapshot.terminal_condition is OperationTerminalCondition.CANCELLED and acknowledged_at is None:
+        raise ValueError("cancelled operation requires a durable cancellation acknowledgement")
 
 
 def _validate_checkpoint_state(snapshot: OperationPersistedSnapshot) -> None:

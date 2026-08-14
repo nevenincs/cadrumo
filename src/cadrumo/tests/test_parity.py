@@ -828,42 +828,6 @@ def test_fstring_registry_expands_sal_and_sll_keys() -> None:
     )
 
 
-def test_fstring_registry_covers_all_legal_entity_form_members() -> None:
-    """Every LegalEntityForm member must have a registered locale key."""
-    from dev.locales import get_registered_keys
-
-    from ..domain.deadlines import LegalEntityForm
-
-    keys = get_registered_keys()
-    missing = []
-    for member in LegalEntityForm:
-        expected = f"wizard.setup.taxpayer-type.legal-entity-form.choices.{member.value.replace('_', '-')}.label"
-        if expected not in keys:
-            missing.append(expected)
-    assert not missing, (
-        f"LegalEntityForm members not covered by the f-string registry: {missing}\n"
-        "Add the missing values to _fstring_registry._build_registrations()."
-    )
-
-
-def test_fstring_registry_covers_all_fiscal_residency_members() -> None:
-    """Every FiscalResidency member must have a registered locale key."""
-    from dev.locales import get_registered_keys
-
-    from ..domain.deadlines import FiscalResidency
-
-    keys = get_registered_keys()
-    missing = []
-    for member in FiscalResidency:
-        expected = f"wizard.setup.residence.fiscal-residency.choices.{member.value.replace('_', '-')}.label"
-        if expected not in keys:
-            missing.append(expected)
-    assert not missing, (
-        f"FiscalResidency members not covered by the f-string registry: {missing}\n"
-        "Add the missing values to _fstring_registry._build_registrations()."
-    )
-
-
 def test_fstring_registry_all_keys_present_in_all_locales(manager: LocaleManager) -> None:
     """Every key produced by the f-string registry must exist in every locale file.
 

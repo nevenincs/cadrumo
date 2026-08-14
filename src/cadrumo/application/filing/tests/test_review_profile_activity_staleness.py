@@ -92,7 +92,6 @@ def _create_profile_with_activity(activity: str) -> None:
             profile_id=_PROFILE_ID,
             display_name="auton",
             overrides={"identity.tax_id": _TAX_ID, "activities.description": activity},
-            enforce_unique_tax_id=False,
         ),
     )
 

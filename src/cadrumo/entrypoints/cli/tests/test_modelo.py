@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from pathlib import Path
-
 import pytest
 
 from ....core import CasillaId, validated_casilla_id
-from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_cli_runtime_profile
+from ._modelo_fixtures import active_cli_profile_fixture
+
+__all__ = ["active_cli_profile_fixture"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -29,12 +27,6 @@ _INVALID_PERIODS = (
     "Q1X",  # garbled quarter token
 )
 _OUT_OF_RANGE_YEARS = ("1899", "2100", "1000")
-
-
-@pytest.fixture
-def _active_cli_profile(tmp_path: Path) -> Iterator[None]:
-    with override_settings(cadrumo_output_language="en"), isolated_cli_runtime_profile(tmp_path=tmp_path):
-        yield
 
 
 def test_work_discard_refuses_without_yes(_active_cli_profile: None) -> None:

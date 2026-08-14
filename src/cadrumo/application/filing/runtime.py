@@ -522,9 +522,14 @@ def _build_runtime_schema_provider_cached(
                 filing_year=filing_year,
                 period=period,
             )
-        except RegistrySnapshotError:
+        except (RegistrySnapshotError, RegistryValidationError) as exc:
             if filing_year is None or period is None:
-                raise
+                raise _registry_snapshot_unavailable_error(
+                    modelo=modelo,
+                    filing_year=filing_year,
+                    period=period,
+                    exc=exc,
+                ) from exc
             continue
     if not snapshots:
         raise ModeloBuilderError(
@@ -537,6 +542,32 @@ def _build_runtime_schema_provider_cached(
         snapshots=snapshots,
         source_root=resolved_source_root,
         sources=dict(authority.catalogues.sources),
+    )
+
+
+def _registry_snapshot_unavailable_error(
+    *,
+    modelo: ModeloDefinition,
+    filing_year: int | None,
+    period: Period | None,
+    exc: RegistrySnapshotError | RegistryValidationError,
+) -> ModeloBuilderError:
+    """Translate a rejected provider snapshot into the filing error surface.
+
+    ``RegistrySnapshot`` is filing-grade by definition.  A provider request
+    without an explicit filing context still needs to refuse a revision whose
+    legal slice is not filing-grade, but it must do so through the filing
+    boundary's typed error rather than leaking the registry implementation
+    exception to callers.
+    """
+    return ModeloBuilderError(
+        translated_message="application.filing.build_draft.errors.registry_snapshot_unavailable",
+        context={
+            "modelo": modelo.id,
+            "filing_year": filing_year,
+            "period": period.registry_token if period is not None else None,
+            "registry_error_type": type(exc).__name__,
+        },
     )
 
 

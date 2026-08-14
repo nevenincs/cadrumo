@@ -84,4 +84,43 @@ def general_m303_filing_evidence(period: Period, *, reference: str) -> FilingIns
     )
 
 
-__all__ = ["general_m303_filing_evidence", "regimen_simplificado_filing_evidence"]
+def general_m303_filing_evidence_from_regimen_snapshot(
+    period: Period,
+    *,
+    reference: str,
+    regimen_snapshot: M303RegimenSimplificadoSnapshot,
+) -> FilingInstanceEvidence:
+    """Build real general-scope evidence from an already validated static authority coordinate."""
+    scope = M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+    )
+    return FilingInstanceEvidence(
+        m303=M303FilingInstanceEvidence(
+            period=period,
+            joint_return_elected=False,
+            annual_volume_nonzero=False,
+            insolvency=None,
+            exonerado_390=M303Exonerado390FilingEvidence(
+                applicable=False,
+                applicability_reference=FilingEvidenceReference(reference=reference),
+                endpoints=(),
+                activity_rows=(),
+                operaciones_terceros_declarables=None,
+                operaciones_terceros_reference=None,
+            ),
+            regimen_simplificado=regimen_simplificado_filing_evidence(
+                period=period,
+                scope_decision=scope,
+                rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
+                regimen_snapshot=regimen_snapshot,
+                dana_2024_eligibility=None,
+            ),
+        ),
+    )
+
+
+__all__ = [
+    "general_m303_filing_evidence",
+    "general_m303_filing_evidence_from_regimen_snapshot",
+    "regimen_simplificado_filing_evidence",
+]

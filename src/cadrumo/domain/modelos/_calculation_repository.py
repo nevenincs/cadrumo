@@ -13,9 +13,14 @@ domain package depends only on the structural port.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ...core.logging import get_logger
 from ._calculation_revision import CalculationRevision, CalculationRevisionCatalogue
 from ._errors import ModeloError
+
+if TYPE_CHECKING:
+    from ._calculation_revision_aggregate import CalculationRevisionAggregateContext
 
 _LOGGER = get_logger(__name__)
 _CALCULATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
@@ -33,16 +38,27 @@ class CalculationRevisionPersistenceError(ModeloError):
 def upsert_calculation_revision(
     catalogue: CalculationRevisionCatalogue,
     revision: CalculationRevision,
+    *,
+    aggregate_context: CalculationRevisionAggregateContext | None = None,
 ) -> CalculationRevisionCatalogue:
     """Return a new :class:`CalculationRevisionCatalogue` with ``revision`` inserted or replaced.
 
     Args:
         catalogue: Source catalogue to update.
         revision: The :class:`CalculationRevision` to insert or replace.
+        aggregate_context: Joined authorities required when the catalogue contains
+            a context-bound rectificativa revision.
     """
     mapping = dict(catalogue.revisions)
     mapping[revision.calculation_revision_id] = revision
-    return CalculationRevisionCatalogue(revisions=mapping)
+    if aggregate_context is None:
+        return CalculationRevisionCatalogue(revisions=mapping)
+    from ._calculation_revision_aggregate import CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY
+
+    return CalculationRevisionCatalogue.model_validate(
+        {"revisions": mapping},
+        context={CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: aggregate_context},
+    )
 
 
 __all__ = [

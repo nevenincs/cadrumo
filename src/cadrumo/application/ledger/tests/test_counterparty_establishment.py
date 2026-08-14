@@ -24,15 +24,12 @@ issuer's error as authority. The resolution carries both and no fact.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
 
 from ....core import ClassifierInputSource
 from ....domain.iva import IvaTerritorialScope, classify_iva
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
@@ -49,24 +46,16 @@ from .._counterparty_establishment import (
     record_confirmed_counterparty_facts,
     resolve_confirmed_counterparty_facts,
 )
+from ._counterparty_fact_fixtures import repository, runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+__all__ = ["repository", "runtime_profile"]
 
 _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
 _SUPPLIER_CIF = "B12345674"
 _OTHER_CIF = "B87654321"
 _ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
-
-
-@pytest.fixture
-def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
-
-
-@pytest.fixture
-def repository(runtime_profile: TestRuntimeProfile) -> ConfirmedCounterpartyFactsRepository:
-    return ConfirmedCounterpartyFactsRepository(objects=runtime_profile.repository)
 
 
 def _confirm(

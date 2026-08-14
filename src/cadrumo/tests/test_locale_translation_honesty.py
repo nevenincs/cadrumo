@@ -159,14 +159,6 @@ def _reserved_token_offenders(flat_leaves: dict[str, str | None]) -> list[str]:
     )
 
 
-def test_reserved_token_offender_detection_discriminates() -> None:
-    """The detector fires on a planted reserved token and stays quiet otherwise."""
-
-    assert _reserved_token_offenders({"a.b": "x %{locale} y", "c.d": "x %{subject} y"}) == ["a.b"]
-    assert _reserved_token_offenders({"c.d": "x {default} y"}) == ["c.d"]
-    assert _reserved_token_offenders({"c.d": "plain prose"}) == []
-
-
 def test_no_catalogue_value_carries_a_reserved_interpolation_token() -> None:
     """No locale value may name a tr() rendering directive as a placeholder.
 

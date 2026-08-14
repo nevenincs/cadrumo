@@ -58,7 +58,7 @@ from ...core.identity import CalculationRevisionId
 from ...core.logging import get_logger
 from ...domain.buckets import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...domain.calculations.registry import BindingId, RelationId
-from ._common import active_bucket_id_or_refuse
+from ._common import active_bucket_id_or_refuse, active_profile_label
 from ._errors import CliRefusedBoundaryError
 from ._modelo_rendering import short_id
 
@@ -796,15 +796,13 @@ def resolve_actor_option(actor: str | None) -> str:
 
 
 def resolve_default_actor() -> str:
-    """Return the active profile display_name, or a permanent fallback label."""
+    """Return the active profile label, or a permanent fallback label."""
     try:
-        from ...application.workflow import workflow_state_repository
         from ...core import resolve_active_bucket_id
 
-        state = workflow_state_repository().load()
-        record = state.active_profile_record()
-        if record is not None and record.display_name:
-            return record.display_name
+        label = active_profile_label()
+        if label:
+            return label
         active = resolve_active_bucket_id()
         if active:
             return active

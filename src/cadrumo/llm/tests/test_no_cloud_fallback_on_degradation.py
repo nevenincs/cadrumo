@@ -39,18 +39,13 @@ from ...tests.loopback_llm import (
     write_json_response,
 )
 from .. import LLMClient, LLMConsentError, LLMError, LLMRequest, LLMRetryPolicy
-from .._client import reset_on_host_inference_arena
+from ._arena_fixtures import _fresh_arena
+
+__all__ = ["_fresh_arena"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _NO_RETRY = LLMRetryPolicy(max_attempts=1)
-
-
-@pytest.fixture(autouse=True)
-def _fresh_arena() -> Iterator[None]:
-    reset_on_host_inference_arena()
-    yield
-    reset_on_host_inference_arena()
 
 
 @contextmanager

@@ -55,7 +55,6 @@ from ..adapters.persistence.storage.sql.session import session_scope
 from ..core import StorageCategory
 from ..core.config import Settings, load_settings, override_settings
 from ..core.errors import CadrumoError
-from ..domain.user_profile import UserProfileStatus
 from .master_key import EphemeralMasterKeyProvider
 from .storage_scope import storage_overrides
 
@@ -158,10 +157,8 @@ def _provision_bucket_dek_v1_session(
             created_at=opened_at,
             last_unlocked_at=opened_at,
             kdf_params=KdfParams.default().to_manifest_params(),
-            recovery_enrolled=False,
             key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
             schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-            status=UserProfileStatus.ACTIVE,
         ),
     )
     session = BucketSession.open(

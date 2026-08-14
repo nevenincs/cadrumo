@@ -73,6 +73,10 @@ def _snapshot(*, revision: int) -> OperationPersistedSnapshot:
         phase_code=event.phase_code,
         started_at=_STARTED,
         updated_at=updated_at,
+        execution_deadline=None,
+        cleanup_deadline=None,
+        cancellation_requested_at=None,
+        cancellation_acknowledged_at=None,
         event_cursor=event.sequence,
         events=(event,),
     )

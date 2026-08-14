@@ -20,6 +20,7 @@ from ...application.modelo import (
     AmendmentComplementariaLiabilityDecreaseError,
     AmendmentEvidenceMissingError,
     AmendmentKindNotPermittedError,
+    AmendmentM303RectificativaMotiveError,
     AmendmentTargetStateError,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -54,7 +55,12 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import RegistryValidationError
-from ...domain.modelos import CalculationRevision, CalculationRevisionAmendmentKind, WorkUnit
+from ...domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionAmendmentKind,
+    M303RectificativaMotive,
+    WorkUnit,
+)
 from ._common import (
     MODELO_CODE_CHOICE,
     activate_subcommand_output_language,
@@ -1035,6 +1041,13 @@ def work_amend(
             help=tr("cli.app.modelo.work.amendment_reason_help"),
         ),
     ] = None,
+    m303_rectificativa_motive: Annotated[
+        M303RectificativaMotive | None,
+        typer.Option(
+            "--m303-rectificativa-motive",
+            help=tr("cli.app.modelo.work.m303_rectificativa_motive_help"),
+        ),
+    ] = None,
     actor: _ActorOpt = None,
     set_overrides: Annotated[
         list[str] | None,
@@ -1069,18 +1082,23 @@ def work_amend(
     overrides = _parse_amendment_overrides(set_specs)
 
     try:
+        from ...adapters.persistence.profile.justificante import JustificanteRepository
+
         record = amend_modelo_revision(
             from_filing_record_id=from_filing_record_id,
             overrides=overrides,
             amendment_kind=kind,
+            m303_rectificativa_motive=m303_rectificativa_motive,
             reason=reason,
             actor=actor or _resolve_default_actor(),
+            justificante_repository=JustificanteRepository(),
         )
     except (
         ModeloRecordNotFoundError,
         AmendmentEvidenceMissingError,
         AmendmentTargetStateError,
         AmendmentKindNotPermittedError,
+        AmendmentM303RectificativaMotiveError,
         AmendmentComplementariaLiabilityDecreaseError,
         CalculationRevisionNotFoundError,
         CalculationRevisionStateError,
@@ -1094,6 +1112,7 @@ def work_amend(
     result = WorkAmendResult.model_validate(
         {
             "amendment_kind": kind.value,
+            "m303_rectificativa_motive": m303_rectificativa_motive,
             "amends_filing_record_id": from_filing_record_id,
             **_filing_record_payload(record).model_dump(mode="python"),
         },
@@ -1101,6 +1120,7 @@ def work_amend(
     lines = [
         "operation\tmodelo.work.amend",
         f"amendment_kind\t{kind.value}",
+        f"m303_rectificativa_motive\t{m303_rectificativa_motive.value if m303_rectificativa_motive else ''}",
         f"amends_filing_record_id\t{from_filing_record_id}",
         *_filing_record_lines(record),
     ]

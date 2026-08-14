@@ -7,6 +7,7 @@ operation envelope or obtain concrete persistence and frontend adapters.
 
 from __future__ import annotations
 
+from contextlib import AbstractAsyncContextManager
 from datetime import datetime
 from typing import Protocol, runtime_checkable
 
@@ -32,6 +33,10 @@ class OperationCancellationScope(Protocol):
 
     async def acknowledge_cancellation(self) -> None:
         """Record that the executor stopped at a cancellation-safe boundary."""
+        ...
+
+    def irreversible_section(self) -> AbstractAsyncContextManager[None]:
+        """Protect one executor-owned mutation boundary from an unsafe stop."""
         ...
 
 

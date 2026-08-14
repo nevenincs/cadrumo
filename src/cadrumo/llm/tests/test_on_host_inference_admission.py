@@ -38,27 +38,13 @@ from ...tests.loopback_llm import (
     write_json_response,
 )
 from .. import LLMBusyError, LLMClient, LLMProviderError, LLMRequest
-from .._client import reset_on_host_inference_arena
+from ._arena_fixtures import _fresh_arena
+
+__all__ = ["_fresh_arena"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _SERVER_WAIT_S = 10.0
-
-
-@pytest.fixture(autouse=True)
-def _fresh_arena() -> Iterator[None]:
-    """Rebuild the process-wide arena around each case.
-
-    The arena is a process singleton sized on first use, which is what makes the
-    bound real across clients; a case configuring a different limit would
-    otherwise inherit the previous one. Reset on the way OUT as well as in, so a
-    case that raised mid-dispatch cannot leave a sized arena behind for the next
-    one -- and the reset itself refuses while a slot is held, so a leaked slot
-    surfaces here as an error rather than as a silently permissive arena.
-    """
-    reset_on_host_inference_arena()
-    yield
-    reset_on_host_inference_arena()
 
 
 def _settings(tmp_path: Path, *, concurrency: int) -> EnvFileFreeSettings:

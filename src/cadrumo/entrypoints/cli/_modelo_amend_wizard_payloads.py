@@ -17,7 +17,7 @@ from ...core import CasillaId
 from ...core.identity import FilingRecordId
 from ...core.json_contract import OutputSchema, register_schema
 from ...domain.calculations.registry import LegalRefId, SourceRefId
-from ...domain.modelos import CalculationRevisionAmendmentKind
+from ...domain.modelos import CalculationRevisionAmendmentKind, M303RectificativaMotive
 from ._modelo_payloads import ModeloRecordPayload
 
 
@@ -57,6 +57,7 @@ class WorkAmendWizardResult(ModeloRecordPayload):
 
     operation: str = "modelo.work.amend_wizard"
     amendment_kind: CalculationRevisionAmendmentKind
+    m303_rectificativa_motive: M303RectificativaMotive | None
     amendment_reason: str = Field(min_length=1, max_length=500)
     amends_filing_record_id: FilingRecordId
     corrected_casillas: tuple[AmendWizardCorrectedCasillaPayload, ...] = ()
