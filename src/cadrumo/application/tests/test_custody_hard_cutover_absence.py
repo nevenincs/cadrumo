@@ -340,11 +340,18 @@ def test_declared_open_violations_still_describe_the_tree() -> None:
 
 
 def test_declared_open_violations_state_their_reason() -> None:
-    """An entry without a stated replacement is an exemption wearing a reason."""
+    """An entry without a stated replacement is an exemption wearing a reason.
+
+    The reason must name where the reach is going -- the per-profile capsule or
+    an authenticated bucket session -- because a declaration that only records
+    "still open" gives the next reader nothing to act on and no way to tell a
+    deferral from an abandonment.
+    """
     unreasoned = {
         path
         for path, declared in _DECLARED_OPEN_VIOLATIONS.items()
-        if len(declared.reason.split()) < 12 or not {"capsule", "session"} & set(declared.reason.split())
+        if len(declared.reason.split()) < 12
+        or not any(destination in declared.reason for destination in ("capsule", "session"))
     }
     assert unreasoned == set(), f"declared open violations must state their replacement: {sorted(unreasoned)}"
     assert all(declared.names for declared in _DECLARED_OPEN_VIOLATIONS.values()), (
