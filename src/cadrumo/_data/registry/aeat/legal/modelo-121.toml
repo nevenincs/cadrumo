@@ -8,7 +8,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-1334#a1"
 published_at = 2017-02-10
 effective_from = 2017-02-11
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the fetched BOE-A-2017-1334 art 1; pending operator re-verification)"
 notes = "Orden HFP/105/2017 art 1: aprueba el modelo 121, comunicación de la cesión del derecho a la deducción por familia numerosa o por personas con discapacidad a cargo (IRPF), por contribuyentes no obligados a presentar declaración."
@@ -27,7 +27,7 @@ article = "3"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-1334#a3"
 published_at = 2017-02-10
 effective_from = 2017-02-11
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the fetched BOE-A-2017-1334 art 3; pending operator re-verification)"
 notes = "Orden HFP/105/2017 art 3: plazo de presentación del modelo 121. Se presenta en el plazo establecido en cada ejercicio para la presentación de la declaración del IRPF — plazo remitido a la campaña de Renta, sin fecha fija propia en la orden."

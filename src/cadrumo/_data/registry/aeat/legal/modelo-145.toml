@@ -8,7 +8,7 @@ article = "primero"
 permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2011-208"
 published_at = 2011-01-05
 effective_from = 2011-01-05
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "agent-review"
 notes = "Resolucion de 3 de enero de 2011 que aprueba el Modelo 145 como comunicacion de datos del perceptor de rentas del trabajo a su pagador."
@@ -28,7 +28,7 @@ article = "unico"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-59"
 published_at = 2014-01-03
 effective_from = 2014-01-03
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "agent-review"
 notes = "Resolucion de 17 de diciembre de 2013 que modifica el Modelo 145 con efectos para comunicaciones de datos al pagador desde 2014."
@@ -48,7 +48,7 @@ article = "apartado unico"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-13679"
 published_at = 2014-12-31
 effective_from = 2014-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "agent-review"
 notes = "Resolucion de 18 de diciembre de 2014 que modifica el Modelo 145 con efectos para comunicaciones de datos al pagador desde 2015."

@@ -15,7 +15,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a1"
 published_at = 1992-12-29
 effective_from = 1993-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIVA art. 1: naturaleza del IVA (impuesto indirecto sobre el consumo)."
@@ -33,7 +33,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a3"
 published_at = 1992-12-29
 effective_from = 2020-02-06
 consolidated_as_of = 2026-08-07
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-07
 reviewed_by = "agent-review"
 notes = """LIVA art. 3: territorialidad. Apartado Dos, numero 1.o, letras a) y b) are the \
@@ -71,7 +71,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a3"
 published_at = 1992-12-29
 effective_from = 2015-01-01
 consolidated_as_of = 2026-08-08
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-08
 reviewed_by = "agent-review"
 notes = """LIVA art. 3 apartado Tres: the ASSIMILATION limb, and a separate entry from apartado Dos because it rules the opposite way. Apartado Dos carves territories OUT of the interior del pais; apartado Tres brings three territories that lie outside every Member State IN, by declaring that operations with Monaco, the Isle of Man and the United Kingdom sovereign base areas of Akrotiri and Dhekelia have the same consideration as operations with France, the United Kingdom and Cyprus respectively. Citing apartado Dos for an assimilation would name the provision that does the reverse. The anchored unit is the WHOLE article, because #a3 is the finest anchor the consolidated document offers and apartado Tres cannot be sliced further; the required_text below is chosen to occur only inside this apartado, so a match cannot be satisfied by apartado Uno or Dos. Current redaction: apartados 2 and 3 were last modified by art. 1.Uno of Ley 28/2014 (BOE-A-2014-12329), in force from 2015-01-01. ASSIMILATION IS RELATIVE, NOT ABSOLUTE, and that is the whole reason it is modelled as a pointer rather than as a scope. The article fixes what each territory is assimilated TO, never what that parent establishes -- so the Isle of Man followed the United Kingdom into and then out of the Community without this article changing a word, and Monaco follows France for as long as France is a Member State. A row recording a fixed scope here would have been correct in 2015 and wrong from 2021 while still reading as grounded."""
@@ -90,7 +90,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a1"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIRPF art. 1: naturaleza del IRPF (tributo personal y directo sobre la renta)."
@@ -106,7 +106,7 @@ article = "5"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a5"
 published_at = 2003-12-18
 effective_from = 2004-07-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LGT art. 5: la Administración tributaria; competencias de la AEAT."
@@ -122,7 +122,7 @@ article = "26"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a26"
 published_at = 2003-12-18
 effective_from = 2004-07-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-authored from official BOE-A-2003-23186#a26 and bundled ley-58-2003-art-26.html; operator to re-stamp"
 notes = "LGT art 26: interes de demora. Define the accessory tax interest charge, the cases in which it is due, calculation over unpaid or improperly refunded amounts, and the art 26.6 legal-interest-plus-25-percent rule cited by RIRPF art 59 for lost deduction regularization."
@@ -144,7 +144,7 @@ article = "148"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a148"
 published_at = 1992-12-29
 effective_from = 1993-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIVA art. 148: régimen especial del recargo de equivalencia."
@@ -160,7 +160,7 @@ article = "164"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a164"
 published_at = 1992-12-29
 effective_from = 1993-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIVA art. 164: obligaciones de los sujetos pasivos (autoliquidación, M303/M390)."
@@ -176,7 +176,7 @@ article = "96"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a96"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIRPF art. 96: obligación de declarar (M100)."
@@ -201,7 +201,7 @@ article = "98"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a98"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIRPF art. 98: borrador de declaración."
@@ -217,7 +217,7 @@ article = "98"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a98"
 published_at = 2003-12-18
 effective_from = 2004-07-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LGT art. 98: iniciación de los procedimientos tributarios (declaraciones, modelos, casillas)."
@@ -233,7 +233,7 @@ article = "99"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a99"
 published_at = 2003-12-18
 effective_from = 2004-07-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LGT art. 99: desarrollo de las actuaciones y procedimientos; documentación (justificante)."
@@ -249,7 +249,7 @@ article = "213"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a213"
 published_at = 2003-12-18
 effective_from = 2004-07-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LGT art. 213: medios de revisión de los actos tributarios."
@@ -265,7 +265,7 @@ article = "3"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a3"
 published_at = 2007-09-05
 effective_from = 2008-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "RGAT art. 3: formación de los censos tributarios (Censo de Obligados Tributarios)."
@@ -288,7 +288,7 @@ article = "18"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a18"
 published_at = 2007-09-05
 effective_from = 2008-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "RGAT art. 18: obligación de disponer de un número de identificación fiscal (NIF)."
@@ -304,7 +304,7 @@ article = "38"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10566#a38"
 published_at = 2015-10-02
 effective_from = 2016-10-02
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "Ley 40/2015 art. 38: la sede electrónica de las Administraciones Públicas."

@@ -8,7 +8,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-19523#a1"
 published_at = 2008-12-04
 effective_from = 2009-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2008-19523 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden EHA/3481/2008 articulo 1: aprueba el Modelo 189, declaracion informativa anual acerca de valores, seguros y rentas, y sus disenos fisicos y logicos."
@@ -28,7 +28,7 @@ article = "5"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-19523#a5"
 published_at = 2008-12-04
 effective_from = 2009-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2008-19523 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden EHA/3481/2008 articulo 5: fija el plazo anual del Modelo 189 entre el dia 1 y el 31 de marzo de cada ano."
@@ -47,7 +47,7 @@ article = "primero"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-22221#a1"
 published_at = 2023-10-31
 effective_from = 2023-11-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-22221 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1180/2023 articulo primero: modifica los disenos de registro del Modelo 189 para campos de declarado como clave de valor y valoracion."
@@ -68,7 +68,7 @@ article = "11"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-24412#a11"
 published_at = 2023-11-30
 effective_from = 2023-12-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-24412 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1284/2023 articulo 11: modifica los campos codigo pais, numero de valores y nominal unitario de los valores en el registro de declarado del Modelo 189."
@@ -89,7 +89,7 @@ article = "unico"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-4521#a1"
 published_at = 2026-02-27
 effective_from = 2026-02-28
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2026-4521 HTML from BOE on 2026-07-01"
 notes = "Orden HAC/132/2026 articulo unico: aprueba las relaciones de valores negociados del cuarto trimestre de 2025 usadas para el Impuesto sobre Patrimonio 2025 y el Modelo 189."

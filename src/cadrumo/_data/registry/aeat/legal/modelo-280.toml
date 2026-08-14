@@ -8,7 +8,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11074#a1"
 published_at = 2015-10-15
 effective_from = 2016-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2015-11074 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HAP/2118/2015 articulo 1: aprueba el Modelo 280 y los disenos de registro para la declaracion informativa anual de Planes de Ahorro a Largo Plazo."
@@ -29,7 +29,7 @@ article = "2"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11074#a2"
 published_at = 2015-10-15
 effective_from = 2016-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2015-11074 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HAP/2118/2015 articulo 2: identifica como obligadas a las entidades aseguradoras o de credito que comercialicen Planes de Ahorro a Largo Plazo."
@@ -49,7 +49,7 @@ article = "4"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11074#a4"
 published_at = 2015-10-15
 effective_from = 2016-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2015-11074 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HAP/2118/2015 articulo 4: fija el plazo anual del Modelo 280 durante el mes de febrero respecto del ano natural inmediato anterior."
@@ -69,7 +69,7 @@ article = "5"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11074#a5"
 published_at = 2015-10-15
 effective_from = 2016-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2015-11074 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HAP/2118/2015 articulo 5: remite la presentacion del Modelo 280 a las condiciones generales de presentacion electronica de declaraciones informativas."
@@ -89,7 +89,7 @@ article = "sexto"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2016-11251#a6"
 published_at = 2016-11-29
 effective_from = 2016-11-30
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-11251 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1822/2016 articulo sexto: modifica los disenos fisicos y logicos del Modelo 280 para consignar importes cuantitativos en euros."
@@ -110,7 +110,7 @@ article = "quinto"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2019-18752#a5"
 published_at = 2019-12-31
 effective_from = 2019-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2019-18752 HTML from BOE on 2026-07-01"
 notes = "Orden HAC/1276/2019 articulo quinto: modifica el Modelo 280 para sustituir el sistema de multienvios por TGVI Online desde el ejercicio 2019."
@@ -131,7 +131,7 @@ article = "cuarto"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20274#a4"
 published_at = 2022-12-03
 effective_from = 2022-12-04
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2022-20274 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1192/2022 articulo cuarto: modifica el campo de extincion del Plan de Ahorro a Largo Plazo del Modelo 280 para incluir el supuesto de fallecimiento del tomador."

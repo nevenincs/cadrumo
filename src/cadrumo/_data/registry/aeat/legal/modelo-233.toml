@@ -8,7 +8,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2018-17772#a1"
 published_at = 2018-12-21
 effective_from = 2018-12-22
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2018-17772 art 1; pending operator re-stamp)"
 notes = "Orden HAC/1400/2018 art 1: aprueba el modelo 233, declaración informativa por gastos en guarderías o centros de educación infantil autorizados. Orden habilitante del modelo 233."
@@ -27,7 +27,7 @@ article = "4"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2018-17772#a4"
 published_at = 2018-12-21
 effective_from = 2018-12-22
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2018-17772 art 4; pending operator re-stamp)"
 notes = "Orden HAC/1400/2018 art 4: plazo de presentación del modelo 233. La declaración se presenta en el mes de enero de cada año, en relación con la información del año inmediato anterior."

@@ -8,7 +8,6 @@ references nor matches a semantic entry to parser output.
 
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
@@ -22,6 +21,7 @@ from cadrumo.domain.calculations.registry import (
     ExportFieldId,
     ExportSemanticPayloadAxis,
     LegalRefs,
+    M303EnvelopePrefixRole,
     ModeloId,
     RecordId,
     SourceRefId,
@@ -61,24 +61,6 @@ class SemanticMapAnchor(_StrictModel):
     source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
     ordinal: int = Field(gt=0)
     record_identity: str = Field(min_length=1)
-
-
-class M303EnvelopePrefixRole(StrEnum):
-    """The closed semantic roles of the thirteen DP30300 prefix slots."""
-
-    OPENING_TAG = "opening_tag"
-    MODELO = "modelo"
-    DISCRIMINANT = "discriminant"
-    FILING_YEAR = "filing_year"
-    PERIOD = "period"
-    RECORD_TYPE = "record_type"
-    AUX_OPENING_TAG = "aux_opening_tag"
-    PRE_PROGRAM_FILLER = "pre_program_filler"
-    PROGRAM_IDENTIFIER = "program_identifier"
-    BETWEEN_IDENTITIES_FILLER = "between_identities_filler"
-    DEVELOPER_TAX_ID = "developer_tax_id"
-    POST_DEVELOPER_FILLER = "post_developer_filler"
-    AUX_CLOSING_TAG = "aux_closing_tag"
 
 
 def _coerce_m303_envelope_prefix_role(value: object) -> object:

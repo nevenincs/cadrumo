@@ -2,9 +2,11 @@
 
 Audits every :class:`ModeloDefinition` and :class:`ModeloRevision` in the
 registry for the four mandatory evidence tiers (legal authority, official
-source guidance, executable parity, and layout authority). Each revision
-is examined through a :class:`RegistrySnapshot` so referential integrity is
-verified before coverage is assessed.
+source guidance, executable parity, and layout authority). Each revision is
+examined through the typed authority projection appropriate to its canonical
+review state: filing-grade revisions use a :class:`RegistrySnapshot`, while
+review-ineligible revisions use :class:`RegistryRevisionInspection` so
+static/audit evidence remains available without claiming filing authority.
 """
 
 from __future__ import annotations
@@ -15,24 +17,30 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, PrivateAttr, computed_field, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, LegalReviewStatus, RevisionReviewStatus
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CrossReferenceId, LegalRefId, SourceRefId, WorkbookParityRefId
 from ._schema import (
     DataBindingDefinition,
     EvidenceTier,
     FormulaDefinition,
+    LegalReference,
+    LiveCrossReferenceDecision,
     ModeloDefinition,
     ModeloRevision,
     ParameterDefinition,
     RegistryCatalogues,
     RegistrySnapshot,
     RelationDefinition,
+    SourceReference,
+    WorkbookParityReference,
 )
 from ._snapshot import build_validated_snapshot
+from ._static_inspection import RegistryRevisionInspection
 from ._validate import RegistryValidator
 
 CoverageGateStatus = Literal["satisfied", "gap"]
+CoverageAuthorityScope = Literal["filing", "inspection_only"]
 RequiredCoverageTier = Literal["legal_authority", "official_source_guidance", "layout_authority"]
 
 REQUIRED_COVERAGE_TIERS: tuple[RequiredCoverageTier, ...] = (
@@ -84,11 +92,22 @@ class ModelLawCoverageLedger(CoverageModel):
     modelo: str
     revision: str
     gates: tuple[EvidenceTierCoverageGate, ...]
+    authority_scope: CoverageAuthorityScope = "filing"
+
+    @property
+    def filing_eligible(self) -> bool:
+        """Whether this ledger was built from filing-grade snapshot authority."""
+        return self.authority_scope == "filing"
 
     @property
     def gaps(self) -> tuple[EvidenceTierCoverageGate, ...]:
         """Return :class:`EvidenceTierCoverageGate` entries that have no supporting registry evidence."""
         return tuple(gate for gate in self.gates if gate.status == "gap")
+
+    @property
+    def filing_gaps(self) -> tuple[EvidenceTierCoverageGate, ...]:
+        """Return mandatory findings that may be read as filing-grade gaps."""
+        return self.gaps if self.filing_eligible else ()
 
 
 class RegistryCoverageAudit(CoverageModel):
@@ -202,6 +221,12 @@ class ConstructEvidenceLedger(CoverageModel):
     modelo: str
     revision: str
     rows: tuple[ConstructEvidenceRow, ...]
+    authority_scope: CoverageAuthorityScope = "filing"
+
+    @property
+    def filing_eligible(self) -> bool:
+        """Whether this ledger was built from filing-grade snapshot authority."""
+        return self.authority_scope == "filing"
 
     @model_validator(mode="after")
     def _rows_are_unique(self) -> ConstructEvidenceLedger:
@@ -215,6 +240,11 @@ class ConstructEvidenceLedger(CoverageModel):
         """Return construct rows whose own or inherited evidence is incomplete."""
         return tuple(row for row in self.rows if row.status in {"unresolved", "unmeasured", "unvalidated"})
 
+    @property
+    def filing_gaps(self) -> tuple[ConstructEvidenceRow, ...]:
+        """Return construct gaps that belong to a filing-grade ledger."""
+        return self.gaps if self.filing_eligible else ()
+
 
 class RegistryConstructEvidenceAudit(CoverageModel):
     """Registry-wide construct evidence audit with an explicit finite denominator."""
@@ -227,9 +257,19 @@ class RegistryConstructEvidenceAudit(CoverageModel):
         return tuple(row for ledger in self.ledgers for row in ledger.gaps)
 
     @property
+    def filing_gaps(self) -> tuple[ConstructEvidenceRow, ...]:
+        """Return only construct gaps from filing-grade ledgers."""
+        return tuple(row for ledger in self.ledgers for row in ledger.filing_gaps)
+
+    @property
+    def inspection_gaps(self) -> tuple[ConstructEvidenceRow, ...]:
+        """Return incomplete construct evidence retained from inspection ledgers."""
+        return tuple(row for ledger in self.ledgers if not ledger.filing_eligible for row in ledger.gaps)
+
+    @property
     def ok(self) -> bool:
-        """Return whether every enumerated construct has complete evidence."""
-        return not self.gaps
+        """Return whether every filing-grade construct has complete evidence."""
+        return not self.filing_gaps
 
 
 def audit_registry_model_law_coverage(
@@ -241,9 +281,12 @@ def audit_registry_model_law_coverage(
     """Validate registry coverage ledgers and return a :class:`RegistryCoverageAudit`.
 
     Legal authority, official guidance, and layout authority are mandatory for
-    every revision because the registry cannot be filing-grade without them.
-    Executable parity remains a reported gap unless an official safe calculator
-    or formula workbook exists for the revision.
+    every filing-grade revision because the registry cannot be filing-grade
+    without them. A revision whose canonical review state is not filing-grade
+    is measured through inspection and retained in the ledger without turning
+    its expected filing ineligibility into a coverage failure. Executable parity
+    remains a reported gap unless an official safe calculator or formula
+    workbook exists for the revision.
 
     Args:
         modelos: Iterable of :class:`ModeloDefinition` instances to audit.
@@ -258,31 +301,69 @@ def audit_registry_model_law_coverage(
     executable_parity_gaps: list[str] = []
     for modelo in modelo_tuple:
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
-            snapshot = build_validated_snapshot(
+            ledger = _model_law_coverage_for_revision(
                 modelo,
+                revision,
                 catalogues,
-                filing_year=_representative_year(revision),
-                period=revision.period_selector.periods[0],
-                revision_id=revision.id,
+                source_root=source_root,
             )
-            ledger = build_model_law_coverage_ledger(snapshot)
             ledgers.append(ledger)
-            gates = {gate.tier: gate for gate in ledger.gates}
-            for tier in REQUIRED_COVERAGE_TIERS:
-                gate = gates[tier]
-                if gate.status == "gap":
-                    required_gate_failures.append(f"modelo {modelo.id} revision {revision.id}: {tier} coverage gap")
-            parity_gate = gates["executable_parity_evidence"]
-            if parity_gate.status == "gap" and (revision.formulas or revision.algorithm_bindings):
-                executable_parity_gaps.append(
-                    f"modelo {modelo.id} revision {revision.id}: executable_parity_evidence coverage gap",
-                )
+            required_failures, parity_gaps = _model_law_coverage_findings(modelo, revision, ledger)
+            required_gate_failures.extend(required_failures)
+            executable_parity_gaps.extend(parity_gaps)
 
     return RegistryCoverageAudit(
         ledgers=tuple(ledgers),
         required_gate_failures=tuple(required_gate_failures),
         executable_parity_gaps=tuple(executable_parity_gaps),
     )
+
+
+def _model_law_coverage_for_revision(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    catalogues: RegistryCatalogues,
+    *,
+    source_root: Path,
+) -> ModelLawCoverageLedger:
+    """Build one revision ledger from filing or inspection authority as applicable."""
+    inspection = RegistryRevisionInspection.from_revision(
+        modelo=modelo,
+        revision=revision,
+        source_root=source_root,
+        sources=catalogues.sources,
+        legal_ref_ids=frozenset(catalogues.legal),
+    )
+    if _revision_is_filing_eligible(revision, inspection, catalogues.legal):
+        snapshot = build_validated_snapshot(
+            modelo,
+            catalogues,
+            filing_year=_representative_year(revision),
+            period=revision.period_selector.periods[0],
+            revision_id=revision.id,
+        )
+        return build_model_law_coverage_ledger(snapshot, _authority_proof=_AUTHORITY_CHECK_PROOF)
+    return build_model_law_coverage_ledger(inspection)
+
+
+def _model_law_coverage_findings(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    ledger: ModelLawCoverageLedger,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Project mandatory and executable-parity findings for one ledger."""
+    gates = {gate.tier: gate for gate in ledger.gates}
+    required_failures = tuple(
+        f"modelo {modelo.id} revision {revision.id}: {tier} coverage gap"
+        for tier in REQUIRED_COVERAGE_TIERS
+        if gates[tier].status == "gap"
+    )
+    parity_gaps = (
+        (f"modelo {modelo.id} revision {revision.id}: executable_parity_evidence coverage gap",)
+        if gates["executable_parity_evidence"].status == "gap" and (revision.formulas or revision.algorithm_bindings)
+        else ()
+    )
+    return required_failures, parity_gaps
 
 
 def audit_registry_construct_evidence(
@@ -305,35 +386,90 @@ def audit_registry_construct_evidence(
     ledgers: list[ConstructEvidenceLedger] = []
     for modelo in modelo_tuple:
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
-            snapshot = build_validated_snapshot(
-                modelo,
-                catalogues,
-                filing_year=_representative_year(revision),
-                period=revision.period_selector.periods[0],
-                revision_id=revision.id,
+            inspection = RegistryRevisionInspection.from_revision(
+                modelo=modelo,
+                revision=revision,
+                source_root=source_root,
+                sources=catalogues.sources,
+                legal_ref_ids=frozenset(catalogues.legal),
             )
-            ledgers.append(_build_construct_evidence_ledger(snapshot, authority_proof=_AUTHORITY_CHECK_PROOF))
+            if _revision_is_filing_eligible(revision, inspection, catalogues.legal):
+                snapshot = build_validated_snapshot(
+                    modelo,
+                    catalogues,
+                    filing_year=_representative_year(revision),
+                    period=revision.period_selector.periods[0],
+                    revision_id=revision.id,
+                )
+                ledgers.append(
+                    _build_construct_evidence_ledger(
+                        snapshot,
+                        authority_proof=_AUTHORITY_CHECK_PROOF,
+                    ),
+                )
+            else:
+                ledgers.append(_build_construct_evidence_ledger(inspection, authority_proof=None))
     return RegistryConstructEvidenceAudit(ledgers=tuple(ledgers))
 
 
-def build_model_law_coverage_ledger(snapshot: RegistrySnapshot) -> ModelLawCoverageLedger:
-    """Build the four-tier coverage ledger for a validated registry snapshot.
+def build_model_law_coverage_ledger(
+    authority: RegistrySnapshot | RegistryRevisionInspection,
+    *,
+    _authority_proof: _AuthorityCheckProof | None = None,
+) -> ModelLawCoverageLedger:
+    """Build the four-tier coverage ledger for one typed registry authority.
 
     Args:
-        snapshot: The :class:`RegistrySnapshot` to assess for model-law coverage.
+        authority: Filing-grade :class:`RegistrySnapshot` or non-filing
+            :class:`RegistryRevisionInspection` to assess for model-law coverage.
+        _authority_proof: Private marker supplied only by the validated
+            registry-wide audit. A hand-built or otherwise unproven snapshot
+            remains inspection-only even though its shape is a
+            :class:`RegistrySnapshot`.
 
     Returns:
         A :class:`ModelLawCoverageLedger` summarising coverage across all evidence tiers.
     """
+    if isinstance(authority, RegistrySnapshot):
+        modelo_id = authority.modelo.id
+        revision_id = authority.revision.id
+        legal_refs: Iterable[LegalRefId] = authority.legal
+        sources: Mapping[SourceRefId, SourceReference] = authority.sources
+        workbook_parity_refs: Iterable[WorkbookParityReference] = authority.workbook_parity_refs.values()
+        live_cross_references: Iterable[LiveCrossReferenceDecision] = authority.live_cross_references.values()
+        authority_scope: CoverageAuthorityScope = (
+            "filing" if _authority_proof is _AUTHORITY_CHECK_PROOF else "inspection_only"
+        )
+    else:
+        modelo_id = authority.modelo_id
+        revision_id = authority.revision_id
+        legal_refs = authority.legal_ref_ids
+        sources = authority.sources
+        workbook_parity_refs = authority.workbook_parity_refs
+        live_cross_references = authority.live_cross_references
+        authority_scope = "inspection_only"
+
     return ModelLawCoverageLedger(
-        modelo=snapshot.modelo.id,
-        revision=snapshot.revision.id,
+        modelo=modelo_id,
+        revision=revision_id,
         gates=(
-            _legal_authority_gate(snapshot),
-            _source_guidance_gate(snapshot),
-            _executable_parity_gate(snapshot),
-            _layout_authority_gate(snapshot),
+            _legal_authority_gate(legal_refs),
+            _source_guidance_gate(
+                sources,
+                live_cross_references,
+            ),
+            _executable_parity_gate(
+                sources,
+                workbook_parity_refs,
+                live_cross_references,
+            ),
+            _layout_authority_gate(
+                sources,
+                workbook_parity_refs,
+                live_cross_references,
+            ),
         ),
+        authority_scope=authority_scope,
     )
 
 
@@ -347,13 +483,22 @@ def build_construct_evidence_ledger(
     return _build_construct_evidence_ledger(snapshot, authority_proof=None)
 
 
+def _construct_evidence_context(
+    authority: RegistrySnapshot | RegistryRevisionInspection,
+) -> tuple[str, str, ModeloRevision | RegistryRevisionInspection, CoverageAuthorityScope]:
+    """Project the shared identity, declarations, and scope for one authority."""
+    if isinstance(authority, RegistrySnapshot):
+        return authority.modelo.id, authority.revision.id, authority.revision, "filing"
+    return authority.modelo_id, authority.revision_id, authority, "inspection_only"
+
+
 def _build_construct_evidence_ledger(
-    snapshot: RegistrySnapshot,
+    authority: RegistrySnapshot | RegistryRevisionInspection,
     *,
     authority_proof: _AuthorityCheckProof | None,
 ) -> ConstructEvidenceLedger:
     """Build construct rows, optionally under the private validated-audit proof."""
-    revision = snapshot.revision
+    modelo_id, revision_id, revision, authority_scope = _construct_evidence_context(authority)
     rows: list[ConstructEvidenceRow] = []
     rows.extend(
         _declared_construct_evidence_row(declaration, kind="formula", authority_proof=authority_proof)
@@ -398,7 +543,12 @@ def _build_construct_evidence_ledger(
         )
 
     rows.sort(key=lambda row: (row.kind, row.construct_id))
-    return ConstructEvidenceLedger(modelo=snapshot.modelo.id, revision=revision.id, rows=tuple(rows))
+    return ConstructEvidenceLedger(
+        modelo=modelo_id,
+        revision=revision_id,
+        rows=tuple(rows),
+        authority_scope=authority_scope,
+    )
 
 
 def _declared_construct_evidence_row(
@@ -475,8 +625,8 @@ def _status_for_declared_refs(
     return "unmeasured"
 
 
-def _legal_authority_gate(snapshot: RegistrySnapshot) -> EvidenceTierCoverageGate:
-    refs = tuple(sorted(ref for ref, item in snapshot.legal.items() if item.evidence_tier == "legal_authority"))
+def _legal_authority_gate(legal_refs: Iterable[LegalRefId]) -> EvidenceTierCoverageGate:
+    refs = tuple(sorted(legal_refs))
     return EvidenceTierCoverageGate(
         tier="legal_authority",
         status=_status(refs),
@@ -485,9 +635,12 @@ def _legal_authority_gate(snapshot: RegistrySnapshot) -> EvidenceTierCoverageGat
     )
 
 
-def _source_guidance_gate(snapshot: RegistrySnapshot) -> EvidenceTierCoverageGate:
-    source_refs = _sources_for_tier(snapshot, "official_source_guidance")
-    cross_refs = _cross_refs_for_tier(snapshot, "official_source_guidance")
+def _source_guidance_gate(
+    sources: Mapping[SourceRefId, SourceReference],
+    live_cross_references: Iterable[LiveCrossReferenceDecision],
+) -> EvidenceTierCoverageGate:
+    source_refs = _sources_for_tier(sources, "official_source_guidance")
+    cross_refs = _cross_refs_for_tier(live_cross_references, "official_source_guidance")
     return EvidenceTierCoverageGate(
         tier="official_source_guidance",
         status=_status(source_refs, cross_refs),
@@ -497,14 +650,19 @@ def _source_guidance_gate(snapshot: RegistrySnapshot) -> EvidenceTierCoverageGat
     )
 
 
-def _executable_parity_gate(snapshot: RegistrySnapshot) -> EvidenceTierCoverageGate:
-    source_refs = _sources_for_tier(snapshot, "executable_parity_evidence")
+def _executable_parity_gate(
+    sources: Mapping[SourceRefId, SourceReference],
+    workbook_parity_refs: Iterable[WorkbookParityReference],
+    live_cross_references: Iterable[LiveCrossReferenceDecision],
+) -> EvidenceTierCoverageGate:
+    source_refs = _sources_for_tier(sources, "executable_parity_evidence")
     workbook_refs = _workbook_refs_for_tier(
-        snapshot,
+        sources,
+        workbook_parity_refs,
         coverage_kinds=("formula_form",),
         tier="executable_parity_evidence",
     )
-    cross_refs = _cross_refs_for_tier(snapshot, "executable_parity_evidence")
+    cross_refs = _cross_refs_for_tier(live_cross_references, "executable_parity_evidence")
     return EvidenceTierCoverageGate(
         tier="executable_parity_evidence",
         status=_status(source_refs, workbook_refs, cross_refs),
@@ -515,14 +673,19 @@ def _executable_parity_gate(snapshot: RegistrySnapshot) -> EvidenceTierCoverageG
     )
 
 
-def _layout_authority_gate(snapshot: RegistrySnapshot) -> EvidenceTierCoverageGate:
-    source_refs = _sources_for_tier(snapshot, "layout_authority")
+def _layout_authority_gate(
+    sources: Mapping[SourceRefId, SourceReference],
+    workbook_parity_refs: Iterable[WorkbookParityReference],
+    live_cross_references: Iterable[LiveCrossReferenceDecision],
+) -> EvidenceTierCoverageGate:
+    source_refs = _sources_for_tier(sources, "layout_authority")
     workbook_refs = _workbook_refs_for_tier(
-        snapshot,
+        sources,
+        workbook_parity_refs,
         coverage_kinds=("record_design_layout", "unsupported_binary_xls", "static_layout"),
         tier="layout_authority",
     )
-    cross_refs = _cross_refs_for_tier(snapshot, "layout_authority")
+    cross_refs = _cross_refs_for_tier(live_cross_references, "layout_authority")
     return EvidenceTierCoverageGate(
         tier="layout_authority",
         status=_status(source_refs, workbook_refs, cross_refs),
@@ -533,16 +696,23 @@ def _layout_authority_gate(snapshot: RegistrySnapshot) -> EvidenceTierCoverageGa
     )
 
 
-def _sources_for_tier(snapshot: RegistrySnapshot, tier: EvidenceTier) -> tuple[SourceRefId, ...]:
-    return tuple(sorted(ref for ref, item in snapshot.sources.items() if item.evidence_tier == tier))
+def _sources_for_tier(
+    sources: Mapping[SourceRefId, SourceReference],
+    tier: EvidenceTier,
+) -> tuple[SourceRefId, ...]:
+    return tuple(sorted(ref for ref, item in sources.items() if item.evidence_tier == tier))
 
 
-def _cross_refs_for_tier(snapshot: RegistrySnapshot, tier: EvidenceTier) -> tuple[CrossReferenceId, ...]:
-    return tuple(sorted(ref for ref, item in snapshot.live_cross_references.items() if item.evidence_tier == tier))
+def _cross_refs_for_tier(
+    live_cross_references: Iterable[LiveCrossReferenceDecision],
+    tier: EvidenceTier,
+) -> tuple[CrossReferenceId, ...]:
+    return tuple(sorted(ref.id for ref in live_cross_references if ref.evidence_tier == tier))
 
 
 def _workbook_refs_for_tier(
-    snapshot: RegistrySnapshot,
+    sources: Mapping[SourceRefId, SourceReference],
+    workbook_parity_refs: Iterable[WorkbookParityReference],
     *,
     coverage_kinds: tuple[str, ...],
     tier: EvidenceTier,
@@ -550,14 +720,29 @@ def _workbook_refs_for_tier(
     return tuple(
         sorted(
             ref.id
-            for ref in snapshot.workbook_parity_refs.values()
-            if ref.formula_coverage in coverage_kinds and snapshot.sources[ref.workbook_source].evidence_tier == tier
+            for ref in workbook_parity_refs
+            if ref.formula_coverage in coverage_kinds and sources[ref.workbook_source].evidence_tier == tier
         ),
     )
 
 
 def _status(*values: tuple[object, ...]) -> CoverageGateStatus:
     return "satisfied" if any(values) else "gap"
+
+
+def _revision_is_filing_eligible(
+    revision: ModeloRevision,
+    inspection: RegistryRevisionInspection,
+    legal: Mapping[LegalRefId, LegalReference],
+) -> bool:
+    """Return whether canonical review state permits a filing snapshot fold."""
+    if revision.review_status is not RevisionReviewStatus.OPERATOR_REVIEWED:
+        return False
+    return all(
+        (reference := legal.get(legal_id)) is not None
+        and reference.review_status is LegalReviewStatus.OPERATOR_REVIEWED
+        for legal_id in inspection.legal_ref_ids
+    )
 
 
 def _representative_year(revision: ModeloRevision) -> int:

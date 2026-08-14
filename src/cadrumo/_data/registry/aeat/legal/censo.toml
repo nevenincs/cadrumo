@@ -8,7 +8,7 @@ article = "9"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a9"
 published_at = 2007-09-05
 effective_from = 2008-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "Reglamento General de las actuaciones y los procedimientos de gestion e inspeccion tributaria (RGAT) art 9: declaracion de alta en el Censo de Empresarios, Profesionales y Retenedores. Base reglamentaria del flujo de alta del Modelo 036."
@@ -28,7 +28,7 @@ article = "10"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a10"
 published_at = 2007-09-05
 effective_from = 2008-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "RGAT art 10: declaracion de modificacion en el Censo. Base reglamentaria del flujo de modificacion del Modelo 036 (cambio de domicilio fiscal, variacion de datos censales, inicio de actividad)."
@@ -48,7 +48,7 @@ article = "11"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a11"
 published_at = 2007-09-05
 effective_from = 2008-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "RGAT art 11: declaracion de baja en el Censo. Base reglamentaria del flujo de baja del Modelo 036 (cese de actividad, plazo de un mes, sucesores)."
@@ -68,7 +68,7 @@ article = "6.3"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4163#a6"
 published_at = 2004-03-08
 effective_from = 2011-03-06
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "verified against official BOE-A-2004-4163 consolidated art. 6; corpus excerpt bundled"
 notes = "RDLeg 1/2004 art 6.3 defines the cadastral reference as the alphanumeric identifier assigned to each immovable property and requires that identifier in documents with economic or tax relevance linked to the property. Grounds the fiscal-address cadastral-reference profile/censo field."
@@ -90,7 +90,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9508#ar"
 published_at = 2007-05-10
 effective_from = 2007-07-01
 consolidated_as_of = 2025-02-03
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
 notes = "Articulo 1 de la Orden EHA/1274/2007: aprobacion del Modelo 036 de declaracion censal de alta, modificacion y baja."
@@ -111,7 +111,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9508#ar-2"
 published_at = 2007-05-10
 effective_from = 2007-07-01
 consolidated_as_of = 2025-02-03
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
 notes = "Articulo 2 de la Orden EHA/1274/2007: obligados a presentar declaracion censal y declaracion de baja mediante Modelo 036."
@@ -131,7 +131,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-410#articulo-primero"
 published_at = 2025-01-09
 effective_from = 2025-02-03
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
 notes = "Articulo primero de la Orden HAC/1526/2024: modifica la Orden EHA/1274/2007 para mantener Modelo 036 y suprimir las superficies activas del Modelo 037."
@@ -151,7 +151,7 @@ article = "disposicion final unica"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-410#disposicionfinalunica"
 published_at = 2025-01-09
 effective_from = 2025-02-03
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
 notes = "Disposicion final unica de la Orden HAC/1526/2024: entrada en vigor el 3 de febrero de 2025 para los Modelos 030 y 036."
@@ -208,7 +208,7 @@ article = "25"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a25"
 published_at = 2007-09-05
 effective_from = 2008-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-review"
 notes = "RGAT art 25: especialidades del NIF a efectos del IVA. Establece que para quienes realizan operaciones intracomunitarias el numero de identificacion es el del reglamento anteponiendole EL PREFIJO ES, conforme al estandar ISO-3166 alfa 2. Es la provision que fija el FORMATO IMPRESO del NIF-IVA espanol, y por tanto la base para admitir ES en el vocabulario de prefijos de IDENTIFICACION -- eje distinto del de establecimiento, que se resuelve por pais y codigo postal y para el que ES no resuelve nada por diseno. Se cita porque el resto de prefijos del vocabulario se reconocen validando el cuerpo contra el patron que su prefijo declara, mientras que los identificadores espanoles validan por la letra de control de la AEAT: ES no podia entrar como entraron sus hermanos, y la asimetria resultante dejaba la identificacion del propio declarante solo asertable. CAMBIO DE DOCUMENTO CITADO, 2026-08-13. La entrada citaba rd-1065-2007-art-25.html, una captura del endpoint de articulo que concatena DOS redacciones fechadas (fecha_vigencia 20080101 de BOE-A-2007-15984 y 20100303 de BOE-A-2010-3370) en una sola unidad extraida de 8873 caracteres, de modo que la comprobacion de required_text se ejecutaba contra texto derogado y texto vigente fundidos. Se repunta al documento consolidado empaquetado rd-1065-2007.html, cuya unidad #a25 contiene el articulo vigente y solo el vigente (4619 caracteres, titulo 'Articulo 25. Especialidades del numero de identificacion fiscal de los empresarios...'). Las tres frases de required_text se han verificado presentes en esa unidad leyendo el fichero empaquetado. OBSERVACION NO RESUELTA AQUI: effective_from sigue declarando 2008-01-01, que corresponde a la redaccion original; el texto en vigor procede de BOE-A-2010-3370. Determinar la fecha citable exige leer la nota de la norma modificante y no el atributo fecha_vigencia, que no es la fecha de efectos, por lo que se deja constancia en lugar de cambiarla."

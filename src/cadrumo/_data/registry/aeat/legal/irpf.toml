@@ -8,7 +8,7 @@ article = "85"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a85"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
 notes = "LIRPF art 85: imputacion de rentas inmobiliarias. Tipo general 2 por ciento del valor catastral; tipo reducido 1,1 por ciento cuando los valores catastrales hayan sido revisados en el periodo impositivo o en los diez periodos impositivos anteriores."
@@ -62,7 +62,7 @@ article = "13"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a13"
 published_at = 2007-03-31
 effective_from = 2007-04-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "RIRPF art 13: gastos deducibles de los rendimientos del capital inmobiliario. Detalla las categorias de gasto que reducen el rendimiento integro del capital inmobiliario: intereses y gastos de financiacion, reparacion y conservacion, tributos no estatales, contraprestaciones por servicios, gastos de formalizacion, saldos de dudoso cobro, primas de seguro, suministros y amortizacion. Base reglamentaria del articulo 23 LIRPF y de la seccion rendimientos_capital_inmobiliario > gastos_deducibles del Modelo 100."
@@ -82,7 +82,7 @@ article = "14"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a14"
 published_at = 2007-03-31
 effective_from = 2007-04-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-06-10
 reviewed_by = "operator"
 notes = "RIRPF art 14: gastos de amortizacion de los rendimientos del capital inmobiliario. Fija la efectividad de la amortizacion de inmuebles arrendados en el 3 por ciento sobre el mayor del coste de adquisicion satisfecho o el valor catastral, excluido el suelo. Provision reglamentaria que establece el tipo del 3 por ciento citado por la seccion rendimientos_capital_inmobiliario > gastos_deducibles > amortizacion del Modelo 100 y por AMORTIZACION_INMUEBLE_RATE. Base sustantiva: articulo 23 LIRPF."
@@ -102,7 +102,7 @@ article = "59"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a59"
 published_at = 2007-03-31
 effective_from = 2015-07-12
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-authored from official BOE-A-2007-6820#a59 and bundled rd-439-2007-art-59.html; operator to re-stamp"
 notes = "RIRPF art 59: perdida del derecho a deducir. Obliga a sumar a la cuota liquida estatal y autonomica las deducciones indebidamente practicadas cuando se incumplen requisitos en periodos posteriores, mas intereses de demora del art 26.6 LGT. Base reglamentaria de las casillas M100 0572/0574/0577/0579 y de sus intereses 0573/0576/0578/0581."
@@ -123,7 +123,7 @@ article = "86"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a86"
 published_at = 2007-03-31
 effective_from = 2007-04-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "RIRPF art 86: tipo de retencion. Heart of the personalized retention scheme for trabajo rendimientos. Define el tipo como cuota de retencion / cuantia total de retribuciones (art-83.2) expresado con dos decimales. Aplica tipo cero cuando la base menos el minimo personal-familiar es no positiva, reduccion de 2 puntos para contribuyentes con vivienda-habitual DT-18 (cifra inferior a 33.007,2 EUR), y un suelo del 2 por ciento para contratos de duracion inferior al anio. Base reglamentaria del calculo del tipo personalizado de retencion del trabajo, citado por art-80 RIRPF."
@@ -143,7 +143,7 @@ article = "88"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a88"
 published_at = 2007-03-31
 effective_from = 2007-04-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "RIRPF art 88: comunicacion de datos del perceptor de rentas del trabajo a su pagador. Base reglamentaria del Modelo 145: el perceptor comunica circunstancias personales y familiares al pagador, el pagador conserva la comunicacion firmada, y el contenido se ajusta al modelo aprobado por resolucion del Departamento de Gestion Tributaria de la AEAT."
@@ -164,7 +164,7 @@ article = "80"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a80"
 published_at = 2007-03-31
 effective_from = 2007-04-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "RIRPF art 80: importe de las retenciones sobre rendimientos del trabajo. Establece el regimen de tipos de retencion: regla general personalizada via tablas del art 86; 35 por ciento para retribuciones de administradores y consejeros (reducido al 19 por ciento si la cifra de negocios de la entidad es inferior a 100.000 euros); 15 por ciento para rendimientos por cursos, conferencias, seminarios y obras literarias, artisticas o cientificas. Base reglamentaria de la retencion sobre rendimientos del trabajo en Modelo 111 (trimestral) y Modelo 190 (resumen anual)."
@@ -184,7 +184,7 @@ article = "90"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a90"
 published_at = 2007-03-31
 effective_from = 2007-04-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "RIRPF art 90: importe de las retenciones sobre rendimientos del capital mobiliario. Establece el tipo general del 19 por ciento aplicado a la base de retencion, con reduccion del 60 por ciento para rendimientos amparados en la deduccion del articulo 68.4 LIRPF (sociedades de capital semilla). Base reglamentaria de la retencion sobre rendimientos del capital mobiliario en Modelo 123 (trimestral) y Modelo 193 (resumen anual)."
@@ -204,7 +204,7 @@ article = "75"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a75"
 published_at = 2007-03-31
 effective_from = 2007-04-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-review"
 notes = "RIRPF art 75: rentas sujetas a retención o ingreso a cuenta (apartados 1-2) y rentas exceptuadas de la obligación de retener o ingresar a cuenta por razón de su naturaleza (apartado 3), with carve-backs that restore withholding for some account, coupon, IIC, and art. 7.ñ payment-on-account cases. Grounding for the modelo-123-2024-base-total-implica-retenciones-total ADVISORY guard: Modelo 123 casillas 04/05 declare bases de retención for dividendos/participaciones and resto de rentas del capital mobiliario, so an amount entered as a positive M123 withholding base is not one of the art. 75.3 income classes for which no withholding obligation exists."
@@ -230,7 +230,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a76"
 published_at = 2007-03-31
 effective_from = 2017-12-30
 consolidated_as_of = 2026-08-05
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-05
 reviewed_by = "agent-authored from live BOE consolidated text BOE-A-2007-6820 retrieved 2026-08-05; operator to re-stamp"
 notes = """RIRPF art 76: obligados a retener o ingresar a cuenta. Fixes WHO bears the \
@@ -280,7 +280,7 @@ article = "95"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a95"
 published_at = 2007-03-31
 effective_from = 2007-04-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "RIRPF art 95: importe de las retenciones sobre rendimientos de actividades economicas. El apartado 1 establece el tipo del 15 por ciento general para actividades profesionales, el tipo reducido del 7 por ciento para nuevos profesionales (inicio + dos siguientes) y para colectivos especificos (recaudadores municipales, mediadores de seguros con auxiliares, delegados comerciales SELAE, actividades artisticas de los grupos IAE 851, 852, 853, 861, 862, 864 y 869 de la seccion segunda y agrupaciones 01, 02, 03 y 05 de la seccion tercera, sujetas a una prueba de ingresos de dos partes: menos de 15.000 euros el ejercicio anterior Y mas del 75 por ciento de los rendimientos integros de actividades economicas y trabajo). Los apartados 4, 5 y 6.1 fijan los tipos sectoriales: 2 por ciento agricola/ganadero general con carve-out del 1 por ciento para engorde de porcino y avicultura (apartado 4), 2 por ciento forestal (apartado 5) y 1 por ciento en estimacion objetiva (apartado 6.1). Base reglamentaria de la retencion sobre rendimientos de actividades economicas en Modelo 111 y del credito de pagos a cuenta en Modelo 130."
@@ -304,7 +304,7 @@ article = "108"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a108"
 published_at = 2007-03-31
 effective_from = 2007-04-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "RIRPF art 108: obligaciones formales del retenedor y del obligado a ingresar a cuenta. Establece la obligacion de presentar declaracion-liquidacion trimestral de las cantidades retenidas e ingresadas (M111, M115, M123, art-71 RIVA enlaza mensual cuando aplica), la declaracion negativa, y la declaracion anual resumen (M180, M190, M193). Base reglamentaria comun de los modelos de retencion IRPF."
@@ -324,7 +324,7 @@ article = "110"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a110"
 published_at = 2007-03-31
 effective_from = 2007-03-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "verified against official BOE-A-2007-6820#a110 and bundled rd-439-2007-art-110.html; operator to re-stamp"
 notes = "Base reglamentaria del importe del pago fraccionado de actividades economicas: 20 por ciento para estimacion directa, escala 4/3/2 por ciento para estimacion objetiva con datos-base, regla sin datos-base al 2 por ciento, actividades agrarias al 2 por ciento, minoraciones y porcentajes superiores. Para la revision 2019-y-siguientes, la regla especifica de resultados negativos de trimestres anteriores del Modelo 130 se verifica contra las instrucciones AEAT del modelo; no contra un apartado 110.5 vigente."
@@ -352,7 +352,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-4948#a1"
 published_at = 2011-03-18
 effective_from = 2011-04-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
 notes = "Aprobacion del modelo 111 — autoliquidacion de retenciones e ingresos a cuenta del IRPF sobre rendimientos del trabajo, actividades economicas, premios, determinadas ganancias patrimoniales e imputaciones de renta. Foundational orden for the Modelo 111 quarterly retenciones return."
@@ -372,7 +372,7 @@ article = "primero"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-21430"
 published_at = 2000-11-28
 effective_from = 2001-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "Aprobacion del modelo 115 — declaracion-documento de ingreso de retenciones e ingresos a cuenta sobre rentas o rendimientos procedentes del arrendamiento o subarrendamiento de inmuebles urbanos. Foundational orden for the Modelo 115 quarterly return."
@@ -392,7 +392,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032"
 published_at = 2007-03-22
 effective_from = 2007-04-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "verified against bundled orden-eha-672-2007.html#a1 and official BOE-A-2007-6032#a1; operator to re-stamp"
 notes = "Orden EHA/672/2007 art 1: aprobacion del Modelo 130 para pagos fraccionados IRPF de actividades economicas en estimacion directa. Article 3 is the separate Modelo 131 approval authority."
@@ -412,7 +412,7 @@ article = "3"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032#a3"
 published_at = 2007-03-22
 effective_from = 2007-04-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "verified against bundled orden-eha-672-2007.html#a3 and official BOE-A-2007-6032#a3; operator to re-stamp"
 notes = "Orden EHA/672/2007 art 3: aprobacion del Modelo 131 para pagos fraccionados IRPF de actividades economicas en estimacion objetiva."
@@ -432,7 +432,7 @@ article = "68.1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
 notes = "Deduccion por inversion en empresas de nueva o reciente creacion. 50 per cent of amounts paid in the period for the subscription of shares or holdings in new or recent-creation enterprises, subject to the conditions set out in the sub-paragraphs 2 and 3, plus contribution of business or professional knowledge per the investment agreement. Maximum annual deduction base is 100,000 euros."
@@ -452,7 +452,7 @@ article = "68.2"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
 notes = "Deducciones en actividades economicas. Cross-references the Impuesto sobre Sociedades incentives and inversion empresarial regime at equal percentages and limits, with carve-outs for the IS article 39 paragraphs 2 and 3. Adds a Modelo-100-specific 5 per cent (or 2.5 per cent) reinversion-of-net-business-income deduction for taxpayers meeting the Impuesto sobre Sociedades art. 101 requirements."
@@ -473,7 +473,7 @@ article = "68.3"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
 notes = "Deducciones por donativos y otras aportaciones. Three concurrent regimes: (a) Ley 49/2002 mecenazgo deductions; (b) 10 per cent of donations to legally recognised foundations and public-utility associations not covered by Ley 49/2002; (c) 20 per cent of party-affiliation fees and political contributions with a 600 euro annual base cap."
@@ -494,7 +494,7 @@ article = "68.4"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Deduccion por rentas obtenidas en Ceuta o Melilla, including economic activities effectively carried out there."
@@ -514,7 +514,7 @@ article = "68.5"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
 notes = "Deduccion por actuaciones para la proteccion y difusion del Patrimonio Historico Espanol y de las ciudades, conjuntos y bienes declarados Patrimonio Mundial. 15 per cent of investments or expenses for: (a) acquisition of Patrimonio Historico Espanol assets from abroad with permanence + cultural-interest declaration requirements; (b) conservation/restoration/exhibition of bienes de interes cultural; (c) rehabilitation of buildings in protected city perimeters or Patrimonio Mundial sites."
@@ -535,7 +535,7 @@ article = "69"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a69"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
 notes = "Limites de determinadas deducciones. Caps the base of the art. 68.3 (donativos) and art. 68.5 (Patrimonio Historico) deductions at 10 per cent of the contribuyente's base liquidable. The limits on art. 68.2 (actividades economicas) follow the Impuesto sobre Sociedades incentivos regime and are computed after subtracting art. 68.1 (empresas nueva creacion) and art. 68.5 (Patrimonio Historico) from the combined estatal + autonomica cuota integra."
@@ -556,7 +556,7 @@ permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2018-16340"
 published_at = 2018-11-30
 effective_from = 2019-01-01
 effective_to = 2019-12-31
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2019."
@@ -577,7 +577,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2019-17252"
 published_at = 2019-11-30
 effective_from = 2020-01-01
 effective_to = 2020-12-31
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2020."
@@ -598,7 +598,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2020-15599"
 published_at = 2020-12-04
 effective_from = 2021-01-01
 effective_to = 2021-12-31
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2021."
@@ -619,7 +619,7 @@ permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2021-19904"
 published_at = 2021-12-02
 effective_from = 2022-01-01
 effective_to = 2022-12-31
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2022."
@@ -640,7 +640,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
 published_at = 2022-12-01
 effective_from = 2023-01-01
 effective_to = 2023-12-31
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2023."
@@ -661,7 +661,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
 published_at = 2023-12-21
 effective_from = 2024-01-01
 effective_to = 2024-12-31
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2024."
@@ -682,7 +682,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
 published_at = 2023-12-21
 effective_from = 2024-01-01
 effective_to = 2024-12-31
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Reduccion especial 2024 para actividades en estimacion objetiva desarrolladas en el termino municipal de Lorca."
@@ -703,7 +703,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
 published_at = 2023-12-21
 effective_from = 2024-01-01
 effective_to = 2024-12-31
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Reduccion especial 2024 para actividades en estimacion objetiva desarrolladas en la Isla de La Palma."
@@ -724,7 +724,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
 published_at = 2023-12-21
 effective_from = 2024-01-01
 effective_to = 2024-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-15
 reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
 notes = "Reduccion general del 5 por ciento del rendimiento neto de modulos para 2024, aplicable tambien para cuantificar el rendimiento neto a efectos de los pagos fraccionados (M131) de 2024 (apartado 3)."
@@ -745,7 +745,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
 published_at = 2023-12-21
 effective_from = 2024-01-01
 effective_to = 2024-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-15
 reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
 notes = "Fase 2a: minoracion por incentivos al empleo. El rendimiento neto previo se minora en el coeficiente de minoracion (incremento del modulo personal asalariado x 0,40, mas el coeficiente por tramos del numero de unidades restante) multiplicado por el rendimiento anual por unidad del modulo personal asalariado. Cross-checked byte-identical against the AEAT Manual practico de Renta 2024, Parte 1."
@@ -767,7 +767,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
 published_at = 2023-12-21
 effective_from = 2024-01-01
 effective_to = 2024-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-15
 reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
 notes = "Fase 2a: minoracion por incentivos a la inversion. Son deducibles las cantidades que, en concepto de amortizacion del inmovilizado material o intangible afecto a la actividad, correspondan a la depreciacion efectiva, calculada segun la tabla de amortizacion de la propia orden (coeficiente lineal maximo, minimo derivado del periodo maximo, o cualquier coeficiente intermedio). El primer slice del motor no modela un registro de bienes de inversion por elemento; la minoracion se recoge como un importe declarado por el operador, grounded en esta instruccion, y se resta del rendimiento neto previo junto con la minoracion por incentivos al empleo."
@@ -788,7 +788,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
 published_at = 2023-12-21
 effective_from = 2024-01-01
 effective_to = 2024-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-15
 reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
 notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantia tabulada para la actividad, al exceso sobre dicha cuantia se le aplica el indice 1,30. Cross-checked byte-identical against the AEAT Manual practico de Renta 2024, Parte 1 (cuantia 30.586,03 euros, epigrafe 673.1)."
@@ -808,7 +808,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
 published_at = 2023-12-21
 effective_from = 2024-01-01
 effective_to = 2024-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-15
 reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
 notes = "Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de pequena dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el indice b.1 tampoco se aplica el indice corrector de exceso (b.3); el indice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre si. El motor de modulos M131 2024 (0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml, m131_resolve_modulos_indices_generales) aplica los cuatro indices generales (b.1, b.2, b.4, b.3) en el orden de la propia Orden y hace cumplir estructuralmente las tres incompatibilidades, en paralelo al motor 2025 grounded en orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades."
@@ -829,7 +829,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
 published_at = 2023-12-21
 effective_from = 2024-01-01
 effective_to = 2024-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-15
 reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
 notes = "Fase 3a: indice corrector para empresas de pequena dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 segun la poblacion del municipio, o 0,90 si ademas hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona fisica, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90). Cross-checked byte-identical against the bundled orden-hfp-1359-2023.html (Anexo II, instruccion 2.3.b.1)."
@@ -850,7 +850,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
 published_at = 2023-12-21
 effective_from = 2024-01-01
 effective_to = 2024-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-15
 reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
 notes = "Fase 3a: indice corrector de temporada. Cuando la actividad tenga la consideracion de actividad de temporada (se desarrolla habitualmente solo ciertos dias del ano, continuos o alternos, sin exceder de 180 dias por ano) se aplica el indice 1,50 (hasta 60 dias), 1,35 (de 61 a 120 dias) o 1,25 (de 121 a 180 dias). Incompatible con el indice corrector por inicio de nuevas actividades (b.4). Cross-checked byte-identical against the bundled orden-hfp-1359-2023.html (Anexo II, instruccion 2.3.b.2)."
@@ -870,7 +870,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
 published_at = 2023-12-21
 effective_from = 2024-01-01
 effective_to = 2024-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-15
 reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
 notes = "Fase 3a: indice corrector por inicio de nuevas actividades. El contribuyente que inicie una nueva actividad a partir del 1 de enero de 2023, que no sea de temporada, no ejercida previamente bajo otra titularidad, y realizada en local exclusivo, aplica el indice 0,80 (primer ejercicio) / 0,90 (segundo ejercicio), o 0,60 / 0,70 si el contribuyente tiene una discapacidad de grado igual o superior al 33 por ciento. Incompatible con el indice corrector de temporada (b.2). Cross-checked byte-identical against the bundled orden-hfp-1359-2023.html (Anexo II, instruccion 2.3.b.4)."
@@ -891,7 +891,7 @@ published_at = 2024-11-12
 effective_from = 2024-11-13
 effective_to = 2024-12-31
 consolidated_as_of = 2026-08-13
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
 notes = "Reduccion DANA 2024 para actividades economicas en estimacion objetiva en municipios afectados; fundamenta el APARTADO 1 del articulo, que opera sobre el rendimiento neto de modulos del IRPF. El apartado 2 del mismo articulo reduce la cuota devengada por operaciones corrientes del regimen simplificado del IVA y tiene su propia entrada, real-decreto-ley-7-2024:art-11.2. CAMBIO DE CORPUS. corpus_ref apuntaba a un extracto recortado a mano del articulo que perdia su ultima frase (la que declara que la reduccion se computa sobre la cuota ANUAL del regimen simplificado); apunta ahora al documento consolidado integro ya empaquetado, cuyo bloque a1-3 es el mismo articulo completo. Ninguna de las tres frases de required_text cambia de resultado: se verificaron contra el bloque nuevo antes del cambio. FECHA DE CONSOLIDACION. consolidated_as_of pasa de 2025-10-29 a 2026-08-13. El 2025-10-29 fechaba el extracto recortado que se retiro y no viajo con el cambio de puntero; las bytes que ahora se citan son las del documento consolidado empaquetado (sha256 13615f1354c9644aeccd62170c60a147e2b18a3d8211bea33c7d387bd63e6eb6), cotejadas contra el texto en vigor servido por boe.es el 2026-08-13. La entrada real-decreto-ley-7-2024:art-11.2 del catalogo del IVA cita esas mismas bytes: una sola fecha para unas mismas bytes. PROVENANCIA DE LA REVISION. El operador reviso esta entrada el 2026-05-05, pero reviso el extracto recortado y una nota de una linea; ni el puntero de evidencia actual ni esta prosa pasaron por sus manos. reviewed_by lo declara asi y queda pendiente de re-sello por operador."
@@ -912,7 +912,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-12944"
 published_at = 2024-06-27
 effective_from = 2024-06-28
 effective_to = 2024-12-31
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Extends Ley 35/2006 additional provision 57 La Palma article 68.4 deduction treatment to the 2024 tax period."
@@ -933,7 +933,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
 published_at = 2024-11-30
 effective_from = 2025-01-01
 effective_to = 2025-12-31
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2025."
@@ -954,7 +954,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
 published_at = 2024-11-30
 effective_from = 2025-01-01
 effective_to = 2025-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-02
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = "Reduccion general del 5 por ciento del rendimiento neto de modulos para 2025, aplicable tambien para cuantificar el rendimiento neto a efectos de los pagos fraccionados (M131) de 2025 (apartado 3)."
@@ -975,7 +975,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
 published_at = 2024-11-30
 effective_from = 2025-01-01
 effective_to = 2025-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = "Fase 2a: minoracion por incentivos al empleo. El rendimiento neto previo se minora en el coeficiente de minoracion (incremento del modulo personal asalariado x 0,40, mas el coeficiente por tramos del numero de unidades restante) multiplicado por el rendimiento anual por unidad del modulo personal asalariado. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, Parte 1, worked example epigrafe 673.1."
@@ -997,7 +997,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
 published_at = 2024-11-30
 effective_from = 2025-01-01
 effective_to = 2025-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = "Fase 2a: minoracion por incentivos a la inversion. Son deducibles las cantidades que, en concepto de amortizacion del inmovilizado material o intangible afecto a la actividad, correspondan a la depreciacion efectiva, calculada segun la tabla de amortizacion de la propia orden (coeficiente lineal maximo, minimo derivado del periodo maximo, o cualquier coeficiente intermedio). El primer slice del motor no modela un registro de bienes de inversion por elemento; la minoracion se recoge como un importe declarado por el operador, grounded en esta instruccion, y se resta del rendimiento neto previo junto con la minoracion por incentivos al empleo. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, Parte 1, worked example epigrafe 673.1 (minoracion por incentivos a la inversion 6.050,00 euros, libro registro de bienes de inversion)."
@@ -1018,7 +1018,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
 published_at = 2024-11-30
 effective_from = 2025-01-01
 effective_to = 2025-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantia tabulada para la actividad, al exceso sobre dicha cuantia se le aplica el indice 1,30. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, Parte 1, worked example epigrafe 673.1 (cuantia 30.586,03 euros)."
@@ -1038,7 +1038,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
 published_at = 2024-11-30
 effective_from = 2025-01-01
 effective_to = 2025-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = "Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de pequena dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el indice b.1 tampoco se aplica el indice corrector de exceso (b.3); el indice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre si. El motor de modulos M131 (0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml, m131_resolve_modulos_indices_generales) aplica ahora los cuatro indices generales (b.1, b.2, b.4, b.3) en el orden de la propia Orden y hace cumplir estructuralmente las tres incompatibilidades: el indice b.1 declarado se ignora para las dos actividades tabuladas con indice especial (721.2 transporte por autotaxis, 722 transporte de mercancias); cuando b.1 se aplica, b.3 se omite; cuando ambos b.2 y b.4 se declaran, prevalece la temporada (orden de enumeracion de la Orden) y se ignora el inicio de nuevas actividades. Dos indicadores internos (modulos-pequena-dimension-ignorado-flag, modulos-temporada-inicio-actividad-conflicto-flag) fundamentan los advisories no bloqueantes que senalan al operador cuando una de sus declaraciones fue ignorada, per no-silent-under-declaration. El motor M100 (0293-...-rendimiento-base.toml) sigue modelando unicamente su propio cascade agrario (indices 1-8, Anexo I instruccion 2.3), sin relacion con este Anexo II."
@@ -1059,7 +1059,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
 published_at = 2024-11-30
 effective_from = 2025-01-01
 effective_to = 2025-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = "Fase 3a: indice corrector para empresas de pequena dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 segun la poblacion del municipio, o 0,90 si ademas hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona fisica, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90). Cross-checked byte-identical against the bundled orden-hac-1347-2024.html (Anexo II, instruccion 2.3.b.1)."
@@ -1080,7 +1080,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
 published_at = 2024-11-30
 effective_from = 2025-01-01
 effective_to = 2025-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = "Fase 3a: indice corrector de temporada. Cuando la actividad tenga la consideracion de actividad de temporada (se desarrolla habitualmente solo ciertos dias del ano, continuos o alternos, sin exceder de 180 dias por ano) se aplica el indice 1,50 (hasta 60 dias), 1,35 (de 61 a 120 dias) o 1,25 (de 121 a 180 dias). Incompatible con el indice corrector por inicio de nuevas actividades (b.4). Cross-checked byte-identical against the bundled orden-hac-1347-2024.html (Anexo II, instruccion 2.3.b.2)."
@@ -1100,7 +1100,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
 published_at = 2024-11-30
 effective_from = 2025-01-01
 effective_to = 2025-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = "Fase 3a: indice corrector por inicio de nuevas actividades. El contribuyente que inicie una nueva actividad a partir del 1 de enero de 2024, que no sea de temporada, no ejercida previamente bajo otra titularidad, y realizada en local exclusivo, aplica el indice 0,80 (primer ejercicio) / 0,90 (segundo ejercicio), o 0,60 / 0,70 si el contribuyente tiene una discapacidad de grado igual o superior al 33 por ciento. Incompatible con el indice corrector de temporada (b.2). Cross-checked byte-identical against the bundled orden-hac-1347-2024.html (Anexo II, instruccion 2.3.b.4)."
@@ -1120,7 +1120,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
 published_at = 2024-11-30
 effective_from = 2025-01-01
 effective_to = 2025-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = "Fase 1a agraria: rendimiento neto previo. Para cada actividad agricola, ganadera o forestal independiente, el rendimiento neto previo se obtiene multiplicando el volumen total de ingresos (incluidas subvenciones e indemnizaciones) del cultivo o explotacion por el indice de rendimiento neto que corresponda a ese producto o servicio, por el cuadro codigo-producto de indices aprobado en este mismo Anexo I. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, Parte 1, Capitulo 9, worked example \"Determinacion del rendimiento neto previo de la actividad\" (Dona M.J.I., manzanas / frutos no citricos, codigo 12: ingresos 18.030,00 euros x indice 0,37 = rendimiento neto previo 6.671,10 euros)."
@@ -1141,7 +1141,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
 published_at = 2024-11-30
 effective_from = 2025-01-01
 effective_to = 2025-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = "Fase 2a agraria: rendimiento neto minorado. El rendimiento neto minorado se obtiene deduciendo del rendimiento neto previo (fase 1a) las cantidades que, en concepto de amortizacion del inmovilizado material e intangible (excluidas las actividades forestales), correspondan a la depreciacion efectiva que sufran los distintos elementos afectos por funcionamiento, uso, disfrute u obsolescencia, calculada elemento por elemento conforme a la tabla de amortizacion de este mismo Anexo I (para grupos no tabulados en el Anexo I, la orden remite a la letra b) del punto 2.2 del Anexo II). El primer slice del motor no modela un registro de bienes de inversion por elemento (valor de adquisicion, coeficiente, periodo transcurrido por bien); la amortizacion se recoge como un importe declarado por el operador, grounded en esta instruccion, y se resta del rendimiento neto previo (casilla 1538 del Modelo 100, minorando la casilla 1537 para obtener la casilla 1539). Mismo patron honesto-escalar que la minoracion por incentivos a la inversion del motor de modulos del Anexo II (instruccion 2.2.b), ver orden-hac-1347-2024:instruccion-2-2-b."
@@ -1162,7 +1162,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
 published_at = 2024-11-30
 effective_from = 2025-01-01
 effective_to = 2025-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = "Fase 3a agraria: rendimiento neto de modulos. Sobre el rendimiento neto minorado (fase 2a) se aplican, cuando corresponda, los indices correctores letras a) a i) de esta instruccion, cada uno sobre el rendimiento minorado o, en su caso, sobre el ya rectificado por los indices anteriores (aplicacion secuencial, no simultanea, siguiendo el orden de letras del Anexo). El motor implementa las letras a) a h) (indices 1 a 8, casillas 1540-1547 del Modelo 100: medios de produccion ajenos 0,75; personal asalariado 0,90/0,85/0,80/0,75 por tramos; tierras arrendadas 0,90; piensos de terceros 0,50; agricultura ecologica 0,95; regadio electrico 0,75; pequena empresa (rendimiento minorado <= 9.447,91 euros) 0,90; forestales 0,80) sobre la casilla 1539 para obtener la casilla 1548 (rendimiento neto de modulos); el indice 9 (mejillon en batea, letra i) se aplica en un producto separado (casilla 0160) fuera de esta cascada. Cada indice es un valor P012 declarado por el operador/preparador segun el Diseno de Registros AEAT (aeat-dr-100-2025-dictionary, campos E5AI1-E5AI8); una casilla en blanco no aplica ningun indice (factor neutro), nunca fabrica una reduccion no declarada. Si el rendimiento neto minorado no es positivo, no se aplica ningun indice corrector (principio general de estimacion objetiva, ver el paralelo Anexo II instruccion 2.3 aplicado por el motor de modulos M131)."
@@ -1183,7 +1183,7 @@ permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
 published_at = 2024-11-30
 effective_from = 2025-01-01
 effective_to = 2025-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = "Fase 4a agraria: reduccion agricultores jovenes. Los agricultores jovenes o asalariados agrarios podran reducir el rendimiento neto de modulos correspondiente a su actividad agraria en un 25 por ciento durante los periodos impositivos cerrados durante los cinco anos siguientes a su primera instalacion como titulares de una explotacion prioritaria (capitulo IV, titulo I, Ley 19/1995), siempre que acrediten un plan de mejora de la explotacion. Desarrolla, para el ejercicio 2025, la disposicion adicional sexta de la Ley del IRPF (ley-35-2006:da-6). Base legal de la casilla 1551 del Modelo 100 2025 (motor: percent(1550, 25) cuando la casilla informativa AJ del Diseno de Registros AEAT declara la elegibilidad; en blanco/No no se fabrica ninguna reduccion)."
@@ -1203,7 +1203,7 @@ permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-23911"
 published_at = 2025-11-26
 effective_from = 2025-11-27
 effective_to = 2025-12-31
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Extends Ley 35/2006 additional provision 57 La Palma article 68.4 deduction treatment to the 2025 tax period."
@@ -1224,7 +1224,7 @@ permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
 published_at = 2025-12-11
 effective_from = 2026-01-01
 effective_to = 2026-12-31
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2026."
@@ -1245,7 +1245,7 @@ permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
 published_at = 2025-12-11
 effective_from = 2026-01-01
 effective_to = 2026-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp"
 notes = "Reduccion general del 5 por ciento del rendimiento neto de modulos para 2026, aplicable tambien para cuantificar el rendimiento neto a efectos de los pagos fraccionados (M131) de 2026 (apartado 3). Cross-checked byte-identical against the 2025 disposicion (orden-hac-1347-2024:da-1): same 5 por ciento figure."
@@ -1266,7 +1266,7 @@ permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
 published_at = 2025-12-11
 effective_from = 2026-01-01
 effective_to = 2026-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp"
 notes = "Fase 2a: minoracion por incentivos al empleo. El rendimiento neto previo se minora en el coeficiente de minoracion (incremento del modulo personal asalariado x 0,40, mas el coeficiente por tramos del numero de unidades restante) multiplicado por el rendimiento anual por unidad del modulo personal asalariado. Cross-checked byte-identical against the 2025 instruccion (orden-hac-1347-2024:instruccion-2-2-a): same coeficiente 0,40 and tramos schedule (0,10/0,15/0,20/0,25/0,30)."
@@ -1288,7 +1288,7 @@ permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
 published_at = 2025-12-11
 effective_from = 2026-01-01
 effective_to = 2026-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp"
 notes = "Fase 2a: minoracion por incentivos a la inversion. Son deducibles las cantidades que, en concepto de amortizacion del inmovilizado material o intangible afecto a la actividad, correspondan a la depreciacion efectiva, calculada segun la tabla de amortizacion de la propia orden (coeficiente lineal maximo, minimo derivado del periodo maximo, o cualquier coeficiente intermedio). El primer slice del motor no modela un registro de bienes de inversion por elemento; la minoracion se recoge como un importe declarado por el operador, grounded en esta instruccion, y se resta del rendimiento neto previo junto con la minoracion por incentivos al empleo."
@@ -1309,7 +1309,7 @@ permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
 published_at = 2025-12-11
 effective_from = 2026-01-01
 effective_to = 2026-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp"
 notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantia tabulada para la actividad, al exceso sobre dicha cuantia se le aplica el indice 1,30. Cross-checked byte-identical against the 2025 instruccion (orden-hac-1347-2024:instruccion-2-3-b-3): same indice 1,30 and per-actividad cuantias for every currently tabled epigrafe (972.1, 721.2, 722, 671.4, 671.5, 672.1, 673.1, 673.2)."
@@ -1329,7 +1329,7 @@ permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
 published_at = 2025-12-11
 effective_from = 2026-01-01
 effective_to = 2026-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp"
 notes = "Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de pequena dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el indice b.1 tampoco se aplica el indice corrector de exceso (b.3). El motor de modulos M131 (0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml) modela unicamente el indice de exceso (b.3) en este primer slice para 2026, sin cruzar la incompatibilidad con los indices especiales a.2/a.4 de las actividades tabuladas que los llevan asignados (721.2 transporte por autotaxis, 722 transporte de mercancias por carretera); esta entrada fundamenta el advisory no bloqueante que senala esa brecha al operador, per orden-hac-1425-2025-Anexo-II-instruccion-2-3 y no-silent-under-declaration. Cross-checked byte-identical against the 2025 instruccion (orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades)."
@@ -1349,7 +1349,7 @@ article = "99"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a99"
 published_at = 2006-11-29
 effective_from = 2016-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 99: obligacion general de practicar pagos a cuenta del IRPF. Define los pagos a cuenta como retenciones, ingresos a cuenta y pagos fraccionados; obliga a retenedores/pagadores a practicar retencion e ingreso a cuenta; y obliga a contribuyentes con actividades economicas a efectuar pagos fraccionados."
@@ -1373,7 +1373,7 @@ article = "30"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a30"
 published_at = 2007-03-31
 effective_from = 2007-03-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "RIRPF art 30: reglas de estimacion directa simplificada para actividades economicas. Grounded in the bundled BOE HTML excerpt for the 5 percent difficult-to-justify-expenses rate and 2,000 EUR annual cap."
@@ -1394,7 +1394,7 @@ article = "31"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a31"
 published_at = 2007-03-31
 effective_from = 2007-04-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-27
 reviewed_by = "agent-review"
 notes = "RIRPF art 31: entidades en regimen de atribucion. Establece la aplicacion de la modalidad simplificada de estimacion directa a actividades economicas desarrolladas por entidades de atribucion de rentas cuando todos sus miembros sean contribuyentes IRPF y la entidad cumpla los requisitos reglamentarios."
@@ -1415,7 +1415,7 @@ article = "39"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a39"
 published_at = 2007-03-31
 effective_from = 2007-04-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-27
 reviewed_by = "agent-review"
 notes = "RIRPF art 39: entidades en regimen de atribucion. Establece la aplicacion del metodo de estimacion objetiva a actividades economicas desarrolladas por entidades de atribucion de rentas, con independencia de las circunstancias individuales de sus miembros y con reglas de computo del ambito de aplicacion."
@@ -1436,7 +1436,7 @@ article = "109"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a109"
 published_at = 2007-03-31
 effective_from = 2007-03-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-27
 reviewed_by = "agent-review"
 notes = "RIRPF art 109: obligados al pago fraccionado. Establece que los contribuyentes que ejercen actividades economicas autoliquidan e ingresan pagos fraccionados de IRPF y recoge las excepciones por retenciones o ingresos a cuenta iguales o superiores al 70 por ciento."
@@ -1457,7 +1457,7 @@ article = "100"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a100"
 published_at = 2007-03-31
 effective_from = 2018-12-23
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "RIRPF art 100: base reglamentaria del importe de las retenciones sobre arrendamientos y subarrendamientos de inmuebles urbanos. Current consolidated text sets the 19 percent withholding rate on amounts paid to the lessor, excluding IVA, and the 60 percent Ceuta/Melilla reduction."
@@ -1478,7 +1478,7 @@ section = "Anexo I"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485#ai"
 published_at = 2007-11-29
 effective_from = 2019-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-review"
 notes = "Aprobacion del Modelo 117 como autoliquidacion periodica de retenciones, ingresos a cuenta y pagos a cuenta sobre rentas o ganancias por transmisiones o reembolsos de participaciones de IIC y transmisiones de derechos de suscripcion."
@@ -1498,7 +1498,7 @@ section = "Anexo II"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485#ai-2"
 published_at = 2007-11-29
 effective_from = 2008-04-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Aprobacion de Modelo 123 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario y determinadas rentas."
@@ -1518,7 +1518,7 @@ section = "Anexo IV"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485#ai-4"
 published_at = 2007-11-29
 effective_from = 2008-04-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-review"
 notes = "Aprobacion del Modelo 126 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y rentas por la contraprestacion de cuentas en instituciones financieras."
@@ -1534,7 +1534,7 @@ section = "Anexo V"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485#av"
 published_at = 2007-11-29
 effective_from = 2008-04-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-review"
 notes = "Aprobacion del Modelo 128 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre rentas o rendimientos del capital mobiliario procedentes de operaciones de capitalizacion y contratos de seguro."
@@ -1551,7 +1551,7 @@ section = "Anexo I"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-1772"
 published_at = 2024-01-31
 effective_from = 2024-02-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Sustituye el anexo II de Orden EHA/3435/2007 para Modelo 123 y desglosa dividendos y otras rentas de participacion frente al resto de rentas."
@@ -1572,7 +1572,7 @@ section = "Anexo III"
 permalink = "https://www.boe.es/eli/es/o/2014/09/24/hap1732"
 published_at = 2014-09-26
 effective_from = 2014-09-27
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Sustituye el anexo VI de la Orden de 20 de noviembre de 2000 para los disenos fisicos y logicos del Modelo 180."
@@ -1593,7 +1593,7 @@ section = "Modelo 180"
 permalink = "https://www.boe.es/eli/es/o/2023/11/28/hfp1284"
 published_at = 2023-11-30
 effective_from = 2023-12-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Actualiza campos del registro de perceptor del Modelo 180 para identificar Isla de La Palma."
@@ -1614,7 +1614,7 @@ article = "apartado-primero"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1999-22372"
 published_at = 1999-11-20
 effective_from = 1999-11-21
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-27
 reviewed_by = "agent-authored from BOE-A-1999-22372 downloaded from boe.es; operator to re-stamp"
 notes = "Orden de 17 de noviembre de 1999 apartado Primero: aprueba los modelos 128 de declaracion-documento de ingreso."
@@ -1633,7 +1633,7 @@ article = "apartado-quinto"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1999-22372"
 published_at = 1999-11-20
 effective_from = 1999-11-21
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-27
 reviewed_by = "agent-authored from BOE-A-1999-22372 downloaded from boe.es; operator to re-stamp"
 notes = "Orden de 17 de noviembre de 1999 apartado Quinto: aprueba los modelos 188 del resumen anual de retenciones e ingresos a cuenta."
@@ -1652,7 +1652,7 @@ article = "apartado-cuarto"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1999-22309"
 published_at = 1999-11-19
 effective_from = 1999-11-20
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-27
 reviewed_by = "agent-authored from BOE-A-1999-22309 downloaded from boe.es; operator to re-stamp"
 notes = "Orden de 18 de noviembre de 1999 apartado Cuarto: aprueba los modelos 193 y 194 del resumen anual de retenciones e ingresos a cuenta."
@@ -1671,7 +1671,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-9225#a1"
 published_at = 2014-09-10
 effective_from = 2014-09-11
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-27
 reviewed_by = "agent-authored from BOE-A-2014-9225#a1 downloaded from boe.es; operator to re-stamp"
 notes = "Orden HAP/1608/2014 articulo 1: aprueba el modelo 187 y sus disenos fisicos y logicos. Bundled because modelos 187, 188 and 194 previously cited orden-eha-3377-2011:art-1, whose own text approves modelo 193; that entry is correct and the citations to it were not."
@@ -1691,7 +1691,7 @@ section = "Anexos I y II"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396#a1"
 published_at = 2011-12-12
 effective_from = 2011-12-13
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Aprobacion del Modelo 193 y de sus disenos fisicos y logicos para resumen anual de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y determinadas rentas."
@@ -1712,7 +1712,7 @@ section = "Modelo 190"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567#a1"
 published_at = 2009-11-23
 effective_from = 2009-11-24
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Aprobacion del Modelo 190 como resumen anual de retenciones e ingresos a cuenta de IRPF sobre rendimientos del trabajo, actividades economicas, premios, ganancias patrimoniales e imputaciones de renta."
@@ -1733,7 +1733,7 @@ section = "Modelo 190"
 permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25390"
 published_at = 2025-12-12
 effective_from = 2025-12-13
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Modifica la Orden EHA/3127/2009 para el Modelo 190 y aplica por primera vez al ejercicio 2025 y siguientes."
@@ -2319,7 +2319,7 @@ article = "27"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a27"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 27: define los rendimientos integros de actividades economicas por la ordenacion por cuenta propia de medios de produccion o recursos humanos y concreta el arrendamiento de inmuebles como actividad economica cuando existe al menos una persona empleada a jornada completa."
@@ -2339,7 +2339,7 @@ article = "28"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a28"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 28: fija las reglas generales de calculo del rendimiento neto de actividades economicas, remitiendo a las normas del Impuesto sobre Sociedades y separando las ganancias o perdidas de elementos patrimoniales afectos."
@@ -2360,7 +2360,7 @@ article = "29"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a29"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a29; operator to re-stamp"
 notes = "LIRPF art 29 defines elementos patrimoniales afectos to an economic activity, including business premises and partially used assets. Grounds censo establishment type and activity-affectation profile selectors."
@@ -2380,7 +2380,7 @@ article = "30"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a30"
 published_at = 2006-11-29
 effective_from = 2018-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 30: regula la determinacion del rendimiento neto de actividades economicas por estimacion directa, sus modalidades normal y simplificada, y reglas especiales de gastos deducibles."
@@ -2402,7 +2402,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#da-12"
 published_at = 2006-11-29
 effective_from = 2023-01-01
 effective_to = 2023-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "agent-review"
 notes = "LIRPF disposición adicional 56ª: eleva exclusivamente para el periodo impositivo 2023 al 7 por ciento el porcentaje de deducción para el conjunto de provisiones deducibles y gastos de difícil justificación de la estimación directa simplificada, manteniendo el límite anual de 2.000 EUR fijado por el art. 30 LIRPF/RIRPF."
@@ -2422,7 +2422,7 @@ article = "31"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a31"
 published_at = 2006-11-29
 effective_from = 2016-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 31: regula la determinacion del rendimiento neto en estimacion objetiva, su renuncia o exclusion, sus limites reglamentarios y el uso de signos, indices o modulos."
@@ -2443,7 +2443,7 @@ article = "32"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32"
 published_at = 2006-11-29
 effective_from = 2023-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 32: regula las reducciones aplicables a determinados rendimientos netos de actividades economicas, incluidos rendimientos irregulares, reducciones por requisitos reglamentarios y reduccion por inicio de actividad en estimacion directa."
@@ -2465,7 +2465,7 @@ article = "33"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a33"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 33: define el concepto de ganancias y perdidas patrimoniales, identifica supuestos sin alteracion patrimonial, exenciones y perdidas no computables. Base legal de la fundacion de ganancias y perdidas patrimoniales en Modelo 100."
@@ -2489,7 +2489,7 @@ article = "34"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a34"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 34: fija la norma general para calcular el importe de ganancias o perdidas patrimoniales por diferencia entre valores de adquisicion y transmision, o por valor de mercado en otros supuestos."
@@ -2510,7 +2510,7 @@ article = "37"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a37"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 37: fija normas especificas de valoracion de ganancias y perdidas patrimoniales para valores cotizados/no cotizados, instituciones de inversion colectiva, aportaciones no dinerarias, permutas y otros supuestos."
@@ -2531,7 +2531,7 @@ article = "35"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a35"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a35; operator to re-stamp"
 notes = "LIRPF art 35: transmisiones a título oneroso — el valor de adquisición (importe real + inversiones/mejoras + gastos y tributos inherentes, menos amortizaciones) y el valor de transmisión (importe real menos gastos y tributos inherentes a cargo del transmitente). Base legal del cálculo de ganancia/pérdida por transmisión onerosa en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a35; operator to confirm and re-stamp."
@@ -2550,7 +2550,7 @@ article = "36"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a36"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a36; operator to re-stamp"
 notes = "LIRPF art 36: transmisiones a título lucrativo — se aplican las reglas del art. 35 tomando por importe real los valores del Impuesto sobre Sucesiones y Donaciones (sin exceder el valor de mercado). Base legal del cálculo de ganancia/pérdida por transmisión lucrativa en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a36; operator to confirm and re-stamp."
@@ -2568,7 +2568,7 @@ article = "38"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a38"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a38; operator to re-stamp"
 notes = "LIRPF art 38: ganancias excluidas de gravamen en supuestos de reinversión — exención de la ganancia por transmisión de la vivienda habitual reinvertida en otra vivienda habitual, y de acciones/participaciones de entidades de nueva o reciente creación. Base legal de las casillas de exención por reinversión en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a38; operator to confirm and re-stamp."
@@ -2586,7 +2586,7 @@ article = "39"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a39"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a39; operator to re-stamp"
 notes = "LIRPF art 39: ganancias patrimoniales no justificadas — bienes o derechos cuya tenencia/declaración/adquisición no se corresponde con la renta o patrimonio declarados, integradas en la base liquidable general del periodo. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a39; operator to confirm and re-stamp."
@@ -2604,7 +2604,7 @@ article = "DT-9"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dtnovena"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#dtnovena; operator to re-stamp"
 notes = "LIRPF disposición transitoria 9ª: régimen transitorio (coeficientes de abatimiento) de las ganancias patrimoniales derivadas de elementos patrimoniales adquiridos antes del 31-12-1994, con el límite acumulado de 400.000 € de valor de transmisión. Base legal de la reducción DT-9ª en las casillas de ganancia patrimonial por transmisión de inmuebles en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#dtnovena; operator to confirm and re-stamp."
@@ -2627,7 +2627,7 @@ article = "82"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a82"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 82: defines the family-unit modalities that may file jointly: legally non-separated spouses with qualifying children, and single-parent units in legal separation or no-marriage cases. Grounds M100 joint-taxation eligibility, family-unit profile bindings, and wizard family-situation checks."
@@ -2650,7 +2650,7 @@ article = "83"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a83"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 83: governs the option for joint taxation by people integrated in a family unit, including the whole-unit election requirement, non-binding nature for later periods, individual-return override, and post-deadline immutability."
@@ -2672,7 +2672,7 @@ article = "84"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a84"
 published_at = 2006-11-29
 effective_from = 2010-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 84: joint-taxation rules, including unchanged quantitative limits, family-unit reduction of 3,400 EUR for art 82 first modality and 2,150 EUR for art 82 second modality, and the cohabiting-parent exclusion for the second-modality reduction. Current consolidated redaction was published 2009-12-19 and is in force from 2010-01-01."
@@ -2694,7 +2694,7 @@ article = "86"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a86"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 86: general attribution-of-income rule. Income corresponding to entities under the attribution regime is attributed to partners, heirs, community members or participants according to section 2. Grounds Modelo 184 and Modelo 100 attribution surfaces."
@@ -2714,7 +2714,7 @@ article = "87"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a87"
 published_at = 2006-11-29
 effective_from = 2022-10-20
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 87: defines entities under the attribution-of-income regime, including entities referenced in art 8.3, analogous foreign entities, the exclusion for sociedades agrarias de transformación, and the non-IS-subject rule except LIS art 15 bis.12. Current consolidated redaction was published 2022-10-19 and is in force from 2022-10-20."
@@ -2736,7 +2736,7 @@ article = "88"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a88"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 88: classifies attributed income by preserving the nature derived from the underlying activity or source for each partner, heir, community member or participant."
@@ -2756,7 +2756,7 @@ article = "89"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a89"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 89: calculation of attributable income and payments on account. It determines attributed income under IRPF rules, excludes listed reductions during entity-level attribution, subjects paid income to withholding/on-account rules, attributes income by applicable rules or equal shares if not proven, and lets IRPF members apply listed reductions on their own returns."
@@ -2780,7 +2780,7 @@ article = "91"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a91"
 published_at = 2006-11-29
 effective_from = 2021-07-11
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 91, current consolidated redaction after Ley 11/2021 art 3.4, published 2021-07-10 and in force from 2021-07-11: imputes income under the international fiscal transparency regime for controlled non-resident entities with low analogous corporate taxation. It grounds M100 TFI entity/name and imputation amount fields, the aggregate TFI imputation formula, and the transparency-related double-taxation deduction; paragraph 6 fixes the imputation period and paragraph 11 lists accompanying entity data."
@@ -2809,7 +2809,7 @@ article = "27"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794#a27"
 published_at = 1994-07-07
 effective_from = 1994-07-08
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "Ley 19/1994 art 27: Reserva para inversiones en Canarias (RIC). Grounds Modelo 100 RIC parameters for materialisation within three years, minimum five-year maintenance, and the IRPF direct-estimation deduction limit over net operating income assigned to the reserve."
@@ -2832,7 +2832,7 @@ article = "43"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794#a43"
 published_at = 1994-07-07
 effective_from = 1994-07-08
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "Ley 19/1994 art 43: Impuesto sobre Sociedades, tipo de gravamen especial. Grounds the 4 percent ZEC reduced-rate parameter used by Modelo 100."
@@ -2851,7 +2851,7 @@ article = "75"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794#a75"
 published_at = 1994-07-07
 effective_from = 1994-07-08
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-06-10
 reviewed_by = "operator"
 notes = "REBECA (Registro Especial de Buques de Canarias): el art 75.1 fija como renta exenta el 50 por 100 de los rendimientos del trabajo personal de los tripulantes de buques inscritos en el Registro Especial de Buques y Empresas Navieras devengados con ocasion de la navegacion. Provision que establece el 50 por 100 aplicado por REBECA_MARITIME_EXEMPTION_FRACTION y por la seccion renta exenta del Modelo 100 para trabajadores del mar."
@@ -2870,7 +2870,7 @@ article = "48"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a48"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-06-02
 reviewed_by = "operator"
 notes = "Base legal para la integracion y compensacion de rentas en la base imponible GENERAL del IRPF (Modelo 100). El saldo negativo de ganancias y perdidas patrimoniales de la base general se compensa con el saldo positivo de rendimientos e imputaciones con el limite del 25 por ciento; el saldo negativo restante se compensa en los cuatro anios siguientes (casillas 1391 saldo pendiente -> 1388 aplicacion). Distinto del art.49, que rige la base imponible del AHORRO."
@@ -2890,7 +2890,7 @@ article = "49"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a49"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "Base legal para la integracion y compensacion de rentas en la base imponible del ahorro en Modelo 100. The current consolidated text, effective from 2015-01-01 after Ley 26/2014, establishes the cross-bucket 25 percent limit and four-year carry-forward for negative savings-base balances. Distinct from art.48, which governs the base imponible general."
@@ -2911,7 +2911,7 @@ article = "57"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a57"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "LIRPF art 57: minimo del contribuyente. Establece el minimo personal del contribuyente con caracter general (5.550 euros anuales), con incrementos por edad: +1.150 euros anuales para contribuyentes mayores de 65 anios, y +1.400 euros adicionales para mayores de 75 anios. Base sustantiva de las casillas del minimo-del-contribuyente de Modelo 100 (0511 y similares)."
@@ -2931,7 +2931,7 @@ article = "58"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a58"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
 notes = "LIRPF art 58: minimo por descendientes. 2.400 euros por el primero, 2.700 por el segundo, 4.000 por el tercero, 4.500 por el cuarto y siguientes. Incremento de 2.800 euros por descendiente menor de 3 anios."
@@ -2951,7 +2951,7 @@ article = "59"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a59"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
 notes = "LIRPF art 59: minimo por ascendientes. 1.150 euros por ascendiente mayor de 65 anios o con discapacidad, 1.400 euros adicionales por ascendiente mayor de 75 anios."
@@ -2970,7 +2970,7 @@ article = "60"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a60"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-14
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a60; operator to re-stamp"
 notes = "LIRPF art 60: minimo por discapacidad. Del contribuyente: 3.000 euros (discapacidad grado >=33%<65%), 9.000 euros (grado >=65%); +3.000 euros en concepto de gastos de asistencia (ayuda de terceras personas, movilidad reducida, o grado >=65%). De ascendientes o descendientes con discapacidad: 3.000 euros por cada uno (>=33%), 9.000 euros (>=65%); +3.000 euros gastos de asistencia. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a60; operator to confirm and re-stamp."
@@ -2990,7 +2990,7 @@ article = "56"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a56"
 published_at = 2006-11-29
 effective_from = 2010-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 56: defines the personal and family minimum as the non-taxed part of the taxable base for basic personal and family needs, allocates it between the general and savings taxable bases, and aggregates arts 57-60 with autonomous-community increases/decreases for autonomic tax calculation. Base legal para el minimo personal y familiar in Modelo 100, casillas 0511-0524."
@@ -3013,7 +3013,7 @@ article = "61"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a61"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-02
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a61; operator to re-stamp"
 notes = "LIRPF art 61: normas comunes para la aplicacion del minimo del contribuyente y por descendientes, ascendientes y discapacidad. Norma 1a: cuando dos o mas contribuyentes tengan derecho al minimo por descendientes, ascendientes o discapacidad respecto de los mismos ascendientes o descendientes, su importe se prorrateara entre ellos por partes iguales -- the custodia-compartida 50% prorrata applied to Modelo 100 casillas 0513/0514. Norma 4a fixes a reduced amount on a mid-year death (unrelated to entry timing); norma 5a's half-period residency rule is scoped to ascendientes only. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a61 (en vigor 01/01/2015); operator to confirm and re-stamp."
@@ -3031,7 +3031,7 @@ article = "58.1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a58"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-04
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a58; operator to re-stamp"
 notes = "LIRPF art 58.1: the rentas ceiling conditioning the minimo por descendientes. A descendant generates the minimo only when, besides being under 25 (or carrying any discapacidad) and cohabiting, the descendant does not hold rentas anuales, excluidas las exentas, superiores a 8.000 euros. This entry grounds the 8.000-euro CEILING specifically, which the parent ley-35-2006:art-58 entry does not pin (its required_text covers only the tranche amounts). The required_text ends at the ', de:' that introduces the tranche list, which is what separates this clause from art 61 norma 1a's grado-de-parentesco tie-break -- that clause carries the SAME 8.000-euro figure but applies it to the CLAIMANT rather than the descendant, and reads 'no tengan ... en cuyo caso'. Confirmed present in the art-58 unit and absent from the art-61 unit. AGENT-AUTHORED, grounded in the bundled authoritative consolidated ley-35-2006.html#a58 (redaccion Ley 26/2014, en vigor 01/01/2015, unamended since); operator to confirm and re-stamp."
@@ -3049,7 +3049,7 @@ article = "61.2"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a61"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-04
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a61; operator to re-stamp"
 notes = "LIRPF art 61 norma 2a: the own-return exclusion. The minimo does not apply at all when the ascendiente or descendiente who generates the entitlement files their own declaracion for this Impuesto with rentas superiores a 1.800 euros. This is an exclusion threshold on the DEPENDANT's own filing, distinct from art 58.1's 8.000-euro rentas ceiling, and distinct from norma 1a's prorrateo which the parent ley-35-2006:art-61 entry already pins. The 1.800-euro figure is pinned verbatim here because the parent entry's required_text covers only the norma 1a prorrateo clause. SCOPE, and read this before authoring anything adjacent: the clause governs THREE minimos in one sentence -- 'No procedera la aplicacion del minimo por descendientes, ascendientes o discapacidad' -- so this entry is the single authority for all three, not a descendientes-only entry. Only the descendientes predicate consumes it today, and the per-year parameters are named 'minimo-descendientes-declaracion-propia-rentas-limite' after that first consumer rather than after the clause's reach; ascendientes and discapacidad are currently bare manual inputs with no formula and no binding, so nothing is incomplete. Whoever builds an ascendientes or discapacidad predicate MUST cite this entry and reuse the existing 1.800 parameter rather than minting a second legal entry and a second parameter for the same clause and the same figure -- one clause, one authority, one figure. AGENT-AUTHORED, grounded in the bundled authoritative consolidated ley-35-2006.html#a61 (redaccion Ley 26/2014, en vigor 01/01/2015, unamended since); operator to confirm and re-stamp."
@@ -3067,7 +3067,7 @@ article = "61.4"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a61"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-05
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a61; operator to re-stamp"
 notes = "LIRPF art 61 norma 4a: the death-in-period flat cuantia. Displacing norma 3a's devengo-date rule, a descendiente or ascendiente who dies during the periodo impositivo and generates the entitlement takes a FLAT 2.400 euros (descendiente) or 1.150 euros (ascendiente) instead of the amount that would otherwise correspond. SCOPE, read this before authoring anything adjacent: one clause fixes BOTH figures, so this entry is the single authority for the descendientes AND the ascendientes death amount, not a descendientes-only entry. Only the descendientes figure is parameterised today (renta-{year}-minimo-descendientes-fallecimiento-{year}); whoever wires the ascendientes minimo MUST cite this same entry and mint a SIBLING parameter under an ascendientes stem for the 1.150 figure -- NOT a second value on the descendientes parameter, whose id is descendientes-specific -- rather than authoring a second legal entry for the same clause. One clause, one legal authority, two parameters. The 2.400 descendientes figure COINCIDES with art 58.1's first-child tranche but is a legally DISTINCT figure: it is fixed here, applies at any birth order, and would not move if a reform moved the tranche, so the two must never share a parameter. CAUTION, the clause is only half the rule as the AEAT Renta manual applies it: the manual's 'Minimo por descendientes / Cuantias aplicables' section restates this flat amount AND adds the ordering limb -- the number of orden is assigned by age 'sin computar a estos efectos aquellos descendientes que, en su caso, hubieran fallecido en el ejercicio con anterioridad a la fecha de devengo del impuesto' -- which has no counterpart in the statutory text of norma 4a and is grounded on the manual source instead. Omitting that second limb over-grants every younger sibling by leaving them at a rank the deceased should have vacated. AGENT-AUTHORED, grounded in the bundled authoritative consolidated ley-35-2006.html#a61 (redaccion Ley 26/2014, en vigor 01/01/2015, unamended since; norma 4a last modified by Ley 39/2010 art 61.5 with effect 01/01/2011 and then by Ley 26/2014); operator to confirm and re-stamp."
@@ -3086,7 +3086,7 @@ article = "62"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a62"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 62: defines the cuota integra estatal as the sum of the amounts resulting from applying the state general scale in art 63 and the state savings scale in art 66 to the general and savings taxable bases. Base legal de la cuota integra estatal in Modelo 100."
@@ -3107,7 +3107,7 @@ article = "63"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a63"
 published_at = 2006-11-29
 effective_from = 2021-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 63: current state general scale for the part of the base liquidable general exceeding the personal and family minimum, including the deduction of the minimum's scale amount and the state average general tax rate. Base legal para the Modelo 100 state general-scale parameters and formulas."
@@ -3130,7 +3130,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20141128&tn
 published_at = 2006-11-29
 effective_from = 2015-01-01
 effective_to = 2020-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-02
 reviewed_by = "agent-review"
 notes = "LIRPF art 63, redaction selected by BOE at 2014-11-28 (art. 1.39 Ley 26/2014, BOE-A-2014-12327), in force 2015-01-01 to 2020-12-31: five-bracket state general scale (9,50/12,00/15,00/18,50/22,50 percent up to 12.450/20.200/35.200/60.000/en adelante euros), before Ley 11/2020 art. 58 added a sixth bracket (24,50 percent above 300.000 euros) with effect from 2021-01-01; brackets below 300.000 euros are numerically unchanged by that amendment. Grounds the 2020 Modelo 100 escala general estatal parameter (renta-2020-escala-estatal-base-general) and its dependent cuota-íntegra-estatal formulas — the stored 2020 bracket values were independently verified against this redaction and are unaffected by the citation correction."
@@ -3152,7 +3152,7 @@ article = "66"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a66"
 published_at = 2006-11-29
 effective_from = 2024-12-22
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 66: current state savings-scale article for base liquidable del ahorro, including resident and certain foreign-resident scales and the minimum personal/family reduction mechanism. The selected BOE redaction is published 2024-12-21 and in force from 2024-12-22; the source note states effects from 2025-01-01 for the Ley 7/2024 change. Base legal para Modelo 100 savings-base state scale parameters and formulas."
@@ -3174,7 +3174,7 @@ article = "67"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a67"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 67: defines the cuota liquida estatal by reducing the prior state tax amount through the art 68.1 new/recent company investment deduction and 50 percent of the art 68.2-68.5 deductions, with a non-negative floor. Base legal para Modelo 100 casillas 0570 and 0585."
@@ -3196,7 +3196,7 @@ article = "68"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
 published_at = 2006-11-29
 effective_from = 2023-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 68: broad state deduction catalogue for new/recent company investment, economic-activity incentives, donations and other contributions, Ceuta/Melilla income, and cultural-heritage actions. Specific sub-article entries (68.1-68.5) remain the preferred fine-grained refs for formulas; this broad entry grounds aggregate deduction-chain surfaces."
@@ -3221,7 +3221,7 @@ article = "7"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a7"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
 notes = "LIRPF art 7.h: rentas exentas — prestaciones publicas por maternidad y paternidad reconocidas por la Seguridad Social (INSS) y por las Comunidades Autonomas. Las prestaciones de la Seguridad Social por baja de maternidad y paternidad son integras del IRPF (art 7.h ley 35/2006, en vigor tras la STC 207/2013 que declaro inconstitucional la exencion para funcionarios). Desde 2018 la exencion vuelve para todos los contribuyentes. El importe de estas prestaciones NO debe incluirse en la casilla 0003 (Retribuciones dinerarias) ya que no constituye rendimiento de trabajo tributable conforme al art 17."
@@ -3241,7 +3241,7 @@ article = "73"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a73"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 73: defines the cuota integra autonomica as the sum of the amounts resulting from applying the autonomic general scale in art 74 and the autonomic savings scale in art 76 to the general and savings taxable bases. Base legal de la cuota integra autonomica in Modelo 100."
@@ -3262,7 +3262,7 @@ article = "74"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a74"
 published_at = 2006-11-29
 effective_from = 2011-01-12
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 74: current autonomic general-scale rule for the part of the base liquidable general exceeding the personal and family minimum adjusted under art 56.3. The article delegates the scale to the Comunidad Autonoma under Ley 22/2009 and defines the autonomic average general tax rate. Base legal para Modelo 100 casillas 0529 and 0531."
@@ -3284,7 +3284,7 @@ article = "75"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a75"
 published_at = 2006-11-29
 effective_from = 2025-04-03
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 75: autonomic-side special rule for judicial child-support annuities, applying the art 74 scale separately to those annuities and to the rest of the general taxable base. It is not the generic autonomic quota article; art 73 is the generic autonomic integral-quota article. Base legal for Modelo 100 annualidades por alimentos surfaces."
@@ -3307,7 +3307,7 @@ article = "76"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a76"
 published_at = 2006-11-29
 effective_from = 2024-12-22
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 76: current autonomic savings-scale article for base liquidable del ahorro, including the personal/family minimum reduction mechanism. The selected BOE redaction is published 2024-12-21 and in force from 2024-12-22; the source note states effects from 2025-01-01 for the Ley 7/2024 change. Base legal para Modelo 100 autonomic savings-scale parameters and formulas."
@@ -3328,7 +3328,7 @@ article = "77"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a77"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 77: defines the cuota liquida autonomica by reducing the prior autonomic tax amount through 50 percent of the art 68.2-68.5 deductions and the deductions established by the Comunidad Autonoma under Ley 22/2009, with a non-negative floor. Base legal para Modelo 100 casillas 0571 and 0586 and autonomic-deduction framework grounding."
@@ -3350,7 +3350,7 @@ article = "80"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a80"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 80: deduccion por doble imposicion internacional para rendimientos o ganancias patrimoniales obtenidos y gravados en el extranjero. The current consolidated text, effective from 2015-01-01 after Ley 26/2014, limits the deduction to the lesser of the foreign tax paid for an identical or analogous tax and the effective average tax rate applied to the foreign-taxed base. Base legal para Modelo 100 casillas 1124, 1127, 1128."
@@ -3372,7 +3372,7 @@ article = "50"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a50"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 50: defines base liquidable general and base liquidable del ahorro, including the ordered reductions against base imponible general, the savings-base remnant rule for art 55, non-negative floors, and four-year compensation of negative general taxable bases. Current consolidated redaction was published 2014-11-28 and is in force from 2015-01-01. Grounds M100 base-liquidation formulas, carried negative-base compensation, and settlement completeness predicates."
@@ -3397,7 +3397,7 @@ article = "51"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a51"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a51; operator to re-stamp"
 notes = "LIRPF art 51: reducciones de la base imponible general por aportaciones y contribuciones a sistemas de previsión social (planes de pensiones, mutualidades de previsión social, planes de previsión asegurados, planes de previsión social empresarial, seguros de dependencia, y sistemas a favor de personas con discapacidad). Base legal de las casillas de reducción/exceso por previsión social en Modelo 100; el límite conjunto lo fija el art. 52. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a51; operator to confirm and re-stamp."
@@ -3418,7 +3418,7 @@ article = "52"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a52"
 published_at = 2006-11-29
 effective_from = 2023-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 52: maximum joint limit for art 51.1-5 reductions. Current consolidated redaction was published 2022-12-24 and is in force from 2023-01-01 after Ley 31/2022 art 62.1; it sets the lesser-of 30 percent / 1,500 EUR limit, employment-plan/autonomo increments, the 8,500 EUR maximum increment cap, 5,000 EUR collective-dependence insurance amount, and five-year carry-forward for unapplied eligible contributions. Grounds M100 pension/prevision-social reductions and casilla 0468/2025 equivalent aggregation."
@@ -3446,7 +3446,7 @@ article = "54"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a54"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a54; operator to re-stamp"
 notes = "LIRPF art 54: reducciones de la base imponible general por aportaciones a patrimonios protegidos de las personas con discapacidad (límite 10.000 € por aportante, 24.250 € conjunto). Base legal de las casillas de reducción/exceso por patrimonio protegido en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a54; operator to confirm and re-stamp."
@@ -3467,7 +3467,7 @@ article = "64"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a64"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a64; operator to re-stamp"
 notes = "LIRPF art 64: especialidades aplicables en los supuestos de anualidades por alimentos a favor de los hijos satisfechas por decisión judicial — la escala se aplica separadamente al importe de las anualidades y al resto de la base liquidable general. Base legal de las casillas de anualidades por alimentos en Modelo 100 (junto con el art. 75 para la parte autonómica). AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a64; operator to confirm and re-stamp."
@@ -3485,7 +3485,7 @@ article = "DA-11"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#daundecima"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#daundecima; operator to re-stamp"
 notes = "LIRPF disposición adicional 11ª: mutualidad de previsión social de deportistas profesionales y de alto nivel — aportaciones reducibles de la base imponible general con su propio límite (la menor de 24.250 € o la suma de rendimientos netos de trabajo y actividades económicas). Base legal de las casillas de reducción/exceso por mutualidad de deportistas en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#daundecima; operator to confirm and re-stamp."
@@ -3508,7 +3508,7 @@ article = "DA-6"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dasexta"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled ley-35-2006.html#dasexta; operator to re-stamp"
 notes = "LIRPF disposición adicional sexta: beneficios fiscales especiales aplicables en actividades agrarias — los agricultores jóvenes o asalariados agrarios que determinen el rendimiento neto de su actividad agraria mediante estimación objetiva podrán reducir el correspondiente a dicha actividad en un 25 por ciento durante los períodos impositivos cerrados durante los cinco años siguientes a su primera instalación como titulares de una explotación prioritaria (Ley 19/1995, capítulo IV, título I), siempre que acrediten la realización de un plan de mejora de la explotación; la reducción se tiene en cuenta también para los pagos fraccionados. Base legal de la reducción agricultores jóvenes (casilla 1551 del Modelo 100 2025, Anexo I Orden HAC/1347/2024, instrucción 3). AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#dasexta; operator to confirm and re-stamp."
@@ -3528,7 +3528,7 @@ article = "DT-18"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dtdecimoctava"
 published_at = 2006-11-29
 effective_from = 2013-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#dtdecimoctava; operator to re-stamp"
 notes = "LIRPF disposición transitoria 18ª: régimen transitorio de la deducción por inversión en vivienda habitual — aplicable a contribuyentes que adquirieron su vivienda habitual (o satisficieron cantidades para su construcción) antes del 01-01-2013 y venían deduciéndose. Base legal de las casillas de deducción por vivienda habitual en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#dtdecimoctava; operator to confirm and re-stamp."
@@ -3546,7 +3546,7 @@ article = "DA-23"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#davigesimatercera"
 published_at = 2006-11-29
 effective_from = 2013-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-authored from bundled ley-35-2006.html#davigesimatercera; operator to re-stamp"
 notes = "LIRPF disposición adicional 23ª defines vivienda habitual for specified exemptions as the dwelling where the taxpayer resides for a continuous three-year period, with statutory exceptions for forced changes such as marriage, separation, job relocation, or first/better employment. Grounds the profile flag that marks whether the fiscal address is the operator's habitual dwelling before the LIRPF art 30 home-office affectation rule is applied."
@@ -3566,7 +3566,7 @@ article = "DT-12"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dtduodecima"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-review"
 notes = "LIRPF disposición transitoria 12ª: régimen transitorio aplicable a prestaciones de planes de pensiones, mutualidades de previsión social y planes de previsión asegurados, including the reduction regime for pre-2007 contributions. Grounds the Modelo 100 DT12 reducción advisory. Apartado 4 (added by Ley 26/2014 art. 1.86, BOE-A-2014-12327) restricts the régimen to prestaciones percibidas within a time window measured from the contingencia year; the apartado-4 required_text phrases ground the calculate-shortcut window gate. Agent-prepared per aeat-calculation-grounding; pending operator re-stamp."
@@ -3589,7 +3589,7 @@ article = "DT-15"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dtdecimoquinta"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#dtdecimoquinta; operator to re-stamp"
 notes = "LIRPF disposición transitoria 15ª: régimen transitorio de la deducción por alquiler de la vivienda habitual — aplicable a contribuyentes con contrato de arrendamiento anterior al 01-01-2015 que venían deduciéndose (10,05% con base máxima según base imponible). Base legal de las casillas informativas y de cálculo de la deducción por alquiler en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#dtdecimoquinta; operator to confirm and re-stamp."
@@ -3607,7 +3607,7 @@ article = "DA-50"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#da-4"
 published_at = 2006-11-29
 effective_from = 2021-10-06
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#da-4; operator to re-stamp"
 notes = "LIRPF disposición adicional 50ª: deducción por obras de mejora de la eficiencia energética de viviendas (20%/40%/60% según el tipo de obra y la reducción de demanda/consumo acreditada por certificado energético). Base legal de las casillas de deducción y exceso por mejoras energéticas de vivienda en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#da-4 (DA quincuagésima); operator to confirm and re-stamp."
@@ -3629,7 +3629,7 @@ article = "DA-58"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#da-11"
 published_at = 2006-11-29
 effective_from = 2023-06-30
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#da-11; operator to re-stamp"
 notes = "LIRPF disposición adicional 58ª: deducción por la adquisición de vehículos eléctricos enchufables y de pila de combustible y por la instalación de puntos de recarga (15% sobre el valor de adquisición, con límites). Base legal de las casillas de deducción por vehículos eléctricos y puntos de recarga en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#da-11 (DA quincuagésima octava); operator to confirm and re-stamp."
@@ -3651,7 +3651,7 @@ article = "DA-60"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#da-14"
 published_at = 2006-11-29
 effective_from = 2025-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-27
 reviewed_by = "agent-authored from bundled ley-35-2006.html#da-14; operator to re-stamp"
 notes = "LIRPF disposición adicional 60ª: reducción del 30% sobre rendimientos de actividades artísticas obtenidos de manera excepcional, con base máxima anual de 150.000 euros, para rendimientos del trabajo artísticos y rendimientos netos de actividades económicas artísticas que excedan del 130% de la media de los tres periodos impositivos anteriores. Base legal de las casillas Modelo 100 2025 de reducción por rendimientos artísticos excepcionales. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#da-14 (DA sexagésima); operator to confirm and re-stamp."
@@ -3671,7 +3671,7 @@ article = "DA-45"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dacuadragesimaquinta"
 published_at = 2006-11-29
 effective_from = 2017-01-21
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-authored from bundled ley-35-2006.html#dacuadragesimaquinta; operator to re-stamp"
 notes = "LIRPF disposición adicional 45ª: tratamiento fiscal de la devolución de cláusulas suelo. Cuando las cantidades devueltas formaron parte de la base de deducciones previas, se pierde el derecho a esas deducciones y deben sumarse las cantidades indebidamente deducidas a la cuota líquida estatal y autonómica, sin intereses de demora. Base legal específica de las casillas Modelo 100 que marcan la regularización motivada por DA 45ª.2.a) o DA 45ª.3. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#dacuadragesimaquinta; operator to confirm and re-stamp."
@@ -3692,7 +3692,7 @@ article = "79"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a79"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "LIRPF art 79: cuota diferencial. Define el resultado de minorar la suma estatal + autonomica por las deducciones siguientes: doble imposicion internacional (art 80), deducciones art 91.10 y 92.4, retenciones art 99.11 y 99.8, cuotas IRNR por cambio de residencia, retenciones y pagos fraccionados. Base sustantiva del Modelo 100 casilla 0610 (cuota diferencial) y 0595 (cuota resultante de la autoliquidacion)."
@@ -3712,7 +3712,7 @@ article = "81"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a81"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "LIRPF art 81: deduccion por maternidad. Establece la deduccion de hasta 1.200 euros anuales por cada hijo menor de tres anios para madres trabajadoras, con incremento de hasta 1.000 euros por gastos en guarderias. Base sustantiva del Modelo 100 casillas 0611 (deduccion), 0612 (abono anticipado), 0613 (incremento guarderias)."
@@ -3732,7 +3732,7 @@ article = "81.2"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a81"
 published_at = 2006-11-29
 effective_from = 2018-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-05
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a81; operator to re-stamp"
 notes = "LIRPF art 81.2: the guarderia increment's ANNUAL CAP. The deduccion por maternidad of apartado 1 may be increased 'hasta en 1.000 euros adicionales' where the contribuyente paid gastos de custodia for a child under three at an authorised guarderia or centro de educacion infantil. This entry grounds the 1.000-euro FIGURE specifically, which the parent ley-35-2006:art-81 entry does not pin -- that entry's required_text covers the 1.200-euro maternidad cap of apartado 1, a different figure for a different concept. CORPUS CHOICE, deliberate: this cites the bundled CONSOLIDATED ley-35-2006.html, not the per-article ley-35-2006-art-81.html excerpt the parent entry uses. That excerpt is a two-vintage hybrid and is tracked as its own open defect; grounding a new figure on it would inherit the problem. The apartado also fixes the turning-three extension ('los gastos incurridos con posterioridad al cumplimiento de dicha edad hasta el mes anterior a aquel en el que pueda comenzar el segundo ciclo de educacion infantil') and the complete-months condition on qualifying spend. AGENT-AUTHORED, grounded in the bundled authoritative consolidated ley-35-2006.html#a81; operator to confirm and re-stamp."
@@ -3751,7 +3751,7 @@ article = "81.3"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a81"
 published_at = 2006-11-29
 effective_from = 2018-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-05
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a81; operator to re-stamp"
 notes = "LIRPF art 81.3 third paragraph: how the apartado 2 increment is PRORATED and BOUNDED. Read this before assuming the proration is a manual gloss -- it is statutory, and an earlier reading of this campaign wrongly attributed it to the AEAT manual alone. The clause states three things the calculation depends on. It is proportional to 'el numero de meses en que se cumplan de forma simultanea los requisitos de los apartados 1 y 2', so the month basis is an INTERSECTION of the two apartados rather than either alone. It carves out the under-three condition for the turning-three extension months ('salvo el relativo a que sea menor de tres anios en los meses a los que se refiere el segundo parrafo del apartado 2'). And it caps the result at 'el importe total del gasto efectivo no subvencionado satisfecho en dicho periodo a la guarderia o centro educativo EN RELACION CON ESE HIJO' -- per child by its own words, which is the authority for bounding the increment per descendant rather than over the household. The apartado's FIRST paragraph prorates the apartado 1 deduccion and is a different rule for a different figure; do not conflate them. AGENT-AUTHORED, grounded in the bundled authoritative consolidated ley-35-2006.html#a81; operator to confirm and re-stamp."
@@ -3770,7 +3770,7 @@ article = "81 bis"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a81bis"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "LIRPF art 81 bis: deducciones por familia numerosa o personas con discapacidad a cargo. Establece deducciones de hasta 1.200 euros anuales por: descendiente con discapacidad (a), ascendiente con discapacidad (b), familia numerosa o ascendiente separado legalmente con dos hijos (c), conyuge con discapacidad (d). Base sustantiva del Modelo 100 casillas 0623/0624 (descendiente), 0636/0637 (ascendiente), 0248/0249 (conyuge), 0660/0661 (familia numerosa), 0662/0663 (ascendiente separado), 0664/0666 (regularizacion)."
@@ -3790,7 +3790,7 @@ article = "101"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a101"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "LIRPF art 101: importe de los pagos a cuenta. Base sustantiva del regimen de tipos de retencion para rendimientos del trabajo (escala personalizada 19/24/30/37/45/47 por ciento), administradores y consejeros (35 por ciento, 19 por ciento para entidades de cifra de negocios inferior a 100.000 euros), atrasos imputados a ejercicios anteriores (15 por ciento), y reduccion del 60 por ciento para rendimientos de Ceuta o Melilla amparados en la deduccion del art 68.4. Espejo legal del articulo 80 RIRPF que desarrolla el procedimiento."
@@ -3810,7 +3810,7 @@ article = "103"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a103"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "LIRPF art 103: devolucion derivada de la normativa del tributo. Establece que cuando la suma de retenciones, ingresos a cuenta, pagos fraccionados y deducciones art 81 / 81 bis supera la cuota resultante de la autoliquidacion, la Administracion practica liquidacion provisional en seis meses y devuelve de oficio el exceso. Base sustantiva del Modelo 100 casilla 0670 (resultado de la declaracion) cuando es a devolver."
@@ -3830,7 +3830,7 @@ article = "3"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-7041"
 published_at = 2026-03-27
 effective_from = 2026-03-28
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2025."
@@ -3850,7 +3850,7 @@ article = "7"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-7041"
 published_at = 2026-03-27
 effective_from = 2026-03-28
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-21
 reviewed_by = "operator"
 notes = "Articulo 7 de la Orden HAC/277/2026: plazo de presentacion de la declaracion del IRPF ejercicio 2025. El plazo general comprende del 8 de abril al 30 de junio de 2026. La domiciliacion bancaria del pago puede realizarse desde el 8 de abril hasta el 25 de junio de 2026."
@@ -3870,7 +3870,7 @@ article = "10"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2026-7041#a10"
 published_at = 2026-03-27
 effective_from = 2026-03-28
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "Orden HAC/277/2026 art 10: additional documentation accompanying IRPF 2025 declarations. It requires taxpayers subject to international fiscal transparency imputation under LIRPF art 91.6 to provide non-resident entity identification, administrator, accounts, positive-income and tax-paid data."
@@ -3893,7 +3893,7 @@ article = "3"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-5721#a3"
 published_at = 2024-03-22
 effective_from = 2024-03-23
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "verified against bundled orden-hac-265-2024.html; operator to re-stamp"
 notes = "Orden HAC/265/2024 art 3: aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2023."
@@ -3913,7 +3913,7 @@ article = "8"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-5721"
 published_at = 2024-03-22
 effective_from = 2024-03-23
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-21
 reviewed_by = "operator"
 notes = "Articulo 8 de la Orden HAC/265/2024: plazo de presentacion de la declaracion del IRPF ejercicio 2023. El plazo general comprende del 3 de abril al 1 de julio de 2024. La domiciliacion bancaria del pago puede realizarse desde el 3 de abril hasta el 26 de junio de 2024."
@@ -3933,7 +3933,7 @@ article = "11"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-5721#a1-3"
 published_at = 2024-03-22
 effective_from = 2024-03-23
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "Orden HAC/265/2024 art 11: additional documentation accompanying IRPF 2023 declarations. It requires taxpayers subject to international fiscal transparency imputation under LIRPF art 91 to provide non-resident entity identification, administrator, accounts, positive-income and tax-paid data."
@@ -3956,7 +3956,7 @@ article = "3"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-4238#a3"
 published_at = 2021-03-18
 effective_from = 2021-03-18
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "verified against bundled orden-hac-248-2021.html; operator to re-stamp"
 notes = "Orden HAC/248/2021 art 3: aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2020."
@@ -3976,7 +3976,7 @@ article = "8"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-4238"
 published_at = 2021-03-18
 effective_from = 2021-03-18
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
 notes = "Articulo 8 de la Orden HAC/248/2021: plazo de presentacion de la declaracion del IRPF ejercicio 2020. El plazo general comprende del 7 de abril al 30 de junio de 2021. La domiciliacion bancaria del pago puede realizarse desde el 7 de abril hasta el 25 de junio de 2021."
@@ -3996,7 +3996,7 @@ article = "10"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-4238#a1-2"
 published_at = 2021-03-18
 effective_from = 2021-03-18
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "Orden HAC/248/2021 art 10: additional documentation accompanying IRPF 2020 declarations. It requires taxpayers subject to international fiscal transparency imputation under LIRPF art 91 to provide non-resident entity identification, administrator, accounts, positive-income and tax-paid data."
@@ -4019,7 +4019,7 @@ article = "3"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-4296#a3"
 published_at = 2022-03-18
 effective_from = 2022-03-18
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "verified against bundled orden-hfp-207-2022.html; operator to re-stamp"
 notes = "Orden HFP/207/2022 art 3: aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2021."
@@ -4039,7 +4039,7 @@ article = "8"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-4296"
 published_at = 2022-03-18
 effective_from = 2022-03-18
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
 notes = "Articulo 8 de la Orden HFP/207/2022: plazo de presentacion de la declaracion del IRPF ejercicio 2021. El plazo general comprende del 6 de abril al 30 de junio de 2022. La domiciliacion bancaria del pago puede realizarse desde el 6 de abril hasta el 27 de junio de 2022."
@@ -4059,7 +4059,7 @@ article = "10"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-4296#a1-2"
 published_at = 2022-03-18
 effective_from = 2022-03-18
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "Orden HFP/207/2022 art 10: additional documentation accompanying IRPF 2021 declarations. It requires taxpayers subject to international fiscal transparency imputation under LIRPF art 91 to provide non-resident entity identification, administrator, accounts, positive-income and tax-paid data."
@@ -4082,7 +4082,7 @@ article = "3"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-8118#a3"
 published_at = 2023-03-31
 effective_from = 2023-04-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "verified against bundled orden-hfp-310-2023.html; operator to re-stamp"
 notes = "Orden HFP/310/2023 art 3: aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2022."
@@ -4102,7 +4102,7 @@ article = "8"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8118"
 published_at = 2023-03-31
 effective_from = 2023-04-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
 notes = "Articulo 8 de la Orden HFP/310/2023: plazo de presentacion de la declaracion del IRPF ejercicio 2022. El plazo general comprende del 11 de abril al 30 de junio de 2023. La domiciliacion bancaria del pago puede realizarse desde el 11 de abril hasta el 27 de junio de 2023."
@@ -4122,7 +4122,7 @@ article = "11"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8118#a1-3"
 published_at = 2023-03-31
 effective_from = 2023-04-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "Orden HFP/310/2023 art 11: additional documentation accompanying IRPF 2022 declarations. It requires taxpayers subject to international fiscal transparency imputation under LIRPF art 91 to provide non-resident entity identification, administrator, accounts, positive-income and tax-paid data."
@@ -4145,7 +4145,7 @@ article = "3"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-5049#a3"
 published_at = 2025-03-14
 effective_from = 2025-03-15
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "verified against bundled orden-hac-242-2025.html; operator to re-stamp"
 notes = "Orden HAC/242/2025 art 3: aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2024."
@@ -4165,7 +4165,7 @@ article = "8"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-5049#a8"
 published_at = 2025-03-14
 effective_from = 2025-03-15
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "verified against official BOE-A-2025-5049#a8 and bundled orden-hac-242-2025.html; operator to re-stamp"
 notes = "Articulo 8 de la Orden HAC/242/2025: plazo de presentacion de la declaracion del IRPF ejercicio 2024. El plazo general comprende del 2 de abril al 30 de junio de 2025. La domiciliacion bancaria del pago puede realizarse desde el 2 de abril hasta el 25 de junio de 2025, por remision al articulo 13.3."
@@ -4185,7 +4185,7 @@ article = "11"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-5049#a11"
 published_at = 2025-03-14
 effective_from = 2025-03-15
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "Orden HAC/242/2025 art 11: additional documentation accompanying IRPF 2024 declarations. It requires taxpayers subject to international fiscal transparency imputation under LIRPF art 91.6 to provide non-resident entity identification, administrator, accounts, positive-income and tax-paid data."
@@ -4208,7 +4208,7 @@ article = "8"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a8"
 published_at = 2006-11-29
 effective_from = 2016-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "verified against bundled ley-35-2006.html#a8; operator to re-stamp"
 notes = "LIRPF art 8 defines IRPF taxpayers as natural persons with habitual residence in Spain or the foreign-residence circumstances in art 10, and excludes non-IS civil societies, herencias yacentes, comunidades de bienes, and LGT art 35.4 entities from direct IRPF taxpayer status. Grounds the natural_person and attribution_entity split on the profile entity-type axis."
@@ -4229,7 +4229,7 @@ article = "9"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a9"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a9; operator to re-stamp"
 notes = "LIRPF art 9 defines habitual residence in Spanish territory for IRPF taxpayers using the 183-day permanence test, the main centre/base of activities or economic interests, and the family presumption. Grounds the resident_irpf branch of taxpayer fiscal-residency profile selection."
@@ -4249,7 +4249,7 @@ article = "11"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a11"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a11; operator to re-stamp"
 notes = "LIRPF art 11: individualización de rentas — la renta se entiende obtenida por los contribuyentes en función del origen o fuente (rendimientos del trabajo por quien genera el derecho, del capital por los titulares de los elementos, de actividades por quien las realiza, ganancias por los titulares). Base legal de las casillas 'Contribuyente que obtiene los rendimientos / a quien corresponde la imputación / titular' del Modelo 100 (toma de datos ampliada). AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a11; operator to confirm and re-stamp."
@@ -4267,7 +4267,7 @@ article = "14.2.m"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a14"
 published_at = 2006-11-29
 effective_from = 2023-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-30
 reviewed_by = "agent-review"
 notes = "LIRPF art 14.2.m: imputacion temporal de rendimientos del trabajo en especie por entrega de acciones o participaciones de empresa emergente que cumplen art 42.3.f pero no estan exentos por superar la cuantia prevista. Se imputan al admitirse a negociacion, salir del patrimonio del contribuyente, o cumplirse el plazo de diez anos."
@@ -4287,7 +4287,7 @@ article = "17"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a17"
 published_at = 2006-11-29
 effective_from = 2020-02-06
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 17: defines rendimientos integros del trabajo from employment, statutory, pension and similar sources, while excluding items that qualify as economic-activity income. Current consolidated redaction was published 2020-02-05 and is in force from 2020-02-06."
@@ -4309,7 +4309,7 @@ article = "42.3.f"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a42"
 published_at = 2006-11-29
 effective_from = 2023-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-30
 reviewed_by = "agent-review"
 notes = "LIRPF art 42.3.f: exencion de rendimientos del trabajo en especie por entrega gratuita o bajo precio de acciones o participaciones a trabajadores en activo, con limite general de 12.000 euros anuales y limite de 50.000 euros anuales para empresas emergentes."
@@ -4331,7 +4331,7 @@ article = "18"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a18"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 18: governs reduction percentages for certain work income, including the 30 percent reduction for qualifying irregular or multi-year work income and the 300,000 EUR annual base cap. Current consolidated redaction was published 2014-11-28 and is in force from 2015-01-01."
@@ -4352,7 +4352,7 @@ article = "19"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a19"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 19: defines rendimiento neto del trabajo as gross work income reduced by deductible expenses, including Social Security or mutualidad contributions, passive-rights deductions, union/professional fees, legal-defence expenses and the general 2,000 EUR other-expenses deduction."
@@ -4374,7 +4374,7 @@ article = "20"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a20"
 published_at = 2006-11-29
 effective_from = 2024-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 20: current reduction for obtaining work income, modified by RDL 4/2024 art 3.1 with effects from 2024-01-01. The BOE selector redaction was published 2024-06-27 and is in force from 2024-06-28. Grounds M100 art-20 casillas, the reduced work-income formula, and the application advisory threshold."
@@ -4398,7 +4398,7 @@ article = "22"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a22"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 22: defines gross real-estate capital income from ownership of rural or urban immovable property or real rights over it, including lease income and consideration for use or enjoyment rights."
@@ -4419,7 +4419,7 @@ article = "23"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a23"
 published_at = 2006-11-29
 effective_from = 2024-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 23: governs deductible expenses and reductions for real-estate capital income. Current consolidated redaction, published 2023-05-25 and effective for housing lease contracts from 2024-01-01, replaces the prior flat housing-rental reduction with 90/70/60/50 percent tiers and keeps the 3 percent amortization effectiveness rule."
@@ -4445,7 +4445,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20210710&tn
 published_at = 2006-11-29
 effective_from = 2021-07-11
 effective_to = 2023-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-30
 reviewed_by = "agent-review"
 notes = "LIRPF art 23, redaction selected by BOE at 2021-07-10 and in force from 2021-07-11: housing-rental net positive real-estate capital income was reduced by a flat 60 percent before the Ley 12/2023 tiered redaction became applicable."
@@ -4467,7 +4467,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20141128&tn
 published_at = 2006-11-29
 effective_from = 2015-01-01
 effective_to = 2020-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-02
 reviewed_by = "agent-review"
 notes = "LIRPF art 52, redaction selected by BOE at 2014-11-28 (art. 1.32 Ley 26/2014, BOE-A-2014-12327), in force 2015-01-01 to 2020-12-31: joint reduction limit was the lesser of 30 percent of net trabajo/actividades income or 8.000 euros annually, plus 5.000 euros for dependencia insurance premiums, before Ley 11/2020 art. 62.2 reduced the flat amount to 2.000 euros with effect from 2021-01-01. Grounds the 2020 Modelo 100 previsión social reduction casillas for the filing year the pre-2021 limit applied."
@@ -4492,7 +4492,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20201231&tn
 published_at = 2006-11-29
 effective_from = 2021-01-01
 effective_to = 2021-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-02
 reviewed_by = "agent-review"
 notes = "LIRPF art 52, redaction selected by BOE at 2020-12-31 (art. 62.2 Ley 11/2020, BOE-A-2020-17339), in force 2021-01-01 to 2021-12-31: joint reduction limit was the lesser of 30 percent of net trabajo/actividades income or 2.000 euros annually, increased by 8.000 euros for empresarial contributions, plus 5.000 euros for dependencia insurance premiums, before the further tiered increase Ley 22/2021 introduced with effect from 2022-01-01. Grounds the 2021 Modelo 100 previsión social reduction casillas."
@@ -4516,7 +4516,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20220701&tn
 published_at = 2006-11-29
 effective_from = 2022-07-02
 effective_to = 2022-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-02
 reviewed_by = "agent-review"
 notes = "LIRPF art 52, redaction selected by BOE at 2022-07-01 (disposición final 1.1 Ley 12/2022, BOE-A-2022-10852, corrected by the errata published 2022-10-06, BOE-A-2022-16278), in force 2022-07-02 to 2022-12-31: joint reduction limit is 1.500 euros annually, increased by 8.500 euros for empresarial/worker contributions (via the coeficiente table this redaction introduces) or 4.250 euros for autónomo sectorial plans, plus 5.000 euros for dependencia insurance premiums. The headline 1.500/8.500 euros figures were already in force from 2022-01-01 (art. 59.2 Ley 22/2021, BOE-A-2021-21653) and are numerically unchanged by this redaction and by the 2023-01-01 redaction; only the worker-contribution coefficient mechanics changed. Grounds the 2022 Modelo 100 previsión social reduction casillas for the redaction actually in force at that revision's devengo date (2022-12-31) — distinct from the 2021-only art-52-2021 entry (2.000/8.000 euros) and cited instead of the bare current entry, whose effective_from (2023-01-01) postdates the 2022 devengo date even though its required_text figures happen to match."
@@ -4539,7 +4539,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20141128&tn
 published_at = 2006-11-29
 effective_from = 2015-01-01
 effective_to = 2020-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-02
 reviewed_by = "agent-review"
 notes = "LIRPF art 66, redaction selected by BOE at 2014-11-28 (art. 1.42 Ley 26/2014, BOE-A-2014-12327), in force 2015-01-01 to 2020-12-31: three-bracket estatal savings scale (9,5/10,5/11,5 percent up to 6.000/44.000/en adelante euros), before Ley 11/2020 art. 59.2 added the fourth bracket (13,00 percent above 200.000 euros) with effect from 2021-01-01. Grounds the 2020 Modelo 100 base liquidable del ahorro estatal scale casillas and formulas."
@@ -4564,7 +4564,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20201231&tn
 published_at = 2006-11-29
 effective_from = 2021-01-01
 effective_to = 2022-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-02
 reviewed_by = "agent-review"
 notes = "LIRPF art 66, redaction selected by BOE at 2020-12-31 (art. 59.2 Ley 11/2020, BOE-A-2020-17339), in force 2021-01-01 to 2022-12-31: four-bracket estatal savings scale adding the 13,00 percent tranche above 200.000 euros, before Ley 31/2022 art. 63.2 restructured the top brackets with effect from 2023-01-01. Grounds the 2021 and 2022 Modelo 100 base liquidable del ahorro estatal scale casillas and formulas."
@@ -4589,7 +4589,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20221224&tn
 published_at = 2006-11-29
 effective_from = 2023-01-01
 effective_to = 2024-12-21
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-02
 reviewed_by = "agent-review"
 notes = "LIRPF art 66, redaction selected by BOE at 2022-12-24 (art. 63.2 Ley 31/2022, BOE-A-2022-22128), in force 2023-01-01 to 2024-12-21: five-bracket estatal savings scale adding the 13,5/14 percent tranches above 200.000/300.000 euros, before the 2024-12-22 redaction. Grounds the 2023 Modelo 100 base liquidable del ahorro estatal scale casillas and formulas."
@@ -4614,7 +4614,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20180704&tn
 published_at = 2006-11-29
 effective_from = 2018-07-05
 effective_to = 2022-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-02
 reviewed_by = "agent-review"
 notes = "LIRPF art 68, redaction selected by BOE at 2018-07-04, in force 2018-07-05 to 2022-12-31: the empresas-de-nueva-creación deduction was 30 percent of the amounts invested with a 60.000 euros annual maximum base, before Ley 28/2022 art. 3 (Startups law) increased it to 50 percent and 100.000 euros with effect from 2023-01-01. Grounds the 2020 and 2021 Modelo 100 deducción por inversión en empresas de nueva o reciente creación casillas and formulas."
@@ -4638,7 +4638,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20141128&tn
 published_at = 2006-11-29
 effective_from = 2015-01-01
 effective_to = 2025-04-02
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-02
 reviewed_by = "agent-review"
 notes = "LIRPF art 75, redaction selected by BOE at 2014-11-28 (art. 1.50 Ley 26/2014, BOE-A-2014-12327), in force 2015-01-01 to 2025-04-02: unchanged text through the 2020-2023 filing years, before the Ley 1/2025 amendment took effect 2025-04-03. Grounds the 2020-2023 Modelo 100 anualidades por alimentos autonomic-quota specialty casillas and formulas."
@@ -4660,7 +4660,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20141128&tn
 published_at = 2006-11-29
 effective_from = 2015-01-01
 effective_to = 2020-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-02
 reviewed_by = "agent-review"
 notes = "LIRPF art 76, redaction selected by BOE at 2014-11-28 (art. 1.51 Ley 26/2014, BOE-A-2014-12327), in force 2015-01-01 to 2020-12-31: three-bracket autonómica savings scale mirroring art. 66's pre-2021 brackets, before Ley 11/2020 art. 59.2 added the fourth bracket with effect from 2021-01-01. Grounds the 2020 Modelo 100 base liquidable del ahorro autonómica scale casillas and formulas."
@@ -4684,7 +4684,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20201231&tn
 published_at = 2006-11-29
 effective_from = 2021-01-01
 effective_to = 2022-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-02
 reviewed_by = "agent-review"
 notes = "LIRPF art 76, redaction selected by BOE at 2020-12-31 (art. 59.2 Ley 11/2020, BOE-A-2020-17339), in force 2021-01-01 to 2022-12-31: four-bracket autonómica savings scale adding the 13,00 percent tranche above 200.000 euros, before Ley 31/2022 art. 63.2 restructured the top brackets with effect from 2023-01-01. Grounds the 2021 and 2022 Modelo 100 base liquidable del ahorro autonómica scale casillas and formulas."
@@ -4707,7 +4707,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20221224&tn
 published_at = 2006-11-29
 effective_from = 2023-01-01
 effective_to = 2024-12-21
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-02
 reviewed_by = "agent-review"
 notes = "LIRPF art 76, redaction selected by BOE at 2022-12-24 (art. 63.2 Ley 31/2022, BOE-A-2022-22128), in force 2023-01-01 to 2024-12-21: five-bracket autonómica savings scale adding the 13,5/14 percent tranches above 200.000/300.000 euros, before the 2024-12-22 redaction. Grounds the 2023 Modelo 100 base liquidable del ahorro autonómica scale casillas and formulas."
@@ -4731,7 +4731,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20061129&tn
 published_at = 2006-11-29
 effective_from = 2007-01-01
 effective_to = 2022-10-19
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-02
 reviewed_by = "agent-review"
 notes = "LIRPF art 87, original 2006-11-29 text, in force 2007-01-01 to 2022-10-19: defines entities under the attribution-of-income regime (art. 8.3 entities, analogous foreign entities, the sociedades agrarias de transformación exclusion, the non-IS-subject rule), before Ley 31/2022 art. 62.5 added the LIS art. 15 bis.12 exception clause with effect from 2022-10-20. Grounds the 2020 and 2021 Modelo 100 régimen de atribución de rentas casillas."
@@ -4753,7 +4753,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20141128&tn
 published_at = 2006-11-29
 effective_from = 2015-01-01
 effective_to = 2021-07-10
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-02
 reviewed_by = "agent-review"
 notes = "LIRPF art 91, redaction selected by BOE at 2014-11-28 (art. 1.58 Ley 26/2014, BOE-A-2014-12327), in force 2015-01-01 to 2021-07-10: imputes income under the international fiscal transparency regime for controlled non-resident entities, before Ley 11/2021 art. 3.4 (antifraude) amended the article with effect from 2021-07-11. Grounds the 2020 Modelo 100 TFI entity/name and imputation amount casillas for the filing year the pre-2021 redaction applied."
@@ -4778,7 +4778,7 @@ article = "DT 38"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dt-6"
 published_at = 2006-11-29
 effective_from = 2024-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-30
 reviewed_by = "agent-review"
 notes = "LIRPF DT 38: contracts for housing rental signed before Ley 12/2023 entered into force apply the reduction in art 23.2 under the redaction in force on 2021-12-31."
@@ -4800,7 +4800,7 @@ article = "24"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a24"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 24: sets the minimum computable real-estate capital income when the tenant, assignee, lessee or sublessee is the taxpayer's spouse or a relative up to the third degree, tying the minimum to the art 85 imputed-rent rules."
@@ -4821,7 +4821,7 @@ article = "25"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a25"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 25: defines gross movable-capital income: participation in entity own funds, third-party lending/interest, capitalization and life/disability insurance operations, and other movable-capital yields such as intellectual-property, assistance, movable-rental and image-right income."
@@ -4844,7 +4844,7 @@ article = "26"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a26"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
 notes = "LIRPF art 26: governs deductible expenses and reductions for movable-capital income, including administration/deposit expenses for negotiable securities, necessary expenses for art 25.4-type income, and the 30 percent reduction for qualifying irregular or multi-year net income capped at 300,000 EUR."
@@ -5349,7 +5349,7 @@ article = "7"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a7"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a7; operator to re-stamp"
 notes = "LIRPF art 7: rentas exentas, including art 7.p foreign-work exemption and its 60.100 EUR annual cap. Base legal de las casillas informativas de rentas exentas (importes que no se integran en la base imponible) del Modelo 100 and the maritime worker Art. 7.p exemption. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a7; operator to confirm and re-stamp."
@@ -5369,7 +5369,7 @@ article = "DA 41"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dacuadragesimaprimera"
 published_at = 2006-11-29
 effective_from = 2015-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-authored from bundled ley-35-2006.html#dacuadragesimaprimera; operator to re-stamp"
 notes = "LIRPF DA 41: tripulantes de determinados buques de pesca. Establishes a 50 por ciento exempt-income rule for qualifying tuna fleet crew, conditioned on compatibility with EU law. Added by Ley 26/2014 art. 1.98; currently guarded inactive by the maritime worker engine until state-aid clearance is granted."
@@ -5389,7 +5389,7 @@ article = "53"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a53"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a53; operator to re-stamp"
 notes = "LIRPF art 53: reducciones de la base imponible general por aportaciones y contribuciones a sistemas de previsión social constituidos a favor de personas con discapacidad. Base legal de las casillas de reducción/exceso por previsión social de personas con discapacidad en Modelo 100 (distinto del patrimonio protegido del art. 54). AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a53; operator to confirm and re-stamp."
@@ -5407,7 +5407,7 @@ article = "55"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a55"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a55; operator to re-stamp"
 notes = "LIRPF art 55: reducciones de la base imponible por pensiones compensatorias satisfechas al cónyuge y anualidades por alimentos (salvo las fijadas a favor de los hijos) por decisión judicial. Base legal de las casillas de reducción por pensiones compensatorias y anualidades por alimentos en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a55; operator to confirm and re-stamp."
@@ -5425,7 +5425,7 @@ article = "92"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a92"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a92; operator to re-stamp"
 notes = "LIRPF art 92: imputación de rentas por la cesión de derechos de imagen. Base legal de las casillas del régimen especial de imputación por cesión de derechos de imagen en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a92; operator to confirm and re-stamp."
@@ -5447,7 +5447,7 @@ article = "95"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a95"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a95; operator to re-stamp"
 notes = "LIRPF art 95: tributación de los socios o partícipes de las instituciones de inversión colectiva constituidas en países o territorios considerados como paraísos fiscales. Base legal de las casillas del régimen especial de imputación por IIC en paraísos fiscales en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a95; operator to confirm and re-stamp."
@@ -5465,7 +5465,7 @@ article = "97"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a97"
 published_at = 2006-11-29
 effective_from = 2007-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a97; operator to re-stamp"
 notes = "LIRPF art 97: autoliquidación. Incluye en su apartado 6 la compensación entre cónyuges cuando, en tributación individual, el resultado de una declaración es a ingresar y el de la otra a devolver. Base legal de las casillas de resultado de la autoliquidación, compensación entre cónyuges (datos de la cuenta SEPA) y autoliquidación rectificativa en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a97; operator to confirm and re-stamp."
@@ -5487,7 +5487,7 @@ article = "DA-48"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#da-48"
 published_at = 2006-11-29
 effective_from = 2018-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html (DA cuadragésima octava); operator to re-stamp"
 notes = "LIRPF disposición adicional 48ª: deducción aplicable a las unidades familiares formadas por residentes fiscales en Estados miembros de la Unión Europea o del Espacio Económico Europeo, que equipara el tratamiento al de la tributación conjunta cuando uno de los miembros no es residente en España. Base legal de las casillas de la deducción por unidad familiar de residentes en la UE/EEE en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html (DA cuadragésima octava); operator to confirm and re-stamp."
@@ -5505,7 +5505,7 @@ article = "DA-70"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-22128#da-70"
 published_at = 2022-12-23
 effective_from = 2023-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "verified against official BOE-A-2022-22128 consolidated DA-70; corpus excerpt bundled"
 notes = "Ley 31/2022 (Presupuestos Generales del Estado para 2023) disposición adicional 70ª: Régimen fiscal especial de las Illes Balears. DA-70.Cuatro grounds the Reserva para Inversiones en las Illes Balears (RIB), including the reserve/materialisation tracking fields and the IRPF estimación-directa cuota deduction for Modelo 100 RIB casillas. Corpus excerpt bundled from the official BOE consolidated text."

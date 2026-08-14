@@ -88,11 +88,7 @@ def _registry_api_references(tree: ast.AST, symbols: frozenset[str]) -> set[str]
 
 
 def _function_definitions(tree: ast.AST) -> set[str]:
-    return {
-        node.name
-        for node in ast.walk(tree)
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-    }
+    return {node.name for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
 
 
 def _non_registry_calculation_sources() -> tuple[Path, ...]:
@@ -125,13 +121,41 @@ def test_m303_midyear_designs_are_canonically_selected_without_a_snapshot() -> N
     assert "period" not in RegistryRevisionInspection.model_fields
 
 
+def test_m038_inspection_retains_exact_model_law_and_construct_evidence() -> None:
+    """The non-filing projection carries the selected revision's evidence union."""
+    inspection = bundled_revision_inspection("038", filing_year=2025, period="01")
+
+    assert inspection.revision_id == "2002-y-siguientes"
+    assert inspection.legal_ref_ids == frozenset(
+        {
+            "ley-58-2003:art-93",
+            "orden-hac-66-2002:art-1",
+            "orden-hac-66-2002:art-6",
+        },
+    )
+    assert inspection.source_ref_ids == frozenset(
+        {
+            "enrolled-modelo-038-layout",
+            "enrolled-modelo-038-procedure",
+        },
+    )
+    assert inspection.casilla_ids == frozenset({"decl.ejercicio", "decl.tipo-declaracion"})
+    assert inspection.binding_ids == frozenset()
+    assert tuple(ref.id for ref in inspection.workbook_parity_refs) == ("modelo-038-orden-static-layout",)
+    assert inspection.live_cross_references == ()
+
+
 def test_inspection_api_cannot_cross_from_static_authority_into_runtime_boundaries() -> None:
     """AST references keep inspection authority out of all runtime consumers."""
     offenders = {
         path.relative_to(_REPOSITORY_ROOT): _registry_api_references(
             ast.parse(path.read_text(encoding="utf-8")), _INSPECTION_SYMBOLS
         )
-        for path in (*_python_sources(_RUNTIME_BOUNDARY_ROOTS), *_non_registry_calculation_sources(), *_handoff_sources())
+        for path in (
+            *_python_sources(_RUNTIME_BOUNDARY_ROOTS),
+            *_non_registry_calculation_sources(),
+            *_handoff_sources(),
+        )
         if _registry_api_references(ast.parse(path.read_text(encoding="utf-8")), _INSPECTION_SYMBOLS)
     }
 
@@ -148,8 +172,9 @@ def test_static_map_authority_has_no_snapshot_or_raw_loader_compatibility() -> N
         if _registry_api_references(ast.parse(path.read_text(encoding="utf-8")), _LEGACY_STATIC_SYMBOLS)
     }
     defined_legacy = {
-        path.relative_to(_REPOSITORY_ROOT): _function_definitions(ast.parse(path.read_text(encoding="utf-8")))
-        .intersection(_LEGACY_STATIC_SYMBOLS)
+        path.relative_to(_REPOSITORY_ROOT): _function_definitions(
+            ast.parse(path.read_text(encoding="utf-8"))
+        ).intersection(_LEGACY_STATIC_SYMBOLS)
         for path in _STATIC_CONSUMERS
         if _function_definitions(ast.parse(path.read_text(encoding="utf-8"))).intersection(_LEGACY_STATIC_SYMBOLS)
     }
@@ -179,9 +204,7 @@ def test_inspection_census_understands_public_facade_and_private_module_aliases(
     assert _registry_api_references(direct, _INSPECTION_SYMBOLS) == {"bundled_revision_inspection"}
     assert _registry_api_references(public_facade, _INSPECTION_SYMBOLS) == {"RegistryRevisionInspection"}
     assert _registry_api_references(module, _INSPECTION_SYMBOLS) == {"inspect_revision"}
-    assert _registry_api_references(imported_public_facade, _INSPECTION_SYMBOLS) == {
-        "RegistryRevisionInspection"
-    }
+    assert _registry_api_references(imported_public_facade, _INSPECTION_SYMBOLS) == {"RegistryRevisionInspection"}
     assert _registry_api_references(imported_private_module, _INSPECTION_SYMBOLS) == {"inspect_revision"}
 
 
@@ -195,6 +218,4 @@ def test_legacy_census_detects_private_module_alias_bypass() -> None:
     )
 
     assert _registry_api_references(legacy_alias, _LEGACY_STATIC_SYMBOLS) == {"load_modelo_directory"}
-    assert _registry_api_references(imported_legacy_alias, _LEGACY_STATIC_SYMBOLS) == {
-        "load_modelo_directory"
-    }
+    assert _registry_api_references(imported_legacy_alias, _LEGACY_STATIC_SYMBOLS) == {"load_modelo_directory"}

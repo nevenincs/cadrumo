@@ -8,7 +8,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-1686#a1"
 published_at = 2003-01-28
 effective_from = 2003-01-29
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2003-1686 art 1; pending operator re-stamp)"
 notes = "Orden HAC/85/2003 art 1: aprueba el modelo 848, comunicación del importe neto de la cifra de negocios (INCN) que deben presentar los sujetos pasivos del Impuesto sobre Actividades Económicas. Orden habilitante del modelo 848. La autoliquidación IAE (modelo 840) es una obligación distinta y queda fuera de alcance; el 848 es sólo la comunicación del INCN."
@@ -27,7 +27,7 @@ article = "3"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-1686#a3"
 published_at = 2003-01-28
 effective_from = 2003-01-29
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2003-1686 art 3; pending operator re-stamp)"
 notes = "Orden HAC/85/2003 art 3: plazo de presentación del modelo 848. Entre el día 1 de enero y el día 14 de febrero, ambos incluidos, del ejercicio en que deba surtir efectos dicha comunicación en el Impuesto sobre Actividades Económicas."

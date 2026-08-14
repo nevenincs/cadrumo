@@ -121,8 +121,7 @@ def census_m303_2024_early_semantic_map(
     duplicate_semantic_anchors = tuple(sorted(anchor for anchor, count in semantic_anchor_counts.items() if count != 1))
     if duplicate_semantic_anchors:
         raise ValueError(
-            "M303 2024-early semantic map assigns an anchor more than once: "
-            f"{duplicate_semantic_anchors!r}",
+            f"M303 2024-early semantic map assigns an anchor more than once: {duplicate_semantic_anchors!r}",
         )
     source_anchors = set(source_anchor_sequence)
     semantic_anchors = set(semantic_anchor_sequence)
@@ -141,9 +140,7 @@ def census_m303_2024_early_semantic_map(
         raise ValueError(f"M303 2024-early reviewed semantic-home totals drifted: {review_home_totals!r}")
 
     simplified_source_anchors = {
-        ("DP30302", ordinal)
-        for ordinal in (*range(6, 78), *range(90, 152))
-        if ordinal not in {92, 94, 120, 122}
+        ("DP30302", ordinal) for ordinal in (*range(6, 78), *range(90, 152)) if ordinal not in {92, 94, 120, 122}
     }
     simplified_entries = tuple(
         entry

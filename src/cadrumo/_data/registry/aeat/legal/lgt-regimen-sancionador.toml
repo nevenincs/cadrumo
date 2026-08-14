@@ -63,7 +63,7 @@ article = "191"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a191"
 published_at = 2003-12-18
 effective_from = 2004-07-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
 notes = "Infraccion por dejar de ingresar la deuda tributaria resultante de una autoliquidacion. The severity axis: leve where the base is 3.000 euros or less, or greater without ocultacion; grave where the base exceeds 3.000 euros and there is ocultacion; muy grave where medios fraudulentos were used. Incorrect books or registers push the infraction off leve above a 10 per cent incidence and make it grave between 10 and 50 per cent. Unremitted retenciones make it grave at 50 per cent or less of the base and muy grave above. Nominal bands: leve 50 por ciento, grave 50 al 100 por ciento, muy grave 100 al 150 por ciento, each graduated under art-187 and reduced under art-188."
@@ -83,7 +83,7 @@ article = "192"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a192"
 published_at = 2003-12-18
 effective_from = 2004-07-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
 notes = "Infraccion por incumplir la obligacion de presentar de forma completa y correcta las declaraciones o documentos necesarios para practicar liquidaciones. Same severity axis and same nominal bands as art-191, applied to the declaration-based rather than the self-assessment-based case: leve 50 por ciento, grave 50 al 100 por ciento, muy grave 100 al 150 por ciento, with the same 10 per cent and 50 per cent books-and-registers thresholds."
@@ -102,7 +102,7 @@ article = "193"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a193"
 published_at = 2003-12-18
 effective_from = 2004-07-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
 notes = "Infraccion por obtener indebidamente devoluciones. Same severity axis and nominal bands as arts. 191 and 192 -- leve 50 por ciento, grave 50 al 100 por ciento, muy grave 100 al 150 por ciento -- applied to a refund wrongly obtained rather than to tax left unpaid."
@@ -121,7 +121,7 @@ article = "194"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a194"
 published_at = 2003-12-18
 effective_from = 2004-07-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
 notes = "Infraccion por solicitar indebidamente devoluciones, beneficios o incentivos fiscales. Always grave. Two distinct sanctions: a multa pecuniaria proporcional del 15 por ciento where a refund is wrongly solicited by omitting or falsifying data without the refund having been obtained, and a multa pecuniaria fija de 300 euros where the wrongly solicited item is a beneficio or incentivo fiscal. This is the one article in the range carrying a FIXED euro amount rather than a proportional band."
@@ -140,7 +140,7 @@ article = "195"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a195"
 published_at = 2003-12-18
 effective_from = 2004-07-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
 notes = "Infraccion por determinar o acreditar improcedentemente partidas positivas o negativas o creditos tributarios aparentes. Always grave. The band depends on where the wrongly accredited item sits: 15 por ciento for partidas to be offset or deducted in the base imponible, and 50 por ciento for partidas in the cuota or for apparent tax credits. The sanction is deducted from any later sanction arising when the same amounts are actually offset."
@@ -159,7 +159,7 @@ article = "196"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a196"
 published_at = 2003-12-18
 effective_from = 2004-07-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
 notes = "Infraccion por imputar incorrectamente o no imputar bases imponibles, rentas o resultados por las entidades sometidas a un regimen de imputacion de rentas. Always grave. Nominal band: multa pecuniaria proporcional del 40 por ciento of the amounts wrongly imputed or not imputed, graduated under art-187 and reduced under art-188."
@@ -177,7 +177,7 @@ article = "197"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a197"
 published_at = 2003-12-18
 effective_from = 2004-07-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
 notes = "Infraccion por imputar incorrectamente deducciones, bonificaciones y pagos a cuenta por las entidades sometidas a un regimen de imputacion de rentas. Always grave. Nominal band: multa pecuniaria proporcional del 75 por ciento of the amounts wrongly imputed, the highest proportional band in the range, graduated under art-187 and reduced under art-188."

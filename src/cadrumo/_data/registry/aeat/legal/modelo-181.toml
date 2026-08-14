@@ -8,7 +8,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-21165#a1"
 published_at = 2009-12-29
 effective_from = 2009-12-30
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2009-21165 art 1; pending operator re-stamp)"
 notes = "Orden EHA/3514/2009 art 1: aprueba el modelo 181, declaración informativa de préstamos y créditos, y operaciones financieras relacionadas con bienes inmuebles. Orden habilitante del modelo 181."
@@ -27,7 +27,7 @@ article = "6"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-21165#a6"
 published_at = 2009-12-29
 effective_from = 2009-12-30
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2009-21165 art 6; pending operator re-stamp)"
 notes = "Orden EHA/3514/2009 art 6: plazo de presentación del modelo 181. Entre el día 1 y el 31 del mes de enero de cada año."

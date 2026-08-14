@@ -10,11 +10,7 @@ from shutil import rmtree
 
 import pytest
 
-from cadrumo.domain.calculations.registry import (
-    RegistryValidationError,
-    bundled_authority,
-    load_modelo_directory,
-)
+from cadrumo.domain.calculations.registry import RegistryValidationError, load_modelo_directory
 
 from .. import _generated_tree_publication
 from .._generated_tree_publication import (
@@ -30,11 +26,6 @@ from .._provenance_manifest import (
 from .test_export_tree import _wire_evidence, _wire_profile, _write_isolated_generated_authority_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-
-@pytest.fixture
-def m200_snapshot():
-    return bundled_authority().snapshot("200", filing_year=2025, period="0A")
 
 
 def _tree_bytes(root: Path) -> dict[str, bytes]:

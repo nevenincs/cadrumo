@@ -8,7 +8,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13228#a1"
 published_at = 2013-12-13
 effective_from = 2013-12-14
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2013-13228 art 1; pending operator re-stamp)"
 notes = "Orden HAP/2368/2013 art 1: aprueba el modelo 270, resumen anual de retenciones e ingresos a cuenta del gravamen especial sobre los premios de determinadas loterías y apuestas. Orden habilitante del modelo 270."
@@ -27,7 +27,7 @@ article = "3"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13228#a3"
 published_at = 2013-12-13
 effective_from = 2013-12-14
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2013-13228 art 3; pending operator re-stamp)"
 notes = "Orden HAP/2368/2013 art 3: plazo de presentación del modelo 270. En el mes de enero de cada año, en relación con los premios satisfechos en el año inmediato anterior."

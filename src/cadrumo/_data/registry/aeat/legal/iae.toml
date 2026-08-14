@@ -8,7 +8,7 @@ article = "78"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4214#a78"
 published_at = 2004-03-09
 effective_from = 2004-03-10
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
 notes = "TRLRHL art 78: naturaleza y hecho imponible del Impuesto sobre Actividades Economicas (IAE)."
@@ -28,7 +28,7 @@ article = "82"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4214#a82"
 published_at = 2004-03-09
 effective_from = 2004-03-10
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
 notes = "TRLRHL art 82: exenciones del IAE. Estaran exentos los sujetos pasivos cuyo importe neto de la cifra de negocios sea inferior a 1.000.000 EUR."
@@ -48,7 +48,7 @@ article = "90"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4214#a90"
 published_at = 2004-03-09
 effective_from = 2004-03-10
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
 notes = "TRLRHL art 90: gestion tributaria del IAE; matricula del impuesto y reglas de gestion compartida entre AEAT y administracion tributaria local."
@@ -67,7 +67,7 @@ article = "unico"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1990-23930#aunico"
 published_at = 1990-09-29
 effective_from = 1990-10-19
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "verified against official BOE-A-1990-23930 consolidated art. unico; corpus excerpt bundled"
 notes = "RDLeg 1175/1990 art unico approves the IAE tariffs and the instruction for their application. Grounds profile storage of the IAE section/group/epigraph code carried from censo/live facts."
@@ -89,7 +89,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-17642"
 published_at = 2003-09-18
 effective_from = 2003-09-19
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
 notes = "Apartado primero de la Orden HAC/2572/2003: aprobacion del modelo 840 de Declaracion del Impuesto sobre Actividades Economicas."
@@ -109,7 +109,7 @@ article = "6"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-17642"
 published_at = 2003-09-18
 effective_from = 2003-09-19
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
 notes = "Apartado sexto de la Orden HAC/2572/2003: plazos de presentacion del Modelo 840 (alta, variacion, baja) por remision a los articulos 5, 6 y 7 del Real Decreto 243/1995."

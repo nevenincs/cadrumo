@@ -103,6 +103,7 @@ from ...domain.calculations.registry import verify_legal_catalogue as _verify_le
 from ...domain.period import calculation_filing_date as _calculation_filing_date
 from ._conformance import (
     AnnualCasillaPopulationComparison,
+    CoverageAuthorityScope,
     LatestRevisionSupportProbe,
     RegistryConformanceProfile,
     RevisionCapabilityFacts,
@@ -547,6 +548,7 @@ __all__ = [
     "AnnualCasillaPopulationComparison",
     "BindingDiff",
     "CasillaDiff",
+    "CoverageAuthorityScope",
     "FiledStateVerificationReport",
     "FormulaDiff",
     "LatestRevisionSupportProbe",

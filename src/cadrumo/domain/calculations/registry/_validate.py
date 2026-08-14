@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING
 
 from ._corpus_catalogue import verify_source_catalogue
 from ._errors import RegistryValidationError
-from ._legal import verify_legal_catalogue
+from ._legal import verify_legal_catalogue_grounding
 from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ._schema_input_kind import InputKind
 from ._source_evidence_fingerprint import (
@@ -193,7 +193,7 @@ class RegistryValidator:
 
         failures: list[str] = []
         try:
-            verify_legal_catalogue(
+            verify_legal_catalogue_grounding(
                 self._legal,
                 source_root=self._source_root,
             )

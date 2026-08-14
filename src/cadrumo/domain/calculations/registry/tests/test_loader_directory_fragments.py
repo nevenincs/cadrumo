@@ -124,8 +124,8 @@ required = true
 
     target = tmp_path / "999"
     (target / "revisions" / "2025" / "casillas").mkdir(parents=True)
-    (target / "revisions" / "2025" / "continuidad").mkdir()
-    (target / "revisions" / "2025" / "export").mkdir()
+    (target / "revisions" / "2025" / "casilla_continuidad_evolutions").mkdir()
+    (target / "revisions" / "2025" / "export_layouts").mkdir()
     _write_standard_manifest(target, "Fragment test")
     _write_standard_revision_preamble(target / "revisions" / "2025" / "revision.toml")
     (target / "revisions" / "2025" / "casillas" / "liquidacion.toml").write_text(
@@ -139,7 +139,7 @@ source_refs = ["aeat-manual"]
 """.lstrip(),
         encoding="utf-8",
     )
-    (target / "revisions" / "2025" / "continuidad" / "base.toml").write_text(
+    (target / "revisions" / "2025" / "casilla_continuidad_evolutions" / "base.toml").write_text(
         """
 [[revisions."2025".casilla_continuidad_evolutions]]
 id = "continuidad-base-2025"
@@ -152,7 +152,7 @@ source_refs = ["aeat-manual"]
 """.lstrip(),
         encoding="utf-8",
     )
-    (target / "revisions" / "2025" / "continuidad" / "cuota.toml").write_text(
+    (target / "revisions" / "2025" / "casilla_continuidad_evolutions" / "cuota.toml").write_text(
         """
 [[revisions."2025".casilla_continuidad_evolutions]]
 id = "continuidad-cuota-2025"
@@ -165,7 +165,7 @@ source_refs = ["aeat-manual"]
 """.lstrip(),
         encoding="utf-8",
     )
-    (target / "revisions" / "2025" / "export" / "manifest.toml").write_text(
+    (target / "revisions" / "2025" / "export_layouts" / "0001-manifest.toml").write_text(
         """
 [[revisions."2025".export_layouts]]
 id = "modelo-999-layout"
@@ -174,7 +174,7 @@ source_refs = ["aeat-manual"]
 """.lstrip(),
         encoding="utf-8",
     )
-    (target / "revisions" / "2025" / "export" / "record-001.toml").write_text(
+    (target / "revisions" / "2025" / "export_layouts" / "0002-record-001.toml").write_text(
         """
 [[revisions."2025".export_layouts]]
 id = "modelo-999-layout"
@@ -228,10 +228,10 @@ number = "0002"
     expected = load_modelo_file(single_file)
 
     target = tmp_path / "999"
-    (target / "revisions" / "2025" / "completeness").mkdir(parents=True)
+    (target / "revisions" / "2025" / "completeness_manifest").mkdir(parents=True)
     _write_standard_manifest(target, "Fragment test")
     _write_standard_revision_preamble(target / "revisions" / "2025" / "revision.toml")
-    (target / "revisions" / "2025" / "completeness" / "manifest.toml").write_text(
+    (target / "revisions" / "2025" / "completeness_manifest" / "0001-manifest.toml").write_text(
         """
 [revisions."2025".completeness_manifest]
 source_ref = "aeat-manual"
@@ -240,7 +240,7 @@ source_refs = ["aeat-manual"]
 """.lstrip(),
         encoding="utf-8",
     )
-    (target / "revisions" / "2025" / "completeness" / "casillas-0001.toml").write_text(
+    (target / "revisions" / "2025" / "completeness_manifest" / "0002-casillas-0001.toml").write_text(
         (
             """
 [[revisions."2025".completeness_manifest.casillas]]
@@ -252,7 +252,7 @@ number = "0001"
         ).lstrip(),
         encoding="utf-8",
     )
-    (target / "revisions" / "2025" / "completeness" / "casillas-0002.toml").write_text(
+    (target / "revisions" / "2025" / "completeness_manifest" / "0003-casillas-0002.toml").write_text(
         (
             """
 [[revisions."2025".completeness_manifest.casillas]]
@@ -325,10 +325,10 @@ source_refs = ["aeat-manual"]
     expected = load_modelo_file(single_file)
 
     target = tmp_path / "999"
-    (target / "revisions" / "2025" / "export").mkdir(parents=True)
+    (target / "revisions" / "2025" / "export_layouts").mkdir(parents=True)
     _write_standard_manifest(target, "Fragment test")
     _write_standard_revision_preamble(target / "revisions" / "2025" / "revision.toml")
-    (target / "revisions" / "2025" / "export" / "record-a.toml").write_text(
+    (target / "revisions" / "2025" / "export_layouts" / "0001-record-a.toml").write_text(
         """
 [[revisions."2025".export_layouts]]
 id = "modelo-999-layout"
@@ -359,7 +359,7 @@ source_refs = ["aeat-manual"]
 """.lstrip(),
         encoding="utf-8",
     )
-    (target / "revisions" / "2025" / "export" / "record-b.toml").write_text(
+    (target / "revisions" / "2025" / "export_layouts" / "0002-record-b.toml").write_text(
         """
 [[revisions."2025".export_layouts]]
 id = "modelo-999-layout"
@@ -413,7 +413,7 @@ formulas = ["formula-1"]
     (target / "revisions" / "2025" / "constructs").mkdir(parents=True)
     _write_standard_manifest(target, "Fragment test")
     _write_standard_revision_preamble(target / "revisions" / "2025" / "revision.toml")
-    (target / "revisions" / "2025" / "constructs" / "casillas.toml").write_text(
+    (target / "revisions" / "2025" / "constructs" / "0001-casillas.toml").write_text(
         """
 [[revisions."2025".constructs]]
 id = "modelo-999-workflow"
@@ -423,7 +423,7 @@ casilla_ids = ["0001"]
 """.lstrip(),
         encoding="utf-8",
     )
-    (target / "revisions" / "2025" / "constructs" / "formulas.toml").write_text(
+    (target / "revisions" / "2025" / "constructs" / "0002-formulas.toml").write_text(
         """
 [[revisions."2025".constructs]]
 id = "modelo-999-workflow"
@@ -442,10 +442,10 @@ formulas = ["formula-1"]
     ("fragment_dir", "fragment_files", "error_match"),
     (
         pytest.param(
-            "export",
+            "export_layouts",
             (
                 (
-                    "record-a.toml",
+                    "0001-record-a.toml",
                     """
 [[revisions."2025".export_layouts]]
 id = "layout"
@@ -456,7 +456,7 @@ record_type = "1"
 """.lstrip(),
                 ),
                 (
-                    "record-b.toml",
+                    "0002-record-b.toml",
                     """
 [[revisions."2025".export_layouts]]
 id = "layout"
@@ -474,7 +474,7 @@ record_type = "2"
             "constructs",
             (
                 (
-                    "one.toml",
+                    "0001-one.toml",
                     """
 [[revisions."2025".constructs]]
 id = "workflow"
@@ -484,7 +484,7 @@ casilla_ids = ["0001"]
 """.lstrip(),
                 ),
                 (
-                    "two.toml",
+                    "0002-two.toml",
                     """
 [[revisions."2025".constructs]]
 id = "workflow"
@@ -520,7 +520,7 @@ def test_directory_mode_rejects_duplicate_export_field_ids_after_record_merge(tm
     """Same-id record fragments must not create ambiguous nested field ids."""
 
     target = tmp_path / "999"
-    export_dir = _minimal_fragment_revision_layout(target, fragment_dirs=("export",)) / "export"
+    export_dir = _minimal_fragment_revision_layout(target, fragment_dirs=("export_layouts",)) / "export_layouts"
     duplicate_field_fragment = """
 [[revisions."2025".export_layouts]]
 id = "modelo-999-layout"
@@ -549,11 +549,11 @@ signed = false
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 """.lstrip()
-    (export_dir / "record-a.toml").write_text(
+    (export_dir / "0001-record-a.toml").write_text(
         duplicate_field_fragment,
         encoding="utf-8",
     )
-    (export_dir / "record-b.toml").write_text(
+    (export_dir / "0002-record-b.toml").write_text(
         duplicate_field_fragment,
         encoding="utf-8",
     )
@@ -588,5 +588,5 @@ def test_directory_mode_rejects_fragment_scalar_redeclaration(tmp_path: Path) ->
         encoding="utf-8",
     )
 
-    with pytest.raises(RegistryLoadError, match="redeclares scalar field 'valid_from'"):
+    with pytest.raises(RegistryLoadError, match="must live in its owned section subdirectory"):
         load_modelo_directory(target)

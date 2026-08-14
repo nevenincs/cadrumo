@@ -121,7 +121,7 @@ def _minimal_legal_ref() -> LegalReference:
         document_id="BOE-A-2006-20764",
         permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
         effective_from=date(2006, 11, 30),
-        review_status="reviewed",
+        review_status="operator_reviewed",
         reviewed_at=date(2026, 7, 1),
         reviewed_by="codex test fixture",
         required_text=("art-1",),

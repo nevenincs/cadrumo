@@ -7,7 +7,7 @@ from typing import Annotated, Literal
 
 from pydantic import AfterValidator, AnyHttpUrl, Field, TypeAdapter, field_validator, model_validator
 
-from ....core import RegistryPeriodCode, RegistrySelectorPeriodCode
+from ....core import REVIEWED_LEGAL_STATUSES, LegalReviewStatus, RegistryPeriodCode, RegistrySelectorPeriodCode
 from ....core.external_constants import (
     PDF_EXTENSION,
     XLS_EXTENSION,
@@ -17,7 +17,7 @@ from ....core.external_constants import (
 from ....core.identity import ContentDigest
 from ._errors import RegistryValidationError
 from ._ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
-from ._schema_base import DateAxis, EvidenceTier, LegalRefs, RegistryModel, ReviewStatus
+from ._schema_base import DateAxis, EvidenceTier, LegalRefs, LegalReviewStatusField, RegistryModel, ReviewStatus
 
 __all__ = [
     "LegalParameter",
@@ -65,6 +65,32 @@ def _validate_legal_corpus_ref(reference_id: LegalRefId, corpus_ref: str) -> Non
     if not path_part or not anchor_part:
         raise RegistryValidationError(
             f"legal reference {reference_id!r} corpus_ref must have non-empty path and anchor"
+        )
+
+
+def _validate_legal_review_metadata(
+    review_status: LegalReviewStatus,
+    reviewed_by: str | None,
+    reviewed_at: date | None,
+) -> None:
+    has_reviewer = reviewed_by is not None
+    has_review_date = reviewed_at is not None
+    if review_status is LegalReviewStatus.PENDING_REVIEW:
+        if has_reviewer or has_review_date:
+            raise RegistryValidationError("pending legal reference must not declare reviewed_by or reviewed_at")
+    elif review_status in REVIEWED_LEGAL_STATUSES and not (has_reviewer and has_review_date):
+        raise RegistryValidationError(f"{review_status.value} legal reference requires reviewed_by and reviewed_at")
+
+
+def _validate_legal_reference_text(
+    reference_id: LegalRefId, required: tuple[str, ...], forbidden: tuple[str, ...]
+) -> None:
+    _validate_legal_text_entries(required, field_name="required_text")
+    _validate_legal_text_entries(forbidden, field_name="forbidden_text")
+    overlap = set(required) & set(forbidden)
+    if overlap:
+        raise RegistryValidationError(
+            f"legal reference {reference_id!r} required_text and forbidden_text must not overlap: {sorted(overlap)!r}",
         )
 
 
@@ -153,9 +179,9 @@ class LegalReference(RegistryModel):
     effective_from: date
     effective_to: date | None = None
     consolidated_as_of: date | None = None
-    review_status: ReviewStatus
-    reviewed_at: date
-    reviewed_by: str = Field(min_length=1)
+    review_status: LegalReviewStatusField
+    reviewed_at: date | None = None
+    reviewed_by: str | None = Field(default=None, min_length=1)
     notes: str | None = None
     required_text: tuple[str, ...] = Field(min_length=1)
     forbidden_text: tuple[str, ...] = ()
@@ -171,14 +197,10 @@ class LegalReference(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_legal_reference(self) -> LegalReference:
+        _validate_legal_review_metadata(self.review_status, self.reviewed_by, self.reviewed_at)
         if self.effective_to is not None and self.effective_to < self.effective_from:
             raise RegistryValidationError("legal reference effective_to must be on or after effective_from")
-        _validate_legal_text_entries(self.required_text, field_name="required_text")
-        _validate_legal_text_entries(self.forbidden_text, field_name="forbidden_text")
-        if overlap := set(self.required_text) & set(self.forbidden_text):
-            raise RegistryValidationError(
-                f"legal reference {self.id!r} required_text and forbidden_text must not overlap: {sorted(overlap)!r}",
-            )
+        _validate_legal_reference_text(self.id, self.required_text, self.forbidden_text)
         _validate_legal_corpus_ref(self.id, self.corpus_ref)
         return self
 

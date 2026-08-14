@@ -217,7 +217,8 @@ def _write_fragmented_revision_blocks(
     for field, blocks in section_blocks.items():
         section_dir = revision_dir / field
         section_dir.mkdir(parents=True, exist_ok=True)
-        (section_dir / f"0001-{field}.toml").write_text(
+        fragment_slug = field.replace("_", "-")
+        (section_dir / f"0001-{fragment_slug}.toml").write_text(
             "".join(blocks).strip("\n") + "\n", encoding="utf-8", newline="\n"
         )
 

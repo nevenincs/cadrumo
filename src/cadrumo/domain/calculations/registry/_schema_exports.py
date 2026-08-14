@@ -7,6 +7,7 @@ surfaces remain independent of fixed-width rendering policy.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from enum import StrEnum
 from typing import Annotated, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
@@ -55,6 +56,9 @@ __all__ = [
     "ExportRecordDefinition",
     "ExportSemanticPayloadAxis",
     "ExportValuePolicyValue",
+    "M303EnvelopePrefixFieldDeclaration",
+    "M303EnvelopePrefixRole",
+    "M303FilingEnvelopeDefinition",
     "OneBasedExportOffset",
     "ProjectionEndpointDeclaration",
     "RecordDiscriminator",
@@ -62,6 +66,86 @@ __all__ = [
 
 type OneBasedExportOffset = Annotated[int, Field(ge=1)]
 """A positive one-based byte coordinate in an AEAT fixed-width export record."""
+
+
+class M303EnvelopePrefixRole(StrEnum):
+    """Closed runtime roles for the reviewed DP30300 prefix declaration."""
+
+    OPENING_TAG = "opening_tag"
+    MODELO = "modelo"
+    DISCRIMINANT = "discriminant"
+    FILING_YEAR = "filing_year"
+    PERIOD = "period"
+    RECORD_TYPE = "record_type"
+    AUX_OPENING_TAG = "aux_opening_tag"
+    PRE_PROGRAM_FILLER = "pre_program_filler"
+    PROGRAM_IDENTIFIER = "program_identifier"
+    BETWEEN_IDENTITIES_FILLER = "between_identities_filler"
+    DEVELOPER_TAX_ID = "developer_tax_id"
+    POST_DEVELOPER_FILLER = "post_developer_filler"
+    AUX_CLOSING_TAG = "aux_closing_tag"
+
+
+def _coerce_m303_envelope_prefix_role(value: object) -> object:
+    """Hydrate the authored layout token into its closed DP30300 prefix role."""
+    if isinstance(value, M303EnvelopePrefixRole):
+        return value
+    if isinstance(value, str):
+        try:
+            return M303EnvelopePrefixRole(value)
+        except ValueError as exc:
+            raise ValueError(f"unknown M303 envelope prefix role {value!r}") from exc
+    raise ValueError("M303 envelope prefix role must be a string")
+
+
+type M303EnvelopePrefixRoleValue = Annotated[
+    M303EnvelopePrefixRole,
+    BeforeValidator(_coerce_m303_envelope_prefix_role),
+]
+
+
+class M303EnvelopePrefixFieldDeclaration(RegistryModel):
+    """One reviewed DP30300 prefix role and its exact emitted byte length."""
+
+    role: M303EnvelopePrefixRoleValue
+    length: int = Field(gt=0)
+
+
+class M303FilingEnvelopeDefinition(RegistryModel):
+    """Static DP30300 declaration carried by a generated Modelo 303 layout.
+
+    This is a declaration of the envelope grammar, not an instance filing
+    payload.  Period, product identity values, body occurrences, bytes, totals,
+    and digests are deliberately absent: the application filing boundary owns
+    those facts when it renders an approved draft.
+    """
+
+    schema_version: Literal[1] = 1
+    source_ref: SourceRefId
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    record_identity: Literal["DP30300"]
+    prefix_fields: tuple[M303EnvelopePrefixFieldDeclaration, ...] = Field(min_length=13, max_length=13)
+    body_record_ids: tuple[RecordId, ...] = Field(min_length=1)
+    product_identity_requirement: Literal["aeat-product-software-identity-v1"]
+    closer_derivation: Literal["m303-relative-closer-v1"]
+    total_derivation: Literal["m303-emitted-byte-total-v1"]
+
+    @model_validator(mode="after")
+    def _require_complete_static_grammar(self) -> M303FilingEnvelopeDefinition:
+        expected_roles = tuple(M303EnvelopePrefixRole)
+        actual_roles = tuple(field.role for field in self.prefix_fields)
+        if actual_roles != expected_roles:
+            raise RegistryValidationError(
+                "M303 filing envelope prefix declaration must retain every source-ordered closed role",
+            )
+        if sum(field.length for field in self.prefix_fields) != 328:
+            raise RegistryValidationError(
+                "M303 filing envelope prefix declaration must retain its exact 328-byte source extent",
+            )
+        if len(set(self.body_record_ids)) != len(self.body_record_ids):
+            raise RegistryValidationError("M303 filing envelope body record declarations must be unique and ordered")
+        return self
+
 
 #: lookup rather than repeated per policy. A policy absent from this table has
 #: no reviewed wire shape and is refused.
@@ -530,6 +614,7 @@ class ExportLayoutDefinition(RegistryModel):
     source_refs: SourceRefs
     legal_refs: LegalRefs
     records: tuple[ExportRecordDefinition, ...] = Field(default_factory=tuple)
+    m303_filing_envelope: M303FilingEnvelopeDefinition | None = None
     dictionary_path_overrides: tuple[XmlDictionaryPathOverride, ...] = Field(default_factory=tuple)
     """Dictionary rows whose AEAT-declared path is corrected before use.
 
@@ -614,6 +699,10 @@ class ExportLayoutDefinition(RegistryModel):
 
 
 def _validate_xml_dictionary_layout(layout: ExportLayoutDefinition) -> None:
+    if layout.m303_filing_envelope is not None:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} declares an M303 filing envelope on an XML-dictionary layout",
+        )
     if layout.dictionary_source_ref is None:
         raise RegistryValidationError(f"export layout {layout.id!r} must declare dictionary_source_ref")
     if layout.dictionary_source_ref not in layout.source_refs:
@@ -643,6 +732,22 @@ def _validate_non_xml_layout(layout: ExportLayoutDefinition) -> None:
         raise RegistryValidationError(
             f"export layout {layout.id!r} declares dictionary path overrides on a {layout.format} layout, "
             "which reads no dictionary",
+        )
+    envelope = layout.m303_filing_envelope
+    if envelope is None:
+        return
+    if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} declares an M303 filing envelope on a non-fixed-width layout",
+        )
+    if envelope.source_ref not in layout.source_refs:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} M303 filing-envelope source must be included in source_refs",
+        )
+    record_ids = tuple(record.id for record in layout.records)
+    if record_ids != envelope.body_record_ids:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} M303 filing-envelope body records must retain the exact layout order",
         )
 
 

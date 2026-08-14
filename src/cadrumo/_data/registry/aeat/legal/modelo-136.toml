@@ -9,7 +9,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#datrigesimate
 published_at = 2006-11-29
 effective_from = 2020-01-01
 consolidated_as_of = 2026-07-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "official BOE consolidated LIRPF corpus audit on 2026-07-01"
 notes = "Current consolidated LIRPF DA 33: special levy on lottery and betting prizes, 40,000 euro exemption, 20 percent rate, and autoliquidation duty when no withholding or payment on account applies."
@@ -32,7 +32,7 @@ article = "5"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2013-952#a5"
 published_at = 2013-01-31
 effective_from = 2013-02-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 5 approves Modelo 136 and identifies the form title."
@@ -52,7 +52,7 @@ article = "6"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2013-952#a6"
 published_at = 2013-01-31
 effective_from = 2013-02-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 6 defines the taxpayers obliged to file Modelo 136."
@@ -72,7 +72,7 @@ article = "7"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2013-952#a7"
 published_at = 2013-01-31
 effective_from = 2013-02-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 7 sets quarterly Modelo 136 filing and payment windows."
@@ -92,7 +92,7 @@ article = "10"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2013-952#a10"
 published_at = 2013-01-31
 effective_from = 2013-02-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 10 defines general electronic filing conditions for Modelos 230 and 136."
@@ -112,7 +112,7 @@ article = "11"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2013-952#a11"
 published_at = 2013-01-31
 effective_from = 2013-02-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 11 defines the internet filing procedure, the quarterly period codes, and the positive amount-to-enter condition for Modelo 136."
@@ -133,7 +133,7 @@ article = "12"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2013-952#a12"
 published_at = 2013-01-31
 effective_from = 2013-02-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 12 grounds the banking and domiciliation payment fields used by Modelo 136."
@@ -153,7 +153,7 @@ article = "tercero"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-10064#a3"
 published_at = 2018-07-18
 effective_from = 2018-07-19
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2018-10064 HTML/PDF downloaded from BOE on 2026-07-01"
 notes = "Articulo tercero replaces the Modelo 136 annex in Orden HAP/70/2013 with the current form in Anexo III."
@@ -173,7 +173,7 @@ section = "disposicion-final-unica"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-10064#df-unica"
 published_at = 2018-07-18
 effective_from = 2018-07-19
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2018-10064 HTML/PDF downloaded from BOE on 2026-07-01"
 notes = "Final provision: the new Modelo 136 applies to 2018 Q3 and later autoliquidations."

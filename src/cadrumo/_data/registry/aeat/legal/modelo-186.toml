@@ -8,7 +8,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-5304#a1"
 published_at = 2003-03-10
 effective_from = 2003-03-11
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2003-5304 art 1; pending operator re-stamp)"
 notes = "Orden HAC/539/2003 art 1: aprueba los diseños físicos y lógicos del modelo 186, declaración informativa de nacimientos y defunciones. Orden habilitante del modelo 186."
@@ -27,7 +27,7 @@ article = "4"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-5304#a4"
 published_at = 2003-03-10
 effective_from = 2003-03-11
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2003-5304 art 4; pending operator re-stamp)"
 notes = "Orden HAC/539/2003 art 4: plazo de presentación del modelo 186. El plazo es el del mes natural siguiente a aquel al que la declaración está referida, con periodicidad mensual."

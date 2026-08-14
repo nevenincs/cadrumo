@@ -8,7 +8,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-2092#a1"
 published_at = 2024-02-01
 effective_from = 2024-02-02
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2024-2092 art 1; pending operator re-stamp)"
 notes = "Orden HAC/72/2024 art 1: aprueba el modelo 238, declaración informativa para la comunicación de información por parte de operadores de plataformas (DAC7). Orden habilitante del modelo 238."
@@ -27,7 +27,7 @@ article = "9"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-2092#a9"
 published_at = 2024-02-01
 effective_from = 2024-02-02
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2024-2092 art 9; pending operator re-stamp)"
 notes = "Orden HAC/72/2024 art 9: plazo de presentación del modelo 238. Tiene carácter anual; el plazo concreto se remite al apartado 6 del artículo 54 del Reglamento General (RD 1065/2007). El RGAT art 54.6 no está incluido en el corpus, por lo que no se autoría una ventana de calendario concreta (no se fabrica la fecha de enero)."

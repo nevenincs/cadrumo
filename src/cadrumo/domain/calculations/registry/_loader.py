@@ -34,6 +34,19 @@ from ._loader_cache import (
 from ._loader_cache import (
     ModeloRevisionSource as _ModeloRevisionSource,
 )
+from ._loader_fingerprints import (
+    _registry_fingerprint_cache,
+    bind_tree_fingerprint_collectors,
+)
+from ._loader_fingerprints import (
+    clear_fingerprint_cache as _clear_fingerprint_cache,
+)
+from ._loader_fingerprints import (
+    collect_registry_tree_fingerprints_for_cache as _collect_fingerprints_for_cache,
+)
+from ._loader_fingerprints import (
+    refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
+)
 from ._modelo_localization import (
     enroll_revision_localization,
     modelo_locale_key,
@@ -52,6 +65,7 @@ from ._toml_helpers import as_toml_table as _as_toml_table
 from ._validate_revision_identity import revision_reference_identity_failures
 
 ModeloRevisionSource = _ModeloRevisionSource
+clear_fingerprint_cache = _clear_fingerprint_cache
 
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
 _REVISION_CONSTRUCTS = "constructs"
@@ -1028,91 +1042,24 @@ def load_registry_tree(root: Path) -> tuple[tuple[ModeloDefinition, ...], Regist
         return _load_registry_tree_cached(str(resolved), refreshed)
 
 
-_registry_fingerprint_cache: dict[Path, tuple[float, _RegistryPathFingerprints, _RegistryPathFingerprints]] = {}
-
-
-def clear_fingerprint_cache() -> None:
-    """Clear the TTL-backed registry-tree fingerprint cache."""
-    _registry_fingerprint_cache.clear()
-
-
-def _collect_registry_tree_fingerprints(resolved: Path) -> _RegistryPathFingerprints:
-    return _collect_registry_tree_fingerprints_for_cache(resolved, use_cache=True)
-
-
-def _collect_registry_tree_fingerprints_uncached(resolved: Path) -> _RegistryPathFingerprints:
-    return _collect_registry_tree_fingerprints_for_cache(resolved, use_cache=False)
-
-
 def _collect_registry_tree_fingerprints_for_cache(
     resolved: Path,
     *,
     use_cache: bool,
 ) -> _RegistryPathFingerprints:
-    """Walk ``resolved`` and return ``(path, size, mtime, digest)`` fingerprints for the lru_cache key.
-
-    Covers every catalogue source the loader will subsequently
-    re-open: ``legal/*.toml``, single-file ``modelos/*.toml``, and
-    directory-mode ``modelos/<id>/manifest.toml`` plus its
-    ``revisions/*.toml`` siblings. It also includes directory mtimes
-    under the registry root so add/remove/rename layout changes invalidate
-    the fingerprint cache before a stale file list can be reused. It also
-    covers every multi-year-renta ``authorization.d/<modelo>.toml``
-    fragment, which the authority reads at the same registry root: per
-    ``aeat-registry-authority-flow`` the authorization surface must
-    invalidate the registry cache when it changes, so adding, editing, or
-    removing an enrollment fragment reliably re-derives every per-modelo
-    capability rather than serving a stale authorization. Fresh
-    fingerprints key on every TOML file; the TTL cache also rechecks
-    directory fingerprints so structural edits do not reuse a stale file
-    list.
-
-    The TTL window is longer for the package-bundled registry tree
-    (:data:`BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS`) than for a mutable
-    authoring tree (:data:`MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS`), and a
-    bundled-tree cache hit skips the directory-mtime walk entirely rather
-    than recomputing it only to compare it against the cached copy: within
-    that window the walk is redundant work repeated on every calculate,
-    snapshot, and revision lookup in quick succession. See
-    :mod:`._loader_cache` for the TTL values and the bundled-root predicate.
-    """
-    import time
-
-    started = time.time()
-    bundled = use_cache and is_bundled_registry_root(resolved)
-    ttl = BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS if bundled else MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS
-
-    if bundled:
-        # Bundled trees short-circuit BEFORE the walk: passing no directory
-        # fingerprints is what skips it entirely rather than recomputing it only
-        # to compare against the cached copy.
-        hit = _live_cached_fingerprints(resolved, now=started, ttl=ttl, directory_fingerprints=None)
-        if hit is not None:
-            return hit
-
-    directory_fingerprints = _collect_registry_directory_fingerprints(resolved)
-    if use_cache:
-        hit = _live_cached_fingerprints(resolved, now=started, ttl=ttl, directory_fingerprints=directory_fingerprints)
-        if hit is not None:
-            return hit
-
-    fingerprints = (*directory_fingerprints, *_registry_source_fingerprints(resolved))
-
-    refreshed_directory_fingerprints = _collect_registry_directory_fingerprints(resolved)
-    if refreshed_directory_fingerprints != directory_fingerprints:
-        _registry_fingerprint_cache.pop(resolved, None)
-        raise RegistryLoadError(
-            f"{resolved}: registry directory changed during cache fingerprinting; "
-            "retry after concurrent registry writes settle",
-        )
-    _store_registry_fingerprints(
+    """Collect the cache key through the dedicated fingerprint orchestrator."""
+    return _collect_fingerprints_for_cache(
         resolved,
-        directory_fingerprints=refreshed_directory_fingerprints,
-        fingerprints=fingerprints,
-        walk_started=started,
-        bundled=bundled,
+        use_cache=use_cache,
+        fingerprint_cache=_registry_fingerprint_cache,
+        is_bundled_root=is_bundled_registry_root,
+        bundled_ttl=BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
+        mutable_ttl=MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS,
+        live_cached=_live_cached_fingerprints,
+        collect_directory=_collect_registry_directory_fingerprints,
+        collect_sources=_registry_source_fingerprints,
+        store=_store_registry_fingerprints,
     )
-    return fingerprints
 
 
 def _live_cached_fingerprints(
@@ -1314,19 +1261,6 @@ def _load_all_modelo_definitions(modelos_dir: Path) -> tuple[ModeloDefinition, .
     return tuple(load_modelo_source(source) for source in discover_modelo_sources(modelos_dir))
 
 
-def _refresh_toml_fingerprint_after_load_error(
-    path: Path,
-    initial_error: RegistryLoadError,
-) -> _RegistryPathFingerprint:
-    try:
-        return _toml_fingerprint(path)
-    except RegistryLoadError as refresh_error:
-        raise RegistryLoadError(
-            f"{path}: registry TOML changed during load; retry after concurrent registry writes settle. "
-            f"Initial failure: {initial_error}; refresh failure: {refresh_error}",
-        ) from refresh_error
-
-
 def _refresh_modelo_directory_fingerprints_after_load_error(
     resolved: Path,
     initial_error: RegistryLoadError,
@@ -1376,6 +1310,17 @@ def _toml_fingerprint(path: Path) -> _RegistryPathFingerprint:
     loader) while the read-only bundled tree keeps the cheap stat-only form.
     """
     return toml_file_fingerprint(path)
+
+
+_collect_registry_tree_fingerprints, _collect_registry_tree_fingerprints_uncached = bind_tree_fingerprint_collectors(
+    is_bundled_root=is_bundled_registry_root,
+    bundled_ttl=BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
+    mutable_ttl=MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS,
+    live_cached=_live_cached_fingerprints,
+    collect_directory=_collect_registry_directory_fingerprints,
+    collect_sources=_registry_source_fingerprints,
+    store=_store_registry_fingerprints,
+)
 
 
 collect_registry_tree_fingerprints = _collect_registry_tree_fingerprints
