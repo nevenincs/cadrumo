@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:a705bfbdb7fa0a65e3918e4d3a6f0969e8fe220915d03594f1602dc1d61f1077'
+body_hash: 'sha256:e99a4cfaf7063ce368ad27d9c3f161d189253f077438a9b50212a3eeffaba118'
 related: []
 ---
 
@@ -117,6 +117,64 @@ and require operator-reviewed revision plus selected legal references before ser
 filing snapshot. New revisions can meet the contract immediately. Existing gaps should
 be emitted as a finite worklist rather than hidden behind allowlists or inferred
 defaults.
+
+### Re-measured at HEAD after the Modelo 390 split landed
+
+A second loaded-authority measurement, taken after the Modelo 390 annual-epoch
+split was committed, supersedes the counts above: 73 modelos and 97 revisions;
+66 open `year_from` selectors, 12 bounded ranges, 19 enumerated-year selectors;
+73 revisions with no `valid_to`; 2026 modelo coverage 66. All 97 revisions
+resolve to `pending_review`. The three selector/effective-date disagreements
+persist exactly as reported: Modelo 200 selector 2024 against `valid_from`
+2025-01-01, Modelo 309 selector 2004 against 2003-12-31, Modelo 720 selector
+2012 against 2013-02-01.
+
+Two consequences are newly measurable. First, the revision-review gate is now
+live at the production boundary, so every filing snapshot refuses: Modelo 303
+2025 1T, Modelo 390 2025 0A and Modelo 100 2025 0A each raise
+`filing-grade snapshot requires operator_reviewed revision`. The in-flight
+export-fragment campaign attests only nine revisions, leaving 88 pending with
+no declared owner. Second, unbounded extrapolation is quantified rather than
+inferred: 64 modelos claim identical coverage for 2027, 2028, 2029, 2030 and
+every later year, because nothing terminates their selectors.
+
+The Modelo 390 split is also the empirical unit cost of an epoch repair: 156
+files and roughly 12,850 inserted lines to replace one open revision with four
+bounded epochs, on a modelo carrying 37 fragments per revision. That cost does
+not generalise. Triaging the 66 open revisions by remediation shape gives 10
+that need only a bounding edit (the modelo is already versioned per year, or
+claims at most two years), and 56 that claim a long single open span. Those 56
+claim 653 modelo-years across 1,874 fragments, but the distribution is extreme:
+Modelo 341 asserts 27 filing years on 6 fragments, Modelo 038 25 years on 6,
+and Modelo 840, 156, 186 and 848 24 years each on 6 to 8. Only three carry real
+bulk — Modelo 200 at 1,045 fragments, Modelo 232 at 256 and Modelo 180 at 89.
+The dominant cost is therefore per-modelo-year evidence adjudication, not file
+mechanics.
+
+### The authority grade already exists, as prose rather than data
+
+Twenty-four `revision.toml` manifests already declare the distinction the
+coverage contract needs, in a comment rather than a field. Modelo 341 states it
+plainly: scheduling/applicability-grade, declaration-header casillas only, no
+bundled diseño de registro, so no numbered money-closure casilla is fabricated.
+The affected modelos are 038, 121, 122, 140, 143, 156, 165, 179, 181, 185, 186,
+220, 222, 233, 234, 238, 270, 341, 380, 490, 576, 592, 763 and 848; twenty-two
+of them fall inside the 56-revision long-span set.
+
+Nothing types or enforces that claim. `CalculationClass` is a
+`Literal["filing", "informative", "summary"]` declared on the modelo, not the
+revision, and it encodes reporting role rather than evidence grade. A
+six-fragment scheduling stub and a filing-grade revision are consequently
+indistinguishable to every consumer, which is the precise mechanism by which an
+open selector converts scheduling applicability into apparent filing authority.
+
+This reframes the horizon question. Bounding Modelo 341 to its bundled-source
+years would be wrong: its approving orden genuinely extends to subsequent years
+on the scheduling axis. What is wrong is that the stub can reach a filing
+surface at all. The evidence therefore favours binding the horizon to a declared
+grade — evidence-bounded epochs where the claim is calculation or filing, an
+open scheduling window that is structurally barred from filing snapshots where
+the claim is applicability only.
 
 ### Scope not yet adjudicated
 

@@ -5,44 +5,11 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:8cf7a5f3cc67b2d3612567a738f686703fc13b79274c6447b873245a73ba5dcd'
+body_hash: 'sha256:5f40461970bad8fc9e2c5b0d9ed1a99aa412ec43d0c808916b765ec76a25a920'
 step_id: 'S33'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace registry-temporal-coverage with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S33 and 2026-08-14-registry-temporal-coverage-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Repair the two pre-existing authority cache invalidation fixtures that die during construction because they declare a legal review status whose vocabulary has since been tightened, restoring real coverage of the fingerprint-backed process cache and the fragmented-revision invalidation property these tests are named for and which went unproven while the staleness defect sat undetected and ## Scope
-
-- `src/cadrumo/domain/calculations/registry/tests/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Repair the two pre-existing authority cache invalidation fixtures that die during construction because they declare a legal review status whose vocabulary has since been tightened, restoring real coverage of the fingerprint-backed process cache and the fragmented-revision invalidation property these tests are named for and which went unproven while the staleness defect sat undetected
 
@@ -74,6 +41,16 @@ related:
 Both named tests reach and exercise their assertions. The file moves from eight
 failed and two passed to three failed and seven passed. No test was added or
 removed, and nothing imports this module, so the file delta is the whole delta.
+
+A sequential run of the whole registry test directory afterwards finished at 602
+failed, 3789 passed, 122 errors in 38 minutes, and the directory-wide result
+confirms the file-level measurement in situ: exactly three failures come from
+this module, all three the packaged-corpus filing-grade class, and every test
+this Step restored passes there too. That absolute figure must NOT be differenced
+against the previous directory run recorded in this campaign. Peers landed
+commits between the two, and the later run collected five more tests than the
+earlier one, so the difference between them measures the shared tree's churn
+rather than this change. The same-HEAD file measurement above is the delta.
 
 The vocabulary repair was narrower than the row's description implied. Three
 `review_status` literals sit in that fixture, but only the legal-catalogue one is
