@@ -15,6 +15,7 @@ from typing import Final
 from ._record_design_ir import (
     RecordDesignIntermediate,
     RecordDesignIntermediateField,
+    RecordDesignIntermediateRelativeSuffixMarker,
     RecordDesignIntermediateVariableEnvelope,
 )
 from ._semantic_map import SemanticMap, SemanticMapAnchor, SemanticMapEntry
@@ -218,6 +219,8 @@ def _relative_anchor(
             str(envelope.record_identity),
         )
     closer = envelope.closing
+    if not isinstance(closer, RecordDesignIntermediateRelativeSuffixMarker):
+        raise ValueError("M303 2023 DP30300 requires one simple relative closer")
     return (
         str(envelope.sheet),
         int(closer.source_row),
