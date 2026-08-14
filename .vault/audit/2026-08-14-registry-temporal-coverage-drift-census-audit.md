@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:868a55491b261d79865074c8f42a5f83fe9b13f2033175d73396bb6d92a363c5'
+body_hash: 'sha256:8d216081a763aa3705a8ff6b38d60e0fda064a81f5ec33a98c2567d0246eec28'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
@@ -36,17 +36,18 @@ collection of two or more filing years; one entry of a mapping keyed by a
 expression that parses Spanish AEAT design prose to derive a filing wire fact;
 and filing wire facts checked into `dev` as data files.
 
-**614 findings** across **239 files and directories**, every one adjudicated:
-**253 enrolled** to a plan row, **336 deferred** with a reference, **25
+**625 findings** across **243 files and directories**, every one adjudicated:
+**254 enrolled** to a plan row, **337 deferred** with a reference, **34
 allowlisted** as not regulatory data. Zero unadjudicated, zero stale ledger rows,
-zero ambiguous matches.
+zero ambiguous matches. A re-run reproduces the finding set exactly, byte for
+byte, and a gate asserts it.
 
 Sanctioned channels are excluded structurally rather than by allowlist:
 `src/cadrumo/core/external_constants.py` is the curated leaf home the
 authority-flow rule grants, and the registry authoring tree is data by design.
 
 Two scope decisions are stated rather than assumed. **The test surface is
-measured and not adjudicated**: it carries **14,712 findings**, overwhelmingly
+measured and not adjudicated**: it carries **14,995 findings**, overwhelmingly
 expected values a test takes from an external authority, which the quality-gates
 rule requires it to carry. The census reaches that scope on demand and a gate
 keeps the exclusion from becoming silent. **The plan row this census executes is
@@ -98,6 +99,34 @@ What is encoded here is not a value but a reading of official text, and a readin
 is exactly the kind of regulatory semantics the authority-flow rule places in the
 registry. No row in the plan moves it. The census recommends one and records the
 deferral in the meantime.
+
+### drift-census | high | the named-constant detector was blind to every value written as a Decimal, and the miss was found by checking a case the plan named
+
+The first build of this census missed
+`EXPECTED_DIFFICULT_JUSTIFICATION_PCT` at
+`src/cadrumo/domain/calculations/registry/_m303_orden_constants.py:18`, one of the
+four values the plan names in that module. Two independent exclusions coincided:
+the value-shape detector skipped `Decimal("1")` because `1` is a scale literal,
+and the name-driven detector skipped it because the assigned value is a call
+rather than a bare number. The constant is written `Decimal("1")` and carries a
+`_PCT` suffix, so both signals were present and neither fired.
+
+The name-driven detector could therefore not see ANY constant written
+`NAME = Decimal(...)`, which is how this repository writes every regulatory
+quantity. It was fixed by teaching the value test to look through a `Decimal`
+call, which raised the census from 614 findings to **625** and surfaced eleven
+constants nothing had reported, including a de minimis reconciliation tolerance
+and a set of zero-valued field defaults.
+
+Two things are worth carrying forward. First, the miss was found only because the
+plan named a specific case to check against, which is what a
+known-instance control is for; without it the census would have reported a clean
+residue over a detector with a hole in it. Second, the residual limitation is
+the same shape and is stated rather than fixed: the name-driven detector is
+vocabulary-driven, so a regulatory constant named in English outside the
+vocabulary is still invisible -- `EXPECTED_MODULE_DISTRIBUTION_VECTOR` in the
+same module is the worked example, caught here only because the whole file
+carries a file-level decision.
 
 ### drift-census | medium | 219 filing-year literals live in Python, dominated by a validation span repeated across the tree
 
@@ -221,7 +250,7 @@ Correct the plan's Description figure from 28 applicability literals to 27, or
 restate it as "one rule per modelo across 27 modelos", which is the fact the
 number was reaching for and is immune to the grep artefact.
 
-Treat the test surface's 14,712 findings as a separate question with its own
+Treat the test surface's 14,995 findings as a separate question with its own
 answer, not as a backlog. The quality-gates rule requires a test's expected value
 to come from an external authority and to live in the test; the interesting
 subset is tests whose expected values were derived from the registry formula

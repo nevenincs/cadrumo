@@ -352,7 +352,18 @@ def _has_regulatory_stem(name: str) -> bool:
 
 
 def _numeric_constant(node: ast.expr) -> bool:
-    return isinstance(node, ast.Constant) and isinstance(node.value, int | float) and not isinstance(node.value, bool)
+    """Return whether ``node`` carries a number, including one wrapped in ``Decimal``.
+
+    The ``Decimal`` case is not a nicety. It is how this repository writes every
+    regulatory quantity, and omitting it made the named-constant detector blind
+    to the entire population it exists to find: the difficult-justification
+    percentage is written ``Decimal("1")``, which the value-shape detector also
+    skips as a scale literal, so the two exclusions coincided and the constant
+    was reported by neither.
+    """
+    if isinstance(node, ast.Constant):
+        return isinstance(node.value, int | float) and not isinstance(node.value, bool)
+    return _decimal_literal_text(node) is not None if isinstance(node, ast.Call) else False
 
 
 def _modelo_member(node: ast.expr | None) -> str | None:

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:0358c7e766fc405c44f23b78697e6e40b2b775d2bc98cdc874a051b96a1b0258'
+body_hash: 'sha256:db8f2131b2b456e9ddc550c87be7314484755db0c7c52d176136c851a974b63e'
 step_id: 'S27'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -39,18 +39,24 @@ related:
 
 ## Outcome
 
-614 findings across 239 files and directories, all adjudicated: 253 enrolled to a
-plan row, 336 deferred against the census audit, 25 allowlisted as not regulatory
+625 findings across 243 files and directories, all adjudicated: 254 enrolled to a
+plan row, 337 deferred against the census audit, 34 allowlisted as not regulatory
 data. Zero unadjudicated, zero stale, zero ambiguous. Enrolments land on five
 rows: 104 on the supported-filing-years row, 8 on the embed classifier, 2 on the
 dev artefact collapse, and one each on the applicability migrator and the embed
 migration.
 
-All three instances the row names as known prior art are recovered
-independently: 27 modelo-keyed entries in the applicability table, nine findings
-across four kinds in the M303 orden constants including SUPPORTED_EJERCICIOS and
-the seasonal coefficients, and five design-prose grammars in the export-tree
-generator.
+The known-instance control did its job by failing. The first build recovered the
+applicability table, the supported ejercicio set, the seasonal coefficients, the
+Lorca 2022 reduction and the export-tree grammars, but MISSED the
+difficult-justification percentage, which is written Decimal("1"): the value-shape
+detector skipped it as a scale literal and the name-driven detector skipped it
+because the assigned value is a call rather than a bare number. The name-driven
+detector could therefore see no constant written NAME = Decimal(...) at all, which
+is how this repository writes every regulatory quantity. Teaching the value test
+to look through a Decimal call raised the census from 614 findings to 625 and
+surfaced eleven constants nothing had reported. All four values the row names in
+that module are now recovered.
 
 The census corrects one figure the plan carries. The applicability rule table
 holds 27 constructions across 27 modelos, not 28: a grep for the constructor also
@@ -60,6 +66,12 @@ in a deletion inventory is not.
 The census also found one realised defect rather than a latent one: the Madrid
 autonomic deduccion filing year is declared independently in two modules, so the
 two can disagree with nothing detecting it.
+
+One residual detector limitation is stated rather than fixed: the name-driven
+detector is vocabulary-driven, so a regulatory constant named in English outside
+the AEAT vocabulary stays invisible. EXPECTED_MODULE_DISTRIBUTION_VECTOR in the
+orden constants module is the worked example, covered here only because the whole
+file carries a file-level decision.
 
 Deletion-inventory entries consumed: none. This row detects and enrols; it
 deletes nothing.
@@ -85,8 +97,8 @@ and the limitation that remains is stated: a new literal inside an
 already-adjudicated file does not red the gate.
 
 Two scope decisions are recorded rather than taken silently. The test surface
-carries 14,712 findings, overwhelmingly expected values a test takes from an
+carries 14,995 findings, overwhelmingly expected values a test takes from an
 external authority as the quality-gates rule requires; it is measured, reachable
-on demand, and deliberately not adjudicated. And 336 of the 614 findings are
+on demand, and deliberately not adjudicated. And 337 of the 625 findings are
 deferred rather than enrolled, because no plan row covers them; the audit
 recommends four new rows and each deferral names that record.
