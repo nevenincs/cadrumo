@@ -27,9 +27,16 @@ replacement lands.  Rooting at the package tree would make those definition and
 substrate sites permanent entries in the declaration below, which is how an
 absence gate degrades into an inventory nobody reads.  The application layer is
 the composition boundary the assertion is actually about: it is where a caller
-*chooses* which custody lifecycle answers for a taxpayer's data.  Outbound AEAT
-adapters reach the retired surface too and are outside this root; they are
-covered by the same replacement work and are not silently exonerated here.
+*chooses* which custody lifecycle answers for a taxpayer's data.
+
+That choice is made in one other place this root does not cover, and the
+exclusion is a real cost rather than a clean line.  Reaches live today in the
+outbound AEAT observation store and Clave Movil client, in the outbound Google
+OAuth flow, and in the command-line profile-readiness check -- the last of which
+composes custody exactly as an application module does.  All four are covered by
+the same replacement work; none is exonerated by sitting outside this root, and
+a future revision that moves the composition boundary should widen the root
+rather than let them stay unnamed.
 
 Two nets catching disjoint sets
 ------------------------------
@@ -92,7 +99,7 @@ decision to write down, not a reason to leave it invisible.
 from __future__ import annotations
 
 import ast
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from pathlib import Path
 
 import pytest
@@ -103,6 +110,11 @@ _PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 _APPLICATION_LAYER = _PACKAGE_ROOT / "application"
 _SCAN_ROOT = _APPLICATION_LAYER
 _STORAGE_ROOT = _PACKAGE_ROOT / "adapters" / "persistence" / "storage"
+
+# Tracked material in a sibling package, read by the scope proof.  It is
+# deliberately not the census of live violations: that evidence disappears when
+# the cutover succeeds.
+_SCOPE_FIXTURE = _APPLICATION_LAYER / "overview" / "tests" / "_custody_absence_scope_fixture.py"
 
 # The shared-master custody surface: the provider protocol and its
 # implementations, the ambient activation/resolution seam that hands a caller
@@ -127,29 +139,26 @@ _RETIRED_CUSTODY_NAMES = frozenset(
 _SUBSTRATE_SEGMENTS = ("adapters", "persistence", "storage")
 _MASTER_KEY_SEGMENTS = (*_SUBSTRATE_SEGMENTS, "master_key")
 
-_DYNAMIC_IMPORT_CALLS = frozenset({"import_module"})
+_DYNAMIC_IMPORT_CALLS = frozenset({"import_module", "__import__", "find_spec", "find_loader", "module_from_spec"})
 
 
 @dataclass(frozen=True)
 class _OpenViolation:
     """A reach that is known, owned, and deliberately still standing.
 
-    ``reaches`` is the anchor: every one of these must still be live, so the
-    declaration expires on its own -- fix the reach and the entry reds until
-    somebody deletes it.  ``retiring`` names symbol reaches that are mid-removal
-    and are accepted present or absent, which keeps the gate stable across an
-    in-flight edit without going blind: only provider-family names may be listed
-    there, an entry must still carry a non-empty ``reaches`` anchor, and any
-    finding in neither set fails the gate.
+    ``reaches`` is the whole declaration and every one of them must still be
+    live, so the entry expires on its own: fix the reach and it reds until
+    somebody deletes it.  There is deliberately no second field for reaches that
+    are accepted-but-not-required.  An earlier revision carried one, to straddle
+    an uncommitted edit removing some names while others stayed -- and because
+    nothing checked it for staleness, it would have accepted those names on that
+    one path forever once the edit landed, with nothing left that could expire.
+    A declaration describes the tree it is read against; it does not hedge across
+    two versions of the tree.
     """
 
     reason: str
     reaches: frozenset[str]
-    retiring: frozenset[str] = frozenset()
-
-    @property
-    def accepted(self) -> frozenset[str]:
-        return self.reaches | self.retiring
 
 
 # Known-open reaches, each waiting on the replacement that moves it to the
@@ -188,15 +197,14 @@ _DECLARED_OPEN_VIOLATIONS: dict[str, _OpenViolation] = {
     "profile_custody/__init__.py": _OpenViolation(
         reason=(
             "A forwarding port of mirror protocols and delegate wrappers reaches the "
-            "shared-master package dynamically; it collapses into one canonical, "
-            "exclusive route to the session and custody surface."
+            "shared-master package dynamically and still forwards the provider "
+            "family; it collapses into one canonical, exclusive route to the "
+            "session and custody surface.  A change removing any of these names "
+            "drops it from this entry in the same commit."
         ),
-        reaches=frozenset({_MASTER_KEY_PACKAGE_ABSOLUTE}),
-        # The provider-family forwards are mid-removal: present at HEAD, gone in
-        # the in-flight edit.  Accepting them either way keeps the gate stable
-        # across that landing without loosening the module anchor above.
-        retiring=frozenset(
+        reaches=frozenset(
             {
+                _MASTER_KEY_PACKAGE_ABSOLUTE,
                 "get_master_key_provider",
                 "KeyringMasterKeyProvider",
                 "FileFallbackMasterKeyProvider",
@@ -257,8 +265,15 @@ def _tail_after(dotted: str, prefix: tuple[str, ...]) -> list[str] | None:
 
 
 def _module_finding(dotted: str) -> str | None:
-    """Report the strongest module-path finding a dotted import target carries."""
-    if _tail_after(dotted, _MASTER_KEY_SEGMENTS) is not None:
+    """Report the strongest module-path finding a dotted import target carries.
+
+    The shared-master package is matched on the SEGMENT rather than on the full
+    substrate path, so a relative dynamic target (``".master_key"`` with a
+    ``package=`` anchor) reaches the same verdict as an absolute one.  Only one
+    package in the tree carries that name, and an import target that names a
+    second one is worth reporting anyway.
+    """
+    if _MASTER_KEY_SEGMENTS[-1] in [segment for segment in dotted.split(".") if segment]:
         return f"master-key-module:{dotted}"
     tail = _tail_after(dotted, _SUBSTRATE_SEGMENTS)
     if tail is not None and any(segment.startswith("_") for segment in tail):
@@ -266,11 +281,20 @@ def _module_finding(dotted: str) -> str | None:
     return None
 
 
-def _string_argument(node: ast.Call) -> str | None:
-    for argument in node.args:
-        if isinstance(argument, ast.Constant) and isinstance(argument.value, str):
-            return argument.value
-    return None
+def _string_arguments(node: ast.Call) -> list[str]:
+    """Return every string literal passed positionally or by keyword.
+
+    Keywords are read because ``import_module(name="...")`` and
+    ``import_module(".master_key", package="...")`` are the same reach as the
+    positional form, and a matcher that scans only ``node.args`` is a spelling
+    away from blind.
+    """
+    supplied: list[ast.expr] = [*node.args, *(keyword.value for keyword in node.keywords)]
+    return [
+        argument.value
+        for argument in supplied
+        if isinstance(argument, ast.Constant) and isinstance(argument.value, str)
+    ]
 
 
 def _called_name(node: ast.Call) -> str:
@@ -296,21 +320,35 @@ def _retired_references(source: str) -> set[str]:
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
             found |= {alias.name for alias in node.names} & _RETIRED_CUSTODY_NAMES
-            if (finding := _module_finding(node.module or "")) is not None:
-                found.add(finding)
+            module_finding = _module_finding(node.module or "")
+            if module_finding is not None:
+                found.add(module_finding)
+            else:
+                # ``from ...storage import master_key`` names the package as an
+                # imported NAME, not in the module path; the most idiomatic form
+                # of the reach, and invisible to a module-path-only check.
+                found |= {
+                    finding
+                    for alias in node.names
+                    if (finding := _module_finding(f"{node.module or ''}.{alias.name}")) is not None
+                }
         elif isinstance(node, ast.Import):
             found |= {finding for alias in node.names if (finding := _module_finding(alias.name)) is not None}
         elif isinstance(node, ast.Call):
             called = _called_name(node)
-            argument = _string_argument(node)
-            if argument is None:
-                continue
-            if called in _DYNAMIC_IMPORT_CALLS and (finding := _module_finding(argument)) is not None:
-                found.add(finding)
-            elif called == "getattr" and argument in _RETIRED_CUSTODY_NAMES:
-                found.add(argument)
-        elif isinstance(node, ast.Attribute) and node.attr in _RETIRED_CUSTODY_NAMES:
-            found.add(node.attr)
+            for argument in _string_arguments(node):
+                if called in _DYNAMIC_IMPORT_CALLS and (finding := _module_finding(argument)) is not None:
+                    found.add(finding)
+                elif called == "getattr" and argument in _RETIRED_CUSTODY_NAMES:
+                    found.add(argument)
+        elif isinstance(node, ast.Attribute):
+            if node.attr in _RETIRED_CUSTODY_NAMES:
+                found.add(node.attr)
+            elif node.attr == _MASTER_KEY_SEGMENTS[-1]:
+                # ``storage.master_key.X`` after ``import ... as storage``: the
+                # package is reached through an attribute chain, so no import
+                # target in this file ever spells it.
+                found.add(f"master-key-attribute:{node.attr}")
         elif isinstance(node, ast.Name) and node.id in _RETIRED_CUSTODY_NAMES:
             found.add(node.id)
     return found
@@ -426,14 +464,24 @@ def test_scan_root_covers_every_sibling_package_of_the_layer() -> None:
     package that went dark.
     """
     scanned = {module.resolve() for module in _production_modules(_SCAN_ROOT)}
+    # Every package at every depth, not only the layer's direct children: a walk
+    # capped at one level below the root leaves nested packages dark while the
+    # top-level census still reads complete.
     packages = [
-        child
-        for child in _APPLICATION_LAYER.iterdir()
-        if child.is_dir() and child.name not in {"tests", "__pycache__"} and (child / "__init__.py").exists()
+        directory
+        for directory in _APPLICATION_LAYER.rglob("*")
+        if directory.is_dir()
+        and (directory / "__init__.py").exists()
+        and "tests" not in directory.relative_to(_APPLICATION_LAYER).parts
+        and "__pycache__" not in directory.parts
     ]
     assert len(packages) > 1, "the application layer must expose sibling packages"
-    uncovered = sorted(package.name for package in packages if not any(package in module.parents for module in scanned))
-    assert uncovered == [], f"scan root misses sibling application packages: {uncovered}"
+    uncovered = sorted(
+        package.relative_to(_APPLICATION_LAYER).as_posix()
+        for package in packages
+        if not any(package in module.parents for module in scanned)
+    )
+    assert uncovered == [], f"scan root misses application packages: {uncovered}"
 
     top_level = {
         child.resolve()
@@ -444,25 +492,42 @@ def test_scan_root_covers_every_sibling_package_of_the_layer() -> None:
     assert missing == [], f"scan root misses top-level application modules: {missing}"
 
 
-def test_scan_root_reaches_reality_outside_this_package() -> None:
-    """The scope proof on real material: every declared reach is found here.
+def test_scan_root_reaches_a_tracked_fixture_in_a_sibling_package() -> None:
+    """The scope proof on real material that survives the cutover succeeding.
 
-    Most declared paths lie outside ``user_profile/`` -- the root this gate used
-    to carry -- so the declaration set is itself the evidence that the widened
-    root sees material the narrow one structurally could not.  Declarations
-    inside ``user_profile/`` prove nothing about scope, so they are excluded from
-    that half of the assertion rather than allowed to stand in for it.
+    An earlier revision anchored this to the census of live violations, asserting
+    at least one declared reach lay outside ``user_profile/``.  That inverts on
+    success: empty the declarations to simulate a finished cutover and the proof
+    reds, so the gate could not be green in the state it exists to bring about,
+    and the standing pressure was to keep one violation alive to hold the proof
+    up.  A tracked fixture in a sibling package proves the same reach and does
+    not expire.
+
+    The fixture carries one reach of each shape, so a root that reaches it also
+    demonstrates both nets firing on real tracked source rather than on a string
+    built inside this file.
     """
-    offenders = _offenders()
-    outside = [path for path in _DECLARED_OPEN_VIOLATIONS if not path.startswith("user_profile/")]
-    assert outside, (
-        "no declared reach lies outside user_profile/, so nothing here proves the "
-        "scan root is wider than the package-scoped one it replaced"
+    assert _SCOPE_FIXTURE.is_file(), (
+        f"the scope fixture is missing at {_SCOPE_FIXTURE}; without it nothing here "
+        "proves the scan root reaches a sibling package"
     )
-    missing = sorted(path for path in _DECLARED_OPEN_VIOLATIONS if path not in offenders)
-    assert missing == [], (
-        f"declared reaches were not found by the scan: {missing}; either the reach "
-        "is gone (delete the declaration) or the scan root no longer reaches it"
+    reached = {path.resolve() for path in _SCAN_ROOT.rglob("*.py")}
+    assert _SCOPE_FIXTURE.resolve() in reached, (
+        "the scan root does not reach the sibling-package fixture, so it is narrower "
+        "than the application layer it claims to cover"
+    )
+
+    findings = _retired_references(_SCOPE_FIXTURE.read_text(encoding="utf-8"))
+    assert any(finding.startswith("master-key-module:") for finding in findings), (
+        f"the scope fixture no longer carries a module reach: {sorted(findings)}"
+    )
+    assert findings & _RETIRED_CUSTODY_NAMES, (
+        f"the scope fixture no longer carries a provider-name reach: {sorted(findings)}"
+    )
+
+    assert _SCOPE_FIXTURE.resolve() not in {path.resolve() for path in _production_modules(_SCAN_ROOT)}, (
+        "the scope fixture must stay out of the production census; it is test "
+        "material and would otherwise need declaring as a violation"
     )
 
 
@@ -470,7 +535,7 @@ def test_production_application_never_reaches_shared_master_custody() -> None:
     undeclared: dict[str, list[str]] = {}
     for path, findings in _offenders().items():
         declared = _DECLARED_OPEN_VIOLATIONS.get(path)
-        surplus = findings if declared is None else findings - declared.accepted
+        surplus = findings if declared is None else findings - declared.reaches
         if surplus:
             undeclared[path] = sorted(surplus)
     assert undeclared == {}, (
@@ -486,6 +551,11 @@ def test_declared_open_violations_still_describe_the_tree() -> None:
     partially fixed, or relocated fails here, so the replacement work deletes the
     entry as a condition of going green rather than leaving a stale exemption
     behind.
+
+    Every declared reach is held to that standard, with no accepted-but-not-
+    required class alongside it.  A reach that is accepted without being required
+    is never checked for staleness, so it survives its own fix and keeps that name
+    tolerated on that path with nothing left that can expire.
     """
     offenders = _offenders()
     drift: dict[str, str] = {}
@@ -515,24 +585,24 @@ def test_declared_open_violations_state_their_reason() -> None:
     assert unreasoned == set(), f"declared open violations must state their replacement: {sorted(unreasoned)}"
 
 
-def test_declared_open_violations_cannot_park_a_reach_in_the_retiring_set() -> None:
-    """``retiring`` is a landing window, not a second exemption channel.
+def test_every_declared_reach_is_required_and_can_therefore_expire() -> None:
+    """Nothing is accepted here without also being required.
 
-    It exists only so an in-flight removal of provider-family names does not make
-    the gate red at HEAD and green a commit later, or the reverse.  A module-path
-    reach parked there would tolerate the whole route into the shared-master
-    package with nothing left to expire, so only symbol names may go in and every
-    entry must still carry an anchor that can die.
+    The staleness check above can only expire what the declaration REQUIRES, so
+    any accepted-but-not-required class would be invisible to it and would
+    outlive its own fix.  ``_OpenViolation`` carries exactly one field of reaches
+    for that reason; this asserts the property directly, so re-introducing a
+    second accepting field without also expiring it fails here rather than
+    quietly widening the gate.
     """
-    anchorless = sorted(path for path, declared in _DECLARED_OPEN_VIOLATIONS.items() if not declared.reaches)
-    assert anchorless == [], f"declarations with no anchor can never go stale: {anchorless}"
+    accepting_fields = {field.name for field in fields(_OpenViolation)} - {"reason"}
+    assert accepting_fields == {"reaches"}, (
+        f"every field that widens what the gate accepts must also be expired by the "
+        f"staleness check; found {sorted(accepting_fields)}"
+    )
 
-    parked = {
-        path: sorted(declared.retiring - _RETIRED_CUSTODY_NAMES)
-        for path, declared in _DECLARED_OPEN_VIOLATIONS.items()
-        if declared.retiring - _RETIRED_CUSTODY_NAMES
-    }
-    assert parked == {}, f"only provider-family names may be declared retiring: {parked}"
+    anchorless = sorted(path for path, declared in _DECLARED_OPEN_VIOLATIONS.items() if not declared.reaches)
+    assert anchorless == [], f"declarations with no reach can never go stale: {anchorless}"
 
 
 def test_retired_names_that_still_exist_belong_to_the_retired_package() -> None:
