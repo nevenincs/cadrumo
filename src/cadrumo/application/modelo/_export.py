@@ -47,6 +47,7 @@ from typing import Annotated, NamedTuple
 from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
@@ -83,6 +84,7 @@ from ...domain.calculations.registry import (
 from ...domain.deadlines import ModeloIVAProfile, TaxpayerProfile
 from ...domain.filing import ModeloDraft
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
+from ...domain.justificante import JustificanteRepositoryProtocol
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -142,6 +144,7 @@ from ._action_errors import (
     ModeloPriorDomiciliationElectionRefusedError,
     WorkUnitNotFoundError,
 )
+from ._export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from ._iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
 from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_scope_for_profile
@@ -224,6 +227,7 @@ class _PreparedModeloExport(NamedTuple):
     schema_provider: RegistrySchemaAccessor
     iva_wallet_provenance: ModeloIvaWalletDecisionProvenance | None
     prior_domiciliation_election: PriorDomiciliationElectionProjection
+    amendment_evidence: AmendmentEvidence | None
 
 
 class ModeloExportCrossBucketRefusedError(ModeloError):
@@ -489,6 +493,11 @@ def _load_revision_for_export(
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": calculation_revision_id},
         )
+    return revision
+
+
+def _require_exportable_revision_state(revision: CalculationRevision) -> None:
+    """Refuse a persisted revision whose lifecycle state cannot be exported."""
     if revision.state not in {
         CalculationRevisionState.VERIFICADO_COMPLETO,
         CalculationRevisionState.PRESENTADO,
@@ -496,9 +505,8 @@ def _load_revision_for_export(
     }:
         raise CalculationRevisionStateError(
             translated_message="application.modelo.errors.export_revision_state_refused",
-            context={"calculation_revision_id": calculation_revision_id, "state": revision.state.value},
+            context={"calculation_revision_id": revision.calculation_revision_id, "state": revision.state.value},
         )
-    return revision
 
 
 def _compose_export_dictionary_values(
@@ -707,10 +715,10 @@ def _build_export_producer_snapshot(
     workflow_profile: TaxpayerProfile,
     resolved_result_disposition: ResultDisposition,
     prior_domiciliation_election: PriorDomiciliationElectionProjection,
+    amendment_evidence: AmendmentEvidence | None,
 ) -> FilingProducerSnapshot:
     """Build the sole typed producer boundary or refuse before any write."""
     presenter, taxpayer_identity = _require_export_identity(command, work_unit=work_unit)
-    evidence = _require_matching_amendment_evidence(command, revision)
     try:
         modelo = Modelo(str(work_unit.modelo))
         iva_profile = workflow_profile.iva
@@ -733,7 +741,7 @@ def _build_export_producer_snapshot(
                 refund=command.refund_election,
                 prior_domiciliation=prior_domiciliation_election.election,
             ),
-            amendment_evidence=evidence,
+            amendment_evidence=amendment_evidence,
             refund_account=iva_profile.refund_account if iva_profile is not None else None,
             charge_account=iva_profile.charge_account if iva_profile is not None else None,
             m303_filing_facts=m303_filing_facts,
@@ -781,24 +789,6 @@ def _require_export_identity(
             },
         )
     return presenter, taxpayer_identity
-
-
-def _require_matching_amendment_evidence(
-    command: ModeloExportCommand,
-    revision: CalculationRevision,
-) -> AmendmentEvidence | None:
-    evidence = command.amendment_evidence
-    if (evidence is None) != (revision.amendment_kind is None) or (
-        evidence is not None and evidence.kind is not revision.amendment_kind
-    ):
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": command.calculation_revision_id,
-                "cause": "typed amendment evidence does not match calculation revision",
-            },
-        )
-    return evidence
 
 
 def _resolve_export_model_profile(
@@ -881,6 +871,7 @@ def _persist_exported_draft(
     exported_at: datetime,
     iva_wallet_provenance: ModeloIvaWalletDecisionProvenance | None,
     prior_domiciliation_election: PriorDomiciliationElectionProjection,
+    amendment_evidence: AmendmentEvidence | None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     schema_provider: RegistrySchemaAccessor,
 ) -> ModeloExportResult:
@@ -899,6 +890,7 @@ def _persist_exported_draft(
         workflow_profile=workflow_profile,
         resolved_result_disposition=resolved_result_disposition,
         prior_domiciliation_election=prior_domiciliation_election,
+        amendment_evidence=amendment_evidence,
     )
     export_subview = schema_provider.get_subview(str(work_unit.modelo))
     export_layout = export_subview.export_layouts[0] if export_subview.export_layouts else None
@@ -1186,13 +1178,12 @@ def _prepare_modelo_export(
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     calculation_observation_repository: CalculationObservationRepository,
+    justificante_repository: JustificanteRepositoryProtocol,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
 ) -> _PreparedModeloExport:
     """Load and validate every persisted authority required before export bytes."""
     revision = _load_revision_for_export(command.calculation_revision_id, repo=calculation_repository)
-    _raise_if_ledger_export_evidence_missing(revision)
-    _raise_if_deductible_iva_evidence_missing(revision)
     work_unit = work_unit_repository.load().get(revision.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
@@ -1222,6 +1213,18 @@ def _prepare_modelo_export(
             context={"work_unit_id": work_unit.work_unit_id},
         )
 
+    amendment_evidence = resolve_persisted_amendment_export_evidence(
+        command,
+        revision,
+        work_unit=work_unit,
+        workflow_profile=workflow_profile,
+        work_unit_repository=work_unit_repository,
+        filing_repository=filing_repository,
+        justificante_repository=justificante_repository,
+    )
+    _require_exportable_revision_state(revision)
+    _raise_if_ledger_export_evidence_missing(revision)
+    _raise_if_deductible_iva_evidence_missing(revision)
     period = _resolve_work_unit_period(work_unit)
     schema_provider = build_runtime_schema_provider(
         filing_year=period.filing_year,
@@ -1275,6 +1278,7 @@ def _prepare_modelo_export(
         schema_provider=schema_provider,
         iva_wallet_provenance=_iva_wallet_decision_export_provenance(iva_wallet_decision),
         prior_domiciliation_election=prior_domiciliation_election,
+        amendment_evidence=amendment_evidence,
     )
 
 
@@ -1289,6 +1293,7 @@ def export_modelo_revision(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     calculation_observation_repository: CalculationObservationRepository | None = None,
+    justificante_repository: JustificanteRepositoryProtocol | None = None,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     clock: datetime | None = None,
 ) -> ModeloExportResult:
@@ -1344,11 +1349,14 @@ def export_modelo_revision(
     _validate_output_path(command.output_path)
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
+    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository(
+        m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
+    )
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
     obs_repo = calculation_observation_repository or CalculationObservationRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
+    justificante_repo = justificante_repository or JustificanteRepository()
 
     prepared = _prepare_modelo_export(
         command,
@@ -1359,6 +1367,7 @@ def export_modelo_revision(
         filing_repository=fr_repo,
         verification_repository=vr_repo,
         calculation_observation_repository=obs_repo,
+        justificante_repository=justificante_repo,
         iva_compensation_decision_repository=iva_compensation_decision_repository,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
     )
@@ -1368,6 +1377,7 @@ def export_modelo_revision(
     schema_provider = prepared.schema_provider
     iva_wallet_provenance = prepared.iva_wallet_provenance
     prior_domiciliation_provenance = prepared.prior_domiciliation_election
+    amendment_evidence = prepared.amendment_evidence
 
     now = clock or _utc_now()
     export_period, approved = _approve_export_draft(
@@ -1389,6 +1399,7 @@ def export_modelo_revision(
         exported_at=now,
         iva_wallet_provenance=iva_wallet_provenance,
         prior_domiciliation_election=prior_domiciliation_provenance,
+        amendment_evidence=amendment_evidence,
         bucket_event_repository=bv_repo,
         schema_provider=schema_provider,
     )

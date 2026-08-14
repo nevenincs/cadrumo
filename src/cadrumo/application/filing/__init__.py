@@ -220,6 +220,7 @@ from ._export import (
     verify_export,
 )
 from ._export_parity import did_page_required, required_applicable_casilla_ids
+from ._export_producer import m303_rectificativa_motive_producer_values
 from ._history_models import ModeloHistory, ModeloHistoryEntry
 from ._history_repository import ModeloHistoryRepository
 from ._import import JustificanteImportResult, import_filing_from_justificante
@@ -1240,6 +1241,7 @@ __all__ = [
     "list_amendments",
     "load_amendment",
     "load_default_filing_profile",
+    "m303_rectificativa_motive_producer_values",
     "project_m303_exonerado_390_value_arrival",
     "refresh_review_status",
     "required_applicable_casilla_ids",

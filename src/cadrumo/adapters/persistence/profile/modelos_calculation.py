@@ -38,9 +38,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ....core import Modelo
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.identity import SubjectTaxId
 from ....core.logging import get_logger
+from ....domain.calculations.registry import RegistryRevisionInspection, bundled_revision_inspection
 from ....domain.modelos import (
+    CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
+    CalculationRevisionAggregateContext,
     CalculationRevisionCatalogue,
     CalculationRevisionPersistenceError,
     assert_revision_snapshot_evidence_coverage,
@@ -80,9 +85,16 @@ class CalculationRevisionCatalogueRepository:
     :class:`~domain.modelos.CalculationRevisionCatalogueRepositoryProtocol`.
     """
 
-    def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        bucket_id: str | None = None,
+        objects: SecureObjectRepository | None = None,
+        m303_rectificativa_taxpayer_tax_id: SubjectTaxId | None = None,
+    ) -> None:
         """Bind the repository to a bucket id and/or an explicit secure-object store."""
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
+        self._m303_rectificativa_taxpayer_tax_id = m303_rectificativa_taxpayer_tax_id
         if objects is not None:
             self._objects = objects
         else:
@@ -173,7 +185,11 @@ class CalculationRevisionCatalogueRepository:
             )
         if record is None:
             return CalculationRevisionCatalogue()
-        envelope = Envelope[CalculationRevisionCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
+        aggregate_context = self._calculation_revision_aggregate_context()
+        envelope = Envelope[CalculationRevisionCatalogue].model_validate_json(
+            record.payload.decode(UTF_8_ENCODING),
+            context={CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: aggregate_context},
+        )
         if not inner_envelope_classification_is_expected(envelope.classification, _CALCULATION_CATALOGUE_SENSITIVITY):
             _LOGGER.error(
                 "calculation-revision catalogue classification mismatch",
@@ -215,6 +231,32 @@ class CalculationRevisionCatalogueRepository:
         for revision in envelope.payload.values():
             assert_revision_snapshot_evidence_coverage(revision)
         return envelope.payload
+
+    def _calculation_revision_aggregate_context(self) -> CalculationRevisionAggregateContext:
+        """Load every persisted authority needed to revalidate rectificativa revisions."""
+        from .justificante import JustificanteRepository
+        from .modelos_filing import ModeloRecordCatalogueRepository
+        from .modelos_work_units import WorkUnitCatalogueRepository
+
+        work_units = WorkUnitCatalogueRepository(objects=self._objects).load()
+        filing_records = ModeloRecordCatalogueRepository(objects=self._objects).load()
+        justificantes = tuple(JustificanteRepository(objects=self._objects).iter_justificantes())
+        inspections: dict[str, RegistryRevisionInspection] = {
+            unit.work_unit_id: bundled_revision_inspection(
+                Modelo.M303.value,
+                filing_year=unit.filing_year,
+                period=unit.period.registry_token,
+            )
+            for unit in work_units.values()
+            if unit.modelo == Modelo.M303.value
+        }
+        return CalculationRevisionAggregateContext(
+            work_units=work_units,
+            filing_records=filing_records,
+            justificantes=justificantes,
+            registry_inspections=inspections,
+            expected_taxpayer_tax_id=self._m303_rectificativa_taxpayer_tax_id,
+        )
 
     def save(self, catalogue: CalculationRevisionCatalogue) -> None:
         """Persist the calculation-revision catalogue to encrypted storage.

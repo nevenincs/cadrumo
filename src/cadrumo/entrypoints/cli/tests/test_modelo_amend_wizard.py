@@ -52,6 +52,7 @@ from .._modelo import _resolve_work_unit_for_cli
 from .._modelo_amend_wizard_cli import (
     _ACTIVE_RUNS,
     _KIND_PAGE_ID,
+    _MOTIVE_PAGE_ID,
     _REASON_PAGE_ID,
     _amendable_rows,
     _baseline_casilla_rows,
@@ -83,6 +84,7 @@ _CORRECTED_INGRESOS = Decimal("1100.00")
 # only the unified rectificativa mechanism can file it.
 _M303_BASELINE_BASE_GENERAL = Decimal("10000.00")
 _M303_CORRECTED_BASE_GENERAL = Decimal("9000.00")
+_M303_RECTIFICATIVA_MOTIVE = "rectificaciones"
 
 
 def _m303_revision_id(*, filing_year: int, period: str) -> str:
@@ -97,6 +99,7 @@ def _m303_revision_id(*, filing_year: int, period: str) -> str:
 # `filed_at`) -- each asserted separately.
 _AMEND_PARITY_SPINE = (
     "amendment_kind",
+    "m303_rectificativa_motive",
     "status",
     "external_evidence",
     "kind",
@@ -164,7 +167,7 @@ def _seed_justificante(*, csv: str, period: str = "1T", modelo: str = "130", fil
         modelo=modelo,
         period=Period.from_year_and_code(filing_year, period),
         ejercicio=str(filing_year),
-        presentation_id=None,
+        presentation_id="1234567890123",
         presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
         tax_id=_TAX_ID,
         total_a_ingresar=None,
@@ -226,8 +229,9 @@ def _scripted_amend(
     change_numbers: list[str],
     corrected_by_number: dict[str, str],
     kind: str,
+    motive: str | None = None,
     reason: str,
-) -> tuple[dict[str, str], str, str]:
+) -> tuple[dict[str, str], str, str | None, str]:
     """Drive the wizard's own two-round definitions through the scripted substrate.
 
     Reproduces exactly what the wizard does -- resolve the unit and its
@@ -274,7 +278,13 @@ def _scripted_amend(
                 period=baseline.period,
                 run_token=run_token,
             )
-            tokens = [corrected_by_number[row.number] for row in selected] + [kind, reason]
+            has_motive_page = any(
+                page.id == _MOTIVE_PAGE_ID for section in corrections_definition.sections for page in section.items
+            )
+            tokens = [corrected_by_number[row.number] for row in selected] + [kind]
+            if has_motive_page and kind == "rectificativa":
+                tokens.append(motive or "")
+            tokens.append(reason)
             corrections_state, corrections_projection = run_scripted_flow(
                 corrections_definition,
                 tokens,
@@ -287,8 +297,9 @@ def _scripted_amend(
                 assert isinstance(casilla_id, str)
                 overrides[casilla_id] = (corrections_state.answers.get(_value_page_id(casilla_id)) or "").strip()
             derived_kind = (corrections_state.answers.get(_KIND_PAGE_ID) or "").strip()
+            derived_motive = (corrections_state.answers.get(_MOTIVE_PAGE_ID) or "").strip() or None
             derived_reason = (corrections_state.answers.get(_REASON_PAGE_ID) or "").strip()
-            return overrides, derived_kind, derived_reason
+            return overrides, derived_kind, derived_motive, derived_reason
         finally:
             _ACTIVE_RUNS.pop(run_token, None)
 
@@ -298,18 +309,21 @@ def _amend_via_shared_path(
     from_filing_record_id: str,
     overrides: dict[str, str],
     kind: str,
+    motive: str | None = None,
     reason: str,
 ):
     """Invoke ``work amend`` -- the shared composition path the wizard delegates to."""
     set_flags: list[str] = []
     for casilla_id, value in overrides.items():
         set_flags += ["--set", f"{casilla_id}={value}"]
+    motive_flags = ["--m303-rectificativa-motive", motive] if motive is not None else []
     return _invoke(
         [
             "--format", "json",
             "app", "modelo", "work", "amend",
             "--from-filing-record", from_filing_record_id,
             "--kind", kind,
+            *motive_flags,
             "--reason", reason,
             *set_flags,
         ],
@@ -370,13 +384,14 @@ def test_amend_wizard_scripted_sequence_files_m130_complementaria() -> None:
     work_unit_id = _create_m130_work_unit()
     baseline_filing_id = _import_external_baseline(work_unit_id)
 
-    overrides, kind, reason = _scripted_amend(
+    overrides, kind, motive, reason = _scripted_amend(
         work_unit_id,
         change_numbers=["01"],
         corrected_by_number={"01": str(_CORRECTED_INGRESOS)},
         kind="complementaria",
         reason="under-reported turnover",
     )
+    assert motive is None
     assert kind == "complementaria"
     assert reason == "under-reported turnover"
     assert overrides == {"01": str(_CORRECTED_INGRESOS)}
@@ -385,6 +400,7 @@ def test_amend_wizard_scripted_sequence_files_m130_complementaria() -> None:
         from_filing_record_id=baseline_filing_id,
         overrides=overrides,
         kind=kind,
+        motive=motive,
         reason=reason,
     )
     assert result.exit_code == 0, result.output
@@ -422,19 +438,22 @@ def test_amend_wizard_scripted_sequence_files_m303_rectificativa() -> None:
     work_unit_id = _create_m303_work_unit()
     baseline_filing_id = _import_external_m303_baseline(work_unit_id)
 
-    overrides, kind, reason = _scripted_amend(
+    overrides, kind, motive, reason = _scripted_amend(
         work_unit_id,
         change_numbers=["07"],
         corrected_by_number={"07": str(_M303_CORRECTED_BASE_GENERAL)},
         kind="rectificativa",
+        motive=_M303_RECTIFICATIVA_MOTIVE,
         reason="overstated base imponible",
     )
     assert kind == "rectificativa"
+    assert motive == _M303_RECTIFICATIVA_MOTIVE
 
     result = _amend_via_shared_path(
         from_filing_record_id=baseline_filing_id,
         overrides=overrides,
         kind=kind,
+        motive=motive,
         reason=reason,
     )
     assert result.exit_code == 0, result.output
@@ -442,6 +461,7 @@ def test_amend_wizard_scripted_sequence_files_m303_rectificativa() -> None:
 
     payload = _payload(result.output)
     assert payload["amendment_kind"] == "rectificativa"
+    assert payload["m303_rectificativa_motive"] == _M303_RECTIFICATIVA_MOTIVE
     assert payload["status"] == "vigente"
     assert payload["external_evidence"] is None
     assert payload["amends_filing_record_id"] == baseline_filing_id
@@ -452,6 +472,61 @@ def test_amend_wizard_scripted_sequence_files_m303_rectificativa() -> None:
         ).output,
     )
     assert Decimal(revision["casilla_values"]["07"]) == _M303_CORRECTED_BASE_GENERAL
+
+
+def test_work_amend_m303_rectificativa_missing_motive_refuses_before_persistence() -> None:
+    """The public command cannot infer the motive from kind, casilla, result, or reason."""
+    _create_profile()
+    work_unit_id = _create_m303_work_unit()
+    baseline_filing_id = _import_external_m303_baseline(work_unit_id)
+
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "amend",
+            "--from-filing-record",
+            baseline_filing_id,
+            "--kind",
+            "rectificativa",
+            "--reason",
+            "rectificaciones with a lower result must not be inferred",
+            "--set",
+            f"07={_M303_CORRECTED_BASE_GENERAL}",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert json.loads(result.output)["error"]["code"] == "REFUSED_MODELO_M303_RECTIFICATIVA_MOTIVE"
+
+
+def test_work_amend_refuses_free_text_m303_rectificativa_motive_at_the_public_parser() -> None:
+    """The CLI accepts only the two domain-enum tokens, never arbitrary prose."""
+    result = _invoke(
+        [
+            "app",
+            "modelo",
+            "work",
+            "amend",
+            "--from-filing-record",
+            "f" * 64,
+            "--kind",
+            "rectificativa",
+            "--m303-rectificativa-motive",
+            "operator prose",
+            "--reason",
+            "operator prose",
+            "--set",
+            "07=1.00",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
 
 
 def test_amend_wizard_scripted_inputs_match_hand_built_work_amend() -> None:
@@ -473,17 +548,19 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend() -> None:
         csv="JUST-2025-303-1T-RECT-WIZARD",
         period="1T",
     )
-    overrides, kind, reason = _scripted_amend(
+    overrides, kind, motive, reason = _scripted_amend(
         wizard_unit_id,
         change_numbers=["07"],
         corrected_by_number={"07": str(_M303_CORRECTED_BASE_GENERAL)},
         kind="rectificativa",
+        motive=_M303_RECTIFICATIVA_MOTIVE,
         reason="wizard-driven rectificativa",
     )
     wizard_result = _amend_via_shared_path(
         from_filing_record_id=wizard_baseline_filing_id,
         overrides=overrides,
         kind=kind,
+        motive=motive,
         reason=reason,
     )
     assert wizard_result.exit_code == 0, wizard_result.output
@@ -506,6 +583,7 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend() -> None:
             "app", "modelo", "work", "amend",
             "--from-filing-record", hand_baseline_filing_id,
             "--kind", "rectificativa",
+            "--m303-rectificativa-motive", _M303_RECTIFICATIVA_MOTIVE,
             "--reason", "hand-built rectificativa",
             "--set", f"07={_M303_CORRECTED_BASE_GENERAL}",
         ],

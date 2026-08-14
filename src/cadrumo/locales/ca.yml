@@ -3516,6 +3516,8 @@ cli:
           és el mecanisme unificat de correcció per als models l'ordre dels quals
           ho implementa (p. ex. Model 303 des de l'exercici 2023).
         amend_wizard_kind_prompt: Tipus de rectificació (%{choices})
+        amend_wizard_m303_rectificativa_motive_prompt: Motiu de la rectificativa del
+          model 303 (%{choices})
         amend_wizard_no_corrections: No s'ha corregit cap casella; l'assistent de
           rectificació necessita almenys un valor modificat.
         amend_wizard_no_current_filing: La unitat de treball %{work_unit_id} no té
@@ -3709,6 +3711,9 @@ cli:
           (predeterminada) o agregació de llibre major de font espanyola.'
         m303_filing_evidence_help: Camí al document JSON complet d'evidències de presentació
           del model 303.
+        m303_rectificativa_motive_help: 'Obligatori per a una rectificativa aplicable
+          del model 303: trieu rectificaciones o discrepancia_criterio_administrativo.
+          Mai no s''infereix ni s''assigna per defecte.'
         missing_binding_guidance: '%{base} Aporta el valor amb --binding KEY=VALUE
           en aquesta ordre, o executa `%{discover}` per veure tots els bindings que
           el càlcul encara necessita.'
@@ -7634,6 +7639,9 @@ errors:
       la taula de despacho de filtres.
     refused_modelo_charge_account_missing: S ha triat una domiciliacio pero no hi
       ha cap compte de carrec registrat.
+    refused_modelo_m303_rectificativa_motive: Les rectificatives del model 303 requereixen
+      exactament un motiu canònic en un disseny de registre aplicable i revisat; el
+      motiu està prohibit en els altres casos.
     refused_modelo_payment_election_capability: El metode de pagament escollit encara
       no esta disponible.
     refused_modelo_payment_election_incompatible: L opcio de pagament escollida requereix

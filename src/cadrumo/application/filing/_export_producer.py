@@ -8,7 +8,9 @@ from ...core import FilingProducerKey, Period, PriorDomiciliationElection, Prorr
 from ...domain.deadlines import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ...domain.filing import FilingExportValidationError
 from ...domain.iva import is_last_filing_period_of_year
+from ...domain.modelos import M303RectificativaMotive
 from ._producer_snapshot import (
+    AmendmentEvidence,
     ChargeAccountSelection,
     FilingProducerSnapshot,
     M303FilingFacts,
@@ -67,6 +69,7 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
     iva_profile = snapshot.model_profile if isinstance(snapshot.model_profile, ModeloIVAProfile) else None
     m303_profile = m303_profile_lexicals(iva_profile, snapshot.m303_filing_facts)
     m303_filing = m303_filing_lexicals(snapshot.m303_filing_facts)
+    m303_motive = m303_rectificativa_motive_producer_values(amendment)
     values: dict[FilingProducerKey, object] = {
         FilingProducerKey.PRESENTER_TAX_ID: str(snapshot.presenter.tax_id),
         FilingProducerKey.FILING_RESULT_DISPOSITION: snapshot.elections.result_disposition.value,
@@ -78,6 +81,12 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
         FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA: amendment.is_rectificativa if amendment else None,
         FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: amendment.is_complementaria if amendment else None,
         FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT: amendment.original_aeat_receipt if amendment else None,
+        FilingProducerKey.AMENDMENT_M303_MOTIVE_RECTIFICACIONES: m303_motive[
+            FilingProducerKey.AMENDMENT_M303_MOTIVE_RECTIFICACIONES
+        ],
+        FilingProducerKey.AMENDMENT_M303_MOTIVE_DISCREPANCIA_CRITERIO_ADMINISTRATIVO: m303_motive[
+            FilingProducerKey.AMENDMENT_M303_MOTIVE_DISCREPANCIA_CRITERIO_ADMINISTRATIVO
+        ],
         FilingProducerKey.SELECTED_ACCOUNT_IBAN: account.iban,
         FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC: account.swift_bic,
         FilingProducerKey.SELECTED_ACCOUNT_BANK_NAME: account.bank_name,
@@ -135,6 +144,21 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
     if set(values) != set(FilingProducerKey):
         raise FilingExportValidationError("filing producer resolver is not exhaustive")
     return values
+
+
+def m303_rectificativa_motive_producer_values(
+    amendment: AmendmentEvidence | None,
+) -> dict[FilingProducerKey, bool | None]:
+    """Project the closed two-checkbox truth table from one persisted motive."""
+    motive = amendment.m303_rectificativa_motive if amendment is not None else None
+    return {
+        FilingProducerKey.AMENDMENT_M303_MOTIVE_RECTIFICACIONES: (
+            motive is M303RectificativaMotive.RECTIFICACIONES if motive is not None else None
+        ),
+        FilingProducerKey.AMENDMENT_M303_MOTIVE_DISCREPANCIA_CRITERIO_ADMINISTRATIVO: (
+            motive is M303RectificativaMotive.DISCREPANCIA_CRITERIO_ADMINISTRATIVO if motive is not None else None
+        ),
+    }
 
 
 def selected_account_lexicals(snapshot: FilingProducerSnapshot) -> SelectedAccountLexicals:
@@ -243,5 +267,6 @@ __all__ = [
     "m303_filing_lexicals",
     "m303_foral_lexicals",
     "m303_profile_lexicals",
+    "m303_rectificativa_motive_producer_values",
     "selected_account_lexicals",
 ]

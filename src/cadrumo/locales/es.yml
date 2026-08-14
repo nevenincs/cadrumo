@@ -3546,6 +3546,8 @@ cli:
           es el mecanismo unificado de corrección para los modelos cuya orden lo implementa
           (p. ej. Modelo 303 desde el ejercicio 2023).
         amend_wizard_kind_prompt: Tipo de rectificación (%{choices})
+        amend_wizard_m303_rectificativa_motive_prompt: Motivo de la rectificativa
+          del modelo 303 (%{choices})
         amend_wizard_no_corrections: No se corrigió ninguna casilla; el asistente
           de rectificación necesita al menos un valor modificado.
         amend_wizard_no_current_filing: La unidad de trabajo %{work_unit_id} no tiene
@@ -3739,6 +3741,9 @@ cli:
           (predeterminada) o agregación de libro mayor de fuente española.'
         m303_filing_evidence_help: Ruta al documento JSON completo de evidencias de
           presentación del modelo 303.
+        m303_rectificativa_motive_help: 'Obligatorio para una rectificativa aplicable
+          del modelo 303: elige rectificaciones o discrepancia_criterio_administrativo.
+          Nunca se infiere ni se asigna por defecto.'
         missing_binding_guidance: '%{base} Aporta el valor con --binding KEY=VALUE
           en este comando, o ejecuta `%{discover}` para ver todos los bindings que
           el cálculo todavía necesita.'
@@ -7682,6 +7687,9 @@ errors:
       la tabla de despacho de filtros.
     refused_modelo_charge_account_missing: Se ha elegido una domiciliacion pero no
       hay una cuenta de cargo registrada.
+    refused_modelo_m303_rectificativa_motive: Las rectificativas del modelo 303 requieren
+      exactamente un motivo canónico en un diseño de registro aplicable y revisado;
+      el motivo está prohibido en los demás casos.
     refused_modelo_payment_election_capability: El metodo de pago elegido aun no esta
       disponible.
     refused_modelo_payment_election_incompatible: La opcion de pago elegida requiere

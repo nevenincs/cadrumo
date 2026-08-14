@@ -3434,6 +3434,8 @@ cli:
           az egységesített helyesbítési mechanizmus azoknál a nyomtatványoknál, amelyeknél
           a rendelet ezt bevezette (pl. 303-as nyomtatvány a 2023-as adóévtől).
         amend_wizard_kind_prompt: Helyesbítés típusa (%{choices})
+        amend_wizard_m303_rectificativa_motive_prompt: A 303-as rectificativa indoka
+          (%{choices})
         amend_wizard_no_corrections: Egyetlen rovat sem lett javítva; az önellenőrzési
           varázslóhoz legalább egy megváltozott érték szükséges.
         amend_wizard_no_current_filing: A(z) %{work_unit_id} munkaegységnek nincs
@@ -3620,6 +3622,9 @@ cli:
           (alapértelmezett) vagy spanyol forrású főkönyvi összesítés.'
         m303_filing_evidence_help: A teljes, típusos Modelo 303 bevallási bizonyíték
           JSON-dokumentumának elérési útja.
+        m303_rectificativa_motive_help: 'Alkalmazható 303-as rectificativa esetén
+          kötelező: válassza a rectificaciones vagy discrepancia_criterio_administrativo
+          értéket. Soha nem következtethető ki és nincs alapértéke.'
         missing_binding_guidance: '%{base} Adja meg az értéket a --binding KEY=VALUE
           kapcsolóval ezen a parancson, vagy futtassa: `%{discover}` az összes hiányzó
           kötés listázásához.'
@@ -7475,6 +7480,9 @@ errors:
       táblázatot.
     refused_modelo_charge_account_missing: Csoportos beszedesi bevallast valasztottak,
       de nincs rogzitett terhelesi szamla.
+    refused_modelo_m303_rectificativa_motive: A 303-as rectificativa egyetlen kanonikus
+      indokot követel meg egy alkalmazható és felülvizsgált rekordtervnél; az indok
+      minden más esetben tiltott.
     refused_modelo_payment_election_capability: A valasztott fizetesi mod meg nem
       tamogatott.
     refused_modelo_payment_election_incompatible: A valasztott fizetesi modhoz pozitiv
