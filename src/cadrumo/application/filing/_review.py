@@ -726,7 +726,7 @@ def _load_profile_activity_fingerprint(bucket_id: str) -> str:
     the stable empty-projection digest.
     """
     try:
-        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return _profile_activity_fingerprint(None)
     return _profile_activity_fingerprint(record_to_path_values(record))

@@ -147,7 +147,7 @@ def _madrid_nacimiento_adopcion_eligibility_advisory_finding(
 def _load_fact_index(bucket_id: str) -> dict[str, UserProfileFactValue] | None:
     """Return the bucket's profile fact index, or ``None`` when no profile exists."""
     try:
-        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return None
     schema = load_user_profile_schema()

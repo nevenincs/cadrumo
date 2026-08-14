@@ -106,7 +106,7 @@ def _attribution_received_omission_advisory_findings(
     record = profile_record
     if record is None:
         try:
-            record = ProfileRecordRepository(bucket_id=work_unit.bucket_id).load(work_unit.bucket_id)
+            record = ProfileRecordRepository.for_current_session(work_unit.bucket_id).load(work_unit.bucket_id)
         except ProfileNotFoundError:
             return ()
 

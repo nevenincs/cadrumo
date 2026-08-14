@@ -272,7 +272,7 @@ class ProfileFactsCheckpointStore:
             return None
         try:
             with self._existing_profile_span():
-                record = ProfileRecordRepository(bucket_id=self._profile_id).load(self._profile_id)
+                record = ProfileRecordRepository.for_current_session(self._profile_id).load(self._profile_id)
         except ProfileIntegrityError:
             # Ordered BEFORE the not-found arm on purpose: this subclasses it,
             # so a single ``except ProfileNotFoundError`` would convert "the

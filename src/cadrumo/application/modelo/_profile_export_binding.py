@@ -228,7 +228,7 @@ def _load_profile_record(*, bucket_id: str, profile_record: object | None) -> ob
     from ..user_profile import ProfileRecordRepository
 
     try:
-        return ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+        return ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return None
 
@@ -292,7 +292,7 @@ def _resolve_profile_export_values(
         from ..user_profile import ProfileRecordRepository
 
         try:
-            record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+            record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
         except ProfileNotFoundError:
             return {}
     resolved_schema = schema if schema is not None else load_user_profile_schema()

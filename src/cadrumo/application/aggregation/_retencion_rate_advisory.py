@@ -330,7 +330,7 @@ def _profile_suggests_sectoral_activity(bucket_id: str | None) -> bool | None:
     from ..user_profile import ProfileRecordRepository, projection_for_taxpayer
 
     try:
-        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return None
     except (OSError, ValueError):

@@ -684,7 +684,7 @@ def _build_modelo_readiness(
     pointer = read_profile_bucket_by_id(active_profile_id)
     if pointer is None:
         return ()
-    record = ProfileRecordRepository(bucket_id=pointer.bucket_id).load(pointer.bucket_id)
+    record = ProfileRecordRepository.for_current_session(pointer.bucket_id).load(pointer.bucket_id)
     reports: list[ProjectionModeloReadiness] = []
     for request in requests:
         readiness_period = _ledger_period_for_modelo_readiness(request)

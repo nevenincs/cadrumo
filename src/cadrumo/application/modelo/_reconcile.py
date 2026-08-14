@@ -1179,7 +1179,7 @@ def _bounded_payload_reference(reference: str) -> str:
 def _active_profile_tax_id(bucket_id: str) -> str:
     from ..user_profile import ProfileRecordRepository, record_to_path_values, record_to_values
 
-    record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+    record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     path_values = record_to_path_values(record)
     profile_tax_id = _normalise_tax_id(path_values.get("identity.tax_id"))
     if profile_tax_id:

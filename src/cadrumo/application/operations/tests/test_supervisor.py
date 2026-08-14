@@ -15,6 +15,7 @@ from ....adapters.persistence.operations import (
     OperationLeaseFilesystemRepository,
     OperationSecureReferenceRepository,
 )
+from ....adapters.persistence.storage import RepositoryError
 from ....adapters.persistence.storage import (
     SecureObjectNamespaceDefinition,
     SecureObjectRepository,
@@ -57,6 +58,7 @@ from .. import (
     OperationSupervisor,
     OperationTerminalCondition,
     OperationTerminalReceipt,
+    operation_conflict_scope_reference,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -521,6 +523,240 @@ def test_response_consumption_is_exact_single_use_and_durable_across_supervisor_
             else:
                 asyncio.run(duplicate.reject(response))
         assert asyncio.run(journal.load(operation_id)) == persisted
+
+
+def test_submit_conflict_does_not_publish_an_orphan_idempotency_claim(tmp_path: Path) -> None:
+    """A real conflict leaves the retry key free until its journal exists."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        contender = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="3" * 64,
+            token="4" * 64,
+        )
+        held_operation = asyncio.run(owner.submit(_request(subject_ref="subject:shared"), operation_id="5" * 64))
+        retry_request = _request(subject_ref="subject:shared", idempotency_key="retry-after-conflict")
+
+        with pytest.raises(ValueError, match="conflict lease"):
+            asyncio.run(contender.submit(retry_request, operation_id="6" * 64))
+        with pytest.raises(RepositoryError):
+            asyncio.run(journal.load("6" * 64))
+
+        held = asyncio.run(journal.load(held_operation))
+        asyncio.run(
+            owner.settle(
+                held_operation,
+                OperationTerminalReceipt(
+                    identity=held.identity,
+                    revision=held.revision + 1,
+                    condition=OperationTerminalCondition.FAILED,
+                    effect=OperationEffect.NONE,
+                    settled_at=_NOW,
+                ),
+            )
+        )
+        created = asyncio.run(contender.submit(retry_request, operation_id="6" * 64))
+        replayed = asyncio.run(contender.submit(retry_request, operation_id="7" * 64))
+
+        assert created == replayed == "6" * 64
+        assert asyncio.run(journal.load(created)).idempotency_claim is not None
+
+
+def test_token_mismatch_refuses_interaction_mutation_before_consumption(tmp_path: Path) -> None:
+    """An equal owner ID cannot adopt another supervisor's different lease token."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        registry = _registry(
+            executor_type=ReviewExecutor,
+            build=ReviewExecutor,
+            interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+        )
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        waiting = asyncio.run(owner.start(operation_id))
+        intruder = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="4" * 64,
+        )
+        response = _response(intent="apply", operation_id=operation_id, revision=waiting.revision)
+
+        with pytest.raises(ValueError, match="not owned"):
+            asyncio.run(intruder.respond(response))
+        assert asyncio.run(journal.load(operation_id)) == waiting
+        consumed = asyncio.run(owner.respond(response))
+        assert asyncio.run(journal.load(operation_id)).consumed_interactions == (consumed,)
+
+
+def test_request_cancel_persists_an_event_free_revision_and_later_terminal_event(tmp_path: Path) -> None:
+    """Cancellation retains prior history without inventing a lifecycle event."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        registry = _registry(
+            executor_type=IdleExecutor,
+            build=IdleExecutor,
+            capabilities=_capabilities(cancellation=OperationCancellation.COOPERATIVE),
+        )
+        supervisor = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        running = asyncio.run(supervisor.start(operation_id))
+        cancellation = asyncio.run(supervisor.request_cancel(operation_id))
+
+        assert running.revision == 1
+        assert cancellation.lifecycle is OperationLifecycle.CANCELLATION_REQUESTED
+        assert cancellation.revision == 2
+        assert cancellation.events == ()
+        assert cancellation.event_cursor == running.event_cursor
+
+        terminal = asyncio.run(
+            supervisor.settle(
+                operation_id,
+                OperationTerminalReceipt(
+                    identity=cancellation.identity,
+                    revision=cancellation.revision + 1,
+                    condition=OperationTerminalCondition.FAILED,
+                    effect=OperationEffect.NONE,
+                    settled_at=_NOW,
+                ),
+            )
+        )
+        replay = asyncio.run(journal.read_after(operation_id, 0, limit=10))
+
+        assert terminal.lifecycle is OperationLifecycle.TERMINAL
+        assert tuple(event.sequence for event in replay.events) == (1, 2)
+        assert tuple(event.revision for event in replay.events) == (1, 3)
+
+
+def test_reconcile_takes_over_expired_owner_settles_and_releases_scope(tmp_path: Path) -> None:
+    """A new real owner takes over expiry, settles interruption, and frees the scope."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        registry = _registry(
+            executor_type=IdleExecutor,
+            build=IdleExecutor,
+            capabilities=_capabilities(permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})),
+        )
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            lease_duration=timedelta(minutes=1),
+        )
+        operation_id = asyncio.run(owner.submit(_request(subject_ref="subject:shared"), operation_id="3" * 64))
+        asyncio.run(owner.start(operation_id))
+        recovered_at = _NOW + timedelta(minutes=2)
+        recovery = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="4" * 64,
+            token="5" * 64,
+            clock=lambda: recovered_at,
+        )
+
+        terminal = asyncio.run(recovery.reconcile(operation_id))
+        released = asyncio.run(
+            leases.inspect(
+                operation_conflict_scope_reference(
+                    definition_id=terminal.identity.definition_id,
+                    subject_ref=terminal.identity.subject_ref,
+                ),
+                terminal.identity.operation_id,
+                observed_at=recovered_at,
+            )
+        )
+        replacement = asyncio.run(
+            recovery.submit(_request(subject_ref="subject:shared"), operation_id="6" * 64)
+        )
+
+        assert terminal.lifecycle is OperationLifecycle.TERMINAL
+        assert terminal.terminal_condition is OperationTerminalCondition.INTERRUPTED
+        assert terminal.effect is OperationEffect.UNKNOWN
+        assert released.current is None
+        assert replacement == "6" * 64
+
+
+def test_settle_refuses_definition_forbidden_effect_before_cleanup_or_journal_mutation(tmp_path: Path) -> None:
+    """Terminal effects use the same definition capability boundary as executor facts."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        executor = DeclaredResourceExecutor()
+        supervisor = _supervisor(
+            registry=_registry(
+                executor_type=DeclaredResourceExecutor,
+                build=lambda: executor,
+                capabilities=_capabilities(owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK})),
+            ),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        running = asyncio.run(supervisor.start(operation_id))
+
+        with pytest.raises(ValueError, match="terminal receipt effect is not declared"):
+            asyncio.run(
+                supervisor.settle(
+                    operation_id,
+                    OperationTerminalReceipt(
+                        identity=running.identity,
+                        revision=running.revision + 1,
+                        condition=OperationTerminalCondition.SUCCEEDED,
+                        effect=OperationEffect.UPDATED,
+                        settled_at=_NOW,
+                        result_ref="result:complete",
+                    ),
+                )
+            )
+
+        assert executor.resource is not None
+        assert executor.resource.close_calls == 0
+        assert asyncio.run(journal.load(operation_id)) == running
 
 
 def _response(

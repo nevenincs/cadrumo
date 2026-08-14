@@ -33,7 +33,7 @@ def m303_profile_readiness_failure(
 
 def active_taxpayer_profile(work_unit: WorkUnit) -> TaxpayerProfile:
     try:
-        record = ProfileRecordRepository(bucket_id=work_unit.bucket_id).load(work_unit.bucket_id)
+        record = ProfileRecordRepository.for_current_session(work_unit.bucket_id).load(work_unit.bucket_id)
     except ProfileNotFoundError as exc:
         raise ModeloProfileReadinessError(
             precondition_failure=m303_profile_readiness_failure("profile_absent", {"profile_present": False}),

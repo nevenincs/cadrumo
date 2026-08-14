@@ -717,7 +717,7 @@ def _resolved_maternidad_meses(work_unit_id: str) -> MaternidadMesesResolution |
     unit = get_work_unit(work_unit_id)
     snapshot = resolve_registry_snapshot_for_work_unit(unit)
     try:
-        record = ProfileRecordRepository(bucket_id=unit.bucket_id).load(unit.bucket_id)
+        record = ProfileRecordRepository.for_current_session(unit.bucket_id).load(unit.bucket_id)
     except ProfileNotFoundError:
         return None
     return resolve_maternidad_meses(record, snapshot)
@@ -848,7 +848,7 @@ def _ambiguous_relacion_hijo_ids(work_unit_id: str, contributing_hijo_ids: froze
 
     unit = get_work_unit(work_unit_id)
     try:
-        record = ProfileRecordRepository(bucket_id=unit.bucket_id).load(unit.bucket_id)
+        record = ProfileRecordRepository.for_current_session(unit.bucket_id).load(unit.bucket_id)
     except ProfileNotFoundError:
         return frozenset[str]()
     facts = {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}

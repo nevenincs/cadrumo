@@ -105,7 +105,7 @@ def _has_descendiente_facts(bucket_id: str) -> bool:
     from ..user_profile import ProfileRecordRepository
 
     try:
-        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return False
     return any(
@@ -185,7 +185,7 @@ def _profile_fact_strings(bucket_id: str) -> dict[str, str] | None:
     from ..user_profile import ProfileRecordRepository
 
     try:
-        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return None
     return {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
@@ -940,7 +940,7 @@ def _declared_descendant_row_count(bucket_id: str) -> int | None:
     from ..user_profile import ProfileRecordRepository
 
     try:
-        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return None
     instances = {
@@ -956,7 +956,7 @@ def _stored_descendientes_count(bucket_id: str) -> Decimal | None:
     from ..user_profile import ProfileRecordRepository
 
     try:
-        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return None
     for fact in record.facts:

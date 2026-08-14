@@ -448,7 +448,7 @@ def create_sandbox(command: CreateSandboxCommand) -> CreateSandboxResult:
             raise SandboxSourceNotFoundError(command.from_profile)
         try:
             with profile_storage_session(source_pointer.bucket_id):
-                source_record = ProfileRecordRepository(bucket_id=source_pointer.bucket_id).load(
+                source_record = ProfileRecordRepository.for_current_session(source_pointer.bucket_id).load(
                     source_pointer.bucket_id,
                 )
         except ProfileNotFoundError as exc:
