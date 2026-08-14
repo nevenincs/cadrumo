@@ -243,7 +243,7 @@ def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
     from ..user_profile import ProfileRecordRepository, record_to_path_values
 
     try:
-        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return None
     return record_to_path_values(record)

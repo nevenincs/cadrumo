@@ -96,9 +96,9 @@ def _read_profile_record(*, profile_id: str, bucket_id: str):
     # Ask the bound session which bucket it serves; matching the pointer and
     # then checking only that SOME session exists leaves it unverified.
     if active_bucket_session_serves(bucket_id):
-        return ProfileRecordRepository(bucket_id=bucket_id).load(profile_id)
+        return ProfileRecordRepository.for_current_session(bucket_id).load(profile_id)
     with profile_storage_session(bucket_id):
-        return ProfileRecordRepository(bucket_id=bucket_id).load(profile_id)
+        return ProfileRecordRepository.for_current_session(bucket_id).load(profile_id)
 
 
 __all__ = [

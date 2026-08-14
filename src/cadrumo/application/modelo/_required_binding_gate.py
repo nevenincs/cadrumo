@@ -135,7 +135,7 @@ def resolved_required_profile_binding_values(
     if str(work_unit.modelo) != Modelo.M202.value:
         return {}
     try:
-        record = ProfileRecordRepository(bucket_id=work_unit.bucket_id).load(work_unit.bucket_id)
+        record = ProfileRecordRepository.for_current_session(work_unit.bucket_id).load(work_unit.bucket_id)
     except ProfileNotFoundError:
         return {}
     facts = profile_fact_index(record, load_user_profile_schema())

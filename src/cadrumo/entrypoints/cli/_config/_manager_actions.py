@@ -1083,7 +1083,7 @@ def _auth_facts_on_record() -> dict[str, str]:
     from ....core import require_active_bucket_id
 
     profile_id = require_active_bucket_id()
-    record = ProfileRecordRepository(bucket_id=profile_id).load(profile_id)
+    record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
     return {
         fact.path: str(fact.value)
         for fact in record.facts

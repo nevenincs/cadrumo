@@ -281,7 +281,7 @@ class WorkflowState(BaseModel):
 
         with override_settings(cadrumo_active_profile=bucket_id):
             try:
-                return ProfileRecordRepository(bucket_id=bucket_id, objects=secure_objects).load(bucket_id)
+                return ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
             except ProfileNotFoundError as exc:
                 _log.debug("active profile record resolution returned no profile record: %s", type(exc).__name__)
                 return None

@@ -16,7 +16,13 @@ from typing import Final, Literal
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
 from cadrumo.core import FilingProducerKey, compile_filing_projection_ref, freeze_toml, read_toml
-from cadrumo.domain.calculations.registry import ModeloId, RegistryValidationError, SourceRefId
+from cadrumo.domain.calculations.registry import (
+    ExportComputedKey,
+    ExportDraftAttribute,
+    ModeloId,
+    RegistryValidationError,
+    SourceRefId,
+)
 
 from ._semantic_map import M303VariableEnvelopeSemantic, SemanticMap, SemanticMapEntry, SemanticMapRecord
 
@@ -135,6 +141,19 @@ def _load_fragment(path: Path) -> SemanticMapFragment:
                 raise RegistryValidationError(
                     f"invalid semantic-map fragment {path.name!r}: projection_ref is not canonical: {exc}",
                 ) from exc
+        for field_name, enum_type in (
+            ("draft_attribute", ExportDraftAttribute),
+            ("computed_key", ExportComputedKey),
+        ):
+            raw_value = entry.get(field_name)
+            if isinstance(raw_value, str):
+                try:
+                    entry[field_name] = enum_type(raw_value)
+                except ValueError as exc:
+                    raise RegistryValidationError(
+                        f"invalid semantic-map fragment {path.name!r}: "
+                        f"{raw_value!r} is not a canonical {field_name}",
+                    ) from exc
         compiled_entries.append(entry)
     data["entries"] = tuple(compiled_entries)
     try:

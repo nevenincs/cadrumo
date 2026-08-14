@@ -29,7 +29,6 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.identity import BucketId, ProfileLabel
 from .....core.time import validate_utc_aware
-from .....domain.user_profile import UserProfileStatus
 from .._kdf_bounds import (
     MIN_MEMORY_COST_KIB,
     MIN_PARALLELISM,
@@ -135,35 +134,6 @@ class BucketManifest(BaseModel):
     session_absolute_minutes: int | None = Field(default=None, gt=0)
     key_schedule: BucketKeySchedule
     schema_version: int = Field(ge=1)
-    status: UserProfileStatus
-    """Plaintext mirror of the encrypted record's lifecycle status.
-
-    Required, with no default. A manifest that omits ``status`` is
-    rejected at the read boundary (fail-closed) rather than silently
-    hydrating as a live profile — a silent default would risk leaking a
-    tombstoned bucket back onto the operator surface. The
-    :class:`CommittedProfileRepository` sets it explicitly on every write:
-    ``ACTIVE`` at creation, ``TOMBSTONED`` in the same write that
-    tombstones the encrypted record.
-    """
-
-    @field_validator("status", mode="before")
-    @classmethod
-    def _coerce_status(cls, value: object) -> UserProfileStatus:
-        """Accept the TOML-native string form of the lifecycle marker.
-
-        The strict model rejects a bare ``str`` for the enum field, but
-        the on-disk TOML manifest stores ``status`` as a plain string.
-        This pre-validator parses that string back into the enum so the
-        manifest round-trips while the public constructor still
-        type-checks an explicit :class:`UserProfileStatus`.
-        """
-        if isinstance(value, UserProfileStatus):
-            return value
-        if isinstance(value, str):
-            return UserProfileStatus(value)
-        raise ValueError("status must be a UserProfileStatus or its string value")
-
     @field_validator("key_schedule", mode="before")
     @classmethod
     def _coerce_key_schedule(cls, value: object) -> BucketKeySchedule:

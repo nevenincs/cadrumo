@@ -104,7 +104,7 @@ def build_active_profile_overview(*, label: str | None = None) -> ProfileOvervie
     from ....core import require_active_bucket_id
 
     profile_id = require_active_bucket_id()
-    record = ProfileRecordRepository(bucket_id=profile_id).load(profile_id)
+    record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
     overview = build_profile_overview(
         record,
         label=label if label is not None else record.display_name,
@@ -291,7 +291,7 @@ def _active_profile_manager_storage(
     profile_id = require_active_bucket_id()
     secure_objects = secure_object_repository_for_active_bucket()
     schema = load_user_profile_schema()
-    profiles = ProfileRecordRepository(bucket_id=profile_id, objects=secure_objects)
+    profiles = ProfileRecordRepository.for_current_session(profile_id)
     workflow = WorkflowStateRepository(objects=secure_objects)
 
     opening = profiles.load(profile_id)

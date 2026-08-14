@@ -1315,7 +1315,7 @@ def _load_profile_facts(
         from ..user_profile import ProfileRecordRepository
 
         try:
-            record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+            record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
         except ProfileNotFoundError:
             return None
     profile_record_fingerprint = _profile_record_fingerprint(record)

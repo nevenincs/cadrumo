@@ -67,6 +67,7 @@ from .. import (
     file_modelo_revision,
     verify_modelo_revision,
 )
+from .._registry_helpers import assert_revision_content_integrity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -422,7 +423,9 @@ def test_m390_persists_exact_ten_value_handoff_from_one_filed_current_m303_4t_re
     assert handoff.source_calculation_revision_id == source.calculation_revision_id
     assert handoff.target_calculation_revision_id == result.revision.calculation_revision_id
     assert CalculationRevision.model_validate_json(result.revision.model_dump_json()) == result.revision
-    assert calculations.load().get(result.revision.calculation_revision_id) == result.revision
+    persisted = calculations.load().get(result.revision.calculation_revision_id)
+    assert persisted == result.revision
+    assert_revision_content_integrity(persisted)
 
     source_values = source.casilla_values
     source_evidence = source.filing_instance_evidence

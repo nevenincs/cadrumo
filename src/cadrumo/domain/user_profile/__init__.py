@@ -103,11 +103,11 @@ from ._schema import (
     profile_value_refusal,
 )
 from ._values import (
+    ProfileSetupState,
     UserProfileFact,
     UserProfileFactValue,
     UserProfileRecord,
     UserProfileSnapshot,
-    ProfileSetupState,
     declared_provenance_sources,
     new_profile_id,
     new_profile_snapshot_id,
@@ -159,6 +159,7 @@ __all__ = [
     "ProfileSchemaDefinition",
     "ProfileSchemaValidationError",
     "ProfileSectionDefinition",
+    "ProfileSetupState",
     "ProfileSnapshotHashMismatchError",
     "ProfileSnapshotNotFoundError",
     "ProfileSnapshotPolicy",
@@ -176,7 +177,6 @@ __all__ = [
     "UserProfileSchemaLoadError",
     "UserProfileSelectorIndex",
     "UserProfileSnapshot",
-    "ProfileSetupState",
     "UserProfileValidationError",
     "boolean_value_refusal",
     "build_user_profile_selector_index",

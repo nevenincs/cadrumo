@@ -1050,7 +1050,7 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
         # session bound to another profile would decrypt this record under the
         # wrong key rather than fall through to the provider branch below.
         if active_bucket_session_serves(bucket_id):
-            record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+            record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
         else:
             from ...core.config import override_settings
 
@@ -1061,7 +1061,7 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
                     fallback_bucket_id=bucket_id,
                 ),
             ):
-                record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+                record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return ClaveAuthFacts()
 

@@ -209,7 +209,7 @@ def _resolve_residence_ccaa(
     record = profile_record
     if record is None:
         try:
-            record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+            record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
         except ProfileNotFoundError:
             return None
 
@@ -267,7 +267,7 @@ def _resolve_iva_deduction_ratio(
     record = profile_record
     if record is None:
         try:
-            record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+            record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
         except ProfileNotFoundError:
             record = None
     if record is not None:

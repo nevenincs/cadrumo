@@ -1144,6 +1144,28 @@ def test_renderer_refuses_missing_or_noncontiguous_official_record_geometry(
     assert not target.exists()
 
 
+def test_renderer_refuses_unstructured_quoted_numeric_prose(_m200_snapshot, tmp_path) -> None:
+    """Quoted digits form an enum only under the reviewed comma-delimited source grammar."""
+    target = tmp_path / "export"
+    joined = _joined(
+        _m200_snapshot,
+        numeric_content='"00000" only if the taxpayer elects "00050"',
+    )
+
+    with pytest.raises(RegistryValidationError, match="ambiguous content"):
+        render_complete_export_tree(
+            target,
+            revision_id="2025",
+            joined=joined,
+            semantic_map=_semantic_map(),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    assert not target.exists()
+
+
 def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(_m200_snapshot, tmp_path) -> None:
     """The renderer rejects unsafe authority mismatches and never overwrites a prior output."""
     joined = _joined(_m200_snapshot)

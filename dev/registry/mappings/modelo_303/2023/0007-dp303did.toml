@@ -1,0 +1,173 @@
+schema_version = 1
+fragment_id = "dp303did"
+modelo = "303"
+design_epoch = "2023"
+source_ref = "aeat-dr-303-2023"
+source_sha256 = "72e463cb29984f535c9f56917d788ff0641965f116aeab47da5f76a59eecfbe4"
+[[entries]]
+export_field_id = "m303-2023.dp303did.f001"
+kind = "literal"
+literal = "<T"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP303DID"
+source_row = 6
+source_cell = "A6"
+ordinal = 1
+record_identity = "DP303DID"
+
+[[entries]]
+export_field_id = "m303-2023.dp303did.f002"
+kind = "literal"
+literal = "303"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP303DID"
+source_row = 7
+source_cell = "A7"
+ordinal = 2
+record_identity = "DP303DID"
+
+[[entries]]
+export_field_id = "m303-2023.dp303did.f003"
+kind = "literal"
+literal = "DID00"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP303DID"
+source_row = 8
+source_cell = "A8"
+ordinal = 3
+record_identity = "DP303DID"
+
+[[entries]]
+export_field_id = "m303-2023.dp303did.f004"
+kind = "literal"
+literal = ">"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP303DID"
+source_row = 9
+source_cell = "A9"
+ordinal = 4
+record_identity = "DP303DID"
+
+[[entries]]
+export_field_id = "m303-2023.dp303did.f005"
+kind = "header"
+producer_key = "selected_account.swift_bic"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP303DID"
+source_row = 10
+source_cell = "A10"
+ordinal = 5
+record_identity = "DP303DID"
+
+[[entries]]
+export_field_id = "m303-2023.dp303did.f006"
+kind = "header"
+producer_key = "selected_account.iban"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP303DID"
+source_row = 11
+source_cell = "A11"
+ordinal = 6
+record_identity = "DP303DID"
+
+[[entries]]
+export_field_id = "m303-2023.dp303did.f007"
+kind = "header"
+producer_key = "selected_account.bank_name"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP303DID"
+source_row = 12
+source_cell = "A12"
+ordinal = 7
+record_identity = "DP303DID"
+
+[[entries]]
+export_field_id = "m303-2023.dp303did.f008"
+kind = "header"
+producer_key = "selected_account.bank_address"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP303DID"
+source_row = 13
+source_cell = "A13"
+ordinal = 8
+record_identity = "DP303DID"
+
+[[entries]]
+export_field_id = "m303-2023.dp303did.f009"
+kind = "header"
+producer_key = "selected_account.bank_city"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP303DID"
+source_row = 14
+source_cell = "A14"
+ordinal = 9
+record_identity = "DP303DID"
+
+[[entries]]
+export_field_id = "m303-2023.dp303did.f010"
+kind = "header"
+producer_key = "selected_account.bank_country_code"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP303DID"
+source_row = 15
+source_cell = "A15"
+ordinal = 10
+record_identity = "DP303DID"
+
+[[entries]]
+export_field_id = "m303-2023.dp303did.f011"
+kind = "computed"
+computed_key = "sepa_marca"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP303DID"
+source_row = 16
+source_cell = "A16"
+ordinal = 11
+record_identity = "DP303DID"
+
+[[entries]]
+export_field_id = "m303-2023.dp303did.f012"
+kind = "filler"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP303DID"
+source_row = 17
+source_cell = "A17"
+ordinal = 12
+record_identity = "DP303DID"
+
+[[entries]]
+export_field_id = "m303-2023.dp303did.f013"
+kind = "literal"
+literal = "</T303DID00>"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP303DID"
+source_row = 18
+source_cell = "A18"
+ordinal = 13
+record_identity = "DP303DID"

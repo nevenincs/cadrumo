@@ -838,7 +838,7 @@ def _expected_tax_id_for_filing_record(filing: ModeloRecord) -> str:
     from ..user_profile import ProfileRecordRepository, record_to_values
 
     try:
-        record = ProfileRecordRepository(bucket_id=filing.bucket_id).load(filing.bucket_id)
+        record = ProfileRecordRepository.for_current_session(filing.bucket_id).load(filing.bucket_id)
     except (CadrumoError, OSError) as exc:
         raise LiveApplicationInputError(
             translated_message="application.live.justificante.errors.filing_identity_unresolved",

@@ -456,6 +456,9 @@ class ProfileCustodyTransactionJournal(_CustodyDigestModel):
 class ProfileCustodyTransactionReceipt(_CustodyDigestModel):
     """One idempotent durable receipt for the application local-delete owner."""
 
+    _digest_maximum_bytes = CUSTODY_RECEIPT_MAX_BYTES
+    _digest_subject = "custody receipt"
+
     schema_version: Literal[1] = CUSTODY_RECEIPT_SCHEMA_VERSION
     owner: Literal["application-local-custody"] = "application-local-custody"
     transaction_id: UUID
@@ -489,6 +492,9 @@ class ProfileCustodyTransactionReceipt(_CustodyDigestModel):
 
 class ProfileCustodyOwnerReceipt(_CustodyDigestModel):
     """One durable idempotence receipt for an ordered local deletion owner."""
+
+    _digest_maximum_bytes = CUSTODY_RECEIPT_MAX_BYTES
+    _digest_subject = "custody owner receipt"
 
     schema_version: Literal[1] = 1
     transaction_id: UUID

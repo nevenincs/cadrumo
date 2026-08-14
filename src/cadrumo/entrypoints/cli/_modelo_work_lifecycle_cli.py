@@ -383,7 +383,7 @@ def _modelo_100_obligation_advisory_output(unit) -> tuple[list[Notice], list[str
     bucket = resolve_active_bucket_id()
     if bucket is None:
         return [], []
-    record = ProfileRecordRepository(bucket_id=bucket).load(bucket)
+    record = ProfileRecordRepository.for_current_session(bucket).load(bucket)
     raw = record_to_values(record) if record is not None else None
     messages = [tr(advisory_key) for advisory_key in build_filing_obligation_advisories(raw)]
     notices = [advisory_notice("modelo.work.create.filing_obligation", message) for message in messages]

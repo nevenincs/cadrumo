@@ -68,7 +68,7 @@ class AtribucionMemberSourceResolver:
         record = self._profile_record
         if record is None:
             try:
-                record = ProfileRecordRepository(bucket_id=context.bucket_id).load(context.bucket_id)
+                record = ProfileRecordRepository.for_current_session(context.bucket_id).load(context.bucket_id)
             except ProfileNotFoundError:
                 return CalculationSourceResolution(
                     resolver_id=self.resolver_id,

@@ -6,7 +6,6 @@ from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId, ProfileLabel
-from ...domain.user_profile import UserProfileStatus
 
 
 class ProfileBucketPointer(BaseModel):
@@ -21,7 +20,6 @@ class ProfileBucketPointer(BaseModel):
 
     bucket_id: BucketId
     label: ProfileLabel
-    status: UserProfileStatus = UserProfileStatus.ACTIVE
 
 
 __all__ = ["ProfileBucketPointer"]

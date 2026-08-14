@@ -18,6 +18,7 @@ from ....core import read_pointer
 from ....domain.user_profile import UserProfileRecord
 from .._capsule_record import PROFILE_RECORD_DATA_FILENAME, ProfileRecordSession
 from .._lifecycle import ProfileCapsuleLifecycle
+from .._profile_record_repository import ProfileRecordRepository, bound_profile_record_session
 from .._profile_repository import CommittedProfileRepository, ProfileNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -58,6 +59,7 @@ def test_lifecycle_projects_only_its_committed_capsule_and_owns_selection(tmp_pa
     envelope, sentinel, data_files, dek = _current_capsule_input()
     service = ProfileCapsuleLifecycle(root=tmp_path)
 
+    record_session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
     created = service.create(
         label="Capsule operator",
         profile_id=_PROFILE_ID,
@@ -65,7 +67,7 @@ def test_lifecycle_projects_only_its_committed_capsule_and_owns_selection(tmp_pa
         sentinel=sentinel,
         data_files=data_files,
         initial_record=UserProfileRecord(profile_id=str(_PROFILE_ID)),
-        record_session=ProfileRecordSession.from_envelope(envelope=envelope, dek=dek),
+        record_session=record_session,
     )
 
     assert created.profile_id == str(_PROFILE_ID)
@@ -76,6 +78,10 @@ def test_lifecycle_projects_only_its_committed_capsule_and_owns_selection(tmp_pa
     assert pointer is not None
     assert pointer.bucket_id == str(_PROFILE_ID)
     assert (tmp_path / "buckets" / str(_PROFILE_ID) / "data" / PROFILE_RECORD_DATA_FILENAME).is_file()
+    with bound_profile_record_session(record_session):
+        assert ProfileRecordRepository.for_current_session(_PROFILE_ID, root=tmp_path).load(_PROFILE_ID).profile_id == str(
+            _PROFILE_ID
+        )
 
 
 def test_repository_refuses_retired_or_uncommitted_bucket_directories(tmp_path) -> None:

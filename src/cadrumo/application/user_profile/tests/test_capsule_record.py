@@ -52,7 +52,7 @@ def test_initial_record_is_encrypted_and_bound_to_the_exact_envelope_session() -
 
     assert restored == record
     assert artifact.previous_record_digest is None
-    assert artifact.content_digest not in payload.decode("utf-8")
+    assert "Initial operator" not in payload.decode("utf-8")
 
 
 def test_record_compare_and_swap_carries_the_previous_current_digest() -> None:
@@ -60,8 +60,8 @@ def test_record_compare_and_swap_carries_the_previous_current_digest() -> None:
     initial = UserProfileRecord(profile_id=str(_PROFILE_ID), setup_state=ProfileSetupState.INCOMPLETE)
     current, current_artifact = session.decode_current(session.create_initial(initial))
     replacement = UserProfileRecord.model_validate(
-        current.model_dump(mode="json", exclude={"content_digest"})
-        | {"setup_state": ProfileSetupState.COMPLETE.value, "record_revision": 2, "previous_record_digest": current.content_digest}
+        current.model_dump(exclude={"content_digest"})
+        | {"setup_state": ProfileSetupState.COMPLETE, "record_revision": 2, "previous_record_digest": current.content_digest}
     )
 
     next_payload = session.prepare_replace(

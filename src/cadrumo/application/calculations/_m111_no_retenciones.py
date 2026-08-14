@@ -56,7 +56,7 @@ def m111_no_retenciones_periods_for_bucket(bucket_id: str) -> frozenset[tuple[in
     from ..user_profile import ProfileRecordRepository, record_to_path_values
 
     try:
-        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return frozenset[tuple[int, str]]()
     return m111_no_retenciones_periods_from_profile_values(record_to_path_values(record))
