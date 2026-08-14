@@ -108,6 +108,8 @@ class SecureObjectRawRow(BaseModel):
     payload_hash: ContentDigest | None = None
     ciphertext_hash: ContentDigest | None = None
     revision_written_at: datetime | None = None
+    write_provenance: str | None = None
+    source_event_id: str | None = None
 
 
 class SecureObjectNamespaceIntegrity(BaseModel):
