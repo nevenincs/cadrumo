@@ -14,9 +14,8 @@ values never render in a repr. Parsing rejects a repeated object key at any
 nesting depth (see :func:`_reject_duplicate_object_keys`) rather than silently
 resolving it to its last occurrence, so the strict-parse contract is total: a
 collision can never slip past ``extra="forbid"`` by being resolved before
-pydantic sees the mapping. This module wraps
-:class:`~cadrumo.adapters.persistence.storage.master_key` custody flows such as
-``config passphrase change`` and ``config recovery verify`` / ``config recover``.
+pydantic sees the mapping. This module carries the passphrase channel for the
+per-profile custody flows, ``config login`` foremost.
 """
 
 from __future__ import annotations
@@ -155,36 +154,6 @@ def terminal_can_prompt_for_secrets() -> bool:
     return stdin_is_tty() and _stdin_is_a_real_console()
 
 
-def write_to_controlling_terminal(text: str) -> None:
-    """Write ``text`` directly to the controlling terminal, never a redirected stream.
-
-    Used by the recovery ``create`` / ``rotate`` verbs to display a candidate
-    recovery code exactly once: the words must reach the operator's terminal
-    and MUST NOT ride stdout (a redirected stdout, a JSON envelope, or a log
-    would serialize the secret). Refuses cleanly when no interactive terminal
-    is attached, mirroring :func:`prompt_secret_no_echo`.
-
-    The console check is load-bearing here, not merely defensive: opening
-    ``CONOUT$`` SUCCEEDS against a console-less host, so a candidate recovery
-    code would be written to a phantom console the operator never sees while
-    the verb reported success — and the words are shown exactly once and are
-    unrecoverable afterwards.
-    """
-    if not terminal_can_prompt_for_secrets():
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.custody.errors.non_interactive_secret_required",
-        )
-    device = "CONOUT$" if sys.platform == "win32" else "/dev/tty"
-    try:
-        with open(device, "w", encoding=UTF_8_ENCODING) as terminal:
-            terminal.write(text)
-            terminal.flush()
-    except OSError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.custody.errors.non_interactive_secret_required",
-        ) from exc
-
-
 def prompt_secret_no_echo(prompt: str) -> str:
     """Read one secret from the controlling terminal with echo suppressed.
 
@@ -244,5 +213,4 @@ __all__ = [
     "prompt_secret_no_echo",
     "read_secrets_stdin",
     "terminal_can_prompt_for_secrets",
-    "write_to_controlling_terminal",
 ]

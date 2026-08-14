@@ -62,17 +62,11 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # the operator in a loop — and its idempotent no-op needs no session.
     "config login",
     "config logout",
-    # Custody verbs own their own session / recovery / rewrap flow. The
-    # root callback must not pre-open the active bucket session before
-    # these handlers can resolve passphrase or recovery material.
     # Durable reset owns the pointer transaction, target locks, target-scoped
     # auth sessions, and external journal itself. Root bootstrap must not open
     # an active bucket session or manufacture an active-profile override before
     # start/resume; status reads only the external journal.
     "config reset",
-    "config passphrase change",
-    "config recover",
-    "config recovery",
     # Diagnostic surface: must operate without a session so the
     # operator can recover from a torn workspace.
     "config repair",

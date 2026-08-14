@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-14'
-body_hash: 'sha256:cea182950885471b6f296b01b1a68273c4f306923f316284f1f01970e301848c'
+body_hash: 'sha256:6b42812b905aceab0a0f359abf5ca7fc0ed8111c221988b1f6d4b64f6f194bc7'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -77,7 +77,7 @@ Rebuild restore and operator access around current capsules and explicit secret 
 Separate safe deterministic transport from custody-authorized password restore and explicit recovery restore.
 
 - [x] `W03.P05.S13` - Have Terra XHigh rebuild deterministic sealed archive transport framing without recovery.wrap, shared-master assumptions, or retired format parsing; `src/cadrumo/adapters/persistence/storage/bucket/`.
-- [ ] `W03.P05.S14` - Have Terra XHigh implement password-only restore, explicit restore-recover lineage, exclusive recovery-artifact export-import, and new-identity portability; `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/application/user_profile/`.
+- [ ] `W03.P05.S14` - Have Terra XHigh implement password-only restore, explicit restore-recover lineage, and new-identity portability, wiring the exclusive recovery-artifact export and import to the per-profile artifact module that ALREADY EXISTS in the custody package rather than authoring a second one, that module already being a guarded external export with no coupling to the archive transport; `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/application/user_profile/ and src/cadrumo/adapters/persistence/storage/custody/_recovery_artifact.py`.
 - [ ] `W03.P05.S15` - Have Sol Medium review archive roots, hostile transport refusal, artifact export-import warnings and proof, restore publication, and rollback limits; `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/application/user_profile/`.
 
 ### Phase `W03.P06` - CLI and TUI authority
@@ -110,7 +110,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S35` - Have Terra XHigh harden the import-hygiene shim detector so a forwarding layer written as wrapper definitions is caught, not only one written as import aliases, since the wrapper form evades the zero-real-definitions test by construction; `dev/quality/import_hygiene_scan.py`.
 - [ ] `W04.P07.S36` - Have Sol Medium first rule whether per-profile recovery will adopt the mnemonic at all, since the codec and its canonical wordlist currently have no consumer anywhere, then either split them out as their own home or delete both halves with the wordlist and its wheel pin, rather than preserving a survivor with nobody to serve; `src/cadrumo/adapters/persistence/storage/master_key/_recovery.py`.
 - [x] `W04.P07.S37` - Have Terra XHigh stop the custody key-derivation calibration from measuring its cost grid on hosts that enrol a profile per test, adopting the fixed point the function already returns when measurement cannot complete, so enrolment stops costing ten supervised child processes without weakening any wrap; `src/cadrumo/core/config.py and src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py`.
-- [ ] `W04.P07.S38` - Have Terra XHigh make the core hashing module the true single owner of canonical-record encoding it already claims to be, emitting utf-8 unescaped and refusing non-finite numbers, and repoint all eight implementations onto it with roundtrip and anti-tautology coverage for the changed persisted digest; `src/cadrumo/core/hashing.py and src/cadrumo/adapters/persistence/storage/ and src/cadrumo/application/`.
+- [x] `W04.P07.S38` - Have Terra XHigh make the core hashing module the true single owner of canonical-record encoding it already claims to be, emitting utf-8 unescaped and refusing non-finite numbers, and repoint all eight implementations onto it with roundtrip and anti-tautology coverage for the changed persisted digest; `src/cadrumo/core/hashing.py and src/cadrumo/adapters/persistence/storage/ and src/cadrumo/application/`.
 - [x] `W04.P07.S39` - Have Terra XHigh delete the re-export bridge module in the custody package and repoint its sole consumer at the two modules it forwards to, in one commit; `src/cadrumo/adapters/persistence/storage/custody/_label_head.py`.
 - [ ] `W04.P07.S40` - Have Sol Medium confirm or refute that the modelo export stages fichero bytes through a predictable unhardened temporary name at an operator-chosen destination, and if confirmed bring that staging under the hardened write contract that governs sensitive financial data; `src/cadrumo/application/modelo/_export.py`.
 - [ ] `W04.P07.S41` - Have Terra XHigh restore or remove the duplicate-label refusal that two live modules import from the profile facade but which is defined nowhere in the tree, an unrecorded casualty of the capsule discovery step that raises on import today; `src/cadrumo/application/user_profile/ and src/cadrumo/application/wizard/_commands.py`.

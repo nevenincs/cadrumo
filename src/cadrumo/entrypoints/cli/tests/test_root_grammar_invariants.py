@@ -8,21 +8,15 @@ one.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_sessionless_storage_root
+from ._isolated_profile_storage_fixtures import _isolated_state
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_state(tmp_path: Path) -> Iterator[None]:
-    with isolated_sessionless_storage_root(tmp_path=tmp_path):
-        yield
+__all__ = ["_isolated_state"]
 
 
 def test_root_does_not_register_bare_reconcile_alias() -> None:
@@ -111,43 +105,27 @@ def test_modelo_audit_verbs_only_register_canonical_three() -> None:
 def test_config_does_not_register_retired_custody_spellings() -> None:
     """The retired custody spellings are unmounted everywhere.
 
-    ``config rekey`` became ``config passphrase change``; ``config
-    show-recovery`` / ``config verify-recovery`` became the ``config recovery``
-    subgroup (``status`` / ``create`` / ``rotate`` / ``verify``). None of the
-    old spellings may resolve."""
+    Two retirements, one assertion. The older one dropped ``config rekey``,
+    ``config show-recovery`` and ``config verify-recovery``. The per-profile
+    custody cutover then retired their successors too: the global recovery
+    facade that mirrored a single shared master key is gone, taking ``config
+    recover``, the ``config recovery`` subgroup and ``config passphrase`` with
+    it — recovery enrolment and restore are per-profile custody operations now.
 
-    for verb in ("rekey", "show-recovery", "verify-recovery"):
+    None of these may resolve. A spelling that quietly re-mounts would hand an
+    operator a verb with no owner behind it, on the data-custody path.
+    """
+
+    for verb in (
+        "rekey",
+        "show-recovery",
+        "verify-recovery",
+        "recover",
+        "recovery",
+        "passphrase",
+    ):
         result = invoke_cached_cli(["config", verb, "--help"])
         assert result.exit_code != 0, (verb, result.output)
-
-
-def test_recovery_verbs_reject_mnemonic_argv_options() -> None:
-    """No recovery verb accepts the mnemonic (or any secret) as an argv value.
-
-    The retired ``--recovery-key`` channel put the 24 words in the process
-    table and shell history; secrets now arrive only via no-echo prompts or
-    ``--secrets-stdin``."""
-
-    for args in (
-        ["config", "recover", "--recovery-key", "a b c"],
-        ["config", "recovery", "verify", "--recovery-key", "a b c"],
-        ["config", "recover", "--new-passphrase", "x"],
-        ["config", "recover", "--confirm-new-passphrase", "x"],
-    ):
-        result = invoke_cached_cli(args)
-        assert result.exit_code != 0, (args, result.output)
-
-
-def test_recovery_grammar_registers_exactly_the_accepted_leaves() -> None:
-    """`config recovery` mounts status/create/rotate/verify and nothing else."""
-
-    for leaf in ("status", "create", "rotate", "verify"):
-        result = invoke_cached_cli(["config", "recovery", leaf, "--help"])
-        assert result.exit_code == 0, (leaf, result.output)
-
-    for leaf in ("show", "mint", "print", "export"):
-        result = invoke_cached_cli(["config", "recovery", leaf, "--help"])
-        assert result.exit_code != 0, (leaf, result.output)
 
 
 _RETIRED_CUSTODY_SPELLINGS = (
@@ -192,10 +170,7 @@ def test_retired_custody_spellings_absent_from_source_and_docs() -> None:
 
     # Rejection-probe tests legitimately carry a retired spelling to prove the
     # CLI refuses it; they are the enforcement, not a citation.
-    exempt = {
-        Path(__file__).resolve(),
-        (Path(__file__).parent / "test_config_recovery_lifecycle.py").resolve(),
-    }
+    exempt = {Path(__file__).resolve()}
     offenders: list[str] = []
     for path in scanned:
         if path.resolve() in exempt:

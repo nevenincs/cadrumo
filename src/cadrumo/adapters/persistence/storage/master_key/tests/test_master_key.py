@@ -100,8 +100,15 @@ class TestTornStateGate:
             with pytest.raises(MasterKeyMaterialMissingError, match="torn state") as excinfo:
                 provider.get_master_key()
             msg = str(excinfo.value)
-            assert "aeat config recover" in msg
-            assert "aeat config profile create NAME" in msg
+            # The torn store has no in-app repair route, so the refusal must
+            # hand the operator the backup and warn against deleting the
+            # directory -- deletion is what destroys every stored record.
+            assert "restore" in msg
+            assert "backup" in msg
+            assert "Do not delete it" in msg
+            # The global recovery facade is retired. Naming it here would hand
+            # a real operator, mid-data-loss, a command that does not resolve.
+            assert "aeat config recover" not in msg
 
     def test_no_install_refuses_implicit_mint(
         self,
