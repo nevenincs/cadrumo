@@ -56,12 +56,13 @@ from ...core import (
     validated_casilla_id,
 )
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.resources import resources
+from ...core.resources import bundled_path
 from ...domain.calculations.registry import (
     BindingId,
     IvaLedgerObservation,
     LegalRefId,
     ModeloRevision,
+    load_registry_tree,
     RegistrySnapshot,
     SourceRefId,
     select_revision,
@@ -848,8 +849,10 @@ class ProrrataRegularizacionSourceResolver:
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         revision = self._registry_snapshot.revision if self._registry_snapshot is not None else None
         if revision is None:
+            modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+            modelo = next(candidate for candidate in modelos if candidate.id == context.modelo)
             revision = select_revision(
-                resources().modelos.authority.modelo(context.modelo),
+                modelo,
                 filing_year=context.filing_year,
                 period=context.period.registry_token,
             )

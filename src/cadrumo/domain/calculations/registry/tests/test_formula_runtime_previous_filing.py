@@ -6,6 +6,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import RegistryAuthorityGrade
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .._bindings import (
@@ -52,6 +53,7 @@ def test_previous_filing_binding_resolves_from_observed_irpf_casillas(
                 filing_year=2025,
                 period=source_reference.required_periods[0],
                 casilla_values=observed_values,
+                grade=RegistryAuthorityGrade.CALCULATION,
             ),
         ),
         filing_year=2026,
@@ -148,6 +150,7 @@ def test_relation_resolves_annual_summary_from_all_source_periods(
                 _M115_BASE_CASILLA: base,
                 _M115_RETENCIONES_CASILLA: retention,
             },
+            grade=RegistryAuthorityGrade.CALCULATION,
         )
         for period, base, retention in (
             ("1T", Decimal("100.00"), Decimal("19.00")),
@@ -188,6 +191,7 @@ def test_previous_filing_binding_requires_complete_observed_casillas(
                     filing_year=2025,
                     period=source_reference.required_periods[0],
                     casilla_values={source_casilla_ids[0]: Decimal("1")},
+                    grade=RegistryAuthorityGrade.CALCULATION,
                 ),
             ),
             filing_year=2026,
@@ -377,6 +381,7 @@ def test_previous_filing_resolver_skips_cap_suppressed_binding(
             _M100_PAGOS_FRACCIONADOS_CASILLA: Decimal("1"),
             _M100_RESULTADO_AUTOLIQUIDACION_CASILLA: Decimal("1"),
         },
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
 
     resolved = resolve_previous_filing_binding_values(

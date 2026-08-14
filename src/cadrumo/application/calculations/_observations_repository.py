@@ -62,12 +62,13 @@ from ...core import (
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.identity import FilingRecordId, same_tax_identifier, tax_id_identity_token
-from ...core.resources import resources
+from ...core.resources import bundled_path
 from ...core.time import UtcInstant, now
 from ...domain.calculations.registry import (
     RegistryModeloObservation,
     RegistrySnapshotError,
     RevisionId,
+    load_registry_tree,
     select_revision,
     undeclared_casilla_ids,
 )
@@ -440,8 +441,12 @@ def _validate_observation_casilla_ids(observation: RegistryModeloObservation) ->
     )
     referenced_casilla_ids = observed_casilla_ids | operand_casilla_refs
     try:
+        modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+        modelo = next((candidate for candidate in modelos if candidate.id == observation.modelo), None)
+        if modelo is None:
+            raise RegistrySnapshotError(f"modelo {observation.modelo!r} is not present in the calculation registry")
         revision = select_revision(
-            resources().modelos.authority.modelo(observation.modelo),
+            modelo,
             filing_year=observation.filing_year,
             period=observation.period,
         )

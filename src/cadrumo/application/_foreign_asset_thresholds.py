@@ -9,12 +9,14 @@ from decimal import Decimal
 from types import MappingProxyType
 
 from ..core import ForeignAssetObligationGroup, Modelo, RevisionReviewStatus
-from ..core.resources import resources
+from ..core.resources import bundled_path
 from ..domain.calculations.registry import (
     ModeloRevision,
     ParameterDefinition,
     RegistryValidationError,
+    load_registry_tree,
     resolve_parameter,
+    select_revision,
 )
 
 _ANNUAL_PERIOD = "0A"
@@ -74,23 +76,30 @@ def foreign_asset_declaration_thresholds(
 ) -> Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold]:
     """Resolve foreign-asset thresholds from the selected bundled registry revision.
 
-    Read through the non-filing revision inspection. Deciding whether a taxpayer is
-    OBLIGED to declare happens before, and independently of, filing: a filing-grade
-    snapshot would additionally require operator review, so an unreviewed revision
-    would make the obligation unanswerable rather than merely unfilable. The filing
-    path builds its own filing-grade snapshot when it files.
+    Deciding whether a taxpayer is OBLIGED to declare happens before, and
+    independently of, filing: a filing-grade snapshot would additionally
+    require operator review, so an unreviewed revision would make the
+    obligation unanswerable rather than merely unfilable. The filing path
+    builds its own filing-grade snapshot when it files.
+
+    Reads directly through ``load_registry_tree`` + ``select_revision``
+    rather than :class:`~domain.calculations.registry.ValidatedRegistryAuthority`:
+    obtaining that authority object at all means its ``.load()``'s
+    unconditional, tree-wide ``validate_registry()`` call, which refuses
+    whenever ANY modelo anywhere lacks an export layout -- entirely unrelated
+    to whether this modelo's own obligation can be answered.
     """
-    authority = resources().modelos.authority
-    inspection = authority.inspect_revision(
-        modelo,
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    definition = next(candidate for candidate in modelos if candidate.id == modelo)
+    selected = select_revision(
+        definition,
         filing_year=filing_year,
         period=_ANNUAL_PERIOD,
         on=date(filing_year, 12, 31),
     )
-    selected = authority.modelo(modelo).revisions[inspection.revision_id]
     return foreign_asset_declaration_thresholds_for_parameters(
         modelo=modelo,
-        parameters=inspection.parameters,
+        parameters=selected.parameters,
         filing_date=date(filing_year, 12, 31),
         revision_review_status=selected.review_status,
     )

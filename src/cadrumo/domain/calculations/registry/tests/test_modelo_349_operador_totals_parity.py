@@ -203,10 +203,16 @@ def test_totals_parity_default_is_exact_equality_not_a_hardcoded_cent() -> None:
     version of this default was a hardcoded cent that would have masked
     exactly this gap.
     """
-    from .....core.resources import resources
-    from .....domain.calculations.registry import RegistryValidationError
+    from .....core.resources import bundled_path
+    from .....domain.calculations.registry import RegistryValidationError, load_registry_tree
+    from .....domain.calculations.registry.tests import build_snapshot
 
-    snapshot = resources().modelos.authority.snapshot("349", filing_year=2025, period="01")
+    # Scoped to M349 alone rather than through ``resources().modelos.authority``,
+    # whose ``.load()`` validates every modelo in the bundled tree before
+    # returning anything.
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(item for item in modelos if item.id == "349")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="01")
     assert not snapshot.revision.verification_expectations, (
         "test precondition: modelo 349 must declare no verification expectations"
     )

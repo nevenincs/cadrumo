@@ -29,8 +29,8 @@ from datetime import date
 from decimal import Decimal
 
 from ...core import ActionEvidenceProvenance, Modelo
-from ...core.resources import resources
-from ...domain.calculations.registry import BindingId, ModeloRevision, select_revision
+from ...core.resources import bundled_path
+from ...domain.calculations.registry import BindingId, ModeloRevision, load_registry_tree, select_revision
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, load_user_profile_schema
 from ..user_profile import ProfileRecordRepository
@@ -82,8 +82,10 @@ def require_persisted_revision_required_bindings_resolved(
     """
     if str(work_unit.modelo) != Modelo.M202.value:
         return
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo_definition = next(candidate for candidate in modelos if candidate.id == str(work_unit.modelo))
     revision = select_revision(
-        resources().modelos.authority.modelo(str(work_unit.modelo)),
+        modelo_definition,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
     )

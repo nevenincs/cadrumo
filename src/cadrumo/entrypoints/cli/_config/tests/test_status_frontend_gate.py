@@ -22,9 +22,9 @@ import typer
 import typer.core
 
 from .....tests.profile_capsule import open_test_profile_session
-from ._isolated_storage_fixture import isolated_storage
+from .....tests.profile_storage_root_fixture import profile_storage_root_fixture
 
-__all__ = ["isolated_storage"]
+__all__ = ["profile_storage_root_fixture"]
 
 from .....tests.cli_runner import invoke_cached_cli
 from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
@@ -475,7 +475,7 @@ def test_an_indexed_row_uses_the_schema_label_and_a_visible_row_marker() -> None
 # ── independent zone degradation (a damaged read never tracebacks) ──────────
 
 
-def test_every_zone_degrades_on_an_empty_storage_root(isolated_storage: Path) -> None:
+def test_every_zone_degrades_on_an_empty_storage_root(profile_storage_root: Path) -> None:
     """With no profile, no auth state, and no recovery enrolment, every zone degrades.
 
     This is the real damaged-host contract: the reads genuinely find

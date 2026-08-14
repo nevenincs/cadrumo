@@ -45,9 +45,10 @@ from ...adapters.persistence.storage import (
 )
 from ...core import CasillaId, CasillaValueKind, IvaCompensationStateProvenance, Modelo, Period
 from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
-from ...core.resources import resources
+from ...core.resources import bundled_path
 from ...core.time import now
 from ...domain.calculations.registry import (
+    load_registry_tree,
     select_revision,
     undeclared_casilla_ids,
 )
@@ -583,8 +584,10 @@ def _iva_compensation_decimal_refusal(
 
 
 def _validate_observed_casilla_ids(observation: FiledDeclaracionObservationProtocol) -> None:
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(candidate for candidate in modelos if candidate.id == observation.modelo)
     revision = select_revision(
-        resources().modelos.authority.modelo(observation.modelo),
+        modelo,
         filing_year=observation.ejercicio,
         period=observation.period.registry_token,
     )

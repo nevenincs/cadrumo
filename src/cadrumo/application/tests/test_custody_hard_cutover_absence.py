@@ -57,12 +57,17 @@ and ``zeroise``, none of which a provider-family name list contains, so a
 name-only gate passes it at any scan width.
 
 The NAME net catches what the module net structurally cannot see: a reach that
-never names the package at all.  ``auth/_sessions.py``, ``diagnostics.py`` and
-``repair_integrity.py`` import the provider from the ``storage`` package facade,
-so no module path in their source mentions ``master_key`` and only the symbol
-identifies where the import resolves to.  These are the reaches that most
-directly instantiate what this module forbids, and the module net reports every
-one of them clean.
+never names the package at all.  ``diagnostics.py`` and ``repair_integrity.py``
+import the provider from the ``storage`` package facade, so no module path in
+their source mentions ``master_key`` and only the symbol identifies where the
+import resolves to.  These are the reaches that most directly instantiate what
+this module forbids, and the module net reports every one of them clean.
+
+``auth/_sessions.py`` stood beside them until it stopped reaching at all.  It
+read the active profile's Cl@ve credentials by opening a shared-master session
+whenever no per-profile one was live; that branch is gone and the read now
+degrades to the settings surface, which is what the function already did with
+no active profile.  Its declaration expired with it.
 
 A dotted module path handed to :func:`importlib.import_module` is a string, so
 an AST walk over ``ImportFrom``/``Attribute``/``Name`` cannot see it, and the
@@ -176,14 +181,6 @@ _DECLARED_OPEN_VIOLATIONS: dict[str, _OpenViolation] = {
             "package, and this import follows it."
         ),
         reaches=frozenset({_MASTER_KEY_PACKAGE}),
-    ),
-    "auth/_sessions.py": _OpenViolation(
-        reason=(
-            "Bucket activation still resolves the process-wide provider and binds "
-            "its key to the session; it must open the session from the profile "
-            "capsule's password envelope instead."
-        ),
-        reaches=frozenset({"activate_master_key_provider", "get_master_key_provider"}),
     ),
     "diagnostics.py": _OpenViolation(
         reason=(

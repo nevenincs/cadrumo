@@ -9,8 +9,11 @@ calculation observations, and attempt to stamp matching current
 :class:`~cadrumo.domain.modelos.ModeloRecord` filings with live
 :class:`~cadrumo.domain.modelos.ExternalEvidence`.
 
-Source capture resolves a
-:class:`~cadrumo.domain.calculations.registry.ValidatedRegistryAuthority` before
+Source capture resolves a law-determined
+:class:`~cadrumo.domain.calculations.registry.ModeloRevision` (via
+:func:`~cadrumo.domain.calculations.registry.load_registry_tree` and
+:func:`~cadrumo.domain.calculations.registry.select_revision`, never a filing-grade
+:class:`~cadrumo.domain.calculations.registry.ValidatedRegistryAuthority`) before
 asking the Sede adapter which prior declarations a target filing needs, so
 cross-period inputs remain registry-authored rather than adapter-inferred. The
 module never creates a remote submission or mutates AEAT state; filing-record
@@ -75,7 +78,7 @@ from ...domain.calculations.registry import (
     ModeloDefinition,
     ModeloRevision,
     RegistryModeloObservation,
-    ValidatedRegistryAuthority,
+    load_registry_tree,
     select_revision,
     verification_tolerance_or_exact,
 )
@@ -1004,17 +1007,21 @@ async def capture_source_filed_data(
     registry_root: Path | None = None,
     source_root: Path | None = None,
 ) -> SourceFiledDataCaptureReport:
-    """Capture source observations and return a :class:`SourceFiledDataCaptureReport`."""
+    """Capture source observations and return a :class:`SourceFiledDataCaptureReport`.
+
+    Reads the target revision structurally (:func:`load_registry_tree` +
+    :func:`select_revision`) rather than through
+    :class:`~cadrumo.domain.calculations.registry.ValidatedRegistryAuthority`:
+    this capture only ever needs the revision's declared casilla/binding
+    structure, never a filing-grade admission. ``source_root`` is accepted for
+    caller-signature compatibility but is unused here -- the structural read
+    resolves no evidence catalogue and never needed it.
+    """
     session, settings = await active_verified_session()
-    if registry_root is None and source_root is None:
-        authority = resources().modelos.authority
-    else:
-        authority = ValidatedRegistryAuthority.load(
-            registry_root or bundled_path("registry", "aeat"),
-            source_root=source_root or bundled_path(),
-        )
+    modelos, _catalogues = load_registry_tree(registry_root or bundled_path("registry", "aeat"))
+    modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
     revision = select_revision(
-        authority.modelo(modelo),
+        modelo_definition,
         filing_year=year,
         period=period.registry_token,
     )

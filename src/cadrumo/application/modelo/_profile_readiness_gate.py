@@ -28,7 +28,7 @@ from datetime import date
 from ...core import Modelo, Period
 from ...core.errors import BaseSeverity
 from ...core.parsing import parse_iso8601_date
-from ...core.resources import resources
+from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import (
     ApplicabilityVerdict,
     ModeloRevision,
@@ -38,6 +38,7 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     build_profile_grounding_index,
     derive_modelo_applicability,
+    load_registry_tree,
     select_revision,
 )
 from ...domain.deadlines import EntityType, IrpfIncomeCategory
@@ -292,8 +293,10 @@ def _report_for_target(
     authority: ValidatedRegistryAuthority | None = None,
 ) -> ProfilePreflightReport:
     try:
+        modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+        modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
         selected = select_revision(
-            resources().modelos.authority.modelo(modelo),
+            modelo_definition,
             filing_year=filing_year,
             period=period.registry_token,
         )

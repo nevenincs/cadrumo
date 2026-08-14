@@ -26,8 +26,9 @@ import re
 import pytest
 
 from .....core.resources import bundled_path
-from .. import CasillaFieldKind, ExportFieldDefinition, resolve_export_layout
+from .. import CasillaFieldKind, ExportFieldDefinition, load_registry_tree, resolve_export_layout
 from .._authority import bundled_authority
+from .._snapshot import build_snapshot
 from .._support_matrix import build_support_matrix
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -53,8 +54,13 @@ _DR145_ROW_RE = re.compile(
 
 
 def _modelo_145():
-    authority = bundled_authority()
-    return authority.modelo("145"), authority.catalogues
+    # Structural declaration checks only -- no snapshot, no filing claim -- so
+    # this reads the compile-only tree directly rather than through
+    # ``bundled_authority()``, whose ``.load()`` validates every modelo in the
+    # bundled tree before returning anything and would fail this M145-only
+    # check on an unrelated modelo's missing filing capability.
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    return next(modelo for modelo in modelos if modelo.id == "145"), catalogues
 
 
 def _official_dr145_rows() -> dict[int, tuple[int, int, str]]:
@@ -149,10 +155,23 @@ def test_modelo_145_casillas_and_parity_cite_official_sources() -> None:
 
 
 def test_modelo_145_export_layout_is_grounded_in_dr145_record_design() -> None:
-    authority = bundled_authority()
-    modelo = authority.modelo("145")
+    """Parses M145's fixed-width export layout, a filing-adjacent claim.
+
+    Built directly from the compile-only tree, scoped to M145 alone, rather
+    than through ``bundled_authority()`` -- see ``_modelo_145``'s docstring.
+    Kept at the default FILING grade: this asserts the export layout's field
+    offsets against the official DR145 record design, the same class of claim
+    as parsing a fixed-width record for filing.
+    """
+    modelo, catalogues = _modelo_145()
     revision = modelo.revisions[_REVISION_ID]
-    snapshot = authority.snapshot("145", filing_year=2026, period="comunicacion")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2026,
+        period="comunicacion",
+    )
     resolved_layout = resolve_export_layout(snapshot)
     layout = resolved_layout.layout
     fields = resolved_layout.ordered_fields
@@ -226,6 +245,11 @@ def test_modelo_145_export_layout_is_grounded_in_dr145_record_design() -> None:
 
 
 def test_modelo_145_export_link_remains_local_communication_export() -> None:
+    # Genuinely needs the full ``ValidatedRegistryAuthority`` -- unlike the
+    # other tests in this module, ``build_support_matrix`` iterates
+    # ``authority.modelos`` across the WHOLE tree, so this cannot be scoped to
+    # M145 alone without changing that function's signature. Stays on
+    # ``bundled_authority()`` and stays red until the tree-wide gate clears.
     authority = bundled_authority()
     modelo = authority.modelo("145")
     revision = modelo.revisions[_REVISION_ID]

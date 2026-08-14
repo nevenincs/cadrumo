@@ -32,7 +32,7 @@ from typing import Final
 from pydantic import BaseModel, ValidationError
 
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, Period, validated_casilla_id
-from ...core.resources import resources
+from ...core.resources import bundled_path
 from ...core.time import now as _utc_now
 from ...domain.calculations.registry import (
     CasillaObservation,
@@ -44,6 +44,7 @@ from ...domain.calculations.registry import (
     casilla_noncanonical_reference_targets,
     casillas_by_id,
     format_noncanonical_casilla_reference,
+    load_registry_tree,
     select_revision,
     undeclared_casilla_ids,
 )
@@ -147,8 +148,10 @@ def record_operator_local_observation[CasillaKey](
 
 def _load_revision(*, modelo: str, filing_year: int, period: Period) -> ModeloRevision:
     try:
+        modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+        modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
         return select_revision(
-            resources().modelos.authority.modelo(modelo),
+            modelo_definition,
             filing_year=filing_year,
             period=period.registry_token,
         )

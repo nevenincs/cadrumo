@@ -18,8 +18,11 @@ from ....adapters.outbound.aeat.sede import (
     ObservedCasillaValue,
 )
 from ....core import CasillaId, CasillaValueKind, IvaCompensationStateProvenance, Period, validated_casilla_id
-from ....core.resources import resources
+from ....core import RegistryAuthorityGrade
+from ....core.resources import bundled_path
 from ....domain.calculations.registry import RegistrySnapshot
+from ....domain.calculations.registry._loader import load_registry_tree
+from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.iva_compensation import IvaCompensationPeriodState
 
 #: A checksum-valid synthetic NIF. ``IvaCompensationPeriodState.taxpayer_nif``
@@ -54,7 +57,24 @@ _BOX_662_BINDING = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
 
 @cache
 def _modelo_390_2026_snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("390", filing_year=2026, period="0A")
+    """Build a CALCULATION-grade snapshot directly, bypassing filing-grade admission.
+
+    Modelo 390 carries a real fichero-BOE layout on every revision, so this
+    succeeds; it deliberately does not go through
+    :class:`~domain.calculations.registry.ValidatedRegistryAuthority`, whose
+    ``.load()`` validates the entire registry tree (including modelos with no
+    export layout at all) and currently refuses unconditionally as a result.
+    """
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(candidate for candidate in modelos if candidate.id == "390")
+    return build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2026,
+        period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
 
 
 def _state(

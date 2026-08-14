@@ -15,8 +15,10 @@ it holds content, ``not_applicable`` because somebody stated it does not apply
 and cited why, or ``blocked_pending_evidence`` because neither is true yet.
 
 The third member is the fail-closed default and the point of the whole
-vocabulary. It is what an empty, undeclared family reads as: not a pass, not a
-failure, a visible worklist entry. It is deliberately never allowlistable -
+vocabulary. It is what an empty, undeclared family reads as, and what it DOES is
+refuse: a revision claiming any rung above applicability while one of its
+enrolled families sits blocked fails registry build, named family by family. It
+clears nothing and permits nothing. It is deliberately never allowlistable -
 there is no mechanism for marking one as acceptable, because the only honest
 ways out are to populate the family or to state and cite why it does not apply.
 An allowlist would be a third way that records nothing and clears the entry.

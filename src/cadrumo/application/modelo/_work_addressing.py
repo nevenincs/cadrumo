@@ -33,8 +33,13 @@ from dataclasses import dataclass
 
 from ...core import ActionEvidenceProvenance, Period
 from ...core.identity import CalculationRevisionId, WorkUnitId
-from ...core.resources import resources
-from ...domain.calculations.registry import RegistrySnapshotError, RevisionId, select_revision
+from ...core.resources import bundled_path
+from ...domain.calculations.registry import (
+    RegistrySnapshotError,
+    RevisionId,
+    load_registry_tree,
+    select_revision,
+)
 from ...domain.contribuyente import CCAA
 from ...domain.modelos import (
     CalculationRevision,
@@ -748,7 +753,11 @@ def resolve_registry_revision_for_work_target(
         ModeloWorkRegistryYearMismatchError: The supplied revision id is not the
             law-determined revision for the visible filing period.
     """
-    definition = resources().modelos.authority.modelo(modelo.strip())
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    stripped_modelo = modelo.strip()
+    definition = next((candidate for candidate in modelos if candidate.id == stripped_modelo), None)
+    if definition is None:
+        raise RegistrySnapshotError(f"modelo {stripped_modelo!r} is not present in the calculation registry")
     if registry_revision_id is None:
         return select_revision(definition, filing_year=filing_year, period=period.registry_token).id
     revision_id = registry_revision_id.strip()

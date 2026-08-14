@@ -9,7 +9,7 @@ that exercise the same surface live in the sibling
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -24,8 +24,10 @@ from ....core.i18n import tr
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.profile_storage_root_fixture import profile_storage_root_fixture
 from ._profile_lifecycle_support import distinct_nif, seed, stage_bucket_manifest
+
+__all__ = ["profile_storage_root_fixture"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -53,11 +55,10 @@ _ADVERTISED_RESIDENT_IRPF_NATURAL_PERSON_FLAGS = (
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[Path]:
+def _isolated_backend(profile_storage_root: Path) -> Path:
     # open_test_profile_session (called inside seed) resolves the
     # file-backed master-key provider provisioned by this fixture.
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        yield storage_root
+    return profile_storage_root
 
 
 def _invoke_config(args: Sequence[str]) -> Result:

@@ -419,8 +419,10 @@ def _applicability_records_for_period(
 
     Raises:
         RegistryValidationError: When a relation names a source modelo the
-            revision declares no dependency classification for, which would
-            leave its clean-state contract undecidable.
+            revision declares no dependency classification for. Without that
+            classification the clean-state contract for this relation has no
+            declared enforcement rule, so the missing classification is
+            refused here rather than let flow onward unenforced.
     """
     requirements = relation_source_requirements(
         snapshot.revision,

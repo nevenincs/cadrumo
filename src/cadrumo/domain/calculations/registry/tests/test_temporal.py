@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import RegistryAuthorityGrade
 from .._errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
@@ -53,12 +54,15 @@ def test_snapshot_normalises_a_case_variant_period_to_the_declared_token() -> No
     form is resolved. Without it the snapshot disagreed with itself: its
     ``filing_period`` normalised through ``Period`` while ``period`` did not.
     """
-    snapshot = _committed_snapshot("100", 2025, "0a")
+    snapshot = _committed_snapshot("100", 2025, "0a", grade=RegistryAuthorityGrade.CALCULATION)
 
     assert snapshot.period == "0A"
     assert snapshot.filing_period is not None
     assert snapshot.filing_period.code == snapshot.period
-    assert snapshot.revision.id == _committed_snapshot("100", 2025, "0A").revision.id
+    assert (
+        snapshot.revision.id
+        == _committed_snapshot("100", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION).revision.id
+    )
 
 
 def test_case_variant_periods_activate_the_same_relation_requirements() -> None:
@@ -69,8 +73,8 @@ def test_case_variant_periods_activate_the_same_relation_requirements() -> None:
     snapshot and a clean-looking empty obligation set instead of the required
     cross-model inputs.
     """
-    canonical = _committed_snapshot("100", 2025, "0A")
-    variant = _committed_snapshot("100", 2025, "0a")
+    canonical = _committed_snapshot("100", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)
+    variant = _committed_snapshot("100", 2025, "0a", grade=RegistryAuthorityGrade.CALCULATION)
 
     canonical_requirements = relation_source_requirements(
         canonical.revision,

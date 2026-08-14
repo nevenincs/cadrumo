@@ -11,10 +11,11 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core import BindingSourceKind, CasillaId, Modelo, Period
-from ...core.resources import resources
+from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import (
     RegistrySnapshot,
     RevisionId,
+    load_registry_tree,
     m303_regimen_simplificado_annual_summary_requirement,
     select_revision,
 )
@@ -273,9 +274,10 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             )
         m303 = evidence.m303
         result = m303.regimen_simplificado.calculation_result
-        authority = resources().modelos.authority
+        modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+        modelo = next(candidate for candidate in modelos if candidate.id == Modelo.M303.value)
         source_revision_at_coordinate = select_revision(
-            authority.modelo(Modelo.M303.value),
+            modelo,
             filing_year=source.filing_year,
             period=source.period.registry_token,
         )

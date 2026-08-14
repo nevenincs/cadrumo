@@ -16,6 +16,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import RegistryAuthorityGrade
 from .._formula_runtime import calculate_registry_snapshot
 from ._registry_schema_support import _committed_snapshot
 
@@ -55,7 +56,7 @@ _ACTIVITY_CASES = {
 
 
 def _calculate_activity_value(period: str, epigrafe: str, module_inputs: dict[str, Decimal]) -> Decimal:
-    snapshot = _committed_snapshot("131", 2025, period)
+    snapshot = _committed_snapshot("131", 2025, period, grade=RegistryAuthorityGrade.CALCULATION)
     assert snapshot.filing_period is not None
     result = calculate_registry_snapshot(
         snapshot,

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from .....core import RegistryAuthorityGrade
 from .....core.money import round_to_cents
 from .._formula_runtime import calculate_registry_snapshot
 from ._registry_schema_support import _committed_snapshot
@@ -534,7 +535,7 @@ def _run_modulos_engine(
     indice_temporada: Decimal = Decimal("0"),
     indice_inicio_actividad: Decimal = Decimal("0"),
 ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
-    snapshot = _committed_snapshot("131", 2025, "1T")
+    snapshot = _committed_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
     assert snapshot.filing_period is not None
     text_inputs = {"modulos-epigrafe": epigrafe} if epigrafe else {}
     result = calculate_registry_snapshot(

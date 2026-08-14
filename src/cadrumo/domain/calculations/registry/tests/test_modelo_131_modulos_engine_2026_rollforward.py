@@ -32,6 +32,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import RegistryAuthorityGrade
 from .....core.money import round_to_cents
 from .._formula_runtime import calculate_registry_snapshot
 from ._registry_schema_support import _committed_snapshot
@@ -121,7 +122,7 @@ def _run_modulos_engine_2026(
     modulo_3: Decimal = Decimal("0"),
     modulo_4: Decimal = Decimal("0"),
 ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
-    snapshot = _committed_snapshot("131", 2026, "1T")
+    snapshot = _committed_snapshot("131", 2026, "1T", grade=RegistryAuthorityGrade.CALCULATION)
     assert snapshot.filing_period is not None
     text_inputs = {"modulos-epigrafe": epigrafe} if epigrafe else {}
     result = calculate_registry_snapshot(
@@ -227,7 +228,7 @@ class TestModulos2026PartialTableCoverageDoesNotSilentlyMisattribute:
         that the 2026 replication did not silently drift from its 2025 source
         (aeat-calculation-aggregation).
         """
-        snapshot_2025 = _committed_snapshot("131", 2025, "1T")
+        snapshot_2025 = _committed_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot_2025.filing_period is not None
         result_2025 = calculate_registry_snapshot(
             snapshot_2025,

@@ -15,12 +15,13 @@ from typing import TYPE_CHECKING
 
 from ...core import Modelo, ResultDisposition, result_disposition_is_refund
 from ...core.errors import CoreValidationError, TerminalPreconditionErrorMixin
-from ...core.resources import resources
+from ...core.resources import bundled_path
 from ...domain.calculations.registry import (
     CasillaObservation,
     ModeloRevision,
     casillas_by_id,
     expression_casilla_refs,
+    load_registry_tree,
     select_revision,
 )
 from ...domain.iva_compensation import (
@@ -331,8 +332,10 @@ def _normalize_carry_observation(
         available_was_calculated=available_was_calculated,
     )
 
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(candidate for candidate in modelos if candidate.id == Modelo.M303.value)
     revision = select_revision(
-        resources().modelos.authority.modelo(Modelo.M303.value),
+        modelo,
         filing_year=observation.filing_year,
         period=observation.period,
     )

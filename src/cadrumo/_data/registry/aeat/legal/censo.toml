@@ -165,6 +165,7 @@ required_text = [
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
+record_design_epoch = "2025"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx"
 sha256 = "791479fbf9e905faf1e43fa0bfbff974d5edaf85d198495892fa8446a1da2ebd"
 bytes = 126664

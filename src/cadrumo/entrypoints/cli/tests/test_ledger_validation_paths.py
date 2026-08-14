@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ._ledger_validation_fixtures import _open_bucket_session
+from ._ledger_validation_fixtures import _open_bucket_session, bucket
 from ._ledger_validation_support import (
     _add_eligible_mixed_expense,
     _assert_pipeline_managed_state_refusal,
@@ -39,7 +39,7 @@ def _assert_negative_amount_refusal(result: Result) -> None:
     assert "--direction" in combined, combined
 
 
-__all__ = ["_open_bucket_session"]
+__all__ = ["_open_bucket_session", "bucket"]
 
 # ---------------------------------------------------------------------------
 # contract.1  ledger add — business_pct set without MIXED classification

@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .....core.resources import bundled_path
 from .. import (
     CasillaContinuidadEvolutionDefinition,
@@ -73,14 +73,37 @@ def _committed_modelo(modelo_id: str) -> tuple[ModeloDefinition, RegistryCatalog
 
 
 @cache
-def _committed_snapshot(modelo_id: str, filing_year: int, period: str) -> RegistrySnapshot:
+def _committed_snapshot(
+    modelo_id: str,
+    filing_year: int,
+    period: str,
+    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+) -> RegistrySnapshot:
+    """Build the committed snapshot for one modelo, at the requested authority grade.
+
+    ``grade`` defaults to :attr:`RegistryAuthorityGrade.FILING`, preserving the
+    original strict contract for callers that need it. A caller asking a
+    narrower question (formula-runtime calculation, applicability/scheduling)
+    should pass a lower grade explicitly.
+    """
     if modelo_id == "303":
         # M303 snapshots include the compiled annual-Orden authority.  The
         # production access point is the only source of that cross-cutting
         # projection, so bypassing it here would produce a partial fixture.
+        # ``ValidatedRegistryAuthority.snapshot`` has no grade parameter, so
+        # M303 stays FILING-grade regardless -- it also has no declared
+        # export layout today, so it fails on that honest capability gap
+        # rather than the grade question.
         return bundled_authority().snapshot(modelo_id, filing_year=filing_year, period=period)
     modelo, catalogues = _committed_modelo(modelo_id)
-    return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period=period)
+    return build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=filing_year,
+        period=period,
+        grade=grade,
+    )
 
 
 def _committed_registry() -> tuple[ModeloDefinition, RegistryCatalogues]:
