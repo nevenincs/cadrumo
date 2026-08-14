@@ -254,6 +254,7 @@ class OperationSupervisor:
         self._operands = operands
         self._owner_id = owner_id
         self._lease_token_factory = lease_token_factory
+        self._lease_token = lease_token_factory()
         self._clock = clock
         self._lease_duration = lease_duration
         self._leases_by_operation: dict[OperationId, OperationOwnerLease] = {}
@@ -267,7 +268,7 @@ class OperationSupervisor:
                 subject_ref=identity.subject_ref,
             ),
             owner_id=self._owner_id,
-            token=self._lease_token_factory(),
+            token=self._lease_token,
             acquired_at=now,
             expires_at=now + self._lease_duration,
         )
@@ -282,10 +283,21 @@ class OperationSupervisor:
             observed.disposition is not OperationLeaseObservationDisposition.ACTIVE
             or observed.current is None
             or observed.current.owner_id != self._owner_id
+            or observed.current.token != self._lease_token
         ):
             raise ValueError("operation is not owned by this supervisor")
+        held = self._leases_by_operation.get(identity.operation_id)
+        if held is not None and held != observed.current:
+            raise ValueError("operation lease no longer matches this supervisor's exact held lease")
         self._leases_by_operation[identity.operation_id] = observed.current
         return observed.current
+
+    async def _release_exact_lease(self, lease: OperationOwnerLease, *, observed_at: datetime) -> None:
+        """Release one exact current lease and refuse any ownership loss."""
+        released = await self._leases.release(lease, observed_at=observed_at)
+        if released.disposition is not OperationLeaseDisposition.RELEASED:
+            raise ValueError("operation exact lease release was refused")
+        self._leases_by_operation.pop(lease.operation_id, None)
 
     async def submit(
         self, request: OperationRequest[BaseModel], *, operation_id: OperationId | None = None
@@ -308,12 +320,16 @@ class OperationSupervisor:
             else None
         )
         if claim is not None:
-            claimed_operation_id = await self._journal.claim_idempotency(claim)
-            if claimed_operation_id != identity.operation_id:
-                return claimed_operation_id
+            existing_operation_id = await self._journal.resolve_idempotency(claim)
+            if existing_operation_id is not None:
+                return existing_operation_id
         lease = self._candidate(identity, now)
         result = await self._leases.acquire(lease, observed_at=now)
         if result.disposition is not OperationLeaseDisposition.ACQUIRED:
+            if claim is not None:
+                existing_operation_id = await self._journal.resolve_idempotency(claim)
+                if existing_operation_id is not None:
+                    return existing_operation_id
             raise ValueError("operation conflict lease was not acquired")
         self._leases_by_operation[identity.operation_id] = lease
         snapshot = OperationPersistedSnapshot(
@@ -325,8 +341,14 @@ class OperationSupervisor:
             updated_at=now,
             idempotency_claim=claim,
         )
-        await self._journal.commit(snapshot, expected_revision=0, lease=lease)
-        return identity.operation_id
+        try:
+            created_operation_id = await self._journal.create(snapshot, lease=lease)
+        except BaseException:
+            await self._release_exact_lease(lease, observed_at=self._clock())
+            raise
+        if created_operation_id != identity.operation_id:
+            await self._release_exact_lease(lease, observed_at=self._clock())
+        return created_operation_id
 
     async def start(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Start one owned registered executor from its durable secure operand."""
@@ -454,9 +476,12 @@ class OperationSupervisor:
         snapshot = await self.inspect(operation_id)
         if receipt.identity != snapshot.identity or receipt.revision != snapshot.revision + 1:
             raise ValueError("terminal receipt does not match successor revision")
-        await close_async_resources(*self._resources.pop(operation_id, []), task_name="operation-settlement")
+        definition = self._registry.lookup(snapshot.identity.definition_id)
+        if receipt.effect not in definition.capabilities.permitted_effects:
+            raise ValueError("terminal receipt effect is not declared by its definition")
         now = receipt.settled_at
         lease = await self._require_owned_lease(snapshot.identity, now)
+        await close_async_resources(*self._resources.pop(operation_id, []), task_name="operation-settlement")
         event = OperationTerminalEvent(
             identity=snapshot.identity,
             revision=receipt.revision,
@@ -479,6 +504,7 @@ class OperationSupervisor:
             }
         )
         await self._journal.commit(successor, expected_revision=snapshot.revision, lease=lease)
+        await self._release_exact_lease(lease, observed_at=now)
         return successor
 
     async def reconcile(self, operation_id: OperationId) -> OperationPersistedSnapshot:
@@ -489,9 +515,17 @@ class OperationSupervisor:
             definition_id=snapshot.identity.definition_id,
             subject_ref=snapshot.identity.subject_ref,
         )
-        observed = await self._leases.inspect(scope_ref, operation_id, observed_at=self._clock())
+        now = self._clock()
+        observed = await self._leases.inspect(scope_ref, operation_id, observed_at=now)
         if observed.disposition is OperationLeaseObservationDisposition.ACTIVE:
             raise ValueError("operation has active owner")
+        if observed.disposition is not OperationLeaseObservationDisposition.EXPIRED or observed.current is None:
+            raise ValueError("operation has no expired owner lease to take over")
+        takeover = self._candidate(snapshot.identity, now)
+        taken_over = await self._leases.compare_and_swap(observed.current, takeover, observed_at=now)
+        if taken_over.disposition is not OperationLeaseDisposition.TAKEN_OVER or taken_over.current != takeover:
+            raise ValueError("operation expired owner lease takeover was refused")
+        self._leases_by_operation[operation_id] = takeover
         if (
             self._registry.lookup(snapshot.identity.definition_id).reconciliation_policy
             is OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT
@@ -502,6 +536,6 @@ class OperationSupervisor:
             revision=snapshot.revision + 1,
             condition=OperationTerminalCondition.INTERRUPTED,
             effect=OperationEffect.UNKNOWN,
-            settled_at=self._clock(),
+            settled_at=now,
         )
         return await self.settle(operation_id, receipt)

@@ -223,8 +223,9 @@ def test_persisted_snapshot_binds_event_derived_phase_and_timeline() -> None:
             OperationPersistedSnapshot.model_validate(changed)
 
     empty_payload["phase_code"] = first.phase_code
-    with pytest.raises(ValidationError, match="without phase events"):
-        OperationPersistedSnapshot.model_validate(empty_payload)
+    event_free_successor = OperationPersistedSnapshot.model_validate(empty_payload)
+    assert event_free_successor.phase_code == first.phase_code
+    assert event_free_successor.event_cursor == 0
 
 
 def test_persisted_terminal_snapshot_binds_exact_terminal_event_and_receipt() -> None:
@@ -267,6 +268,9 @@ def test_persisted_terminal_snapshot_binds_exact_terminal_event_and_receipt() ->
 
 
 def test_public_port_signatures_pin_explicit_lease_evidence_inputs() -> None:
+    assert tuple(inspect.signature(OperationJournal.resolve_idempotency).parameters) == ("self", "claim")
+    assert tuple(inspect.signature(OperationJournal.create).parameters) == ("self", "snapshot", "lease")
+    assert inspect.signature(OperationJournal.create).parameters["lease"].kind is inspect.Parameter.KEYWORD_ONLY
     assert tuple(inspect.signature(OperationJournal.commit).parameters) == (
         "self",
         "snapshot",

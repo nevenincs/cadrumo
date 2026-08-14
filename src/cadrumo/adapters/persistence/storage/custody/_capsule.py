@@ -360,6 +360,7 @@ def remove_profile_custody_deletion_tombstone(
 # current public custody vocabulary and ensure all later staged helpers use it.
 PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES = _INVENTORY_MAX_ENTRIES
 PROFILE_CUSTODY_INVENTORY_MAX_TOTAL_BYTES = _INVENTORY_MAX_TOTAL_BYTES
+PROFILE_CUSTODY_PROFILE_RECORD_MAX_BYTES = 4 * 1024 * 1024
 ProfileCustodyInventory = _CanonicalProfileCustodyInventory
 ProfileCustodyInventoryEntry = _CanonicalProfileCustodyInventoryEntry
 
@@ -715,6 +716,56 @@ def load_committed_profile_custody_label(
     return _load_profile_custody_label_from_verified_capsule(capsule_path)
 
 
+def load_committed_profile_custody_data_file(
+    profile_id: UUID,
+    relative_name: str,
+    *,
+    maximum_bytes: int = PROFILE_CUSTODY_PROFILE_RECORD_MAX_BYTES,
+    settings: Settings | None = None,
+    root: Path | None = None,
+) -> bytes:
+    """Read one regular capsule ``data/`` member after current-marker proof."""
+    if maximum_bytes < 1:
+        raise ValueError("profile custody data read maximum must be positive")
+    parts = tuple(relative_name.split("/"))
+    if not parts or any(part in {"", ".", ".."} for part in parts):
+        raise ProfileCustodyRecordError("profile custody data member path is invalid")
+    capsule_path = recognize_current_profile_capsule(profile_id, settings=settings, root=root)
+    if capsule_path is None:
+        raise ProfileCustodyRecordError("profile capsule is not committed")
+    data_path = capsule_path / "data"
+    member_path = data_path.joinpath(*parts)
+    if os.name != "nt":
+        with _posix_directory_fd(capsule_path) as capsule_fd:
+            data_fd = _posix_open_child_directory(capsule_fd, "data")
+            directory_fd = data_fd
+            try:
+                for segment in parts[:-1]:
+                    child_fd = _posix_open_child_directory(directory_fd, segment)
+                    if directory_fd != data_fd:
+                        os.close(directory_fd)
+                    directory_fd = child_fd
+                return _read_regular_file_fd(
+                    directory_fd,
+                    parts[-1],
+                    display_path=member_path,
+                    maximum_bytes=maximum_bytes,
+                    trace=[],
+                )
+            finally:
+                if directory_fd != data_fd:
+                    os.close(directory_fd)
+                os.close(data_fd)
+    with ExitStack() as anchors:
+        _anchor_directory(anchors, capsule_path)
+        _anchor_directory(anchors, data_path)
+        parent = data_path
+        for segment in parts[:-1]:
+            parent = parent / segment
+            _anchor_directory(anchors, parent)
+        return _read_regular_file(member_path, maximum_bytes=maximum_bytes, trace=[])
+
+
 def load_staged_profile_custody_label(
     profile_id: UUID,
     transaction_id: UUID,
@@ -859,6 +910,7 @@ __all__ = [
     "PROFILE_CUSTODY_DELETION_FILENAME",
     "PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES",
     "PROFILE_CUSTODY_INVENTORY_MAX_TOTAL_BYTES",
+    "PROFILE_CUSTODY_PROFILE_RECORD_MAX_BYTES",
     "PROFILE_CUSTODY_LABEL_FILENAME",
     "PROFILE_CUSTODY_LABEL_MAX_BYTES",
     "PROFILE_CUSTODY_LAYOUT_VERSION",
@@ -870,6 +922,7 @@ __all__ = [
     "inventory_committed_profile_custody_capsule",
     "list_current_profile_custody_capsule_ids",
     "load_committed_profile_custody_label",
+    "load_committed_profile_custody_data_file",
     "load_committed_profile_password_material",
     "load_staged_profile_custody_label",
     "parse_profile_custody_commit",

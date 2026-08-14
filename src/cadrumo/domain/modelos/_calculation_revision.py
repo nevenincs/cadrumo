@@ -44,7 +44,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Annotated, Final, Literal, Self, override
+from typing import Annotated, Final, Literal, Self, TypedDict, override
 
 from pydantic import (
     BaseModel,
@@ -961,6 +961,72 @@ def _m303_regimen_simplificado_annual_summary_handoff_revision_id_payload(
     return {"m303_regimen_simplificado_annual_summary_handoff": handoff.unsigned_identity_payload()}
 
 
+class CalculationRevisionIdentityInputs(TypedDict):
+    """The complete, target-id-free input set for a calculation revision hash."""
+
+    work_unit_id: str
+    input_values_by_casilla_id: Mapping[CasillaId, str]
+    binding_overrides: Mapping[BindingId, str]
+    row_binding_values: Mapping[BindingId, Mapping[str, str]] | None
+    casilla_values: Mapping[CasillaId, Decimal]
+    relation_overrides: Mapping[RelationId, str] | None
+    source_transaction_ids: Sequence[str]
+    m210_official_tipo_renta_code: str | None
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None
+    borrador_snapshot_id: str | None
+    bindings_sourced_from_borrador: Sequence[BindingId]
+    detail_rows: Sequence[ModeloDetailRow]
+    source_issues: Sequence[CalculationSourceIssue]
+    filing_instance_evidence: FilingInstanceEvidence | None
+    m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None
+
+
+def calculation_revision_identity_inputs(
+    *,
+    work_unit_id: str,
+    input_values_by_casilla_id: Mapping[CasillaId, str],
+    binding_overrides: Mapping[BindingId, str],
+    row_binding_values: Mapping[BindingId, Mapping[str, str]] | None = None,
+    casilla_values: Mapping[CasillaId, Decimal],
+    relation_overrides: Mapping[RelationId, str] | None = None,
+    source_transaction_ids: Sequence[str] = (),
+    m210_official_tipo_renta_code: str | None = None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
+    borrador_snapshot_id: str | None = None,
+    bindings_sourced_from_borrador: Sequence[BindingId] = (),
+    detail_rows: Sequence[ModeloDetailRow] = (),
+    source_issues: Sequence[CalculationSourceIssue] = (),
+    filing_instance_evidence: FilingInstanceEvidence | None,
+    m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
+) -> CalculationRevisionIdentityInputs:
+    """Build the one complete target-id-free calculation-revision identity input.
+
+    Every revision-id derivation flows through this builder.  The annual-summary
+    handoff is deliberately represented here, rather than selectively added by
+    its producer or read-side verifier, so a future identity consumer cannot
+    silently omit the cross-model calculation input.
+    """
+    return {
+        "work_unit_id": work_unit_id,
+        "input_values_by_casilla_id": input_values_by_casilla_id,
+        "binding_overrides": binding_overrides,
+        "row_binding_values": row_binding_values,
+        "casilla_values": casilla_values,
+        "relation_overrides": relation_overrides,
+        "source_transaction_ids": source_transaction_ids,
+        "m210_official_tipo_renta_code": m210_official_tipo_renta_code,
+        "m210_gross_income_source_mode": m210_gross_income_source_mode,
+        "borrador_snapshot_id": borrador_snapshot_id,
+        "bindings_sourced_from_borrador": bindings_sourced_from_borrador,
+        "detail_rows": detail_rows,
+        "source_issues": source_issues,
+        "filing_instance_evidence": filing_instance_evidence,
+        "m303_regimen_simplificado_annual_summary_handoff": (
+            m303_regimen_simplificado_annual_summary_handoff
+        ),
+    }
+
+
 def derive_calculation_revision_id(
     *,
     work_unit_id: str,
@@ -979,7 +1045,34 @@ def derive_calculation_revision_id(
     filing_instance_evidence: FilingInstanceEvidence | None,
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
 ) -> str:
-    """Return the deterministic SHA-256 id for a calculation attempt.
+    """Return the deterministic SHA-256 id for a calculation attempt."""
+    return _derive_calculation_revision_id_from_identity_inputs(
+        calculation_revision_identity_inputs(
+            work_unit_id=work_unit_id,
+            input_values_by_casilla_id=input_values_by_casilla_id,
+            binding_overrides=binding_overrides,
+            row_binding_values=row_binding_values,
+            casilla_values=casilla_values,
+            relation_overrides=relation_overrides,
+            source_transaction_ids=source_transaction_ids,
+            m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+            m210_gross_income_source_mode=m210_gross_income_source_mode,
+            borrador_snapshot_id=borrador_snapshot_id,
+            bindings_sourced_from_borrador=bindings_sourced_from_borrador,
+            detail_rows=detail_rows,
+            source_issues=source_issues,
+            filing_instance_evidence=filing_instance_evidence,
+            m303_regimen_simplificado_annual_summary_handoff=(
+                m303_regimen_simplificado_annual_summary_handoff
+            ),
+        ),
+    )
+
+
+def _derive_calculation_revision_id_from_identity_inputs(
+    identity_inputs: CalculationRevisionIdentityInputs,
+) -> str:
+    """Hash a value returned only by :func:`calculation_revision_identity_inputs`.
 
     The id is content-addressed by the parent work unit plus the
     three payload mappings: input casilla values, scalar binding overrides, and
@@ -1002,6 +1095,23 @@ def derive_calculation_revision_id(
     participates, so changing Modelo 303 joint-return or insolvency facts creates
     a distinct immutable revision rather than mutating a draft.
     """
+    work_unit_id = identity_inputs["work_unit_id"]
+    input_values_by_casilla_id = identity_inputs["input_values_by_casilla_id"]
+    binding_overrides = identity_inputs["binding_overrides"]
+    row_binding_values = identity_inputs["row_binding_values"]
+    casilla_values = identity_inputs["casilla_values"]
+    relation_overrides = identity_inputs["relation_overrides"]
+    source_transaction_ids = identity_inputs["source_transaction_ids"]
+    m210_official_tipo_renta_code = identity_inputs["m210_official_tipo_renta_code"]
+    m210_gross_income_source_mode = identity_inputs["m210_gross_income_source_mode"]
+    borrador_snapshot_id = identity_inputs["borrador_snapshot_id"]
+    bindings_sourced_from_borrador = identity_inputs["bindings_sourced_from_borrador"]
+    detail_rows = identity_inputs["detail_rows"]
+    source_issues = identity_inputs["source_issues"]
+    filing_instance_evidence = identity_inputs["filing_instance_evidence"]
+    m303_regimen_simplificado_annual_summary_handoff = identity_inputs[
+        "m303_regimen_simplificado_annual_summary_handoff"
+    ]
     payload: dict[str, object] = _base_revision_id_payload(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
@@ -1587,6 +1697,43 @@ class CalculationRevision(BaseModel):
             raw_mapping,
             surface="row_binding_values",
         )
+
+
+def calculation_revision_identity_inputs_from_revision(
+    revision: CalculationRevision,
+) -> CalculationRevisionIdentityInputs:
+    """Project one persisted revision through the sole hash-input builder.
+
+    Read-side integrity checks and the model's own invariant both use this
+    function.  It prevents those consumers from independently enumerating the
+    identity fields and thereby omitting a newly added calculation input.
+    """
+    return calculation_revision_identity_inputs(
+        work_unit_id=revision.work_unit_id,
+        input_values_by_casilla_id=revision.input_values_by_casilla_id,
+        binding_overrides=revision.binding_overrides,
+        row_binding_values=revision.row_binding_values,
+        relation_overrides=revision.relation_overrides,
+        casilla_values=revision.casilla_values,
+        source_transaction_ids=revision.source_transaction_ids,
+        m210_official_tipo_renta_code=revision.m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=revision.m210_gross_income_source_mode,
+        borrador_snapshot_id=revision.borrador_snapshot_id,
+        bindings_sourced_from_borrador=revision.bindings_sourced_from_borrador,
+        detail_rows=revision.detail_rows,
+        source_issues=revision.source_issues,
+        filing_instance_evidence=revision.filing_instance_evidence,
+        m303_regimen_simplificado_annual_summary_handoff=(
+            revision.m303_regimen_simplificado_annual_summary_handoff
+        ),
+    )
+
+
+def derive_calculation_revision_id_from_revision(revision: CalculationRevision) -> str:
+    """Derive a persisted revision's id from its complete canonical input set."""
+    return _derive_calculation_revision_id_from_identity_inputs(
+        calculation_revision_identity_inputs_from_revision(revision),
+    )
 
 
 class CalculationRevisionCatalogue(BaseModel):
