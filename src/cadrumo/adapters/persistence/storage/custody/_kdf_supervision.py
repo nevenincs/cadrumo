@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Final, Literal, cast
 from uuid import UUID
 
 from .....core import StorageCategory, storage_path
+from .....core.config import load_settings
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ._errors import (
     ProfileCustodyPasswordError,
@@ -217,6 +218,21 @@ def calibrate_profile_kdf(*, salt: bytes, settings: Settings | None = None) -> P
     fallback = fixed_profile_kdf_fallback(salt=salt)
     if not profile_kdf_is_eligible(fallback, resources=resources):
         raise _resource_refusal()
+
+    # Measuring the grid costs one supervised child per warmup and per sample,
+    # which is the right price for an operator's one-off enrolment and the
+    # wrong one for a host that enrols constantly. Declining to measure adopts
+    # the SAME fixed point this function already returns when the grid cannot
+    # be measured before its deadline -- a stronger point than the measured
+    # band's floor -- so nothing about the wrap weakens; only the host
+    # measurement is skipped.
+    if not (settings or load_settings()).cadrumo_profile_kdf_measure_calibration:
+        return ProfileCustodyKdfCalibration(
+            version=PROFILE_CUSTODY_KDF_CALIBRATION_VERSION,
+            parameters=fallback,
+            source="fallback",
+            median_seconds=None,
+        )
 
     deadline = time.monotonic() + PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS
     completed_measurements: list[tuple[ProfileCustodyKdfParameters, tuple[float, ...] | None]] = []

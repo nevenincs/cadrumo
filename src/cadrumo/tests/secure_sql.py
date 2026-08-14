@@ -408,6 +408,15 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
         cadrumo_active_profile=None,
         cadrumo_secret_store_backend="file",
         cadrumo_secret_passphrase=passphrase,
+        # Enrolment calibrates the KDF grid by MEASURING real supervised
+        # derivations -- one child process per warmup and per sample. That is
+        # the right price once, on an operator's machine, and the wrong one on
+        # a host that enrols a profile per test: measured at 15.5s of a 17.4s
+        # registration. Declining to measure adopts the fixed point the
+        # calibrator already falls back to, which is STRONGER than the measured
+        # band's floor, so the wrap does not weaken and every derivation is
+        # still a real Argon2id through the same supervised worker.
+        cadrumo_profile_kdf_measure_calibration=False,
         # Anchored on ``tmp_path``, not on the storage root, so the secret
         # substrate stays a sibling of the bucket tree rather than nesting
         # inside it -- the production custody split.
@@ -450,6 +459,12 @@ def isolated_runtime_profile(
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile=bucket_id,
         cadrumo_secret_store_backend="file",
+        # Enrolment calibrates the KDF grid by MEASURING real supervised
+        # derivations, one child process per warmup and per sample. See
+        # `isolated_profile_storage_root` for the measured cost; the fixed
+        # fallback adopted instead is stronger than the measured band's
+        # floor, so no wrap weakens and the derivation stays real.
+        cadrumo_profile_kdf_measure_calibration=False,
         cadrumo_secret_passphrase=passphrase,
         **storage_overrides(tmp_path, StorageCategory.SECRETS),
     ) as settings:
@@ -552,6 +567,12 @@ def isolated_two_bucket_runtime(
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile=primary_bucket_id,
         cadrumo_secret_store_backend="file",
+        # Enrolment calibrates the KDF grid by MEASURING real supervised
+        # derivations, one child process per warmup and per sample. See
+        # `isolated_profile_storage_root` for the measured cost; the fixed
+        # fallback adopted instead is stronger than the measured band's
+        # floor, so no wrap weakens and the derivation stays real.
+        cadrumo_profile_kdf_measure_calibration=False,
         cadrumo_secret_passphrase=passphrase,
         # One secret substrate for both buckets: the production shape is many
         # buckets under one root sharing one master key, each with its own
