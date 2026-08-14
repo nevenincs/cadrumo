@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-14'
-body_hash: 'sha256:9f6efb1f9db391824052df737c92f7b596655055dc936522c427f22eaa4a26bd'
+body_hash: 'sha256:b25711789043030d9c12cbd2442d7db6b97d2258f76aa47952d0d3c5e6f709a7'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -52,7 +52,7 @@ Produce a reproducible census that classifies every fixture before any duplicate
 
 - [x] `W06.P16.S47` - Implement the AST-backed fixture census with decorator scope autouse constraint owner and consumer fields; `dev/quality/fixture_census.py`.
 - [x] `W06.P16.S48` - Add real-tree census tests that prove root source development and packaging coverage and reject collapse; `dev/quality/tests/test_fixture_census.py`.
-- [ ] `W06.P16.S49` - Generate the complete fixture ownership manifest with no unclassified records; `dev/quality/fixture_ownership.toml`.
+- [x] `W06.P16.S49` - Generate the complete fixture ownership manifest with no unclassified records; `dev/quality/fixture_ownership.toml`.
 
 ### Phase `W06.P17` - establish the independently verdictable harness lane
 

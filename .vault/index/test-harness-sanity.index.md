@@ -6,10 +6,11 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:89a247ce0fc796084542b6dd5eb100ca9c27b9ed0ebd62ef5ad7872b3e3dc064'
+body_hash: 'sha256:31872c2c1942eb2ed7a0fa6f611985cc62d3aafd803f37a65168b6c88adfa80e'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
+  - '[[2026-08-14-test-harness-sanity-W06-P16-S49]]'
   - '[[2026-08-14-test-harness-sanity-W06-P17-S50]]'
   - '[[2026-08-14-test-harness-sanity-W06-P17-S51]]'
   - '[[2026-08-14-test-harness-sanity-W06-P17-S52]]'
@@ -37,6 +38,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 
 - `2026-08-14-test-harness-sanity-W06-P16-S47` - Implement the AST-backed fixture census with decorator scope autouse constraint owner and consumer fields
 - `2026-08-14-test-harness-sanity-W06-P16-S48` - Add real-tree census tests that prove root source development and packaging coverage and reject collapse
+- `2026-08-14-test-harness-sanity-W06-P16-S49` - Generate the complete fixture ownership manifest with no unclassified records
 - `2026-08-14-test-harness-sanity-W06-P17-S50` - Define the outer-serial harness recipe with explicit membership non-vacuity and exit-status preservation
 - `2026-08-14-test-harness-sanity-W06-P17-S51` - Enroll the harness verdict in CI independently from unit and integration verdicts
 - `2026-08-14-test-harness-sanity-W06-P17-S52` - Prove the harness recipe selects every declared member and fails when membership collapses
