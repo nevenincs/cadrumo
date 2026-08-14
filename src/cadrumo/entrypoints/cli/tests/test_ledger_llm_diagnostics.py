@@ -24,7 +24,7 @@ from pydantic import ValidationError
 
 from ....adapters.outbound.llm import UsageRecorder
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....application.workflow import workflow_state_repository
+from ....application.workflow import WorkflowState
 from ....core.config import override_settings
 from ....core.i18n import clear_output_language_cache, tr
 from ....domain.transactions import (
@@ -66,7 +66,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_BUCKET_ID),
     ):
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID))
+        register_minimal_profile(WorkflowState(), profile_id=_BUCKET_ID)
         yield
 
 
