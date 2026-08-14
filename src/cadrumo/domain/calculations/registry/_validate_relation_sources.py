@@ -54,7 +54,7 @@ _RelationAllowanceKey = tuple[RelationId, ModeloId, str, int, int]
 
 
 @dataclass(frozen=True, slots=True)
-class _RelationSourceYearCoverageAllowance:
+class RelationSourceYearCoverageAllowance:
     """One documented, currently-necessary relation source-year gap.
 
     Mirrors :class:`~._validate_previous_filing_year_coverage._PreviousFilingYearCoverageAllowance`
@@ -85,12 +85,14 @@ class _RelationSourceYearCoverageAllowance:
     discharge: str
 
 
-_ALLOWANCES: tuple[_RelationSourceYearCoverageAllowance, ...] = ()
+_ALLOWANCES: tuple[RelationSourceYearCoverageAllowance, ...] = ()
 
 
 def validate_relation_closure(
     modelos: Iterable[ModeloDefinition],
     modelos_by_id: Mapping[str, ModeloDefinition],
+    *,
+    source_year_coverage_allowances: Iterable[RelationSourceYearCoverageAllowance] | None = None,
 ) -> list[str]:
     """Validate cross-model relation closure for registry modelos.
 
@@ -102,6 +104,9 @@ def validate_relation_closure(
         modelos_by_id: Mapping of modelo id to
             :class:`~cadrumo.domain.calculations.registry.ModeloDefinition`
             used to resolve each relation's source modelo.
+        source_year_coverage_allowances: Explicit documented source-year gaps
+            for this validation sweep. ``None`` uses the production registry
+            allowances.
 
     Every "lacks exact source revision coverage" finding is reconciled
     against :data:`_ALLOWANCES` after the full sweep, exactly as
@@ -111,8 +116,9 @@ def validate_relation_closure(
     (but whose relation WAS reached) is itself reported as a stale-entry
     failure.
     """
+    allowances = tuple(_ALLOWANCES if source_year_coverage_allowances is None else source_year_coverage_allowances)
     structured_failures: list[RelationCoverageFailure] = []
-    allowance_relation_keys = {(allowance.relation_id, allowance.source_modelo) for allowance in _ALLOWANCES}
+    allowance_relation_keys = {(allowance.relation_id, allowance.source_modelo) for allowance in allowances}
     encountered_relations: set[tuple[RelationId, ModeloId]] = set()
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -131,6 +137,7 @@ def validate_relation_closure(
     return _reconcile_relation_coverage_allowances(
         structured_failures,
         encountered_relations=encountered_relations,
+        allowances=allowances,
     )
 
 
@@ -138,9 +145,10 @@ def _reconcile_relation_coverage_allowances(
     structured_failures: list[RelationCoverageFailure],
     *,
     encountered_relations: set[tuple[RelationId, ModeloId]],
+    allowances: tuple[RelationSourceYearCoverageAllowance, ...],
 ) -> list[str]:
     """Suppress every allowlisted finding and report every stale allowance, once per full sweep."""
-    allowances_by_key: dict[_RelationAllowanceKey, _RelationSourceYearCoverageAllowance] = {
+    allowances_by_key: dict[_RelationAllowanceKey, RelationSourceYearCoverageAllowance] = {
         (
             allowance.relation_id,
             allowance.source_modelo,
@@ -148,7 +156,7 @@ def _reconcile_relation_coverage_allowances(
             allowance.missing_from_year,
             allowance.missing_through_year,
         ): allowance
-        for allowance in _ALLOWANCES
+        for allowance in allowances
     }
     consumed: set[_RelationAllowanceKey] = set()
     failures: list[str] = []
@@ -171,7 +179,7 @@ def _reconcile_relation_coverage_allowances(
             f"stale relation source-year-coverage allowance: relation {allowance.relation_id!r} "
             f"source {allowance.source_modelo!r} period {allowance.source_period!r} from "
             f"{allowance.missing_from_year} through {allowance.missing_through_year} no longer "
-            "matches a real gap; remove the entry from _ALLOWANCES",
+            "matches a real gap; remove or update the documented allowance",
         )
     return failures
 

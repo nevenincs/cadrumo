@@ -62,8 +62,8 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
 _FULL_WORKFLOW = Path(__file__).resolve().parents[3] / ".github" / "workflows" / "ci-full.yml"
 _REPOSITORY_ROOT = _WORKFLOW.parents[2]
 _TEST_HARNESS_MEMBERS = (
-    "src/cadrumo/tests/test_worker_count_hook.py",
-    "src/cadrumo/tests/test_every_test_module_is_collectable.py",
+    "src/cadrumo/tests/test_worker_count_hook_harness.py",
+    "src/cadrumo/tests/test_full_corpus_collectability_harness.py",
 )
 
 
@@ -113,7 +113,7 @@ def test_harness_recipe_runs_every_real_proof_outer_serially_and_non_vacuously()
     assert recipe is not None, "no justfile recipe named test-harness"
     commands = tuple(line.strip().removeprefix("@") for line in recipe.group(1).splitlines())
 
-    pytest_prefix = "uv run --no-sync pytest -q"
+    pytest_prefix = "uv run --no-sync pytest -q -m integration"
     assert commands == (
         *(f"{pytest_prefix} --collect-only -n0 {member}" for member in _TEST_HARNESS_MEMBERS),
         f"{pytest_prefix} -rsf -n0 {' '.join(_TEST_HARNESS_MEMBERS)}",
@@ -125,10 +125,13 @@ def test_harness_recipe_runs_every_real_proof_outer_serially_and_non_vacuously()
 def test_harness_member_preflight_rejects_empty_collection_even_when_another_member_exists(tmp_path: Path) -> None:
     """A per-member preflight catches the empty proof an aggregate would hide."""
     empty_member = tmp_path / "test_empty_harness_member.py"
-    empty_member.write_text("import pytest\n\npytestmark = pytest.mark.unit\n", encoding="utf-8")
+    empty_member.write_text("import pytest\n\npytestmark = pytest.mark.integration\n", encoding="utf-8")
     populated_member = tmp_path / "test_populated_harness_member.py"
     populated_member.write_text(
-        "import pytest\n\npytestmark = pytest.mark.unit\n\ndef test_real_item_is_collectable() -> None:\n    pass\n",
+        "import pytest\n\n"
+        "pytestmark = pytest.mark.integration\n\n"
+        "def test_real_item_is_collectable() -> None:\n"
+        "    pass\n",
         encoding="utf-8",
     )
 
@@ -158,6 +161,8 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
         "--no-sync",
         "pytest",
         "-q",
+        "-m",
+        "integration",
         "--collect-only",
         "-n0",
         _TEST_HARNESS_MEMBERS[0],

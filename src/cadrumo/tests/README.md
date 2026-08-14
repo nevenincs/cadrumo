@@ -124,10 +124,10 @@ hole; it does not fill it.
 filename, module-level marker, execution-scope, hex-layer, or retired
 marker rules.
 
-The collection hook in `aeat.tests._marker_hook`, invoked from both the
-repo-root `conftest.py` and `src/cadrumo/tests/conftest.py`, also raises
-`pytest.UsageError` during collection when a test item lacks exactly one
-execution marker or exactly one accepted `hex_*` marker.
+The repo-root `conftest.py` invokes the collection policy in
+`cadrumo.tests._marker_hook` once for every collected subtree. It raises
+`pytest.UsageError` when a test item lacks exactly one execution marker or
+exactly one accepted `hex_*` marker.
 
 ## Live Read Opt-In
 

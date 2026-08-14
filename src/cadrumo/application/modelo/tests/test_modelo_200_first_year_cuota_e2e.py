@@ -41,7 +41,6 @@ or xfail.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -57,7 +56,6 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
 from ...user_profile import ProfileRecordRepository
 from .. import (
@@ -99,13 +97,6 @@ _CASILLA_CUOTA_DIFERENCIAL: CasillaId = validated_casilla_id(
     surface="_CASILLA_CUOTA_DIFERENCIAL",
 )
 _RELATION_PREFILL_SOURCE = "relation_prefill"
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    """Yield the active profile's real encrypted-SQLite object repository."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def _seed_first_year_modalidad_cuota_profile() -> None:

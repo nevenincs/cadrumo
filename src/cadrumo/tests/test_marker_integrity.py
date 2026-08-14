@@ -19,6 +19,9 @@ from __future__ import annotations
 import ast
 import io
 import re
+import subprocess
+import sys
+import tempfile
 import tokenize
 import tomllib
 from functools import cache
@@ -104,6 +107,7 @@ _EXPECTED_CONFIGURED_MARKERS = (
     _EXECUTION_MARKERS | _HEX_MARKERS | {"docs", "serial", "perf", "external_tool", "os_keychain", "resident_service"}
 )
 _OS_KEYCHAIN_MARKER = "os_keychain"
+_LIVE_POLICY_SUBPROCESS_TIMEOUT_SECONDS = 60
 #: Every test whose assertion subject IS the OS credential store, by node id.
 #:
 #: This membership is PINNED rather than counted, because ``os_keychain`` removes a
@@ -1113,6 +1117,108 @@ def test_live_gate_helper_usage_is_aeat_live_marked(marker_policy_inventory: _Ma
     """Tests that call the shared live gate helper must be ``aeat_live`` modules."""
     violations = marker_policy_inventory.live_gate_helper_violations
     assert not violations, "requires_live_enabled() used outside aeat_live tests:\n" + "\n".join(violations)
+
+
+def test_root_policy_rejects_domain_local_banned_live_import_before_unit_deselection() -> None:
+    """A domain-local live module cannot hide a banned import behind ``-m unit``.
+
+    The generated module lives under ``src/cadrumo`` but outside the central
+    harness, so this runs the installed repository-root conftest through the
+    same discovery route a domain owner uses. ``-m unit`` would ordinarily
+    deselect its ``aeat_live`` item; exit code 2 from the banned-import policy
+    proves the root hook inspects it before marker selection can remove it.
+    """
+    with tempfile.TemporaryDirectory(prefix="s74-live-policy-", dir=_SRC_CADRUMO) as temporary_directory:
+        module = _write_domain_local_live_module(
+            Path(temporary_directory),
+            "test_banned_live_import.py",
+            "import unittest.mock\n"
+            "import pytest\n\n"
+            "pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_domain]\n\n\n"
+            "def test_banned_import_never_executes() -> None:\n"
+            "    raise AssertionError('collection policy should exit before this test can run')\n",
+        )
+
+        completed = _run_root_policy_subprocess("unit", module)
+        output = completed.stdout + completed.stderr
+
+    assert completed.returncode == 2, _subprocess_diagnostics(completed)
+    assert "Banned import in live-marked file" in output, _subprocess_diagnostics(completed)
+    assert "unittest.mock" in output, _subprocess_diagnostics(completed)
+
+
+def test_root_policy_accepts_clean_domain_local_live_module_with_one_conftest_traversal() -> None:
+    """A clean domain-local live module collects and sees one root policy hook.
+
+    The child test interrogates pytest's installed hook registry from the real
+    process. It therefore proves both that a clean live module remains
+    executable and that exactly one conftest-owned collection traversal is
+    installed: the repository-root owner, rather than a child duplicate.
+    """
+    root_policy_owner = _REPO_ROOT / "conftest.py"
+    module_source = (
+        "from pathlib import Path\n\n"
+        "import pytest\n\n"
+        "pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_domain]\n"
+        f"EXPECTED_POLICY_OWNER = Path({str(root_policy_owner)!r})\n\n\n"
+        "def test_clean_domain_local_live_control() -> None:\n"
+        "    assert True\n\n\n"
+        "def test_root_collection_policy_has_one_conftest_owner(pytestconfig: pytest.Config) -> None:\n"
+        "    conftest_collection_hooks = [\n"
+        "        Path(hook.function.__code__.co_filename).resolve()\n"
+        "        for hook in pytestconfig.pluginmanager.hook.pytest_collection_modifyitems.get_hookimpls()\n"
+        "        if Path(hook.function.__code__.co_filename).name == 'conftest.py'\n"
+        "    ]\n"
+        "    assert conftest_collection_hooks == [EXPECTED_POLICY_OWNER.resolve()]\n"
+    )
+    with tempfile.TemporaryDirectory(prefix="s74-live-policy-", dir=_SRC_CADRUMO) as temporary_directory:
+        module = _write_domain_local_live_module(Path(temporary_directory), "test_clean_live_control.py", module_source)
+
+        completed = _run_root_policy_subprocess("aeat_live", module)
+        output = completed.stdout + completed.stderr
+
+    assert completed.returncode == 0, _subprocess_diagnostics(completed)
+    assert "2 passed" in output, "the clean live control did not execute both non-vacuity probes:\n" + output
+
+
+def _write_domain_local_live_module(temporary_root: Path, filename: str, source: str) -> Path:
+    """Create one temporary domain-local live module beneath the real source root."""
+    module = temporary_root / "domain_local" / "tests" / filename
+    module.parent.mkdir(parents=True)
+    module.write_text(source, encoding="utf-8")
+    return module
+
+
+def _run_root_policy_subprocess(marker_expression: str, module: Path) -> subprocess.CompletedProcess[str]:
+    """Collect one generated source module through the installed root policy."""
+    return subprocess.run(  # noqa: S603 - fixed interpreter argv; marker expressions are local literals.
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "-n0",
+            "-o",
+            "addopts=",
+            "-p",
+            "no:cacheprovider",
+            "-m",
+            marker_expression,
+            str(module),
+        ],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=_LIVE_POLICY_SUBPROCESS_TIMEOUT_SECONDS,
+        check=False,
+    )
+
+
+def _subprocess_diagnostics(completed: subprocess.CompletedProcess[str]) -> str:
+    """Render child-process evidence when a policy expectation fails."""
+    return f"returncode={completed.returncode}\nstdout:\n{completed.stdout}\nstderr:\n{completed.stderr}"
 
 
 def test_pyproject_marker_registry_is_pruned_and_unique() -> None:

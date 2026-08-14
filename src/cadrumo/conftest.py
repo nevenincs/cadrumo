@@ -7,9 +7,8 @@ because pytest's conftest discovery walks UP from each test file; a
 conftest inside the ``tests/`` subdirectory is invisible to ratchets
 hosted at ``src/cadrumo/test_*.py`` and elsewhere under ``src/cadrumo/``.
 
-Marker-contract and live-import gating remain hosted from
-``src/cadrumo/tests/conftest.py`` (collection-time hook scope is shared
-across all child conftests by pytest).
+Marker-contract and live-import gating are owned by the repo-root
+``conftest.py`` so every collected test subtree reaches the same policy.
 """
 
 from __future__ import annotations

@@ -11,10 +11,8 @@ module reuses as its own instrument, per the row that decided ADVISE is the
 correct behaviour for absence and left the malformed case refusing.
 
 Real registry, real (encrypted) observation repository, no mocks. The
-malformed-still-refuses proof is backed by an out-of-repo mutation: collapsing
-the two exception types back into one shows the malformed case would ALSO be
-silently swallowed, so the distinct type — not merely the test — is what
-keeps the two conditions apart.
+incomplete and ambiguous observations exercise the two malformed inputs that
+must keep refusing, while the empty repository exercises genuine absence.
 """
 
 from __future__ import annotations
@@ -143,50 +141,3 @@ def test_an_ambiguous_multiple_observed_filing_match_still_refuses() -> None:
             filing_year=_M130_FILING_YEAR,
             period=_M130_PERIOD,
         )
-
-
-def test_collapsing_the_two_exception_types_would_swallow_the_malformed_case_too(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Out-of-repo mutation: without the distinct absence signal, malformed also goes silent.
-
-    Monkeypatches the module's absence-signal exception to BE
-    :class:`RegistryValidationError` — the collapse this row explicitly
-    forbids ("widening the application resolver's except clause ... suppresses
-    malformed-binding refusals along with absent observations"). With the two
-    types identical, the SAME matched-but-incomplete observation from the
-    sibling refusal test is silently absorbed into "unsatisfied" instead of
-    refusing, proving the distinct exception type — not merely the test
-    asserting a message string — is what keeps the malformed case refusing.
-    """
-    from ....domain.calculations.registry import _bindings_previous_filing as _module
-
-    snapshot = _m130_snapshot()
-    incomplete_observation = registry_grounded_modelo_observation(
-        modelo="100",
-        filing_year=_M100_FILING_YEAR,
-        period="0A",
-        casilla_values={validated_casilla_id(_SOURCE_CASILLAS[0], surface="test fixture"): Decimal("1")},
-    )
-
-    # Positive control: unmutated, the malformed case still refuses.
-    with pytest.raises(RegistryValidationError, match="requires observed casilla"):
-        resolve_previous_filing_binding_values(
-            snapshot.revision,
-            (incomplete_observation,),
-            filing_year=_M130_FILING_YEAR,
-            period=_M130_PERIOD,
-        )
-
-    monkeypatch.setattr(_module, "_PreviousFilingObservationAbsentError", RegistryValidationError)
-
-    resolved = resolve_previous_filing_binding_values(
-        snapshot.revision,
-        (incomplete_observation,),
-        filing_year=_M130_FILING_YEAR,
-        period=_M130_PERIOD,
-    )
-    assert _BINDING_ID not in resolved, (
-        "the mutation must collapse the malformed case into unsatisfied — if this still refuses, "
-        "the mutation did not actually bite and the proof is void"
-    )

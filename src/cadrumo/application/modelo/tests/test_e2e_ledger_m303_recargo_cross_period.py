@@ -40,7 +40,6 @@ registry grounding gate.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -68,7 +67,6 @@ from ....domain.transactions import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
-from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
 from ...user_profile import ProfileRecordRepository
 from .. import (
@@ -113,13 +111,6 @@ _QUARTER_SALES: dict[str, dict[RecargoTier, tuple[Decimal, Decimal, Decimal]]] =
         "reducido": (Decimal("3000.00"), _REDUCED_RATE, Decimal("42.00")),
     },
 }
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    """Yield the active profile's real encrypted-SQLite object repository."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def _recargo_sale(

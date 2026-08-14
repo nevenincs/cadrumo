@@ -218,10 +218,10 @@ forbidden_modules =
 # neither substitutes for the other.
 ignore_imports =
     # ── Test-module carve-out, matching every other contract in this file ──
-    # The subpackage's own tests reach the shared secure-SQL runtime profile
-    # and the core-side stores for real-adapter roundtrips. Pinned per chain
-    # origin rather than by a wildcard so a NEW production edge still fails.
-    cadrumo.llm.conftest -> cadrumo.tests.secure_sql
+    # The subpackage's fixture discovery reaches the canonical secure-runtime
+    # test support. Pinned per chain origin rather than by a wildcard so a NEW
+    # production edge still fails.
+    cadrumo.llm.conftest -> cadrumo.tests.llm_secure_runtime
     # The stamp-singularity gate scans the whole non-test package, so it needs
     # the shared file-walk helpers; that package reaches storage for its own
     # roundtrip fixtures. A test-file chain origin, pinned like its siblings.

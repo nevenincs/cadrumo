@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 import logging
-import secrets
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
@@ -23,7 +22,6 @@ from ......core.external_constants import UTF_8_ENCODING
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ......tests.path_obstruction import obstructed_path
 from ...blob_store import EncryptedBlobStore
-from ...crypto import KEY_SIZE
 from ...errors import (
     BlobNotFoundError,
     RetentionPolicyError,
@@ -38,11 +36,6 @@ _STORE_LOGGER_NAME = "cadrumo.adapters.persistence.storage.secret_store._secret_
 
 _SECRET_CREATED_AT = datetime(2026, 5, 28, 11, 55, 0, tzinfo=UTC)
 _SECRET_EXPIRES_AT = datetime(2099, 5, 28, 11, 55, 0, tzinfo=UTC)
-
-
-@pytest.fixture
-def fixed_master_key() -> bytes:
-    return secrets.token_bytes(KEY_SIZE)
 
 
 @pytest.fixture

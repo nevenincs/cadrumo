@@ -15,7 +15,7 @@ existing previous-filing binding from real stored observations, with no caller
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -39,7 +39,6 @@ from ....domain.user_profile import (
     UserProfileRecord,
 )
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
 from ...user_profile import ProfileRecordRepository
 from .._calculation_actions import (
@@ -63,13 +62,6 @@ _CASILLA_0501: CasillaId = validated_casilla_id("0501", surface="_CASILLA_0501")
 _TRABAJO_INGRESOS: CasillaId = validated_casilla_id("0003", surface="_TRABAJO_INGRESOS")
 _M130_PAGOS_OUTPUT: CasillaId = validated_casilla_id("19", surface="_M130_PAGOS_OUTPUT")
 _M131_PAGOS_OUTPUT: CasillaId = validated_casilla_id("15", surface="_M131_PAGOS_OUTPUT")
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    """Yield the active profile's real encrypted-SQLite object repository."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:

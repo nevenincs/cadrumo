@@ -458,9 +458,9 @@ test-ratchets:
 [doc('Run the dedicated outer-serial test-harness verdict (installed hook and full-corpus collection proofs).')]
 [group('testing')]
 test-harness:
-    @uv run --no-sync pytest -q --collect-only -n0 src/cadrumo/tests/test_worker_count_hook.py
-    @uv run --no-sync pytest -q --collect-only -n0 src/cadrumo/tests/test_every_test_module_is_collectable.py
-    @uv run --no-sync pytest -q -rsf -n0 src/cadrumo/tests/test_worker_count_hook.py src/cadrumo/tests/test_every_test_module_is_collectable.py
+    @uv run --no-sync pytest -q -m integration --collect-only -n0 src/cadrumo/tests/test_worker_count_hook_harness.py
+    @uv run --no-sync pytest -q -m integration --collect-only -n0 src/cadrumo/tests/test_full_corpus_collectability_harness.py
+    @uv run --no-sync pytest -q -m integration -rsf -n0 src/cadrumo/tests/test_worker_count_hook_harness.py src/cadrumo/tests/test_full_corpus_collectability_harness.py
 
 # Run the unit test suite in parallel, ignoring workbook parity tests. Quiet
 # progress; failures shown. `durations` is optional and, when set, prints

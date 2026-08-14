@@ -45,7 +45,6 @@ invoice/transaction link. No mocks, stubs, skips, or xfail.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -76,7 +75,6 @@ from ....domain.transactions import (
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, IvaWalletDecisionRepository
 from ...invoices import build_catalogue_invoice, link_invoice_transaction_catalogues
 from ...modelo import (
@@ -174,13 +172,6 @@ _M303_MANUAL_RESULTADO_CASILLA_ZEROS: dict[str, Decimal] = {
     "77": Decimal("0.00"),
     "109": Decimal("0.00"),
 }
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    """Yield the active profile's real encrypted-SQLite object repository."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def _seed_taxpayer_profile(secure_objects: SecureObjectRepository) -> None:

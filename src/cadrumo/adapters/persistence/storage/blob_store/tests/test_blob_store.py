@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import secrets
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
@@ -55,11 +54,6 @@ def _bucket_session(*, dek: bytes) -> BucketSession:
         idle_minutes=15,
         opened_at=_SESSION_OPENED_AT,
     )
-
-
-@pytest.fixture
-def fixed_master_key() -> bytes:
-    return secrets.token_bytes(KEY_SIZE)
 
 
 @pytest.fixture
