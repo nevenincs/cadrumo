@@ -9,10 +9,10 @@ session.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar, Token
 from pathlib import Path
-from typing import Iterator
 from uuid import UUID
 
 from ...adapters.persistence.storage.custody import load_committed_profile_custody_data_file
@@ -20,7 +20,9 @@ from ...core.paths import effective_storage_root
 from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord
 from ._capsule_record import PROFILE_RECORD_DATA_FILENAME, ProfileRecordSession
 
-_ACTIVE_RECORD_SESSION: ContextVar[ProfileRecordSession | None] = ContextVar("active_profile_record_session", default=None)
+_ACTIVE_RECORD_SESSION: ContextVar[ProfileRecordSession | None] = ContextVar(
+    "active_profile_record_session", default=None
+)
 
 
 @contextmanager

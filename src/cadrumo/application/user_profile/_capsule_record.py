@@ -13,7 +13,7 @@ import base64
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Final
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
@@ -22,7 +22,6 @@ from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record
 from ...adapters.persistence.storage.custody import ProfileCustodyEnvelope
 from ...core.identity import ProfileId
 from ...domain.user_profile import UserProfileRecord
-
 
 PROFILE_RECORD_DATA_FILENAME: Final = "profile-record.v1.json"
 PROFILE_RECORD_SCHEMA_VERSION: Final = 1
@@ -48,7 +47,11 @@ def _digest(value: bytes) -> str:
 
 
 def _validate_digest(value: str) -> str:
-    if len(value) != 71 or not value.startswith(_DIGEST_PREFIX) or any(part not in "0123456789abcdef" for part in value[7:]):
+    if (
+        len(value) != 71
+        or not value.startswith(_DIGEST_PREFIX)
+        or any(part not in "0123456789abcdef" for part in value[7:])
+    ):
         raise ValueError("record digest must be a lowercase sha256 digest")
     return value
 
@@ -226,8 +229,13 @@ class ProfileRecordSession:
             record = UserProfileRecord.model_validate_json(plaintext)
         except (ValidationError, ValueError) as exc:
             raise ProfileRecordIntegrityError("profile record cannot be authenticated and decoded") from exc
-        if UUID(str(record.profile_id)) != self.profile_id or f"sha256:{record.content_digest}" != artifact.content_digest:
-            raise ProfileRecordIntegrityError("profile record plaintext differs from its authenticated identity or digest")
+        if (
+            UUID(str(record.profile_id)) != self.profile_id
+            or f"sha256:{record.content_digest}" != artifact.content_digest
+        ):
+            raise ProfileRecordIntegrityError(
+                "profile record plaintext differs from its authenticated identity or digest"
+            )
         return record, artifact
 
     def prepare_replace(
@@ -243,7 +251,10 @@ class ProfileRecordSession:
             raise ProfileRecordConflictError("profile record revision compare-and-swap failed")
         if UUID(str(record.profile_id)) != self.profile_id:
             raise ProfileRecordIntegrityError("replacement profile record UUID differs from its custody session")
-        if record.record_revision != current.revision + 1 or record.previous_record_digest != current.content_digest[7:]:
+        if (
+            record.record_revision != current.revision + 1
+            or record.previous_record_digest != current.content_digest[7:]
+        ):
             raise ProfileRecordIntegrityError("replacement record does not carry the next revision and current digest")
         return _encode_artifact(
             session=self,
