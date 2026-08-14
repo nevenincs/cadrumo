@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:d4a54a70899961c317f3eb4811b455c2bbf6054aa330c78131730a7396ec1e1c'
+body_hash: 'sha256:e35de363963cce88cde224d0f9d7929174b2f07df71097b0496d347c9605a1b3'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -25,6 +25,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P20-S64]]'
   - '[[2026-08-14-test-harness-sanity-W07-P20-S65]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S67]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P21-S68]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S71]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S72]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S73]]'
@@ -78,6 +79,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P20-S64` - Canonicalize the M100 2024 committed registry snapshot family
 - `2026-08-14-test-harness-sanity-W07-P20-S65` - Canonicalize the M200 development registry snapshot family
 - `2026-08-14-test-harness-sanity-W07-P21-S67` - Adjudicate and canonicalize every remaining development fixture cluster in the census
+- `2026-08-14-test-harness-sanity-W07-P21-S68` - Adjudicate and canonicalize every remaining packaging fixture cluster in the census
 - `2026-08-14-test-harness-sanity-W07-P22-S71` - Promote banned-live-import enforcement into the shared root policy helper
 - `2026-08-14-test-harness-sanity-W07-P22-S72` - Make the repository root the sole collection-policy hook owner
 - `2026-08-14-test-harness-sanity-W07-P22-S73` - Remove duplicate marker traversal and live-policy ownership from the child conftest
