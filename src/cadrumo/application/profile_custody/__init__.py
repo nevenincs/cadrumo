@@ -140,20 +140,6 @@ class ProfileCustodyUnlockPort(Protocol):
         ...
 
 
-class ProfileCustodyBucketSessionPort(Protocol):
-    """The live-session fields needed by an authenticated record reader."""
-
-    @property
-    def bucket_id(self) -> str:
-        """The bucket this live session was opened against."""
-        ...
-
-    @property
-    def dek(self) -> bytes:
-        """The session's bound data-encryption key."""
-        ...
-
-
 class ProfileLoginThrottleEvaluationPort(Protocol):
     """Failed-login backoff decision exposed to the application."""
 
@@ -926,7 +912,6 @@ __all__ = [
     "ProfileBucketStoragePathsPort",
     "ProfileBucketStoragePort",
     "ProfileCustodyBucketEventHistoryPort",
-    "ProfileCustodyBucketSessionPort",
     "ProfileCustodyLocalRecordStore",
     "ProfileCustodyRecordSessionMaterial",
     "ProfileCustodyRegistrationMaterial",
