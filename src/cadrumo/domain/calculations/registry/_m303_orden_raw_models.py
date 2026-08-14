@@ -101,6 +101,14 @@ class M303AnnualOrdenRawDifficultJustification(RegistryModel):
     non_agricultural_required_text: str = Field(min_length=1)
 
 
+class M303AnnualOrdenRawLorca2022Reduction(RegistryModel):
+    """The DA 4(2) Annex-II Lorca IVA reduction, parsed from the 2022 Orden."""
+
+    municipality: Literal["Lorca"]
+    percentage: Decimal = Field(gt=Decimal("0"), lt=Decimal("100"))
+    required_text: tuple[str, str, str]
+
+
 class M303AnnualOrdenSourceCensus(RegistryModel):
     """Complete, digest-bound extraction of one official annual Orden source."""
 
@@ -114,41 +122,63 @@ class M303AnnualOrdenSourceCensus(RegistryModel):
     agricultural_ingresos_a_cuenta: tuple[M303AnnualOrdenRawAgriculturalIngresoACuenta, ...] = Field(min_length=1)
     seasonal_indexes: tuple[M303AnnualOrdenRawSeasonalIndex, ...] = Field(min_length=1)
     difficult_justification: M303AnnualOrdenRawDifficultJustification
+    lorca_2022_reduction: M303AnnualOrdenRawLorca2022Reduction | None
 
     @model_validator(mode="after")
     def _has_the_complete_official_annual_quota_catalogue(self) -> M303AnnualOrdenSourceCensus:
-        if len(self.activities) != EXPECTED_ACTIVITY_COUNT:
-            raise RegistryValidationError(
-                f"annual Orden source must contain {EXPECTED_ACTIVITY_COUNT} annual IVA activity tables, "
-                f"got {len(self.activities)}",
-            )
-        module_counts = Counter(len(activity.modules) for activity in self.activities)
-        if module_counts != EXPECTED_MODULE_DISTRIBUTION:
-            raise RegistryValidationError(
-                "annual Orden source has an unexpected IVA module distribution: "
-                f"{dict(sorted(module_counts.items()))!r}",
-            )
-        if sum(module_counts.values()) != EXPECTED_ACTIVITY_COUNT:
-            raise RegistryValidationError("annual Orden source activity table count is internally inconsistent")
-        total_modules = sum(module_count * occurrences for module_count, occurrences in module_counts.items())
-        if total_modules != EXPECTED_MODULE_COUNT:
-            raise RegistryValidationError(
-                f"annual Orden source must contain {EXPECTED_MODULE_COUNT} IVA module rows",
-            )
-        expected_agricultural_count = EXPECTED_AGRICULTURAL_AXIS_COUNTS.get(self.ejercicio)
-        if expected_agricultural_count is None:
-            raise RegistryValidationError("annual Orden source has an unsupported agricultural axis exercise")
-        if len(self.agricultural_indexes) != expected_agricultural_count:
-            raise RegistryValidationError("annual Orden source has the wrong agricultural quota-index row count")
-        if len(self.agricultural_ingresos_a_cuenta) != expected_agricultural_count:
-            raise RegistryValidationError("annual Orden source has the wrong agricultural ingreso-a-cuenta row count")
-        if len(self.non_agricultural_ingresos_a_cuenta) != EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT:
-            raise RegistryValidationError("annual Orden source has the wrong IAE ingreso-a-cuenta row count")
-        seasonal_shape = tuple(
-            (item.minimum_days, item.maximum_days, item.coefficient) for item in self.seasonal_indexes
-        )
-        if seasonal_shape != EXPECTED_SEASONAL_INDEXES:
-            raise RegistryValidationError("annual Orden source has the wrong seasonal index bands")
-        if self.difficult_justification.percentage != EXPECTED_DIFFICULT_JUSTIFICATION_PCT:
-            raise RegistryValidationError("annual Orden source has the wrong difficult-justification percentage")
+        _validate_source_activity_catalogue(self)
+        _validate_source_agricultural_axes(self)
+        _validate_source_common_axes(self)
+        _validate_source_lorca_2022_reduction(self)
         return self
+
+
+def _validate_source_activity_catalogue(census: M303AnnualOrdenSourceCensus) -> None:
+    if len(census.activities) != EXPECTED_ACTIVITY_COUNT:
+        raise RegistryValidationError(
+            f"annual Orden source must contain {EXPECTED_ACTIVITY_COUNT} annual IVA activity tables, "
+            f"got {len(census.activities)}",
+        )
+    module_counts = Counter(len(activity.modules) for activity in census.activities)
+    if module_counts != EXPECTED_MODULE_DISTRIBUTION:
+        raise RegistryValidationError(
+            f"annual Orden source has an unexpected IVA module distribution: {dict(sorted(module_counts.items()))!r}",
+        )
+    if sum(module_counts.values()) != EXPECTED_ACTIVITY_COUNT:
+        raise RegistryValidationError("annual Orden source activity table count is internally inconsistent")
+    total_modules = sum(module_count * occurrences for module_count, occurrences in module_counts.items())
+    if total_modules != EXPECTED_MODULE_COUNT:
+        raise RegistryValidationError(
+            f"annual Orden source must contain {EXPECTED_MODULE_COUNT} IVA module rows",
+        )
+
+
+def _validate_source_agricultural_axes(census: M303AnnualOrdenSourceCensus) -> None:
+    expected_agricultural_count = EXPECTED_AGRICULTURAL_AXIS_COUNTS.get(census.ejercicio)
+    if expected_agricultural_count is None:
+        raise RegistryValidationError("annual Orden source has an unsupported agricultural axis exercise")
+    if len(census.agricultural_indexes) != expected_agricultural_count:
+        raise RegistryValidationError("annual Orden source has the wrong agricultural quota-index row count")
+    if len(census.agricultural_ingresos_a_cuenta) != expected_agricultural_count:
+        raise RegistryValidationError("annual Orden source has the wrong agricultural ingreso-a-cuenta row count")
+
+
+def _validate_source_common_axes(census: M303AnnualOrdenSourceCensus) -> None:
+    if len(census.non_agricultural_ingresos_a_cuenta) != EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT:
+        raise RegistryValidationError("annual Orden source has the wrong IAE ingreso-a-cuenta row count")
+    seasonal_shape = tuple((item.minimum_days, item.maximum_days, item.coefficient) for item in census.seasonal_indexes)
+    if seasonal_shape != EXPECTED_SEASONAL_INDEXES:
+        raise RegistryValidationError("annual Orden source has the wrong seasonal index bands")
+    if census.difficult_justification.percentage != EXPECTED_DIFFICULT_JUSTIFICATION_PCT:
+        raise RegistryValidationError("annual Orden source has the wrong difficult-justification percentage")
+
+
+def _validate_source_lorca_2022_reduction(census: M303AnnualOrdenSourceCensus) -> None:
+    reduction = census.lorca_2022_reduction
+    if census.ejercicio == 2022:
+        if reduction is None:
+            raise RegistryValidationError("annual Orden 2022 source lacks its Lorca IVA reduction authority")
+        if reduction.percentage != Decimal("20"):
+            raise RegistryValidationError("annual Orden 2022 source has the wrong Lorca IVA reduction percentage")
+    elif reduction is not None:
+        raise RegistryValidationError("only the 2022 annual Orden may publish the Lorca 2022 reduction")

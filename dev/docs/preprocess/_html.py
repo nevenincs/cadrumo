@@ -181,6 +181,7 @@ _IVA_ANNUAL_INSTRUCTION_FRAGMENT_SPEC: Final[tuple[str, str, str]] = (
 
 _M303_ANNUAL_ORDEN_SOURCES: Final[frozenset[str]] = frozenset(
     {
+        "orden-hfp-1335-2021.html",
         "orden-hfp-1172-2022.html",
         "orden-hfp-1359-2023.html",
         "orden-hac-1347-2024.html",

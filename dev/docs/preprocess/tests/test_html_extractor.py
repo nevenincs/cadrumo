@@ -55,6 +55,7 @@ _SLICE_HTML = _NORMATIVES / "html" / "orden-hap-2250-2015-art-4.html"
 _MARKED_ANNEX_HTML = _NORMATIVES / "html" / "orden-eha-3435-2007.html"
 _UNMARKED_ANNEX_HTML = _NORMATIVES / "html" / "orden-hfp-1359-2023.html"
 _MODULES_2025_HTML = _NORMATIVES / "html" / "orden-hac-1347-2024.html"
+_MODULES_2022_HTML = _NORMATIVES / "html" / "orden-hfp-1335-2021.html"
 _APARTADO_ORDINAL_HTML = _NORMATIVES / "html" / "orden-hac-3625-2003-art-3.html"
 _ORDINAL_PARAGRAPH_HTML = _NORMATIVES / "html" / "boe-a-2011-208-modelo-145.html"
 
@@ -66,6 +67,7 @@ def test_worked_example_files_exist() -> None:
     assert _MARKED_ANNEX_HTML.is_file(), _MARKED_ANNEX_HTML
     assert _UNMARKED_ANNEX_HTML.is_file(), _UNMARKED_ANNEX_HTML
     assert _MODULES_2025_HTML.is_file(), _MODULES_2025_HTML
+    assert _MODULES_2022_HTML.is_file(), _MODULES_2022_HTML
     assert _APARTADO_ORDINAL_HTML.is_file(), _APARTADO_ORDINAL_HTML
     assert _ORDINAL_PARAGRAPH_HTML.is_file(), _ORDINAL_PARAGRAPH_HTML
 
@@ -237,6 +239,30 @@ def test_iva_instructions_and_activity_tables_become_atomic_citation_units() -> 
     assert "\n972.1\n" in hairdressing.text
     assert "Cuota mínima por operaciones corrientes: 13 %" in hairdressing.text
     assert "Salones e institutos de belleza" not in hairdressing.text
+
+
+def test_2022_iva_units_preserve_the_legacy_table_shape_and_lorca_reduction() -> None:
+    """The source-neutral annual parser keeps 2022's multi-value table rows exact."""
+    output = build_outputs(_MODULES_2022_HTML, repo_root=_REPO_ROOT)[0]
+    fragments = {unit.anchor: unit for unit in output.units if unit.anchor}
+
+    iva_table_anchors = tuple(
+        unit.anchor
+        for unit in output.units
+        if unit.anchor
+        and unit.anchor.startswith("#m303-anexo-ii-iva-")
+        and unit.anchor != "#m303-anexo-ii-iva-ingreso-a-cuenta"
+    )
+    assert len(iva_table_anchors) == 49
+    bread = fragments["#m303-anexo-ii-iva-419-1-industrias-del-pan-y-de-la-bolleria"]
+    assert "1 Personal empleado. Persona. 1.693,54" in bread.text
+    assert "3 Superficie del horno. 100 ddecímetros cuadrados. 30,47" in bread.text
+
+    lorca = fragments["#m303-da-4-lorca-2022-reduction"]
+    assert "anexo II de esta Orden" in lorca.text
+    assert "20 por ciento" in lorca.text
+    assert "cuota trimestral" in lorca.text
+    assert "cuota anual" in lorca.text
 
 
 def test_toc_and_form_boilerplate_is_stripped() -> None:

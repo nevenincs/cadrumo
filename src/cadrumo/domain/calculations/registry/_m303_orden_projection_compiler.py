@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
+from typing import Literal
 from unicodedata import normalize
 
+from ....core.identity import ContentDigest
 from ....domain.iva import (
     ActividadOrdenAnual,
     AutoridadAgricolaOrdenAnualNoResuelta,
@@ -15,6 +17,7 @@ from ....domain.iva import (
     ModuloOrdenAnual,
     PorcentajeIngresoCuentaAgricolaOrdenAnual,
     PorcentajeIngresoCuentaIaeOrdenAnual,
+    ReduccionLorcaOrdenAnual,
 )
 from ._errors import RegistryValidationError
 from ._ids import LegalRefId, RevisionId, SourceRefId
@@ -24,6 +27,7 @@ from ._m303_orden_keys import (
     agricultural_ingreso_legal_key,
     annual_orden_legal_keys,
     difficult_justification_legal_key,
+    lorca_2022_reduction_legal_key,
     non_agricultural_ingreso_legal_key,
     seasonal_index_legal_key,
 )
@@ -32,9 +36,12 @@ from ._m303_orden_raw_models import M303AnnualOrdenRawActivity, M303AnnualOrdenS
 from ._m303_orden_source import annual_orden_raw_activity_identity
 
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
-_AUXILIARY_INDICATOR_BY_IAE_AND_ACTIVITY = {
+_AUXILIARY_INDICATOR_BY_IAE_AND_ACTIVITY: Mapping[tuple[str, str], Literal["1", "2"]] = {
     ("691.9", "reparacion-de-calzado"): "1",
-    ("691.9", "reparacion-de-otros-bienes-de-consumo-n-c-o-p-excepto-reparacion-de-calzado-restauracion-de-obras-de-arte-muebles-antiguedades-e-instrumentos-musicales"): "2",
+    (
+        "691.9",
+        "reparacion-de-otros-bienes-de-consumo-n-c-o-p-excepto-reparacion-de-calzado-restauracion-de-obras-de-arte-muebles-antiguedades-e-instrumentos-musicales",
+    ): "2",
     ("722", "transporte-de-mercancias-por-carretera-excepto-residuos"): "1",
     ("722", "transporte-de-residuos-por-carretera"): "2",
 }
@@ -44,6 +51,8 @@ def compile_m303_annual_orden_projection(
     *,
     census: M303AnnualOrdenSourceCensus,
     registry_revision_id: RevisionId,
+    record_design_source_ref: SourceRefId,
+    record_design_source_content_digest: ContentDigest,
     legal_refs: Mapping[str, LegalRefId],
 ) -> M303AnnualOrdenProjection:
     """Compile one validated source census into its immutable registry projection."""
@@ -86,6 +95,9 @@ def compile_m303_annual_orden_projection(
                 )
                 for index, item in enumerate(census.agricultural_ingresos_a_cuenta)
             ),
+            annual_orden_source_ref=census.source_ref,
+            record_design_source_ref=record_design_source_ref,
+            record_design_source_content_digest=record_design_source_content_digest,
         ),
         non_agricultural_ingresos_a_cuenta=tuple(
             PorcentajeIngresoCuentaIaeOrdenAnual(
@@ -114,6 +126,16 @@ def compile_m303_annual_orden_projection(
                 legal_refs[difficult_justification_legal_key("no_agricola")],
             ),
             source_refs=(census.source_ref,),
+        ),
+        lorca_2022_reduction=(
+            None
+            if census.lorca_2022_reduction is None
+            else ReduccionLorcaOrdenAnual(
+                percentage=census.lorca_2022_reduction.percentage,
+                legal_refs=(legal_refs[lorca_2022_reduction_legal_key()],),
+                source_refs=(census.source_ref,),
+                source_content_digest=census.source_content_digest,
+            )
         ),
     )
 

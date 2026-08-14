@@ -38,6 +38,8 @@ def resolve_m303_regimen_simplificado_snapshot(
     )
     projection = _select_m303_annual_orden_projection(registry_snapshot)
     return M303RegimenSimplificadoSnapshot(
+        filing_year=registry_snapshot.filing_year,
+        registry_revision_id=registry_snapshot.revision.id,
         scope_decision=scope_decision,
         orden=M303AnnualOrdenSnapshot(
             ejercicio=projection.ejercicio,
@@ -59,6 +61,7 @@ def resolve_m303_regimen_simplificado_snapshot(
             non_agricultural_ingresos_a_cuenta=projection.non_agricultural_ingresos_a_cuenta,
             seasonal_indexes=projection.seasonal_indexes,
             difficult_justification=projection.difficult_justification,
+            lorca_2022_reduction=projection.lorca_2022_reduction,
         ),
         record_design=record_design,
     )

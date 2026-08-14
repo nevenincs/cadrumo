@@ -155,7 +155,20 @@ from ._source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
     out_of_window_summary_source_diagnostic,
+    source_issue_diagnostics,
     storage_degradation_resolution,
+)
+from ._source_mesh import (
+    flatten_source_provenance_for as _flattened_provenance_for,
+)
+from ._source_mesh import (
+    sorted_source_ids as _sorted_ids,
+)
+from ._source_mesh import (
+    source_diagnostics_for as _diagnostics_for,
+)
+from ._source_mesh import (
+    source_provenance_for as _provenance_for,
 )
 from ._undeclared_activity_advisory import undeclared_activity_income_advisory_observations
 
@@ -360,76 +373,66 @@ class LedgerIvaAggregationSourceResolver:
                 silence_report.recargo_rate_divergences,
                 resolver_id=self.resolver_id,
             )
-            + tuple(
-                CalculationSourceDiagnostic(
-                    reason="source_issue",
-                    source_kind="ledger_iva_aggregation",
-                    resolver_id=self.resolver_id,
-                    message=issue.detail,
-                )
-                for issue in aggregation.issues
-                if issue.reason not in _IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS
+            + source_issue_diagnostics(
+                aggregation.issues,
+                source_kind="ledger_iva_aggregation",
+                resolver_id=self.resolver_id,
+                suppressed_reasons=_IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS,
             )
-            + tuple(
-                CalculationSourceDiagnostic(
-                    reason="unrouted_observation",
-                    source_kind="ledger_iva_aggregation",
-                    resolver_id=self.resolver_id,
-                    message=(
-                        f"declarable IVA observation {observation.ledger_id!r} "
-                        f"(category={observation.category.value!r}, rate_kind={observation.rate_kind.value!r}, "
-                        f"flow_direction={observation.flow_direction.value!r}) is not consumed by any "
-                        f"ledger_iva_aggregation binding on revision {context.revision.id!r}; "
-                        "its base/cuota is not declared on this calculation"
-                    ),
-                )
-                for observation in unconsumed
+            + _diagnostics_for(
+                unconsumed,
+                reason="unrouted_observation",
+                source_kind="ledger_iva_aggregation",
+                resolver_id=self.resolver_id,
+                message=lambda observation: (
+                    f"declarable IVA observation {observation.ledger_id!r} "
+                    f"(category={observation.category.value!r}, rate_kind={observation.rate_kind.value!r}, "
+                    f"flow_direction={observation.flow_direction.value!r}) is not consumed by any "
+                    f"ledger_iva_aggregation binding on revision {context.revision.id!r}; "
+                    "its base/cuota is not declared on this calculation"
+                ),
             )
-            + tuple(
-                CalculationSourceDiagnostic(
-                    reason="unrouted_declarable_quantity",
-                    source_kind="ledger_iva_aggregation",
-                    resolver_id=self.resolver_id,
-                    message=(
-                        f"{len(quantity.observations)} IVA row(s) carry {quantity.total} EUR of "
-                        f"{quantity.fact!r} in categories "
-                        f"{_residue_categories(quantity.observations)}, which no ledger_iva_aggregation "
-                        f"binding on revision {context.revision.id!r} draws for those categories; that "
-                        f"amount is not declared on this calculation. The rows themselves ARE consumed "
-                        f"for their other quantities, so no other screen reports them"
-                    ),
-                )
-                for quantity in unrouted_quantities
+            + _diagnostics_for(
+                unrouted_quantities,
+                reason="unrouted_declarable_quantity",
+                source_kind="ledger_iva_aggregation",
+                resolver_id=self.resolver_id,
+                message=lambda quantity: (
+                    f"{len(quantity.observations)} IVA row(s) carry {quantity.total} EUR of "
+                    f"{quantity.fact!r} in categories "
+                    f"{_residue_categories(quantity.observations)}, which no ledger_iva_aggregation "
+                    f"binding on revision {context.revision.id!r} draws for those categories; that "
+                    f"amount is not declared on this calculation. The rows themselves ARE consumed "
+                    f"for their other quantities, so no other screen reports them"
+                ),
             )
-            + tuple(
-                CalculationSourceDiagnostic(
-                    reason="structurally_unroutable_base_category",
-                    source_kind="ledger_iva_aggregation",
-                    resolver_id=self.resolver_id,
-                    message=(
-                        f"IVA category {category.value!r} appears on this period's ledger, and no "
-                        f"ledger_iva_aggregation binding on revision {context.revision.id!r} could ever draw "
-                        "its taxable base, for any row of that category -- not merely for the rows seen this "
-                        "period. Cuota is legitimately zero or already declared elsewhere for this category, "
-                        "so no tax is lost, but the base amount itself is not represented in this filing"
-                    ),
-                )
-                for category in unroutable_categories
+            + _diagnostics_for(
+                unroutable_categories,
+                reason="structurally_unroutable_base_category",
+                source_kind="ledger_iva_aggregation",
+                resolver_id=self.resolver_id,
+                message=lambda category: (
+                    f"IVA category {category.value!r} appears on this period's ledger, and no "
+                    f"ledger_iva_aggregation binding on revision {context.revision.id!r} could ever draw "
+                    "its taxable base, for any row of that category -- not merely for the rows seen this "
+                    "period. Cuota is legitimately zero or already declared elsewhere for this category, "
+                    "so no tax is lost, but the base amount itself is not represented in this filing"
+                ),
             ),
             provenance=(
-                tuple(
-                    CalculationSourceProvenance(
+                _provenance_for(
+                    aggregation.observations,
+                    lambda observation: CalculationSourceProvenance(
                         source_kind="ledger_iva_aggregation",
                         source_ref=f"transaction:{observation.ledger_id}",
-                    )
-                    for observation in aggregation.observations
+                    ),
                 )
-                + tuple(
-                    CalculationSourceProvenance(
+                + _provenance_for(
+                    aggregation.prorrata_references,
+                    lambda reference: CalculationSourceProvenance(
                         source_kind="ledger_iva_aggregation",
                         source_ref=f"prorrata:{reference.transaction_id}",
-                    )
-                    for reference in aggregation.prorrata_references
+                    ),
                 )
                 + _iva_prorrata_apportionment_provenance(
                     context.revision,
@@ -506,17 +509,13 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 context.revision,
                 aggregation.observations,
             ),
-            source_transaction_ids=tuple(
-                sorted(observation.transaction_id for observation in aggregation.observations),
+            source_transaction_ids=_sorted_ids(
+                aggregation.observations, lambda observation: observation.transaction_id
             ),
-            diagnostics=tuple(
-                CalculationSourceDiagnostic(
-                    reason="source_issue",
-                    source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
-                    resolver_id=self.resolver_id,
-                    message=issue.detail,
-                )
-                for issue in aggregation.issues
+            diagnostics=source_issue_diagnostics(
+                aggregation.issues,
+                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
+                resolver_id=self.resolver_id,
             )
             + tuple(
                 CalculationSourceDiagnostic(
@@ -535,10 +534,9 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 )
                 for observation in unrouted
             ),
-            provenance=tuple(
-                provenance
-                for observation in aggregation.observations
-                for provenance in _renta_observation_provenance(observation)
+            provenance=_flattened_provenance_for(
+                aggregation.observations,
+                _renta_observation_provenance,
             ),
         )
 
@@ -632,22 +630,18 @@ class LedgerRentaIncomeAggregationSourceResolver:
             owned_sources=self.owned_sources,
             binding_values=binding_values,
             bound_inputs_by_casilla_id=_m130_retenciones_backend_inputs(context, binding_values),
-            source_transaction_ids=tuple(
-                sorted(observation.transaction_id for observation in aggregation.observations),
+            source_transaction_ids=_sorted_ids(
+                aggregation.observations, lambda observation: observation.transaction_id
             ),
             diagnostics=_out_of_window_summary_diagnostics(
                 aggregation.out_of_window_summary,
                 source_kind="ledger_renta_income_aggregation",
                 resolver_id=self.resolver_id,
             )
-            + tuple(
-                CalculationSourceDiagnostic(
-                    reason="source_issue",
-                    source_kind="ledger_renta_income_aggregation",
-                    resolver_id=self.resolver_id,
-                    message=issue.detail,
-                )
-                for issue in aggregation.issues
+            + source_issue_diagnostics(
+                aggregation.issues,
+                source_kind="ledger_renta_income_aggregation",
+                resolver_id=self.resolver_id,
             )
             + tuple(
                 CalculationSourceDiagnostic(
@@ -695,12 +689,12 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 context.revision,
                 resolver_id=self.resolver_id,
             ),
-            provenance=tuple(
-                CalculationSourceProvenance(
+            provenance=_provenance_for(
+                aggregation.observations,
+                lambda observation: CalculationSourceProvenance(
                     source_kind="ledger_renta_income_aggregation",
                     source_ref=f"transaction:{observation.transaction_id}",
-                )
-                for observation in aggregation.observations
+                ),
             ),
         )
 
@@ -967,22 +961,18 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=binding_values,
-            source_transaction_ids=tuple(
-                sorted(observation.transaction_id for observation in aggregation.observations),
+            source_transaction_ids=_sorted_ids(
+                aggregation.observations, lambda observation: observation.transaction_id
             ),
             diagnostics=_out_of_window_summary_diagnostics(
                 aggregation.out_of_window_summary,
                 source_kind="ledger_impatriado_income_aggregation",
                 resolver_id=self.resolver_id,
             )
-            + tuple(
-                CalculationSourceDiagnostic(
-                    reason="source_issue",
-                    source_kind="ledger_impatriado_income_aggregation",
-                    resolver_id=self.resolver_id,
-                    message=issue.detail,
-                )
-                for issue in aggregation.issues
+            + source_issue_diagnostics(
+                aggregation.issues,
+                source_kind="ledger_impatriado_income_aggregation",
+                resolver_id=self.resolver_id,
             )
             + tuple(
                 CalculationSourceDiagnostic(
@@ -998,12 +988,12 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
                 )
                 for observation in unrouted
             ),
-            provenance=tuple(
-                CalculationSourceProvenance(
+            provenance=_provenance_for(
+                aggregation.observations,
+                lambda observation: CalculationSourceProvenance(
                     source_kind="ledger_impatriado_income_aggregation",
                     source_ref=f"transaction:{observation.transaction_id}",
-                )
-                for observation in aggregation.observations
+                ),
             ),
         )
 
@@ -1087,22 +1077,18 @@ class LedgerIrnrIncomeAggregationSourceResolver:
                 ),
             },
             detail_rows=_irnr_annual_agrupacion_renta_rows(context, aggregation.observations),
-            source_transaction_ids=tuple(
-                sorted(observation.transaction_id for observation in aggregation.observations),
+            source_transaction_ids=_sorted_ids(
+                aggregation.observations, lambda observation: observation.transaction_id
             ),
             diagnostics=_out_of_window_summary_diagnostics(
                 aggregation.out_of_window_summary,
                 source_kind="ledger_irnr_income_aggregation",
                 resolver_id=self.resolver_id,
             )
-            + tuple(
-                CalculationSourceDiagnostic(
-                    reason="source_issue",
-                    source_kind="ledger_irnr_income_aggregation",
-                    resolver_id=self.resolver_id,
-                    message=issue.detail,
-                )
-                for issue in aggregation.issues
+            + source_issue_diagnostics(
+                aggregation.issues,
+                source_kind="ledger_irnr_income_aggregation",
+                resolver_id=self.resolver_id,
             )
             + tuple(
                 CalculationSourceDiagnostic(
@@ -1119,12 +1105,12 @@ class LedgerIrnrIncomeAggregationSourceResolver:
                 )
                 for observation in unrouted
             ),
-            provenance=tuple(
-                CalculationSourceProvenance(
+            provenance=_provenance_for(
+                aggregation.observations,
+                lambda observation: CalculationSourceProvenance(
                     source_kind="ledger_irnr_income_aggregation",
                     source_ref=f"transaction:{observation.transaction_id}",
-                )
-                for observation in aggregation.observations
+                ),
             ),
         )
 
@@ -1210,22 +1196,18 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 context.revision,
                 aggregation.observations,
             ),
-            source_transaction_ids=tuple(
-                sorted(observation.transaction_id for observation in aggregation.observations),
+            source_transaction_ids=_sorted_ids(
+                aggregation.observations, lambda observation: observation.transaction_id
             ),
             diagnostics=_out_of_window_summary_diagnostics(
                 aggregation.out_of_window_summary,
                 source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
                 resolver_id=self.resolver_id,
             )
-            + tuple(
-                CalculationSourceDiagnostic(
-                    reason="source_issue",
-                    source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
-                    resolver_id=self.resolver_id,
-                    message=issue.detail,
-                )
-                for issue in aggregation.issues
+            + source_issue_diagnostics(
+                aggregation.issues,
+                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
+                resolver_id=self.resolver_id,
             )
             + tuple(
                 CalculationSourceDiagnostic(
@@ -1241,12 +1223,12 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 )
                 for observation in unrouted
             ),
-            provenance=tuple(
-                CalculationSourceProvenance(
+            provenance=_provenance_for(
+                aggregation.observations,
+                lambda observation: CalculationSourceProvenance(
                     source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
                     source_ref=f"transaction:{observation.transaction_id}",
-                )
-                for observation in aggregation.observations
+                ),
             ),
         )
 
@@ -1697,18 +1679,26 @@ def _invoice_line_iva_observation(
             deduction_authority=deduction_authority,
         )
     category = invoice.iva_category
-    declared_flow = _DECLARED_CATEGORY_BASE_ONLY_FLOWS.get(category) if category is not None else None
-    if category is not None and declared_flow is not None and invoice.kind is InvoiceKind.ISSUED:
-        return _declared_category_base_only_observation(
+    if category is None:
+        return _standard_invoice_line_iva_observation(
             ledger_id=ledger_id,
             invoice=invoice,
             line=line,
             devengo_date=devengo_date,
             recargo_amount=recargo_amount,
-            category=category,
-            flow_direction=declared_flow,
         )
-    if category is not None and category not in _BASE_ONLY_ROUTED_CATEGORIES:
+    declared_flow = _DECLARED_CATEGORY_BASE_ONLY_FLOWS.get(category)
+    if declared_flow is not None:
+        if invoice.kind is InvoiceKind.ISSUED:
+            return _declared_category_base_only_observation(
+                ledger_id=ledger_id,
+                invoice=invoice,
+                line=line,
+                devengo_date=devengo_date,
+                recargo_amount=recargo_amount,
+                category=category,
+                flow_direction=declared_flow,
+            )
         # The declared treatment wins over the rate slot, which is what the
         # bank-transaction path has always done and what this path did not. The
         # slot cannot express a reverse charge at all: the supplier charges
@@ -1738,7 +1728,7 @@ def _invoice_line_iva_observation(
             category=category,
             deduction_authority=deduction_authority,
         )
-    if category is None or category not in _BASE_ONLY_ROUTED_CATEGORIES:
+    if category not in _BASE_ONLY_ROUTED_CATEGORIES:
         # No declared treatment at all: the rate slot is the only signal there
         # is, and the standard-case classification is the right reading of it.
         # ``category is None`` is folded into this membership test rather than
@@ -1953,24 +1943,22 @@ def _category_counterparty_mismatch_diagnostics(
     category may be mis-tagged, or the counterparty country may be. The record
     does not know which, and guessing would point the operator at the wrong fix.
     """
-    return tuple(
-        CalculationSourceDiagnostic(
-            reason="invoice_category_counterparty_mismatch",
-            source_kind="ledger_iva_aggregation",
-            resolver_id=resolver_id,
-            source_ref=f"invoice:{invoice.invoice_id}",
-            message=(
-                f"invoice {invoice.invoice_number!r} declares "
-                f"{invoice.iva_category.value if invoice.iva_category else 'no category'} but its "
-                f"counterparty country {invoice.counterparty_country!r} cannot bear it, so its base "
-                "is NOT declared on this modelo"
-            ),
-            remedy=(
-                "Correct either the invoice's IVA category or its counterparty country so the two "
-                "agree, then recalculate so the operation reaches its casilla"
-            ),
-        )
-        for invoice in invoices
+    return _diagnostics_for(
+        invoices,
+        reason="invoice_category_counterparty_mismatch",
+        source_kind="ledger_iva_aggregation",
+        resolver_id=resolver_id,
+        source_ref=lambda invoice: f"invoice:{invoice.invoice_id}",
+        message=lambda invoice: (
+            f"invoice {invoice.invoice_number!r} declares "
+            f"{invoice.iva_category.value if invoice.iva_category else 'no category'} but its "
+            f"counterparty country {invoice.counterparty_country!r} cannot bear it, so its base "
+            "is NOT declared on this modelo"
+        ),
+        remedy=lambda _invoice: (
+            "Correct either the invoice's IVA category or its counterparty country so the two "
+            "agree, then recalculate so the operation reaches its casilla"
+        ),
     )
 
 
@@ -1988,24 +1976,22 @@ def _reverse_charge_underivable_diagnostics(
     about whether an invoice line may carry a rated slot with a zero cuota needs
     in order to be made on evidence.
     """
-    return tuple(
-        CalculationSourceDiagnostic(
-            reason="invoice_reverse_charge_cuota_not_derivable",
-            source_kind="ledger_iva_aggregation",
-            resolver_id=resolver_id,
-            source_ref=f"invoice:{invoice.invoice_id}",
-            message=(
-                f"invoice {invoice.invoice_number!r} declares "
-                f"{invoice.iva_category.value if invoice.iva_category else 'no category'}, so the "
-                "recipient owes the self-assessed cuota, but no line states a rated tier to compute "
-                "it from -- the cuota is NOT declared on this modelo"
-            ),
-            remedy=(
-                "Record the rate the supply bore on the invoice line, keeping its cuota at zero, "
-                "then recalculate so the self-assessment reaches its casilla"
-            ),
-        )
-        for invoice in invoices
+    return _diagnostics_for(
+        invoices,
+        reason="invoice_reverse_charge_cuota_not_derivable",
+        source_kind="ledger_iva_aggregation",
+        resolver_id=resolver_id,
+        source_ref=lambda invoice: f"invoice:{invoice.invoice_id}",
+        message=lambda invoice: (
+            f"invoice {invoice.invoice_number!r} declares "
+            f"{invoice.iva_category.value if invoice.iva_category else 'no category'}, so the "
+            "recipient owes the self-assessed cuota, but no line states a rated tier to compute "
+            "it from -- the cuota is NOT declared on this modelo"
+        ),
+        remedy=lambda _invoice: (
+            "Record the rate the supply bore on the invoice line, keeping its cuota at zero, "
+            "then recalculate so the self-assessment reaches its casilla"
+        ),
     )
 
 
@@ -2028,23 +2014,21 @@ def _missing_invoice_deduction_authority_diagnostics(
     the ledger does NOT carry it the guard refuses outright and this diagnostic
     is never reached.
     """
-    return tuple(
-        CalculationSourceDiagnostic(
-            reason="source_issue",
-            source_kind="ledger_iva_aggregation",
-            resolver_id=resolver_id,
-            source_ref=f"invoice:{invoice.invoice_id}",
-            message=(
-                f"received invoice {invoice.invoice_number!r} carries IVA input evidence but no exact "
-                "deduction fact kind or immutable evidence provenance, so it is declared from the "
-                "transaction ledger rather than from the invoice"
-            ),
-            remedy=(
-                "Link this invoice to its classified ledger transaction, so its deduction family and "
-                "evidence provenance are recorded against the operation"
-            ),
-        )
-        for invoice in invoices
+    return _diagnostics_for(
+        invoices,
+        reason="source_issue",
+        source_kind="ledger_iva_aggregation",
+        resolver_id=resolver_id,
+        source_ref=lambda invoice: f"invoice:{invoice.invoice_id}",
+        message=lambda invoice: (
+            f"received invoice {invoice.invoice_number!r} carries IVA input evidence but no exact "
+            "deduction fact kind or immutable evidence provenance, so it is declared from the "
+            "transaction ledger rather than from the invoice"
+        ),
+        remedy=lambda _invoice: (
+            "Link this invoice to its classified ledger transaction, so its deduction family and "
+            "evidence provenance are recorded against the operation"
+        ),
     )
 
 
@@ -2689,12 +2673,12 @@ class RetencionesAggregationSourceResolver:
             owned_sources=self.owned_sources,
             binding_values=resolve_retenciones_aggregation_binding_values(context.revision, aggregation),
             diagnostics=administrador_retencion_rate_advisory_observations(observations),
-            provenance=tuple(
-                CalculationSourceProvenance(
+            provenance=_provenance_for(
+                aggregation.rollups,
+                lambda rollup: CalculationSourceProvenance(
                     source_kind="retenciones_aggregation",
                     source_ref=f"perceptor:{rollup.perceptor_nif}",
-                )
-                for rollup in aggregation.rollups
+                ),
             ),
         )
 

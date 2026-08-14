@@ -19,7 +19,7 @@ for declared binding sources without an enrolled resolver.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -707,6 +707,78 @@ class CalculationSourceProvenance(BaseModel):
         ):
             raise SourceMeshError("aggregation.source_mesh.errors.relation_provenance_incomplete")
         return self
+
+
+class _SourceIssue(Protocol):
+    @property
+    def reason(self) -> object: ...
+
+    @property
+    def detail(self) -> str: ...
+
+
+def _no_source_text(_: object) -> None:
+    return None
+
+
+def source_diagnostics_for[T](
+    items: Iterable[T],
+    *,
+    reason: CalculationSourceDiagnosticReason,
+    source_kind: str,
+    resolver_id: str | None,
+    message: Callable[[T], str],
+    source_ref: Callable[[T], str | None] = _no_source_text,
+    remedy: Callable[[T], str | None] = _no_source_text,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Project repeated source facts through the diagnostic contract."""
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason=reason,
+            source_kind=source_kind,
+            resolver_id=resolver_id,
+            source_ref=source_ref(item),
+            message=message(item),
+            remedy=remedy(item),
+        )
+        for item in items
+    )
+
+
+def source_issue_diagnostics(
+    issues: Sequence[_SourceIssue],
+    *,
+    source_kind: str,
+    resolver_id: str,
+    suppressed_reasons: frozenset[object] = frozenset(),
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Project typed aggregation issues, optionally excluding known non-advisories."""
+    return source_diagnostics_for(
+        (issue for issue in issues if issue.reason not in suppressed_reasons),
+        reason="source_issue",
+        source_kind=source_kind,
+        resolver_id=resolver_id,
+        message=lambda issue: issue.detail,
+    )
+
+
+def source_provenance_for[T](
+    items: Iterable[T], project: Callable[[T], CalculationSourceProvenance]
+) -> tuple[CalculationSourceProvenance, ...]:
+    """Project one provenance record for each source fact."""
+    return tuple(project(item) for item in items)
+
+
+def flatten_source_provenance_for[T](
+    items: Iterable[T], project: Callable[[T], Iterable[CalculationSourceProvenance]]
+) -> tuple[CalculationSourceProvenance, ...]:
+    """Flatten source facts that contribute more than one provenance record."""
+    return tuple(provenance for item in items for provenance in project(item))
+
+
+def sorted_source_ids[T](items: Iterable[T], project: Callable[[T], str]) -> tuple[str, ...]:
+    """Return stable identifiers for a source collection."""
+    return tuple(sorted(project(item) for item in items))
 
 
 class BorradorSourceProvenance(BaseModel):

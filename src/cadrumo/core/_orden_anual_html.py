@@ -20,19 +20,20 @@ from bs4 import BeautifulSoup, Tag
 _ACTIVITY_MARKER = "cuota devengada anual por unidad"
 _AGRICULTURAL_INDEX_MARKER = "índice de cuota devengada por operaciones corrientes"
 _ACTIVITY_HEADING_RE = re.compile(
-    r"Actividad:\s*(.+?)(?=\s+Ep[ií]grafe\s+I\.A\.E\.?|\s+M[oó]dulo|$)",
+    r"Actividad:\s*(.+?)(?=\s+Ep[ií]grafe\s+I\.?A\.?E\.?\s*:?|\s+M[oó]dulo|$)",
     re.I,
 )
-_AGRICULTURAL_ACTIVITY_RE = re.compile(r"^Actividad:\s*(.+?)\.?$", re.I)
-_AGRICULTURAL_INDEX_RE = re.compile(
+AGRICULTURAL_ACTIVITY_RE = re.compile(r"^Actividad:\s*(.+?)\.?$", re.I)
+AGRICULTURAL_INDEX_RE = re.compile(
     r"^Índice de cuota devengada por operaciones corrientes:\s*([0-9]+(?:,[0-9]+)?)\.?$",
     re.I,
 )
-_IAE_HEADING_RE = re.compile(r"Ep[ií]grafe\s+I\.A\.E\.?\s*:?\s*(.+?)(?=\s+M[oó]dulo|$)", re.I)
+_IAE_HEADING_RE = re.compile(r"Ep[ií]grafe\s+I\.?A\.?E\.?\s*:?\s*(.+?)(?=\s+M[oó]dulo|$)", re.I)
 _MINIMUM_QUOTA_RE = re.compile(
     r"Cuota m[ií]nima por operaciones corrientes:\s*(\d+(?:,\d+)?)\s*%\s+de la cuota devengada",
     re.I,
 )
+_MODULE_ORDER_RE = re.compile(r"(?P<order>[1-7])\.?$")
 _SEASONAL_INDEX_RE = re.compile(
     r"(?:Hasta\s+(?P<until_60>60)\s+d[ií]as de temporada|"
     r"De\s+(?P<from_61>61)\s+a\s+(?P<until_120>120)\s+d[ií]as de temporada|"
@@ -40,7 +41,7 @@ _SEASONAL_INDEX_RE = re.compile(
     r"\s*:\s*(?P<coefficient>[0-9]+(?:,[0-9]+)?)\.?",
     re.I,
 )
-_DIFFICULT_JUSTIFICATION_RE = re.compile(
+DIFFICULT_JUSTIFICATION_RE = re.compile(
     r"ser[aá]\s+deducible\s+el\s+(?P<percentage>[0-9]+)\s+por\s+ciento.*?"
     r"cuotas soportadas.*?dif[ií]cil justificaci[oó]n",
     re.I,
@@ -128,6 +129,15 @@ class OrdenAnualIvaDifficultJustification:
 
 
 @dataclass(frozen=True, slots=True)
+class OrdenAnualIvaLorca2022Reduction:
+    """The source-stated Annex-II Lorca reduction for the 2022 IVA regime."""
+
+    municipality: Literal["Lorca"]
+    percentage: Decimal
+    required_text: tuple[str, str, str]
+
+
+@dataclass(frozen=True, slots=True)
 class OrdenAnualIvaAuthority:
     """Complete annual-Orden IVA simplified-regime source IR for one exercise."""
 
@@ -137,6 +147,7 @@ class OrdenAnualIvaAuthority:
     agricultural_ingresos_a_cuenta: tuple[OrdenAnualIvaAgriculturalIngresoACuenta, ...]
     seasonal_indexes: tuple[OrdenAnualIvaSeasonalIndex, ...]
     difficult_justification: OrdenAnualIvaDifficultJustification
+    lorca_2022_reduction: OrdenAnualIvaLorca2022Reduction | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -155,6 +166,7 @@ def extract_orden_anual_iva_authority(markup: bytes, *, source_label: str) -> Or
         extract_agricultural_indexes,
         extract_difficult_justification,
         extract_ingresos_a_cuenta,
+        extract_lorca_2022_reduction,
     )
 
     soup = BeautifulSoup(markup, "lxml")
@@ -182,6 +194,7 @@ def extract_orden_anual_iva_authority(markup: bytes, *, source_label: str) -> Or
         agricultural_ingresos_a_cuenta=agricultural_ingresos_a_cuenta,
         seasonal_indexes=seasonal_indexes,
         difficult_justification=difficult_justification,
+        lorca_2022_reduction=extract_lorca_2022_reduction(soup, source_label=source_label),
     )
 
 
@@ -251,6 +264,15 @@ def orden_anual_iva_authority_units(authority: OrdenAnualIvaAuthority) -> tuple[
             ),
         ),
     )
+    if authority.lorca_2022_reduction is not None:
+        units.append(
+            OrdenAnualIvaAuthorityUnit(
+                anchor="#m303-da-4-lorca-2022-reduction",
+                title="Reducción Lorca 2022 de cuota devengada IVA",
+                section="Disposición adicional cuarta · IVA",
+                text="\n".join(authority.lorca_2022_reduction.required_text),
+            ),
+        )
     return tuple(units)
 
 
@@ -267,20 +289,20 @@ def orden_anual_iva_activity_anchors(
 
 
 def _is_annual_iva_quota_table(table: Tag) -> bool:
-    return _ACTIVITY_MARKER in _normalise_html_text(table.get_text(" ", strip=True)).casefold()
+    return _ACTIVITY_MARKER in normalise_html_text(table.get_text(" ", strip=True)).casefold()
 
 
 def _is_agricultural_index_table(table: Tag) -> bool:
-    return _AGRICULTURAL_INDEX_MARKER in _normalise_html_text(table.get_text(" ", strip=True)).casefold()
+    return _AGRICULTURAL_INDEX_MARKER in normalise_html_text(table.get_text(" ", strip=True)).casefold()
 
 
 def _extract_activity_table(table: Tag, *, source_label: str) -> OrdenAnualIvaActivityTable:
-    annex_heading = _annex_heading(table)
+    annex_heading = annex_heading_for(table)
     if annex_heading != "ANEXO II":
         raise OrdenAnualHtmlParseError(
             f"annual Orden source {source_label!r} non-agricultural quota table is not scoped by ANEXO II",
         )
-    table_text = _normalise_html_text(table.get_text(" ", strip=True))
+    table_text = normalise_html_text(table.get_text(" ", strip=True))
     activity_name, iae_epigrafe = _extract_activity_identity(table, table_text, source_label=source_label)
     footer_text, cuota_minima_pct = _extract_minimum_quota(table, source_label=source_label)
     modules = _extract_modules(table, source_label=source_label)
@@ -304,7 +326,7 @@ def _extract_seasonal_indexes(soup: BeautifulSoup, *, source_label: str) -> tupl
     matches = tuple(
         (match, text)
         for tag in soup.find_all(["p", "li"])
-        if (text := _normalise_html_text(tag.get_text(" ", strip=True)))
+        if (text := normalise_html_text(tag.get_text(" ", strip=True)))
         for match in _SEASONAL_INDEX_RE.finditer(text)
     )
     if len(matches) != 3:
@@ -325,7 +347,11 @@ def _extract_seasonal_indexes(soup: BeautifulSoup, *, source_label: str) -> tupl
             OrdenAnualIvaSeasonalIndex(
                 minimum_days=minimum_days,
                 maximum_days=maximum_days,
-                coefficient=_decimal(match.group("coefficient"), source_label=source_label, context="seasonal index"),
+                coefficient=parse_decimal(
+                    match.group("coefficient"),
+                    source_label=source_label,
+                    context="seasonal index",
+                ),
                 required_text=text,
             ),
         )
@@ -344,14 +370,18 @@ def _extract_activity_identity(table: Tag, table_text: str, *, source_label: str
 
 
 def _extract_minimum_quota(table: Tag, *, source_label: str) -> tuple[str, Decimal]:
-    footer = table.find("tfoot")
-    footer_text = _normalise_html_text(" ".join(footer.stripped_strings)) if footer is not None else ""
-    minimum_quota_match = _MINIMUM_QUOTA_RE.search(footer_text)
-    if minimum_quota_match is None:
+    matches = tuple(
+        (text, match)
+        for row in table.find_all("tr")
+        if (text := normalise_html_text(row.get_text(" ", strip=True)))
+        if (match := _MINIMUM_QUOTA_RE.search(text)) is not None
+    )
+    if len(matches) != 1:
         raise OrdenAnualHtmlParseError(
             f"annual Orden source {source_label!r} quota table lacks a numeric cuota mínima footer",
         )
-    return footer_text, _decimal(
+    footer_text, minimum_quota_match = matches[0]
+    return footer_text, parse_decimal(
         minimum_quota_match.group(1), source_label=source_label, context="cuota mínima percentage"
     )
 
@@ -360,7 +390,11 @@ def _extract_modules(table: Tag, *, source_label: str) -> tuple[OrdenAnualIvaMod
     body = table.find("tbody")
     if body is None:
         raise OrdenAnualHtmlParseError(f"annual Orden source {source_label!r} quota table has no module body")
-    modules = tuple(_extract_module_row(row, source_label=source_label) for row in body.find_all("tr", recursive=False))
+    modules = tuple(
+        module
+        for row in body.find_all("tr", recursive=False)
+        for module in _extract_module_rows(row, source_label=source_label)
+    )
     if tuple(module.order for module in modules) != tuple(range(1, len(modules) + 1)):
         raise OrdenAnualHtmlParseError(
             f"annual Orden source {source_label!r} has incomplete or unordered module rows",
@@ -368,33 +402,47 @@ def _extract_modules(table: Tag, *, source_label: str) -> tuple[OrdenAnualIvaMod
     return modules
 
 
-def _extract_module_row(row: Tag, *, source_label: str) -> OrdenAnualIvaModule:
-    values = _row_values(row, expected_cells=4, source_label=source_label, context="module")
-    try:
-        order = int(values[0])
-    except ValueError as exc:
+def _extract_module_rows(row: Tag, *, source_label: str) -> tuple[OrdenAnualIvaModule, ...]:
+    cells = tuple(row.find_all(["td", "th"], recursive=False))
+    if len(cells) != 4:
+        return ()
+    columns = tuple(tuple(normalise_html_text(value) for value in cell.stripped_strings) for cell in cells)
+    if columns[0] == ("Módulo",):
+        return ()
+    lengths = {len(column) for column in columns}
+    if len(lengths) != 1 or not columns[0]:
+        raise OrdenAnualHtmlParseError(
+            f"annual Orden source {source_label!r} module row has incomplete column values",
+        )
+    return tuple(_module_from_values(values, source_label=source_label) for values in zip(*columns, strict=True))
+
+
+def _module_from_values(values: tuple[str, str, str, str], *, source_label: str) -> OrdenAnualIvaModule:
+    order_match = _MODULE_ORDER_RE.fullmatch(values[0])
+    if order_match is None:
         raise OrdenAnualHtmlParseError(
             f"annual Orden source {source_label!r} module order is not a numeric first cell",
-        ) from exc
+        )
+    order = int(order_match.group("order"))
     return OrdenAnualIvaModule(
         order=order,
         definition=values[1],
         unit=values[2],
-        coefficient=_decimal(values[3], source_label=source_label, context="module coefficient", thousands=True),
+        coefficient=parse_decimal(values[3], source_label=source_label, context="module coefficient", thousands=True),
         required_text=" ".join(values),
     )
 
 
-def _row_values(row: Tag, *, expected_cells: int, source_label: str, context: str) -> tuple[str, ...]:
+def row_values(row: Tag, *, expected_cells: int, source_label: str, context: str) -> tuple[str, ...]:
     cells = tuple(row.find_all(["td", "th"], recursive=False))
     if len(cells) != expected_cells:
         raise OrdenAnualHtmlParseError(
             f"annual Orden source {source_label!r} has a {context} row with {len(cells)} cells",
         )
-    return tuple(_normalise_html_text(cell.get_text(" ", strip=True)) for cell in cells)
+    return tuple(normalise_html_text(cell.get_text(" ", strip=True)) for cell in cells)
 
 
-def _decimal(value: str, *, source_label: str, context: str, thousands: bool = False) -> Decimal:
+def parse_decimal(value: str, *, source_label: str, context: str, thousands: bool = False) -> Decimal:
     normalised = value.replace("%", "").strip()
     if thousands:
         normalised = normalised.replace(".", "")
@@ -406,9 +454,9 @@ def _decimal(value: str, *, source_label: str, context: str, thousands: bool = F
         ) from exc
 
 
-def _percent(value: str, *, source_label: str, context: str) -> Decimal:
+def parse_percent(value: str, *, source_label: str, context: str) -> Decimal:
     """Parse a source percentage through the annual-Orden decimal authority."""
-    return _decimal(value, source_label=source_label, context=context)
+    return parse_decimal(value, source_label=source_label, context=context)
 
 
 def _activity_heading_from_text(text: str) -> tuple[str | None, str | None]:
@@ -422,14 +470,14 @@ def _activity_heading_from_text(text: str) -> tuple[str | None, str | None]:
     )
 
 
-def _annex_heading(tag: Tag) -> str:
+def annex_heading_for(tag: Tag) -> str:
     heading = tag.find_previous(
         lambda candidate: (
             candidate.name in {"h1", "h2", "h3", "h4", "h5", "h6"}
-            and "anexo_num" in candidate.get_attribute_list("class")
+            and bool({"anexo_num", "anexo"}.intersection(candidate.get_attribute_list("class")))
         ),
     )
-    return _normalise_html_text(heading.get_text(" ", strip=True)) if heading is not None else ""
+    return normalise_html_text(heading.get_text(" ", strip=True)) if heading is not None else ""
 
 
 def _activity_heading_from_preceding_siblings(table: Tag) -> tuple[str | None, str | None]:
@@ -439,7 +487,7 @@ def _activity_heading_from_preceding_siblings(table: Tag) -> tuple[str | None, s
             continue
         if sibling.name == "table":
             break
-        preceding_text = f"{_normalise_html_text(sibling.get_text(' ', strip=True))} {preceding_text}"
+        preceding_text = f"{normalise_html_text(sibling.get_text(' ', strip=True))} {preceding_text}"
         activity_name, iae_epigrafe = _activity_heading_from_text(preceding_text)
         if activity_name is not None and iae_epigrafe is not None:
             return activity_name, iae_epigrafe
@@ -471,7 +519,7 @@ def _semantic_slug(value: str) -> str:
     return compact
 
 
-def _normalise_html_text(value: str) -> str:
+def normalise_html_text(value: str) -> str:
     return _SPACE_RE.sub(" ", value).strip()
 
 
@@ -484,6 +532,7 @@ __all__ = [
     "OrdenAnualIvaAuthorityUnit",
     "OrdenAnualIvaDifficultJustification",
     "OrdenAnualIvaIngresoACuenta",
+    "OrdenAnualIvaLorca2022Reduction",
     "OrdenAnualIvaModule",
     "OrdenAnualIvaSeasonalIndex",
     "extract_orden_anual_iva_authority",

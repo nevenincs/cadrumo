@@ -27,31 +27,48 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 @pytest.mark.parametrize(
-    ("ejercicio", "source_ref", "expected_digest", "expected_agricultural_axis_count"),
     (
+        "ejercicio",
+        "source_ref",
+        "expected_digest",
+        "expected_agricultural_axis_count",
+        "expects_lorca_2022_reduction",
+    ),
+    (
+        (
+            2022,
+            "boe-orden-hfp-1335-2021-iva-authority",
+            "29f6edf412129634c9cf16a9a60aede5fe0f962a8489e8e6f2efe7bd0e104c5a",
+            16,
+            True,
+        ),
         (
             2023,
             "boe-orden-hfp-1172-2022-iva-authority",
             "1cab2ef540868ec0d5344d8e801ac6c52b5ee27c1aefb794ca7c0330df693957",
             16,
+            False,
         ),
         (
             2024,
             "boe-orden-hfp-1359-2023-iva-authority",
             "e403d33762cc7353ca3f752820df71244291217aeb35309d5e383f166cde49a5",
             16,
+            False,
         ),
         (
             2025,
             "boe-orden-hac-1347-2024-iva-authority",
             "fca55fa51ca1b68e4b8098ebfc4749e4d5f9daac880112d35085352df46c8165",
             17,
+            False,
         ),
         (
             2026,
             "boe-orden-hac-1425-2025-iva-authority",
             "7762218c63fcc914dfc5ed532d6c0daa3b21f506427c924b93eb2698527d3ac8",
             17,
+            False,
         ),
     ),
 )
@@ -60,6 +77,7 @@ def test_pinned_boe_orden_compiler_extracts_the_complete_annual_iva_catalogue(
     source_ref: str,
     expected_digest: str,
     expected_agricultural_axis_count: int,
+    expects_lorca_2022_reduction: bool,
 ) -> None:
     """Each pinned BOE source supplies all 49 tables and 141 module rows."""
     _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
@@ -91,6 +109,15 @@ def test_pinned_boe_orden_compiler_extracts_the_complete_annual_iva_catalogue(
         (121, 180, Decimal("1.25")),
     )
     assert census.difficult_justification.percentage == 1
+    if expects_lorca_2022_reduction:
+        assert census.lorca_2022_reduction is not None
+        assert census.lorca_2022_reduction.municipality == "Lorca"
+        assert census.lorca_2022_reduction.percentage == 20
+        assert "anexo II de esta Orden" in census.lorca_2022_reduction.required_text[1]
+        assert "cuota trimestral" in census.lorca_2022_reduction.required_text[2]
+        assert "cuota anual" in census.lorca_2022_reduction.required_text[2]
+    else:
+        assert census.lorca_2022_reduction is None
     assert (
         sha256(
             json.dumps(
@@ -294,6 +321,168 @@ def test_resolved_annual_orden_snapshot_carries_source_derived_identity_and_mini
     assert activity.cuota_minima_pct == 20
 
 
+def test_2022_snapshot_carries_lorca_authority_and_crosswalk_refusal_with_exact_sources() -> None:
+    """The 2022 snapshot keeps the available reduction separate from the unavailable crosswalk."""
+    registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2022, period="4T")
+    resolved = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=registry_snapshot,
+        scope_decision=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
+    )
+
+    assert resolved.record_design.id == "aeat-dr-303-2022"
+    reduction = resolved.orden.lorca_2022_reduction
+    assert reduction is not None
+    assert reduction.percentage == Decimal("20")
+    assert reduction.annex_scope == "ANEXO II"
+    assert reduction.calculation_periods == ("trimestral", "anual")
+    assert reduction.legal_refs == ("orden-hfp-1335-2021:da-4-lorca-2022-reduction:lorca-2022-reduction",)
+    assert reduction.source_refs == ("boe-orden-hfp-1335-2021-iva-authority",)
+    assert reduction.source_content_digest == "3fda96dcf2dcb3b3f0863bc07b0eabd45e21c6850d4b611e635627befb450c46"
+
+    agricultural = resolved.orden.agricultural_authority
+    assert agricultural.status == "official_code_crosswalk_unavailable"
+    assert agricultural.filing_record == "DP30302"
+    assert agricultural.filing_code_digits == 2
+    assert agricultural.annual_orden_source_ref == "boe-orden-hfp-1335-2021-iva-authority"
+    assert agricultural.record_design_source_ref == "aeat-dr-303-2022"
+    assert agricultural.record_design_source_content_digest == (
+        "6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60"
+    )
+    assert agricultural.refusal_reason == "annual_orden_does_not_publish_dp30302_two_digit_agricultural_crosswalk"
+
+
+def test_2022_snapshot_refuses_lorca_authority_with_a_drifted_source_reference() -> None:
+    """The available Lorca rate cannot survive without its exact BOE source identity."""
+    registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2022, period="4T")
+    resolved = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=registry_snapshot,
+        scope_decision=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
+    )
+    payload = resolved.orden.model_dump(mode="python")
+    assert payload["lorca_2022_reduction"] is not None
+    payload["lorca_2022_reduction"]["source_refs"] = ("boe-orden-unrelated",)
+
+    with pytest.raises(ValidationError, match="exact HFP/1335 source reference"):
+        type(resolved.orden).model_validate(payload)
+
+
+def test_2022_snapshot_refuses_a_stripped_lorca_authority_from_the_real_envelope() -> None:
+    """The exact 2022 public snapshot is incomplete when its available reduction is removed."""
+    registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2022, period="4T")
+    resolved = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=registry_snapshot,
+        scope_decision=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
+    )
+    payload = resolved.orden.model_dump(mode="python")
+    payload["lorca_2022_reduction"] = None
+
+    with pytest.raises(ValidationError, match="2022 snapshot lacks its Lorca reduction authority"):
+        type(resolved.orden).model_validate(payload)
+
+
+def test_2025_snapshot_refuses_an_injected_lorca_authority_from_the_real_2022_envelope() -> None:
+    """The one-year Lorca authority cannot be copied into another annual snapshot."""
+    scope_decision = M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+    )
+    resolved_2022 = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=resources().modelos.authority.snapshot("303", filing_year=2022, period="4T"),
+        scope_decision=scope_decision,
+    )
+    resolved_2025 = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=resources().modelos.authority.snapshot("303", filing_year=2025, period="4T"),
+        scope_decision=scope_decision,
+    )
+    payload = resolved_2025.orden.model_dump(mode="python")
+    reduction = resolved_2022.orden.lorca_2022_reduction
+    assert reduction is not None
+    payload["lorca_2022_reduction"] = reduction.model_dump(mode="python")
+
+    with pytest.raises(ValidationError, match="only the 2022 annual Orden snapshot may carry the Lorca reduction"):
+        type(resolved_2025.orden).model_validate(payload)
+
+
+def test_2022_snapshot_refuses_coordinated_lorca_parent_and_child_source_drift() -> None:
+    """A coordinated parent/child rewrite cannot replace the HFP/1335 Lorca authority."""
+    registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2022, period="4T")
+    resolved = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=registry_snapshot,
+        scope_decision=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
+    )
+    payload = resolved.model_dump(mode="python")
+    payload["orden"]["source_ref"] = "boe-orden-hfp-1172-2022-iva-authority"
+    payload["orden"]["source_content_digest"] = "3ba48312e1ae6b939de017dbcf9a34d25559594ccbc14a6da14492af87755abb"
+    assert payload["orden"]["lorca_2022_reduction"] is not None
+    payload["orden"]["lorca_2022_reduction"]["legal_refs"] = (
+        "orden-hfp-1172-2022:da-4-lorca-2022-reduction:lorca-2022-reduction",
+    )
+    payload["orden"]["lorca_2022_reduction"]["source_refs"] = ("boe-orden-hfp-1172-2022-iva-authority",)
+    payload["orden"]["lorca_2022_reduction"]["source_content_digest"] = (
+        "3ba48312e1ae6b939de017dbcf9a34d25559594ccbc14a6da14492af87755abb"
+    )
+
+    with pytest.raises(ValidationError, match="exact HFP/1335 legal reference"):
+        type(resolved).model_validate(payload)
+
+
+def test_2022_snapshot_refuses_coordinated_record_design_parent_and_child_drift() -> None:
+    """The crosswalk refusal cannot move with a substituted record-design envelope."""
+    registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2022, period="4T")
+    resolved = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=registry_snapshot,
+        scope_decision=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
+    )
+    other_snapshot = resources().modelos.authority.snapshot("303", filing_year=2023, period="4T")
+    other_resolved = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=other_snapshot,
+        scope_decision=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
+    )
+    payload = resolved.model_dump(mode="python")
+    payload["record_design"] = other_resolved.record_design.model_dump(mode="python")
+    payload["orden"]["agricultural_authority"]["record_design_source_ref"] = other_resolved.record_design.id
+    payload["orden"]["agricultural_authority"]["record_design_source_content_digest"] = (
+        other_resolved.record_design.sha256
+    )
+
+    with pytest.raises(ValidationError, match="exact AEAT design source"):
+        type(resolved).model_validate(payload)
+
+
+def test_snapshot_refuses_cross_envelope_filing_year_and_record_design_drift() -> None:
+    """The public snapshot retains one filing-year/revision/record-design coordinate."""
+    registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="4T")
+    resolved = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=registry_snapshot,
+        scope_decision=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
+    )
+    year_payload = resolved.model_dump(mode="python")
+    year_payload["filing_year"] = 2026
+    with pytest.raises(ValidationError, match="filing year and revision coordinate"):
+        type(resolved).model_validate(year_payload)
+
+    record_design_payload = resolved.model_dump(mode="python")
+    record_design_payload["orden"]["agricultural_authority"]["record_design_source_ref"] = "aeat-dr-303-2022"
+    record_design_payload["orden"]["agricultural_authority"]["record_design_source_content_digest"] = (
+        "6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60"
+    )
+    with pytest.raises(ValidationError, match="resolved record-design source"):
+        type(resolved).model_validate(record_design_payload)
+
+
 def test_generated_directory_refuses_an_extra_toml_file(tmp_path: Path) -> None:
     """A parallel hand-authored taxonomy cannot coexist with the generated manifest."""
     _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
@@ -320,12 +509,29 @@ def test_generated_annual_orden_legal_ids_cover_every_compiled_source_axis() -> 
         sources=catalogues.sources,
     )
 
-    assert len(compilation.legal) == 536
-    assert any(":anexo-i-iva-index:" in legal_ref_id for legal_ref_id in compilation.legal)
-    assert any(":anexo-i-iva-ingreso-a-cuenta:" in legal_ref_id for legal_ref_id in compilation.legal)
-    assert any(":anexo-ii-iva-ingreso-a-cuenta:" in legal_ref_id for legal_ref_id in compilation.legal)
-    assert any(":iva-indice-temporada:" in legal_ref_id for legal_ref_id in compilation.legal)
-    assert any(":iva-dificil-justificacion-agricola:" in legal_ref_id for legal_ref_id in compilation.legal)
+    axis_legal_refs_by_source: dict[str, tuple[str, ...]] = {}
+    for projection in compilation.authority.projections:
+        axis_legal_refs = tuple(
+            legal_ref
+            for legal_refs in (
+                *(activity.legal_refs for activity in projection.activities),
+                *(item.legal_refs for item in projection.agricultural_authority.quota_indexes),
+                *(item.legal_refs for item in projection.agricultural_authority.ingreso_a_cuenta_percentages),
+                *(item.legal_refs for item in projection.non_agricultural_ingresos_a_cuenta),
+                *(item.legal_refs for item in projection.seasonal_indexes),
+                projection.difficult_justification.legal_refs,
+                (() if projection.lorca_2022_reduction is None else projection.lorca_2022_reduction.legal_refs),
+            )
+            for legal_ref in legal_refs
+        )
+        assert len(axis_legal_refs) == len(set(axis_legal_refs))
+        existing = axis_legal_refs_by_source.setdefault(projection.source_ref, axis_legal_refs)
+        assert existing == axis_legal_refs
+
+    assert set().union(*(set(axis_legal_refs) for axis_legal_refs in axis_legal_refs_by_source.values())) == set(
+        compilation.legal
+    )
+    assert "orden-hfp-1335-2021:da-4-lorca-2022-reduction:lorca-2022-reduction" in compilation.legal
     for source in compilation.authority.projections:
         corpus_path = bundled_path() / catalogues.sources[source.source_ref].corpus_path
         assert "#m303-anexo-i-iva-" in corpus_path.with_name(corpus_path.name + ".extracted.json").read_text(
