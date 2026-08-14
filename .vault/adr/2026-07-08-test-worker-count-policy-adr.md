@@ -1,15 +1,15 @@
 ---
 tags:
-  - '#adr'
-  - '#test-worker-count-policy'
+  - "#adr"
+  - "#test-worker-count-policy"
 date: '2026-07-08'
-modified: '2026-07-17'
-body_hash: 'sha256:03246b3ab5e9441c99a6db6202ed63db3871a628927c71628888df7dee64a7f8'
 related:
-  - '[[2026-07-10-test-worker-count-policy-research]]'
+  - "[[2026-07-10-test-worker-count-policy-research]]"
+superseded_by: '2026-08-14-test-harness-sanity-successor-adr'
+modified: '2026-08-14'
+body_hash: 'sha256:d94113d69ceaf8b394a98f1169b3338f8edbc30a652cddad20278e8cfa39e86c'
 ---
-
-# `test-worker-count-policy` adr: `cap pytest-xdist workers via the native env var, operator-set, never a blanket default` | (**status:** `accepted`)
+# `test-worker-count-policy` adr: `cap pytest-xdist workers via the native env var, operator-set, never a blanket default` | (**status:** `superseded`)
 
 ## Problem Statement
 
