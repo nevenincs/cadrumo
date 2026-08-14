@@ -10,7 +10,7 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.workflow import workflow_state_repository
+from ....application.workflow import WorkflowState, workflow_state_repository
 from ....core import Period
 from ....domain.modelos import (
     ModeloCode,
@@ -37,9 +37,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         open_test_profile_session(_PROFILE_ID),
     ):
         try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id=_PROFILE_ID),
-            )
+            register_minimal_profile(WorkflowState(), profile_id=_PROFILE_ID)
             yield
         finally:
             dispose_engine()

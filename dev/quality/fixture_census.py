@@ -178,6 +178,10 @@ class FixtureRecord:
     #: default exists for records built directly in tests, where a fixture that
     #: was never classified is by definition not a scaffold.
     body_performs_no_work: bool = False
+    #: Digest of what the body's imported names actually RESOLVE to. An AST dump
+    #: records the local name, so two bodies calling different functions that
+    #: happen to share a name dump identically; this is what separates them.
+    body_symbol_origins_sha256: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -234,18 +238,22 @@ class FixtureCensus:
     @property
     def aliased_behaviours(self) -> tuple[AliasedBehaviour, ...]:
         """Return every fixture body reached through more than one name."""
-        by_body: dict[str, list[FixtureRecord]] = {}
+        by_body: dict[tuple[str, str], list[FixtureRecord]] = {}
         for record in self.fixtures:
             if record.body_performs_no_work:
                 continue
-            by_body.setdefault(record.normalized_body_sha256, []).append(record)
+            # Keyed on the body AND on what its imported names resolve to: an
+            # AST dump records the local name, so two bodies calling different
+            # functions that share a name are otherwise indistinguishable.
+            key = (record.normalized_body_sha256, record.body_symbol_origins_sha256)
+            by_body.setdefault(key, []).append(record)
         return tuple(
             AliasedBehaviour(
                 body_sha256=body,
                 effective_names=tuple(sorted({record.effective_name for record in group})),
                 sites=tuple(sorted(f"{record.path}:{record.line}" for record in group)),
             )
-            for body, group in sorted(by_body.items())
+            for (body, _origins), group in sorted(by_body.items())
             if len({record.effective_name for record in group}) > 1
         )
 
@@ -388,6 +396,38 @@ def _resolve_import_module(module: str, path: Path, node: ast.ImportFrom) -> str
     if node.module:
         return f"{target}.{node.module}" if target else node.module
     return target or None
+
+
+def _module_symbol_origins(tree: ast.Module, path: Path, root: Path) -> dict[str, str]:
+    """Map each imported name in a module to the module that provides it.
+
+    Two fixture bodies can dump to identical AST while calling entirely
+    different functions, because the dump records the local NAME and not what
+    that name resolves to. Two censuses in this tree do exactly that: one body
+    calls a CLI-action census and another a tax-id respelling census, both
+    spelled ``census("HEAD")`` and both imported from different modules. Without
+    origins they group as one behaviour, which is a false positive that costs a
+    reviewer a real investigation.
+    """
+    module = _module_name(path, root)
+    origins: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            provider = _resolve_import_module(module, path, node)
+            if provider is None:
+                continue
+            for alias in node.names:
+                origins[alias.asname or alias.name] = f"{provider}.{alias.name}"
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                origins[alias.asname or alias.name] = alias.name
+    return origins
+
+
+def _body_symbol_origins(body: list[ast.stmt], origins: dict[str, str]) -> tuple[tuple[str, str], ...]:
+    """Return the resolved origin of every imported name this body references."""
+    referenced = {node.id for statement in body for node in ast.walk(statement) if isinstance(node, ast.Name)}
+    return tuple(sorted((name, origins[name]) for name in referenced if name in origins))
 
 
 def iter_source_files(repo_root: Path = REPO_ROOT) -> tuple[Path, ...]:
@@ -686,6 +726,7 @@ class _ModuleVisitor(ast.NodeVisitor):
         self.path = path
         self.root = root
         self.pytest_modules, self.fixture_aliases = _pytest_bindings(tree)
+        self.symbol_origins = _module_symbol_origins(tree, path, root)
         self.fixtures: list[_FixtureDraft] = []
         self.functions: list[_FunctionFact] = []
         self.dynamic_fixture_requests: list[DynamicFixtureRequest] = []
@@ -799,6 +840,10 @@ class _ModuleVisitor(ast.NodeVisitor):
                 include_attributes=False,
             )
             body_performs_no_work = _performs_no_work(executable_body)
+            symbol_origins = _body_symbol_origins(executable_body, self.symbol_origins)
+            body_symbol_origins_sha256 = hashlib.sha256(
+                json.dumps(symbol_origins, sort_keys=True).encode(_UTF_8),
+            ).hexdigest()
             record = FixtureRecord(
                 path=relative,
                 line=node.lineno,
@@ -817,6 +862,7 @@ class _ModuleVisitor(ast.NodeVisitor):
                 consumers=(),
                 autouse_reach=(),
                 body_performs_no_work=body_performs_no_work,
+                body_symbol_origins_sha256=body_symbol_origins_sha256,
             )
             self.fixtures.append(
                 _FixtureDraft(

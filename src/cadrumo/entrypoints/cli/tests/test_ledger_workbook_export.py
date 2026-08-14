@@ -36,7 +36,7 @@ def _invoke(args: Sequence[str]) -> Result:
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    from ....application.workflow import workflow_state_repository
+    from ....application.workflow import WorkflowState
 
     dispose_engine()
     with (
@@ -45,9 +45,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         open_test_profile_session("00000000-0000-4000-8000-000000000000"),
     ):
         try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000")
-            )
+            register_minimal_profile(WorkflowState(), profile_id="00000000-0000-4000-8000-000000000000")
             yield
         finally:
             dispose_engine()

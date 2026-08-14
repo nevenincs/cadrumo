@@ -51,7 +51,7 @@ from ....application.modelo import (
     ensure_recipient_encryption_keypair,
     recipient_encryption_public_key,
 )
-from ....application.workflow import workflow_state_repository
+from ....application.workflow import WorkflowState
 from ....core import STR_KEYED_MAPPING_ADAPTER, CasillaId, validated_casilla_id
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import UserProfileFact
@@ -85,9 +85,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         open_test_profile_session(_BUCKET_ID),
     ):
         try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID),
-            )
+            register_minimal_profile(WorkflowState(), profile_id=_BUCKET_ID)
             yield
         finally:
             dispose_engine()

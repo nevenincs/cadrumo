@@ -155,7 +155,32 @@ class ProfileRecordRepository:
         expected_content_digest: str,
         now: datetime | None = None,
     ) -> UserProfileRecord:
-        """CAS-complete setup; the lifecycle owns the physical replacement."""
+        """CAS-complete setup; the lifecycle owns the physical replacement.
+
+        Judged through the same authority every fact-writing door uses, but at
+        the strictest setting the authority offers. A profile born incomplete
+        defers exactly the missing-required-field issues, and this promotion is
+        the moment they come due: COMPLETE is not a label for a record that has
+        stopped being edited, it is the CLAIM that nothing required is missing.
+        Promoting without re-applying them publishes that claim about a record
+        that does not support it, and every downstream surface reading setup
+        state then trusts it -- which is why this door judges harder than the
+        doors that merely write a fact, rather than the same amount.
+
+        The already-COMPLETE early return above stays ahead of the judgement on
+        purpose: it is an idempotent no-op that publishes nothing, so holding it
+        to a contract a stored record may predate would refuse a caller that
+        changes no state.
+
+        Raises:
+            ProfileNotFoundError: When the bound session does not serve
+                ``profile_id``.
+            ProfileRecordConflictError: When the compare-and-swap fails.
+            ProfileSchemaValidationError: When the record does not satisfy the
+                complete-profile contract it is being promoted into.
+        """
+        from ._validation import reject_invalid_profile_facts
+
         identity = UUID(str(profile_id))
         if identity != self._session.profile_id:
             raise ProfileNotFoundError("profile record session does not serve the requested UUID")
@@ -164,6 +189,7 @@ class ProfileRecordRepository:
             raise ProfileRecordConflictError("profile record revision compare-and-swap failed")
         if current.setup_state is ProfileSetupState.COMPLETE:
             return current
+        reject_invalid_profile_facts(str(identity), current.facts, require_complete=True)
         occurred_at = (now or datetime.now(UTC)).astimezone(UTC)
         replacement = UserProfileRecord(
             schema_id=current.schema_id,

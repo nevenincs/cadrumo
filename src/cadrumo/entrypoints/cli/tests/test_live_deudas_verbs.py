@@ -20,7 +20,7 @@ from click.testing import Result
 
 from ....adapters.outbound.aeat.sede import Deuda
 from ....application.live import DeudasCapture, DeudasService
-from ....application.workflow import workflow_state_repository
+from ....application.workflow import WorkflowState
 from ....core import DeudaDireccion, ObjetoTributario, Period
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
@@ -42,7 +42,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         override_settings(cadrumo_live_state_dir=tmp_path / "probe-live-state"),
         open_test_profile_session(_BUCKET),
     ):
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_BUCKET))
+        register_minimal_profile(WorkflowState(), profile_id=_BUCKET)
         yield
 
 

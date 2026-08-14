@@ -57,17 +57,24 @@ and ``zeroise``, none of which a provider-family name list contains, so a
 name-only gate passes it at any scan width.
 
 The NAME net catches what the module net structurally cannot see: a reach that
-never names the package at all.  ``diagnostics.py`` and ``repair_integrity.py``
-import the provider from the ``storage`` package facade, so no module path in
-their source mentions ``master_key`` and only the symbol identifies where the
-import resolves to.  These are the reaches that most directly instantiate what
-this module forbids, and the module net reports every one of them clean.
+imports the provider from the ``storage`` package facade, where no module path
+in the source mentions ``master_key`` and only the symbol identifies where the
+import resolves to.  ``auth/_sessions.py``, ``diagnostics.py`` and
+``repair_integrity.py`` were all built that way, and the module net reported
+every one of them clean.
 
-``auth/_sessions.py`` stood beside them until it stopped reaching at all.  It
-read the active profile's Cl@ve credentials by opening a shared-master session
-whenever no per-profile one was live; that branch is gone and the read now
-degrades to the settings surface, which is what the function already did with
-no active profile.  Its declaration expired with it.
+**The name net now matches nothing in the application layer, and that is the
+result rather than a reason to retire it.**  All three opened a shared-master
+session whenever no per-profile one served the bucket: to read the active
+profile's Cl@ve credentials, to print a storage-health report, and to probe
+secure-object decryptability.  Each now works from the session the operator
+already holds, and answers honestly without one -- empty facts and the settings
+surface, a warn row carrying the profile-health verdict, and the substrate's
+readiness refusal.  Their declarations expired with the reaches.
+
+A net that currently matches nothing is exactly what an absence gate looks like
+when it has succeeded; it stays because the shape it forbids is one import away
+from returning, and because a name list is the only thing that would see it.
 
 A dotted module path handed to :func:`importlib.import_module` is a string, so
 an AST walk over ``ImportFrom``/``Attribute``/``Name`` cannot see it, and the
@@ -184,12 +191,12 @@ _DECLARED_OPEN_VIOLATIONS: dict[str, _OpenViolation] = {
     ),
     "diagnostics.py": _OpenViolation(
         reason=(
-            "The storage-health probe reports custody readiness by resolving the "
-            "process-wide provider; it must read the per-profile capsule's "
-            "enrolment state instead.  Its session-error import follows the "
-            "surviving substrate out of the shared-master package."
+            "The storage-health probe no longer resolves the process-wide provider "
+            "to read secure state; what remains is its session-error import, which "
+            "follows the surviving session substrate out of the shared-master "
+            "package as the per-profile capsule takes over composition."
         ),
-        reaches=frozenset({"get_master_key_provider", _MASTER_KEY_PACKAGE}),
+        reaches=frozenset({_MASTER_KEY_PACKAGE}),
     ),
     "profile_custody/__init__.py": _OpenViolation(
         reason=(
@@ -203,14 +210,6 @@ _DECLARED_OPEN_VIOLATIONS: dict[str, _OpenViolation] = {
             "one static import of the master-key module."
         ),
         reaches=frozenset({_MASTER_KEY_PACKAGE}),
-    ),
-    "repair_integrity.py": _OpenViolation(
-        reason=(
-            "Integrity repair unlocks records through the process-wide provider "
-            "context; it must run inside an authenticated per-profile bucket "
-            "session instead."
-        ),
-        reaches=frozenset({"get_master_key_provider"}),
     ),
     "user_profile/_bundle_encryption.py": _OpenViolation(
         reason=(

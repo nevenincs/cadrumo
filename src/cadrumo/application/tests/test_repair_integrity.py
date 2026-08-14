@@ -21,6 +21,7 @@ import pytest
 from ...adapters.persistence.storage import (
     REPAIR_INTEGRITY_DECISION_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
+    StorageValidationError,
     has_active_bucket_session,
     suspend_active_session,
 )
@@ -203,7 +204,24 @@ class TestBuildListReport:
             {row.object_key_digest for row in default.rows},
         )
 
-    def test_list_opens_active_bucket_session_for_bootstrap_exempt_repair(self, tmp_path: Path) -> None:
+    def test_list_refuses_without_a_session_instead_of_listing_a_sound_row_as_unreadable(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """The list surface opens no session of its own, so it refuses without one.
+
+        It used to enter the shared-master provider when no per-profile session
+        served the bucket, which unlocked a taxpayer's records with no password
+        to satisfy a diagnostic.  Without that branch the substrate answers, and
+        its readiness refusal is the right answer: every row is undecryptable
+        without the bucket key, so a report produced keyless would call a sound
+        bucket corrupt -- and the quarantine verb moves exactly the rows a probe
+        calls unreadable.
+
+        The served read above the suspension is the anti-tautology half: it
+        proves the row is present and decrypts, so the refusal below is the
+        missing key and not a missing row.
+        """
         with isolated_runtime_profile(tmp_path=tmp_path):
             assert WORKFLOW_STATE_NAMESPACE.default_object_key is not None
             secure_object_repository_for_active_bucket().save(
@@ -214,12 +232,16 @@ class TestBuildListReport:
                 written_at=_BOOTSTRAP_WRITTEN_AT,
                 payload=b"repair-list-sessionless",
             )
+            served = build_repair_list_report(namespace="cadrumo.workflow")
             with suspend_active_session():
                 assert not has_active_bucket_session()
-                report = build_repair_list_report(namespace="cadrumo.workflow")
+                with pytest.raises(StorageValidationError) as refusal:
+                    build_repair_list_report(namespace="cadrumo.workflow")
 
-        assert report.rows_total == 1
-        assert report.integrity.readable + report.integrity.unreadable == 1
+        assert served.rows_total == 1
+        assert served.integrity.readable == 1
+        assert served.integrity.unreadable == 0
+        assert refusal.value.translated_message == "errors.storage.runtime.not_ready"
 
     def test_list_refuses_when_both_flags_passed(self) -> None:
         with (

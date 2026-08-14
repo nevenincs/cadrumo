@@ -38,6 +38,7 @@ from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.user_profile import ProfileSetupState, UserProfileFact
+from ._capsule_record import ProfileRecordConflictError
 from ._profile_record_repository import ProfileRecordRepository
 from ._validation import reject_invalid_profile_facts
 
@@ -315,7 +316,16 @@ def apply_cotejo(
             "divergence_count": str(len(divergences)),
         },
     )
-    assert replacement.record_revision == record.record_revision + 1
+    if replacement.record_revision != record.record_revision + 1:
+        # A bare assert here was stripped under optimised interpretation and,
+        # when it did run, reached the operator as an AssertionError carrying
+        # nothing to act on. The invariant is worth keeping -- a commit that
+        # did not advance the revision by exactly one means the record this
+        # cotejo published is not the one it read -- so it is enforced as a
+        # typed refusal on a filing-adjacent write path instead.
+        raise ProfileRecordConflictError(
+            "cotejo apply did not advance the profile record by exactly one revision",
+        )
     return state
 
 

@@ -53,15 +53,29 @@ BUCKET_ID = "7390a6bb-5577-4e08-8518-16e6292f690f"
 PERIOD_2025_1T = Period.from_year_and_code(2025, "1T")
 FILED_JUSTIFICANTE_STORAGE_REF = "secure-object:financial:" + "d" * 64
 OBSERVED_CASILLA: CasillaId = validated_casilla_id("01", surface="overview calendar observed casilla")
-#: Naming the revision an observation is stamped with is revision SELECTION, resolved
-#: from the filing scope by law. It is not a filing operation, so it is read through
-#: the non-filing inspection: a filing-grade snapshot would additionally demand
-#: operator review of a revision no calendar test ever files.
-OBSERVED_REVISION_ID = str(
-    resources()
-    .modelos.authority.inspect_revision("303", filing_year=2025, period=PERIOD_2025_1T.registry_token)
-    .revision_id,
-)
+
+
+@cache
+def observed_revision_id() -> str:
+    """Return the law-determined revision an observation is stamped with.
+
+    Naming that revision is revision SELECTION, resolved from the filing scope
+    by law. It is not a filing operation, so it is read through the non-filing
+    inspection: a filing-grade snapshot would additionally demand operator
+    review of a revision no calendar test ever files.
+
+    Resolved on first use rather than at import. Loading the registry authority
+    is expensive and can fail on material unrelated to any caller, and doing it
+    while the module is still importing makes that failure a COLLECTION error
+    for every module that imports this one -- including modules that never touch
+    a revision id. As a module-level constant this reached four test modules
+    that only wanted the shared taxpayer persona.
+    """
+    return str(
+        resources()
+        .modelos.authority.inspect_revision("303", filing_year=2025, period=PERIOD_2025_1T.registry_token)
+        .revision_id,
+    )
 
 
 @cache
@@ -221,13 +235,13 @@ def calculation_observation_payload(
             observation=observation,
             captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
             source_kind=source_kind,
-            stamped_revision_id=OBSERVED_REVISION_ID,
+            stamped_revision_id=observed_revision_id(),
         )
     return ObservationEnvelopePayload(
         observation=observation,
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind=source_kind,
-        stamped_revision_id=OBSERVED_REVISION_ID,
+        stamped_revision_id=observed_revision_id(),
         source_metadata=source_metadata,
     )
 

@@ -102,16 +102,209 @@ def test_bracket_quoted_object_key_path_parses() -> None:
     )
 
 
-def test_unterminated_quoted_key_path_is_refused() -> None:
-    body = '@result aeat app modelo verify\n@expect result.x["abc == 1\n'
+@pytest.mark.parametrize(
+    ("body", "expected_substring"),
+    [
+        pytest.param(
+            '@result aeat app modelo verify\n@expect result.x["abc == 1\n',
+            "is not a valid dotted path",
+            id="unterminated_quoted_key_path",
+        ),
+        pytest.param(
+            '@result aeat app modelo verify\n@expect result.x["a"b"] == 1\n',
+            "is not a valid dotted path",
+            id="embedded_double_quote_in_key_path",
+        ),
+        pytest.param(
+            "aeat app modelo create 303 --year 2026 --period 1T\n",
+            "exactly one @result frame; found none",
+            id="zero_result_frames",
+        ),
+        pytest.param(
+            "@result aeat app modelo verify\n"
+            '@expect result.status == "verified_complete"\n'
+            "@result aeat app modelo view\n"
+            '@expect result.status == "verified_complete"\n',
+            "exactly one @result frame; found 2",
+            id="multiple_result_frames",
+        ),
+        pytest.param(
+            '@result aeat app modelo verify\n@expect result.status == "verified_complete"\naeat app modelo view\n',
+            "must be the last EXECUTED frame",
+            id="non_terminal_result_frame",
+        ),
+        pytest.param(
+            "aeat app modelo calculate {work_unit_id}\n"
+            "@result aeat app modelo verify\n"
+            '@expect result.status == "verified_complete"\n',
+            "does not resolve to an earlier @capture",
+            id="unresolved_placeholder",
+        ),
+        pytest.param(
+            # The capture is produced by frame 1's output, so it is not available
+            # to frame 1's own argv -- only to strictly-later frames.
+            "aeat app modelo calculate {work_unit_id}\n"
+            "@capture work_unit_id result.work_unit_id\n"
+            "@result aeat app modelo verify\n"
+            '@expect result.status == "verified_complete"\n',
+            "does not resolve to an earlier @capture",
+            id="placeholder_cannot_reference_its_own_frame_capture",
+        ),
+        pytest.param(
+            "aeat app modelo create 303\n"
+            "```bash\n"
+            "@result aeat app modelo verify\n"
+            '@expect result.status == "verified_complete"\n',
+            "nested code fences",
+            id="nested_fence",
+        ),
+        pytest.param(
+            'ls -la\n@result aeat app modelo verify\n@expect result.status == "verified_complete"\n',
+            "unrecognised line",
+            id="plain_non_aeat_line_is_unrecognised",
+        ),
+        pytest.param(
+            "@result ls -la\n",
+            "must invoke 'aeat'",
+            id="sigil_frame_must_invoke_aeat",
+        ),
+        pytest.param(
+            "@capture work_unit_id result.work_unit_id\n"
+            "@result aeat app modelo verify\n"
+            '@expect result.status == "verified_complete"\n',
+            "@capture must follow a command frame",
+            id="capture_before_any_frame",
+        ),
+        pytest.param(
+            "@result aeat app modelo verify\n@expect result.status verified\n",
+            "@expect must be '@expect <json-path> == <literal>'",
+            id="malformed_expect_without_operator",
+        ),
+        pytest.param(
+            "@result aeat app modelo verify\n@expect result.status == verified_complete\n",
+            "must be a JSON literal",
+            id="unquoted_expect_string_literal",
+        ),
+        pytest.param(
+            "aeat app modelo create 303\n"
+            "@capture work_unit_id result.work_unit_id\n"
+            "aeat app modelo calculate {work_unit_id}\n"
+            "@capture work_unit_id result.work_unit_id\n"
+            "@result aeat app modelo verify {work_unit_id}\n"
+            '@expect result.status == "verified_complete"\n',
+            "duplicate @capture name",
+            id="duplicate_capture_name",
+        ),
+        pytest.param(
+            "@teardown aeat app modelo delete\n"
+            "@result aeat app modelo verify\n"
+            '@expect result.status == "verified_complete"\n',
+            "unknown sigil",
+            id="unknown_sigil",
+        ),
+        pytest.param(
+            "aeat app modelo calculate {1bad}\n"
+            "@result aeat app modelo verify\n"
+            '@expect result.status == "verified_complete"\n',
+            "invalid placeholder",
+            id="invalid_placeholder_shape",
+        ),
+        pytest.param(
+            # M1: an unterminated ``{work_unit_id`` would otherwise survive as a
+            # literal argv token with no problem raised.
+            "aeat app modelo create 303\n"
+            "@capture work_unit_id result.work_unit_id\n"
+            "aeat app modelo calculate {work_unit_id\n"
+            "@result aeat app modelo verify\n"
+            '@expect result.status == "verified_complete"\n',
+            "unbalanced placeholder brace",
+            id="unbalanced_placeholder_brace",
+        ),
+        pytest.param(
+            "aeat app modelo calculate value}\n"
+            "@result aeat app modelo verify\n"
+            '@expect result.status == "verified_complete"\n',
+            "unbalanced placeholder brace",
+            id="stray_closing_brace",
+        ),
+    ],
+)
+def test_refuses(body: str, expected_substring: str) -> None:
     problems = _problems(body)
-    assert any("is not a valid dotted path" in problem for problem in problems)
+    assert any(expected_substring in problem for problem in problems)
 
 
-def test_embedded_double_quote_in_key_path_is_refused() -> None:
-    body = '@result aeat app modelo verify\n@expect result.x["a"b"] == 1\n'
+@pytest.mark.parametrize(
+    ("body", "expected_substring_a", "expected_substring_b"),
+    [
+        pytest.param(
+            "@result aeat app modelo verify\n",
+            "at least one",
+            "@expect",
+            id="result_without_expect",
+        ),
+        pytest.param(
+            # M3: exit_code is an integer exit status.
+            '@result aeat app modelo verify\n@expect exit_code == "nope"\n',
+            "exit_code",
+            "integer literal",
+            id="non_int_exit_code_expect",
+        ),
+        pytest.param(
+            # A bool is an int subclass in Python but is not an exit code.
+            "@result aeat app modelo verify\n@expect exit_code == true\n",
+            "exit_code",
+            "integer literal",
+            id="bool_exit_code_expect",
+        ),
+        pytest.param(
+            # L1: the diagnostic points at the offending @capture line (line 4),
+            # not the frame's command line.
+            "aeat app modelo create 303\n"
+            "@capture work_unit_id result.work_unit_id\n"
+            "aeat app modelo calculate {work_unit_id}\n"
+            "@capture work_unit_id result.work_unit_id\n"
+            "@result aeat app modelo verify {work_unit_id}\n"
+            '@expect result.status == "verified_complete"\n',
+            "line 4",
+            "duplicate @capture name",
+            id="duplicate_capture_diagnostic_locates_the_capture_line",
+        ),
+        pytest.param(
+            "aeat app modelo create 303 --year 2026 --period 1T\n"
+            "@result aeat app modelo verify\n"
+            "@expect exit_code == 0\n"
+            "@step This attaches to nothing.\n",
+            "line 4",
+            "trailing @step",
+            id="trailing_step_with_no_following_frame",
+        ),
+        pytest.param(
+            "@step\n"
+            "aeat app modelo create 303 --year 2026 --period 1T\n"
+            "@result aeat app modelo verify\n"
+            "@expect exit_code == 0\n",
+            "line 1",
+            "@step requires one imperative sentence",
+            id="empty_step_sentence",
+        ),
+        pytest.param(
+            # '0abc' is neither an identifier nor an all-digit object key.
+            "aeat app modelo create 303 --year 2026 --period 1T\n"
+            "@result aeat app modelo verify\n@expect result.0abc == 1\n",
+            "not a valid dotted path",
+            "0abc",
+            id="mixed_alnum_starting_with_digit_is_still_refused",
+        ),
+    ],
+)
+def test_refuses_with_two_substrings(
+    body: str,
+    expected_substring_a: str,
+    expected_substring_b: str,
+) -> None:
     problems = _problems(body)
-    assert any("is not a valid dotted path" in problem for problem in problems)
+    assert any(expected_substring_a in problem and expected_substring_b in problem for problem in problems)
 
 
 def test_setup_frame_is_classified_and_argv_decomposed() -> None:
@@ -168,136 +361,6 @@ def test_whitespace_only_verify_is_refused() -> None:
     assert any(":verify: option is required" in problem for problem in problems)
 
 
-def test_zero_result_frames_is_refused() -> None:
-    body = "aeat app modelo create 303 --year 2026 --period 1T\n"
-    problems = _problems(body)
-    assert any("exactly one @result frame; found none" in problem for problem in problems)
-
-
-def test_multiple_result_frames_is_refused() -> None:
-    body = (
-        "@result aeat app modelo verify\n"
-        '@expect result.status == "verified_complete"\n'
-        "@result aeat app modelo view\n"
-        '@expect result.status == "verified_complete"\n'
-    )
-    problems = _problems(body)
-    assert any("exactly one @result frame; found 2" in problem for problem in problems)
-
-
-def test_non_terminal_result_frame_is_refused() -> None:
-    body = '@result aeat app modelo verify\n@expect result.status == "verified_complete"\naeat app modelo view\n'
-    problems = _problems(body)
-    assert any("must be the last EXECUTED frame" in problem for problem in problems)
-
-
-def test_result_without_expect_is_refused() -> None:
-    body = "@result aeat app modelo verify\n"
-    problems = _problems(body)
-    assert any("at least one" in problem and "@expect" in problem for problem in problems)
-
-
-def test_unresolved_placeholder_is_refused() -> None:
-    body = (
-        "aeat app modelo calculate {work_unit_id}\n"
-        "@result aeat app modelo verify\n"
-        '@expect result.status == "verified_complete"\n'
-    )
-    problems = _problems(body)
-    assert any("does not resolve to an earlier @capture" in problem for problem in problems)
-
-
-def test_placeholder_cannot_reference_its_own_frame_capture() -> None:
-    # The capture is produced by frame 1's output, so it is not available to
-    # frame 1's own argv -- only to strictly-later frames.
-    body = (
-        "aeat app modelo calculate {work_unit_id}\n"
-        "@capture work_unit_id result.work_unit_id\n"
-        "@result aeat app modelo verify\n"
-        '@expect result.status == "verified_complete"\n'
-    )
-    problems = _problems(body)
-    assert any("does not resolve to an earlier @capture" in problem for problem in problems)
-
-
-def test_nested_fence_is_refused() -> None:
-    body = (
-        "aeat app modelo create 303\n"
-        "```bash\n"
-        "@result aeat app modelo verify\n"
-        '@expect result.status == "verified_complete"\n'
-    )
-    problems = _problems(body)
-    assert any("nested code fences" in problem for problem in problems)
-
-
-def test_plain_non_aeat_line_is_unrecognised() -> None:
-    body = 'ls -la\n@result aeat app modelo verify\n@expect result.status == "verified_complete"\n'
-    problems = _problems(body)
-    assert any("unrecognised line" in problem for problem in problems)
-
-
-def test_sigil_frame_must_invoke_aeat() -> None:
-    body = "@result ls -la\n"
-    problems = _problems(body)
-    assert any("must invoke 'aeat'" in problem for problem in problems)
-
-
-def test_capture_before_any_frame_is_refused() -> None:
-    body = (
-        "@capture work_unit_id result.work_unit_id\n"
-        "@result aeat app modelo verify\n"
-        '@expect result.status == "verified_complete"\n'
-    )
-    problems = _problems(body)
-    assert any("@capture must follow a command frame" in problem for problem in problems)
-
-
-def test_malformed_expect_without_operator_is_refused() -> None:
-    body = "@result aeat app modelo verify\n@expect result.status verified\n"
-    problems = _problems(body)
-    assert any("@expect must be '@expect <json-path> == <literal>'" in problem for problem in problems)
-
-
-def test_unquoted_expect_string_literal_is_refused() -> None:
-    body = "@result aeat app modelo verify\n@expect result.status == verified_complete\n"
-    problems = _problems(body)
-    assert any("must be a JSON literal" in problem for problem in problems)
-
-
-def test_duplicate_capture_name_is_refused() -> None:
-    body = (
-        "aeat app modelo create 303\n"
-        "@capture work_unit_id result.work_unit_id\n"
-        "aeat app modelo calculate {work_unit_id}\n"
-        "@capture work_unit_id result.work_unit_id\n"
-        "@result aeat app modelo verify {work_unit_id}\n"
-        '@expect result.status == "verified_complete"\n'
-    )
-    problems = _problems(body)
-    assert any("duplicate @capture name" in problem for problem in problems)
-
-
-def test_unknown_sigil_is_refused() -> None:
-    body = (
-        "@teardown aeat app modelo delete\n"
-        "@result aeat app modelo verify\n"
-        '@expect result.status == "verified_complete"\n'
-    )
-    problems = _problems(body)
-    assert any("unknown sigil" in problem for problem in problems)
-
-
-def test_invalid_placeholder_shape_is_refused() -> None:
-    body = (
-        "aeat app modelo calculate {1bad}\n"
-        "@result aeat app modelo verify\n"
-        '@expect result.status == "verified_complete"\n'
-    )
-    problems = _problems(body)
-    assert any("invalid placeholder" in problem for problem in problems)
-
-
 def test_independent_faults_accumulate_in_one_pass() -> None:
     # A nested fence AND a missing @result AND a bad @expect literal -- all three
     # surface together, proving the parser does not abort on the first fault.
@@ -316,30 +379,6 @@ def test_independent_faults_accumulate_in_one_pass() -> None:
 
 
 # --- Review findings M1-M3, L1-L2 -------------------------------------------
-
-
-def test_unbalanced_placeholder_brace_is_refused() -> None:
-    # M1: an unterminated ``{work_unit_id`` would otherwise survive as a literal
-    # argv token with no problem raised.
-    body = (
-        "aeat app modelo create 303\n"
-        "@capture work_unit_id result.work_unit_id\n"
-        "aeat app modelo calculate {work_unit_id\n"
-        "@result aeat app modelo verify\n"
-        '@expect result.status == "verified_complete"\n'
-    )
-    problems = _problems(body)
-    assert any("unbalanced placeholder brace" in problem for problem in problems)
-
-
-def test_stray_closing_brace_is_refused() -> None:
-    body = (
-        "aeat app modelo calculate value}\n"
-        "@result aeat app modelo verify\n"
-        '@expect result.status == "verified_complete"\n'
-    )
-    problems = _problems(body)
-    assert any("unbalanced placeholder brace" in problem for problem in problems)
 
 
 def test_over_long_sequence_id_accumulates_not_raw_validation_error() -> None:
@@ -364,39 +403,10 @@ def test_over_long_verify_is_refused() -> None:
     assert any("at most 240 characters" in problem for problem in problems)
 
 
-def test_non_int_exit_code_expect_is_refused() -> None:
-    # M3: exit_code is an integer exit status.
-    body = '@result aeat app modelo verify\n@expect exit_code == "nope"\n'
-    problems = _problems(body)
-    assert any("exit_code" in problem and "integer literal" in problem for problem in problems)
-
-
-def test_bool_exit_code_expect_is_refused() -> None:
-    # A bool is an int subclass in Python but is not an exit code.
-    body = "@result aeat app modelo verify\n@expect exit_code == true\n"
-    problems = _problems(body)
-    assert any("exit_code" in problem and "integer literal" in problem for problem in problems)
-
-
 def test_int_exit_code_expect_is_accepted() -> None:
     body = "@result aeat app modelo verify\n@expect exit_code == 1\n"
     sequence = _parse(body)
     assert sequence.result_frame.expects[0].expected == 1
-
-
-def test_duplicate_capture_diagnostic_locates_the_capture_line() -> None:
-    # L1: the diagnostic points at the offending @capture line (line 4), not the
-    # frame's command line.
-    body = (
-        "aeat app modelo create 303\n"
-        "@capture work_unit_id result.work_unit_id\n"
-        "aeat app modelo calculate {work_unit_id}\n"
-        "@capture work_unit_id result.work_unit_id\n"
-        "@result aeat app modelo verify {work_unit_id}\n"
-        '@expect result.status == "verified_complete"\n'
-    )
-    problems = _problems(body)
-    assert any("line 4" in problem and "duplicate @capture name" in problem for problem in problems)
 
 
 def test_parser_regexes_are_derived_from_the_schema_constraints() -> None:
@@ -456,17 +466,6 @@ def test_step_prose_is_not_placeholder_scanned() -> None:
     assert sequence.frames[0].placeholder_names == ()
 
 
-def test_trailing_step_with_no_following_frame_is_refused() -> None:
-    body = (
-        "aeat app modelo create 303 --year 2026 --period 1T\n"
-        "@result aeat app modelo verify\n"
-        "@expect exit_code == 0\n"
-        "@step This attaches to nothing.\n"
-    )
-    problems = _problems(body)
-    assert any("line 4" in problem and "trailing @step" in problem for problem in problems)
-
-
 def test_two_step_lines_for_one_frame_are_refused() -> None:
     body = (
         "@step First description.\n"
@@ -478,17 +477,6 @@ def test_two_step_lines_for_one_frame_are_refused() -> None:
     problems = _problems(body)
     assert any("line 2" in problem and "one @step description" in problem for problem in problems)
     assert any("line 1" in problem for problem in problems)  # the unattached earlier line is named
-
-
-def test_empty_step_sentence_is_refused() -> None:
-    body = (
-        "@step\n"
-        "aeat app modelo create 303 --year 2026 --period 1T\n"
-        "@result aeat app modelo verify\n"
-        "@expect exit_code == 0\n"
-    )
-    problems = _problems(body)
-    assert any("line 1" in problem and "@step requires one imperative sentence" in problem for problem in problems)
 
 
 def test_over_long_step_sentence_is_refused() -> None:
@@ -517,15 +505,6 @@ def test_numeric_object_key_segments_are_accepted() -> None:
     calculate, result = sequence.frames
     assert calculate.captures == (CaptureBinding(name="net_yield", json_path="result.casilla_values.03"),)
     assert result.expects[0] == ExpectAssertion(json_path="result.casilla_values.01", expected="1000.00")
-
-
-def test_mixed_alnum_starting_with_digit_is_still_refused() -> None:
-    # '0abc' is neither an identifier nor an all-digit object key.
-    body = (
-        "aeat app modelo create 303 --year 2026 --period 1T\n@result aeat app modelo verify\n@expect result.0abc == 1\n"
-    )
-    problems = _problems(body)
-    assert any("not a valid dotted path" in problem and "0abc" in problem for problem in problems)
 
 
 # ---------------------------------------------------------------------------

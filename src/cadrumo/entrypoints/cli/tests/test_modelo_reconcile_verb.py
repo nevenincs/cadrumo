@@ -18,7 +18,7 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....application.workflow import workflow_state_repository
+from ....application.workflow import WorkflowState, workflow_state_repository
 from ....core import Period, validated_casilla_id
 from ....domain.modelos import (
     CalculationRevision,
@@ -57,12 +57,10 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session("11111111-1111-4111-8111-111111111111"),
     ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id="11111111-1111-4111-8111-111111111111",
-                overrides={"identity.tax_id": _FIXTURE_PROFILE_TAX_ID},
-            )
+        register_minimal_profile(
+            WorkflowState(),
+            profile_id="11111111-1111-4111-8111-111111111111",
+            overrides={"identity.tax_id": _FIXTURE_PROFILE_TAX_ID},
         )
         yield
 

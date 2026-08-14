@@ -33,7 +33,9 @@ from ....domain.user_profile import (
     ProfileSetupState,
     UserProfileFact,
     UserProfileRecord,
+    load_user_profile_schema,
 )
+from ....tests.user_profile import complete_profile_facts
 from .._capsule_record import ProfileRecordConflictError, ProfileRecordSession, ProfileRecordStore
 from .._custody_repository import profile_custody_transaction_lock
 from .._custody_transactions import ProfileCustodyTransactionConflictError
@@ -158,7 +160,16 @@ def test_complete_setup_cas_replaces_only_the_current_authenticated_record(tmp_p
         password_envelope=envelope,
         sentinel=sentinel,
         data_files=data_files,
-        initial_record=UserProfileRecord(profile_id=str(_PROFILE_ID), setup_state=ProfileSetupState.INCOMPLETE),
+        # The subject carries a complete answer set because promotion now
+        # judges the record against the contract COMPLETE claims. This test is
+        # about the compare-and-swap, so its subject has to be a record that
+        # promotion would legitimately accept; an empty one would fail here for
+        # the promotion door's reason rather than this test's.
+        initial_record=UserProfileRecord(
+            profile_id=str(_PROFILE_ID),
+            facts=complete_profile_facts(load_user_profile_schema()),
+            setup_state=ProfileSetupState.INCOMPLETE,
+        ),
         record_session=record_session,
     )
 

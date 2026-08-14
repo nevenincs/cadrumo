@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 from ..application.user_profile import conditional_profile_missing_required
 from ..application.user_profile._lifecycle import ProfileCapsuleLifecycle
+from ..application.user_profile._validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
 from ..application.workflow import WorkflowState
 from ..core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ..core.hashing import sha256_hex
@@ -33,6 +34,10 @@ if TYPE_CHECKING:
 
 
 _PLACEHOLDER_TAX_ID = f"12345678{nif_check_letter(12345678)}"
+
+#: Identity handed to the validator purely to read back its completeness
+#: report. Nothing is persisted under it.
+_COMPLETENESS_PROBE_PROFILE_ID = "00000000-0000-4000-8000-000000000000"
 _PLACEHOLDER_DATE = "1990-01-01"
 _PLACEHOLDER_BOOLEAN = "false"
 
@@ -135,4 +140,45 @@ def complete_conditional_facts(
     return tuple(completed)
 
 
-__all__ = ["complete_conditional_facts", "register_minimal_profile", "schema_valid_placeholder"]
+def complete_profile_facts(
+    schema: ProfileSchemaDefinition,
+    facts: Iterable[UserProfileFact] = (),
+) -> tuple[UserProfileFact, ...]:
+    """Return ``facts`` extended until the schema reports nothing required missing.
+
+    Built by asking the validation service what it still considers missing and
+    filling exactly that, repeatedly, rather than from a hand-listed set. A
+    literal list of required paths is a second authority for the schema's own
+    required flags: the moment the schema gains one, every profile assembled
+    from the literal is quietly short of complete while still calling itself
+    so, which is the failure this helper exists to keep out of tests about
+    completeness.
+
+    Unconditional and conditional requirements are filled together because
+    answering one can open the other -- declaring an IVA regime opens a block
+    of regime-conditional fields -- so a single pass would stop short.
+
+    Args:
+        schema: The loaded profile schema whose requirements are satisfied.
+        facts: Optional facts to start from; their values are preserved.
+    """
+    service = ProfileValidationService(schema=schema)
+    completed = list(facts)
+    fields = {f"{section.key}.{field.key}": field for section in schema.sections for field in section.fields}
+    for _ in range(len(fields) + 1):
+        report = service.validate_facts(_COMPLETENESS_PROBE_PROFILE_ID, completed)
+        missing = tuple(
+            issue.path for issue in report.issues if issue.code in COMPLETENESS_ISSUE_CODES and issue.path in fields
+        )
+        if not missing:
+            return tuple(completed)
+        completed.extend(UserProfileFact(path=path, value=schema_valid_placeholder(fields[path])) for path in missing)
+    raise RuntimeError("profile completeness did not converge; a required field is unfillable")
+
+
+__all__ = [
+    "complete_conditional_facts",
+    "complete_profile_facts",
+    "register_minimal_profile",
+    "schema_valid_placeholder",
+]

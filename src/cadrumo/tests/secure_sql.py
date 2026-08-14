@@ -31,12 +31,8 @@ from ..adapters.persistence.storage import (
     secure_object_repository_for_active_bucket,
 )
 from ..adapters.persistence.storage.bucket import (
-    BUCKET_MANIFEST_SCHEMA_VERSION,
-    BucketKeySchedule,
-    BucketManifest,
     BucketPaths,
     provision_bucket_directory,
-    write_manifest,
 )
 from ..adapters.persistence.storage.crypto import (
     decrypt_secure_object_payload,
@@ -45,7 +41,6 @@ from ..adapters.persistence.storage.crypto import (
 )
 from ..adapters.persistence.storage.master_key import (
     BucketSession,
-    KdfParams,
     activate_session,
     delete_profile_session,
     get_master_key_provider,
@@ -119,9 +114,9 @@ def _provision_bucket_dek_v1_session(
     Mirrors the production mint sequence (``CommittedProfileRepository.create``
     inside ``open_test_profile_session``): resolve the configured
     master-key provider, mint the per-bucket wrapped DEK under that
-    provider's resolved key-encryption key (KEK), write the manifest in
-    the ``BUCKET_DEK_V1`` schedule, then open a session keyed by the same
-    KEK and the minted DEK.
+    provider's resolved key-encryption key (KEK), then open a session keyed
+    by the same KEK and the minted DEK. No manifest is written: a bucket's
+    registration is proven by its published profile capsule.
 
     The caller MUST have already entered an ``override_settings`` block
     that configures the file backend, secret-store directory, and
@@ -140,26 +135,14 @@ def _provision_bucket_dek_v1_session(
             master_key = provider.provision_master_key()
         except SecretAlreadyExistsError:
             master_key = provider.get_master_key()
-    # Mint the wrapped DEK before the manifest exists so the bootstrap
-    # branch of ``load_or_mint_bucket_dek`` writes the keystore file and
-    # returns a fresh DEK, exactly as the production create span does.
+    # Mint the wrapped DEK through the bootstrap branch of
+    # ``load_or_mint_bucket_dek``, which writes the keystore file and returns
+    # a fresh DEK exactly as the production create span does.
     dek = load_or_mint_bucket_dek(
         kek=master_key,
         storage_root=storage_root,
         bucket_id=bucket_id,
         allow_bootstrap_mint=True,
-    )
-    write_manifest(
-        paths,
-        BucketManifest(
-            bucket_id=bucket_id,
-            label=label,
-            created_at=opened_at,
-            last_unlocked_at=opened_at,
-            kdf_params=KdfParams.default().to_manifest_params(),
-            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-        ),
     )
     session = BucketSession.open(
         bucket_id=bucket_id,

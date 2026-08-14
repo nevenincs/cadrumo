@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.workflow import workflow_state_repository
+from ....application.workflow import WorkflowState
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
@@ -31,17 +31,15 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_PROFILE_ID),
     ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id=_PROFILE_ID,
-                overrides={
-                    "taxpayer_type.fiscal_residency": "non_resident_irnr",
-                    "taxpayer_type.country_of_fiscal_residence": "GB",
-                    "taxpayer_type.representante_fiscal_nif": "12345678Z",
-                    "taxpayer_type.representante_fiscal_nombre": "Test Representative",
-                },
-            ),
+        register_minimal_profile(
+            WorkflowState(),
+            profile_id=_PROFILE_ID,
+            overrides={
+                "taxpayer_type.fiscal_residency": "non_resident_irnr",
+                "taxpayer_type.country_of_fiscal_residence": "GB",
+                "taxpayer_type.representante_fiscal_nif": "12345678Z",
+                "taxpayer_type.representante_fiscal_nombre": "Test Representative",
+            },
         )
         try:
             yield
