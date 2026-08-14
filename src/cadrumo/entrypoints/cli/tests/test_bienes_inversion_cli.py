@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .._bienes_inversion_payloads import (
@@ -31,7 +31,7 @@ _PRORRATA_SECTOR_ID = "sector-services"
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(_PROFILE_ID),
+        open_test_profile_session(_PROFILE_ID),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(state, profile_id=_PROFILE_ID),

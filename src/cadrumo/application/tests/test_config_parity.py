@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from ...tests.cli_runner import invoke_cached_cli
+from ...tests.profile_capsule import open_test_profile_session
 from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -21,11 +22,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def _seed_active_profile(tax_id: str = "00000000T", activity: str = "design") -> None:
     """Seed an active profile through the profile application service."""
 
-    from ...domain.user_profile import UserProfileFact
-    from ..user_profile import register_active_profile
-    from ..workflow import workflow_state_repository
+    from ...domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+    from ...tests.profile_capsule import seed_test_profile_record
+    from ..user_profile import ProfileCapsuleLifecycle
 
-    repo = workflow_state_repository()
+    profile_id = "00000000-0000-4000-8000-000000000000"
     facts = (
         UserProfileFact(path="identity.tax_id", value=tax_id),
         UserProfileFact(path="identity.name", value="operator"),
@@ -40,14 +41,11 @@ def _seed_active_profile(tax_id: str = "00000000T", activity: str = "design") ->
         UserProfileFact(path="activities.description", value=activity),
         UserProfileFact(path="provenance.source", value="manual_cli"),
     )
-    repo.update(
-        lambda state: register_active_profile(
-            state,
-            profile_id="00000000-0000-4000-8000-000000000000",
-            display_name="operator",
-            facts=facts,
-        ),
+    seed_test_profile_record(
+        UserProfileRecord(profile_id=profile_id, facts=facts, setup_state=ProfileSetupState.COMPLETE),
+        label="operator",
     )
+    ProfileCapsuleLifecycle().select(profile_id)
 
 
 def test_config_create_then_config_show_round_trips_iva_regime(
@@ -89,14 +87,14 @@ def test_config_create_then_config_show_round_trips_iva_regime(
         assert facts["iva.regime"] == "GENERAL"
 
         from ...tests.profile_capsule import load_test_profile_record
-        from ..user_profile import fact_value, profile_storage_session
+        from ..user_profile import fact_value
         from ..workflow import read_profile_bucket
 
         # The bucket directory is named by the minted UUID; resolve it
         # from the operator label "default" carried in the manifest.
         pointer = read_profile_bucket("default")
         assert pointer is not None
-        with profile_storage_session(pointer.bucket_id):
+        with open_test_profile_session(pointer.bucket_id):
             record = load_test_profile_record(pointer.bucket_id)
             assert fact_value(record, "iva.regime") == "GENERAL"
 

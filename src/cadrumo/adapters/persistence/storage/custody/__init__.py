@@ -56,6 +56,9 @@ from ._errors import (
 from ._filesystem import (
     PROFILE_CUSTODY_COMMIT_FILENAME,
     clear_profile_custody_local_record,
+    compare_and_clear_profile_custody_local_record,
+    compare_and_replace_profile_custody_local_record,
+    compare_and_replace_same_or_predecessor_profile_custody_local_record,
     ensure_profile_custody_local_directory,
     profile_custody_local_lock,
     profile_custody_root_lock,
@@ -87,7 +90,12 @@ from ._kdf_supervision import (
     unlock_profile_custody_material,
     wrap_profile_custody_material,
 )
-from ._label_head import LABEL_HEAD_MAX_BYTES, ProfileLabelHead, ProfileLabelHeadRepository
+from ._label_head import (
+    LABEL_HEAD_MAX_BYTES,
+    ProfileLabelHead,
+    ProfileLabelHeadPendingAdvance,
+    ProfileLabelHeadRepository,
+)
 from ._paths import profile_custody_path
 from ._records import (
     PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
@@ -208,9 +216,13 @@ __all__ = [
     "ProfileCustodyUnlock",
     "ProfileCustodyWrappedDek",
     "ProfileLabelHead",
+    "ProfileLabelHeadPendingAdvance",
     "ProfileLabelHeadRepository",
     "calibrate_profile_kdf",
     "clear_profile_custody_local_record",
+    "compare_and_clear_profile_custody_local_record",
+    "compare_and_replace_profile_custody_local_record",
+    "compare_and_replace_same_or_predecessor_profile_custody_local_record",
     "create_profile_custody_password_envelope",
     "create_profile_custody_recovery_envelope",
     "create_profile_custody_sentinel",

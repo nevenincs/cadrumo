@@ -28,10 +28,10 @@ from pathlib import Path
 import pytest
 import typer
 
-from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core import Period, StandardPeriodCode
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .._common import _canonical_period, _filter_canonical_period, _LedgerPeriodRefusal
@@ -241,7 +241,7 @@ def test_filter_clause_refuses_calendar_and_year_qualified() -> None:
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
+        open_test_profile_session("11111111-1111-4111-8111-111111111111"),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111"),

@@ -40,9 +40,9 @@ from ....core.config import load_settings
 from ....domain.filing import CasillaSchemaProvider, ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from ....domain.user_profile import UserProfileFact
+from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...user_profile import profile_create_storage_span, profile_storage_session, set_active_field
 from ...workflow import workflow_state_repository
 from .. import (
     ModeloApprovalStaleReason,
@@ -71,7 +71,7 @@ def _profile_storage(tmp_path: Path) -> Iterator[None]:
     DEK, and encrypted record. The tests mint that profile through the same
     application create span used by the CLI rather than a partial record write.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_PROFILE_ID):
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_PROFILE_ID):
         yield
 
 
@@ -97,9 +97,7 @@ def _create_profile_with_activity(activity: str) -> None:
 
 
 def _edit_profile_activity(activity: str) -> None:
-    workflow_state_repository().update(
-        lambda state: set_active_field(state, UserProfileFact(path="activities.description", value=activity)),
-    )
+    set_active_test_profile_facts((UserProfileFact(path="activities.description", value=activity),))
 
 
 def _ready_draft(schema_provider: CasillaSchemaProvider) -> ModeloDraft:
@@ -123,7 +121,7 @@ def test_approval_goes_stale_when_profile_activity_changes(_profile_storage: Non
     schema_provider = _schema_provider()
     draft = _ready_draft(schema_provider)
 
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         approved = approve_draft(
             draft,
             bucket_id=bucket_id,
@@ -140,7 +138,7 @@ def test_approval_goes_stale_when_profile_activity_changes(_profile_storage: Non
     # digest changes.
     _edit_profile_activity("comercio")
 
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         reasons = approval_stale_reasons(approved, bucket_id=bucket_id, schema_provider=schema_provider)
 
     # Only the taxpayer profile changed: draft, transactions, invoices, prior
@@ -162,7 +160,7 @@ def test_approval_not_stale_when_profile_unchanged(_profile_storage: None) -> No
     schema_provider = _schema_provider()
     draft = _ready_draft(schema_provider)
 
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         approved = approve_draft(
             draft,
             bucket_id=bucket_id,

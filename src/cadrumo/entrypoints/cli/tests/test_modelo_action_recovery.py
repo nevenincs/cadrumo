@@ -12,10 +12,10 @@ import pytest
 
 from ....adapters.persistence.storage.sql import dispose_engine
 from ....application.modelo import get_work_unit
-from ....application.user_profile import profile_storage_session
 from ....core import resolve_active_bucket_id
 from ....core.config import SecretStoreBackend, load_settings, override_settings
 from ....entrypoints.mcp import build_verb_input_schemas, cli_argv_for
+from ....tests.profile_capsule import open_test_profile_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -292,7 +292,7 @@ def _work_state(*, storage_root: Path, secret_store_dir: Path, work_unit_id: str
         try:
             bucket_id = resolve_active_bucket_id()
             assert bucket_id is not None
-            with profile_storage_session(bucket_id):
+            with open_test_profile_session(bucket_id):
                 work_unit = get_work_unit(work_unit_id)
             assert work_unit is not None
             return {

@@ -40,21 +40,18 @@ import os
 import subprocess
 import sys
 import textwrap
-from collections.abc import Iterator
 from pathlib import Path
 from typing import Final
 
 import pytest
 
-from ....application.user_profile import profile_create_storage_span
-from ....application.workflow import workflow_state_repository
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.json_contract import ENVELOPE_SCHEMA_VERSION
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["active_profile_isolated_backend"]
 
 PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"logs", "cadrumo.log"})
 """Taxonomy-vocabulary literals this module deliberately pins.
@@ -64,18 +61,6 @@ crash's traceback must reach; both the directory and the leaf filename are
 asserted directly against the real DEFAULT-derived path, not an injected
 value.
 """
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
-    ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
-        )
-        yield
 
 
 def _error_document(output: str) -> dict[str, object]:

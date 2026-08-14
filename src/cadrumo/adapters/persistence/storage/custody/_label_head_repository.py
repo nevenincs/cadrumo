@@ -18,7 +18,7 @@ from ._filesystem import (
     read_profile_custody_local_record,
     write_profile_custody_local_record,
 )
-from ._label_head_models import LABEL_HEAD_MAX_BYTES, ProfileLabelHead, _PendingLabelHeadAdvance
+from ._label_head_models import LABEL_HEAD_MAX_BYTES, ProfileLabelHead, ProfileLabelHeadPendingAdvance
 
 
 def _read_profile_custody_record(path: Path, *, maximum_bytes: int, subject: str) -> bytes:
@@ -76,11 +76,11 @@ class ProfileLabelHeadRepository:
         current_head: ProfileLabelHead,
         current_label: ProfileCustodyCapsuleLabel,
         replacement_label: ProfileCustodyCapsuleLabel,
-    ) -> _PendingLabelHeadAdvance:
+    ) -> ProfileLabelHeadPendingAdvance:
         if not current_head.verifies(current_label):
             raise ProfileCustodyRecordError("profile label differs from its trusted head")
         replacement_head = ProfileLabelHead.advance(current=current_head, label=replacement_label)
-        pending = _PendingLabelHeadAdvance.create(
+        pending = ProfileLabelHeadPendingAdvance.create(
             expected_head=current_head,
             expected_label=current_label,
             replacement_label=replacement_label,
@@ -103,7 +103,11 @@ class ProfileLabelHeadRepository:
             raise ProfileCustodyRecordError("profile label differs from its trusted head")
         return head
 
-    def _recover_pending(self, pending: _PendingLabelHeadAdvance, current_label: ProfileCustodyCapsuleLabel) -> None:
+    def _recover_pending(
+        self,
+        pending: ProfileLabelHeadPendingAdvance,
+        current_label: ProfileCustodyCapsuleLabel,
+    ) -> None:
         current_head = self._load_head(pending.profile_id)
         if current_head is None:
             raise ProfileCustodyRecordError("pending label advance lacks its trusted current head")
@@ -136,7 +140,7 @@ class ProfileLabelHeadRepository:
             raise ProfileCustodyRecordError("profile label head identity or canonical bytes differ")
         return head
 
-    def _load_pending(self, profile_id: UUID) -> _PendingLabelHeadAdvance | None:
+    def _load_pending(self, profile_id: UUID) -> ProfileLabelHeadPendingAdvance | None:
         path = self.pending_path(profile_id)
         if not os.path.lexists(path):
             return None
@@ -146,7 +150,7 @@ class ProfileLabelHeadRepository:
                 maximum_bytes=LABEL_HEAD_MAX_BYTES,
                 subject="pending profile label head",
             )
-            pending = _PendingLabelHeadAdvance.model_validate_json(payload)
+            pending = ProfileLabelHeadPendingAdvance.model_validate_json(payload)
         except (ProfileCustodyRecordError, ValidationError, ValueError) as exc:
             raise ProfileCustodyRecordError("pending profile label head is invalid") from exc
         if pending.profile_id != profile_id or pending.canonical_json_bytes() != payload:
@@ -177,7 +181,7 @@ class ProfileLabelHeadRepository:
         except Exception as exc:
             raise ProfileCustodyRecordError("profile label head cannot be atomically replaced") from exc
 
-    def _write_pending_exclusive(self, pending: _PendingLabelHeadAdvance) -> None:
+    def _write_pending_exclusive(self, pending: ProfileLabelHeadPendingAdvance) -> None:
         self._ensure_root()
         try:
             write_profile_custody_local_record(

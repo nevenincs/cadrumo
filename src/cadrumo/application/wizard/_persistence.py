@@ -32,7 +32,7 @@ from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ...core.parsing import parse_bool, parse_iso8601_date
 from ...core.setup_answers import register_project_answers as _register_project_answers
 from ...core.time import today_madrid
-from ...domain.user_profile import UserProfileFact, UserProfileRecord
+from ...domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..workflow import WorkflowInputMismatchError, WorkflowState
 from ._descendant_group import (
     DESCENDANT_PAGE_IDS,
@@ -61,13 +61,26 @@ def apply_wizard_fact_changes(
     resulting sequence with one command event.  A ``value=None`` change is
     retained deliberately: it is the explicit current-record representation
     of clearing an answer.
+
+    This is the ONE door onto profile facts, so it is also where the schema
+    judges them.  An engine-derived path, an unknown path and a value of the
+    wrong shape are all refused here rather than at the surface that happened
+    to collect the answer: a check living only in the manager's edit dialog
+    binds nobody who writes through the wizard, the CLI or a later surface,
+    and a stored value at a derived path silently displaces the computation
+    that owns it.
     """
-    from ..user_profile import ProfileRecordRepository
+    from ..user_profile import ProfileRecordRepository, reject_invalid_profile_facts
 
     repository = ProfileRecordRepository.for_current_session(profile_id)
     current = repository.load(profile_id)
     changed_paths = {fact.path for fact in changes}
     next_facts = (*tuple(fact for fact in current.facts if fact.path not in changed_paths), *changes)
+    reject_invalid_profile_facts(
+        profile_id,
+        next_facts,
+        require_complete=current.setup_state is not ProfileSetupState.INCOMPLETE,
+    )
     return repository.apply_fact_changes(
         profile_id,
         facts=next_facts,

@@ -18,15 +18,11 @@ that genuinely does not resolve to any work unit still gets the plain not-found
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....domain.modelos import (
@@ -36,28 +32,13 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ._strict_cli_fixture_support import binding_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+__all__ = ["binding_isolated_backend"]
+
 _WORK_UNIT_CREATED_AT = datetime(2026, 5, 28, 15, 0, tzinfo=UTC)
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
-    ):
-        try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111"),
-            )
-            yield
-        finally:
-            dispose_engine()
 
 
 def _seed_work_unit_without_revision(*, modelo: str = "130", filing_year: int = 2026, period: str = "1T") -> str:

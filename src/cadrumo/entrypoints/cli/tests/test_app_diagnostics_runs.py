@@ -11,21 +11,17 @@ recorder ``run-health`` reads, and the verb reports it back typed.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
 from click.testing import Result
 
 from ....adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
-from ....application.user_profile import profile_create_storage_span
-from ....application.workflow import workflow_state_repository
-from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ._strict_cli_fixture_support import diagnostics_isolated_backend
 from .envelope_helpers import unwrap_cli_result as _json_result
+
+__all__ = ["diagnostics_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -34,17 +30,6 @@ _BUCKET_ID = "22222222-3333-4444-8555-666666666666"
 
 def _invoke(args: list[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-@pytest.fixture
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(_BUCKET_ID),
-    ):
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID))
-        yield
 
 
 def _seed_runs() -> None:

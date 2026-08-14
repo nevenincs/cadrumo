@@ -7,7 +7,6 @@ from decimal import Decimal
 from pathlib import Path
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....application.user_profile import profile_storage_session
 from ....core import resolve_active_bucket_id
 from ....domain.transactions import (
     BusinessClassification,
@@ -18,6 +17,7 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
+from ....tests.profile_capsule import open_test_profile_session
 
 
 def seed_m130_income_transaction(
@@ -73,7 +73,7 @@ def seed_m130_income_transaction(
             "classified_by": "manual",
         },
     )
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         existing = TransactionCatalogueRepository(bucket_id=bucket_id).load()
         transactions = (*tuple(existing.transactions.values()), income)
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
@@ -136,7 +136,7 @@ def seed_m130_expense_transaction(
             "classified_by": "manual",
         },
     )
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         existing = TransactionCatalogueRepository(bucket_id=bucket_id).load()
         transactions = (*tuple(existing.transactions.values()), expense)
         TransactionCatalogueRepository(bucket_id=bucket_id).save(

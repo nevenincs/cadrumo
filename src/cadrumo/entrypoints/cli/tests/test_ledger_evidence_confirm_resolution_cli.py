@@ -33,7 +33,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterator
 from pathlib import Path
 from typing import Final
 
@@ -41,14 +40,14 @@ import pytest
 from click.testing import Result
 
 from ....application.ledger import FILER_POSTCODE_FACT_PATH
-from ....application.user_profile import set_active_fields
-from ....application.workflow import workflow_state_repository
 from ....core import STR_KEYED_MAPPING_ADAPTER, IvaCategoryOutcome
 from ....domain.iva import IvaCategory
 from ....domain.user_profile import UserProfileFact
-from ._ledger_ux_support import _invoke, _open_ledger_ux_session
+from ....tests.profile_capsule import set_active_test_profile_facts
+from ._ledger_ux_support import _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["_open_bucket_session"]
 
 _RELIEF_NOTICE: Final = "ledger.evidence.confirm.category_unsupported_relief"
 _INFERRED_NOTICE: Final = "ledger.evidence.confirm.category_rate_inferred"
@@ -134,15 +133,7 @@ def _undeclare_the_filers_postcode() -> None:
     nothing was stated, so the operator's action is to supply the fact rather
     than to correct it, and the two refusals send them different places.
     """
-    workflow_state_repository().update(
-        lambda state: set_active_fields(state, (UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value=""),)),
-    )
-
-
-@pytest.fixture(autouse=True)
-def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
-    with _open_ledger_ux_session(tmp_path):
-        yield
+    set_active_test_profile_facts((UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value=""),))
 
 
 def _confirm_raw(tmp_path: Path, document: str, *, name: str) -> Result:

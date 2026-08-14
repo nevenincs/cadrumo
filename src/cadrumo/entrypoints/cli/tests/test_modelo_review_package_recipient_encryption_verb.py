@@ -57,11 +57,11 @@ from ....application.modelo import (
     recipient_encryption_public_key,
     resolve_registry_revision_for_work_target,
 )
-from ....application.user_profile import profile_create_storage_span, set_active_fields
 from ....application.workflow import workflow_state_repository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ._modelo_review_package_support import seed_exportable_modelo_revision
@@ -90,7 +90,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     dispose_engine()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(_BUCKET_ID),
+        open_test_profile_session(_BUCKET_ID),
     ):
         try:
             workflow_state_repository().update(
@@ -102,14 +102,11 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _set_export_profile_name() -> None:
-    workflow_state_repository().update(
-        lambda state: set_active_fields(
-            state,
-            (
-                UserProfileFact(path="identity.name", value="Ana"),
-                UserProfileFact(path="identity.surnames", value="Recipient Encryption Test"),
-                UserProfileFact(path="activities.description", value="Consulting"),
-            ),
+    set_active_test_profile_facts(
+        (
+            UserProfileFact(path="identity.name", value="Ana"),
+            UserProfileFact(path="identity.surnames", value="Recipient Encryption Test"),
+            UserProfileFact(path="activities.description", value="Consulting"),
         ),
     )
 

@@ -16,18 +16,18 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import date
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import profile_create_storage_span, set_active_fields
 from ....application.workflow import workflow_state_repository
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.user_profile import register_minimal_profile
+from ._modelo_empty_profile_fixture import _isolated_backend
 from .envelope_helpers import unwrap_envelope_notices, unwrap_schema_envelope
+
+__all__ = ["_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -42,16 +42,6 @@ _M100_PERIOD = "0A"
 _M390_MODELO = "390"
 _M390_YEAR = 2025
 _M390_PERIOD = "0A"
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        try:
-            yield
-        finally:
-            dispose_engine()
 
 
 def _numbers_by_section(result: dict[str, list[dict[str, str]]]) -> dict[str, set[str]]:
@@ -178,19 +168,16 @@ def _partial_m100_profile() -> Iterator[None]:
     pattern: real facts persisted through the workflow state repository, not
     a mock or a placeholder.
     """
-    with profile_create_storage_span("22222222-2222-4222-8222-222222222222"):
+    with open_test_profile_session("22222222-2222-4222-8222-222222222222"):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(state, profile_id="22222222-2222-4222-8222-222222222222"),
         )
-        workflow_state_repository().update(
-            lambda state: set_active_fields(
-                state,
-                (
-                    UserProfileFact(path="tax_residence.ccaa", value="cataluna"),
-                    UserProfileFact(path="renta_filing.declaration_type", value="1"),
-                    UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-                    UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-                ),
+        set_active_test_profile_facts(
+            (
+                UserProfileFact(path="tax_residence.ccaa", value="cataluna"),
+                UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
             ),
         )
         yield

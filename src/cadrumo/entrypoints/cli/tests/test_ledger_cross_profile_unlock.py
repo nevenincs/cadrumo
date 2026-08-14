@@ -5,7 +5,7 @@ distinct statement into each while that profile's session is active, then
 re-activates each in turn and asserts its ledger surfaces only its own rows --
 the operator-facing cross-profile runtime-pegged ledger guarantee.
 
-The active session is opened with ``profile_create_storage_span`` -- the same
+The active session is opened with ``open_test_profile_session`` -- the same
 session primitive the ``aeat config login`` verb drives; re-entering a
 span is the in-process equivalent of unlocking the active profile between
 commands.
@@ -20,11 +20,11 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 
@@ -75,12 +75,12 @@ def _list_ids() -> set[str]:
 def test_two_profiles_keep_independent_ledgers_across_unlocks() -> None:
     # Provision + load each profile into its own bucket, importing a distinct
     # statement while that profile's session is the active one.
-    with profile_create_storage_span(_AUTONOMA_PROFILE_ID):
+    with open_test_profile_session(_AUTONOMA_PROFILE_ID):
         _register(profile_id=_AUTONOMA_PROFILE_ID, label="autonoma")
         _import(_AUTONOMA_CSV)
         autonoma_ids = _list_ids()
 
-    with profile_create_storage_span(_RETAILER_PROFILE_ID):
+    with open_test_profile_session(_RETAILER_PROFILE_ID):
         _register(profile_id=_RETAILER_PROFILE_ID, label="retailer")
         _import(_RETAILER_CSV)
         retailer_ids = _list_ids()
@@ -90,12 +90,12 @@ def test_two_profiles_keep_independent_ledgers_across_unlocks() -> None:
 
     # Unlocking a profile reopens its session and surfaces only that profile's
     # ledger -- no bleed-through.
-    with profile_create_storage_span(_AUTONOMA_PROFILE_ID):
+    with open_test_profile_session(_AUTONOMA_PROFILE_ID):
         unlocked = invoke_cached_cli(["config", "login", "autonoma"])
         assert unlocked.exit_code == 0, unlocked.output
         back = _list_ids()
     assert back == autonoma_ids
     assert back.isdisjoint(retailer_ids)
 
-    with profile_create_storage_span(_RETAILER_PROFILE_ID):
+    with open_test_profile_session(_RETAILER_PROFILE_ID):
         assert _list_ids() == retailer_ids

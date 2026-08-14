@@ -27,7 +27,6 @@ from typing import Any
 import pytest
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.application.user_profile import profile_storage_session
 from cadrumo.core import resolve_active_bucket_id
 from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.domain.transactions import (
@@ -41,6 +40,7 @@ from cadrumo.domain.transactions import (
 )
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
+from cadrumo.tests.profile_capsule import open_test_profile_session
 from cadrumo.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 
 from .. import ExitCodeScenario, check_exit_code_scenario
@@ -116,7 +116,7 @@ def _seed_m130_income_transaction(*, amount: Decimal, filing_year: int) -> None:
             "classified_by": "manual",
         },
     )
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         existing = TransactionCatalogueRepository(bucket_id=bucket_id).load()
         transactions = (*tuple(existing.transactions.values()), income)
         TransactionCatalogueRepository(bucket_id=bucket_id).save(

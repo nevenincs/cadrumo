@@ -47,10 +47,10 @@ from ....domain.modelos import (
     upsert_calculation_revision,
     upsert_work_unit,
 )
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .._reconcile import (
     ReconciliationDeclaracionSourceUnsupportedError,
@@ -75,7 +75,7 @@ _PERIOD = "1T"
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("22222222-2222-4222-8222-222222222222"),
+        open_test_profile_session("22222222-2222-4222-8222-222222222222"),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(

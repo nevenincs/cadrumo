@@ -28,38 +28,23 @@ preserve as any other invoice-creation path.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from ....application.invoices import BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
-from ....application.user_profile import profile_create_storage_span
-from ....application.workflow import workflow_state_repository
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .envelope_helpers import require_schema_envelope as _json_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["active_profile_isolated_backend"]
 
 # Two valid Spanish NIF/CIF counterparties (control digit verified).
 _RECEIVED_COUNTERPARTY_CIF = "A58818501"
 _ISSUED_COUNTERPARTY_NIF = "B12345674"
 
 _CSV_HEADER = "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
-    ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111"),
-        )
-        yield
 
 
 def _line_value(output: str, key: str) -> str:

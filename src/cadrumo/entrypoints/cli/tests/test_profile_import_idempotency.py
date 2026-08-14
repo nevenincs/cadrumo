@@ -26,6 +26,7 @@ from click.testing import Result
 
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_storage  # noqa: F401 - autouse fixture
 from ....tests.secure_sql import isolated_profile_storage_root
 from .privacy_helpers import (
@@ -260,9 +261,9 @@ def test_reimport_same_bundle_is_refused(tmp_path: Path) -> None:
         # Profile IDs are redacted at the CLI boundary; verify UUID
         # round-trip by reading the encrypted manifest directly through
         # the persistence layer.
-        from ....application.user_profile import CommittedProfileRepository, profile_storage_session
+        from ....application.user_profile import CommittedProfileRepository
 
-        with profile_storage_session(exported_id):
+        with open_test_profile_session(exported_id):
             aggregate = CommittedProfileRepository().load(exported_id)
         assert aggregate.profile_id == exported_id
 
@@ -318,9 +319,9 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
         assert r_free.exit_code == 0, r_free.output
         free_payload = assert_public_profile_payload_redacted(r_free.output, exported_id)
         assert free_payload["display_name"] == "idempotency-test-imported"
-        from ....application.user_profile import CommittedProfileRepository, profile_storage_session
+        from ....application.user_profile import CommittedProfileRepository
 
-        with profile_storage_session(exported_id):
+        with open_test_profile_session(exported_id):
             imported = CommittedProfileRepository().load(exported_id)
         assert imported.profile_id == exported_id
         assert imported.label == "idempotency-test-imported"
@@ -389,12 +390,12 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
 
         # Profile IDs are redacted at the CLI boundary; verify UUID round-trip
         # by reading both encrypted manifests through the persistence layer.
-        from ....application.user_profile import CommittedProfileRepository, profile_storage_session
+        from ....application.user_profile import CommittedProfileRepository
 
-        with profile_storage_session(exported_id):
+        with open_test_profile_session(exported_id):
             original_aggregate = CommittedProfileRepository().load(exported_id)
         assert original_aggregate.profile_id == exported_id
-        with profile_storage_session(mutated_id):
+        with open_test_profile_session(mutated_id):
             mutated_aggregate = CommittedProfileRepository().load(mutated_id)
         assert mutated_aggregate.profile_id == mutated_id
         assert mutated_aggregate.label == "idempotency-test-mutated"

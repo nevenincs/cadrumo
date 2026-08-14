@@ -28,10 +28,10 @@ import pytest
 from pydantic import ValidationError
 
 from ....application.flows import run_scripted_flow
-from ....application.user_profile import profile_storage_session
 from ....core import resolve_active_bucket_id
 from ....core.flows import FlowMode
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
 from .._modelo import _resolve_work_unit_for_cli
 from .._modelo_work_wizard_cli import (
@@ -95,7 +95,7 @@ def _scripted_manual_answers(work_unit_id: str) -> list[tuple[_WizardStep, str]]
     # Step discovery reads the registry and the bucket-scoped profile, so it
     # runs inside a real profile storage session — the same session the CLI
     # command opens per invocation.
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
         steps = _outstanding_wizard_steps(unit)
         _ACTIVE_RUNS[run_token] = {}
@@ -320,7 +320,7 @@ def test_binding_grounding_lookup_covers_a_real_m130_binding() -> None:
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
 
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
         lookup = _binding_grounding_lookup(unit)
 

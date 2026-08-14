@@ -11,9 +11,9 @@ import pytest
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .. import create_work_unit
 from .._calculate_input import (
@@ -52,7 +52,7 @@ def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(tmp
     snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period=period.registry_token)
 
     bucket_id = _PROFILE_ID
-    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(bucket_id):
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,
@@ -130,7 +130,7 @@ def _m200_bundle_with_casilla_value(raw_value: str, *, tmp_path: Path) -> WorkCa
     period = Period.from_year_and_code(2025, "0A")
     snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period=period.registry_token)
     bucket_id = _DECIMAL_GRAMMAR_PROFILE_ID
-    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(bucket_id):
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,
@@ -197,7 +197,7 @@ def _m303_bundle_with_period_override(raw_value: str, *, tmp_path: Path) -> Work
     period = Period.from_year_and_code(2025, "1T")
     snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period=period.registry_token)
     bucket_id = _M303_PROFILE_ID
-    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(bucket_id):
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,
@@ -285,7 +285,7 @@ def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_eve
     )
     descendant_overrides = dict(descendant_facts_from_list((child,)))
 
-    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_MATERNIDAD_BUCKET_ID):
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_MATERNIDAD_BUCKET_ID):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,

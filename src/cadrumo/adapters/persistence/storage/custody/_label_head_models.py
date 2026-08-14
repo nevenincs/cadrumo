@@ -159,7 +159,7 @@ class ProfileLabelHead(_CustodyDigestModel):
         )
 
 
-class _PendingLabelHeadAdvance(_CustodyDigestModel):
+class ProfileLabelHeadPendingAdvance(_CustodyDigestModel):
     """Crash-recovery witness for one label-record then head advance."""
 
     _digest_maximum_bytes = LABEL_HEAD_MAX_BYTES
@@ -186,7 +186,7 @@ class _PendingLabelHeadAdvance(_CustodyDigestModel):
         return value
 
     @model_validator(mode="after")
-    def _validate_pending(self) -> _PendingLabelHeadAdvance:
+    def _validate_pending(self) -> ProfileLabelHeadPendingAdvance:
         if (
             self.expected_label.profile_id != self.profile_id
             or self.replacement_label.profile_id != self.profile_id
@@ -207,7 +207,7 @@ class _PendingLabelHeadAdvance(_CustodyDigestModel):
         expected_label: ProfileCustodyCapsuleLabel,
         replacement_label: ProfileCustodyCapsuleLabel,
         replacement_head: ProfileLabelHead,
-    ) -> _PendingLabelHeadAdvance:
+    ) -> ProfileLabelHeadPendingAdvance:
         if not expected_head.verifies(expected_label):
             raise ProfileCustodyRecordError("pending label advance does not start at its trusted head")
         return cls._create_with_self_digest(
@@ -223,4 +223,4 @@ class _PendingLabelHeadAdvance(_CustodyDigestModel):
         )
 
 
-__all__ = ["LABEL_HEAD_MAX_BYTES", "ProfileLabelHead"]
+__all__ = ["LABEL_HEAD_MAX_BYTES", "ProfileLabelHead", "ProfileLabelHeadPendingAdvance"]

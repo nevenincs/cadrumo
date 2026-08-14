@@ -16,11 +16,13 @@ roundtrip, anti-tautology, the N-per-work-unit key, atomicity — live in
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
+
+from ...tests._profile_backend_fixtures import _isolated_backend
+
+__all__ = ["_isolated_backend"]
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
@@ -31,9 +33,6 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....tests import FIXTURES_DIR
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
-from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .._reconcile import (
     ModeloReconciliationCommand,
@@ -50,22 +49,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 _WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 13, 30, 0, tzinfo=UTC)
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
-    ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id="11111111-1111-4111-8111-111111111111",
-                overrides={"identity.tax_id": "00000000T"},
-            ),
-        )
-        yield
 
 
 def _active_bucket_id() -> str:

@@ -53,7 +53,7 @@ class ProfileCustodyHoldAssessment(BaseModel):
             "assessed_at": assessed_at.astimezone(UTC).isoformat(),
             "assessor": "application-custody-hold-owner",
         }
-        from ._custody_transactions import _canonical_bytes, _digest
+        from ._custody_transactions import canonical_payload_digest
 
         return cls(
             profile_id=legal.profile_id,
@@ -61,7 +61,7 @@ class ProfileCustodyHoldAssessment(BaseModel):
             filing_hold=filing.blocks_local_deletion,
             assessed_at=assessed_at,
             assessor="application-custody-hold-owner",
-            evidence_digest=_digest(_canonical_bytes(payload, maximum_bytes=1024, subject="hold assessment")),
+            evidence_digest=canonical_payload_digest(payload, maximum_bytes=1024, subject="hold assessment"),
         )
 
 
@@ -116,9 +116,9 @@ class ProfileCustodyHoldEvidence(BaseModel):
 
     @property
     def computed_evidence_digest(self) -> str:
-        from ._custody_transactions import _canonical_bytes, _digest
+        from ._custody_transactions import canonical_payload_digest
 
-        return _digest(_canonical_bytes(self.canonical_payload, maximum_bytes=1024, subject="hold evidence"))
+        return canonical_payload_digest(self.canonical_payload, maximum_bytes=1024, subject="hold evidence")
 
 
 def evidence_from_owner_projection(projection: ProfileDeletionHoldOwnerProjection) -> ProfileCustodyHoldEvidence:

@@ -22,9 +22,10 @@ from ....adapters.persistence.storage.runtime_repository import (
 from ....application.workflow import read_profile_bucket
 from ....domain.buckets import BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
 from ....tests.cli_runner import invoke_cached_cli
-from ._isolated_profile_storage_fixtures import _isolated_backend
+from ....tests.profile_capsule import open_test_profile_session
+from ....tests.secure_sql import isolated_profile_storage
 
-__all__ = ["_isolated_backend"]
+__all__ = ["isolated_profile_storage"]
 from ._profile_lifecycle_support import create_profile_via_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -34,11 +35,10 @@ def _bucket_history(bucket_id: str) -> BucketEventHistoryCatalogue:
     """Load ``bucket_id``'s own event-history catalogue from real storage.
 
     Reading a bucket's encrypted store requires an active session scoped
-    to that bucket, so the read runs inside ``profile_storage_session``.
+    to that bucket, so the read runs inside ``open_test_profile_session``.
     """
-    from ....application.user_profile import profile_storage_session
 
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         repository = BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
         return repository.load()
 

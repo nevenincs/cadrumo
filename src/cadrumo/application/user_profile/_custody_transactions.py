@@ -113,6 +113,11 @@ def canonical_model_bytes(model: BaseModel, *, maximum_bytes: int, subject: str)
     return _canonical_bytes(model.model_dump(mode="json"), maximum_bytes=maximum_bytes, subject=subject)
 
 
+def canonical_payload_digest(payload: object, *, maximum_bytes: int, subject: str) -> str:
+    """Digest an already-JSON-shaped payload under the one canonical encoding."""
+    return _digest(_canonical_bytes(payload, maximum_bytes=maximum_bytes, subject=subject))
+
+
 def _payload_without_self_digest(model: BaseModel) -> dict[str, object]:
     payload = cast(dict[str, object], model.model_dump(mode="json"))
     payload.pop("self_digest", None)

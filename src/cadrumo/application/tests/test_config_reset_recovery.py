@@ -24,6 +24,7 @@ from typing import Final
 import pytest
 
 from ...core import StorageCategory
+from ...tests.profile_capsule import open_test_profile_session
 from ...tests.storage_scope import storage_env_overrides
 from .test_config_reset import (
     _OVERRIDE_REASON,
@@ -230,11 +231,10 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
     )
     from .._config_reset_repository import ConfigResetJournalRepository
     from ..auth import configure_operator_auth
-    from ..user_profile import profile_storage_session
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
-        with profile_storage_session(_PROFILE_A_ID):
+        with open_test_profile_session(_PROFILE_A_ID):
             configure_operator_auth("certificate")
         if boundary == "snapshotted":
             _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="7")

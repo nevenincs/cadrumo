@@ -39,7 +39,6 @@ from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....application.flows import FlowAnswerError, FlowPage, run_scripted_flow
 from ....application.modelo import get_filing_record
-from ....application.user_profile import profile_storage_session
 from ....core import STR_KEYED_MAPPING_ADAPTER, Period, resolve_active_bucket_id
 from ....core.flows import FlowMode
 from ....core.resources import resources
@@ -47,6 +46,7 @@ from ....domain.justificante import Justificante
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
 from .._modelo import _resolve_work_unit_for_cli
 from .._modelo_amend_wizard_cli import (
@@ -179,7 +179,7 @@ def _seed_justificante(*, csv: str, period: str = "1T", modelo: str = "130", fil
     )
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         JustificanteRepository(bucket_id=bucket_id).save(receipt)
 
 
@@ -246,7 +246,7 @@ def _scripted_amend(
     run_token = "test-amend-scripted"  # noqa: S105 - a copy-table run token, not a credential
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
         assert unit.current_filing_record_id is not None
         baseline = get_filing_record(unit.current_filing_record_id)
@@ -344,7 +344,7 @@ def _permitted_kind_choice_values(
     run_token = "test-amend-kind-choices"  # noqa: S105 - a copy-table run token, not a credential
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
         assert unit.current_filing_record_id is not None
         baseline = get_filing_record(unit.current_filing_record_id)
@@ -690,7 +690,7 @@ def test_amend_wizard_blank_selection_yields_no_corrections() -> None:
     run_token = "test-amend-blank"  # noqa: S105 - a copy-table run token, not a credential
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
         assert unit.current_filing_record_id is not None
         baseline = get_filing_record(unit.current_filing_record_id)

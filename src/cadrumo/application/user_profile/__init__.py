@@ -38,14 +38,6 @@ object keys rather than stored HMAC lookup digests, so import can
 re-save them through the target bucket's secure-object substrate and
 re-encrypt under the recipient bucket DEK.
 
-Custody helpers exposed here are application commands over storage-owned
-secret-store primitives. :func:`create_recovery_code`,
-:func:`rotate_recovery_code`, :func:`verify_recovery_code`,
-:func:`change_passphrase`, and :func:`recover_secret_store` resolve runtime
-settings, update active-bucket
-recovery metadata when needed, and return typed result records while leaving key
-wrapping and recovery envelope persistence in :mod:`adapters.persistence.storage`.
-
 Projection and baseline helpers such as
 :func:`record_to_path_values`, :func:`projection_for_taxpayer`, and
 :func:`missing_filing_baseline_flags` provide the canonical schema-path and
@@ -190,20 +182,6 @@ if TYPE_CHECKING:
         divergence_facts,
         open_censo_divergences,
     )
-    from ._custody import (
-        CustodyPassphraseChangeResult,
-        CustodyRecoverResult,
-        CustodyRecoveryEnrollmentResult,
-        CustodyRecoveryStatus,
-        CustodyRecoveryVerification,
-        change_passphrase,
-        create_recovery_code,
-        inspect_recovery_status,
-        recover_secret_store,
-        recovery_wrap_path,
-        rotate_recovery_code,
-        verify_recovery_code,
-    )
     from ._custody_carry import (
         TYPED_CATEGORY_NAMESPACES,
         carried_namespace_definitions,
@@ -294,7 +272,11 @@ if TYPE_CHECKING:
         user_profile_snapshot_object_key,
     )
     from ._section_rows import next_section_row_index, section_row_facts
-    from ._validation import ProfileValidationService
+    from ._validation import (
+        COMPLETENESS_ISSUE_CODES,
+        ProfileValidationService,
+        reject_invalid_profile_facts,
+    )
 
 # An explicit register call replaces a side-effect import so the
 # registration point is greppable rather than hidden behind a
@@ -370,6 +352,7 @@ _LAZY_EXPORTS: dict[str, str] = {
                 "EffectiveFact",
                 "record_to_effective_facts",
                 "record_to_path_values",
+    "reject_invalid_profile_facts",
                 "record_to_values",
                 "snapshot_to_values",
             ),
@@ -385,7 +368,10 @@ _LAZY_EXPORTS: dict[str, str] = {
                 "format_profile_selector_requirements",
             ),
         ),
-        ("._validation", ("ProfileValidationService",)),
+        (
+            "._validation",
+            ("COMPLETENESS_ISSUE_CODES", "ProfileValidationService", "reject_invalid_profile_facts"),
+        ),
         (
             "._bundle",
             (
@@ -427,23 +413,6 @@ _LAZY_EXPORTS: dict[str, str] = {
                 "EncryptedProfileBundleExport",
                 "decrypt_profile_bundle_with_passphrase",
                 "encrypt_profile_bundle_for_passphrase",
-            ),
-        ),
-        (
-            "._custody",
-            (
-                "CustodyPassphraseChangeResult",
-                "CustodyRecoverResult",
-                "CustodyRecoveryEnrollmentResult",
-                "CustodyRecoveryStatus",
-                "CustodyRecoveryVerification",
-                "change_passphrase",
-                "create_recovery_code",
-                "inspect_recovery_status",
-                "recover_secret_store",
-                "recovery_wrap_path",
-                "rotate_recovery_code",
-                "verify_recovery_code",
             ),
         ),
         (
@@ -609,6 +578,7 @@ __all__ = [
     "CENSO_DIVERGENCE_PREFIX",
     "CENSO_SOURCE_TAG",
     "CENSO_UNADOPTED_EVIDENCE_FIELDS",
+    "COMPLETENESS_ISSUE_CODES",
     "MASKED_PLACEHOLDER",
     "PASSPHRASE_MINIMUM_LENGTH",
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
@@ -623,11 +593,6 @@ __all__ = [
     "CensoSyncService",
     "CommittedProfileRepository",
     "CompleteSetupCommand",
-    "CustodyPassphraseChangeResult",
-    "CustodyRecoverResult",
-    "CustodyRecoveryEnrollmentResult",
-    "CustodyRecoveryStatus",
-    "CustodyRecoveryVerification",
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",
     "EffectiveFact",
@@ -701,13 +666,11 @@ __all__ = [
     "censal_facts_from_read",
     "censo_divergence_notice",
     "censo_unadopted_evidence",
-    "change_passphrase",
     "close_active_profile_record_session",
     "close_profile_session_artefacts",
     "cloud_evidence_upload_eligible_for_active_profile",
     "compare_and_swap_profile_pointer",
     "conditional_profile_missing_required",
-    "create_recovery_code",
     "decrypt_profile_bundle_with_passphrase",
     "deserialize_profile_bundle",
     "divergence_facts",
@@ -718,7 +681,6 @@ __all__ = [
     "format_profile_path_requirements",
     "format_profile_preflight_requirement",
     "format_profile_selector_requirements",
-    "inspect_recovery_status",
     "iva_regime_required",
     "list_profile_key_records",
     "login_profile",
@@ -739,10 +701,9 @@ __all__ = [
     "record_to_effective_facts",
     "record_to_path_values",
     "record_to_values",
-    "recover_secret_store",
-    "recovery_wrap_path",
     "register_imported_profile_bundle",
     "register_profile_with_credentials",
+    "reject_invalid_profile_facts",
     "require_profile_record_session",
     "resolve_active_capability",
     "resolve_capability",
@@ -751,7 +712,6 @@ __all__ = [
     "resolve_profile_output_language_hint",
     "restore_carried_objects",
     "resume_active_profile_session",
-    "rotate_recovery_code",
     "section_row_facts",
     "serialize_carried_objects",
     "serialize_profile_bundle",
@@ -759,5 +719,4 @@ __all__ = [
     "user_profile_snapshot_object_key",
     "validate_bundle_payload",
     "validate_profile_values",
-    "verify_recovery_code",
 ]

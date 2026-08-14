@@ -15,38 +15,16 @@ bucket through the real persistence stack — no mocks, no stubs, no skips.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
-from pathlib import Path
 from typing import Any
 
 import pytest
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import profile_create_storage_span
-from ....application.workflow import workflow_state_repository
-from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ._ledger_seeded_profile_fixture import _isolated_backend
+
+__all__ = ["_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
-    ):
-        try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000")
-            )
-            yield
-        finally:
-            dispose_engine()
 
 
 def _add_row(*, amount: str, description: str, idempotency_key: str) -> str:

@@ -10,12 +10,12 @@ from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.ledger import FILER_POSTCODE_FACT_PATH
-from ....application.user_profile import profile_create_storage_span, set_active_fields
 from ....application.workflow import workflow_state_repository
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.config import override_settings
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 
@@ -54,7 +54,7 @@ def open_bucket_session(tmp_path: Path) -> Iterator[None]:
     with (
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(_PROFILE_ID),
+        open_test_profile_session(_PROFILE_ID),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
@@ -93,9 +93,7 @@ def _create_profile_and_import(tmp_path: Path) -> str:
 
 
 def _set_profile_axis(key: str, value: str) -> None:
-    workflow_state_repository().update(
-        lambda state: set_active_fields(state, (UserProfileFact(path=key, value=value),)),
-    )
+    set_active_test_profile_facts((UserProfileFact(path=key, value=value),))
 
 
 #: The IVA axes the deadlines profile demands before it will answer for a
@@ -148,14 +146,9 @@ def _declare_general_regime_iva_profile() -> None:
     Written in ONE update rather than one per axis, so the profile is never
     observed half-declared by anything reading between writes.
     """
-    workflow_state_repository().update(
-        lambda state: set_active_fields(
-            state,
-            tuple(
-                UserProfileFact(path=path, value=value)
-                for path, value in (*_GENERAL_REGIME_IVA_AXES, *_FILER_FISCAL_ADDRESS_AXES)
-            ),
-        ),
+    set_active_test_profile_facts(
+        UserProfileFact(path=path, value=value)
+        for path, value in (*_GENERAL_REGIME_IVA_AXES, *_FILER_FISCAL_ADDRESS_AXES)
     )
 
 

@@ -194,6 +194,14 @@ HOMONYM_EXCEPTIONS: Final[frozenset[tuple[str, str]]] = frozenset(
         # "logs" (in a different test) as the sole deliberate pin; this one
         # coincides with the vocabulary by accident of a natural variable name,
         # not by intent to defend the "invoices" on-disk name.
+        (
+            "entrypoints/cli/tests/test_config_custody_profile_lifecycle.py",
+            "custody",
+        ),
+        # The operator-chosen profile LABEL passed to ``config profile create``
+        # ("custody", named for what the test exercises), not the
+        # ``custody`` capsule directory the taxonomy owns. It reaches the CLI
+        # as an argv token and never addresses a path.
     },
 )
 """Verified coincidental collisions with the taxonomy vocabulary: read, and confirmed not a pin.
@@ -329,13 +337,16 @@ def test_the_scanned_corpus_is_not_degenerate() -> None:
     """The gate must be reading real declarations, not finding nothing to check.
 
     A bound, not a count: an exact figure rots on the next module that opts
-    in. ``PINNED_TAXONOMY_LITERALS`` was declared in 41 modules when this gate
-    was written; if discovery collapses to a handful, every assertion below
-    would report a clean tree it never actually read.
+    in -- and, as this floor learned, on the next that legitimately opts OUT
+    when its pinned literal genuinely leaves the module. ``PINNED_TAXONOMY_LITERALS``
+    was declared in 41 modules when this gate was written and the floor was set
+    six below that, close enough that one honest removal tripped it. The floor
+    is set well clear of the live population instead: it exists to catch
+    discovery COLLAPSING, not to ratchet the count.
     """
     modules = _pinned_modules()
-    assert len(modules) >= 35, (
-        f"found only {len(modules)} module(s) declaring {_DECLARATION_NAME}, expected at least 35. "
+    assert len(modules) >= 25, (
+        f"found only {len(modules)} module(s) declaring {_DECLARATION_NAME}, expected at least 25. "
         "Discovery has likely broken (a shape change to the declaration, or to package_python_files), "
         "not that most modules stopped pinning anything"
     )

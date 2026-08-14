@@ -35,10 +35,10 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....tests.filing_evidence import general_m303_filing_evidence
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
@@ -116,7 +116,7 @@ def _ensure_operator_storage_span() -> None:
         return
     if _ACTIVE_STORAGE_STACK is None:
         raise RuntimeError("modelo export test storage span is not active")
-    _ACTIVE_STORAGE_STACK.enter_context(profile_create_storage_span("11111111-1111-4111-8111-111111111111"))
+    _ACTIVE_STORAGE_STACK.enter_context(open_test_profile_session("11111111-1111-4111-8111-111111111111"))
     _PROFILE_SPAN_OPEN = True
 
 

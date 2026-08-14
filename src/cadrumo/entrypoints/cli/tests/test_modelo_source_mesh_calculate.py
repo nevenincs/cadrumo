@@ -31,6 +31,7 @@ from ....domain.transactions import (
 from ....domain.usage_ratios import UsageRatioProfile
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .envelope_helpers import unwrap_envelope_notices
@@ -389,7 +390,6 @@ def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation() ->
 
 def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses() -> None:
     """An operator's public CLI M100 path carries ledger income through 0171/0180/0224."""
-    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
 
     _create_profile()
@@ -442,7 +442,7 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses() -> Non
             taxable_base=Decimal("900.00"),
         ),
     )
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         _seed_m100_profile_facts(bucket_id)
         _seed_prior_m100_zero_carry()
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
@@ -594,14 +594,13 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
 
 def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_evidence() -> None:
     """A classified rent ledger row alone must hard-stop instead of producing zeros."""
-    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
 
     _create_profile()
     work_unit = _create_115_work_unit()
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
             TransactionCatalogue.from_transactions((_classified_rent_transaction(),)),
         )
@@ -658,7 +657,6 @@ def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_
 
 
 def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
-    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
 
     _create_profile()
@@ -695,7 +693,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
     # is supplied without a persisted decision, even when the amount is zero.
     # A local_recurrence decision with selected_amount=0 satisfies the guard
     # while leaving the ledger mesh assertions meaningful.
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         from ....application.calculations import IvaWalletDecisionRepository
         from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 
@@ -734,7 +732,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
     payload = _payload(result.output)
     revision_id = payload["calculation_revision_id"]
 
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         persisted = CalculationRevisionCatalogueRepository().load().revisions[revision_id]
 
     assert persisted.source_transaction_ids == tuple(sorted((sale.transaction_id, purchase.transaction_id)))
@@ -805,10 +803,9 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
     advisory assertions meaningful.
     """
     from ....application.calculations import IvaWalletDecisionRepository
-    from ....application.user_profile import profile_storage_session
     from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         decision = IvaCompensationReconciliationDecision(
             taxpayer_nif="12345678Z",
             target_year=2026,
@@ -839,7 +836,6 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
     that suppression on the operator-facing calculate surface across both the
     JSON ``notices`` channel and the human text output.
     """
-    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
 
     _create_profile()
@@ -879,7 +875,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
         # only the establishment is what this fixture used to do.
         counterparty_identification_state=EUMemberState.DE,
     )
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
             TransactionCatalogue.from_transactions((domestic_sale, cuota_less_supply)),
         )
@@ -929,7 +925,6 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
     repercutido-general binding must leave ``source_advisories`` empty and emit
     no ADVISORY line.
     """
-    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
 
     _create_profile()
@@ -945,7 +940,7 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
     )
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
             TransactionCatalogue.from_transactions((domestic_sale,)),
         )

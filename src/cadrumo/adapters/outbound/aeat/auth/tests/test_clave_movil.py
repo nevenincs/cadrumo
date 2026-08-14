@@ -9,12 +9,12 @@ from pathlib import Path
 import pytest
 from pydantic import AnyUrl, SecretStr
 
-from ......application.user_profile import profile_create_storage_span
 from ......application.workflow import workflow_state_repository
 from ......core import AuthProviderKind
 from ......core.config import Settings
 from ......core.i18n import tr
 from ......domain.calculations.registry import RegistryValidationError, RemoteOperation, assert_remote_operation_allowed
+from ......tests.profile_capsule import open_test_profile_session
 from ......tests.secure_sql import isolated_runtime_profile
 from ......tests.user_profile import register_minimal_profile
 from .. import operator_progress_sink
@@ -115,7 +115,7 @@ def test_identity_classification_rejects_checksum_invalid_identity(identity: str
 
 def test_attempt_context_uses_profile_storage_and_redacts_identity_values() -> None:
     bucket_id = "25252525-2525-4252-8252-252525252525"
-    with profile_create_storage_span(bucket_id):
+    with open_test_profile_session(bucket_id):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,

@@ -24,11 +24,11 @@ from ....adapters.persistence.storage.bucket import (
     provision_bucket_directory,
     write_manifest,
 )
-from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import load_settings
 from ....core.identity import nif_check_letter
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
 
 _STAGED_MANIFEST_CREATED_AT = datetime(2026, 5, 28, 15, 50, tzinfo=UTC)
@@ -51,15 +51,15 @@ def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
     ``CommittedProfileRepository`` always writes the record alongside.
 
     Unlike the unsecured-backend version, this implementation uses
-    ``profile_create_storage_span`` to provision real key material for
-    the bucket so the CLI can open a ``profile_storage_session`` and
+    ``open_test_profile_session`` to provision real key material for
+    the bucket so the CLI can open a ``open_test_profile_session`` and
     reach the point where the missing record is detected. Without key
     material the session open fails before the torn state is observable.
     """
 
     # Provision the master key for the staged bucket so CLI commands can
     # open a session and reach the profile-record-missing detection point.
-    with profile_create_storage_span(bucket_id):
+    with open_test_profile_session(bucket_id):
         pass
 
     root = load_settings().cadrumo_local_storage_root
@@ -98,13 +98,13 @@ def seed(name: str = "default", *, tax_id: str | None = None) -> None:
     # duplicate-tax-id refusal; a test that asserts a specific tax id
     # passes it explicitly.
     #
-    # profile_create_storage_span provisions key material for the named
+    # open_test_profile_session provisions key material for the named
     # bucket and activates a real session so the profile lifecycle service
     # can resolve the file-backed secure-object repository.
     #
     overrides = {"identity.tax_id": tax_id} if tax_id is not None else None
     profile_id = _profile_id_for_label(name)
-    with profile_create_storage_span(profile_id):
+    with open_test_profile_session(profile_id):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,

@@ -27,11 +27,12 @@ from click.testing import Result
 
 from ....core.config import load_settings
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
+from ....tests.secure_sql import isolated_profile_storage
 from .._common import cli_policy_refusal_projection
 from .._errors import CliRefusedBoundaryError, error_boundary_under_test
-from ._isolated_profile_storage_fixtures import _isolated_backend
 
-__all__ = ["_isolated_backend"]
+__all__ = ["isolated_profile_storage"]
 from ._profile_lifecycle_support import create_profile_via_cli, seed
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -50,12 +51,12 @@ def _per_bucket_backend(tmp_path: Path) -> Iterator[Path]:
 
     Each profile bucket resolves its own SQLite file from the
     active-profile pointer chain, the production cold-start path.
-    The autouse ``_isolated_backend`` fixture runs first and installs
+    The autouse ``isolated_profile_storage`` fixture runs first and installs
     an empty isolated_profile_storage_root; this fixture layers on
     top by yielding the same tmp_path storage root so callers can
     use create_profile_via_cli.
     """
-    # _isolated_backend's isolated_profile_storage_root already set
+    # isolated_profile_storage already set
     # cadrumo_local_storage_root to tmp_path / "cadrumo-storage".
     yield load_settings().cadrumo_local_storage_root
 
@@ -108,7 +109,6 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
     no re-key happens; ``profile show`` and the lifecycle service both
     still find the record, now carrying the new display label.
     """
-    from ....application.user_profile import profile_storage_session
     from ....application.workflow import read_profile_bucket
     from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
     from ....tests.profile_capsule import load_test_profile_record
@@ -123,7 +123,7 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
 
     # Reading the profile record directly via the lifecycle service requires an
     # active session scoped to the bucket UUID.
-    with profile_storage_session(uuid_before):
+    with open_test_profile_session(uuid_before):
         record = load_test_profile_record(uuid_before)
     # The identity is unchanged; only the bucket manifest label moved.
     assert record.profile_id == uuid_before

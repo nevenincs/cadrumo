@@ -9,7 +9,7 @@ binds the exact record session around each read or replacement.
 from __future__ import annotations
 
 from base64 import b64encode
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager, suppress
 from datetime import UTC, datetime
 from hashlib import sha256
@@ -33,7 +33,7 @@ from ..application.user_profile._profile_record_repository import (
 )
 from ..core.paths import effective_storage_root
 from ..domain.buckets import BucketEventType
-from ..domain.user_profile import UserProfileRecord
+from ..domain.user_profile import UserProfileFact, UserProfileRecord
 
 
 def _active_bucket_dek(profile_id: UUID) -> bytes:
@@ -184,6 +184,62 @@ def replace_test_profile_record(
         return repository.load(identity)
 
 
+def upsert_test_profile_facts(
+    profile_id: str | UUID,
+    facts: Iterable[UserProfileFact],
+    *,
+    root: Path | None = None,
+) -> UserProfileRecord:
+    """Merge facts onto a seeded record through the production capsule writer.
+
+    The record writer takes the complete next fact sequence rather than a
+    patch, so the merge is composed here: same-path facts replace in place and
+    new ones append in declaration order.  Tests that used to layer a handful
+    of answers onto a minimal profile get the same effect without any
+    application-side upsert command, and every write still goes through the
+    real revision compare-and-swap.
+    """
+    identity = UUID(str(profile_id))
+    storage_root = effective_storage_root(root)
+    with bound_test_profile_record(identity, root=storage_root) as repository:
+        current = repository.load(identity)
+        merged: dict[str, UserProfileFact] = {fact.path: fact for fact in current.facts}
+        for fact in facts:
+            merged[fact.path] = fact
+        repository.apply_fact_changes(
+            identity,
+            facts=tuple(merged.values()),
+            expected_revision=current.record_revision,
+            expected_content_digest=current.content_digest,
+            event_type=BucketEventType.PROFILE_VALUES_UPDATED.value,
+            event_payload={},
+            now=datetime.now(UTC),
+        )
+        return repository.load(identity)
+
+
+def set_active_test_profile_facts(
+    facts: Iterable[UserProfileFact],
+    *,
+    root: Path | None = None,
+) -> UserProfileRecord:
+    """Merge facts onto the ACTIVE profile's seeded record.
+
+    The successor to the retired application-side plural fact command, for the
+    many suites that seed a minimal profile and then layer a handful of
+    answers onto whichever profile the test made active.  Selection is read
+    through the production precedence chain rather than passed in, so a test
+    that forgot to select a profile fails here instead of silently writing to
+    a different capsule.
+    """
+    from ..core import resolve_active_bucket_id
+
+    active = resolve_active_bucket_id()
+    if active is None:
+        raise RuntimeError("no active profile is selected; seed and select one before setting facts")
+    return upsert_test_profile_facts(active, facts, root=root)
+
+
 def seed_test_profile_record(
     record: UserProfileRecord,
     *,
@@ -229,4 +285,6 @@ __all__ = [
     "open_test_profile_session",
     "replace_test_profile_record",
     "seed_test_profile_record",
+    "set_active_test_profile_facts",
+    "upsert_test_profile_facts",
 ]

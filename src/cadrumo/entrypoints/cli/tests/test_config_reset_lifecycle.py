@@ -10,7 +10,6 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.storage.bucket import bucket_paths
-from ....application.user_profile import profile_create_storage_span, profile_storage_session
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.config import override_settings
@@ -21,6 +20,7 @@ from ....domain.modelos import (
     derive_filing_record_id,
 )
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .._bootstrap_exempt import is_bootstrap_exempt
@@ -50,7 +50,7 @@ def _persist_retained_filing() -> None:
         filed_at=datetime(2025, 7, 1, tzinfo=UTC),
         filed_by="aeat.cli.modelo.file",
     )
-    with profile_storage_session(_PROFILE_ID):
+    with open_test_profile_session(_PROFILE_ID):
         repository = ModeloRecordCatalogueRepository(bucket_id=_PROFILE_ID)
         catalogue = repository.load()
         repository.save(
@@ -81,7 +81,7 @@ def test_config_reset_start_status_and_resume_exact_durable_journal(
     tmp_path: Path,
 ) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
-        with profile_create_storage_span(_PROFILE_ID):
+        with open_test_profile_session(_PROFILE_ID):
             workflow_state_repository().update(
                 lambda state: register_minimal_profile(
                     state,

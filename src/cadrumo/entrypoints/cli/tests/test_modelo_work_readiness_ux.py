@@ -9,6 +9,7 @@ import pytest
 from ....core import Modelo
 from ....core.config import override_settings
 from ....core.resources import resources
+from ....tests.profile_capsule import open_test_profile_session
 from ._modelo_work_ux_support import (
     _PROFILE_ID,
     _attempt_incomplete_profile_create,
@@ -32,13 +33,12 @@ _REPRESENTANTE_PROFILE_PATHS = frozenset(
 
 
 def _remove_representante_fields_from_operator_profile() -> None:
-    from ....application.user_profile import profile_storage_session
     from ....application.workflow import read_profile_bucket
     from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
 
     pointer = read_profile_bucket(_PROFILE_ID)
     assert pointer is not None
-    with profile_storage_session(pointer.bucket_id):
+    with open_test_profile_session(pointer.bucket_id):
         record = load_test_profile_record(pointer.bucket_id)
         replace_test_profile_record(
             record.model_copy(

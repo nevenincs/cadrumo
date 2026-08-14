@@ -6,22 +6,20 @@ refuses anything else by design. Key material held as immutable ``bytes`` or
 memory entirely at the garbage collector's discretion.
 
 That gap is structurally wider on the recovery surface than on the
-steady-state session path, because it opens on every recovery mint, unwrap,
-and passphrase change — and an enrollment holds a live plaintext DEK across
-the operator's *interactive* confirmation, which lasts as long as it takes a
-human to copy down 24 words.
+steady-state session path, because it opens on every mint and every unwrap —
+and an enrollment holds a live plaintext key across the operator's
+*interactive* confirmation, which lasts as long as it takes a human to copy
+down 24 words.
 
-These tests pin the contract that closes it: every secret the recovery
-surface mints or recovers comes back in a buffer ``zeroise`` accepts, and the
-containers that hold key material across an operation wipe on demand. The
+These tests pin the contract that closes it for the BIP-39 primitives: every
+secret they mint or recover comes back in a buffer ``zeroise`` accepts, and
+the containers that hold key material across an operation wipe on demand. The
 refusal test below is what gives the rest their teeth — it proves ``zeroise``
 genuinely rejects the immutable shapes, so a regression back to ``bytes`` or
 ``str`` fails these tests rather than passing them vacuously.
 """
 
 from __future__ import annotations
-
-from datetime import UTC, datetime
 
 import pytest
 
@@ -34,12 +32,10 @@ from .._recovery import (
     unwrap_master_key,
     wrap_master_key,
 )
-from .._recovery_facade import mint_recovery_envelope, unwrap_recovery_envelope
 from .._zeroise import zeroise
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_NOW = datetime(2026, 5, 14, 12, 0, 0, tzinfo=UTC)
 _DEK = bytes(range(32))
 
 
@@ -127,62 +123,6 @@ def test_unwrap_master_key_returns_a_buffer_zeroise_accepts() -> None:
     assert recovered == _DEK
     zeroise(recovered)
     assert recovered == bytearray(32)
-
-
-def test_unwrap_recovery_envelope_returns_a_buffer_zeroise_accepts() -> None:
-    """The DEK recovered from a real envelope comes back wipeable."""
-    minted = mint_recovery_envelope(dek=_DEK, created_at=_NOW)
-
-    recovered = unwrap_recovery_envelope(envelope=minted.envelope, mnemonic=minted.mnemonic)
-
-    assert isinstance(recovered, bytearray)
-    assert recovered == _DEK
-    zeroise(recovered)
-    assert recovered == bytearray(32)
-
-
-def test_minted_recovery_wipe_clears_the_mnemonic() -> None:
-    """The minted record's mnemonic is wipeable once the operator has copied it."""
-    minted = mint_recovery_envelope(dek=_DEK, created_at=_NOW)
-    original_words = minted.mnemonic
-    assert len(original_words.split()) == 24
-
-    minted.wipe()
-
-    assert minted.mnemonic != original_words
-
-
-def test_minted_recovery_wipe_leaves_the_public_envelope_intact() -> None:
-    """Wiping the secret must not disturb the ciphertext envelope.
-
-    The envelope is public wrap material and the only part meant to reach
-    disk; a wipe that damaged it would destroy the enrollment it just
-    created.
-    """
-    minted = mint_recovery_envelope(dek=_DEK, created_at=_NOW)
-    fingerprint = minted.envelope.recovery_fingerprint
-    wrapped_dek = minted.envelope.wrapped_dek_b64
-    mnemonic = minted.mnemonic
-
-    minted.wipe()
-
-    assert minted.envelope.recovery_fingerprint == fingerprint
-    assert minted.envelope.wrapped_dek_b64 == wrapped_dek
-    # The envelope still unwraps under the words the operator wrote down.
-    assert unwrap_recovery_envelope(envelope=minted.envelope, mnemonic=mnemonic) == _DEK
-
-
-def test_minted_recovery_cannot_serialise_its_mnemonic() -> None:
-    """The minted record carries no pydantic serialisation path for the secret.
-
-    ``MintedRecovery`` is deliberately a slotted plain class rather than a
-    pydantic model, so there is no ``model_dump_json`` that could write the
-    recovery code to the very disk the envelope exists to keep it off.
-    """
-    minted = mint_recovery_envelope(dek=_DEK, created_at=_NOW)
-
-    assert not hasattr(minted, "model_dump_json")
-    assert not hasattr(minted, "model_dump")
 
 
 def test_recovery_key_cannot_serialise_its_material() -> None:

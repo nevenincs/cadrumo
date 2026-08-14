@@ -25,14 +25,14 @@ Recovery exports include the low-level BIP-39 primitives
 :func:`generate_recovery_key`, :func:`encode_mnemonic`,
 :func:`decode_mnemonic`, :func:`wrap_master_key`,
 :func:`unwrap_master_key`, :func:`save_wrapped_master_key`, and
-:func:`load_wrapped_master_key`) plus the typed recovery-envelope
-facade (:class:`MintedRecovery`, :class:`RecoveryRecord`,
-:func:`mint_recovery_envelope`, :func:`load_recovery_envelope`,
-:func:`save_recovery_envelope`, :func:`unwrap_recovery_envelope`,
-:func:`verify_recovery_mnemonic`, and
-:func:`open_session_from_recovery`). Importing this package does not
-resolve providers, acquire keys, unwrap recovery material, or write
-custody files; callers must invoke the exported operations explicitly.
+:func:`load_wrapped_master_key`) plus the on-disk envelope record
+:class:`RecoveryRecord`. Recovery ENROLMENT and RESTORE are per-profile
+custody operations owned by
+:mod:`cadrumo.adapters.persistence.storage.custody`; the global
+recovery facade that once mirrored a single shared master key is
+retired. Importing this package does not resolve providers, acquire
+keys, unwrap recovery material, or write custody files; callers must
+invoke the exported operations explicitly.
 
 The persisted cross-process profile session (the ``aeat config login``
 state) is exported through :class:`PersistedProfileSession`,
@@ -125,25 +125,6 @@ from ._recovery import (
     unwrap_master_key,
     wrap_master_key,
 )
-from ._recovery_facade import (
-    MintedRecovery,
-    RecoveryEnrollmentMode,
-    RecoveryEnrollmentOutcome,
-    RecoveryLifecycleStatus,
-    RecoveryRecoverOutcome,
-    RecoveryVerifyOutcome,
-    load_recovery_envelope,
-    mint_recovery_envelope,
-    open_session_from_recovery,
-    recovery_create,
-    recovery_recover,
-    recovery_rotate,
-    recovery_status,
-    recovery_verify,
-    save_recovery_envelope,
-    unwrap_recovery_envelope,
-    verify_recovery_mnemonic,
-)
 from ._recovery_record import RecoveryRecord
 from ._zeroise import zeroise
 
@@ -160,18 +141,12 @@ __all__ = [
     "LoginThrottleState",
     "MasterKeyProvider",
     "MasterKeyReentrantError",
-    "MintedRecovery",
     "NoActiveBucketSessionError",
     "PassphraseCallback",
     "PersistedProfileSession",
     "ProfileSessionResumeOutcome",
-    "RecoveryEnrollmentMode",
-    "RecoveryEnrollmentOutcome",
     "RecoveryKey",
-    "RecoveryLifecycleStatus",
     "RecoveryRecord",
-    "RecoveryRecoverOutcome",
-    "RecoveryVerifyOutcome",
     "ThrottleEvaluation",
     "UnsecuredMasterKeyProvider",
     "WrappedDek",
@@ -201,26 +176,17 @@ __all__ = [
     "has_active_bucket_session",
     "idle_minutes_for_bucket",
     "load_or_mint_bucket_dek",
-    "load_recovery_envelope",
     "load_wrapped_master_key",
     "login_throttle_path",
     "looks_like_real_tax_id",
     "mint_profile_session",
-    "mint_recovery_envelope",
-    "open_session_from_recovery",
     "profile_session_path",
     "read_wrapped_bucket_dek",
     "record_login_failure",
-    "recovery_create",
-    "recovery_recover",
-    "recovery_rotate",
-    "recovery_status",
-    "recovery_verify",
     "refuse_unsecured_bucket_with_real_profile",
     "refuse_unsecured_with_real_nif",
     "reset_login_throttle",
     "resume_profile_session",
-    "save_recovery_envelope",
     "save_wrapped_master_key",
     "session_absolute_minutes_for_bucket",
     "session_serves_bucket",
@@ -228,8 +194,6 @@ __all__ = [
     "unwrap_dek",
     "unwrap_master_key",
     "unwrap_profile_session_dek",
-    "unwrap_recovery_envelope",
-    "verify_recovery_mnemonic",
     "wrap_dek",
     "wrap_master_key",
     "wrap_profile_session_dek",

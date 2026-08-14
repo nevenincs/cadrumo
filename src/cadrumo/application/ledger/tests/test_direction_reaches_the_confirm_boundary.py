@@ -27,7 +27,6 @@ from typing import ClassVar, override
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import profile_create_storage_span, set_active_fields
 from ....application.workflow import workflow_state_repository
 from ....core import ConfirmationBlockReason, DraftDiscrepancyKind
 from ....core.config import load_settings, override_settings
@@ -41,6 +40,7 @@ from ....tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
+from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .._confirmation_gate import ConfirmationBlockedError, confirmation_blockers
@@ -214,16 +214,13 @@ def live_document(tmp_path: Path, reader_url: str):
             cadrumo_llm_ollama_chat_url=reader_url,
         ),
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(_PROFILE_ID),
+        open_test_profile_session(_PROFILE_ID),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(state, profile_id=_PROFILE_ID, display_name="tester"),
         )
-        workflow_state_repository().update(
-            lambda state: set_active_fields(
-                state,
-                (UserProfileFact(path=FILER_TAX_ID_FACT_PATH, value=_FILER_CIF),),
-            ),
+        set_active_test_profile_facts(
+            (UserProfileFact(path=FILER_TAX_ID_FACT_PATH, value=_FILER_CIF),),
         )
 
         def _add(lines: tuple[str, ...], read: dict[str, str]) -> _LiveDocument:

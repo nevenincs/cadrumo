@@ -12,7 +12,7 @@ and audit trail that the structured ``config profile export`` transport
 deliberately excludes.
 
 No mocks. Real ``isolated_profile_storage_root`` fixture, real
-``profile_storage_session``, real encrypted repositories, real AEAD sealing.
+``open_test_profile_session``, real encrypted repositories, real AEAD sealing.
 """
 
 from __future__ import annotations
@@ -23,10 +23,9 @@ import pytest
 from click.testing import Result
 
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
-from ._isolated_profile_storage_fixtures import _isolated_source
+from ....tests.secure_sql import isolated_profile_storage, isolated_profile_storage_root
 
-__all__ = ["_isolated_source"]
+__all__ = ["isolated_profile_storage"]
 from .envelope_helpers import unwrap_envelope_notices, unwrap_schema_envelope
 from .privacy_helpers import assert_public_profile_id_not_leaked, assert_public_profile_payload_redacted
 

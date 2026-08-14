@@ -16,13 +16,6 @@ disk, and the follow-on process must behave the way that claim implies
 (silent resume when persisted, a typed keychain-unavailable refusal when
 the current receipt cannot be accelerated). That coupling fails loudly if
 either half drifts, on a healthy host and a degraded one alike.
-
-The ``"buckets"`` literal in ``_create_profile`` is deliberate: the
-``_CLI_HARNESS`` subprocess sets no bucket-root override, so
-``storage_root / "buckets"`` checks production's real DEFAULT-derived
-location, not an injected value. Re-deriving it from the taxonomy accessor
-would make the assertion agree unconditionally with the code path it exists
-to independently confirm.
 """
 
 from __future__ import annotations
@@ -34,7 +27,7 @@ import sys
 from collections.abc import Iterator
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, Final
+from typing import Any
 from uuid import UUID
 
 import pytest
@@ -43,9 +36,6 @@ from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.secure_sql import reap_profile_session_keys
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _PASSPHRASE = "lifecycle-session-passphrase"  # noqa: S105
 

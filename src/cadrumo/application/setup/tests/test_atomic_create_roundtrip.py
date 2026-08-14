@@ -27,6 +27,7 @@ from ....core.config import override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_envelope import unwrap_cli_result as _json
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -230,9 +231,9 @@ def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(_cli_st
         assert _json(imported_show)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
         imported_facts = {row["path"]: row["value"] for row in _json(imported_show)["facts"]}
         assert imported_facts == source_facts
-        from ...user_profile import CommittedProfileRepository, profile_storage_session
+        from ...user_profile import CommittedProfileRepository
 
-        with profile_storage_session(exported_id):
+        with open_test_profile_session(exported_id):
             imported = CommittedProfileRepository().load(exported_id)
         assert imported.profile_id == exported_id
         assert imported.label == "alice"

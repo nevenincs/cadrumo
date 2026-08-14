@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, ClassVar
+from uuid import UUID
 
 import pytest
 from sqlalchemy import Engine, Select
@@ -46,7 +47,7 @@ from ..adapters.persistence.storage.master_key import (
     BucketSession,
     KdfParams,
     activate_session,
-    delete_profile_session_key,
+    delete_profile_session,
     get_master_key_provider,
     load_or_mint_bucket_dek,
 )
@@ -64,11 +65,11 @@ _DEFAULT_SECONDARY_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 
 
 def reap_profile_session_keys(storage_root: Path) -> None:
-    """Delete every OS-keychain profile-session key owned by ``storage_root``.
+    """Revoke every current session receipt discoverable under ``storage_root``.
 
     A login mints a random session key into the OS keychain under the
-    service ``cadrumo:profile-session``, keyed by bucket UUID; production
-    reaps it on logout and on bucket destruction. A test's storage root is
+    service ``cadrumo:profile-session:v2``, paired with its random session
+    UUID; production reaps it on logout and on profile destruction. A test's storage root is
     a temporary directory that is simply discarded, so nothing there ever
     reaches a reap path — and because every run mints a FRESH bucket uuid,
     each such test leaves one more permanent orphan behind in the
@@ -76,13 +77,13 @@ def reap_profile_session_keys(storage_root: Path) -> None:
     and ``CredWrite`` starts failing host-wide, which breaks login for the
     developer running the suite.
 
-    The bucket identities are recovered from the two durable directories a
-    provisioned bucket owns under the root, so buckets the test created
-    through the real product surfaces (with uuids the test never names)
-    are reaped alongside the ones the harness provisioned itself.
+    Profile UUID candidates are recovered from the two durable directories a
+    capsule owns under the root.  The product deletion operation then reads
+    the strict receipt and addresses only its named ``profile_id/session_id``
+    entry; teardown never recreates the retired global-account API.
 
     Best-effort by construction: a missing entry is already a no-op in
-    :func:`delete_profile_session_key`, a root that was never populated
+    :func:`delete_profile_session`, a root that was never populated
     enumerates to nothing, and a directory whose name is not a bucket
     identity is skipped. Teardown must never fail a passing test nor mask
     a failing one.
@@ -99,11 +100,10 @@ def reap_profile_session_keys(storage_root: Path) -> None:
         bucket_ids.update(entry.name for entry in entries if entry.is_dir())
     for bucket_id in bucket_ids:
         try:
-            delete_profile_session_key(bucket_id=bucket_id)
-        except CadrumoError:
-            # A directory name that is not a canonical bucket identity can
-            # never have addressed a keychain entry, so there is nothing to
-            # reap and nothing to report.
+            delete_profile_session(storage_root=storage_root, profile_id=UUID(bucket_id))
+        except (CadrumoError, ValueError):
+            # A directory name that is not a canonical profile UUID never
+            # names a current receipt, so there is nothing to revoke.
             continue
 
 
@@ -117,7 +117,7 @@ def _provision_bucket_dek_v1_session(
     """Provision a genuine ``bucket-dek-v1`` bucket and open its session.
 
     Mirrors the production mint sequence (``CommittedProfileRepository.create``
-    inside ``profile_create_storage_span``): resolve the configured
+    inside ``open_test_profile_session``): resolve the configured
     master-key provider, mint the per-bucket wrapped DEK under that
     provider's resolved key-encryption key (KEK), write the manifest in
     the ``BUCKET_DEK_V1`` schedule, then open a session keyed by the same
@@ -127,7 +127,7 @@ def _provision_bucket_dek_v1_session(
     that configures the file backend, secret-store directory, and
     dev-test passphrase (as :func:`isolated_profile_storage_root` does),
     so the provider this helper resolves is the same one a nested
-    :func:`profile_storage_session` re-resolves on the read path. That
+    :func:`open_test_profile_session` re-resolves on the read path. That
     consistency is what lets the wrapped DEK unwrap under the
     provider-resolved KEK rather than a divergent raw test key.
     """
@@ -439,7 +439,7 @@ def isolated_runtime_profile(
     configured with the dev-test passphrase (as
     :func:`isolated_profile_storage_root` does) so the wrapped DEK is
     minted under, and unwraps under, the same master-key provider a
-    nested :func:`profile_storage_session` re-resolves on the read path.
+    nested :func:`open_test_profile_session` re-resolves on the read path.
     """
 
     storage_root = tmp_path / "cadrumo-storage"
@@ -508,7 +508,7 @@ class MultiBucketTestRuntime:
         that operate against the secondary via
         ``BucketMaintenanceService`` do NOT need this — the service
         opens its own scoped session through
-        ``profile_storage_session``; this helper is for tests that
+        ``open_test_profile_session``; this helper is for tests that
         need direct repository access against the secondary.
         """
         with (
@@ -660,6 +660,12 @@ def isolated_cli_runtime_profile(
 
 
 @pytest.fixture(autouse=True)
+def isolated_profile_storage(tmp_path: Path) -> Iterator[None]:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def isolated_cli_backend(tmp_path: Path) -> Iterator[Path]:
     """Canonical isolated storage root for CLI end-to-end tests.
 
@@ -713,6 +719,7 @@ __all__ = [
     "isolated_cli_backend",
     "isolated_cli_runtime_profile",
     "isolated_ephemeral_secure_sql",
+    "isolated_profile_storage",
     "isolated_profile_storage_root",
     "isolated_runtime_profile",
     "isolated_sessionless_storage_root",

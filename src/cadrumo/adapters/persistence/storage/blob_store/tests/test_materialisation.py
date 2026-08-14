@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from ......application.user_profile import profile_create_storage_span
 from ......core.classification import SensitivityClass
 from ......core.config import Settings
 from ......tests import assert_path_matches_grammar
 from ......tests.master_key import EphemeralMasterKeyProvider
+from ......tests.profile_capsule import open_test_profile_session
 from ......tests.secure_sql import isolated_profile_storage_root
 from ...secret_store import SecretRecord
 from .._blob_store import EncryptedBlobStore
@@ -81,7 +81,7 @@ def test_get_secret_store_writes_a_real_blob_at_the_declared_taxonomy_path(tmp_p
     """
     with (
         isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
-        profile_create_storage_span(_BUCKET_ID),
+        open_test_profile_session(_BUCKET_ID),
     ):
         store = get_secret_store()
         blob_ref = store.put(_record())

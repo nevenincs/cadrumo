@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import zipfile
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -13,9 +13,7 @@ from click.testing import Result
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.modelo import resolve_registry_revision_for_work_target
-from ....application.user_profile import profile_create_storage_span, set_active_fields
 from ....application.workflow import workflow_state_repository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.modelos import (
@@ -30,12 +28,14 @@ from ....domain.modelos import (
 )
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ....tests.profile_capsule import set_active_test_profile_facts
 from ._modelo_review_package_support import seed_exportable_modelo_revision
+from ._strict_cli_fixture_support import binding_isolated_backend
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+__all__ = ["binding_isolated_backend"]
 
 
 def _invoke(args: Sequence[str]) -> Result:
@@ -51,31 +51,12 @@ def _active_registry_revision_id(*, modelo: str, filing_year: int, period: str) 
     )
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
-    ):
-        try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111"),
-            )
-            yield
-        finally:
-            dispose_engine()
-
-
 def _set_export_profile_name() -> None:
-    workflow_state_repository().update(
-        lambda state: set_active_fields(
-            state,
-            (
-                UserProfileFact(path="identity.name", value="Ana"),
-                UserProfileFact(path="identity.surnames", value="Review Package Test"),
-                UserProfileFact(path="activities.description", value="Consulting"),
-            ),
+    set_active_test_profile_facts(
+        (
+            UserProfileFact(path="identity.name", value="Ana"),
+            UserProfileFact(path="identity.surnames", value="Review Package Test"),
+            UserProfileFact(path="activities.description", value="Consulting"),
         ),
     )
 

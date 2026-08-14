@@ -26,15 +26,15 @@ from uuid import UUID
 import pytest
 from click.testing import Result
 
-from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.resources import resources
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
+from ....tests.secure_sql import isolated_profile_storage
 from ....tests.user_profile import register_minimal_profile
-from ._isolated_profile_storage_fixtures import _isolated_backend
 
-__all__ = ["_isolated_backend"]
+__all__ = ["isolated_profile_storage"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -50,7 +50,7 @@ def _seed_active_profile(name: str = "operator", *, overrides: Mapping[str, str]
     digest[6] = (digest[6] & 0x0F) | 0x40
     digest[8] = (digest[8] & 0x3F) | 0x80
     profile_id = str(UUID(bytes=bytes(digest)))
-    with profile_create_storage_span(profile_id):
+    with open_test_profile_session(profile_id):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,

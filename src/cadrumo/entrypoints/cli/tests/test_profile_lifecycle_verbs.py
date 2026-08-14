@@ -23,6 +23,7 @@ from ....adapters.persistence.storage import (
 from ....core.i18n import tr
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ._profile_lifecycle_support import distinct_nif, seed, stage_bucket_manifest
 
@@ -53,7 +54,7 @@ _ADVERTISED_RESIDENT_IRPF_NATURAL_PERSON_FLAGS = (
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[Path]:
-    # profile_create_storage_span (called inside seed) resolves the
+    # open_test_profile_session (called inside seed) resolves the
     # file-backed master-key provider provisioned by this fixture.
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         yield storage_root
@@ -374,7 +375,6 @@ def test_config_login_emits_profile_activated_event() -> None:
     """
 
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ....application.user_profile import profile_storage_session
     from ....application.workflow import read_profile_bucket
     from ....domain.buckets import BucketEventType
 
@@ -386,7 +386,7 @@ def test_config_login_emits_profile_activated_event() -> None:
 
     # The bucket-event-history catalogue is encrypted; reading it requires an
     # active session for the operator profile's UUID bucket.
-    with profile_storage_session(pointer.bucket_id):
+    with open_test_profile_session(pointer.bucket_id):
         catalogue = BucketEventHistoryRepository().load()
     matching = [
         event

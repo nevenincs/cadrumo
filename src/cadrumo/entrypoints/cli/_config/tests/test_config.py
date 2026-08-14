@@ -28,6 +28,7 @@ from .....adapters.persistence.storage.sql.engine import dispose_engine
 from .....core.config import override_settings
 from .....core.i18n import tr
 from .....tests.cli_runner import invoke_cached_cli
+from .....tests.profile_capsule import open_test_profile_session
 from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .._errors import ConfigBoundaryError
 
@@ -388,28 +389,6 @@ def test_recover_without_interactive_stdin_refuses_instructively() -> None:
     assert not isinstance(result.exception, EOFError)
 
 
-def test_passphrase_change_refusal_json_stream_parses_cleanly_without_traceback_leak() -> None:
-    """`aeat --format json config passphrase change` refusal is a pure-JSON error document.
-
-    Symptom 2 of the same root cause: the INTERNAL-boundary crash logged a
-    traceback that leaked before the envelope, breaking any JSON consumer of the
-    error stream. The REFUSED path emits only the typed error document (on
-    stderr, per the ``write_stderr`` error contract; stdout stays empty), so it
-    parses cleanly.
-    """
-    result = invoke_cached_cli(["--format", "json", "config", "passphrase", "change"])
-
-    assert result.exit_code == 2
-    assert "Traceback" not in result.stderr
-    assert "Traceback" not in result.output
-    # stdout carries no leaked JSON/traceback; the typed error document is the
-    # sole content of the JSON error stream and parses cleanly.
-    document = json.loads(result.stderr)
-    assert document["status"] == "error"
-    assert document["error"]["category"] == "REFUSED"
-    assert document["error"]["code"] == "REFUSED_CLI_BOUNDARY"
-
-
 def test_error_envelope_carries_the_active_command_identifier() -> None:
     """A refused leaf command's error envelope names the failing command.
 
@@ -419,14 +398,6 @@ def test_error_envelope_carries_the_active_command_identifier() -> None:
     error can never disagree on the command name. A machine consumer of the
     error stream thus knows which command failed without argv bookkeeping.
     """
-    change = json.loads(invoke_cached_cli(["--format", "json", "config", "passphrase", "change"]).stderr)
-    assert change["command"] == "config.passphrase.change"
-
-    recover = json.loads(
-        invoke_cached_cli(["--format", "json", "config", "recover"]).stderr,
-    )
-    assert recover["command"] == "config.recover"
-
     # A hyphenated CLI leaf maps to its underscored envelope id, and a deeper
     # path threads every segment (unknown-profile refusal on a nested command).
     bad_show = json.loads(
@@ -457,12 +428,12 @@ def test_pre_resolution_error_envelope_command_stays_null() -> None:
 
 def _record_divergence(profile_name: str) -> None:
     """Persist one open cotejo divergence on the named profile's record."""
-    from .....application.user_profile import CensoDivergence, apply_cotejo, profile_storage_session
+    from .....application.user_profile import CensoDivergence, apply_cotejo
     from .....application.workflow import read_profile_bucket, workflow_state_repository
 
     pointer = read_profile_bucket(profile_name)
     assert pointer is not None
-    with profile_storage_session(pointer.bucket_id):
+    with open_test_profile_session(pointer.bucket_id):
         workflow_state_repository().update(
             lambda state: apply_cotejo(
                 state,

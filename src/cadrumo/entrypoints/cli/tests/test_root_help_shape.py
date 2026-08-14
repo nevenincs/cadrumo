@@ -18,35 +18,31 @@ import shutil
 import sqlite3
 import subprocess
 import sys
-from collections.abc import Iterator
 from pathlib import Path
 from typing import Final
 
 import pytest
 
+from ....tests.profile_capsule import open_test_profile_session
+from ._profile_storage_fixtures import isolated_profile_storage
+
+__all__ = ["isolated_profile_storage"]
+
 from .... import __version__
 from ....application.operator_surface import build_help_document
-from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core import PRODUCT_IDENTITY, BucketPointer, write_pointer
 from ....core.config import SecretStoreBackend, Settings, load_settings
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root, isolated_sessionless_storage_root
 from ....tests.user_profile import register_minimal_profile
+from ._isolated_profile_storage_fixtures import _isolated_state
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["_isolated_state"]
 
 PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"logs"})
 """Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
-
-
-@pytest.fixture(autouse=True)
-def _isolated_state(tmp_path: Path) -> Iterator[None]:
-    # Most tests in this file only invoke --help or subprocess-isolated
-    # commands; they need storage isolation but no active session.
-    with isolated_sessionless_storage_root(tmp_path=tmp_path):
-        yield
 
 
 def _invoke(args: list[str]):
@@ -185,15 +181,9 @@ def test_bare_invocation_preserves_selected_profile_with_missing_manifest() -> N
 
 # The custody and audit families the curated help MUST cite, keyed by the live
 # command prefix that identifies each. The sibling resolve gate above proves a
-# cited command exists; it is blind to a family the help simply OMITS, which is
-# exactly how this surface once claimed coverage of recovery, certificate and
-# audit while citing none of them. Each prefix is a live family: the passphrase
-# custody verb, the recovery lifecycle group, the flat recover verb, the
-# certificate credential custody group, and the modelo evidence-audit group.
+# cited command exists; it is blind to a family the help simply OMITS. Each
+# prefix is a live family: certificate credential custody and Modelo audit.
 _REQUIRED_HELP_FAMILIES: dict[str, str] = {
-    "passphrase custody": "aeat config passphrase",
-    "recovery lifecycle": "aeat config recovery",
-    "recovery recover": "aeat config recover",
     "certificate custody": "aeat config auth certificate",
     "modelo audit": "aeat app modelo audit",
 }
@@ -208,16 +198,15 @@ def _curated_help_commands() -> list[str]:
     ]
 
 
-def test_curated_help_covers_custody_and_audit_families() -> None:
-    """The curated help must CITE the custody and audit families, not just resolve what it cites.
+def test_curated_help_covers_required_families() -> None:
+    """The curated help must cite the required families, not just resolve what it cites.
 
     A surface omission is silent to the resolve and suggestion-conformance gates:
     they check that every cited command exists, never that a required family is
     cited at all. This gate closes that hole for the named families below.
 
     A prefix matches a citation when the citation is the family verb itself or a
-    child of it (``prefix`` or ``prefix`` + a space), so ``aeat config recover``
-    does not spuriously satisfy the ``aeat config recovery`` group.
+    child of it (``prefix`` or ``prefix`` + a space).
     """
     commands = _curated_help_commands()
     assert len(commands) >= 40, (
@@ -496,27 +485,20 @@ def test_installed_console_profile_create_fails_fast_without_prompt_host(tmp_pat
     assert "Traceback" not in combined_output
 
 
+@pytest.mark.usefixtures("isolated_profile_storage")
 class TestBareInvocationWithActiveProfile:
     """Tests that call register_minimal_profile need a file-backed storage root.
 
     register_minimal_profile goes through build_lifecycle_service →
     _secure_objects_for_bucket → runtime.require_ready(), which needs an
-    active bucket session. profile_create_storage_span initialises the key
+    active bucket session. open_test_profile_session initialises the key
     material and activates the session for the target profile_id so the
     call succeeds without a pre-provisioned test bucket in the profile list.
     """
 
-    @pytest.fixture(autouse=True)
-    def _isolated_state(self, tmp_path: Path) -> Iterator[None]:
-        # Overrides the module-level _isolated_state. Uses profile_storage_root
-        # (not sessionless) so profile_create_storage_span can resolve a
-        # file-backed master-key provider and provision key material.
-        with isolated_profile_storage_root(tmp_path=tmp_path):
-            yield
-
     def test_bare_invocation_reports_profile_state_without_cli_only_storage(self) -> None:
         missing = _invoke([])
-        with profile_create_storage_span("11111111-1111-4111-8111-111111111111"):
+        with open_test_profile_session("11111111-1111-4111-8111-111111111111"):
             workflow_state_repository().update(
                 lambda current: register_minimal_profile(
                     current,
@@ -548,7 +530,7 @@ class TestBareInvocationWithActiveProfile:
     def test_bare_invocation_after_logout_points_to_login_not_create(self) -> None:
         """A registered profile without a selection is a login state, not first run."""
 
-        with profile_create_storage_span("11111111-1111-4111-8111-111111111111"):
+        with open_test_profile_session("11111111-1111-4111-8111-111111111111"):
             workflow_state_repository().update(
                 lambda current: register_minimal_profile(
                     current,
@@ -574,7 +556,7 @@ class TestBareInvocationWithActiveProfile:
         assert help_payload["surface"] == "root"
         assert help_payload["heading"]  # locale-driven; presence is the structural assertion
 
-        with profile_create_storage_span("11111111-1111-4111-8111-111111111111"):
+        with open_test_profile_session("11111111-1111-4111-8111-111111111111"):
             workflow_state_repository().update(
                 lambda current: register_minimal_profile(
                     current,

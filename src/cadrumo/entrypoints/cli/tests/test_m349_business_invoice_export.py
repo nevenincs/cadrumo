@@ -13,16 +13,16 @@ from click.testing import Result
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....application.aggregation import CalculationSourceContext
 from ....application.invoices import InvoiceCatalogueSourceResolver
-from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import load_modelo_path
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
+from ....tests.secure_sql import isolated_profile_storage
 from ....tests.user_profile import register_minimal_profile
-from ._isolated_profile_storage_fixtures import _isolated_backend
 
-__all__ = ["_isolated_backend"]
+__all__ = ["isolated_profile_storage"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -255,7 +255,7 @@ def test_m349_business_invoices_persist_and_export_operador_rows(tmp_path: Path)
 
 
 def test_emilio_catalogue_service_invoice_feeds_m349() -> None:
-    with profile_create_storage_span("11111111-1111-4111-8111-111111111111"):
+    with open_test_profile_session("11111111-1111-4111-8111-111111111111"):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111"),
         )

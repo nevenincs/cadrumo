@@ -24,6 +24,7 @@ import pytest
 
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .._common import _declared_tax_id, cli_policy_refusal_projection
 from .._errors import CliRefusedBoundaryError, error_boundary_under_test
@@ -77,13 +78,12 @@ def _persist_facts(*, include_tax_id: bool) -> None:
     entry: the path is simply never among the facts written, which is what makes
     absence unambiguous.
     """
-    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
     from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None, "profile create must install an active-profile pointer"
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         record = load_test_profile_record(bucket_id)
         kept = {fact.path: fact for fact in record.facts if fact.path != "identity.tax_id"}
         kept.update({fact.path: fact for fact in _SUPPORTING_FACTS})
@@ -100,13 +100,12 @@ def _persist_facts(*, include_tax_id: bool) -> None:
 
 
 def _active_record():
-    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
     from ....tests.profile_capsule import load_test_profile_record
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         return load_test_profile_record(bucket_id)
 
 

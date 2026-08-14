@@ -21,16 +21,19 @@ import pytest
 import typer
 import typer.core
 
+from .....tests.profile_capsule import open_test_profile_session
+from ._isolated_storage_fixture import isolated_storage
+
+__all__ = ["isolated_storage"]
+
 from .....tests.cli_runner import invoke_cached_cli
 from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
-from .....tests.secure_sql import isolated_profile_storage_root
 from ....cli._config import _status_frontend
 from ....cli._config._status_frontend import present_status_tui
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
     from pathlib import Path
 
     from .....adapters.inbound.tui import StatusFactRow
@@ -303,21 +306,19 @@ def _seed_auth_facts() -> None:
     renders UNMASKED and is read by the net, while ``auth.numero_soporte``
     is declared ``secret``, so its row is masked and deliberately skipped.
 
-    They are written through ``set_active_fields`` -- the same plural door
-    the manager's authentication action commits through -- against the
-    real encrypted record, so the rows projected from them are the rows
-    an operator's screen is built from.
+    They are written through the record repository's compare-and-swap fact
+    door -- the same one the manager's authentication action commits through
+    -- against the real encrypted record, so the rows projected from them are
+    the rows an operator's screen is built from.
     """
-    from .....application.user_profile import set_active_fields
-    from .....application.workflow import workflow_state_repository
     from .....domain.user_profile import UserProfileFact
+    from .....tests.profile_capsule import set_active_test_profile_facts
 
-    set_active_fields(
-        workflow_state_repository().load(),
+    set_active_test_profile_facts(
         (
             UserProfileFact(path=_AUTH_PROVIDER_PATH, value=_AUTH_PROVIDER_VALUE),
             UserProfileFact(path=_AUTH_SOPORTE_PATH, value=_AUTH_SOPORTE_VALUE),
-        ),
+        )
     )
 
 
@@ -327,13 +328,12 @@ def _fact_rows_over_a_real_profile() -> tuple[tuple[StatusFactRow, ...], UserPro
     The record is returned alongside its rows so a caller can project the
     SAME record through another surface and compare the two readings.
     """
-    from .....application.user_profile import profile_storage_session
     from .....application.workflow import read_profile_bucket, workflow_state_repository
 
     _create_profile()
     pointer = read_profile_bucket("operator")
     assert pointer is not None
-    with profile_storage_session(pointer.bucket_id):
+    with open_test_profile_session(pointer.bucket_id):
         _seed_auth_facts()
         record = workflow_state_repository().load().active_profile_record()
         assert record is not None
@@ -475,13 +475,7 @@ def test_an_indexed_row_uses_the_schema_label_and_a_visible_row_marker() -> None
 # ── independent zone degradation (a damaged read never tracebacks) ──────────
 
 
-@pytest.fixture
-def _empty_storage(tmp_path: Path) -> Iterator[Path]:
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        yield storage_root
-
-
-def test_every_zone_degrades_on_an_empty_storage_root(_empty_storage: Path) -> None:
+def test_every_zone_degrades_on_an_empty_storage_root(isolated_storage: Path) -> None:
     """With no profile, no auth state, and no recovery enrolment, every zone degrades.
 
     This is the real damaged-host contract: the reads genuinely find

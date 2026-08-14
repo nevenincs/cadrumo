@@ -37,9 +37,9 @@ from .....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from .....adapters.persistence.storage import SYNC_RUN_RECORDS_NAMESPACE
 from .....core import SyncSurface
 from .....domain.buckets import BucketEventType
+from .....tests.profile_capsule import open_test_profile_session
 from .....tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_minimal_profile
-from ....user_profile import profile_create_storage_span
 from ....workflow import workflow_state_repository
 from .._persist import record_sync_run
 from .._records import (
@@ -65,7 +65,7 @@ _WIDE_SCOPE_MODELOS = tuple(f"{100 + index}" for index in range(120))
 @pytest.fixture
 def active_profile(tmp_path: Path) -> Iterator[str]:
     """Bind a real isolated encrypted profile bucket for one test."""
-    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_BUCKET_ID):
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
         workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID))
         bucket_id = workflow_state_repository().load().active_profile_bucket_id()
         assert bucket_id is not None
