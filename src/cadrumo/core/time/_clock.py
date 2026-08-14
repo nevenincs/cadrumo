@@ -14,8 +14,8 @@ deterministic. The seam is DEFAULT-OFF: production never enters
 ``datetime.now(tz=UTC)`` with zero behaviour change. The seam is
 context-var scoped — never process-global — so it cannot leak across
 tasks the way ``freezegun`` / ``time_machine`` global freezing does, the
-pattern banned in live-marked tests by
-:data:`aeat-tests.conftest.BANNED_LIVE_IMPORTS`. :func:`frozen_clock`
+pattern banned in live-marked tests by the repo-root shared collection policy.
+:func:`frozen_clock`
 additionally refuses to activate while the pytest live-read opt-in
 (:attr:`cadrumo.core.config.Settings.live_tests_enabled`) is set, keeping
 live-marked tests on real wall-clock plus explicit ``clock=`` injection

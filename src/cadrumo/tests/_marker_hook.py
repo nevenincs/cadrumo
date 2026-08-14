@@ -1,9 +1,8 @@
 """Shared pytest collection policy enforcing taxonomy and live-import safety.
 
-This module is test-infrastructure, not a production module. It is imported
-from both the repo-root ``conftest.py`` and ``src/cadrumo/tests/conftest.py``
-so that items collected anywhere under ``src/cadrumo/`` pass through the same
-enforcement surface.
+This module is test-infrastructure, not a production module. The repo-root
+``conftest.py`` imports it so items collected anywhere under ``src/cadrumo/``
+pass through the same enforcement surface.
 
 The marker contract enforced by :func:`apply` on every collected item:
 
@@ -41,12 +40,10 @@ hold is always stated.
 
 The two policy functions compose in this order: :func:`apply` validates marker
 taxonomy before :func:`apply_banned_live_import_policy` inspects live-marked
-modules. The latter does not mutate ``items`` or module state, so calling it
-again on the same collection has the identical verdict. That makes it safe to
-move its caller from the package conftest to the root collection surface without
-creating a transitional policy split.
+modules. The repo-root hook invokes them in that order exactly once per
+collection.
 
-Live AEAT access is opt-in gated by the package-scoped conftest after
+Live AEAT access is opt-in gated by the shared :mod:`.live_gate` helper after
 this taxonomy check.
 """
 

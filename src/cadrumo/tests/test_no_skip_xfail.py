@@ -800,7 +800,7 @@ def pytest_collection_modifyitems(config, items):
 def rogue_helper():
     pytestmark = [pytest.mark.skip]
 """
-    inventory = _skip_policy_inventory_for_source("src/cadrumo/tests/conftest.py", source)
+    inventory = _skip_policy_inventory_for_source("conftest.py", source)
 
     assert _shortcut_violation_name_counts(inventory.shortcut_violations) == Counter({"pytest.mark.skip": 2})
 
