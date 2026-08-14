@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:ca91d9e9dab0d75ba948d8d05a5c7e5d82da3fd47042ccecb8fd14023db07638'
+body_hash: 'sha256:9df7af6ede966866d534f0fa62a4e1ef6a8a74decc8f0e06816c211765ea96ce'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -24,6 +24,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P23-S76]]'
   - '[[2026-08-14-test-harness-sanity-W07-P23-S77]]'
   - '[[2026-08-14-test-harness-sanity-W07-P23-S78]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P23-S79]]'
   - '[[2026-08-14-test-harness-sanity-audit]]'
   - '[[2026-08-14-test-harness-sanity-plan]]'
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -62,6 +63,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P23-S76` - Replace previous-filing exception mutation with reachable real behavior
 - `2026-08-14-test-harness-sanity-W07-P23-S77` - Replace relation-allowance mutation with an explicit production input
 - `2026-08-14-test-harness-sanity-W07-P23-S78` - Replace previous-filing revision-selector mutation with real registry input
+- `2026-08-14-test-harness-sanity-W07-P23-S79` - Restore the no-monkeypatch gate and discriminating controls to green
 
 ### plan
 
