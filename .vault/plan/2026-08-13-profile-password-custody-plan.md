@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-14'
-body_hash: 'sha256:d67fb735fbc207c1ae0ee1f744bc2f627a92be5a37086c4a673d5c0b8694fa75'
+body_hash: 'sha256:99b6a1cf95cb62deb3fb7d4f61bcbfa1e448a503f35b1fb5335f34c29af3e4dd'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -139,6 +139,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S65` - Have Sol Medium give the M303 per-activity prorrata completeness refusal one home, since the invariant is genuinely enforced on the live export path but raises an untranslated internal registry error, while an orphaned second implementation that can never fire carries the operator-facing typed refusal whose localisation key already ships in all four catalogues, so the better surface and the better position are currently in different objects and deleting either loses something real; `src/cadrumo/application/filing/ and src/cadrumo/domain/calculations/registry/_m303_prorrata_activity_projection.py`.
 - [ ] `W04.P07.S67` - Have Terra XHigh delete the retired workspace-initialisation package in one atomic commit, its entry point being an unconditional refusal with no callers kept alive only by two string references, re-homing the four genuinely valuable tests it hosts onto the package that owns active-profile registration and deleting the typing test that keeps a retired contract alive, the atomicity mattering because removing the package without updating both string references reds the import-smoke inventory; `src/cadrumo/application/setup/ and src/cadrumo/tests/test_layout_import_smoke.py`.
 - [ ] `W04.P07.S68` - Have Terra XHigh widen the substrate signatures that force ten delegate sites to narrow a handle and then hand the same object back to a substrate demanding its concrete type, one of which returns a type guard, since the interim fail-closed identity check correctly refuses a structurally conforming stand-in the substrate never minted but is a guard standing in for a boundary that should not need one; `src/cadrumo/adapters/persistence/storage/master_key/ and src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/adapters/persistence/storage/bucket/ and src/cadrumo/application/profile_custody/`.
+- [ ] `W04.P07.S69` - Have Terra XHigh remove the second bucket-root creator that survives as dead production code, since the layout helper creating a bucket directory with its database and blob children outside publication has zero production callers and is reached only from tests, making it exactly the class of second creator the new bucket-root guard exists to refuse, and leaving it in the production package invites it being wired back up; `src/cadrumo/adapters/persistence/storage/bucket/_layout.py`.
 
 ## Wave `W05` - end-to-end proof
 
