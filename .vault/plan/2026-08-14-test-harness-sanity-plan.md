@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-14'
-body_hash: 'sha256:71956e5c90e97f4c22f8063c92152bb60fce18a59e5320bb494d421866d90be0'
+body_hash: 'sha256:25c54333050bac75a9699948214278582eca501adeb7c829055126005e74051e'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -111,7 +111,7 @@ Apply collection policy exactly once from the root and prove domain-local live r
 - [x] `W07.P22.S71` - Promote banned-live-import enforcement into the shared root policy helper; `src/cadrumo/tests/_marker_hook.py`.
 - [x] `W07.P22.S72` - Make the repository root the sole collection-policy hook owner; `conftest.py`.
 - [x] `W07.P22.S73` - Remove duplicate marker traversal and live-policy ownership from the child conftest; `src/cadrumo/tests/conftest.py`.
-- [ ] `W07.P22.S74` - Add real subprocess proofs for domain-local banned live imports and clean controls; `src/cadrumo/tests/test_marker_integrity.py`.
+- [x] `W07.P22.S74` - Add real subprocess proofs for domain-local banned live imports and clean controls; `src/cadrumo/tests/test_marker_integrity.py`.
 
 ### Phase `W07.P23` - remove forbidden monkeypatch controls
 
