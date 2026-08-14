@@ -303,6 +303,11 @@ class BindingSourceKind(StrEnum):
     # the FIFO carry projection. This is a registry-declared source because the
     # two annual boxes are not independent relation copy/sum folds.
     IVA_COMPENSATION_ANNUAL_PARTITION = "iva_compensation_annual_partition"
+    # Modelo 390 annual simplified-regime summary: consumes the one immutable,
+    # filed-current Modelo 303 4T CalculationRevision and its evidence rather
+    # than a scalar observation or relation prefill.  Its 10-box envelope is
+    # keyed by canonical M390 CasillaIds and persisted on the target revision.
+    M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY = "m303_regimen_simplificado_annual_summary"
     # Capital-goods IVA deduction regularización (LIVA arts. 107-110): the source
     # that would materialise Modelo 303 casilla 43 / the Modelo 390 regularización
     # field from the profile-scoped bienes-de-inversión register plus definitive
@@ -426,8 +431,14 @@ def counterpart_source_kind(value: object) -> CounterpartSourceKind:
         source_kind = value if isinstance(value, BindingSourceKind) else BindingSourceKind(value)
     except ValueError as exc:
         raise ValueError(f"unsupported source_kind {value!r}") from exc
-    if source_kind in COUNTERPART_SOURCE_KINDS:
-        return source_kind
+    if source_kind is BindingSourceKind.LEDGER_TRANSACTION:
+        return BindingSourceKind.LEDGER_TRANSACTION
+    if source_kind is BindingSourceKind.PURCHASE_INVOICE_EVIDENCE:
+        return BindingSourceKind.PURCHASE_INVOICE_EVIDENCE
+    if source_kind is BindingSourceKind.PAYABLE_INVOICE:
+        return BindingSourceKind.PAYABLE_INVOICE
+    if source_kind is BindingSourceKind.COLLECTIBLE_INVOICE:
+        return BindingSourceKind.COLLECTIBLE_INVOICE
     raise ValueError(
         "unsupported source_kind; use one of ledger_transaction, "
         "purchase_invoice_evidence, payable_invoice, collectible_invoice",

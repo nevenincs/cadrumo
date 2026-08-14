@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import UserProfileLifecycleRepository
+from ....application.user_profile import ProfileRecordRepository
 from ....core.access_gate import AuthorizationState
 from ....core.resources import resources
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
@@ -76,7 +76,7 @@ def _store_capital_withholding_profile(runtime_profile: TestRuntimeProfile) -> N
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )
-    lifecycle = UserProfileLifecycleRepository(
+    lifecycle = ProfileRecordRepository(
         bucket_id=_PROFILE_ID,
         objects=runtime_profile.repository,
     )

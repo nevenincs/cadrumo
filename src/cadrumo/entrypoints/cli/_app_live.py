@@ -1478,109 +1478,74 @@ def _filed_capture_notices(
     return ((truncation,) if truncation is not None else ()) + report.evidence_notices
 
 
-@filed_app.command("pull", help=tr("cli.app.live.filed.pull_help"))
-def filed_pull_cmd(
+def _emit_single_filed_pull(
     ctx: typer.Context,
-    modelos: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--modelo",
-            help=tr(
-                "cli.app.live.filed.pull_modelo_help",
-                default="Modelo code to include. Repeat or omit with --from-year/--to-year for a bulk pull.",
-            ),
-        ),
-    ] = None,
-    year: Annotated[int | None, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help"))] = None,
-    year_from: Annotated[
-        int | None,
-        typer.Option("--from-year", min=2000, max=2099, help=tr("cli.app.live.from_year_help")),
-    ] = None,
-    year_to: Annotated[
-        int | None,
-        typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
-    ] = None,
-    output_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--output-root",
-            file_okay=False,
-            dir_okay=True,
-            writable=True,
-            help=tr("cli.app.live.output_root_help"),
-        ),
-    ] = None,
-    period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.live.period_help"))] = None,
-    expediente_id: Annotated[str | None, typer.Option("--expediente", help=tr("cli.app.live.expediente_help"))] = None,
-    limit: Annotated[int | None, typer.Option("--limit", min=1, help=tr("cli.app.live.limit_help"))] = None,
-    dry_run: Annotated[
-        bool,
-        typer.Option("--dry-run", help=tr("cli.app.live.filed.pull_dry_run_help")),
-    ] = False,
+    *,
+    modelo: str,
+    year: int,
+    output_root: Path | None,
+    period: str | None,
+    expediente_id: str | None,
+    limit: int | None,
 ) -> None:
-    """Capture filed-declaration observations through the read-only AEAT register.
+    """Capture and emit one modelo/year filed-declaration report."""
+    from ...core.config import load_settings
+    from ._app_live_payloads import FiledCaptureResult
 
-    Single-modelo mode delegates to
-    :func:`capture_filed_data`; range mode delegates to
-    :func:`capture_filed_data_bulk`. Both flows emit :class:`FiledCaptureResult`,
-    persist encrypted filed observations and artefact references, register parsed
-    justificante metadata when available, and only stamp local
-    :class:`ModeloRecord` evidence when an existing current filing record
-    matches.
-    """
+    resolved_period = _live_period_option(period, year=year)
+    report = asyncio.run(
+        capture_filed_data(
+            modelo=modelo,
+            year=year,
+            output_root=resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir),
+            period=resolved_period,
+            expediente_id=expediente_id,
+            limit=limit,
+        ),
+    )
+    lines = _filed_capture_lines(report, mode="single", modelo=report.modelo, year=report.year)
+    result = FiledCaptureResult(
+        output_root=report.output_root,
+        modelo=report.modelo,
+        year=report.year,
+        captured_count=report.captured_count,
+        observation_paths=list(report.observation_paths),
+        artefact_refs=list(report.artefact_refs),
+        justificante_metadata_count=report.justificante_metadata_count,
+        justificante_csvs=list(report.justificante_csvs),
+        filing_evidence_stamped_count=report.filing_evidence_stamped_count,
+        filing_record_ids=list(report.filing_record_ids),
+        filing_evidence_conflict_count=report.filing_evidence_conflict_count,
+        filing_evidence_conflict_record_ids=list(report.filing_evidence_conflict_record_ids),
+        casilla_count=report.casilla_count,
+        calculation_observation_count=report.calculation_observation_count,
+        calculation_observation_keys=list(report.calculation_observation_keys),
+    )
+    notices = _filed_capture_notices(report, limit=limit)
+    _emit_envelope(
+        ctx,
+        command="app.live.filed.pull",
+        result=result,
+        lines=(*lines, *notice_lines(notices)),
+        notices=notices,
+    )
+
+
+def _emit_bulk_filed_pull(
+    ctx: typer.Context,
+    *,
+    selected_modelos: tuple[str, ...],
+    year: int | None,
+    year_from: int | None,
+    year_to: int | None,
+    output_root: Path | None,
+    limit: int | None,
+    dry_run: bool,
+) -> None:
+    """Capture and emit a bulk filed-declaration report."""
     from ...core.config import load_settings
     from ._app_live_payloads import FiledCaptureFailurePayload, FiledCaptureResult
 
-    _emit_live_auth_preflight()
-    selected_modelos = tuple(modelos or ())
-    if len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None:
-        if dry_run:
-            # Single-modelo capture has no dry-run path, so accepting the flag here
-            # would hand an operator a real write under a flag whose whole promise
-            # is leaving no trace. Refused rather than ignored, and rather than
-            # extending single mode, which is a different decision.
-            raise typer.BadParameter(tr("cli.app.live.filed.pull_dry_run_single_mode_error"))
-        resolved_period = _live_period_option(period, year=year)
-        report = asyncio.run(
-            capture_filed_data(
-                modelo=selected_modelos[0],
-                year=year,
-                output_root=resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir),
-                period=resolved_period,
-                expediente_id=expediente_id,
-                limit=limit,
-            ),
-        )
-        lines = _filed_capture_lines(report, mode="single", modelo=report.modelo, year=report.year)
-        result = FiledCaptureResult(
-            output_root=report.output_root,
-            modelo=report.modelo,
-            year=report.year,
-            captured_count=report.captured_count,
-            observation_paths=list(report.observation_paths),
-            artefact_refs=list(report.artefact_refs),
-            justificante_metadata_count=report.justificante_metadata_count,
-            justificante_csvs=list(report.justificante_csvs),
-            filing_evidence_stamped_count=report.filing_evidence_stamped_count,
-            filing_record_ids=list(report.filing_record_ids),
-            filing_evidence_conflict_count=report.filing_evidence_conflict_count,
-            filing_evidence_conflict_record_ids=list(report.filing_evidence_conflict_record_ids),
-            casilla_count=report.casilla_count,
-            calculation_observation_count=report.calculation_observation_count,
-            calculation_observation_keys=list(report.calculation_observation_keys),
-        )
-        notices = _filed_capture_notices(report, limit=limit)
-        _emit_envelope(
-            ctx,
-            command="app.live.filed.pull",
-            result=result,
-            lines=(*lines, *notice_lines(notices)),
-            notices=notices,
-        )
-        return
-
-    if period is not None or expediente_id is not None:
-        raise typer.BadParameter("--period and --expediente are only valid for one --modelo with --year")
     resolved_from, resolved_to = resolve_pull_year_range(year=year, year_from=year_from, year_to=year_to)
     report = asyncio.run(
         capture_filed_data_bulk(
@@ -1647,6 +1612,90 @@ def filed_pull_cmd(
         result=result,
         lines=(*lines, *notice_lines(capture_notices)),
         notices=notices,
+    )
+
+
+@filed_app.command("pull", help=tr("cli.app.live.filed.pull_help"))
+def filed_pull_cmd(
+    ctx: typer.Context,
+    modelos: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--modelo",
+            help=tr(
+                "cli.app.live.filed.pull_modelo_help",
+                default="Modelo code to include. Repeat or omit with --from-year/--to-year for a bulk pull.",
+            ),
+        ),
+    ] = None,
+    year: Annotated[int | None, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help"))] = None,
+    year_from: Annotated[
+        int | None,
+        typer.Option("--from-year", min=2000, max=2099, help=tr("cli.app.live.from_year_help")),
+    ] = None,
+    year_to: Annotated[
+        int | None,
+        typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
+    ] = None,
+    output_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--output-root",
+            file_okay=False,
+            dir_okay=True,
+            writable=True,
+            help=tr("cli.app.live.output_root_help"),
+        ),
+    ] = None,
+    period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.live.period_help"))] = None,
+    expediente_id: Annotated[str | None, typer.Option("--expediente", help=tr("cli.app.live.expediente_help"))] = None,
+    limit: Annotated[int | None, typer.Option("--limit", min=1, help=tr("cli.app.live.limit_help"))] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help=tr("cli.app.live.filed.pull_dry_run_help")),
+    ] = False,
+) -> None:
+    """Capture filed-declaration observations through the read-only AEAT register.
+
+    Single-modelo mode delegates to
+    :func:`capture_filed_data`; range mode delegates to
+    :func:`capture_filed_data_bulk`. Both flows emit :class:`FiledCaptureResult`,
+    persist encrypted filed observations and artefact references, register parsed
+    justificante metadata when available, and only stamp local
+    :class:`ModeloRecord` evidence when an existing current filing record
+    matches.
+    """
+    _emit_live_auth_preflight()
+    selected_modelos = tuple(modelos or ())
+    if len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None:
+        if dry_run:
+            # Single-modelo capture has no dry-run path, so accepting the flag here
+            # would hand an operator a real write under a flag whose whole promise
+            # is leaving no trace. Refused rather than ignored, and rather than
+            # extending single mode, which is a different decision.
+            raise typer.BadParameter(tr("cli.app.live.filed.pull_dry_run_single_mode_error"))
+        _emit_single_filed_pull(
+            ctx,
+            modelo=selected_modelos[0],
+            year=year,
+            output_root=output_root,
+            period=period,
+            expediente_id=expediente_id,
+            limit=limit,
+        )
+        return
+
+    if period is not None or expediente_id is not None:
+        raise typer.BadParameter("--period and --expediente are only valid for one --modelo with --year")
+    _emit_bulk_filed_pull(
+        ctx,
+        selected_modelos=selected_modelos,
+        year=year,
+        year_from=year_from,
+        year_to=year_to,
+        output_root=output_root,
+        limit=limit,
+        dry_run=dry_run,
     )
 
 

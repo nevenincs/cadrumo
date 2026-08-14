@@ -54,7 +54,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import UserProfileLifecycleRepository
+from ....application.user_profile import ProfileRecordRepository
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import calculate_registry_snapshot
@@ -105,8 +105,6 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
 
     # The project verb builds casilla_observations from engine_result.entries.
@@ -274,7 +272,7 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
         ),
     )
-    lifecycle = UserProfileLifecycleRepository(
+    lifecycle = ProfileRecordRepository(
         bucket_id=_PROFILE_ID,
         objects=runtime_profile.repository,
     )
@@ -592,8 +590,6 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         date_binding_values={
             f"renta-{_FILING_YEAR}-profile-taxpayer-birth-date": date(1980, 1, 1),
         },
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
 
     # Assert projected M100 casilla values equal oracle values.

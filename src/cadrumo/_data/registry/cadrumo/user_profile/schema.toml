@@ -1,6 +1,6 @@
 [schema]
 id = "cadrumo.user_profile"
-version = 5
+version = 6
 title = "Cadrumo user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"

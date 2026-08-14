@@ -278,60 +278,17 @@ def _drive_wizard_calculation(
     prompted = list(_run_wizard_steps(steps, run_token=run_token))
 
     for _attempt in range(_MAX_MISSING_INPUT_RETRIES):
-        casilla_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "casilla"]
-        binding_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "binding"]
-        relation_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "relation"]
-
-        calculation_inputs = work_calculate_input_bundle_from_cli(
-            work_unit_id=unit.work_unit_id,
-            casilla=casilla_overrides or None,
-            binding=binding_overrides or None,
-            relation=relation_overrides or None,
-            row=None,
-            borrador_snapshot_id=None,
-            prestacion_inss_exenta=None,
-            rescate_plan_pensiones_capital=None,
-            rescate_plan_pensiones_aportaciones_pre_2007=None,
-            rescate_plan_pensiones_aportaciones_totales=None,
-            sal_beneficio_neto=None,
-            sal_reserva_dotada=None,
-            sal_capital_social=None,
-            autoconsumo_promotor_base=None,
+        calculation_result = _run_wizard_calculation_attempt(
+            deps=deps,
+            unit=unit,
+            actor=resolved_actor,
+            prompted=prompted,
+            run_token=run_token,
         )
-
-        # Downstream of operator-argument handling, exactly as on the direct
-        # calculate verb: the actor label is bounded above, and the prompted
-        # answers have already been parsed into a validated input bundle. A
-        # pydantic ValidationError from here is a record the application built
-        # from its own state, so it is classified by position rather than by
-        # inspecting the exception.
-        try:
-            calculation_result = calculate_modelo_work_revision(
-                work_unit_id=unit.work_unit_id,
-                actor=resolved_actor,
-                inputs=calculation_inputs,
-            )
-        except RegistryValidationError as exc:
-            follow_up = _follow_up_step_for_missing_input(exc, unit=unit)
-            if follow_up is None:
-                raise deps.bad_parameter_from_error(exc) from exc
-            answer = _run_wizard_steps((follow_up,), run_token=run_token)
-            prompted.extend(answer)
+        if calculation_result is None:
             continue
-        except WorkUnitMutationRefusedError:
-            raise
-        except (
-            WorkUnitNotFoundError,
-            CalculationRegistryUnavailableError,
-            Modelo100BorradorBindingError,
-            ModeloIvaWalletReconciliationBlocked,
-        ) as exc:
-            raise deps.bad_parameter_from_error(exc) from exc
-        except ValidationError as exc:
-            raise CliOutboundPayloadBoundaryError(exc) from exc
-        else:
-            _emit_wizard_result(ctx, calculation_result, tuple(prompted))
-            return
+        _emit_wizard_result(ctx, calculation_result, tuple(prompted))
+        return
 
     # Exhausted the retry budget: surface the last registry refusal rather
     # than looping silently. Structurally unreachable in practice (a
@@ -350,6 +307,65 @@ def _drive_wizard_calculation(
             limit=_MAX_MISSING_INPUT_RETRIES,
         ),
     )
+
+
+def _wizard_calculation_inputs(
+    unit: WorkUnit,
+    prompted: list[tuple[_WizardStep, str]],
+) -> Any:
+    casilla_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "casilla"]
+    binding_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "binding"]
+    relation_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "relation"]
+    return work_calculate_input_bundle_from_cli(
+        work_unit_id=unit.work_unit_id,
+        casilla=casilla_overrides or None,
+        binding=binding_overrides or None,
+        relation=relation_overrides or None,
+        row=None,
+        borrador_snapshot_id=None,
+        prestacion_inss_exenta=None,
+        rescate_plan_pensiones_capital=None,
+        rescate_plan_pensiones_aportaciones_pre_2007=None,
+        rescate_plan_pensiones_aportaciones_totales=None,
+        sal_beneficio_neto=None,
+        sal_reserva_dotada=None,
+        sal_capital_social=None,
+        autoconsumo_promotor_base=None,
+    )
+
+
+def _run_wizard_calculation_attempt(
+    *,
+    deps: _WizardDeps,
+    unit: WorkUnit,
+    actor: str,
+    prompted: list[tuple[_WizardStep, str]],
+    run_token: str,
+) -> ModeloWorkCalculationServiceResult | None:
+    calculation_inputs = _wizard_calculation_inputs(unit, prompted)
+    try:
+        return calculate_modelo_work_revision(
+            work_unit_id=unit.work_unit_id,
+            actor=actor,
+            inputs=calculation_inputs,
+        )
+    except RegistryValidationError as exc:
+        follow_up = _follow_up_step_for_missing_input(exc, unit=unit)
+        if follow_up is None:
+            raise deps.bad_parameter_from_error(exc) from exc
+        prompted.extend(_run_wizard_steps((follow_up,), run_token=run_token))
+        return None
+    except WorkUnitMutationRefusedError:
+        raise
+    except (
+        WorkUnitNotFoundError,
+        CalculationRegistryUnavailableError,
+        Modelo100BorradorBindingError,
+        ModeloIvaWalletReconciliationBlocked,
+    ) as exc:
+        raise deps.bad_parameter_from_error(exc) from exc
+    except ValidationError as exc:
+        raise CliOutboundPayloadBoundaryError(exc) from exc
 
 
 #: Binding ``source`` kinds a wizard may legitimately ask an operator to fill

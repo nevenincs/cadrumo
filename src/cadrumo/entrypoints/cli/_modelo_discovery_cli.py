@@ -593,62 +593,69 @@ def _register_requires_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
 
 
 def _requires_notices(checklist: DataInventoryChecklist) -> tuple[Notice, ...]:
-    notices: list[Notice] = []
-    if not checklist.profile_checked:
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.INFO,
-                code="modelo.requires.no_active_profile",
-                message=tr(
-                    "cli.app.modelo.requires.no_active_profile",
-                    default=(
-                        "No active profile is set, so profile-dependent coefficients "
-                        "(e.g. home-office usage ratio) could not be checked for gaps."
-                    ),
-                ),
-                context={"modelo": str(checklist.modelo)},
-            ),
+    notices = [
+        notice
+        for notice in (
+            _profile_requirement_notice(checklist),
+            _unbucketed_source_notice(checklist),
         )
-    elif checklist.unresolved_profile_bindings:
-        binding_ids = ", ".join(sorted(str(binding_id) for binding_id in checklist.unresolved_profile_bindings))
-        missing = _unresolved_profile_requirements(checklist) or binding_ids
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="modelo.requires.missing_profile_coefficient",
-                message=tr(
-                    "cli.app.modelo.requires.missing_profile_coefficient",
-                    default=(
-                        "The active profile has not set the following coefficient(s) needed for this modelo: {missing}."
-                    ),
-                    missing=missing,
-                ),
-                # The binding ids stay on the notice context: they are the
-                # registry-side identifiers a support channel needs, while the
-                # message carries the profile facts the operator must supply.
-                context={"modelo": str(checklist.modelo), "missing_bindings": binding_ids},
-            ),
-        )
-    if checklist.unbucketed_sources:
-        source_kinds = ", ".join(sorted({entry.binding_source or "" for entry in checklist.unbucketed_sources}))
-        binding_ids = ", ".join(
-            sorted(str(entry.binding_id) for entry in checklist.unbucketed_sources if entry.binding_id is not None),
-        )
-        casilla_ids = ", ".join(sorted({str(entry.casilla_id) for entry in checklist.unbucketed_sources}))
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="modelo.requires.unbucketed_binding_source",
-                message=tr("cli.app.modelo.requires.unbucketed_binding_source"),
-                context={
-                    "modelo": str(checklist.modelo),
-                    "source_kinds": source_kinds,
-                    "binding_ids": binding_ids,
-                    "casilla_ids": casilla_ids,
-                },
-            ),
-        )
+        if notice is not None
+    ]
     return tuple(notices)
+
+
+def _profile_requirement_notice(checklist: DataInventoryChecklist) -> Notice | None:
+    if not checklist.profile_checked:
+        return Notice(
+            severity=NoticeSeverity.INFO,
+            code="modelo.requires.no_active_profile",
+            message=tr(
+                "cli.app.modelo.requires.no_active_profile",
+                default=(
+                    "No active profile is set, so profile-dependent coefficients "
+                    "(e.g. home-office usage ratio) could not be checked for gaps."
+                ),
+            ),
+            context={"modelo": str(checklist.modelo)},
+        )
+    if not checklist.unresolved_profile_bindings:
+        return None
+    binding_ids = ", ".join(sorted(str(binding_id) for binding_id in checklist.unresolved_profile_bindings))
+    missing = _unresolved_profile_requirements(checklist) or binding_ids
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="modelo.requires.missing_profile_coefficient",
+        message=tr(
+            "cli.app.modelo.requires.missing_profile_coefficient",
+            default="The active profile has not set the following coefficient(s) needed for this modelo: {missing}.",
+            missing=missing,
+        ),
+        # The binding ids stay on the notice context: they are the
+        # registry-side identifiers a support channel needs, while the
+        # message carries the profile facts the operator must supply.
+        context={"modelo": str(checklist.modelo), "missing_bindings": binding_ids},
+    )
+
+
+def _unbucketed_source_notice(checklist: DataInventoryChecklist) -> Notice | None:
+    if not checklist.unbucketed_sources:
+        return None
+    source_kinds = ", ".join(sorted({entry.binding_source or "" for entry in checklist.unbucketed_sources}))
+    binding_ids = ", ".join(
+        sorted(str(entry.binding_id) for entry in checklist.unbucketed_sources if entry.binding_id is not None),
+    )
+    casilla_ids = ", ".join(sorted({str(entry.casilla_id) for entry in checklist.unbucketed_sources}))
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="modelo.requires.unbucketed_binding_source",
+        message=tr("cli.app.modelo.requires.unbucketed_binding_source"),
+        context={
+            "modelo": str(checklist.modelo),
+            "source_kinds": source_kinds,
+            "binding_ids": binding_ids,
+            "casilla_ids": casilla_ids,
+        },
+    )
 
 
 def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:

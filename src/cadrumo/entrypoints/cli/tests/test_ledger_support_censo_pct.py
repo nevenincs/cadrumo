@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import UserProfileLifecycleRepository
+from ....application.user_profile import ProfileRecordRepository
 from ....domain.categories import SpendingCategory
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
@@ -34,7 +34,7 @@ def runtime(tmp_path: Path) -> Iterator[None]:
 
 
 def _declare_vivienda_office() -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="Classify censo pct profile",

@@ -19,7 +19,7 @@ from ....application.operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,
 )
-from ....application.user_profile import UserProfileLifecycleRepository, profile_create_storage_span
+from ....application.user_profile import ProfileRecordRepository, profile_create_storage_span
 from ....application.workflow import (
     SiteHealthAlert,
     WorkflowAbortReason,
@@ -90,7 +90,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
                 display_name=_PROFILE_LABEL,
             ),
         )
-        UserProfileLifecycleRepository(bucket_id=_PROFILE_ID).save(
+        ProfileRecordRepository(bucket_id=_PROFILE_ID).save(
             UserProfileRecord(
                 profile_id=_PROFILE_ID,
                 display_name=_PROFILE_LABEL,

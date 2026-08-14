@@ -747,11 +747,15 @@ def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
 
 
 @overload
-def redact_structured[T](value: dict[str, T], *, rules: tuple[_RedactionRule, ...]) -> dict[str, T]: ...
+def redact_structured(value: dict[str, str], *, rules: tuple[_RedactionRule, ...]) -> dict[str, str]: ...
 
 
 @overload
-def redact_structured[T](value: list[T], *, rules: tuple[_RedactionRule, ...]) -> list[T]: ...
+def redact_structured(value: Mapping[str, object], *, rules: tuple[_RedactionRule, ...]) -> Mapping[str, object]: ...
+
+
+@overload
+def redact_structured(value: list[str], *, rules: tuple[_RedactionRule, ...]) -> list[str]: ...
 
 
 @overload
@@ -1071,11 +1075,17 @@ def redact_for_cli_output(text: str, *, reveal_identifiers: bool = False) -> str
 
 
 @overload
-def redact_structured_for_cli_output[T](value: dict[str, T], *, reveal_identifiers: bool = False) -> dict[str, T]: ...
+def redact_structured_for_cli_output(value: dict[str, str], *, reveal_identifiers: bool = False) -> dict[str, str]: ...
 
 
 @overload
-def redact_structured_for_cli_output[T](value: list[T], *, reveal_identifiers: bool = False) -> list[T]: ...
+def redact_structured_for_cli_output(
+    value: Mapping[str, object], *, reveal_identifiers: bool = False
+) -> Mapping[str, object]: ...
+
+
+@overload
+def redact_structured_for_cli_output(value: list[str], *, reveal_identifiers: bool = False) -> list[str]: ...
 
 
 @overload

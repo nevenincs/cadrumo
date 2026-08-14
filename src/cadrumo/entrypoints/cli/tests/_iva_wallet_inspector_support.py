@@ -77,11 +77,11 @@ def _store_profile_with_nif(nif: str, *, bucket_id: str = _SEED_BUCKET_ID) -> No
     verb's active-bucket NIF resolver relies on. ``bucket_id`` must therefore
     be the same UUIDv4 the paired :func:`isolated_runtime_profile` activates.
     """
-    from ....application.user_profile import UserProfileLifecycleRepository
+    from ....application.user_profile import ProfileRecordRepository
     from ....domain.user_profile import UserProfileFact, UserProfileRecord
 
     created_at = datetime(2025, 1, 1, 12, 0, tzinfo=UTC)
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+    ProfileRecordRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Test runtime profile",
@@ -94,11 +94,11 @@ def _store_profile_with_nif(nif: str, *, bucket_id: str = _SEED_BUCKET_ID) -> No
 
 def _seed_full_autonomo_profile_for_guidance(bucket_id: str) -> None:
     """Persist a minimal autonomo profile sufficient for M303 work-unit applicability."""
-    from ....application.user_profile import UserProfileLifecycleRepository
+    from ....application.user_profile import ProfileRecordRepository
     from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 
     created_at = datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+    ProfileRecordRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Test runtime profile",

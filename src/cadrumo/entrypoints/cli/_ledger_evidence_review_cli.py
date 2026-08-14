@@ -322,14 +322,52 @@ def _review_queue_row(
     # Read through the one projection the show surface's notices use; the queue
     # must not independently classify a document it sends the operator to review.
     advisories = review_advisory_kinds(stored.draft)
+    if not _review_queue_matches(
+        stored,
+        reason=reason,
+        finding=finding,
+        advisory=advisory,
+        blocking_only=blocking_only,
+        reasons=reasons,
+        advisories=advisories,
+        blockers=blockers,
+    ):
+        return None
+    return _review_queue_payload(
+        stored,
+        blockers=blockers,
+        reasons=reasons,
+        advisories=advisories,
+    )
+
+
+def _review_queue_matches(
+    stored: StoredExtractionDraft,
+    *,
+    reason: ConfirmationBlockReason | None,
+    finding: DraftDiscrepancyKind | None,
+    advisory: ReviewAdvisoryKind | None,
+    blocking_only: bool,
+    reasons: list[str],
+    advisories: tuple[ReviewAdvisoryKind, ...],
+    blockers: tuple[ConfirmationBlocker, ...],
+) -> bool:
     if reason is not None and reason.value not in reasons:
-        return None
+        return False
     if finding is not None and all(item.kind is not finding for item in stored.draft.discrepancies):
-        return None
+        return False
     if advisory is not None and advisory not in advisories:
-        return None
-    if blocking_only and not blockers:
-        return None
+        return False
+    return not blocking_only or bool(blockers)
+
+
+def _review_queue_payload(
+    stored: StoredExtractionDraft,
+    *,
+    blockers: tuple[ConfirmationBlocker, ...],
+    reasons: list[str],
+    advisories: tuple[ReviewAdvisoryKind, ...],
+) -> EvidenceReviewRowPayload:
     return EvidenceReviewRowPayload.model_validate(
         {
             "evidence_reference": stored.evidence_reference,

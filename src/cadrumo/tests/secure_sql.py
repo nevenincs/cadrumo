@@ -117,7 +117,7 @@ def _provision_bucket_dek_v1_session(
 ) -> tuple[BucketSession, BucketPaths]:
     """Provision a genuine ``bucket-dek-v1`` bucket and open its session.
 
-    Mirrors the production mint sequence (``ProfileRepository.create``
+    Mirrors the production mint sequence (``CommittedProfileRepository.create``
     inside ``profile_create_storage_span``): resolve the configured
     master-key provider, mint the per-bucket wrapped DEK under that
     provider's resolved key-encryption key (KEK), write the manifest in

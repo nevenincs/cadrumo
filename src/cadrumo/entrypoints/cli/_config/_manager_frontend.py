@@ -100,17 +100,18 @@ def host_can_run_full_screen() -> bool:
 
 def build_active_profile_overview(*, label: str | None = None) -> ProfileOverview:
     """Build the manager's page for whichever profile is currently active."""
-    from ....application.user_profile import ProfileRepository, build_profile_overview
+    from ....application.user_profile import ProfileRecordRepository, build_profile_overview
     from ....core import require_active_bucket_id
 
-    aggregate = ProfileRepository().load(require_active_bucket_id())
+    profile_id = require_active_bucket_id()
+    record = ProfileRecordRepository(bucket_id=profile_id).load(profile_id)
     overview = build_profile_overview(
-        aggregate.record,
-        label=label if label is not None else aggregate.label,
+        record,
+        label=label if label is not None else record.display_name,
     )
     from ._status_frontend import build_active_profile_notices
 
-    return overview.model_copy(update={"notices": build_active_profile_notices(aggregate.record)})
+    return overview.model_copy(update={"notices": build_active_profile_notices(record)})
 
 
 def persist_active_profile_field(path: str, value: str, *, label: str | None = None) -> ProfileOverview:
@@ -279,7 +280,7 @@ def _active_profile_manager_storage(
     """
     from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
     from ....application.user_profile import (
-        ProfileRepository,
+        ProfileRecordRepository,
         apply_active_profile_facts,
         build_profile_overview,
     )
@@ -290,11 +291,11 @@ def _active_profile_manager_storage(
     profile_id = require_active_bucket_id()
     secure_objects = secure_object_repository_for_active_bucket()
     schema = load_user_profile_schema()
-    profiles = ProfileRepository(secure_objects=secure_objects, schema=schema)
+    profiles = ProfileRecordRepository(bucket_id=profile_id, objects=secure_objects)
     workflow = WorkflowStateRepository(objects=secure_objects)
 
     opening = profiles.load(profile_id)
-    resolved_label = label if label is not None else opening.label
+    resolved_label = label if label is not None else opening.display_name
 
     def _page(record: UserProfileRecord) -> ProfileOverview:
         from ._status_frontend import build_active_profile_notices
@@ -321,7 +322,7 @@ def _active_profile_manager_storage(
         workflow.update(_apply)
         return _page(committed[-1])
 
-    return _page(opening.record), _persist
+    return _page(opening), _persist
 
 
 def present_profile_manager(*, label: str | None = None) -> None:

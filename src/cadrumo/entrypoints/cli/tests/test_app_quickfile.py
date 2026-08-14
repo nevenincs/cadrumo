@@ -177,6 +177,7 @@ def _write_m303_filing_evidence(path: Path) -> None:
         m303=M303FilingInstanceEvidence(
             period=period,
             joint_return_elected=False,
+            annual_volume_nonzero=False,
             insolvency=None,
             exonerado_390=M303Exonerado390FilingEvidence(
                 applicable=False,

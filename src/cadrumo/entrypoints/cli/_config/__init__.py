@@ -178,7 +178,7 @@ def _atomic_create_profile(*, display_name, facts, profile_id: str | None = None
     on the single atomic provisioner ``register_active_profile``:
     bucket directory + manifest + encrypted record + active-profile
     pointer in one all-or-nothing unit of work owned by
-    ``ProfileRepository.create``, with rollback on any failure.
+    ``CommittedProfileRepository.create``, with rollback on any failure.
 
     When ``profile_id`` is supplied (bundle import with D5 identity
     preservation), it is used as-is; otherwise a fresh UUID is minted.
@@ -365,7 +365,7 @@ def config_profile_delete(
         f"status\t{record.status.value}",
     ]
     if deleting_active_profile:
-        # The deleted profile was the active one; ProfileRepository.delete
+        # The deleted profile was the active one; CommittedProfileRepository.delete
         # cleared the active-profile pointer as part of the tombstone.
         # Make that consequence explicit so the operator is not left in a
         # silent no-active-profile state.

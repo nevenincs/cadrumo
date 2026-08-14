@@ -198,7 +198,7 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
     # Function-local for the cycle reason the sibling profile-backed advisories
     # document: the profile package reaches back into this layer.
     from ...application.invoices import simplificada_requires_tax_id_for_domestic_issuer
-    from ...application.user_profile import UserProfileLifecycleRepository, projection_for_taxpayer
+    from ...application.user_profile import ProfileRecordRepository, projection_for_taxpayer
     from ...core import resolve_active_bucket_id
     from ...domain.user_profile import ProfileNotFoundError
 
@@ -206,7 +206,7 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
     if bucket_id is None:
         return []
     try:
-        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return []
     except (OSError, ValueError):

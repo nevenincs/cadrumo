@@ -18,7 +18,7 @@ from __future__ import annotations
 import pytest
 
 from .....application.user_profile import (
-    ProfileRepository,
+    ProfileRecordRepository,
     build_profile_overview,
     register_profile_with_credentials,
 )
@@ -37,8 +37,9 @@ _LABEL = "Session Storage Subject"
 
 def _page_from_storage() -> object:
     """Build the page from an independent full read of the encrypted record."""
-    aggregate = ProfileRepository().load(require_active_bucket_id())
-    return build_profile_overview(aggregate.record, label=_LABEL)
+    profile_id = require_active_bucket_id()
+    record = ProfileRecordRepository(bucket_id=profile_id).load(profile_id)
+    return build_profile_overview(record, label=_LABEL)
 
 
 def test_the_post_edit_page_equals_one_built_from_a_fresh_read(tmp_path) -> None:

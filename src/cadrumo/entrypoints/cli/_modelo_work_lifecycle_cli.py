@@ -377,14 +377,14 @@ def _modelo_100_obligation_advisory_output(unit) -> tuple[list[Notice], list[str
     if unit.modelo != Modelo.M100:
         return [], []
     from ...application.overview import build_filing_obligation_advisories
-    from ...application.user_profile import ProfileRepository, record_to_values
+    from ...application.user_profile import ProfileRecordRepository, record_to_values
     from ...core import resolve_active_bucket_id
 
     bucket = resolve_active_bucket_id()
     if bucket is None:
         return [], []
-    record = ProfileRepository().load(bucket)
-    raw = record_to_values(record.record) if record is not None else None
+    record = ProfileRecordRepository(bucket_id=bucket).load(bucket)
+    raw = record_to_values(record) if record is not None else None
     messages = [tr(advisory_key) for advisory_key in build_filing_obligation_advisories(raw)]
     notices = [advisory_notice("modelo.work.create.filing_obligation", message) for message in messages]
     return notices, messages

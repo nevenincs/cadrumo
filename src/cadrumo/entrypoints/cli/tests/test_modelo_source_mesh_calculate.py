@@ -259,9 +259,9 @@ def _m100_activity_expense_transaction(
 
 
 def _seed_m100_profile_facts(bucket_id: str) -> None:
-    from ....application.user_profile import UserProfileLifecycleRepository
+    from ....application.user_profile import ProfileRecordRepository
 
-    repository = UserProfileLifecycleRepository(bucket_id=bucket_id)
+    repository = ProfileRecordRepository(bucket_id=bucket_id)
     record = repository.load(bucket_id)
     additions = (
         UserProfileFact(path="tax_residence.ccaa", value="madrid"),

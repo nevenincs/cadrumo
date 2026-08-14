@@ -37,7 +37,7 @@ from .....adapters.inbound.tui import (
     ProfileManagerApp,
 )
 from .....application.user_profile import (
-    ProfileRepository,
+    ProfileRecordRepository,
     build_profile_overview,
     register_profile_with_credentials,
 )
@@ -113,9 +113,10 @@ whether asking for a page at all can leave the asking thread stuck."""
 
 def _manager() -> ProfileManagerApp:
     """The manager as production builds it, on a freshly registered profile."""
-    aggregate = ProfileRepository().load(require_active_bucket_id())
+    profile_id = require_active_bucket_id()
+    aggregate = ProfileRecordRepository(bucket_id=profile_id).load(profile_id)
     return ProfileManagerApp(
-        build_profile_overview(aggregate.record, label=_LABEL),
+        build_profile_overview(aggregate, label=_LABEL),
         persist=lambda path, value: persist_active_profile_field(path, value, label=_LABEL),
         actions=manager_actions(),
     )
@@ -123,9 +124,10 @@ def _manager() -> ProfileManagerApp:
 
 def _manager_offering(action: ManagerAction) -> ProfileManagerApp:
     """The production manager, carrying one action written for a test."""
-    aggregate = ProfileRepository().load(require_active_bucket_id())
+    profile_id = require_active_bucket_id()
+    aggregate = ProfileRecordRepository(bucket_id=profile_id).load(profile_id)
     return ProfileManagerApp(
-        build_profile_overview(aggregate.record, label=_LABEL),
+        build_profile_overview(aggregate, label=_LABEL),
         persist=lambda path, value: persist_active_profile_field(path, value, label=_LABEL),
         actions=(action,),
     )
@@ -190,9 +192,10 @@ async def test_an_action_that_starts_its_own_loop_is_carried_by_the_seam(tmp_pat
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
-        aggregate = ProfileRepository().load(require_active_bucket_id())
+        profile_id = require_active_bucket_id()
+        aggregate = ProfileRecordRepository(bucket_id=profile_id).load(profile_id)
         app = ProfileManagerApp(
-            build_profile_overview(aggregate.record, label=_LABEL),
+            build_profile_overview(aggregate, label=_LABEL),
             persist=lambda path, value: persist_active_profile_field(path, value, label=_LABEL),
             actions=(ManagerAction(key="loop-owner", label="Loop owner", run=_run),),
         )

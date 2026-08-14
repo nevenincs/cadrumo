@@ -35,6 +35,7 @@ class FilingProducerKey(StrEnum):
     M303_REDEME_ENROLLED = "m303.redeme_enrolled"
     M303_EXCLUSIVELY_FORAL = "m303.tax_territory.exclusively_foral"
     M303_REGIME_COMPOSITION_CODE = "m303.regime_composition.official_code"
+    M303_ANNUAL_VOLUME_NONZERO = "m303.annual_volume_nonzero"
     M303_JOINT_RETURN_ELECTED = "m303.joint_return_elected"
     M303_CASH_ACCOUNTING_REGIME_ENROLLED = "m303.cash_accounting_regime_enrolled"
     M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS = "m303.recipient_of_cash_accounting_operations"

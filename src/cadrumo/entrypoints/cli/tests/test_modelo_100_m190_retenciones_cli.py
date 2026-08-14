@@ -11,7 +11,7 @@ import pytest
 
 from ....application.calculations import CalculationObservationRepository
 from ....application.modelo import APP_FILING_SOURCE_KIND
-from ....application.user_profile import UserProfileLifecycleRepository
+from ....application.user_profile import ProfileRecordRepository
 from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
@@ -72,7 +72,7 @@ def _seed_m100_2025_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )
-    UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).save(record)
+    ProfileRecordRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).save(record)
 
 
 def _seed_prior_year_zero_carry(runtime_profile: TestRuntimeProfile) -> None:

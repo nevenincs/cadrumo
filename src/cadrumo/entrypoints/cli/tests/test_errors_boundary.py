@@ -28,7 +28,7 @@ import pytest
 from ....adapters.persistence.storage import SensitivityClass
 from ....application.user_profile import (
     USER_PROFILE_VALUE_NAMESPACE,
-    UserProfileLifecycleRepository,
+    ProfileRecordRepository,
     user_profile_value_object_key,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
@@ -63,7 +63,7 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> str:
 
     ``isolated_runtime_profile`` already provisions the bucket manifest.
     This function writes only the encrypted profile record via the
-    injected repository, bypassing ``ProfileRepository.create`` which
+    injected repository, bypassing ``CommittedProfileRepository.create`` which
     would reject the already-present manifest.
     """
     record = UserProfileRecord(
@@ -77,7 +77,7 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> str:
             UserProfileFact(path="identity.tax_id", value="00000000T"),
         ),
     )
-    lifecycle = UserProfileLifecycleRepository(
+    lifecycle = ProfileRecordRepository(
         bucket_id=_PROFILE_ID,
         objects=runtime_profile.repository,
     )

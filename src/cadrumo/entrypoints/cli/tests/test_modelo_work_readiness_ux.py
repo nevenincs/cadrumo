@@ -32,13 +32,13 @@ _REPRESENTANTE_PROFILE_PATHS = frozenset(
 
 
 def _remove_representante_fields_from_operator_profile() -> None:
-    from ....application.user_profile import UserProfileLifecycleRepository, profile_storage_session
+    from ....application.user_profile import ProfileRecordRepository, profile_storage_session
     from ....application.workflow import read_profile_bucket
 
     pointer = read_profile_bucket(_PROFILE_ID)
     assert pointer is not None
     with profile_storage_session(pointer.bucket_id):
-        repository = UserProfileLifecycleRepository(bucket_id=pointer.bucket_id)
+        repository = ProfileRecordRepository(bucket_id=pointer.bucket_id)
         record = repository.load(pointer.bucket_id)
         repository.save(
             record.model_copy(

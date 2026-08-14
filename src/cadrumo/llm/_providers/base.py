@@ -13,12 +13,18 @@ import logging
 import math
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
+from typing import TYPE_CHECKING
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from .._errors import LLMProviderError, LLMRateLimitError, LLMTransientTransportError
+from ...core import ActionEvidenceProvenance
+from .._errors import LLMConfigError, LLMProviderError, LLMRateLimitError, LLMTransientTransportError
 from .._models import LLMProvider, MultimodalImageInput
+from .._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
+
+if TYPE_CHECKING:
+    from logging import Logger
 
 
 class ProviderRequest(BaseModel):
@@ -109,6 +115,50 @@ class _ProviderAdapter(ABC):
 
     provider: LLMProvider
     supports_images: bool = False
+    _api_key: str
+    _timeout_s: int
+
+    def _configure_api_key(self, api_key: str, timeout_s: int) -> None:
+        """Bind credentials and timeout for an API-key-backed provider."""
+        if not api_key:
+            raise LLMConfigError(
+                context={"provider": self.provider.value, "provider_credentials_present": False},
+                precondition_verdict=llm_no_recovery_verdict(
+                    LLMPreconditionCondition.PROVIDER_CREDENTIALS_PRESENT,
+                    facts={"provider": self.provider.value, "provider_credentials_present": False},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                ),
+            )
+        self._api_key = api_key
+        self._timeout_s = timeout_s
+
+    async def _request_completion[ResponseModel: BaseModel](
+        self,
+        request: ProviderRequest,
+        *,
+        endpoint: str,
+        headers: Mapping[str, str] | None,
+        json: object,
+        response_model: type[ResponseModel],
+        logger: Logger,
+    ) -> ResponseModel:
+        """Send and validate one HTTP provider completion response."""
+        async with httpx.AsyncClient(timeout=self._timeout_s) as client:
+            response = await post_provider_request(
+                client,
+                endpoint,
+                provider_name=self.provider.value,
+                model=request.model,
+                logger=logger,
+                headers=headers,
+                json=json,
+            )
+        check_http_error(response, provider_name=self.provider.value, model=request.model, logger=logger)
+        return parse_provider_response(
+            response,
+            provider_name=self.provider.value,
+            response_model=response_model,
+        )
 
     def unsupported_parameters(self, model: str) -> frozenset[str]:
         """Return the request parameters this adapter must NOT put on the wire for *model*.

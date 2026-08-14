@@ -282,7 +282,7 @@ class ModelCandidate(BaseModel):
     runtime: ModelRuntime
     roles: frozenset[ModelRole] = Field(min_length=1)
     memory_requirement_bytes: int | None = Field(default=None, gt=0)
-    input_price_per_mtok_usd: Decimal | None = Field(default=None, gt=0)
+    input_price_per_mtok_usd: Decimal | None = Field(default=None, gt=Decimal("0"))
     max_context_tokens: int = Field(gt=0)
     licence: ModelLicence
     measured_baseline_ref: str = ""

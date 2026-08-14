@@ -14,7 +14,7 @@ from pydantic import AnyHttpUrl, TypeAdapter
 from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....application.user_profile import (
     CENSO_SOURCE_TAG,
-    UserProfileLifecycleRepository,
+    ProfileRecordRepository,
     profile_create_storage_span,
     profile_storage_session,
 )
@@ -193,7 +193,7 @@ def _justificante_metadata(*, csv: str, tax_id: str = "X1234567L") -> Justifican
 
 def _stamp_calendar_enrolment_from_censo() -> None:
     with profile_storage_session(PRIMARY_PROFILE_ID):
-        repository = UserProfileLifecycleRepository(bucket_id=PRIMARY_PROFILE_ID)
+        repository = ProfileRecordRepository(bucket_id=PRIMARY_PROFILE_ID)
         record = repository.load(PRIMARY_PROFILE_ID)
         censo_paths = {
             "iva.regime": CENSO_SOURCE_TAG,

@@ -46,6 +46,7 @@ def _write_evidence(path: Path, period: Period, *, joint_return_elected: bool = 
         m303=M303FilingInstanceEvidence(
             period=period,
             joint_return_elected=joint_return_elected,
+            annual_volume_nonzero=False,
             insolvency=M303InsolvencyFilingFact(
                 judicial_order_date=date(2026, 2, 3),
                 subtype=M303InsolvencyFilingSubtype.POST_ORDER,

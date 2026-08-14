@@ -114,10 +114,7 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
     no re-key happens; ``profile show`` and the lifecycle service both
     still find the record, now carrying the new display label.
     """
-    from ....application.user_profile import (
-        build_lifecycle_service,
-        profile_storage_session,
-    )
+    from ....application.user_profile import ProfileRecordRepository, profile_storage_session
     from ....application.workflow import read_profile_bucket
     from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 
@@ -132,8 +129,7 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
     # Reading the profile record directly via the lifecycle service requires an
     # active session scoped to the bucket UUID.
     with profile_storage_session(uuid_before):
-        svc = build_lifecycle_service(bucket_id=uuid_before)
-        record = svc.read(uuid_before)
+        record = ProfileRecordRepository(bucket_id=uuid_before).load(uuid_before)
     # The identity is unchanged; only the label moved.
     assert record.profile_id == uuid_before
     assert record.display_name == "bob"

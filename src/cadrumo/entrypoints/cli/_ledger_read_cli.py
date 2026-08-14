@@ -16,7 +16,7 @@ from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import typer
 
@@ -78,6 +78,16 @@ from ._ledger_list import (
 from ._ledger_review_cli import register_ledger_review_command
 from ._ledger_support import _ledger_cli_no_recovery
 from ._participation_cli import register_participation_commands
+
+if TYPE_CHECKING:
+    from ...application.ledger import (
+        LedgerPreflightReport,
+        LlmConfidenceProviderMetrics,
+        LlmDiagnosticsReport,
+        LlmUsageCostProviderMetrics,
+    )
+    from ._ledger_payloads import LedgerLinkInconsistencyPayload
+    from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
 
 ResolveTransactionId = Callable[[Any, str], str]
 
@@ -160,7 +170,6 @@ def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
     ) -> None:
         """Report existing LLM usage, cost, and classification-confidence metrics."""
         from ...application.ledger import build_llm_diagnostics_report
-        from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
 
         since_date = _parse_iso_date(since, "--since")
         until_date = _parse_iso_date(until, "--until")
@@ -175,78 +184,88 @@ def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
             until=until_date,
             low_confidence_threshold=threshold,
         )
-        result = LedgerLlmDiagnosticsResult.model_validate(
-            {
-                "since": since_date.isoformat() if since_date is not None else None,
-                "until": until_date.isoformat() if until_date is not None else None,
-                "low_confidence_threshold": format(report.low_confidence_threshold, "f"),
-                "usage_providers": [
-                    {
-                        "provider": row.provider,
-                        "calls": row.calls,
-                        "cache_hits": row.cache_hits,
-                        "input_tokens": row.input_tokens,
-                        "output_tokens": row.output_tokens,
-                        "total_tokens": row.total_tokens,
-                        "cost_estimate_usd": (
-                            None if row.cost_estimate_usd is None else format(row.cost_estimate_usd, "f")
-                        ),
-                        "unpriced_calls": row.unpriced_calls,
-                    }
-                    for row in report.usage_providers
-                ],
-                "total_calls": report.total_calls,
-                "total_cache_hits": report.total_cache_hits,
-                "total_input_tokens": report.total_input_tokens,
-                "total_output_tokens": report.total_output_tokens,
-                "total_cost_estimate_usd": (
-                    None if report.total_cost_estimate_usd is None else format(report.total_cost_estimate_usd, "f")
-                ),
-                "total_unpriced_calls": report.total_unpriced_calls,
-                "confidence_providers": [
-                    {
-                        "provider": row.provider,
-                        "classified_count": row.classified_count,
-                        "low_confidence_count": row.low_confidence_count,
-                        "high_confidence_count": row.high_confidence_count,
-                        "medium_confidence_count": row.medium_confidence_count,
-                        "min_confidence": optional_decimal_text(row.min_confidence),
-                        "max_confidence": optional_decimal_text(row.max_confidence),
-                        "mean_confidence": optional_decimal_text(row.mean_confidence),
-                    }
-                    for row in report.confidence_providers
-                ],
-                "total_classified": report.total_classified,
-                "total_low_confidence": report.total_low_confidence,
-                "has_data": report.has_data,
-            },
-        )
-        lines: list[str] = []
-        for row in report.usage_providers:
-            lines.append(
-                f"{row.provider}\tcalls={row.calls}\tcache_hits={row.cache_hits}"
-                # "unpriced" rather than a number: this line is what an operator
-                # budgets from, and a blank or a zero here would read as free.
-                f"\ttokens={row.total_tokens}\tcost_usd="
-                f"{'unpriced' if row.cost_estimate_usd is None else format(row.cost_estimate_usd, 'f')}",
-            )
-        for row in report.confidence_providers:
-            mean_text = optional_decimal_text(row.mean_confidence) or "-"
-            lines.append(
-                f"{row.provider}\tclassified={row.classified_count}"
-                f"\tlow_confidence={row.low_confidence_count}\tmean={mean_text}",
-            )
-        notices: list[Notice] = []
-        if not report.has_data:
-            notice = Notice(
-                severity=NoticeSeverity.INFO,
-                code="ledger.llm_diagnostics.no_data",
-                message=tr("cli.ledger.llm_diagnostics.no_data_message"),
-                context={},
-            )
-            notices.append(notice)
-            lines.append(notice.message)
+        result = _llm_diagnostics_result(report, since=since_date, until=until_date)
+        lines, notices = _llm_diagnostics_lines_and_notices(report)
         _emit_envelope(ctx, command="ledger.llm_diagnostics", result=result, lines=lines, notices=notices)
+
+
+def _llm_diagnostics_result(
+    report: LlmDiagnosticsReport,
+    *,
+    since: date | None,
+    until: date | None,
+) -> LedgerLlmDiagnosticsResult:
+    from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
+
+    return LedgerLlmDiagnosticsResult.model_validate(
+        {
+            "since": since.isoformat() if since is not None else None,
+            "until": until.isoformat() if until is not None else None,
+            "low_confidence_threshold": format(report.low_confidence_threshold, "f"),
+            "usage_providers": [_llm_usage_provider_payload(row) for row in report.usage_providers],
+            "total_calls": report.total_calls,
+            "total_cache_hits": report.total_cache_hits,
+            "total_input_tokens": report.total_input_tokens,
+            "total_output_tokens": report.total_output_tokens,
+            "total_cost_estimate_usd": (
+                None if report.total_cost_estimate_usd is None else format(report.total_cost_estimate_usd, "f")
+            ),
+            "total_unpriced_calls": report.total_unpriced_calls,
+            "confidence_providers": [_llm_confidence_provider_payload(row) for row in report.confidence_providers],
+            "total_classified": report.total_classified,
+            "total_low_confidence": report.total_low_confidence,
+            "has_data": report.has_data,
+        },
+    )
+
+
+def _llm_usage_provider_payload(row: LlmUsageCostProviderMetrics) -> dict[str, object]:
+    return {
+        "provider": row.provider,
+        "calls": row.calls,
+        "cache_hits": row.cache_hits,
+        "input_tokens": row.input_tokens,
+        "output_tokens": row.output_tokens,
+        "total_tokens": row.total_tokens,
+        "cost_estimate_usd": None if row.cost_estimate_usd is None else format(row.cost_estimate_usd, "f"),
+        "unpriced_calls": row.unpriced_calls,
+    }
+
+
+def _llm_confidence_provider_payload(row: LlmConfidenceProviderMetrics) -> dict[str, object]:
+    return {
+        "provider": row.provider,
+        "classified_count": row.classified_count,
+        "low_confidence_count": row.low_confidence_count,
+        "high_confidence_count": row.high_confidence_count,
+        "medium_confidence_count": row.medium_confidence_count,
+        "min_confidence": optional_decimal_text(row.min_confidence),
+        "max_confidence": optional_decimal_text(row.max_confidence),
+        "mean_confidence": optional_decimal_text(row.mean_confidence),
+    }
+
+
+def _llm_diagnostics_lines_and_notices(report: LlmDiagnosticsReport) -> tuple[list[str], list[Notice]]:
+    lines = [
+        f"{row.provider}\tcalls={row.calls}\tcache_hits={row.cache_hits}"
+        f"\ttokens={row.total_tokens}\tcost_usd="
+        f"{'unpriced' if row.cost_estimate_usd is None else format(row.cost_estimate_usd, 'f')}"
+        for row in report.usage_providers
+    ]
+    lines.extend(
+        f"{row.provider}\tclassified={row.classified_count}"
+        f"\tlow_confidence={row.low_confidence_count}\tmean={optional_decimal_text(row.mean_confidence) or '-'}"
+        for row in report.confidence_providers
+    )
+    if report.has_data:
+        return lines, []
+    notice = Notice(
+        severity=NoticeSeverity.INFO,
+        code="ledger.llm_diagnostics.no_data",
+        message=tr("cli.ledger.llm_diagnostics.no_data_message"),
+        context={},
+    )
+    return [*lines, notice.message], [notice]
 
 
 def _parse_iso_date(value: str | None, option: str) -> date | None:
@@ -414,8 +433,7 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
     ) -> None:
         """Surface ledger anomalies and broken invoice links without mutating state."""
         from ...application.invoices import verify_invoice_repository_links
-        from ...application.ledger import LedgerPreflightIssue, preflight_transaction_catalogue
-        from ._ledger_payloads import LedgerCheckResult, LedgerLinkInconsistencyPayload
+        from ._ledger_payloads import LedgerLinkInconsistencyPayload
 
         if bucket_id_option is not None:
             transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id_option)
@@ -445,38 +463,14 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
         link_notices = _link_inconsistency_notices(link_inconsistencies)
         canonical_period = _optional_canonical_period(period, year=year)
         if canonical_period is not None:
-            report = preflight_transaction_catalogue(
+            _emit_ledger_check_period(
+                ctx,
                 bucket_id=bucket_id,
                 period=canonical_period,
-                transactions=catalogue,
-            )
-            period_label = str(canonical_period)
-            ready = report.ready and not link_rows
-            payload = {
-                "bucket_id": bucket_id,
-                "periods": [period_label],
-                "checked_transaction_count": report.checked_transaction_count,
-                "issues": [issue.model_dump(mode="json") for issue in report.issues],
-                "link_inconsistencies": link_rows,
-                "ready": ready,
-            }
-            lines = [
-                f"bucket\t{bucket_id}",
-                f"periods\t{period_label}",
-                f"checked\t{report.checked_transaction_count}",
-                f"issues\t{len(report.issues)}",
-                f"link_inconsistencies\t{len(link_rows)}",
-                f"ready\t{str(ready).lower()}",
-            ]
-            for issue in report.issues:
-                lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
-            lines.extend(link_lines)
-            _emit_envelope(
-                ctx,
-                command="ledger.check",
-                result=LedgerCheckResult.model_validate(payload),
-                lines=lines,
-                notices=link_notices,
+                catalogue=catalogue,
+                link_rows=link_rows,
+                link_lines=link_lines,
+                link_notices=link_notices,
             )
             return
 
@@ -489,74 +483,170 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
         )
 
         if not years:
-            ready = not link_rows
-            payload = {
-                "bucket_id": bucket_id,
-                "periods": [],
-                "checked_transaction_count": 0,
-                "issues": [],
-                "link_inconsistencies": link_rows,
-                "ready": ready,
-            }
-            lines = [
-                f"bucket\t{bucket_id}",
-                "periods\t",
-                "checked\t0",
-                "issues\t0",
-                f"link_inconsistencies\t{len(link_rows)}",
-                f"ready\t{str(ready).lower()}",
-            ]
-            lines.extend(link_lines)
-            _emit_envelope(
+            _emit_ledger_check_empty(
                 ctx,
-                command="ledger.check",
-                result=LedgerCheckResult.model_validate(payload),
-                lines=lines,
-                notices=link_notices,
+                bucket_id=bucket_id,
+                link_rows=link_rows,
+                link_lines=link_lines,
+                link_notices=link_notices,
             )
             return
 
-        aggregated_issues: list[LedgerPreflightIssue] = []
-        aggregated_payload_issues: list[dict[str, object]] = []
-        checked_total = 0
-        for year in years:
-            report = preflight_transaction_catalogue(
-                bucket_id=bucket_id,
-                period=Period.from_year_and_code(year, "0A"),
-                transactions=catalogue,
-            )
-            checked_total += report.checked_transaction_count
-            for issue in report.issues:
-                aggregated_issues.append(issue)
-                aggregated_payload_issues.append(issue.model_dump(mode="json"))
-
-        ready = not aggregated_issues and not link_rows
-        payload = {
-            "bucket_id": bucket_id,
-            "periods": [str(year) for year in years],
-            "checked_transaction_count": checked_total,
-            "issues": aggregated_payload_issues,
-            "link_inconsistencies": link_rows,
-            "ready": ready,
-        }
-        lines = [
-            f"bucket\t{bucket_id}",
-            f"periods\t{','.join(str(year) for year in years)}",
-            f"checked\t{checked_total}",
-            f"issues\t{len(aggregated_issues)}",
-            f"link_inconsistencies\t{len(link_rows)}",
-            f"ready\t{str(ready).lower()}",
-        ]
-        for issue in aggregated_issues:
-            lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
-        lines.extend(link_lines)
-        _emit_envelope(
+        _emit_ledger_check_all_periods(
             ctx,
-            command="ledger.check",
-            result=LedgerCheckResult.model_validate(payload),
-            lines=lines,
-            notices=link_notices,
+            bucket_id=bucket_id,
+            years=years,
+            catalogue=catalogue,
+            link_rows=link_rows,
+            link_lines=link_lines,
+            link_notices=link_notices,
         )
+
+
+def _emit_ledger_check_period(
+    ctx: typer.Context,
+    *,
+    bucket_id: str,
+    period: Period,
+    catalogue: Any,
+    link_rows: list[LedgerLinkInconsistencyPayload],
+    link_lines: list[str],
+    link_notices: list[Notice],
+) -> None:
+    from ...application.ledger import preflight_transaction_catalogue
+    from ._ledger_payloads import LedgerCheckResult
+
+    report = preflight_transaction_catalogue(
+        bucket_id=bucket_id,
+        period=period,
+        transactions=catalogue,
+    )
+    period_label = str(period)
+    ready = report.ready and not link_rows
+    payload = {
+        "bucket_id": bucket_id,
+        "periods": [period_label],
+        "checked_transaction_count": report.checked_transaction_count,
+        "issues": [issue.model_dump(mode="json") for issue in report.issues],
+        "link_inconsistencies": link_rows,
+        "ready": ready,
+    }
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"periods\t{period_label}",
+        f"checked\t{report.checked_transaction_count}",
+        f"issues\t{len(report.issues)}",
+        f"link_inconsistencies\t{len(link_rows)}",
+        f"ready\t{str(ready).lower()}",
+    ]
+    lines.extend(_ledger_check_issue_lines(report))
+    lines.extend(link_lines)
+    _emit_envelope(
+        ctx,
+        command="ledger.check",
+        result=LedgerCheckResult.model_validate(payload),
+        lines=lines,
+        notices=link_notices,
+    )
+
+
+def _emit_ledger_check_empty(
+    ctx: typer.Context,
+    *,
+    bucket_id: str,
+    link_rows: list[LedgerLinkInconsistencyPayload],
+    link_lines: list[str],
+    link_notices: list[Notice],
+) -> None:
+    from ._ledger_payloads import LedgerCheckResult
+
+    ready = not link_rows
+    payload = {
+        "bucket_id": bucket_id,
+        "periods": [],
+        "checked_transaction_count": 0,
+        "issues": [],
+        "link_inconsistencies": link_rows,
+        "ready": ready,
+    }
+    lines = [
+        f"bucket\t{bucket_id}",
+        "periods\t",
+        "checked\t0",
+        "issues\t0",
+        f"link_inconsistencies\t{len(link_rows)}",
+        f"ready\t{str(ready).lower()}",
+        *link_lines,
+    ]
+    _emit_envelope(
+        ctx,
+        command="ledger.check",
+        result=LedgerCheckResult.model_validate(payload),
+        lines=lines,
+        notices=link_notices,
+    )
+
+
+def _emit_ledger_check_all_periods(
+    ctx: typer.Context,
+    *,
+    bucket_id: str,
+    years: list[int],
+    catalogue: Any,
+    link_rows: list[LedgerLinkInconsistencyPayload],
+    link_lines: list[str],
+    link_notices: list[Notice],
+) -> None:
+    from ...application.ledger import preflight_transaction_catalogue
+    from ._ledger_payloads import LedgerCheckResult
+
+    aggregated_issues: list[Any] = []
+    aggregated_payload_issues: list[dict[str, object]] = []
+    checked_total = 0
+    for year in years:
+        report = preflight_transaction_catalogue(
+            bucket_id=bucket_id,
+            period=Period.from_year_and_code(year, "0A"),
+            transactions=catalogue,
+        )
+        checked_total += report.checked_transaction_count
+        aggregated_issues.extend(report.issues)
+        aggregated_payload_issues.extend(issue.model_dump(mode="json") for issue in report.issues)
+
+    ready = not aggregated_issues and not link_rows
+    payload = {
+        "bucket_id": bucket_id,
+        "periods": [str(year) for year in years],
+        "checked_transaction_count": checked_total,
+        "issues": aggregated_payload_issues,
+        "link_inconsistencies": link_rows,
+        "ready": ready,
+    }
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"periods\t{','.join(str(year) for year in years)}",
+        f"checked\t{checked_total}",
+        f"issues\t{len(aggregated_issues)}",
+        f"link_inconsistencies\t{len(link_rows)}",
+        f"ready\t{str(ready).lower()}",
+        *(_ledger_check_issue_lines_from_items(aggregated_issues)),
+        *link_lines,
+    ]
+    _emit_envelope(
+        ctx,
+        command="ledger.check",
+        result=LedgerCheckResult.model_validate(payload),
+        lines=lines,
+        notices=link_notices,
+    )
+
+
+def _ledger_check_issue_lines(report: LedgerPreflightReport) -> list[str]:
+    return _ledger_check_issue_lines_from_items(report.issues)
+
+
+def _ledger_check_issue_lines_from_items(issues: Any) -> list[str]:
+    return [f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}" for issue in issues]
 
 
 def _register_ledger_preflight_command(app: typer.Typer) -> None:

@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import UserProfileLifecycleRepository
+from ....application.user_profile import ProfileRecordRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
@@ -75,7 +75,7 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         ),
     )
-    lifecycle = UserProfileLifecycleRepository(
+    lifecycle = ProfileRecordRepository(
         bucket_id=_PROFILE_ID,
         objects=runtime_profile.repository,
     )

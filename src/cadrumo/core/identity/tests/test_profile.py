@@ -8,7 +8,7 @@ UUID resolution belongs above this core identity boundary.
 See Also:
     :mod:`~core.identity._profile`
         Alias definition under test.
-    :class:`~application.user_profile.ProfileAggregate`
+    :class:`~application.user_profile.CommittedProfileView`
         Application aggregate that carries the immutable profile UUID alongside
         mutable operator-facing labels.
     :func:`~application.user_profile.verify_profile_integrity`

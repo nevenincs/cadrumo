@@ -29,7 +29,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import UserProfileLifecycleRepository
+from ....application.user_profile import ProfileRecordRepository
 from ....core.resources import resources
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
@@ -105,7 +105,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )
-    lifecycle = UserProfileLifecycleRepository(
+    lifecycle = ProfileRecordRepository(
         bucket_id=_PROFILE_ID,
         objects=runtime_profile.repository,
     )
@@ -155,7 +155,7 @@ def _seed_legal_entity_profile(
         status=UserProfileStatus.ACTIVE,
         facts=tuple(facts),
     )
-    lifecycle = UserProfileLifecycleRepository(
+    lifecycle = ProfileRecordRepository(
         bucket_id=_PROFILE_ID,
         objects=runtime_profile.repository,
     )

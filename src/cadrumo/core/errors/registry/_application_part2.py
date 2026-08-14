@@ -368,6 +368,46 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile._custody_transactions.ProfileCustodyTransactionError",
+        ErrorCode(
+            code="FAIL_PROFILE_CUSTODY_TRANSACTION",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_storage_profile_custody",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.user_profile._custody_transactions.ProfileCustodyTransactionConflictError",
+        ErrorCode(
+            code="REFUSED_PROFILE_CUSTODY_TRANSACTION_CONFLICT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_profile_custody",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.user_profile._custody_transactions.ProfileCustodyTransactionRefusalError",
+        ErrorCode(
+            code="REFUSED_PROFILE_CUSTODY_TRANSACTION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_profile_custody",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.user_profile._custody_transactions.ProfileCustodyTransactionCorruptError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_CUSTODY_TRANSACTION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_profile_custody_record",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile._orchestration.ProfileAlreadyRegisteredError",
         ErrorCode(
             code="REFUSED_PROFILE_ALREADY_REGISTERED",
