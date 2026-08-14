@@ -95,7 +95,7 @@ from ...domain.modelos import (
 )
 from ..calculations import CalculationObservationRepository
 from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
-from ..filing._runtime_repository import modelo_record_repository_for_application
+from ..filing import modelo_record_repository_for_application
 from ..prorrata_register import ProrrataRegisterRepository
 from ._action_errors import (
     CalculationRevisionNotFoundError,

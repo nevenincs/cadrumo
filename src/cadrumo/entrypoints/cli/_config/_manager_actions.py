@@ -520,116 +520,6 @@ def _run_export() -> ManagerActionOutcome:
     return ManagerActionOutcome(message=tr("flows.manager.action.export_done", destination=str(destination)))
 
 
-_PASSPHRASE_CURRENT_KEY = "current"  # noqa: S105 - a prompt field key, not a credential
-_PASSPHRASE_NEW_KEY = "new"  # noqa: S105 - a prompt field key, not a credential
-_PASSPHRASE_CONFIRM_KEY = "confirm"  # noqa: S105 - a prompt field key, not a credential
-
-
-def passphrase_action() -> ManagerAction:
-    """Rotate the passphrase protecting this profile's secret store.
-
-    The application door this drives is
-    :func:`~cadrumo.application.user_profile.change_passphrase`, the exact
-    verb behind ``aeat config passphrase change`` — it re-verifies the
-    current passphrase by unwrapping the stored master key before
-    rewrapping under the new one, so a wrong current answer changes
-    nothing.
-    """
-    from ....adapters.inbound.tui import ManagerAction
-
-    return ManagerAction(
-        key="passphrase",
-        label=tr("flows.manager.action.passphrase"),
-        label_key="flows.manager.action.passphrase",
-        run=_run_passphrase_change,
-    )
-
-
-def _run_passphrase_change() -> ManagerActionOutcome:
-    """Collect the current and a new passphrase, then rotate the secret store.
-
-    Three fields rather than two: the new passphrase is retyped so a typo
-    in it is caught here rather than discovered at the next login, when
-    the only recourse left is the recovery code. All three are masked —
-    :attr:`~cadrumo.adapters.inbound.tui.FormField.secret` — because a
-    passphrase read back in clear on a shared screen defeats the point of
-    asking for one.
-
-    The confirmation check happens here rather than as a per-field
-    validator: a field is checked against its own rule as it is typed, but
-    "does this equal the other field" can only be judged once both are on
-    the page, so it is judged once, on the collected batch, the same way
-    the certificate action judges its Cl@ve pair.
-
-    A wrong current passphrase is reported by name rather than folded into
-    a generic failure, because it is the one answer this door can actually
-    tell apart from a defect: ``change_passphrase`` unwraps the stored
-    master key under the typed value before it does anything else, so a
-    mismatch there is the operator's own typo, not a torn write.
-    """
-    from ....adapters.inbound.tui import FormField, FormPage, ManagerActionDisposition, ManagerActionOutcome
-    from ....adapters.persistence.storage import (
-        MasterKeyMaterialMissingError,
-        MasterKeyPassphraseMismatchError,
-        SecretStoreError,
-    )
-    from ....application.user_profile import change_passphrase
-    from ._manager_frontend import present_form
-
-    page = FormPage(
-        title=tr("flows.manager.action.passphrase"),
-        section=tr("flows.manager.action.passphrase"),
-        fields=(
-            FormField(
-                key=_PASSPHRASE_CURRENT_KEY,
-                label=tr("flows.manager.action.passphrase_current"),
-                secret=True,
-                validate=lambda value: None if value else tr("flows.manager.action.passphrase_current"),
-            ),
-            FormField(
-                key=_PASSPHRASE_NEW_KEY,
-                label=tr("flows.manager.action.passphrase_new"),
-                secret=True,
-                validate=lambda value: None if value else tr("flows.manager.action.passphrase_new"),
-            ),
-            FormField(
-                key=_PASSPHRASE_CONFIRM_KEY,
-                label=tr("flows.manager.action.passphrase_confirm"),
-                secret=True,
-                validate=lambda value: None if value else tr("flows.manager.action.passphrase_confirm"),
-            ),
-        ),
-    )
-    collected = present_form(page)
-    if collected is None:
-        return ManagerActionOutcome(message=tr("flows.manager.action.abandoned"))
-
-    new_value = collected[_PASSPHRASE_NEW_KEY]
-    if new_value != collected[_PASSPHRASE_CONFIRM_KEY]:
-        return ManagerActionOutcome(
-            message=tr("flows.manager.action.passphrase_mismatch"),
-            disposition=ManagerActionDisposition.REFUSED,
-        )
-
-    try:
-        change_passphrase(
-            current_passphrase=collected[_PASSPHRASE_CURRENT_KEY],
-            new_passphrase=new_value,
-        )
-    except MasterKeyPassphraseMismatchError:
-        return ManagerActionOutcome(
-            message=tr("flows.manager.action.passphrase_wrong_current"),
-            disposition=ManagerActionDisposition.REFUSED,
-        )
-    except (MasterKeyMaterialMissingError, SecretStoreError):
-        return ManagerActionOutcome(
-            message=tr("flows.manager.action.passphrase_failed"),
-            disposition=ManagerActionDisposition.REFUSED,
-        )
-
-    return ManagerActionOutcome(message=tr("flows.manager.action.passphrase_done"))
-
-
 def certificate_action() -> ManagerAction:
     """Choose how this taxpayer authenticates, and with which certificate.
 
@@ -1042,7 +932,7 @@ def _commit_auth_choice(collected: Mapping[str, str]) -> tuple[str, AuthConfigur
         CLI surfaces.
     """
     from ....application.auth import configure_operator_auth, select_operator_certificate_source
-    from ....application.wizard._persistence import apply_wizard_fact_changes
+    from ....application.wizard import apply_wizard_fact_changes
     from ....core import require_active_bucket_id
     from ....domain.user_profile import UserProfileFact
 
@@ -1193,7 +1083,7 @@ def _run_add_row() -> ManagerActionOutcome:
         next_section_row_index,
         section_row_facts,
     )
-    from ....application.wizard._persistence import apply_wizard_fact_changes
+    from ....application.wizard import apply_wizard_fact_changes
     from ....core import require_active_bucket_id
     from ....domain.user_profile import ProfileSchemaValidationError, load_user_profile_schema
     from ._manager_frontend import build_active_profile_overview, present_form
@@ -1572,7 +1462,6 @@ def manager_actions() -> tuple[ManagerAction, ...]:
     """Every action the manager offers, in the order it offers them."""
     return (
         certificate_action(),
-        passphrase_action(),
         censal_pull_action(),
         filed_history_pull_all_action(),
         add_row_action(),
@@ -1591,5 +1480,4 @@ __all__ = [
     "google_export_action",
     "logout_action",
     "manager_actions",
-    "passphrase_action",
 ]

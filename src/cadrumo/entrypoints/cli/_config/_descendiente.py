@@ -138,7 +138,7 @@ def _write_descendientes(bucket_id: str, descendientes: tuple[DescendantInfo, ..
     clears = tuple(UserProfileFact(path=path, value=None) for path in stale_paths if path not in new_pairs)
     upserts = tuple(UserProfileFact(path=path, value=value) for path, value in new_pairs.items())
 
-    from ....application.wizard._persistence import apply_wizard_fact_changes
+    from ....application.wizard import apply_wizard_fact_changes
 
     apply_wizard_fact_changes(
         profile_id=bucket_id,

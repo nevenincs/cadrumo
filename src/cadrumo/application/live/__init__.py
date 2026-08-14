@@ -630,6 +630,10 @@ def __getattr__(name: str):
         from . import _notification_documents as _impl_mod
 
         return getattr(_impl_mod, name)
+    if name == "NotificationDocumentProtocol":
+        from . import _notification_ports as _impl_mod
+
+        return getattr(_impl_mod, name)
     if name in (
         "DeudasService",
         "DeudasCapture",
@@ -712,6 +716,7 @@ __all__ = [
     "LiveIvaSurfaceTimeoutError",
     "NotificationDocumentCustody",
     "NotificationDocumentNotFoundError",
+    "NotificationDocumentProtocol",
     "NotificationDocumentRecord",
     "NotificationDocumentService",
     "NotificationsService",
