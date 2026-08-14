@@ -10,7 +10,6 @@ a deliberately-isolated declarative base so we never touch the live
 from __future__ import annotations
 
 import logging
-import secrets
 from collections.abc import Iterator
 from typing import cast
 
@@ -20,7 +19,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import DecryptionError, StorageValidationError
-from .. import KEY_SIZE, EncryptedBytes, EncryptedJSON, EncryptedPayload, EncryptedString, HashedLookup
+from .. import EncryptedBytes, EncryptedJSON, EncryptedPayload, EncryptedString, HashedLookup
 from .._crypto import encrypt_record
 from .._encrypted_columns import _AAD_JSON, _AAD_STRING
 
@@ -56,11 +55,6 @@ class _CryptoRow(_TestBase):
     secret_bytes: Mapped[bytes | None] = mapped_column(EncryptedBytes, nullable=True)
     secret_json: Mapped[object | None] = mapped_column(EncryptedJSON, nullable=True)
     lookup_key: Mapped[bytes | None] = mapped_column(HashedLookup, nullable=True, index=True)
-
-
-@pytest.fixture
-def fixed_master_key() -> bytes:
-    return secrets.token_bytes(KEY_SIZE)
 
 
 @pytest.fixture(autouse=True)

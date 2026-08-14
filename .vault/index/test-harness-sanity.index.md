@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:9df7af6ede966866d534f0fa62a4e1ef6a8a74decc8f0e06816c211765ea96ce'
+body_hash: 'sha256:a033336c5a404a5300ea6dcbd99d340fb94090bd6be639ef089d876a1fd66d3f'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -16,6 +16,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W06-P17-S52]]'
   - '[[2026-08-14-test-harness-sanity-W07-P18-S53]]'
   - '[[2026-08-14-test-harness-sanity-W07-P18-S55]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P18-S56]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S71]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S72]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S73]]'
@@ -55,6 +56,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W06-P17-S52` - Prove the harness recipe selects every declared member and fails when membership collapses
 - `2026-08-14-test-harness-sanity-W07-P18-S53` - Canonicalize duplicated LLM secure-runtime fixtures at their narrowest common owner
 - `2026-08-14-test-harness-sanity-W07-P18-S55` - Canonicalize the exact secure-object-repository cluster without merging its divergent shape
+- `2026-08-14-test-harness-sanity-W07-P18-S56` - Canonicalize fixed-master-key fixtures across persistence storage tests
 - `2026-08-14-test-harness-sanity-W07-P22-S71` - Promote banned-live-import enforcement into the shared root policy helper
 - `2026-08-14-test-harness-sanity-W07-P22-S72` - Make the repository root the sole collection-policy hook owner
 - `2026-08-14-test-harness-sanity-W07-P22-S73` - Remove duplicate marker traversal and live-policy ownership from the child conftest
