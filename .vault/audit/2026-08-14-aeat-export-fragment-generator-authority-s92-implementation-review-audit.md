@@ -5,29 +5,10 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:d6093734f17ef65cd35b20f903f57f78ee1fcabeb1e1edfdd368fcdbe5b6215a'
+body_hash: 'sha256:cde06fa3d6817d00d4589a1c834c114eb5e9dc9bd5ee9e7414c1a76a775d40b4'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S92]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace aeat-export-fragment-generator-authority with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `aeat-export-fragment-generator-authority` audit: `S92 M303 rectificativa motive implementation review`
 

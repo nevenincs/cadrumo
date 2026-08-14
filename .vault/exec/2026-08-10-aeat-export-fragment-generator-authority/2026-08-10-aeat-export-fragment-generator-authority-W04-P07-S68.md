@@ -5,45 +5,11 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:0fb17f2b941c02fff8fdc3cca2950027d70f01bab3a2038dbb06a30cf931655a'
+body_hash: 'sha256:f1f4eeb68ee766f7b64692f62dfbf050328ec8b646a4bea437b2466ff6aad936'
 step_id: 'S68'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace aeat-export-fragment-generator-authority with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S68 and 2026-08-10-aeat-export-fragment-generator-authority-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Author and review the Modelo 303 2024-early-epoch semantic map and source-bound render profile, exact-bijecting all 393 fixed-record anchors plus the 13 DP30300 prefix anchors, 406 in total, each to its one canonical typed authority. Reuse the reviewed 2023 semantic-home patterns only where the official design is unchanged, and review by hand every epoch delta that moves a semantic home rather than an offset. Of these anchors 130 are nonnumbered DP30302 simplified-regime anchors whose projection endpoint declarations S63 supplies, so this row cannot close before S63 lands and its DP30302 share must be re-counted against the post-S63 declaration index. The amendment-evidence region is verified UNCHANGED from 2023 for this epoch: DP30303 ordinal 29 still declares a complementaria flag, so the complementaria producer assignment carries over here. The move to a rectificativa self-assessment happens at 2024-late, not at this epoch and ## Scope
-
-- `dev/registry/mappings/modelo_303/2024-early/`
-- `dev/registry/render_profiles/modelo_303/2024-early/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Author and review the Modelo 303 2024-early-epoch semantic map and source-bound render profile, exact-bijecting all 393 fixed-record anchors plus the 13 DP30300 prefix anchors, 406 in total, each to its one canonical typed authority. Reuse the reviewed 2023 semantic-home patterns only where the official design is unchanged, and review by hand every epoch delta that moves a semantic home rather than an offset. Of these anchors 130 are nonnumbered DP30302 simplified-regime anchors whose projection endpoint declarations S63 supplies, so this row cannot close before S63 lands and its DP30302 share must be re-counted against the post-S63 declaration index. The amendment-evidence region is verified UNCHANGED from 2023 for this epoch: DP30303 ordinal 29 still declares a complementaria flag, so the complementaria producer assignment carries over here. The move to a rectificativa self-assessment happens at 2024-late, not at this epoch
 
