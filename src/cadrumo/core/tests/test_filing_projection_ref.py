@@ -22,6 +22,7 @@ from .. import (
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,
     M303RegimenSimplificadoCohort,
+    M303RegimenSimplificadoFact,
     M303RegimenSimplificadoFactProjectionRef,
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
@@ -52,7 +53,10 @@ def test_core_facade_exposes_the_canonical_flat_projection_union() -> None:
 def test_every_projection_discriminator_and_payload_field_is_required() -> None:
     for model_type in _REF_MODELS:
         assert model_type.model_fields
-        assert all(field.is_required() for field in model_type.model_fields.values()), model_type.__name__
+        optional = {"sub_index"} if model_type is M303RegimenSimplificadoFactProjectionRef else set()
+        assert all(field.is_required() for name, field in model_type.model_fields.items() if name not in optional), (
+            model_type.__name__
+        )
         assert model_type.model_fields["projection_kind"].is_required(), model_type.__name__
 
 
@@ -80,7 +84,7 @@ def test_all_seven_flat_projection_variants_validate() -> None:
             projection_kind="m303_regimen_simplificado_fact",
             cohort=M303RegimenSimplificadoCohort.AGRICOLA,
             slot=1,
-            fact_identity="indice-corrector",
+            fact=M303RegimenSimplificadoFact.INDICE_CUOTA,
         ),
         M303RegimenSimplificadoModuleProjectionRef(
             projection_kind="m303_regimen_simplificado_module",
@@ -155,7 +159,7 @@ def test_compiler_constructs_the_required_module_shape_without_defaults() -> Non
             "projection_kind": "m303_regimen_simplificado_fact",
             "cohort": "agricola",
             "slot": 1,
-            "fact_identity": "  indice-corrector  ",
+            "fact": "  indice_cuota  ",
         },
         {
             "projection_kind": "m303_prorrata_activity",
@@ -170,13 +174,48 @@ def test_compiler_refuses_surrounding_whitespace_in_identity_tokens(payload: dic
         compile_filing_projection_ref(payload)
 
 
-def test_fact_identity_model_refuses_instead_of_normalizing_whitespace() -> None:
+def test_fact_model_refuses_instead_of_normalizing_whitespace() -> None:
     with pytest.raises(ValidationError):
         M303RegimenSimplificadoFactProjectionRef(
             projection_kind="m303_regimen_simplificado_fact",
             cohort=M303RegimenSimplificadoCohort.AGRICOLA,
             slot=1,
-            fact_identity="  indice-corrector  ",
+            fact="  indice_cuota  ",
+        )
+
+
+@pytest.mark.parametrize(
+    "fact, sub_index, message",
+    [
+        (M303RegimenSimplificadoFact.INDICE_CUOTA, 1, "must not carry sub_index"),
+    ],
+)
+def test_fact_model_only_admits_source_declared_multiplicity(
+    fact: M303RegimenSimplificadoFact,
+    sub_index: int | None,
+    message: str,
+) -> None:
+    with pytest.raises(ValidationError, match=message):
+        M303RegimenSimplificadoFactProjectionRef(
+            projection_kind="m303_regimen_simplificado_fact",
+            cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
+            slot=1,
+            fact=fact,
+            sub_index=sub_index,
+        )
+
+
+@pytest.mark.parametrize("sub_index", [0, -1, 5, "1", True])
+def test_fact_ref_requires_a_positive_exact_sub_index_when_present(sub_index: object) -> None:
+    with pytest.raises((ValidationError, ValueError)):
+        compile_filing_projection_ref(
+            {
+                "projection_kind": "m303_regimen_simplificado_fact",
+                "cohort": "no_agricola",
+                "slot": 1,
+                "fact": "mesas_capacidad",
+                "sub_index": sub_index,
+            }
         )
 
 

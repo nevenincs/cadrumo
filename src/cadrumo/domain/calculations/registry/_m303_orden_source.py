@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import cast
 from urllib.parse import urlsplit
 
-from ....core import normalise_corpus_text, render_corpus_sidecar_text
+from ....core import OrdenAnualIvaAuthorityUnit, normalise_corpus_text, render_corpus_sidecar_text
 from ....core._orden_anual_html import (
     OrdenAnualIvaActivityTable,
     OrdenAnualIvaAgriculturalIndex,
@@ -19,6 +19,7 @@ from ....core._orden_anual_html import (
     OrdenAnualIvaAuthority,
     OrdenAnualIvaDifficultJustification,
     OrdenAnualIvaIngresoACuenta,
+    OrdenAnualIvaLorca2022Reduction,
     OrdenAnualIvaModule,
     OrdenAnualIvaSeasonalIndex,
     extract_orden_anual_iva_authority,
@@ -39,6 +40,7 @@ from ._m303_orden_raw_models import (
     M303AnnualOrdenRawAgriculturalIngresoACuenta,
     M303AnnualOrdenRawDifficultJustification,
     M303AnnualOrdenRawIngresoACuenta,
+    M303AnnualOrdenRawLorca2022Reduction,
     M303AnnualOrdenRawModule,
     M303AnnualOrdenRawSeasonalIndex,
     M303AnnualOrdenSourceCensus,
@@ -135,6 +137,7 @@ def extract_m303_annual_orden_source(
             ),
             seasonal_indexes=tuple(_registry_raw_seasonal_index(item) for item in parsed_authority.seasonal_indexes),
             difficult_justification=_registry_raw_difficult_justification(parsed_authority.difficult_justification),
+            lorca_2022_reduction=_registry_raw_lorca_2022_reduction(parsed_authority.lorca_2022_reduction),
         )
     except (TypeError, ValueError) as exc:
         raise RegistryLoadError(f"annual Orden source {source.id!r} is incomplete or malformed: {exc}") from exc
@@ -247,6 +250,18 @@ def _registry_raw_difficult_justification(
         percentage=item.percentage,
         agricultural_required_text=item.agricultural_required_text,
         non_agricultural_required_text=item.non_agricultural_required_text,
+    )
+
+
+def _registry_raw_lorca_2022_reduction(
+    item: OrdenAnualIvaLorca2022Reduction | None,
+) -> M303AnnualOrdenRawLorca2022Reduction | None:
+    if item is None:
+        return None
+    return M303AnnualOrdenRawLorca2022Reduction(
+        municipality=item.municipality,
+        percentage=item.percentage,
+        required_text=item.required_text,
     )
 
 
@@ -382,18 +397,41 @@ def _required_sidecar_text(value: object, source: SourceReference) -> str:
 def _validate_sidecar_authority_units(
     units: tuple[Mapping[str, object], ...], authority: OrdenAnualIvaAuthority, source: SourceReference
 ) -> None:
-    expected = orden_anual_iva_authority_units(authority)
-    expected_by_anchor = {unit.anchor: unit for unit in expected}
-    if len(expected_by_anchor) != len(expected):
-        raise RegistryLoadError(f"annual Orden authority units have ambiguous anchors for {source.id!r}")
-    actual = tuple(
-        unit for unit in units if isinstance(unit.get("anchor"), str) and str(unit["anchor"]).startswith("#m303-")
-    )
-    actual_by_anchor = {str(unit["anchor"]): unit for unit in actual}
+    expected_by_anchor = _expected_authority_units_by_anchor(authority, source)
+    actual, actual_by_anchor = _actual_authority_units_by_anchor(units)
     if len(actual_by_anchor) != len(actual) or set(actual_by_anchor) != set(expected_by_anchor):
         raise RegistryLoadError(
             f"annual Orden sidecar has extra, missing, or cross-year authority units for {source.id!r}"
         )
+    _validate_authority_unit_texts(expected_by_anchor, actual_by_anchor, source)
+
+
+def _expected_authority_units_by_anchor(
+    authority: OrdenAnualIvaAuthority,
+    source: SourceReference,
+) -> dict[str, OrdenAnualIvaAuthorityUnit]:
+    expected = orden_anual_iva_authority_units(authority)
+    expected_by_anchor = {unit.anchor: unit for unit in expected}
+    if len(expected_by_anchor) != len(expected):
+        raise RegistryLoadError(f"annual Orden authority units have ambiguous anchors for {source.id!r}")
+    return expected_by_anchor
+
+
+def _actual_authority_units_by_anchor(
+    units: tuple[Mapping[str, object], ...],
+) -> tuple[tuple[Mapping[str, object], ...], dict[str, Mapping[str, object]]]:
+    actual = tuple(
+        unit for unit in units if isinstance(unit.get("anchor"), str) and str(unit["anchor"]).startswith("#m303-")
+    )
+    actual_by_anchor = {str(unit["anchor"]): unit for unit in actual}
+    return actual, actual_by_anchor
+
+
+def _validate_authority_unit_texts(
+    expected_by_anchor: Mapping[str, OrdenAnualIvaAuthorityUnit],
+    actual_by_anchor: Mapping[str, Mapping[str, object]],
+    source: SourceReference,
+) -> None:
     for anchor, expected_unit in expected_by_anchor.items():
         unit_text = normalise_corpus_text(str(actual_by_anchor[anchor].get("text")))
         if unit_text != normalise_corpus_text(expected_unit.text):

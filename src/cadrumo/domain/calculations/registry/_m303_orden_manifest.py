@@ -61,6 +61,9 @@ def generate_m303_annual_orden_manifest(
                 ),
                 seasonal_index_coefficients=tuple(item.coefficient for item in census.seasonal_indexes),
                 difficult_justification_pct=census.difficult_justification.percentage,
+                lorca_2022_reduction_pct=(
+                    None if census.lorca_2022_reduction is None else census.lorca_2022_reduction.percentage
+                ),
             ),
         )
     return M303AnnualOrdenGeneratedManifest(
@@ -102,6 +105,11 @@ def render_m303_annual_orden_manifest(
                 + ", ".join(f'"{value}"' for value in source.seasonal_index_coefficients)
                 + "]",
                 f'difficult_justification_pct = "{source.difficult_justification_pct}"',
+                *(
+                    ()
+                    if source.lorca_2022_reduction_pct is None
+                    else (f'lorca_2022_reduction_pct = "{source.lorca_2022_reduction_pct}"',)
+                ),
                 "",
             ),
         )
@@ -165,6 +173,7 @@ def load_m303_annual_orden_authority(
                 census=census,
                 source=source,
                 modelo_303=modelo_303,
+                sources=sources,
                 annual_source_refs=annual_source_refs,
                 table_legal_refs=table_legal_refs,
             )
@@ -196,6 +205,7 @@ def _annual_orden_projections_for_source(
     census: M303AnnualOrdenSourceCensus,
     source: SourceReference,
     modelo_303: ModeloDefinition,
+    sources: Mapping[SourceRefId, SourceReference],
     annual_source_refs: frozenset[SourceRefId],
     table_legal_refs: Mapping[str, LegalReference],
 ) -> tuple[M303AnnualOrdenProjection, ...]:
@@ -212,14 +222,36 @@ def _annual_orden_projections_for_source(
             raise RegistryValidationError(
                 f"Modelo 303 revision {revision.id!r} must cite exactly its filing-year annual Orden source",
             )
+        record_design_source = _annual_orden_record_design_source(revision.source_refs, sources=sources)
         projections.append(
             compile_m303_annual_orden_projection(
                 census=census,
                 registry_revision_id=revision.id,
+                record_design_source_ref=record_design_source.id,
+                record_design_source_content_digest=record_design_source.sha256,
                 legal_refs={identity: legal_ref.id for identity, legal_ref in table_legal_refs.items()},
             ),
         )
     return tuple(projections)
+
+
+def _annual_orden_record_design_source(
+    revision_source_refs: Sequence[SourceRefId],
+    *,
+    sources: Mapping[SourceRefId, SourceReference],
+) -> SourceReference:
+    candidates = tuple(
+        source
+        for source_ref in revision_source_refs
+        if (source := sources.get(source_ref)) is not None
+        and source.kind == "record_design"
+        and source.record_design_epoch is not None
+    )
+    if len(candidates) != 1:
+        raise RegistryValidationError(
+            "Modelo 303 annual Orden projection requires exactly one revision-owned record-design source",
+        )
+    return candidates[0]
 
 
 def _merge_annual_orden_legal_refs(
@@ -275,11 +307,19 @@ def _validate_generated_source_matches_census(
     generated: M303AnnualOrdenGeneratedSource,
     census: M303AnnualOrdenSourceCensus,
 ) -> None:
+    if generated.source_ref != census.source_ref or generated.source_content_digest != census.source_content_digest:
+        raise RegistryValidationError("annual Orden generated source no longer matches its pinned source identity")
+    _validate_generated_source_activity_counts(generated, census)
+    _validate_generated_source_axis_counts(generated, census)
+
+
+def _validate_generated_source_activity_counts(
+    generated: M303AnnualOrdenGeneratedSource,
+    census: M303AnnualOrdenSourceCensus,
+) -> None:
     actual_distribution = tuple(
         sum(len(activity.modules) == size for activity in census.activities) for size in range(1, 8)
     )
-    if generated.source_ref != census.source_ref or generated.source_content_digest != census.source_content_digest:
-        raise RegistryValidationError("annual Orden generated source no longer matches its pinned source identity")
     if generated.activity_table_count != len(census.activities):
         raise RegistryValidationError("annual Orden generated source activity count no longer matches the BOE HTML")
     if generated.module_row_count != sum(len(activity.modules) for activity in census.activities):
@@ -288,6 +328,23 @@ def _validate_generated_source_matches_census(
         raise RegistryValidationError(
             "annual Orden generated source module distribution no longer matches the BOE HTML",
         )
+
+
+def _validate_generated_source_axis_counts(
+    generated: M303AnnualOrdenGeneratedSource,
+    census: M303AnnualOrdenSourceCensus,
+) -> None:
+    _validate_generated_source_agricultural_axis_counts(generated, census)
+    _validate_generated_source_non_agricultural_axis_count(generated, census)
+    _validate_generated_source_seasonal_axis(generated, census)
+    _validate_generated_source_difficult_justification(generated, census)
+    _validate_generated_source_lorca_reduction(generated, census)
+
+
+def _validate_generated_source_agricultural_axis_counts(
+    generated: M303AnnualOrdenGeneratedSource,
+    census: M303AnnualOrdenSourceCensus,
+) -> None:
     if generated.agricultural_index_row_count != len(census.agricultural_indexes):
         raise RegistryValidationError(
             "annual Orden generated source agricultural-index count no longer matches the BOE HTML"
@@ -296,15 +353,47 @@ def _validate_generated_source_matches_census(
         raise RegistryValidationError(
             "annual Orden generated source agricultural ingreso-a-cuenta count no longer matches the BOE HTML",
         )
+
+
+def _validate_generated_source_non_agricultural_axis_count(
+    generated: M303AnnualOrdenGeneratedSource,
+    census: M303AnnualOrdenSourceCensus,
+) -> None:
     if generated.non_agricultural_ingreso_a_cuenta_row_count != len(census.non_agricultural_ingresos_a_cuenta):
         raise RegistryValidationError(
             "annual Orden generated source IAE ingreso-a-cuenta count no longer matches the BOE HTML",
         )
-    if generated.seasonal_index_day_bands != tuple(
-        (item.minimum_days, item.maximum_days) for item in census.seasonal_indexes
-    ) or generated.seasonal_index_coefficients != tuple(item.coefficient for item in census.seasonal_indexes):
+
+
+def _validate_generated_source_seasonal_axis(
+    generated: M303AnnualOrdenGeneratedSource,
+    census: M303AnnualOrdenSourceCensus,
+) -> None:
+    actual_bands = tuple((item.minimum_days, item.maximum_days) for item in census.seasonal_indexes)
+    actual_coefficients = tuple(item.coefficient for item in census.seasonal_indexes)
+    if (
+        generated.seasonal_index_day_bands != actual_bands
+        or generated.seasonal_index_coefficients != actual_coefficients
+    ):
         raise RegistryValidationError("annual Orden generated source seasonal indexes no longer match the BOE HTML")
+
+
+def _validate_generated_source_difficult_justification(
+    generated: M303AnnualOrdenGeneratedSource,
+    census: M303AnnualOrdenSourceCensus,
+) -> None:
     if generated.difficult_justification_pct != census.difficult_justification.percentage:
         raise RegistryValidationError(
             "annual Orden generated source difficult-justification percentage no longer matches the BOE HTML",
+        )
+
+
+def _validate_generated_source_lorca_reduction(
+    generated: M303AnnualOrdenGeneratedSource,
+    census: M303AnnualOrdenSourceCensus,
+) -> None:
+    actual_percentage = None if census.lorca_2022_reduction is None else census.lorca_2022_reduction.percentage
+    if generated.lorca_2022_reduction_pct != actual_percentage:
+        raise RegistryValidationError(
+            "annual Orden generated source Lorca 2022 reduction no longer matches the BOE HTML",
         )

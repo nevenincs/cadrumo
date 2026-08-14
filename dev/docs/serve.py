@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import http.client
 import json
 import os
 import socket
@@ -52,8 +53,7 @@ import sys
 import tempfile
 import threading
 import time
-import urllib.error
-import urllib.request
+import urllib.parse
 import webbrowser
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -328,6 +328,23 @@ def classify_probe(*, http_ok: bool, is_sphinx: bool) -> PortStatus:
     return PortStatus.DIRTY
 
 
+def _validated_probe_target(host: str, port: int) -> tuple[str, int, str]:
+    url_host = f"[{host}]" if ":" in host else host
+    parsed = urllib.parse.urlsplit(f"http://{url_host}:{port}/")
+    if (
+        parsed.scheme != "http"
+        or parsed.hostname != host
+        or parsed.port != port
+        or parsed.path != "/"
+        or parsed.query
+        or parsed.fragment
+        or parsed.username is not None
+        or parsed.password is not None
+    ):
+        raise ValueError("docs probe target is not a plain HTTP host and port")
+    return parsed.hostname, parsed.port, parsed.path
+
+
 def _port_bindable(bind_host: str, port: int) -> bool:
     """Return whether ``bind_host:port`` can be bound (nothing is listening).
 
@@ -363,19 +380,17 @@ def probe_port(bind_host: str, port: int, *, timeout: float = _PROBE_TIMEOUT_SEC
     if _port_bindable(bind_host, port):
         return PortStatus.FREE
     http_host = _probe_host(bind_host)
-    url = f"http://{http_host}:{port}/"
     try:
-        with urllib.request.urlopen(url, timeout=timeout) as response:  # fixed localhost scheme
-            status = getattr(response, "status", None) or response.getcode()
+        validated_host, validated_port, target = _validated_probe_target(http_host, port)
+        connection = http.client.HTTPConnection(validated_host, validated_port, timeout=timeout)
+        try:
+            connection.request("GET", target)
+            response = connection.getresponse()
+            status = response.status
             body = response.read(_PROBE_READ_BYTES).decode("utf-8", "replace")
-    except urllib.error.HTTPError as exc:
-        # A real HTTP error status means something is serving — just not our
-        # docs (or an autobuild page mid-build); read the body to be sure.
-        body = ""
-        with contextlib.suppress(OSError):
-            body = exc.read(_PROBE_READ_BYTES).decode("utf-8", "replace")
-        return classify_probe(http_ok=False, is_sphinx=_looks_like_sphinx(body))
-    except (urllib.error.URLError, TimeoutError, OSError):
+        finally:
+            connection.close()
+    except (http.client.HTTPException, TimeoutError, OSError, ValueError):
         # Bound (bind failed above) but not usable as HTTP — dirty.
         return PortStatus.DIRTY
     return classify_probe(http_ok=200 <= status < 300, is_sphinx=_looks_like_sphinx(body))

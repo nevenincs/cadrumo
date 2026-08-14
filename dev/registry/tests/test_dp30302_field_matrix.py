@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import tomllib
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core import M303RegimenSimplificadoFact, compile_filing_projection_ref
 from cadrumo.domain.calculations.registry import (
     RegistryValidationError,
     bundled_authority,
@@ -145,6 +147,94 @@ def test_persisted_matrix_reflects_the_two_corrected_constants() -> None:
     assert tuple(by_epoch[epoch].no_agricola for epoch in DP30302_EPOCHS) == (114, 110, 116, 122, 122)
     assert tuple(by_epoch[epoch].agricola for epoch in DP30302_EPOCHS) == (20, 20, 24, 20, 20)
     assert tuple(by_epoch[epoch].simplified for epoch in DP30302_EPOCHS) == (134, 130, 140, 142, 142)
+
+
+def test_real_dp30302_anchors_keep_other_countries_refund_distinct_from_quarterly_quotas() -> None:
+    """The two adjacent 4T concepts are distinct typed declarations, never a shared fact."""
+    fields = _dp30302_sheets()["2023"]
+    descriptions = tuple(field.normalized_description for field in fields)
+    assert any("Devolución cuotas soportadas otros países" in item for item in descriptions)
+    assert any("Cuotas soportadas - 4T" in item for item in descriptions)
+
+    endpoint_path = (
+        Path(__file__).resolve().parents[3]
+        / "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/projection_endpoints"
+        / "0001-projection-endpoints.toml"
+    )
+    payload = tomllib.loads(endpoint_path.read_text(encoding="utf-8"))
+    refs = tuple(
+        compile_filing_projection_ref(item["projection_ref"])
+        for item in payload["revisions"]["2023"]["projection_endpoints"]
+    )
+    non_agricultural_slot_one = {
+        ref.fact
+        for ref in refs
+        if getattr(ref, "projection_kind", None) == "m303_regimen_simplificado_fact"
+        and ref.cohort.value == "no_agricola"
+        and ref.slot == 1
+    }
+    assert M303RegimenSimplificadoFact.DEVOLUCION_CUOTAS_SOPORTADAS_OTROS_PAISES in non_agricultural_slot_one
+    assert M303RegimenSimplificadoFact.CUOTAS_SOPORTADAS_CUARTO_TRIMESTRE in non_agricultural_slot_one
+
+
+def test_real_dp30302_declarations_keep_the_reviewed_epoch_multiplicity() -> None:
+    """The hash-pinned designs, rather than a generated count, govern every repeated fact."""
+    root = Path(__file__).resolve().parents[3] / "src/cadrumo/_data/registry/aeat/modelos/303/revisions"
+    expected = {
+        "2023": (208, 134, {"superficie_horno_dias_cuarto_trimestre": {None}}),
+        "2024-hasta-08-y-2t": (204, 130, {"superficie_horno_dias_cuarto_trimestre": {None}}),
+        "2024-desde-09-y-3t": (214, 140, {"superficie_horno_dias_cuarto_trimestre": {None}}),
+        "2025": (
+            216,
+            142,
+            {
+                "superficie_horno_dias_cuarto_trimestre": {1, 2, 3, 4},
+                "superficie_horno_cuarto_trimestre": {1, 2, 3, 4},
+            },
+        ),
+        "2026-y-siguientes": (
+            216,
+            142,
+            {
+                "superficie_horno_dias_cuarto_trimestre": {1, 2, 3, 4},
+                "superficie_horno_cuarto_trimestre": {1, 2, 3, 4},
+            },
+        ),
+    }
+    always_repeated = {
+        "mesas_capacidad",
+        "mesas_dias_cuarto_trimestre",
+        "mesas_numero",
+    }
+
+    for revision_id, (total, simplified, epoch_specific) in expected.items():
+        path = root / revision_id / "projection_endpoints/0001-projection-endpoints.toml"
+        payload = tomllib.loads(path.read_text(encoding="utf-8"))
+        endpoints = payload["revisions"][revision_id]["projection_endpoints"]
+        simplified_endpoints = tuple(
+            item
+            for item in endpoints
+            if item["projection_ref"].get("projection_kind", "").startswith("m303_regimen_simplificado_")
+        )
+        simplified_refs = tuple(
+            compile_filing_projection_ref(item["projection_ref"])
+            for item in simplified_endpoints
+            if item["projection_ref"].get("projection_kind") == "m303_regimen_simplificado_fact"
+        )
+        assert len(endpoints) == total
+        assert len(simplified_endpoints) == simplified
+        for fact in always_repeated:
+            assert {
+                ref.sub_index
+                for ref in simplified_refs
+                if ref.fact.value == fact and ref.cohort.value == "no_agricola" and ref.slot == 1
+            } == {1, 2, 3, 4}
+        for fact, sub_indices in epoch_specific.items():
+            assert {
+                ref.sub_index
+                for ref in simplified_refs
+                if ref.fact.value == fact and ref.cohort.value == "no_agricola" and ref.slot == 1
+            } == sub_indices
 
 
 def test_persisted_matrix_carries_a_family_whose_cardinality_transitions_across_epochs() -> None:

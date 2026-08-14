@@ -34,6 +34,7 @@ def main(argv: list[str] | None = None) -> int:
     manifest_path.write_text(
         render_m303_annual_orden_manifest(source_root=bundled_path(), sources=catalogues.sources),
         encoding="utf-8",
+        newline="\n",
     )
     return 0
 

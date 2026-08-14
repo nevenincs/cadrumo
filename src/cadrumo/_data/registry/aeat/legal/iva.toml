@@ -581,6 +581,20 @@ applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/303_2025.xlsx"
 review_status = "reviewed"
 
+[sources."aeat-dr-303-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2022"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx"
+sha256 = "6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60"
+bytes = 339445
+retrieved_at = 2026-08-14
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_22/DR303e22.xlsx"
+review_status = "reviewed"
+
 [sources."aeat-dr-303-2023"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -1811,6 +1825,20 @@ retrieved_at = 2026-08-10
 applies_from = 2023-01-01
 applies_to = 2023-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+review_status = "reviewed"
+
+[sources."boe-orden-hfp-1335-2021-iva-authority"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/orden-hfp-1335-2021.html"
+sha256 = "3fda96dcf2dcb3b3f0863bc07b0eabd45e21c6850d4b611e635627befb450c46"
+bytes = 507246
+retrieved_at = 2026-08-14
+published_at = 2021-12-01
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19904"
 review_status = "reviewed"
 
 [sources."boe-orden-hfp-1359-2023-iva-authority"]

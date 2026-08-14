@@ -6,12 +6,16 @@ from decimal import Decimal
 
 import pytest
 
+from .....application.calculations import calculate_m303_regimen_simplificado_result
 from .....core import (
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,
     M303RegimenSimplificadoCohort,
+    M303RegimenSimplificadoFact,
+    M303RegimenSimplificadoFactProjectionRef,
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
+    Period,
 )
 from .....core.resources import resources
 from .....domain.iva import (
@@ -29,6 +33,7 @@ from .. import (
     RegistryValidationError,
     project_m303_regimen_simplificado_rows,
     resolve_m303_regimen_simplificado_snapshot,
+    validate_m303_regimen_simplificado_endpoint_epoch,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -93,6 +98,30 @@ def test_projection_rejects_missing_or_duplicate_typed_references() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "revision_id, fact, sub_index",
+    [
+        ("2023", M303RegimenSimplificadoFact.SUPERFICIE_HORNO_CUARTO_TRIMESTRE, 1),
+        ("2024-hasta-08-y-2t", M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE, 1),
+        ("2025", M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE, None),
+    ],
+)
+def test_epoch_admission_refuses_real_horno_fact_shapes_outside_the_selected_design(
+    revision_id: str,
+    fact: M303RegimenSimplificadoFact,
+    sub_index: int | None,
+) -> None:
+    reference = M303RegimenSimplificadoFactProjectionRef(
+        projection_kind="m303_regimen_simplificado_fact",
+        cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
+        slot=1,
+        fact=fact,
+        sub_index=sub_index,
+    )
+    with pytest.raises(RegistryValidationError, match="not admitted"):
+        validate_m303_regimen_simplificado_endpoint_epoch((reference,), revision_id=revision_id)
+
+
 def test_projection_identity_never_uses_json_serialisation() -> None:
     import inspect
 
@@ -104,7 +133,15 @@ def test_projection_identity_never_uses_json_serialisation() -> None:
 
 
 def test_declared_quantity_projection_uses_the_exact_annual_orden_ordinal() -> None:
-    annual_orden = _resolved_annual_orden_for_2026()
+    registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+    scope_decision = M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+    )
+    regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=registry_snapshot,
+        scope_decision=scope_decision,
+    )
+    annual_orden = regimen_snapshot.orden
     annual_activity = annual_orden.activities[0]
     assert annual_activity.kind == "no_agricola"
     assert annual_activity.iae_epigrafe is not None
@@ -130,7 +167,7 @@ def test_declared_quantity_projection_uses_the_exact_annual_orden_ordinal() -> N
         ),
         facts=tuple(
             HechoActividadSimplificado(
-                identity=identity,
+                fact=M303RegimenSimplificadoFact.CUOTA_DEVENGADA_OPERACIONES_CORRIENTES,
                 value=Decimal("1"),
                 evidence_reference=evidence,
             )
@@ -153,7 +190,14 @@ def test_declared_quantity_projection_uses_the_exact_annual_orden_ordinal() -> N
         orden=annual_orden.activities,
         agricultural_authority=annual_orden.agricultural_authority,
         applicable=True,
-        calculation_result=None,
+        calculation_result=calculate_m303_regimen_simplificado_result(
+            period=Period.from_year_and_code(2026, "1T"),
+            scope_decision=scope_decision,
+            rows=RegimenSimplificadoFilingRows(ejercicio=annual_activity.ejercicio, activities=(activity,)),
+            regimen_snapshot=regimen_snapshot,
+            dana_2024_eligibility=None,
+            catalogues=resources().modelos.authority.catalogues,
+        ),
         censo_iae_epigraphs=frozenset({annual_activity.iae_epigrafe}),
     )
 
@@ -171,7 +215,7 @@ def test_agricultural_projection_refuses_without_official_code_crosswalk() -> No
         activity_code=agricultural_authority.quota_indexes[0].activity_name,
         facts=(
             HechoActividadSimplificado(
-                identity="test-s73-agricultural-fact",
+                fact=M303RegimenSimplificadoFact.CUOTA_DEVENGADA,
                 value=Decimal("1"),
                 evidence_reference=evidence,
             ),
