@@ -29,6 +29,7 @@ from ._loader_cache import (
     is_bundled_registry_root,
     registry_disk_cache_enabled,
     toml_file_fingerprint,
+    validate_modelo_directory_source,
 )
 from ._loader_cache import (
     ModeloRevisionSource as _ModeloRevisionSource,
@@ -366,6 +367,7 @@ def load_modelo_directory(directory: Path) -> ModeloDefinition:
     manifest_path = resolved / "manifest.toml"
     if not manifest_path.is_file():
         raise RegistryLoadError(f"{resolved}: missing manifest.toml")
+    validate_modelo_directory_source(resolved)
 
     fingerprints = _collect_modelo_directory_fingerprints(resolved)
     try:
@@ -471,14 +473,27 @@ def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -
     revision_manifest = path / "revision.toml"
     if not revision_manifest.is_file():
         raise RegistryLoadError(f"{path}: revision fragment directory must contain revision.toml")
-    section_fragment_paths = sorted(
-        p for p in path.rglob("*.toml") if p != revision_manifest and not any(part == "locales" for part in p.parts)
-    )
+    section_dirs = _revision_section_directories(path)
+    _require_revision_section_fragments(section_dirs)
     merged_revision: dict[str, object] = {}
     _merge_revision_manifest(revision_manifest, revision_id, merged_revision)
-    for fragment_path in section_fragment_paths:
+    for fragment_path in _revision_section_fragment_paths(section_dirs):
         _merge_revision_fragment(fragment_path, revision_id, merged_revision)
     merged_revisions[revision_id] = merged_revision
+
+
+def _revision_section_directories(path: Path) -> tuple[Path, ...]:
+    return tuple(sorted(entry for entry in path.iterdir() if entry.is_dir() and entry.name != "locales"))
+
+
+def _require_revision_section_fragments(section_dirs: tuple[Path, ...]) -> None:
+    for section_dir in section_dirs:
+        if not any(candidate.is_file() for candidate in section_dir.rglob("*.toml")):
+            raise RegistryLoadError(f"{section_dir}: revision section fragment directory contains no TOML fragments")
+
+
+def _revision_section_fragment_paths(section_dirs: tuple[Path, ...]) -> tuple[Path, ...]:
+    return tuple(sorted(fragment_path for section_dir in section_dirs for fragment_path in section_dir.glob("*.toml")))
 
 
 def _read_single_revision_table(path: Path, expected_revision_id: RevisionId) -> dict[str, object]:
@@ -545,7 +560,16 @@ def _merge_revision_manifest(path: Path, expected_revision_id: RevisionId, merge
 def _merge_revision_fragment(path: Path, expected_revision_id: RevisionId, merged_revision: dict[str, object]) -> None:
     """Merge one per-section fragment TOML into a single raw revision payload."""
     raw_revision_table = _read_single_revision_table(path, expected_revision_id)
+    if not raw_revision_table:
+        raise RegistryLoadError(f"{path}: revision fragment declares no section fields")
+    fragment_directory = path.relative_to(path.parents[1]).parts[0]
+    section_name = "export_layouts" if fragment_directory == "export" else fragment_directory
     for key, value in raw_revision_table.items():
+        if key != section_name:
+            raise RegistryLoadError(
+                f"{path}: revision fragment folder {fragment_directory!r} may declare only its owned section; "
+                f"found {key!r}",
+            )
         _merge_revision_fragment_field(path, key, value, merged_revision)
 
 
@@ -960,6 +984,7 @@ def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:
     """
     resolved = root.resolve()
     legal_dir = resolved / "legal"
+    _validate_legal_directory(legal_dir)
     legal: dict[str, LegalReference] = {}
     parameters: dict[str, LegalParameter] = {}
     for path in sorted(legal_dir.glob("*.toml")):
@@ -991,6 +1016,8 @@ def load_registry_tree(root: Path) -> tuple[tuple[ModeloDefinition, ...], Regist
         A tuple of all :class:`ModeloDefinition` objects and the merged :class:`RegistryCatalogues`.
     """
     resolved = root.resolve()
+    _validate_legal_directory(resolved / "legal")
+    discover_modelo_sources(resolved / "modelos")
     fingerprints = _collect_registry_tree_fingerprints(resolved)
     try:
         return _load_registry_tree_cached(str(resolved), fingerprints)
@@ -1261,6 +1288,19 @@ def _load_shared_catalogue_files(legal_dir: Path) -> RegistryCatalogues:
         parameters.update(catalogue.parameters)
     _validate_legal_parameter_refs(legal_dir, parameters=parameters, legal=legal)
     return RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
+
+
+def _validate_legal_directory(legal_dir: Path) -> None:
+    """Require the shared legal catalogue to remain one flat TOML directory."""
+    if not legal_dir.is_dir():
+        return
+    for entry in sorted(legal_dir.iterdir()):
+        if entry.is_dir():
+            raise RegistryLoadError(f"{entry}: unrecognized legal directory; legal catalogues must be flat")
+        if not entry.is_file() or entry.suffix != ".toml":
+            raise RegistryLoadError(
+                f"{entry}: unrecognized legal catalogue file; legal catalogues must use the '.toml' suffix",
+            )
 
 
 def _load_all_modelo_definitions(modelos_dir: Path) -> tuple[ModeloDefinition, ...]:

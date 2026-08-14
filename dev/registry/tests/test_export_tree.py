@@ -803,6 +803,28 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
     assert layout == first.layout
 
 
+def test_real_loader_accepts_only_generator_owned_export_provenance(_m200_snapshot, tmp_path) -> None:
+    """The generated JSON sidecar is structural evidence, not a TOML fragment."""
+    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "200")
+    render_complete_export_tree(
+        revision_dir / "export",
+        revision_id="2025",
+        joined=_joined(_m200_snapshot),
+        semantic_map=_semantic_map(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
+    )
+
+    loaded = load_modelo_directory(tmp_path / "modelos" / "200")
+    assert loaded.revisions["2025"].export_layouts
+
+    unexpected = revision_dir / "export" / "unexpected.json"
+    unexpected.write_text("{}\n", encoding="utf-8", newline="\n")
+    with pytest.raises(RegistryError, match="unrecognized revision fragment file"):
+        load_modelo_directory(tmp_path / "modelos" / "200")
+
+
 @pytest.mark.parametrize("required", [False, True])
 def test_renderer_carries_semantic_projection_occurrence_authority_into_generated_record(
     _m200_snapshot,
