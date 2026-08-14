@@ -12,6 +12,7 @@ from pydantic import AnyHttpUrl, ValidationError
 
 from ...adapters.persistence.storage import (
     SECURE_OBJECT_WORKFLOW_STATE_KEY,
+    StorageValidationError,
     activate_session,
     has_active_bucket_session,
     suspend_active_session,
