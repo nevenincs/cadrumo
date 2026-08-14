@@ -262,10 +262,6 @@ def _repos(tmp_path: Path) -> Iterator[_Repos]:
         yield wu, cr, fr, vr, bv
 
 
-@pytest.fixture
-def repos(tmp_path: Path) -> Iterator[_Repos]:
-    yield from _repos(tmp_path)
-
 
 @dataclass(frozen=True, slots=True)
 class _FileFlowRuntime:

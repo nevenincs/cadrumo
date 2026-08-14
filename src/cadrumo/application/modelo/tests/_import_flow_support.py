@@ -9,6 +9,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -94,7 +96,8 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 )
 
 
-def _repos(tmp_path: Path) -> Iterator[_Repos]:
+@pytest.fixture
+def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Yield the five catalogue repositories over an encrypted SQLite db."""
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:

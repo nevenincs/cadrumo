@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -19,16 +17,13 @@ from ._import_flow_support import (
     _UNKNOWN_IMPORT_CASILLA,
     _import_external_filing,
     _Repos,
-    _repos,
     _seed_work_unit,
+    repos,
 )
 
+__all__ = ["repos"]
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@pytest.fixture
-def repos(tmp_path: Path) -> Iterator[_Repos]:
-    yield from _repos(tmp_path)
 
 
 def test_import_refuses_casilla_ids_not_in_registry(repos: _Repos) -> None:

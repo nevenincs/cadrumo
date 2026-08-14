@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:a089f25cf294e8d44128ee1da7c50bbb2c2cf23db9cb78084c0081f3a66cfd56'
+body_hash: 'sha256:6bbf2cb03b63424a09c5472176de68dfba39add1eb52745a0e2d33f66f92d81a'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -18,6 +18,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P18-S55]]'
   - '[[2026-08-14-test-harness-sanity-W07-P18-S56]]'
   - '[[2026-08-14-test-harness-sanity-W07-P19-S60]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P20-S61]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S71]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S72]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S73]]'
@@ -62,6 +63,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P18-S55` - Canonicalize the exact secure-object-repository cluster without merging its divergent shape
 - `2026-08-14-test-harness-sanity-W07-P18-S56` - Canonicalize fixed-master-key fixtures across persistence storage tests
 - `2026-08-14-test-harness-sanity-W07-P19-S60` - Canonicalize schema-loader fixtures while preserving proven scope
+- `2026-08-14-test-harness-sanity-W07-P20-S61` - Remove local redeclarations of the canonical modelo repositories fixture
 - `2026-08-14-test-harness-sanity-W07-P22-S71` - Promote banned-live-import enforcement into the shared root policy helper
 - `2026-08-14-test-harness-sanity-W07-P22-S72` - Make the repository root the sole collection-policy hook owner
 - `2026-08-14-test-harness-sanity-W07-P22-S73` - Remove duplicate marker traversal and live-policy ownership from the child conftest
