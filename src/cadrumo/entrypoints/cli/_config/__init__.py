@@ -226,6 +226,18 @@ def config_list(
 
 
 _register_lazy_wizard_leaf(
+    "create",
+    "create",
+    help=tr(
+        "cli.config.profile.create_help",
+    ),
+    epilog=tr(
+        "cli.config.profile.create_epilog",
+    ),
+)
+
+
+_register_lazy_wizard_leaf(
     "edit",
     "edit",
     help=tr(

@@ -78,7 +78,7 @@ from dev.quality.cli_action_census_dispositions import (
     validate_dispositions,
 )
 
-from ....application.operator_surface import HelpSurface, build_help_document
+from ....application.operator_surface import HelpSurface, build_help_document, build_root_landing_report
 from ....tests.cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -507,6 +507,143 @@ def test_action_ledger_exclusions_have_specific_non_action_contexts() -> None:
     repeated = category_templates.copy()
     repeated[(category, template)] = 7
     assert repeated_template_overflow(repeated) == {(category, template): 7}
+
+
+def _iter_help_entry_commands() -> Iterator[tuple[str, str]]:
+    """Yield ``(origin, command)`` for every curated help row on every surface.
+
+    Walks the TYPED documents rather than their rendered JSON, so the
+    denominator is structural: every :class:`HelpEntry` reachable from every
+    :class:`HelpSurface`. There is no extractor between the surface and the
+    check that could narrow it.
+    """
+    for surface in HelpSurface:
+        document = build_help_document(surface)
+        for section in document.sections:
+            for entry in section.entries:
+                yield f"operator help surface {surface.value}", entry.command
+
+
+def _iter_landing_report_commands() -> Iterator[tuple[str, str]]:
+    """Yield ``(origin, command)`` for every arm of the bare-root landing report.
+
+    The landing report is the FIRST surface a new operator meets, and it emits
+    its command outside :func:`build_help_document` — so the curated-help walk
+    above cannot see it. Each arm is exercised by driving the builder's real
+    inputs, because the arms differ precisely in which command they hand over:
+    an operator with no profile at all is sent somewhere different from one
+    whose selection cannot be resolved.
+    """
+    yield "landing arm active-profile", build_root_landing_report("operator").command
+    yield (
+        "landing arm selection-unresolvable",
+        build_root_landing_report(None, profile_selected=True).command,
+    )
+    yield (
+        "landing arm registered-none-active",
+        build_root_landing_report(None, profile_selected=False, registered_profile_count=1).command,
+    )
+    yield (
+        "landing arm first-run",
+        build_root_landing_report(None, profile_selected=False, registered_profile_count=0).command,
+    )
+
+
+# A root-global option may precede the command family (``aeat --format json
+# config repair``), which the family-rooted citation grammar cannot parse. The
+# family token is where the tree walk begins, so the path is read from there.
+_COMMAND_FAMILY_PATTERN = re.compile(r"\b(app|config)\b")
+
+
+def _advertised_command_failures(command: str, *, origin: str) -> list[str]:
+    """Report why ``command`` is not registered, or nothing when it resolves.
+
+    An advertised command falls into exactly one of two domains, and BOTH are
+    checked — neither is skipped, because a skipped entry is how this class of
+    gate goes quietly vacuous:
+
+    - it names a command family, so every token from that family onward must
+      resolve in the live tree;
+    - it names no family at all (``aeat --version --detail``), so it is a bare
+      root invocation and every option it cites must be a real root option.
+    """
+    family = _COMMAND_FAMILY_PATTERN.search(command)
+    if family is None:
+        cited = _OPTION_TOKEN_PATTERN.findall(command)
+        if not cited:
+            return [
+                f"{origin}: advertised command {command!r} names neither a command family nor a root "
+                "option, so nothing about it is checked against the live tree"
+            ]
+        unknown = sorted(option for option in cited if option not in _root_option_names())
+        if not unknown:
+            return []
+        return [
+            f"{origin}: advertised command {command!r} cites root option(s) {unknown} the live root callback "
+            "does not declare"
+        ]
+
+    path = f"aeat {command[family.start() :]}"
+    if _count_citations(path) == 0:
+        return [
+            f"{origin}: advertised command {command!r} yields no parseable citation, so it is "
+            "not checked against the live tree at all"
+        ]
+    return _dead_citations_in(path, origin=origin)
+
+
+def _unregistered_advertised_commands() -> list[str]:
+    """Report every advertised operator command the live tree does not register."""
+    return [
+        failure
+        for origin, command in (*_iter_help_entry_commands(), *_iter_landing_report_commands())
+        for failure in _advertised_command_failures(command, origin=origin)
+    ]
+
+
+def test_every_advertised_operator_command_is_registered_in_the_live_tree() -> None:
+    """A verb may never be advertised to the operator without being registered.
+
+    The curated help surfaces and the bare-root landing report are the two
+    places the application tells an operator which command to run next. Both
+    are hand-authored beside a command tree they do not import, so nothing but
+    this check binds them together: ``aeat config profile create NAME`` was
+    advertised across both while its registration had been dropped, leaving
+    first-run profile creation reachable only through the terminal manager.
+
+    The asserted property is registration, not navigability: a curated entry
+    may legitimately advertise a browsable GROUP (``aeat app modelo work``),
+    and every such group prints its own help when invoked bare. What may never
+    happen is a token in an advertised path resolving to nothing.
+    """
+    failures = _unregistered_advertised_commands()
+    assert not failures, "the operator is advertised commands the live CLI tree does not register:\n" + "\n".join(
+        failures
+    )
+
+
+def test_the_advertised_command_gate_flags_an_unregistered_verb() -> None:
+    """Anti-tautology proof for the advertised-versus-registered check.
+
+    Drives the gate's own classifier over an unregistered verb, over the live
+    first-run command that must pass, over a root-global-option form whose
+    family sits past the options, and over a bare root invocation that names no
+    family. Without this, the gate above would keep reporting green if the
+    resolver started accepting everything or the classifier started skipping.
+    """
+    unregistered = _advertised_command_failures("aeat config profile bootstrap NAME", origin="synthetic")
+    assert len(unregistered) == 1, unregistered
+    assert "'bootstrap'" in unregistered[0]
+
+    assert not _advertised_command_failures("aeat config profile create NAME", origin="synthetic")
+    assert not _advertised_command_failures("aeat --format json config repair", origin="synthetic")
+    assert not _advertised_command_failures("aeat --version --detail", origin="synthetic")
+
+    # A root-only form citing an option the root callback does not declare is
+    # caught rather than waved through as "no family, nothing to check".
+    invented_root_option = _advertised_command_failures("aeat --invented-root-flag", origin="synthetic")
+    assert len(invented_root_option) == 1, invented_root_option
+    assert "--invented-root-flag" in invented_root_option[0]
 
 
 def test_operator_help_documents_cite_live_commands() -> None:
