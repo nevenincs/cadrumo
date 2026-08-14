@@ -123,7 +123,6 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -135,10 +134,10 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
-    ManualWorkedExamplePayload,
     RegistryModeloObservation,
     ValidatedRegistryAuthority,
 )
+from ....domain.calculations.registry.tests import read_manual_worked_example
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
@@ -164,12 +163,6 @@ _FILING_YEAR = 2024
 _ORACLE_PAYLOAD_NAME = "modelo-200-2024-ejemplo1-tributacion-minima-empresa-grande.json"
 
 
-def _oracle_payload() -> ManualWorkedExamplePayload:
-    """Read the bundled oracle through the registry's own strict payload model."""
-    path = Path(bundled_path("corpus", "manual_oracles")) / _ORACLE_PAYLOAD_NAME
-    return ManualWorkedExamplePayload.model_validate_json(path.read_text(encoding="utf-8"))
-
-
 def _declared_liquidacion_inputs() -> dict[CasillaId, Decimal]:
     """The manual's Ejemplo 1 figures, read FROM the oracle rather than retyped here.
 
@@ -180,7 +173,7 @@ def _declared_liquidacion_inputs() -> dict[CasillaId, Decimal]:
     is the same 2.000.000 the example states twice, and its locator cites both
     statements. That box choice predates this declaration and is unchanged by it.
     """
-    declared = _oracle_payload().declared_inputs
+    declared = read_manual_worked_example(_ORACLE_PAYLOAD_NAME).declared_inputs
     assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
     return {
         validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)

@@ -14,7 +14,6 @@ from .. import (
     CasillaFieldKind,
     RecordDesignSheet,
     build_snapshot,
-    load_registry_tree,
     resolve_export_layout,
 )
 from .._binding_selector_utils import BindingFixedExportSelector, binding_export_selector
@@ -27,7 +26,8 @@ from .._record_design import (
     extract_record_design_pdf,
     extract_record_design_pdf_bytes,
 )
-from .._schema import DataBindingDefinition, ModeloDefinition, RegistryCatalogues
+from .._schema import DataBindingDefinition
+from ._registry_schema_support import _committed_registry_tree
 
 __all__ = [
     "_MODELO_131_CURRENT",
@@ -58,11 +58,6 @@ __all__ = [
 _MODELO_131_WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_131", "files")
 _MODELO_131_CURRENT = _MODELO_131_WORKBOOK_ROOT / "01-131-ejercicios-2026-actualizado-04-03-26-180-kb-xlsx.xlsx"
 _RECORD_DESIGN_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
-
-
-@cache
-def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    return load_registry_tree(bundled_path("registry", "aeat"))
 
 
 @cache

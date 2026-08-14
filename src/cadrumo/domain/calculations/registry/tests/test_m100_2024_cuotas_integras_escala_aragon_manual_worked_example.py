@@ -77,16 +77,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .. import (
-    ManualWorkedExamplePayload,
     ValidatedRegistryAuthority,
 )
+from ._manual_oracle_support import read_manual_worked_example
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -126,12 +125,6 @@ transcriptions of one page, agreeing by nothing.
 _ORACLE_PAYLOAD_NAME = "modelo-100-2024-cuotas-integras-escala-aragon.json"
 
 
-def _oracle_payload() -> ManualWorkedExamplePayload:
-    """Read the bundled oracle through the registry's own strict payload model."""
-    path = Path(bundled_path("corpus", "manual_oracles")) / _ORACLE_PAYLOAD_NAME
-    return ManualWorkedExamplePayload.model_validate_json(path.read_text(encoding="utf-8"))
-
-
 def _declared_manual_inputs() -> dict[CasillaId, Decimal]:
     """The facts the manual PRINTS for this case, read from the oracle's declaration.
 
@@ -140,7 +133,7 @@ def _declared_manual_inputs() -> dict[CasillaId, Decimal]:
     declaring the figures again for the grounding fold, and nothing anywhere checking
     the two agreed. They did agree; nothing made them.
     """
-    declared = _oracle_payload().declared_inputs
+    declared = read_manual_worked_example(_ORACLE_PAYLOAD_NAME).declared_inputs
     assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
     return {
         validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
@@ -182,7 +175,7 @@ _REL_2024: dict[str, Decimal] = {
 
 
 def _scenario(*, ccaa: str, scenario_id: str, grounded: bool) -> RegistryCalculationScenario:
-    expected_by_casilla_id = _oracle_payload().expected_by_casilla_id
+    expected_by_casilla_id = read_manual_worked_example(_ORACLE_PAYLOAD_NAME).expected_by_casilla_id
     expected_outputs = (
         tuple(
             RegistryScenarioExpectedOutput(

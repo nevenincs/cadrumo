@@ -96,16 +96,15 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .. import (
-    ManualWorkedExamplePayload,
     ValidatedRegistryAuthority,
 )
+from ._manual_oracle_support import read_manual_worked_example
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -162,12 +161,6 @@ _BASE_BINDINGS_2024 = {
 _ORACLE_PAYLOAD_NAME = "modelo-100-2024-ganancias-patrimoniales-transmision-inmueble.json"
 
 
-def _oracle_payload() -> ManualWorkedExamplePayload:
-    """Read the bundled oracle through the registry's own strict payload model."""
-    path = Path(bundled_path("corpus", "manual_oracles")) / _ORACLE_PAYLOAD_NAME
-    return ManualWorkedExamplePayload.model_validate_json(path.read_text(encoding="utf-8"))
-
-
 def _declared_inmueble_inputs() -> dict[CasillaId, Decimal]:
     """The manual's own transmisión figures, read FROM the oracle rather than retyped.
 
@@ -178,7 +171,7 @@ def _declared_inmueble_inputs() -> dict[CasillaId, Decimal]:
     solución rather than a fact from the case statement: the engine consumes it, the
     example states it, and it is cited where it is stated.
     """
-    declared = _oracle_payload().declared_inputs
+    declared = read_manual_worked_example(_ORACLE_PAYLOAD_NAME).declared_inputs
     assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
     return {
         validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
