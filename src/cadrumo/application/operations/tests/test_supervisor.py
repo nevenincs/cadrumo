@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -16,6 +17,7 @@ from ....adapters.persistence.operations import (
     OperationSecureReferenceRepository,
 )
 from ....adapters.persistence.storage import (
+    STORAGE_NAMESPACE_REGISTRY,
     RepositoryError,
     SecureObjectNamespaceDefinition,
     SecureObjectRepository,
@@ -25,7 +27,7 @@ from ....adapters.persistence.storage import (
 )
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.classification import SensitivityClass
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_ephemeral_secure_sql, isolated_runtime_profile
 from .. import (
     OperationApplyResponse,
     OperationBaselinePolicy,
@@ -44,10 +46,12 @@ from .. import (
     OperationIdentity,
     OperationInteractionKind,
     OperationInteractionRequest,
+    OperationLeaseDisposition,
     OperationLifecycle,
     OperationNoticeEvent,
     OperationOwnedResource,
     OperationPendingInteraction,
+    OperationPersistedSnapshot,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationRejectResponse,
@@ -204,6 +208,29 @@ class ReviewExecutor:
     ) -> str | None:
         del request
         await context.interactions.request(_pending_interaction(context.identity))
+        return None
+
+
+class WaitingExecutor:
+    """Concrete executor that holds real asynchronous work until released."""
+
+    def __init__(self, *, started: asyncio.Event, release: asyncio.Event) -> None:
+        self.started = started
+        self.release = release
+        self.cancelled = False
+
+    async def execute(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        del request, context
+        self.started.set()
+        try:
+            await self.release.wait()
+        except asyncio.CancelledError:
+            self.cancelled = True
+            raise
         return None
 
 
@@ -574,6 +601,480 @@ def test_submit_conflict_does_not_publish_an_orphan_idempotency_claim(tmp_path: 
 
         assert created == replayed == "6" * 64
         assert asyncio.run(journal.load(created)).idempotency_claim is not None
+
+
+def test_submit_journal_create_refusal_releases_the_exact_lease_for_retry(tmp_path: Path) -> None:
+    """A post-acquisition journal refusal releases its exact lease before retry."""
+    with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
+        storage_root = tmp_path / "durable-state"
+        journal, leases, operands = _repositories(
+            storage_root=storage_root,
+            profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
+        )
+        supervisor = _supervisor(
+            registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = "3" * 64
+        request = _request()
+        journal_root = storage_root / "operation-journals"
+        journal_root.mkdir(parents=True)
+        refused_path = journal_root / f"{operation_id}.json"
+        refused_path.mkdir()
+
+        with pytest.raises(RepositoryError, match="create already exists"):
+            asyncio.run(supervisor.submit(request, operation_id=operation_id))
+        observation = asyncio.run(
+            leases.inspect(
+                operation_conflict_scope_reference(
+                    definition_id=request.definition_id,
+                    subject_ref=request.subject_ref,
+                ),
+                operation_id,
+                observed_at=_NOW,
+            )
+        )
+        assert observation.current is None
+
+        refused_path.rmdir()
+        created = asyncio.run(supervisor.submit(request, operation_id=operation_id))
+        assert created == operation_id
+        assert asyncio.run(journal.load(created)).idempotency_claim is None
+
+
+def test_supervisor_renews_exact_lease_before_expiry_and_settles_beyond_original_duration(tmp_path: Path) -> None:
+    """A renewal made while live retains exclusive settlement beyond the original window."""
+    observed_at = [_NOW]
+    with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state",
+            profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
+        )
+        supervisor = _supervisor(
+            registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            clock=lambda: observed_at[0],
+            lease_duration=timedelta(minutes=1),
+        )
+        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+
+        observed_at[0] = _NOW + timedelta(seconds=30)
+        running = asyncio.run(supervisor.start(operation_id))
+        scope_ref = operation_conflict_scope_reference(
+            definition_id=running.identity.definition_id,
+            subject_ref=running.identity.subject_ref,
+        )
+        renewed = asyncio.run(leases.inspect(scope_ref, operation_id, observed_at=observed_at[0]))
+
+        assert renewed.current is not None
+        assert renewed.current.acquired_at == _NOW
+        assert renewed.current.expires_at == _NOW + timedelta(seconds=90)
+
+        observed_at[0] = _NOW + timedelta(seconds=75)
+        still_owned = asyncio.run(leases.inspect(scope_ref, operation_id, observed_at=observed_at[0]))
+        terminal = asyncio.run(
+            supervisor.settle(
+                operation_id,
+                OperationTerminalReceipt(
+                    identity=running.identity,
+                    revision=running.revision + 1,
+                    condition=OperationTerminalCondition.SUCCEEDED,
+                    effect=OperationEffect.NONE,
+                    settled_at=observed_at[0],
+                    result_ref="result:renewed-settlement",
+                ),
+            )
+        )
+
+        assert still_owned.current == renewed.current
+        assert terminal.lifecycle is OperationLifecycle.TERMINAL
+
+
+def test_start_heartbeats_a_quiet_executor_past_the_initial_lease_window(tmp_path: Path) -> None:
+    """A quiet executor stays exclusively owned and can settle after its first lease expires."""
+    observed_at = [_NOW]
+    with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state",
+            profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
+        )
+        started = asyncio.Event()
+        release = asyncio.Event()
+        executor = WaitingExecutor(started=started, release=release)
+        registry = _registry(executor_type=WaitingExecutor, build=lambda: executor)
+        supervisor = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            clock=lambda: observed_at[0],
+            lease_duration=timedelta(milliseconds=30),
+        )
+        contender = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="4" * 64,
+            token="5" * 64,
+            clock=lambda: observed_at[0],
+            lease_duration=timedelta(milliseconds=30),
+        )
+
+        async def run_quiet_executor() -> OperationPersistedSnapshot:
+            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            start_task = asyncio.create_task(supervisor.start(operation_id))
+            await started.wait()
+            observed_at[0] = _NOW + timedelta(milliseconds=20)
+            await asyncio.sleep(0.025)
+            running = await journal.load(operation_id)
+            scope_ref = operation_conflict_scope_reference(
+                definition_id=running.identity.definition_id,
+                subject_ref=running.identity.subject_ref,
+            )
+            renewed = await leases.inspect(scope_ref, operation_id, observed_at=observed_at[0])
+
+            assert renewed.current is not None
+            assert renewed.current.expires_at > _NOW + timedelta(milliseconds=30)
+
+            observed_at[0] = _NOW + timedelta(milliseconds=45)
+            with pytest.raises(ValueError, match="conflict lease"):
+                await contender.submit(_request(), operation_id="6" * 64)
+
+            release.set()
+            finished = await start_task
+            return await supervisor.settle(
+                operation_id,
+                OperationTerminalReceipt(
+                    identity=finished.identity,
+                    revision=finished.revision + 1,
+                    condition=OperationTerminalCondition.SUCCEEDED,
+                    effect=OperationEffect.NONE,
+                    settled_at=observed_at[0],
+                    result_ref="result:heartbeat-settlement",
+                ),
+            )
+
+        terminal = asyncio.run(run_quiet_executor())
+        assert terminal.lifecycle is OperationLifecycle.TERMINAL
+
+
+def test_heartbeat_owner_loss_cancels_executor_without_mutating_winner_bytes(tmp_path: Path) -> None:
+    """An exact replacement refuses renewal, joins executor cancellation, and preserves winner bytes."""
+    observed_at = [_NOW]
+    with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
+        storage_root = tmp_path / "durable-state"
+        journal, leases, operands = _repositories(
+            storage_root=storage_root,
+            profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
+        )
+        started = asyncio.Event()
+        release = asyncio.Event()
+        executor = WaitingExecutor(started=started, release=release)
+        registry = _registry(executor_type=WaitingExecutor, build=lambda: executor)
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            clock=lambda: observed_at[0],
+            lease_duration=timedelta(milliseconds=30),
+        )
+        replacement = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="4" * 64,
+            token="5" * 64,
+            clock=lambda: observed_at[0],
+            lease_duration=timedelta(milliseconds=30),
+        )
+
+        async def lose_owner_lease() -> None:
+            operation_id = await owner.submit(_request(subject_ref="subject:shared"), operation_id="3" * 64)
+            start_task = asyncio.create_task(owner.start(operation_id))
+            await started.wait()
+            running = await journal.load(operation_id)
+            scope_ref = operation_conflict_scope_reference(
+                definition_id=running.identity.definition_id,
+                subject_ref=running.identity.subject_ref,
+            )
+            held = await leases.inspect(scope_ref, operation_id, observed_at=observed_at[0])
+            assert held.current is not None
+            assert (
+                await leases.release(held.current, observed_at=observed_at[0])
+            ).disposition is OperationLeaseDisposition.RELEASED
+            await replacement.submit(_request(subject_ref="subject:shared"), operation_id="6" * 64)
+
+            journal_path = storage_root / "operation-journals" / f"{operation_id}.json"
+            lease_path = storage_root / "operation-journals" / f"{scope_ref}.lease.json"
+            journal_before = journal_path.read_bytes()
+            lease_before = lease_path.read_bytes()
+            observed_at[0] = _NOW + timedelta(milliseconds=20)
+
+            with pytest.raises(ValueError, match="renewal was refused"):
+                await start_task
+
+            assert executor.cancelled
+            assert journal_path.read_bytes() == journal_before
+            assert lease_path.read_bytes() == lease_before
+
+        asyncio.run(lose_owner_lease())
+
+
+def test_exact_lease_renewal_owner_loss_refuses_without_changing_durable_bytes(tmp_path: Path) -> None:
+    """A replaced held lease refuses renewal without mutating either durable record."""
+    observed_at = [_NOW]
+    with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
+        storage_root = tmp_path / "durable-state"
+        journal, leases, operands = _repositories(
+            storage_root=storage_root,
+            profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
+        )
+        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            clock=lambda: observed_at[0],
+            lease_duration=timedelta(minutes=1),
+        )
+        operation_id = asyncio.run(owner.submit(_request(subject_ref="subject:shared"), operation_id="3" * 64))
+        original = asyncio.run(journal.load(operation_id))
+        scope_ref = operation_conflict_scope_reference(
+            definition_id=original.identity.definition_id,
+            subject_ref=original.identity.subject_ref,
+        )
+        held = asyncio.run(leases.inspect(scope_ref, operation_id, observed_at=observed_at[0]))
+        assert held.current is not None
+        assert (
+            asyncio.run(leases.release(held.current, observed_at=observed_at[0])).disposition
+            is OperationLeaseDisposition.RELEASED
+        )
+
+        intruder = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="4" * 64,
+            token="5" * 64,
+            clock=lambda: observed_at[0],
+            lease_duration=timedelta(minutes=1),
+        )
+        asyncio.run(intruder.submit(_request(subject_ref="subject:shared"), operation_id="6" * 64))
+        journal_path = storage_root / "operation-journals" / f"{operation_id}.json"
+        lease_path = storage_root / "operation-journals" / f"{scope_ref}.lease.json"
+        journal_before = journal_path.read_bytes()
+        lease_before = lease_path.read_bytes()
+
+        observed_at[0] = _NOW + timedelta(seconds=30)
+        with pytest.raises(ValueError, match="renewal was refused"):
+            asyncio.run(owner.start(operation_id))
+
+        assert journal_path.read_bytes() == journal_before
+        assert lease_path.read_bytes() == lease_before
+
+
+def test_stale_settle_preserves_declared_resource_and_winner_evidence(tmp_path: Path) -> None:
+    """A stale owner cannot close resources before exact lease proof; the winner closes its own once."""
+    with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
+        storage_root = tmp_path / "durable-state"
+        journal, leases, operands = _repositories(
+            storage_root=storage_root,
+            profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
+        )
+        executors: list[DeclaredResourceExecutor] = []
+
+        def build_executor() -> DeclaredResourceExecutor:
+            executor = DeclaredResourceExecutor()
+            executors.append(executor)
+            return executor
+
+        registry = _registry(
+            executor_type=DeclaredResourceExecutor,
+            build=build_executor,
+            capabilities=_capabilities(owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK})),
+        )
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        contender = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="4" * 64,
+            token="5" * 64,
+        )
+        operation_id = asyncio.run(owner.submit(_request(subject_ref="subject:shared"), operation_id="3" * 64))
+        running = asyncio.run(owner.start(operation_id))
+        assert len(executors) == 1
+        stale_resource = executors[0].resource
+        assert stale_resource is not None
+        scope_ref = operation_conflict_scope_reference(
+            definition_id=running.identity.definition_id,
+            subject_ref=running.identity.subject_ref,
+        )
+        held = asyncio.run(leases.inspect(scope_ref, operation_id, observed_at=_NOW))
+        assert held.current is not None
+        assert (
+            asyncio.run(leases.release(held.current, observed_at=_NOW)).disposition
+            is OperationLeaseDisposition.RELEASED
+        )
+        winner_id = asyncio.run(contender.submit(_request(subject_ref="subject:shared"), operation_id="6" * 64))
+        journal_path = storage_root / "operation-journals" / f"{operation_id}.json"
+        lease_path = storage_root / "operation-journals" / f"{scope_ref}.lease.json"
+        journal_before = journal_path.read_bytes()
+        lease_before = lease_path.read_bytes()
+
+        with pytest.raises(ValueError, match="exact held lease"):
+            asyncio.run(
+                owner.settle(
+                    operation_id,
+                    OperationTerminalReceipt(
+                        identity=running.identity,
+                        revision=running.revision + 1,
+                        condition=OperationTerminalCondition.SUCCEEDED,
+                        effect=OperationEffect.NONE,
+                        settled_at=_NOW,
+                        result_ref="result:stale-settlement",
+                    ),
+                )
+            )
+
+        assert stale_resource.close_calls == 0
+        assert journal_path.read_bytes() == journal_before
+        assert lease_path.read_bytes() == lease_before
+
+        winner_running = asyncio.run(contender.start(winner_id))
+        assert len(executors) == 2
+        winner_resource = executors[1].resource
+        assert winner_resource is not None
+        terminal = asyncio.run(
+            contender.settle(
+                winner_id,
+                OperationTerminalReceipt(
+                    identity=winner_running.identity,
+                    revision=winner_running.revision + 1,
+                    condition=OperationTerminalCondition.SUCCEEDED,
+                    effect=OperationEffect.NONE,
+                    settled_at=_NOW,
+                    result_ref="result:winner-settlement",
+                ),
+            )
+        )
+
+        assert terminal.lifecycle is OperationLifecycle.TERMINAL
+        assert stale_resource.close_calls == 0
+        assert winner_resource.close_calls == 1
+
+
+def test_await_terminal_waits_for_a_real_durable_settlement(tmp_path: Path) -> None:
+    """Awaiting a live operation reloads until its terminal journal record exists."""
+    with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state",
+            profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
+        )
+        supervisor = _supervisor(
+            registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        pending = asyncio.run(journal.load(operation_id))
+
+        async def await_after_settlement() -> OperationPersistedSnapshot:
+            waiter = asyncio.create_task(supervisor.await_terminal(operation_id))
+            await asyncio.sleep(0)
+            assert not waiter.done()
+            await supervisor.settle(
+                operation_id,
+                OperationTerminalReceipt(
+                    identity=pending.identity,
+                    revision=pending.revision + 1,
+                    condition=OperationTerminalCondition.SUCCEEDED,
+                    effect=OperationEffect.NONE,
+                    settled_at=_NOW,
+                    result_ref="result:awaited-settlement",
+                ),
+            )
+            return await waiter
+
+        terminal = asyncio.run(await_after_settlement())
+        assert terminal.lifecycle is OperationLifecycle.TERMINAL
+
+
+def test_await_terminal_sustained_wait_uses_bounded_real_journal_reads(tmp_path: Path) -> None:
+    """A non-terminal durable wait backs off instead of repeatedly opening its real journal file."""
+    with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
+        storage_root = tmp_path / "durable-state"
+        journal, leases, operands = _repositories(
+            storage_root=storage_root,
+            profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
+        )
+        supervisor = _supervisor(
+            registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        journal_path = (storage_root / "operation-journals" / f"{operation_id}.json").resolve()
+        journal_opens = [0]
+
+        def audit_open(event: str, arguments: tuple[object, ...]) -> None:
+            if event != "open" or not arguments:
+                return
+            opened_argument = arguments[0]
+            if not isinstance(opened_argument, str):
+                return
+            try:
+                opened_path = Path(opened_argument).resolve()
+            except (OSError, TypeError):
+                return
+            if opened_path == journal_path:
+                journal_opens[0] += 1
+
+        sys.addaudithook(audit_open)
+
+        async def sustain_non_terminal_wait() -> None:
+            waiter = asyncio.create_task(supervisor.await_terminal(operation_id))
+            await asyncio.sleep(0.13)
+            assert not waiter.done()
+            assert 1 <= journal_opens[0] <= 3
+            waiter.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await waiter
+
+        asyncio.run(sustain_non_terminal_wait())
 
 
 def test_token_mismatch_refuses_interaction_mutation_before_consumption(tmp_path: Path) -> None:

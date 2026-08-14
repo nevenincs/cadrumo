@@ -11,6 +11,7 @@ import pytest
 
 from .....application.operations import (
     OperationConsumedInteraction,
+    OperationIdempotencyClaim,
     OperationIdentity,
     OperationLeaseDisposition,
     OperationOwnerLease,
@@ -182,6 +183,34 @@ def test_operation_journal_requires_coherent_initial_history(tmp_path: Path) -> 
     _claim_lease(malformed_root, _lease())
     with pytest.raises(RepositoryError, match="begin at sequence one"):
         asyncio.run(malformed.commit(_snapshot(revision=0, sequence=2), expected_revision=0, lease=_lease()))
+
+
+def test_operation_journal_creates_and_resolves_idempotency_only_from_a_complete_snapshot(tmp_path: Path) -> None:
+    """A real retry claim is visible only as part of its durable initial journal."""
+    repository = OperationJournalRepository(storage_root=tmp_path)
+    initial = _snapshot(revision=0, sequence=1)
+    claim = OperationIdempotencyClaim.bind(
+        identity=initial.identity,
+        idempotency_key="retry-once",
+        request_reference=initial.request_reference,
+    )
+    idempotent_initial = initial.model_copy(update={"idempotency_claim": claim})
+    _claim_lease(tmp_path, _lease())
+
+    assert asyncio.run(repository.create(idempotent_initial, lease=_lease())) == initial.operation_id
+    assert (
+        asyncio.run(OperationJournalRepository(storage_root=tmp_path).resolve_idempotency(claim))
+        == initial.operation_id
+    )
+    assert tuple((tmp_path / "operation-journals").glob("claim-*.json")) == ()
+
+    conflicting_request = OperationIdempotencyClaim.bind(
+        identity=initial.identity,
+        idempotency_key="retry-once",
+        request_reference="e" * 64,
+    )
+    with pytest.raises(RepositoryError, match="bound to a different request"):
+        asyncio.run(repository.resolve_idempotency(conflicting_request))
 
 
 def test_operation_journal_replays_full_history_by_exclusive_bounded_cursor(tmp_path: Path) -> None:
