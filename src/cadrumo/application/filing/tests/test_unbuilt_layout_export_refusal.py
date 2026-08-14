@@ -1,4 +1,11 @@
-"""Withdrawn filing layouts refuse before creating an artefact."""
+"""A modelo with no complete export layout refuses before creating an artefact.
+
+Modelo 111's fixed-width fichero-BOE layout has never been built (its record
+design still names producer fields with no canonical typed producer
+authority). Nothing about this is an AEAT-side withdrawal; the layout simply
+does not exist yet, and ``export_draft`` refuses honestly rather than writing
+a partial artefact.
+"""
 
 from pathlib import Path
 
@@ -19,7 +26,7 @@ from ._export_support import _approved_modelo_111_registry_draft, _schema_provid
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_withdrawn_layout_refuses_before_writing_output(tmp_path: Path) -> None:
+def test_a_modelo_with_no_export_layout_refuses_before_writing_output(tmp_path: Path) -> None:
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M111,
         taxpayer_tax_id="12345678Z",
@@ -42,7 +49,7 @@ def test_withdrawn_layout_refuses_before_writing_output(tmp_path: Path) -> None:
         charge_account=None,
         m303_filing_facts=None,
     )
-    output = tmp_path / "withdrawn-modelo-111.txt"
+    output = tmp_path / "unbuilt-layout-modelo-111.txt"
 
     with pytest.raises(FilingExportError, match="no complete export_layouts definition"):
         export_draft(

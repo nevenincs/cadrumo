@@ -322,7 +322,6 @@ def test_runtime_projection_rejects_ambiguous_revision_casilla_identity() -> Non
         application_links={},
         deadline_windows={},
         filing_schedules={},
-        support_removal_decisions={},
         constructs={},
         dependency_classifications={},
     )
@@ -395,7 +394,6 @@ def test_runtime_projection_rejects_casilla_binding_id_collision() -> None:
         application_links={},
         deadline_windows={},
         filing_schedules={},
-        support_removal_decisions={},
         constructs={},
         dependency_classifications={},
     )
