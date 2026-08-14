@@ -493,80 +493,69 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
     ]
 
     setup_report: WizardStatusReport | None = None
-    provider_context: object | None = None
     try:
-        try:
-            from ..adapters.persistence.storage import active_bucket_session_serves, get_master_key_provider
-            from ..core import resolve_active_bucket_id
-            from .wizard import build_wizard_status
-            from .workflow import assess_active_profile_health, workflow_state_repository
+        from .wizard import build_wizard_status
+        from .workflow import assess_active_profile_health, workflow_state_repository
 
-            _active_bucket = resolve_active_bucket_id()
-            if _active_bucket is not None and not active_bucket_session_serves(_active_bucket):
-                provider_context = get_master_key_provider()
-                # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL:
-                # get_master_key_provider returns a runtime context object;
-                # __enter__/__exit__ are not statically visible here.
-                provider_context.__enter__()
-            state = workflow_state_repository().load()
-            checks.append(
-                DiagnosticCheck(
-                    name="secure_state.load",
-                    status="ok",
-                    summary=tr("cli.diagnostics.summary.state_backend_readable"),
+        # Read the secure state through whatever session the operator already
+        # holds. This probe deliberately opens none of its own: it used to enter
+        # the shared-master provider whenever no per-profile session served the
+        # active bucket, which unlocked a taxpayer's bucket with no password so
+        # a health report could be printed. The locked case is a diagnostic
+        # verdict, not an obstacle -- the handler below already renders it as a
+        # warn with the profile-health verdict that tells the operator to log in.
+        state = workflow_state_repository().load()
+        checks.append(
+            DiagnosticCheck(
+                name="secure_state.load",
+                status="ok",
+                summary=tr("cli.diagnostics.summary.state_backend_readable"),
+            ),
+        )
+        profile_health = assess_active_profile_health(state)
+        checks.append(_active_profile_storage_check(profile_health))
+        setup_report = _repair_safe_wizard_status(
+            build_wizard_status(state),
+            active_profile_label=profile_health.active_profile_label,
+        )
+        checks.append(_profile_check(setup_report, profile_health=profile_health, state=state))
+        checks.append(_auth_check(setup_report))
+    except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
+        from .workflow import assess_active_profile_health
+
+        _log.debug("config repair secure state probe failed", exc_info=True)
+        profile_health = assess_active_profile_health()
+        missing_active_bucket_session = _is_missing_active_bucket_session(exc)
+        checks.append(
+            DiagnosticCheck(
+                name="secure_state.load",
+                status="warn" if missing_active_bucket_session else "fail",
+                summary=tr("cli.diagnostics.summary.state_backend_unreadable"),
+                # A missing bucket session on a cold start is an
+                # expected diagnostic verdict, not a fault to report
+                # verbatim. Surfacing the raw NoActiveBucketSession
+                # exception text leaks internal plumbing; the
+                # summary + typed profile verdict already guide the operator.
+                detail=None if missing_active_bucket_session else _compact_exception(exc),
+                precondition_verdict=(
+                    _required_profile_health_verdict(profile_health)
+                    if missing_active_bucket_session
+                    else _diagnostic_action_verdict(
+                        condition_id="diagnostics.secure_state.load.readable",
+                        evidence_id="diagnostics.secure_state.load.observation",
+                        values={"readable": False},
+                        action_id="operator.diagnostics.workflow.reset_progress",
+                        argument_bindings=(_resolved_verdict_binding("yes", True),),
+                    )
                 ),
-            )
-            profile_health = assess_active_profile_health(state)
-            checks.append(_active_profile_storage_check(profile_health))
-            setup_report = _repair_safe_wizard_status(
-                build_wizard_status(state),
-                active_profile_label=profile_health.active_profile_label,
-            )
-            checks.append(_profile_check(setup_report, profile_health=profile_health, state=state))
-            checks.append(_auth_check(setup_report))
-        except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
-            from .workflow import assess_active_profile_health
+            ),
+        )
+        checks.append(_active_profile_storage_check(profile_health))
+        checks.append(_profile_unavailable_check(profile_health))
+        checks.append(_auth_unavailable_check(profile_health))
 
-            _log.debug("config repair secure state probe failed", exc_info=True)
-            profile_health = assess_active_profile_health()
-            missing_active_bucket_session = _is_missing_active_bucket_session(exc)
-            checks.append(
-                DiagnosticCheck(
-                    name="secure_state.load",
-                    status="warn" if missing_active_bucket_session else "fail",
-                    summary=tr("cli.diagnostics.summary.state_backend_unreadable"),
-                    # A missing bucket session on a cold start is an
-                    # expected diagnostic verdict, not a fault to report
-                    # verbatim. Surfacing the raw NoActiveBucketSession
-                    # exception text leaks internal plumbing; the
-                    # summary + typed profile verdict already guide the operator.
-                    detail=None if missing_active_bucket_session else _compact_exception(exc),
-                    precondition_verdict=(
-                        _required_profile_health_verdict(profile_health)
-                        if missing_active_bucket_session
-                        else _diagnostic_action_verdict(
-                            condition_id="diagnostics.secure_state.load.readable",
-                            evidence_id="diagnostics.secure_state.load.observation",
-                            values={"readable": False},
-                            action_id="operator.diagnostics.workflow.reset_progress",
-                            argument_bindings=(_resolved_verdict_binding("yes", True),),
-                        )
-                    ),
-                ),
-            )
-            checks.append(_active_profile_storage_check(profile_health))
-            checks.append(_profile_unavailable_check(profile_health))
-            checks.append(_auth_unavailable_check(profile_health))
-
-        secure_objects = _probe_secure_objects_integrity()
-        checks.append(_secure_objects_integrity_check(secure_objects))
-    finally:
-        if provider_context is not None:
-            # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL:
-            # get_master_key_provider returns a runtime context object;
-            # __enter__/__exit__ are not statically visible here.
-            provider_context.__exit__(None, None, None)  # pyrefly: ignore[missing-attribute]  # reason: runtime context-manager protocol, see the rationale above
-
+    secure_objects = _probe_secure_objects_integrity()
+    checks.append(_secure_objects_integrity_check(secure_objects))
     checks.append(_registry_cross_domain_integrity_check(root))
 
     return ConfigRepairReport(

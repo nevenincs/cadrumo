@@ -33,16 +33,26 @@ def bucket_dek_path(*, storage_root: Path, bucket_id: str) -> Path:
 
 
 def bucket_key_schedule(*, storage_root: Path, bucket_id: str):
-    """Return the bucket's key schedule, or ``None`` when no manifest exists."""
-    from ..bucket import MISSING_BUCKET_MANIFEST_MESSAGE, bucket_paths, read_manifest
-    from ..errors import StorageValidationError
+    """Return the bucket's key schedule, or ``None`` when it is not registered.
+
+    Registration is proven by the bucket's published profile capsule, which
+    is the sole authority for whether a bucket exists. A bucket whose
+    identifier is not a profile UUID, or which carries no published capsule,
+    is unregistered — the state the bootstrap arm of
+    :func:`load_or_mint_bucket_dek` exists to enrol.
+    """
+    from uuid import UUID
+
+    from ..bucket import BucketKeySchedule
+    from ..custody import recognize_current_profile_capsule
 
     try:
-        return read_manifest(bucket_paths(storage_root, bucket_id)).key_schedule
-    except StorageValidationError as exc:
-        if str(exc) == MISSING_BUCKET_MANIFEST_MESSAGE:
-            return None
-        raise
+        identity = UUID(str(bucket_id))
+    except ValueError:
+        return None
+    if recognize_current_profile_capsule(identity, root=storage_root) is None:
+        return None
+    return BucketKeySchedule.BUCKET_DEK_V1
 
 
 def idle_minutes_for_bucket(*, storage_root: Path, bucket_id: str, default_minutes: int) -> int:
@@ -104,9 +114,9 @@ def load_or_mint_bucket_dek(
             write_wrapped_bucket_dek(path, wrapped)
             return dek
         raise MasterKeyMaterialMissingError(
-            f"bucket {bucket_id!r} has no manifest; run `aeat config login NAME` to unlock "
-            "an existing profile before invoking commands that decrypt or persist stored "
-            "records. If no profile exists yet, this build has no command that creates one.",
+            f"bucket {bucket_id!r} has no published profile capsule; run `aeat config login NAME` "
+            "to unlock an existing profile before invoking commands that decrypt or persist "
+            "stored records. If no profile exists yet, this build has no command that creates one.",
         )
 
     if key_schedule is BucketKeySchedule.BUCKET_DEK_V1:

@@ -578,7 +578,18 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
     assert archive_exists is None, "preview must not create the quarantine table"
 
 
-def test_quarantine_preview_opens_session_for_bootstrap_exempt_repair(tmp_path: Path) -> None:
+def test_the_preview_reports_nothing_without_a_session_rather_than_a_false_corruption(tmp_path: Path) -> None:
+    """A keyless probe must not answer the decryptability question at all.
+
+    Every row is undecryptable without the bucket key, so a probe that ran
+    keyless would report a sound bucket as entirely corrupt.  The repair path
+    used to open a shared-master session of its own to avoid that; it now opens
+    none, and the substrate refusal underneath leaves the report empty.
+
+    The served read is what gives the sessionless one meaning: it proves the row
+    is there and decrypts cleanly, so an empty sessionless report is the missing
+    key rather than a missing row.
+    """
     namespace = "cadrumo.workflow"
     with isolated_runtime_profile(tmp_path=tmp_path):
         secure_object_repository_for_active_bucket().save(
@@ -589,15 +600,24 @@ def test_quarantine_preview_opens_session_for_bootstrap_exempt_repair(tmp_path: 
             written_at=datetime.now(UTC),
             payload=b"repair-preview-sessionless",
         )
+        served = preview_quarantine_unreadable_secure_objects()
         with suspend_active_session():
             assert not has_active_bucket_session()
-            report = preview_quarantine_unreadable_secure_objects()
+            sessionless = preview_quarantine_unreadable_secure_objects()
 
-    assert report.readable_total + report.unreadable_total >= 1
-    assert any(item.namespace == namespace for item in report.namespaces)
+    assert any(item.namespace == namespace for item in served.namespaces)
+    assert served.unreadable_total == 0
+    assert sessionless.namespaces == ()
 
 
-def test_quarantine_opens_session_for_bootstrap_exempt_repair(tmp_path: Path) -> None:
+def test_a_sessionless_quarantine_moves_nothing(tmp_path: Path) -> None:
+    """The mutating verb is where a keyless probe would do real damage.
+
+    ``quarantine`` moves exactly the rows the probe calls unreadable, so a
+    keyless run would archive every row of a sound bucket.  The proof is the
+    read taken afterwards under the real session: the row is still live and
+    still decrypts, so nothing was moved out from under it.
+    """
     namespace = "cadrumo.workflow"
     with isolated_runtime_profile(tmp_path=tmp_path):
         secure_object_repository_for_active_bucket().save(
@@ -610,10 +630,12 @@ def test_quarantine_opens_session_for_bootstrap_exempt_repair(tmp_path: Path) ->
         )
         with suspend_active_session():
             assert not has_active_bucket_session()
-            report = quarantine_unreadable_secure_objects()
+            sessionless = quarantine_unreadable_secure_objects()
+        survived = preview_quarantine_unreadable_secure_objects()
 
-    assert report.readable_total + report.unreadable_total >= 1
-    assert any(item.namespace == namespace for item in report.namespaces)
+    assert sessionless.namespaces == ()
+    assert any(item.namespace == namespace for item in survived.namespaces)
+    assert survived.unreadable_total == 0
 
 
 def test_importing_diagnostics_does_not_pull_the_browser_or_registry_subtree() -> None:

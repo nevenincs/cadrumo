@@ -286,14 +286,23 @@ def _build_repair_integrity_report(
 
 @contextmanager
 def active_bucket_repair_session() -> Generator[None]:
-    """Best-effort session opener for active-bucket repair diagnostics.
+    """Reuse the operator's own bucket session for active-bucket repair probes.
 
-    Repair integrity and quarantine previews need to test decryptability under
-    the active bucket key, but they are bootstrap-adjacent diagnostics rather
-    than profile enrollment flows. If a session is already active it is reused;
-    otherwise the configured master-key provider is entered for the span. A
-    provider failure is logged and the caller still observes the normal
-    repository/runtime readiness result.
+    Repair integrity and quarantine previews test decryptability under the
+    active bucket key, but they are bootstrap-adjacent diagnostics rather than
+    profile enrollment flows: they never open a session of their own. A session
+    that already serves the target is reused; with none, the span runs without
+    one and the caller observes the normal repository/runtime readiness result.
+
+    Running on without a session is safe here only because the substrate fails
+    closed underneath: resolving the bucket-attached repository raises the
+    ``not_ready`` readiness refusal before any row is probed. That matters more
+    than it looks. These probes classify a row as unreadable when it will not
+    decrypt, and the quarantine flow MOVES every such row out of the live
+    table -- so a probe that ran keyless would report a sound bucket as
+    entirely corrupt and quarantine all of it. Do not add a fallback that opens
+    a session here to make the probe "work": a keyless probe answers the
+    question wrongly, and the refusal is the correct answer.
 
     See Also:
         :func:`~cadrumo.application.diagnostics.preview_quarantine_unreadable_secure_objects`
@@ -303,45 +312,21 @@ def active_bucket_repair_session() -> Generator[None]:
             Commit flow that uses this context before calling
             :meth:`~cadrumo.adapters.persistence.storage.SecureObjectRepository.quarantine_unreadable_rows`.
     """
-    provider: object | None = None
-    try:
-        from ..adapters.persistence.storage import (
-            active_bucket_session_serves,
-            get_master_key_provider,
-            has_active_bucket_session,
-        )
-        from ..core import resolve_active_bucket_id
+    from ..adapters.persistence.storage import active_bucket_session_serves, has_active_bucket_session
+    from ..core import resolve_active_bucket_id
 
-        # Probing decryptability under the WRONG bucket's key reports readable
-        # rows as unreadable, and this context feeds the quarantine flows, so a
-        # mismatched reuse would quarantine sound records. Bucket-match when a
-        # target resolves; with no resolvable active bucket there is nothing to
-        # compare against, and reusing whatever is bound stays correct.
-        target_bucket_id = resolve_active_bucket_id()
-        reusable = (
-            active_bucket_session_serves(target_bucket_id)
-            if target_bucket_id is not None
-            else has_active_bucket_session()
-        )
-        if reusable:
-            yield
-            return
-        provider = get_master_key_provider()
-        # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL:
-        # get_master_key_provider returns object; __enter__/__exit__ are correct
-        # at runtime but unverifiable without a typed Protocol.
-        provider.__enter__()
-    except Exception as exc:
-        _log.debug("repair integrity could not open active bucket session: %s", type(exc).__name__)
-        yield
-        return
-    try:
-        yield
-    finally:
-        # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL:
-        # get_master_key_provider returns object; __enter__/__exit__ are correct
-        # at runtime but unverifiable without a typed Protocol.
-        provider.__exit__(None, None, None)
+    # Probing decryptability under the WRONG bucket's key reports readable rows
+    # as unreadable, and this context feeds the quarantine flows, so a
+    # mismatched reuse would quarantine sound records. Bucket-match when a
+    # target resolves; with no resolvable active bucket there is nothing to
+    # compare against, and reusing whatever is bound stays correct.
+    target_bucket_id = resolve_active_bucket_id()
+    reusable = (
+        active_bucket_session_serves(target_bucket_id) if target_bucket_id is not None else has_active_bucket_session()
+    )
+    if not reusable:
+        _log.debug("repair integrity found no bucket session to reuse; the substrate refusal answers")
+    yield
 
 
 def build_repair_list_report(
