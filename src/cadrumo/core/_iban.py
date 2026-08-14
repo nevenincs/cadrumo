@@ -58,21 +58,35 @@ def normalise_iban(value: str) -> str:
 def iban_mod_97(canonical: str) -> int:
     """Compute the ISO 13616 IBAN mod-97 check residue for an already-canonical IBAN.
 
-    Callers normalize separators and case before matching
-    :data:`IBAN_SHAPE_RE`; see
+    Existing callers normalize separators and case and independently re-check
+    :data:`IBAN_SHAPE_RE` before calling this; see
     :func:`domain.calculations.registry._schema._validate_iban_string` and
-    :meth:`domain.deadlines.RefundAccount._validate_iban`. This helper
-    moves the leading four characters to the tail, replaces each letter with its
-    ``A=10 ... Z=35`` numeric form, and returns the integer modulo 97. A valid
-    IBAN yields a residue of 1.
+    :meth:`domain.deadlines.RefundAccount._validate_iban`. Those call-site
+    gates are harmless belt-and-braces now that the shape is enforced here
+    too, but they must not be the ONLY thing standing between a malformed
+    string and a "valid" answer: a caller that forgets its own gate must
+    still be refused, not silently pass. ``iban_mod_97("ES82")`` -- four
+    characters, no BBAN at all -- previously returned ``1`` (a false
+    "valid"), because the mod-97 arithmetic tolerates any string long enough
+    to slice; nothing in the function itself demanded a real IBAN shape.
+
+    This helper moves the leading four characters to the tail, replaces each
+    letter with its ``A=10 ... Z=35`` numeric form, and returns the integer
+    modulo 97. A valid IBAN yields a residue of 1.
 
     Args:
-        canonical: Uppercase, separator-free IBAN text that has already matched
-            :data:`IBAN_SHAPE_RE`.
+        canonical: Uppercase, separator-free IBAN text.
 
     Returns:
         The ISO 13616 check residue. ``1`` means the check digits are valid.
+
+    Raises:
+        ValueError: If ``canonical`` does not match :data:`IBAN_SHAPE_RE` --
+            it cannot be a real IBAN, so no residue is computed at all rather
+            than an arithmetically well-formed but meaningless one.
     """
+    if not IBAN_SHAPE_RE.match(canonical):
+        raise ValueError(f"iban_mod_97 requires an ISO 13616-shaped IBAN, got {canonical!r}")
     rearranged = canonical[4:] + canonical[:4]
     numeric = "".join(ch if ch.isdigit() else str(ord(ch) - ord("A") + 10) for ch in rearranged)
     return int(numeric) % 97
