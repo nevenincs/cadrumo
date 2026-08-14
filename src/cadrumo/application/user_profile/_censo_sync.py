@@ -445,9 +445,9 @@ class CensoSyncService:
         """
         from ...domain.user_profile import ProfileNotFoundError
         from ._projections import record_to_path_values
-        from ._repository import ProfileRecordRepository
+        from ._profile_record_repository import ProfileRecordRepository
 
-        repository = self._profiles or ProfileRecordRepository(bucket_id=self._bucket_id)
+        repository = self._profiles or ProfileRecordRepository.for_current_session(self._bucket_id)
         try:
             record = repository.load(profile_id)
         except ProfileNotFoundError:

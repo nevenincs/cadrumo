@@ -15,8 +15,8 @@ from ....adapters.persistence.operations import (
     OperationLeaseFilesystemRepository,
     OperationSecureReferenceRepository,
 )
-from ....adapters.persistence.storage import RepositoryError
 from ....adapters.persistence.storage import (
+    RepositoryError,
     SecureObjectNamespaceDefinition,
     SecureObjectRepository,
     StorageCustodyDisposition,
@@ -706,9 +706,7 @@ def test_reconcile_takes_over_expired_owner_settles_and_releases_scope(tmp_path:
                 observed_at=recovered_at,
             )
         )
-        replacement = asyncio.run(
-            recovery.submit(_request(subject_ref="subject:shared"), operation_id="6" * 64)
-        )
+        replacement = asyncio.run(recovery.submit(_request(subject_ref="subject:shared"), operation_id="6" * 64))
 
         assert terminal.lifecycle is OperationLifecycle.TERMINAL
         assert terminal.terminal_condition is OperationTerminalCondition.INTERRUPTED

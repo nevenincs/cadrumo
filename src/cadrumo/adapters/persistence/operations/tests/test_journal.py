@@ -10,8 +10,8 @@ from pathlib import Path
 import pytest
 
 from .....application.operations import (
-    OperationIdentity,
     OperationConsumedInteraction,
+    OperationIdentity,
     OperationLeaseDisposition,
     OperationOwnerLease,
     OperationPersistedSnapshot,
@@ -220,16 +220,12 @@ def test_operation_journal_refuses_rewriting_full_consumed_interaction_evidence(
         response_digest="f" * 64,
         consumed_at=_STARTED + timedelta(minutes=3),
     )
-    accepted = _snapshot(revision=3, sequence=4).model_copy(
-        update={"consumed_interactions": (accepted_consumption,)}
-    )
+    accepted = _snapshot(revision=3, sequence=4).model_copy(update={"consumed_interactions": (accepted_consumption,)})
     asyncio.run(repository.commit(accepted, expected_revision=snapshots[-1].revision, lease=_lease()))
 
     changed_value = "9" * 64 if field == "response_digest" else _STARTED + timedelta(minutes=4)
     planted = accepted_consumption.model_copy(update={field: changed_value})
-    tampered = _snapshot(revision=4, sequence=5).model_copy(
-        update={"consumed_interactions": (planted,)}
-    )
+    tampered = _snapshot(revision=4, sequence=5).model_copy(update={"consumed_interactions": (planted,)})
     path = tmp_path / "operation-journals" / f"{accepted.operation_id}.json"
     stable_bytes = path.read_bytes()
 
