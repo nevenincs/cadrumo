@@ -177,6 +177,27 @@ class FixtureRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class AliasedBehaviour:
+    """One fixture body reached through more than one effective name.
+
+    This is the duplication a name-keyed comparison cannot express. Grouping
+    fixtures by name asks "is this name declared twice"; a behaviour copied
+    under a fresh name each time answers no every time, while a search for any
+    one of those names returns a single site and reads as unique. Keying on the
+    body inverts the question, and the answer is the set of names below.
+
+    Aliasing is reported, never refused. Two sites may share a body and still
+    differ in scope, autouse, or the module values they close over, so this is
+    the population a reviewer must adjudicate -- not a verdict that they are
+    interchangeable.
+    """
+
+    body_sha256: str
+    effective_names: tuple[str, ...]
+    sites: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class FixtureCensus:
     """A reproducible fixture population and the source files it measured."""
 
@@ -199,6 +220,27 @@ class FixtureCensus:
     def fixture_count(self) -> int:
         """Return the number of fixture definitions in the complete census."""
         return len(self.fixtures)
+
+    @property
+    def aliased_behaviours(self) -> tuple[AliasedBehaviour, ...]:
+        """Return every fixture body reached through more than one name."""
+        by_body: dict[str, list[FixtureRecord]] = {}
+        for record in self.fixtures:
+            by_body.setdefault(record.normalized_body_sha256, []).append(record)
+        return tuple(
+            AliasedBehaviour(
+                body_sha256=body,
+                effective_names=tuple(sorted({record.effective_name for record in group})),
+                sites=tuple(sorted(f"{record.path}:{record.line}" for record in group)),
+            )
+            for body, group in sorted(by_body.items())
+            if len({record.effective_name for record in group}) > 1
+        )
+
+    @property
+    def aliased_behaviour_count(self) -> int:
+        """Return how many distinct behaviours are reached through several names."""
+        return len(self.aliased_behaviours)
 
     @property
     def factory_fixture_candidate_count(self) -> int:
@@ -1096,6 +1138,8 @@ def _json_payload(result: FixtureCensus) -> dict[str, object]:
         "factory_fixture_candidate_count": result.factory_fixture_candidate_count,
         "factory_fixture_candidates": [asdict(candidate) for candidate in result.factory_fixture_candidates],
         "unresolved_call_assignment_count": result.unresolved_call_assignment_count,
+        "aliased_behaviour_count": result.aliased_behaviour_count,
+        "aliased_behaviours": [asdict(behaviour) for behaviour in result.aliased_behaviours],
     }
 
 
@@ -1116,8 +1160,14 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"fixture census: {result.fixture_count} fixtures in {len(result.sources)} source files; "
         f"dynamic requests={len(result.dynamic_fixture_requests)}; "
-        f"factory-bound fixtures={result.factory_fixture_candidate_count}",
+        f"factory-bound fixtures={result.factory_fixture_candidate_count}; "
+        f"aliased behaviours={result.aliased_behaviour_count}",
     )
+    for behaviour in result.aliased_behaviours:
+        print(
+            f"  one body under {len(behaviour.effective_names)} names "
+            f"({', '.join(behaviour.effective_names)}): {', '.join(behaviour.sites)}",
+        )
     print(
         f"  {result.unresolved_call_assignment_count} module-level call assignments could not be resolved to a "
         "definition; a fixture factory reached through such a callee would not be recognised here.",

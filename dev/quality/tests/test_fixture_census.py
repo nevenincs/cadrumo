@@ -207,9 +207,7 @@ def test_fixture_body_digest_ignores_leading_docstrings(tmp_path: Path) -> None:
     payload = build_manifest(result)
 
     assert len({record.normalized_body_sha256 for record in result.fixtures}) == 1
-    assert {row["disposition"] for row in payload["fixture"]} == {
-        "substitutable-duplicate"
-    }
+    assert {row["disposition"] for row in payload["fixture"]} == {"substitutable-duplicate"}
 
 
 def test_census_records_fixture_identity_constraints_and_topology(tmp_path: Path) -> None:
@@ -364,10 +362,9 @@ def test_imported_effective_name_fixture_preserves_binding_and_reach(tmp_path: P
 
     (record,) = census(root).fixtures
 
-    assert [
-        (binding.provider_name, binding.bound_name, binding.path)
-        for binding in record.imported_bindings
-    ] == [("implementation", "public_resource", "src/cadrumo/test_consumer.py")]
+    assert [(binding.provider_name, binding.bound_name, binding.path) for binding in record.imported_bindings] == [
+        ("implementation", "public_resource", "src/cadrumo/test_consumer.py")
+    ]
     assert ("test_explicit", "imported-parameter") in {
         (consumer.qualname, consumer.via) for consumer in record.consumers
     }
@@ -509,9 +506,7 @@ def test_ownership_manifest_rejects_identical_local_consumer_clones(tmp_path: Pa
 
     payload = build_manifest(census(root))
 
-    assert {row["disposition"] for row in payload["fixture"]} == {
-        "substitutable-duplicate"
-    }
+    assert {row["disposition"] for row in payload["fixture"]} == {"substitutable-duplicate"}
     with pytest.raises(FixtureOwnershipError, match="substitutable duplicate fixtures remain"):
         validate_manifest(census(root), payload)
 
@@ -574,14 +569,11 @@ def test_import_paths_do_not_prove_fixture_divergence(tmp_path: Path) -> None:
         for record in result.fixtures
         for binding in record.imported_bindings
     } == {("shared_resource", "first_alias"), ("shared_resource", "second_alias")}
-    assert {
-        (consumer.qualname, consumer.via)
-        for record in result.fixtures
-        for consumer in record.consumers
-    } == {("test_first", "imported-parameter"), ("test_second", "imported-parameter")}
-    assert {row["disposition"] for row in payload["fixture"]} == {
-        "substitutable-duplicate"
+    assert {(consumer.qualname, consumer.via) for record in result.fixtures for consumer in record.consumers} == {
+        ("test_first", "imported-parameter"),
+        ("test_second", "imported-parameter"),
     }
+    assert {row["disposition"] for row in payload["fixture"]} == {"substitutable-duplicate"}
 
 
 def test_decorator_alias_and_keyword_order_do_not_change_fixture_constraints(tmp_path: Path) -> None:
@@ -633,9 +625,7 @@ def test_decorator_alias_and_keyword_order_do_not_change_fixture_constraints(tmp
         "pytest_asyncio.fixture(autouse=True, scope='module')",
     }
     assert len({row["constraints_sha256"] for row in payload["fixture"]}) == 1
-    assert {row["disposition"] for row in payload["fixture"]} == {
-        "substitutable-duplicate"
-    }
+    assert {row["disposition"] for row in payload["fixture"]} == {"substitutable-duplicate"}
 
 
 def test_class_local_import_shadows_do_not_prove_semantic_divergence(tmp_path: Path) -> None:
@@ -711,9 +701,7 @@ def test_class_local_clones_without_import_shadows_remain_substitutable(tmp_path
 
     payload = build_manifest(census(root))
 
-    assert {row["disposition"] for row in payload["fixture"]} == {
-        "substitutable-duplicate"
-    }
+    assert {row["disposition"] for row in payload["fixture"]} == {"substitutable-duplicate"}
 
 
 @pytest.mark.parametrize("second_docstring", ("second documentation", "first documentation"))
@@ -748,9 +736,7 @@ def test_owner_global_helper_docstrings_do_not_prove_divergence(
 
     payload = build_manifest(census(root))
 
-    assert {row["disposition"] for row in payload["fixture"]} == {
-        "substitutable-duplicate"
-    }
+    assert {row["disposition"] for row in payload["fixture"]} == {"substitutable-duplicate"}
 
 
 def test_owner_global_recursion_detects_executable_helper_difference(tmp_path: Path) -> None:
@@ -1024,3 +1010,189 @@ def test_live_fixture_ownership_manifest_is_complete_and_has_no_substitutable_du
     """The checked manifest exactly classifies the stable production census."""
     repository_root = Path(__file__).resolve().parents[3]
     check_manifest(repository_root)
+
+
+def _write_factory_binding_tree(root: Path, *, first_argument: str, second_argument: str) -> None:
+    """Create one factory and two module-level bindings of it, arguments caller-controlled."""
+    _write_source(root, "conftest.py", "pass\n")
+    _write_source(
+        root,
+        "src/cadrumo/factory.py",
+        """
+        import pytest
+
+        def make_thing_fixture(label):
+            @pytest.fixture
+            def _thing():
+                return label
+            return _thing
+        """,
+    )
+    _write_source(
+        root,
+        "src/cadrumo/test_first.py",
+        f"""
+        from cadrumo.factory import make_thing_fixture
+
+        _thing = make_thing_fixture("{first_argument}")
+
+        def test_first(_thing):
+            assert _thing
+        """,
+    )
+    _write_source(
+        root,
+        "src/cadrumo/test_second.py",
+        f"""
+        from cadrumo.factory import make_thing_fixture
+
+        _thing = make_thing_fixture("{second_argument}")
+
+        def test_second(_thing):
+            assert _thing
+        """,
+    )
+    (root / "dev").mkdir(parents=True)
+    (root / "packaging").mkdir(parents=True)
+
+
+def test_factory_bound_fixture_appears_as_a_classified_manifest_row(tmp_path: Path) -> None:
+    """A binding the decorator-only walk cannot see still reaches a real disposition."""
+    root = tmp_path / "factory-single-binding"
+    _write_source(root, "conftest.py", "pass\n")
+    _write_source(
+        root,
+        "src/cadrumo/factory.py",
+        """
+        import pytest
+
+        def make_thing_fixture(label):
+            @pytest.fixture
+            def _thing():
+                return label
+            return _thing
+        """,
+    )
+    _write_source(
+        root,
+        "src/cadrumo/test_consumer.py",
+        """
+        from cadrumo.factory import make_thing_fixture
+
+        _thing = make_thing_fixture("solo")
+
+        def test_uses_thing(_thing):
+            assert _thing == "solo"
+        """,
+    )
+    (root / "dev").mkdir(parents=True)
+    (root / "packaging").mkdir(parents=True)
+
+    result = census(root)
+    (candidate,) = result.factory_fixture_candidates
+    binding_id = f"{candidate.path}:{candidate.line}:{candidate.bound_name}"
+
+    payload = build_manifest(result)
+
+    rows_by_id = {row["id"]: row for row in payload["fixture"]}
+    assert binding_id in rows_by_id
+    row = rows_by_id[binding_id]
+    assert row["disposition"] in {"retained-current-owner", "retained-divergent", "substitutable-duplicate"}
+    assert row["effective_name"] == "_thing"
+    assert row["scope"] == "function"
+    assert row["autouse"] is False
+    validate_manifest(result, payload)
+
+
+def test_factory_bindings_with_different_arguments_are_not_substitutable_duplicates(tmp_path: Path) -> None:
+    """Two produced fixtures of the same factory with different inputs are distinct fixtures."""
+    root = tmp_path / "factory-divergent-arguments"
+    _write_factory_binding_tree(root, first_argument="alpha", second_argument="beta")
+
+    result = census(root)
+    payload = build_manifest(result)
+
+    binding_ids = {
+        f"{candidate.path}:{candidate.line}:{candidate.bound_name}" for candidate in result.factory_fixture_candidates
+    }
+    assert len(binding_ids) == 2
+    binding_rows = [row for row in payload["fixture"] if row["id"] in binding_ids]
+    assert len(binding_rows) == 2
+    assert {row["disposition"] for row in binding_rows} == {"retained-divergent"}
+    assert {row["divergence_kind"] for row in binding_rows} == {"body"}
+    assert len({row["body_sha256"] for row in binding_rows}) == 2
+    validate_manifest(result, payload)
+
+
+def test_factory_bindings_with_identical_arguments_are_flagged_substitutable(tmp_path: Path) -> None:
+    """Two produced fixtures of the same factory with the same input really are interchangeable."""
+    root = tmp_path / "factory-identical-arguments"
+    _write_factory_binding_tree(root, first_argument="shared", second_argument="shared")
+
+    result = census(root)
+    payload = build_manifest(result)
+
+    binding_ids = {
+        f"{candidate.path}:{candidate.line}:{candidate.bound_name}" for candidate in result.factory_fixture_candidates
+    }
+    assert len(binding_ids) == 2
+    binding_rows = [row for row in payload["fixture"] if row["id"] in binding_ids]
+    assert len(binding_rows) == 2
+    assert {row["disposition"] for row in binding_rows} == {"substitutable-duplicate"}
+    assert len({row["body_sha256"] for row in binding_rows}) == 1
+    with pytest.raises(FixtureOwnershipError, match="substitutable duplicate fixtures remain"):
+        validate_manifest(result, payload)
+
+
+def test_census_reports_one_body_reached_through_several_names(tmp_path: Path) -> None:
+    """A behaviour copied under a fresh name each time must still be countable.
+
+    This is the duplication a name-keyed comparison cannot express: grouping by
+    name asks "is this name declared twice", and a renamed copy answers no every
+    time, while a search for any one of those names returns a single site and
+    reads as unique. Keying on the body inverts the question.
+    """
+    root = tmp_path / "aliased-behaviour"
+    _write_source(root, "conftest.py", "pass\n")
+    for module_name, fixture_name in (
+        ("first", "isolated_backend"),
+        ("second", "active_runtime"),
+        ("third", "bucket"),
+    ):
+        _write_source(
+            root,
+            f"src/cadrumo/{module_name}.py",
+            f"""
+            import pytest
+
+            @pytest.fixture
+            def {fixture_name}():
+                return "same behaviour"
+            """,
+        )
+    (root / "dev").mkdir(parents=True)
+    (root / "packaging").mkdir(parents=True)
+
+    result = census(root)
+
+    assert result.aliased_behaviour_count == 1
+    (behaviour,) = result.aliased_behaviours
+    assert behaviour.effective_names == ("active_runtime", "bucket", "isolated_backend")
+    assert len(behaviour.sites) == 3
+
+
+def test_census_does_not_report_a_repeated_name_as_an_aliased_behaviour(tmp_path: Path) -> None:
+    """The discriminating control: same name twice is duplication, not aliasing.
+
+    Without this, the detector above would pass just as well if it reported
+    every repeated body regardless of naming -- which would drown the aliasing
+    signal in the ordinary same-name duplication the manifest already handles.
+    """
+    root = tmp_path / "repeated-name"
+    _write_repeated_fixture_tree(root, second_body='return "first"')
+
+    result = census(root)
+
+    assert len(result.fixtures) == 2
+    assert len({record.normalized_body_sha256 for record in result.fixtures}) == 1
+    assert result.aliased_behaviour_count == 0
