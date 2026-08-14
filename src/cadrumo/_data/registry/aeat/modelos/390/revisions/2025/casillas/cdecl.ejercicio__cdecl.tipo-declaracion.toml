@@ -1,0 +1,23 @@
+[[revisions."2025".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+continuidad_id = "filing-year"
+required = true
+input_kind = "informational"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["boe-modelo-390-2009-form", "aeat-modelo-390-procedure"]
+
+[[revisions."2025".casillas]]
+id = "decl.tipo-declaracion"
+number = "tipo-declaracion"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+continuidad_id = "tipo-declaracion"
+required = true
+input_kind = "informational"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["boe-modelo-390-2009-form", "aeat-modelo-390-procedure"]

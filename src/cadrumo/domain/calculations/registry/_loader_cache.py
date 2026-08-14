@@ -26,6 +26,7 @@ See Also:
 from __future__ import annotations
 
 import hashlib
+import re
 import tempfile
 from dataclasses import dataclass
 from functools import lru_cache
@@ -69,6 +70,14 @@ MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS = 1.0
 ModeloSourceLayout = Literal["single_file", "directory"]
 ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
 
+_ADMINISTRATIVE_FRAGMENT_NAME = re.compile(
+    r"^(?P<prefix>[0-9]{4})-[a-z0-9](?:[a-z0-9]|[.-](?=[a-z0-9]))*\.toml$",
+)
+_CASILLA_FRAGMENT_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9+_.-]*\.toml$")
+_CONTINUIDAD_FRAGMENT_NAME = re.compile(r"^[a-z0-9][a-z0-9.-]*\.toml$")
+_SOURCE_NATIVE_FRAGMENT_SECTIONS = frozenset({"casillas", "casilla_continuidad_evolutions"})
+_GENERATED_EXPORT_PROVENANCE_FILENAME = "_generation.provenance.json"
+
 
 @dataclass(frozen=True, slots=True)
 class ModeloRevisionSource:
@@ -94,6 +103,7 @@ class ModeloSource:
 def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
     """Discover single-file and directory-mode modelo sources."""
     resolved = modelos_dir.resolve()
+    _validate_modelos_directory_entries(resolved)
     sources: list[ModeloSource] = []
     seen_modelo_ids: dict[str, ModeloSource] = {}
     for source in _single_file_modelo_sources(resolved):
@@ -101,6 +111,26 @@ def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
     for source in _directory_modelo_sources(resolved):
         _append_modelo_source(source, sources, seen_modelo_ids)
     return tuple(sources)
+
+
+def _validate_modelos_directory_entries(modelos_dir: Path) -> None:
+    """Refuse plausible modelo sources that discovery would otherwise ignore."""
+    if not modelos_dir.is_dir():
+        return
+    for entry in sorted(modelos_dir.iterdir()):
+        if entry.is_file():
+            if entry.suffix != ".toml":
+                raise RegistryLoadError(
+                    f"{entry}: unrecognized modelos file; modelo files must use the '.toml' suffix",
+                )
+            continue
+        if entry.is_dir():
+            if not (entry / "manifest.toml").is_file():
+                raise RegistryLoadError(
+                    f"{entry}: orphan modelo directory; directory-mode modelos must contain manifest.toml",
+                )
+            continue
+        raise RegistryLoadError(f"{entry}: unrecognized modelos entry")
 
 
 def _read_modelo_id(path: Path, *, description: str) -> str:
@@ -137,6 +167,7 @@ def _directory_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
 
 
 def _directory_modelo_source(entry: Path) -> ModeloSource:
+    validate_modelo_directory_source(entry)
     manifest_path = entry / "manifest.toml"
     return ModeloSource(
         modelo_id=_read_modelo_id(manifest_path, description="manifest"),
@@ -145,6 +176,30 @@ def _directory_modelo_source(entry: Path) -> ModeloSource:
         manifest_path=manifest_path.resolve(),
         revision_sources=_discover_revision_sources(entry / "revisions"),
     )
+
+
+def validate_modelo_directory_source(entry: Path) -> None:
+    """Validate every entry that belongs to one directory-mode modelo source."""
+    allowed_directories = frozenset({"locales", "revisions"})
+    for child in sorted(entry.iterdir()):
+        if child.is_file():
+            if child.name != "manifest.toml":
+                raise RegistryLoadError(f"{child}: unrecognized modelo source file; only manifest.toml is allowed")
+            continue
+        if child.is_dir():
+            if child.name not in allowed_directories:
+                raise RegistryLoadError(f"{child}: unrecognized modelo source directory")
+            if child.name == "locales":
+                _validate_flat_toml_files(child, description="modelo locale")
+            continue
+        raise RegistryLoadError(f"{child}: unrecognized modelo source entry")
+    _discover_revision_sources(entry / "revisions")
+
+
+def _validate_flat_toml_files(directory: Path, *, description: str) -> None:
+    for entry in sorted(directory.iterdir()):
+        if not entry.is_file() or entry.suffix != ".toml":
+            raise RegistryLoadError(f"{entry}: unrecognized {description} entry; only TOML files are allowed")
 
 
 def _append_modelo_source(
@@ -165,6 +220,7 @@ def _append_modelo_source(
 def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSource, ...]:
     if not revisions_dir.is_dir():
         return ()
+    _validate_revision_directory_entries(revisions_dir)
     file_sources = tuple(
         source for path in sorted(revisions_dir.glob("*.toml")) for source in _revision_file_sources(path)
     )
@@ -172,6 +228,16 @@ def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSourc
         _revision_directory_source(path) for path in sorted(revisions_dir.iterdir()) if path.is_dir()
     )
     return (*file_sources, *directory_sources)
+
+
+def _validate_revision_directory_entries(revisions_dir: Path) -> None:
+    for entry in sorted(revisions_dir.iterdir()):
+        if entry.is_file() and entry.suffix != ".toml":
+            raise RegistryLoadError(
+                f"{entry}: unrecognized revision file; revision files must use the '.toml' suffix",
+            )
+        if not entry.is_file() and not entry.is_dir():
+            raise RegistryLoadError(f"{entry}: unrecognized revisions entry")
 
 
 def _revision_file_sources(path: Path) -> tuple[ModeloRevisionSource, ...]:
@@ -191,13 +257,14 @@ def _revision_file_sources(path: Path) -> tuple[ModeloRevisionSource, ...]:
 
 
 def _revision_directory_source(path: Path) -> ModeloRevisionSource:
+    _validate_revision_fragment_tree(path)
     revision_manifest = path / "revision.toml"
     fragment_paths = (revision_manifest,) if revision_manifest.is_file() else ()
     fragment_paths = (
         *fragment_paths,
         *tuple(
             p
-            for p in sorted(path.rglob("*.toml"))
+            for p in sorted(path.glob("*/*.toml"))
             if p != revision_manifest and not any(part == "locales" for part in p.parts)
         ),
     )
@@ -207,6 +274,79 @@ def _revision_directory_source(path: Path) -> ModeloRevisionSource:
         path=path,
         fragment_paths=fragment_paths,
     )
+
+
+def _validate_revision_fragment_tree(path: Path) -> None:
+    """Reject ignored files and enforce schema-family-aware fragment names."""
+    _validate_revision_fragment_top_level(path)
+    _validate_revision_fragment_file_suffixes(path)
+    for section_dir in _revision_fragment_section_directories(path):
+        _validate_section_fragment_names(section_dir)
+
+
+def _validate_revision_fragment_top_level(path: Path) -> None:
+    for entry in sorted(path.iterdir()):
+        if entry.is_file() and entry.name != "revision.toml":
+            raise RegistryLoadError(
+                f"{entry}: revision section fragment must live in its owned section subdirectory",
+            )
+
+
+def _validate_revision_fragment_file_suffixes(path: Path) -> None:
+    for entry in sorted(path.rglob("*")):
+        if entry.is_file() and entry.suffix != ".toml" and not _is_generated_export_provenance(entry, path):
+            raise RegistryLoadError(
+                f"{entry}: unrecognized revision fragment file; fragments must use the '.toml' suffix",
+            )
+
+
+def _is_generated_export_provenance(entry: Path, revision_root: Path) -> bool:
+    """Recognise the one generator-owned non-TOML revision artefact."""
+    return (
+        entry.name == _GENERATED_EXPORT_PROVENANCE_FILENAME
+        and entry.parent == revision_root / "export"
+    )
+
+
+def _revision_fragment_section_directories(path: Path) -> tuple[Path, ...]:
+    return tuple(sorted(entry for entry in path.iterdir() if entry.is_dir() and entry.name != "locales"))
+
+
+def _validate_section_fragment_names(section_dir: Path) -> None:
+    nested_entries = sorted(entry for entry in section_dir.iterdir() if entry.is_dir())
+    if nested_entries:
+        raise RegistryLoadError(
+            f"{nested_entries[0]}: nested revision section directories are not allowed; "
+            "fragments must be direct children of their owned section directory",
+        )
+    fragment_paths = sorted(section_dir.glob("*.toml"))
+    if section_dir.name == "casillas":
+        pattern = _CASILLA_FRAGMENT_NAME
+        description = "casilla source-native"
+    elif section_dir.name == "casilla_continuidad_evolutions":
+        pattern = _CONTINUIDAD_FRAGMENT_NAME
+        description = "casilla continuity source-native"
+    else:
+        pattern = _ADMINISTRATIVE_FRAGMENT_NAME
+        description = "numbered administrative"
+
+    prefixes: dict[str, Path] = {}
+    for fragment_path in fragment_paths:
+        match = pattern.fullmatch(fragment_path.name)
+        if match is None:
+            raise RegistryLoadError(
+                f"{fragment_path}: invalid {description} fragment filename",
+            )
+        if section_dir.name in _SOURCE_NATIVE_FRAGMENT_SECTIONS:
+            continue
+        prefix = match.group("prefix")
+        previous = prefixes.get(prefix)
+        if previous is not None:
+            raise RegistryLoadError(
+                f"{fragment_path}: duplicate administrative fragment prefix {prefix!r} in {section_dir}; "
+                f"already used by {previous.name}",
+            )
+        prefixes[prefix] = fragment_path
 
 
 @lru_cache(maxsize=1)

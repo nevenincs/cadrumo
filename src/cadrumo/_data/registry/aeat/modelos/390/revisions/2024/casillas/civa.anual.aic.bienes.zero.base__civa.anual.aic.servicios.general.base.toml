@@ -1,0 +1,127 @@
+# Per-tier rate-BLIND base-imponible casillas for the AIC block, one per
+# (category, rate_kind) combination the box layer above splits. Mirrors the
+# domestic Reg. ordinario pattern exactly (iva.anual.repercutido.general.base
+# etc.): each catches a row whose TIER is known but whose specific rate is
+# not, so an unrated AIC row still lands somewhere instead of falling out of
+# every box. Internal only (no export_refs), matching that same precedent --
+# AEAT's design has no box for a rate-unrecorded AIC amount.
+
+[[revisions."2024".casillas]]
+id = "iva.anual.aic.bienes.zero.base"
+number = "iva.anual.aic.bienes.zero.base"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_base_imponible_aic_bienes_zero"
+continuidad_id = "iva-base-imponible-aic-bienes-zero"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One rate-blind AIC bienes base per tier (zero); distinct from its sibling tiers, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-bienes-zero-blind-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".casillas]]
+id = "iva.anual.aic.bienes.super_reduced.base"
+number = "iva.anual.aic.bienes.super_reduced.base"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_base_imponible_aic_bienes_super_reduced"
+continuidad_id = "iva-base-imponible-aic-bienes-super-reduced"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One rate-blind AIC bienes base per tier (super_reduced); distinct from its sibling tiers, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-bienes-super-reduced-blind-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".casillas]]
+id = "iva.anual.aic.bienes.reduced.base"
+number = "iva.anual.aic.bienes.reduced.base"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_base_imponible_aic_bienes_reduced"
+continuidad_id = "iva-base-imponible-aic-bienes-reduced"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One rate-blind AIC bienes base per tier (reduced); distinct from its sibling tiers, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-bienes-reduced-blind-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".casillas]]
+id = "iva.anual.aic.bienes.general.base"
+number = "iva.anual.aic.bienes.general.base"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_base_imponible_aic_bienes_general"
+continuidad_id = "iva-base-imponible-aic-bienes-general"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One rate-blind AIC bienes base per tier (general); distinct from its sibling tiers, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-bienes-general-blind-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".casillas]]
+id = "iva.anual.aic.servicios.zero.base"
+number = "iva.anual.aic.servicios.zero.base"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_base_imponible_aic_servicios_zero"
+continuidad_id = "iva-base-imponible-aic-servicios-zero"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One rate-blind AIC servicios base per tier (zero); distinct from its sibling tiers, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-servicios-zero-blind-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".casillas]]
+id = "iva.anual.aic.servicios.super_reduced.base"
+number = "iva.anual.aic.servicios.super_reduced.base"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_base_imponible_aic_servicios_super_reduced"
+continuidad_id = "iva-base-imponible-aic-servicios-super-reduced"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One rate-blind AIC servicios base per tier (super_reduced); distinct from its sibling tiers, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-servicios-super-reduced-blind-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".casillas]]
+id = "iva.anual.aic.servicios.reduced.base"
+number = "iva.anual.aic.servicios.reduced.base"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_base_imponible_aic_servicios_reduced"
+continuidad_id = "iva-base-imponible-aic-servicios-reduced"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One rate-blind AIC servicios base per tier (reduced); distinct from its sibling tiers, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-servicios-reduced-blind-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".casillas]]
+id = "iva.anual.aic.servicios.general.base"
+number = "iva.anual.aic.servicios.general.base"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_base_imponible_aic_servicios_general"
+continuidad_id = "iva-base-imponible-aic-servicios-general"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One rate-blind AIC servicios base per tier (general); distinct from its sibling tiers, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-servicios-general-blind-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]

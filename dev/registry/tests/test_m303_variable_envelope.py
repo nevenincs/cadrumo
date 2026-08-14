@@ -1,16 +1,18 @@
-"""Real-binary contract tests for the Modelo 303 DP30300 composition authority."""
+"""Real-binary contract tests for the Modelo 303 DP30300 static declaration."""
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
-from cadrumo.core import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity, Period
-from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import RegistryValidationError, load_catalogue_file
+from cadrumo.core import content_hash_hex
+from cadrumo.domain.calculations.registry import RegistryValidationError, bundled_revision_inspection
 
 from .._m303_variable_envelope import (
-    M303EnvelopeBodyMember,
-    render_m303_variable_envelope_bytes,
+    M303EnvelopeProvenance,
+    compile_m303_filing_envelope_definition,
+    validate_m303_variable_envelope,
 )
 from .._record_design_ir import (
     RecordDesignIntermediateField,
@@ -29,11 +31,11 @@ from .._semantic_map import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _MODELO_303_DESIGNS = (
-    ("aeat-dr-303-2023", 2023, "2023"),
-    ("aeat-dr-303-2024-early", 2024, "2024-early"),
-    ("aeat-dr-303-2024-late", 2024, "2024-late"),
-    ("aeat-dr-303-2025", 2025, "2025"),
-    ("aeat-dr-303-2026", 2026, "2026"),
+    ("aeat-dr-303-2023", "2023", 2023, "4T", "2023"),
+    ("aeat-dr-303-2024-early", "2024-hasta-08-y-2t", 2024, "2T", "2024-early"),
+    ("aeat-dr-303-2024-late", "2024-desde-09-y-3t", 2024, "3T", "2024-late"),
+    ("aeat-dr-303-2025", "2025", 2025, "4T", "2025"),
+    ("aeat-dr-303-2026", "2026-y-siguientes", 2026, "4T", "2026"),
 )
 _BODY_RECORD_IDS = ("m303-page-1", "m303-page-2")
 
@@ -91,31 +93,22 @@ def _semantic_for(
     )
 
 
-def _product_identity() -> AeatProductSoftwareIdentity:
-    return AeatProductSoftwareIdentity(
-        program_identifier="C303",
-        developer_tax_id="Y0000001S",
-        evidence=(
-            AeatProductSoftwareEvidence(
-                reference="aeat-software-registration:c303",
-                digest="a" * 64,
-            ),
-        ),
-    )
-
-
-@pytest.mark.parametrize(("source_ref", "filing_year", "design_epoch"), _MODELO_303_DESIGNS)
-def test_real_m303_binaries_render_the_typed_envelope_without_a_legacy_layout(
+@pytest.mark.parametrize(
+    ("source_ref", "expected_revision_id", "filing_year", "period", "design_epoch"),
+    _MODELO_303_DESIGNS,
+)
+def test_real_m303_binaries_compile_the_typed_static_declaration_without_instance_inputs(
     source_ref: str,
+    expected_revision_id: str,
     filing_year: int,
+    period: str,
     design_epoch: str,
 ) -> None:
-    """All five hash-pinned DP30300 sources yield one measured byte composition."""
-    source_root = bundled_path()
-    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml"))
+    """All five hash-pinned DP30300 sources yield one source-bound static grammar."""
+    inspection = bundled_revision_inspection("303", filing_year=filing_year, period=period)
     intermediate = load_record_design_intermediate(
-        source_root,
-        catalogues.sources,
+        inspection.source_root,
+        inspection.sources,
         source_ref=source_ref,
         filing_year=filing_year,
         design_epoch=design_epoch,
@@ -126,38 +119,52 @@ def test_real_m303_binaries_render_the_typed_envelope_without_a_legacy_layout(
         source_ref=str(intermediate.source.source_ref),
         source_sha256=intermediate.source.source_sha256,
     )
-    body_members = (
-        M303EnvelopeBodyMember(record_id="m303-page-1", payload=b"PAGE-ONE\r\n"),
-        M303EnvelopeBodyMember(record_id="m303-page-2", payload=b"PAGE-TWO\r\n"),
-    )
-
-    rendered = render_m303_variable_envelope_bytes(
+    declaration = compile_m303_filing_envelope_definition(
         semantic,
         envelope,
         source=intermediate.source,
-        product_software_identity=_product_identity(),
-        filing_period=Period.from_year_and_code(filing_year, "4T"),
-        body_members=body_members,
+        body_record_ids=_BODY_RECORD_IDS,
     )
 
+    assert inspection.revision_id == expected_revision_id
     assert len(envelope.prefix_fields) == 13
-    assert len(rendered.prefix) == 328
-    assert rendered.prefix[92:96] == b"C303"
-    assert rendered.prefix[100:109] == b"Y0000001S"
-    assert rendered.closer == f"</T3030{filing_year:04d}4T0000>".encode("ascii")
-    assert rendered.payload[328 : 328 + len(body_members[0].payload)] == body_members[0].payload
-    assert (
-        rendered.total_length == len(rendered.payload) == 328 + sum(len(member.payload) for member in body_members) + 18
+    assert tuple(field.role for field in declaration.prefix_fields) == tuple(M303EnvelopePrefixRole)
+    assert sum(field.length for field in declaration.prefix_fields) == 328
+    assert declaration.body_record_ids == _BODY_RECORD_IDS
+    assert declaration.product_identity_requirement == "aeat-product-software-identity-v1"
+    assert declaration.closer_derivation == "m303-relative-closer-v1"
+    assert declaration.total_derivation == "m303-emitted-byte-total-v1"
+
+    provenance = M303EnvelopeProvenance(
+        schema_version=2,
+        revision_id="2023",
+        layout_id="generated-modelo-303-2023-fichero",
+        semantic_sha256="a" * 64,
+        envelope=declaration,
+        envelope_sha256=content_hash_hex(declaration.model_dump(mode="json")),
+    )
+    encoded_provenance = provenance.model_dump(mode="json")
+
+    assert M303EnvelopeProvenance.model_validate_json(provenance.model_dump_json()) == provenance
+    assert set(encoded_provenance) == {
+        "schema_version",
+        "revision_id",
+        "layout_id",
+        "semantic_sha256",
+        "envelope",
+        "envelope_sha256",
+    }
+    assert not {"period", "payload", "payload_sha256", "total_length", "product_software_identity"} & set(
+        encoded_provenance
     )
 
 
-def test_m303_envelope_refuses_source_drift_and_reordered_body_members() -> None:
-    """Product identity cannot make a drifted source or reordered body silently render."""
-    source_root = bundled_path()
-    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml"))
+def test_m303_static_declaration_refuses_source_drift_and_reordered_body_definitions() -> None:
+    """No later application authority can repair source or record-order drift."""
+    inspection = bundled_revision_inspection("303", filing_year=2026, period="4T")
     intermediate = load_record_design_intermediate(
-        source_root,
-        catalogues.sources,
+        inspection.source_root,
+        inspection.sources,
         source_ref="aeat-dr-303-2026",
         filing_year=2026,
         design_epoch="2026",
@@ -168,23 +175,15 @@ def test_m303_envelope_refuses_source_drift_and_reordered_body_members() -> None
         source_ref=str(intermediate.source.source_ref),
         source_sha256="b" * 64,
     )
-    members = (
-        M303EnvelopeBodyMember(record_id="m303-page-2", payload=b"PAGE-TWO\r\n"),
-        M303EnvelopeBodyMember(record_id="m303-page-1", payload=b"PAGE-ONE\r\n"),
-    )
-
     with pytest.raises(RegistryValidationError, match="not pinned to the exact parser source"):
-        render_m303_variable_envelope_bytes(
+        validate_m303_variable_envelope(
             semantic,
             envelope,
             source=intermediate.source,
-            product_software_identity=_product_identity(),
-            filing_period=Period.from_year_and_code(2026, "4T"),
-            body_members=members,
+            body_record_ids=tuple(reversed(_BODY_RECORD_IDS)),
         )
-
     with pytest.raises(RegistryValidationError, match="body records must match"):
-        render_m303_variable_envelope_bytes(
+        validate_m303_variable_envelope(
             _semantic_for(
                 envelope,
                 source_ref=str(intermediate.source.source_ref),
@@ -192,24 +191,19 @@ def test_m303_envelope_refuses_source_drift_and_reordered_body_members() -> None
             ),
             envelope,
             source=intermediate.source,
-            product_software_identity=_product_identity(),
-            filing_period=Period.from_year_and_code(2026, "4T"),
-            body_members=members,
+            body_record_ids=tuple(reversed(_BODY_RECORD_IDS)),
         )
 
-    with pytest.raises(RegistryValidationError, match="monthly or quarterly"):
-        render_m303_variable_envelope_bytes(
-            _semantic_for(
-                envelope,
-                source_ref=str(intermediate.source.source_ref),
-                source_sha256=intermediate.source.source_sha256,
-            ),
-            envelope,
-            source=intermediate.source,
-            product_software_identity=_product_identity(),
-            filing_period=Period.from_year_and_code(2026, "0A"),
-            body_members=(
-                M303EnvelopeBodyMember(record_id="m303-page-1", payload=b"PAGE-ONE\r\n"),
-                M303EnvelopeBodyMember(record_id="m303-page-2", payload=b"PAGE-TWO\r\n"),
-            ),
-        )
+
+def test_static_generator_has_no_instance_carrier_vocabulary() -> None:
+    """DP30300 compilation retains grammar only; application owns filing bytes."""
+    source = Path("dev/registry/_m303_variable_envelope.py").read_text(encoding="utf-8")
+
+    forbidden = {
+        "M303EnvelopeGenerationInput",
+        "M303EnvelopeBodyMember",
+        "M303EnvelopeBytes",
+        "render_m303_variable_envelope_bytes",
+        "m303_envelope_body_casilla_coordinates",
+    }
+    assert all(name not in source for name in forbidden)

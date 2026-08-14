@@ -451,6 +451,17 @@ pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
 test-ratchets:
     @uv run --no-sync pytest -q -p no:cacheprovider -rsf src/cadrumo/tests/test_test_inventory.py src/cadrumo/tests/test_marker_integrity.py src/cadrumo/tests/test_relative_imports_only.py src/cadrumo/tests/test_no_skip_xfail.py src/cadrumo/tests/test_mock_inventory.py src/cadrumo/tests/test_monkeypatch_inventory.py src/cadrumo/tests/test_no_broad_exception_raises.py src/cadrumo/tests/test_no_bare_except.py src/cadrumo/tests/test_no_tautology.py --tb=short
 
+# Run the dedicated harness verdict outer-serially. Each explicit owned member
+# collects separately before the combined real-proof run, so pytest exit 5
+# exposes either collapsed proof without inventing another marker. Every call
+# is direct, preserving the meaningful failing pytest exit status.
+[doc('Run the dedicated outer-serial test-harness verdict (installed hook and full-corpus collection proofs).')]
+[group('testing')]
+test-harness:
+    @uv run --no-sync pytest -q --collect-only -n0 src/cadrumo/tests/test_worker_count_hook.py
+    @uv run --no-sync pytest -q --collect-only -n0 src/cadrumo/tests/test_every_test_module_is_collectable.py
+    @uv run --no-sync pytest -q -rsf -n0 src/cadrumo/tests/test_worker_count_hook.py src/cadrumo/tests/test_every_test_module_is_collectable.py
+
 # Run the unit test suite in parallel, ignoring workbook parity tests. Quiet
 # progress; failures shown. `durations` is optional and, when set, prints
 # pytest's slowest-N-tests profile (CI passes a value to keep a rolling

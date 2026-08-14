@@ -128,16 +128,16 @@ def test_persisted_matrix_matches_a_fresh_measurement_of_the_five_binaries() -> 
     assert persisted == live
 
 
-def test_every_epoch_measurement_uses_its_selected_validated_registry_snapshot() -> None:
+def test_every_epoch_measurement_uses_its_selected_validated_registry_inspection() -> None:
     """The parser may read only the source the selected M303 revision admits."""
     authority = bundled_authority()
     intermediates = load_dp30302_epoch_intermediates(authority)
     assert len(intermediates) == len(DP30302_EPOCH_COORDINATES)
     for coordinate, intermediate in zip(DP30302_EPOCH_COORDINATES, intermediates, strict=True):
-        snapshot = authority.snapshot("303", filing_year=coordinate.filing_year, period=coordinate.period)
+        inspection = authority.inspect_revision("303", filing_year=coordinate.filing_year, period=coordinate.period)
         assert intermediate.source.source_ref == coordinate.source_ref
-        assert intermediate.source.source_ref in snapshot.revision.source_refs
-        assert snapshot.sources[coordinate.source_ref].sha256 == intermediate.source.source_sha256
+        assert intermediate.source.source_ref in inspection.revision_source_refs
+        assert inspection.sources[coordinate.source_ref].sha256 == intermediate.source.source_sha256
 
 
 def test_persisted_matrix_reflects_the_two_corrected_constants() -> None:

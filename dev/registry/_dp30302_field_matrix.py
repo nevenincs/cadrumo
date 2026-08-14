@@ -30,7 +30,7 @@ from cadrumo.domain.calculations.registry import (
 )
 
 from ._record_design_ir import RecordDesignIntermediate, RecordDesignIntermediateField, load_record_design_intermediate
-from ._semantic_map_validation import validate_snapshot_source_authority
+from ._semantic_map_validation import validate_inspection_source_authority
 
 __all__ = [
     "DP30302_EPOCHS",
@@ -258,22 +258,22 @@ class DP30302FieldMatrix(_StrictModel):
 def load_dp30302_epoch_intermediates(
     authority: ValidatedRegistryAuthority,
 ) -> tuple[RecordDesignIntermediate, ...]:
-    """Load the five DP30302 designs only through their selected validated snapshots."""
+    """Load the five DP30302 designs through selected static inspections."""
     intermediates: list[RecordDesignIntermediate] = []
     for coordinate in DP30302_EPOCH_COORDINATES:
-        snapshot = authority.snapshot(
+        inspection = authority.inspect_revision(
             "303",
             filing_year=coordinate.filing_year,
             period=coordinate.period,
         )
         intermediate = load_record_design_intermediate(
             authority.source_root,
-            snapshot.sources,
+            inspection.sources,
             source_ref=coordinate.source_ref,
             filing_year=coordinate.filing_year,
             design_epoch=coordinate.epoch,
         )
-        validate_snapshot_source_authority(intermediate, snapshot)
+        validate_inspection_source_authority(intermediate, inspection)
         intermediates.append(intermediate)
     return tuple(intermediates)
 
@@ -323,10 +323,10 @@ def _measure_dp30302_epoch(
 
 
 def measure_dp30302_field_matrix(authority: ValidatedRegistryAuthority) -> DP30302FieldMatrix:
-    """Recompute the complete DP30302 matrix from five validated source snapshots.
+    """Recompute the complete DP30302 matrix from five validated source inspections.
 
     Each parsed binary is admitted by its filing-context-selected
-    :class:`ValidatedRegistryAuthority` snapshot before measurement.  This
+    :class:`ValidatedRegistryAuthority` inspection before measurement.  This
     neither reads a directory listing nor admits catalogue rows outside the
     selected revision authority.
     """

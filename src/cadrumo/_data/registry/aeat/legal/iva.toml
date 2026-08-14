@@ -498,6 +498,7 @@ sha256 = "6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252"
 bytes = 556062
 retrieved_at = 2026-05-06
 applies_from = 2025-01-01
+applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/390_2025.xlsx"
 review_status = "reviewed"
 

@@ -6,10 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.resources import bundled_path, resources
-from cadrumo.domain.calculations.registry import ExportComputedKey, ExportEncoding, load_catalogue_file
+from cadrumo.domain.calculations.registry import ExportComputedKey, ExportEncoding, bundled_revision_inspection
 
-from .._export_tree import ExportTreeTransportProfile, _render_records
+from .._export_tree import ExportTreeTransportProfile, _render_records, render_complete_export_tree
 from .._provenance_manifest import semantic_map_digest
 from .._record_design_ir import load_record_design_intermediate
 from .._render_profile import (
@@ -39,17 +38,16 @@ _PROFILE_DIGEST = "e59b3446a5f5dcfe6b2de3f0cf3befa6aaaeb6fb02a055433d584a099908d
 
 @pytest.fixture(scope="module")
 def _authorities():
-    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml"))
+    inspection = bundled_revision_inspection("303", filing_year=2023, period="4T")
     intermediate = load_record_design_intermediate(
-        bundled_path(),
-        catalogues.sources,
+        inspection.source_root,
+        inspection.sources,
         source_ref=M303_2023_SOURCE_REF,
         filing_year=2023,
         design_epoch="2023",
     )
     semantic_map = load_semantic_map(_MAP_DIRECTORY)
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2023, period="4T")
-    joined = join_record_design_semantics(semantic_map, intermediate, snapshot)
+    joined = join_record_design_semantics(semantic_map, intermediate, inspection)
     profile = load_and_validate_render_profile(
         _PROFILE_DIRECTORY,
         joined,
@@ -63,15 +61,15 @@ def _authorities():
             entries=(),
         ),
     )
-    return intermediate, semantic_map, snapshot, joined, profile
+    return intermediate, semantic_map, inspection, joined, profile
 
 
-def test_real_2023_source_snapshot_map_and_profile_are_exhaustive(_authorities) -> None:
-    intermediate, semantic_map, snapshot, joined, profile = _authorities
+def test_real_2023_source_inspection_map_and_profile_are_exhaustive(_authorities) -> None:
+    intermediate, semantic_map, inspection, joined, profile = _authorities
     census = census_m303_2023_semantic_map(intermediate, semantic_map)
 
     assert intermediate.source.source_sha256 == M303_2023_SOURCE_SHA256
-    assert snapshot.revision.id == "2023"
+    assert inspection.revision_id == "2023"
     assert census.total_anchor_count == M303_2023_TOTAL_ANCHOR_COUNT
     assert census.class_totals == M303_2023_CLASS_TOTALS
     assert census.review_home_totals == M303_2023_REVIEW_HOME_TOTALS
@@ -142,4 +140,47 @@ def test_real_static_compiler_normalizes_the_complete_2023_map(_authorities) -> 
         for field in blank_page_markers.values()
     )
     by_field_id = {str(derivation.field.id): derivation.field for derivation in derivations}
+    assert by_field_id["m303-2023.dp30301.f006"].kind.value == "header"
+    assert by_field_id["m303-2023.dp30301.f006"].producer_key.value == "filing.result_disposition"
     assert by_field_id["m303-2023.dp30301.f050"].allowed_values == ("0", "50", "62")
+
+
+def test_real_2023_static_declaration_preserves_dp30300_without_instance_values(
+    _authorities,
+    tmp_path: Path,
+) -> None:
+    """The complete reviewed 2023 map compiles DP30300 without period or payload inputs."""
+    _, semantic_map, inspection, joined, profile = _authorities
+    transport = ExportTreeTransportProfile(
+        modelo="303",
+        design_epoch="2023",
+        source_ref=M303_2023_SOURCE_REF,
+        source_sha256=M303_2023_SOURCE_SHA256,
+        layout_id="generated-modelo-303-2023-fichero",
+        format="fixed_width",
+        encoding=ExportEncoding.LATIN_1,
+        line_ending="crlf",
+        serializer_convention="rtoml-pretty-v1",
+    )
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id=inspection.revision_id,
+        joined=joined,
+        semantic_map=semantic_map,
+        transport_profile=transport,
+        render_profile=profile,
+        render_profile_source_evidence=RenderProfileSourceEvidence(
+            design_identity=profile.design_identity,
+            entries=(),
+        ),
+    )
+    declaration = rendered.layout.m303_filing_envelope
+    assert declaration is not None
+
+    assert declaration.source_ref == M303_2023_SOURCE_REF
+    assert declaration.source_sha256 == M303_2023_SOURCE_SHA256
+    assert declaration.body_record_ids == tuple(record.id for record in rendered.layout.records)
+    assert sum(field.length for field in declaration.prefix_fields) == 328
+    assert declaration.product_identity_requirement == "aeat-product-software-identity-v1"
+    assert rendered.provenance_manifest.m303_variable_envelope is not None
+    assert rendered.provenance_manifest.m303_variable_envelope.envelope == declaration

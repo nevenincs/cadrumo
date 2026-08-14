@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import re
+import shlex
+import shutil
 from pathlib import Path
 
 import pytest
 import yaml
+
+from ...packaging._command import run_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -56,13 +60,18 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
 
 
 _FULL_WORKFLOW = Path(__file__).resolve().parents[3] / ".github" / "workflows" / "ci-full.yml"
+_REPOSITORY_ROOT = _WORKFLOW.parents[2]
+_TEST_HARNESS_MEMBERS = (
+    "src/cadrumo/tests/test_worker_count_hook.py",
+    "src/cadrumo/tests/test_every_test_module_is_collectable.py",
+)
 
 
 def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
-    """Per-push CI is the two-job speed profile: static checks plus the unit suite."""
+    """Per-push CI has independent static, unit, and harness verdicts."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     assert document["name"] == "Cadrumo CI"
-    assert set(document["jobs"]) == {"cadrumo-static", "cadrumo-unit"}
+    assert set(document["jobs"]) == {"cadrumo-static", "cadrumo-unit", "cadrumo-test-harness"}
 
     static = document["jobs"]["cadrumo-static"]
     static_commands = "\n".join(str(step.get("run", "")) for step in static["steps"])
@@ -86,6 +95,115 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     # locally) so the marker expression and the durations/worker overrides
     # have one declaration site; the recipe's substance is pinned below.
     assert "CADRUMO_PYTEST_WORKERS=8 just test-unit 50" in unit_commands
+
+
+def test_harness_recipe_runs_every_real_proof_outer_serially_and_non_vacuously() -> None:
+    """Each declared harness proof preflights alone before their exact combined run.
+
+    The worker-hook and full-corpus collectors are intentionally explicit
+    members rather than a marker selection: losing either must surface as that
+    member's pytest exit 5, not as an empty green aggregate. All calls are
+    outer-serial, preventing their real child processes from nesting inside an
+    xdist pool.
+    """
+    recipe = re.search(
+        r"(?m)^test-harness:\r?\n((?:    @[^\r\n]+\r?\n?)+)",
+        _JUSTFILE.read_text(encoding="utf-8"),
+    )
+    assert recipe is not None, "no justfile recipe named test-harness"
+    commands = tuple(line.strip().removeprefix("@") for line in recipe.group(1).splitlines())
+
+    pytest_prefix = "uv run --no-sync pytest -q"
+    assert commands == (
+        *(f"{pytest_prefix} --collect-only -n0 {member}" for member in _TEST_HARNESS_MEMBERS),
+        f"{pytest_prefix} -rsf -n0 {' '.join(_TEST_HARNESS_MEMBERS)}",
+    )
+    assert all("-n0" in command for command in commands)
+    assert all("||" not in command and ";" not in command for command in commands)
+
+
+def test_harness_member_preflight_rejects_empty_collection_even_when_another_member_exists(tmp_path: Path) -> None:
+    """A per-member preflight catches the empty proof an aggregate would hide."""
+    empty_member = tmp_path / "test_empty_harness_member.py"
+    empty_member.write_text("import pytest\n\npytestmark = pytest.mark.unit\n", encoding="utf-8")
+    populated_member = tmp_path / "test_populated_harness_member.py"
+    populated_member.write_text(
+        "import pytest\n\npytestmark = pytest.mark.unit\n\ndef test_real_item_is_collectable() -> None:\n    pass\n",
+        encoding="utf-8",
+    )
+
+    just = shutil.which("just")
+    assert just is not None, "test-harness requires the installed just executable"
+    shown_recipe = run_command(
+        [just, "--show", "test-harness"],
+        cwd=_REPOSITORY_ROOT,
+        timeout_seconds=30,
+    )
+    assert shown_recipe.returncode == 0, (
+        f"could not render the real test-harness recipe\nstdout:\n{shown_recipe.stdout}\nstderr:\n{shown_recipe.stderr}"
+    )
+    preflight = next(
+        (
+            line.strip().removeprefix("@")
+            for line in shown_recipe.stdout.splitlines()
+            if "--collect-only" in line and _TEST_HARNESS_MEMBERS[0] in line
+        ),
+        None,
+    )
+    assert preflight is not None, "the rendered test-harness recipe has no worker-hook member preflight"
+    command = shlex.split(preflight)
+    assert command == [
+        "uv",
+        "run",
+        "--no-sync",
+        "pytest",
+        "-q",
+        "--collect-only",
+        "-n0",
+        _TEST_HARNESS_MEMBERS[0],
+    ]
+
+    aggregate = run_command(
+        [*command[:-1], str(populated_member), str(empty_member)],
+        cwd=_REPOSITORY_ROOT,
+        timeout_seconds=30,
+    )
+    assert aggregate.returncode == 0, (
+        "the populated control must make aggregate collection non-empty\n"
+        f"command: {shlex.join([*command[:-1], str(populated_member), str(empty_member)])}\n"
+        f"stdout:\n{aggregate.stdout}\nstderr:\n{aggregate.stderr}"
+    )
+
+    empty_preflight = run_command(
+        [*command[:-1], str(empty_member)],
+        cwd=_REPOSITORY_ROOT,
+        timeout_seconds=30,
+    )
+    assert empty_preflight.returncode == 5, (
+        "the per-member collect preflight must preserve pytest exit 5 for an empty member\n"
+        f"command: {shlex.join([*command[:-1], str(empty_member)])}\n"
+        f"stdout:\n{empty_preflight.stdout}\nstderr:\n{empty_preflight.stderr}"
+    )
+
+
+def test_ci_harness_verdict_is_a_standalone_blocking_job() -> None:
+    """The deterministic proof reports independently from static and unit work."""
+    document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
+    harness = document["jobs"]["cadrumo-test-harness"]
+    assert "needs" not in harness
+    assert harness["timeout-minutes"] <= 25
+    assert harness.get("continue-on-error") is not True
+
+    commands = tuple(str(step.get("run", "")) for step in harness["steps"] if step.get("run"))
+    assert commands[-1] == "just test-harness"
+    assert sum(command == "just test-harness" for command in commands) == 1
+
+    routine_commands = "\n".join(
+        str(step.get("run", ""))
+        for job_name in ("cadrumo-static", "cadrumo-unit")
+        for step in document["jobs"][job_name]["steps"]
+    )
+    assert "just test-harness" not in routine_commands
 
 
 def test_the_dev_ci_recipe_carries_the_substance_the_workflow_delegates() -> None:

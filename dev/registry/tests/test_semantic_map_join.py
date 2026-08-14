@@ -7,7 +7,7 @@ import inspect
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry import RegistryValidationError, bundled_authority
+from cadrumo.domain.calculations.registry import RegistryValidationError, bundled_revision_inspection
 
 from .. import _semantic_map_join
 from .._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 @pytest.fixture
 def _m200_snapshot():
-    return bundled_authority().snapshot("200", filing_year=2025, period="0A")
+    return bundled_revision_inspection("200", filing_year=2025, period="0A")
 
 
 def _intermediate(snapshot) -> RecordDesignIntermediate:

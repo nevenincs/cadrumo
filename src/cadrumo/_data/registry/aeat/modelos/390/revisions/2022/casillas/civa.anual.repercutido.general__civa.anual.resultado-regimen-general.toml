@@ -1,0 +1,313 @@
+[[revisions."2022".casillas]]
+id = "iva.anual.repercutido.general"
+number = "iva.anual.repercutido.general"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_repercutida_general"
+continuidad_id = "iva-cuota-repercutida-general"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-general-cuota"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.repercutido.reducido"
+number = "iva.anual.repercutido.reducido"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_repercutida_reducido"
+continuidad_id = "iva-cuota-repercutida-reducido"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.repercutido.super-reducido"
+number = "iva.anual.repercutido.super-reducido"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_repercutida_super_reducido"
+continuidad_id = "iva-cuota-repercutida-super-reducido"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-super-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.soportado.interiores"
+number = "iva.anual.soportado.interiores"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_cuota_soportada_interiores"
+continuidad_id = "iva-cuota-soportada-interiores"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-soportado-interiores-cuota"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+# Annual IVA soportado deducible en importaciones de bienes corrientes. Mirrors
+# the M303 import-deducible cuota (LIVA art. 17 hecho imponible + art. 92
+# deducción) so the annual deducible total includes imports; without it the M390
+# resultado over-states the importer's amount to pay. Internal (no fichero
+# export), bound to the same ledger import aggregation M303 uses.
+[[revisions."2022".casillas]]
+id = "iva.anual.soportado.importaciones"
+number = "iva.anual.soportado.importaciones"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_cuota_soportada_importaciones"
+continuidad_id = "iva-cuota-soportada-importaciones"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-soportado-importaciones-cuota"
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.regularizacion-prorrata-definitiva"
+number = "522"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_anual_regularizacion_prorrata_definitiva"
+continuidad_id = "iva-anual-regularizacion-prorrata-definitiva"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.regularizacion-bienes-inversion"
+number = "63"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_anual_regularizacion_bienes_inversion"
+continuidad_id = "iva-anual-regularizacion-bienes-inversion"
+required = false
+input_kind = "bound"
+binding = "modelo-390-bienes-inversion-regularizacion-casilla-63"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+# Rate-blind AIC TOTAL layer, feeding the annual devengada total formula
+# (modelo-390-iva-anual-cuota-devengada-total) so an AIC row whose rate was
+# never recorded is still counted. NO LONGER EXPORTED: it previously carried
+# export_refs pointing at the ISP (inversion del sujeto pasivo) box [28],
+# which was the defect -- AIC and domestic ISP are different LIVA hechos
+# imponibles (art. 13/85 vs art. 84) and the design gives them different
+# boxes. The rate-specific box layer for this quantity lives in
+# civa.anual.aic.bienes.tipo-0.base__civa.anual.aic.servicios.tipo-21.cuota.toml,
+# and the domestic ISP boxes [27]/[28] now have their own casillas in
+# civa.anual.autorepercutido.interior.base__civa.anual.autorepercutido.interior.cuota.toml.
+[[revisions."2022".casillas]]
+id = "iva.anual.autorepercutido.intracomunitaria"
+number = "iva.anual.autorepercutido.intracomunitaria"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_cuota_autorepercutida_intracomunitaria"
+continuidad_id = "iva-cuota-autorepercutida-intracomunitaria"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+# Recargo de equivalencia cuota devengada - anual (LIVA art. 161). Mirrors the
+# M303 casillas 21/24 so the annual devengada total includes the recargo a
+# supplier charges a recargo-de-equivalencia retailer; see the comment on
+# modelo-390-iva-anual-cuota-devengada-total for the grounding.
+[[revisions."2022".casillas]]
+id = "iva.anual.repercutido.recargo.general"
+number = "iva.anual.repercutido.recargo.general"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_recargo_equivalencia_general"
+continuidad_id = "iva-cuota-recargo-equivalencia-general"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-recargo-equivalencia-general-cuota"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.repercutido.recargo.reducido"
+number = "iva.anual.repercutido.recargo.reducido"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_recargo_equivalencia_reducido"
+continuidad_id = "iva-cuota-recargo-equivalencia-reducido"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier (1.4pct) from the super-reducido (0.5pct) tier; a genuine LIVA art. 161 tier split, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-recargo-equivalencia-reducido-cuota"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+# Recargo de equivalencia tipo 0.5pct - Cuota devengada anual (LIVA art. 161).
+# Mirrors the M303 casilla 158 so the annual devengada total includes the
+# super-reducido recargo tier alongside the general (5.2pct) and reducido
+# (1.4pct) tiers above; see the comment on
+# modelo-390-iva-anual-cuota-devengada-total for the grounding.
+[[revisions."2022".casillas]]
+id = "iva.anual.repercutido.recargo.super-reducido"
+number = "iva.anual.repercutido.recargo.super-reducido"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_recargo_equivalencia_super_reducido"
+continuidad_id = "iva-cuota-recargo-equivalencia-super-reducido"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier (0.5pct) from the reducido (1.4pct) tier; a genuine LIVA art. 161 tier split, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-recargo-equivalencia-super-reducido-cuota"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+# Reconciliation casillas — pulled from the four 303 quarters via previous_filing.
+
+[[revisions."2022".casillas]]
+id = "iva.anual.reconciliacion.devengada-303"
+number = "iva.anual.reconciliacion.devengada-303"
+section = ["iva", "anual", "reconciliacion"]
+data_type = "money"
+semantic_role = "iva_anual_reconciliacion_devengada_303"
+continuidad_id = "iva-anual-reconciliacion-devengada-303"
+required = false
+input_kind = "bound"
+binding = "modelo-390-prev-303-cuota-devengada-total"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.reconciliacion.deducible-303"
+number = "iva.anual.reconciliacion.deducible-303"
+section = ["iva", "anual", "reconciliacion"]
+data_type = "money"
+semantic_role = "iva_anual_reconciliacion_deducible_303"
+continuidad_id = "iva-anual-reconciliacion-deducible-303"
+required = false
+input_kind = "bound"
+binding = "modelo-390-prev-303-cuota-deducible-total"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.reconciliacion.resultado-303"
+number = "iva.anual.reconciliacion.resultado-303"
+section = ["iva", "anual", "reconciliacion"]
+data_type = "money"
+semantic_role = "iva_anual_reconciliacion_resultado_303"
+continuidad_id = "iva-anual-reconciliacion-resultado-303"
+required = false
+input_kind = "bound"
+binding = "modelo-390-prev-303-resultado-regimen-general"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.compensacion-ultimo-periodo-97"
+number = "97"
+section = ["iva", "anual", "resultado_liquidaciones"]
+data_type = "money"
+semantic_role = "iva_anual_compensacion_ultimo_periodo"
+continuidad_id = "iva-anual-compensacion-ultimo-periodo"
+required = false
+input_kind = "bound"
+binding = "modelo-390-prev-303-compensacion-ultimo-periodo"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-390-2022"] }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.compensacion-generada-ejercicio-no-97"
+number = "662"
+section = ["iva", "anual", "resultado_liquidaciones"]
+data_type = "money"
+semantic_role = "iva_anual_compensacion_generada_ejercicio"
+continuidad_id = "iva-anual-compensacion-generada-ejercicio"
+required = false
+input_kind = "bound"
+binding = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-390-2022"] }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+# -----------------------------------------------------------------------------
+# Computed annual totals — same shape as Modelo 303 result-casillas, applied
+# over the full ejercicio rather than per quarter.
+# -----------------------------------------------------------------------------
+
+# Box [34] "Total bases y cuotas IVA - Cuota" (page 02): the Reg. ordinario
+# devengada total, excluding recargo de equivalencia, over the four rungs this
+# revision models. See the comment on modelo-390-iva-anual-total-bases-cuotas-iva
+# for scope.
+[[revisions."2022".casillas]]
+id = "iva.anual.total-bases-cuotas-iva"
+number = "34"
+section = ["iva", "anual", "totales"]
+data_type = "money"
+semantic_role = "iva_anual_total_bases_cuotas_iva"
+continuidad_id = "iva-anual-total-bases-cuotas-iva"
+required = false
+input_kind = "computed"
+formula = "modelo-390-iva-anual-total-bases-cuotas-iva"
+form_number = "34"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.cuota-devengada-total"
+number = "iva.anual.cuota-devengada-total"
+section = ["iva", "anual", "totales"]
+data_type = "money"
+semantic_role = "iva_anual_cuota_devengada_total"
+continuidad_id = "iva-anual-cuota-devengada-total"
+required = false
+input_kind = "computed"
+formula = "modelo-390-iva-anual-cuota-devengada-total"
+# Printed box number, read off the bundled AEAT annual-summary render:
+# "Total cuotas IVA y recargo de equivalencia (34 + 36 + ...) ... 47 88.416,00".
+form_number = "47"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.cuota-deducible-total"
+number = "iva.anual.cuota-deducible-total"
+section = ["iva", "anual", "totales"]
+data_type = "money"
+semantic_role = "iva_anual_cuota_deducible_total"
+continuidad_id = "iva-anual-cuota-deducible-total"
+required = false
+input_kind = "computed"
+formula = "modelo-390-iva-anual-cuota-deducible-total"
+# Printed box number, read off the bundled AEAT annual-summary render:
+# "Suma de deducciones (49 + 513 + ...) ... 64 68.202,00".
+form_number = "64"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.resultado-regimen-general"
+number = "iva.anual.resultado-regimen-general"
+section = ["iva", "anual", "totales"]
+data_type = "money"
+semantic_role = "iva_anual_resultado_regimen_general"
+continuidad_id = "iva-anual-resultado-regimen-general"
+required = false
+input_kind = "computed"
+formula = "modelo-390-iva-anual-resultado-regimen-general"
+# Printed box number, read off the bundled AEAT annual-summary render:
+# "Resultado regimen general (4 7 - 64) ... 65 20.214,00".
+form_number = "65"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+# -----------------------------------------------------------------------------
+# Formulas backing the three computed annual result-casillas.
+# -----------------------------------------------------------------------------

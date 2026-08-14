@@ -1,0 +1,108 @@
+# Rate-specific box-layer bindings for the Recargo de equivalencia block of the
+# annual resumen, the recargo counterpart of the Reg. ordinario layer beside it.
+#
+# The three rate-blind recargo bindings in 0001 select recargo_amount_sum routed
+# by the line's IVA rate TIER, and the official design keys its recargo boxes by
+# the recargo RATE. Those are not the same axis: one reducido tier carries the
+# 1,4 %, 1 % and 0,62 % recargo rates, so all three merged into box [600] and
+# [694] and [666] stayed empty. Each binding here admits exactly one IVA rate and
+# therefore exactly one recargo rate, so each official box draws only its own.
+#
+# These COMPLEMENT the rate-blind tier bindings rather than replacing them. The
+# tier bindings keep feeding modelo-390-iva-anual-cuota-devengada-total and
+# therefore keep every row, including one whose IVA rate the ledger never
+# recorded; these feed the per-rate boxes and admit no such row. Narrowing a tier
+# binding instead of adding these would delete the rate-unrecorded recargo from
+# the declared annual total outright.
+#
+# The recargo rate is not chosen here -- it follows the IVA rate by statute:
+#
+#   IVA 21 %  -> recargo 5,2 %   LIVA art. 161.1
+#   IVA 10 %  -> recargo 1,4 %   LIVA art. 161.2 (via art. 91.uno)
+#   IVA  4 %  -> recargo 0,5 %   LIVA art. 161.3 (via art. 91.dos)
+#   IVA 7,5 % -> recargo 1 %     RDL 4/2024 art. 1.Dos, 1 Oct - 31 Dec 2024
+#   IVA  5 %  -> recargo 0,62 %  RDL 4/2024 art. 1.Uno, 1 Jul - 30 Sep 2024
+#   IVA  2 %  -> recargo 0,26 %  RDL 4/2024 art. 1.Dos, 1 Oct - 31 Dec 2024
+#
+# The tabaco rung (recargo 1,75 %, LIVA art. 161.4, boxes [41]/[42]) is absent
+# because the IVA category it depends on is not modelled at all; that is a
+# separate omission from this merge and is not repaired by adding a rung here.
+#
+# The 0 % rung (boxes [663]/[664]) is likewise absent, and for a different
+# reason: the recargo block has no rate-blind ZERO tier binding, so adding a
+# rate-specific 0 % recargo box would create the one shape that loses money
+# silently -- a rate-specific rung with no total layer behind it. Giving it one
+# means adding a term to the annual devengada total formula, which is a change
+# to a money-bearing total and a decision of its own.
+
+[[revisions."2025".bindings]]
+id = "modelo-390-iva-recargo-equivalencia-tipo-5-2-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_general"], rate_kinds = ["general"], applied_rates = ["0.21"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2025".bindings]]
+id = "modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_reduced"], rate_kinds = ["reduced"], applied_rates = ["0.10"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2025".bindings]]
+id = "modelo-390-iva-recargo-equivalencia-tipo-1-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_reduced"], rate_kinds = ["reduced"], applied_rates = ["0.075"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2025".bindings]]
+id = "modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_reduced"], rate_kinds = ["reduced"], applied_rates = ["0.05"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2025".bindings]]
+id = "modelo-390-iva-recargo-equivalencia-tipo-0-5-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], applied_rates = ["0.04"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2025".bindings]]
+id = "modelo-390-iva-recargo-equivalencia-tipo-0-26-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], applied_rates = ["0.02"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]

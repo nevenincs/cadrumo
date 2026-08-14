@@ -15,10 +15,10 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.core import FilingProjectionRef
 from cadrumo.domain.calculations.registry import (
     CasillaFieldKind,
-    RegistrySnapshot,
+    ProjectionEndpointDeclaration,
+    RegistryRevisionInspection,
     RegistryValidationError,
     SourceRefId,
-    casillas_by_id,
 )
 
 from ._m303_variable_envelope import validate_m303_variable_envelope
@@ -27,8 +27,8 @@ from ._semantic_map import SemanticMap, SemanticMapAnchor, SemanticMapEntry, Sem
 
 __all__ = [
     "SemanticMapAnomalyException",
+    "validate_inspection_source_authority",
     "validate_semantic_map",
-    "validate_snapshot_source_authority",
 ]
 
 
@@ -60,38 +60,41 @@ type _RecordKey = tuple[str, str]
 def validate_semantic_map(
     semantic_map: SemanticMap,
     intermediate: RecordDesignIntermediate,
-    snapshot: RegistrySnapshot,
+    inspection: RegistryRevisionInspection,
     *,
     anomaly_exceptions: tuple[SemanticMapAnomalyException, ...] = (),
 ) -> None:
-    """Validate one complete semantic map against one parser intermediate.
+    """Validate a static map through a non-filing revision inspection.
 
-    The snapshot is the target revision authority for semantic identities; it
-    is never used to infer official coordinates or to admit a legacy export
-    layout.  Export field identifiers are already grammar-checked by the
-    semantic-map schema and must be unique in this generated-layout map.
-
-    Raises:
-        RegistryValidationError: If source authority, exact bijection, or a
-            canonical registry reference is invalid.
+    Static source compilation has no filing context.  The inspection presents
+    the selected revision's immutable admission facts without constructing a
+    snapshot or crossing the filing/legal-review gate.
     """
-    _validate_scope(semantic_map, intermediate, snapshot)
-    validate_snapshot_source_authority(intermediate, snapshot)
+    _validate_scope(semantic_map, intermediate, modelo_id=inspection.modelo_id)
+    validate_inspection_source_authority(intermediate, inspection)
     _validate_anomaly_exceptions(anomaly_exceptions, intermediate)
     _validate_exact_bijection(semantic_map, intermediate)
     _validate_exact_record_bijection(semantic_map, intermediate)
     _validate_variable_envelope_boundary(semantic_map, intermediate)
-    _validate_entry_references(semantic_map, snapshot)
+    _validate_entry_references(
+        semantic_map,
+        casilla_ids=inspection.casilla_ids,
+        binding_ids=inspection.binding_ids,
+        projection_endpoints=inspection.projection_endpoints,
+        legal_ref_ids=inspection.legal_ref_ids,
+        source_refs=frozenset(inspection.sources),
+    )
 
 
 def _validate_scope(
     semantic_map: SemanticMap,
     intermediate: RecordDesignIntermediate,
-    snapshot: RegistrySnapshot,
+    *,
+    modelo_id: str,
 ) -> None:
-    if semantic_map.modelo != snapshot.modelo.id:
+    if semantic_map.modelo != modelo_id:
         raise RegistryValidationError(
-            f"semantic map modelo {semantic_map.modelo!r} does not match target snapshot modelo {snapshot.modelo.id!r}",
+            f"semantic map modelo {semantic_map.modelo!r} does not match target revision modelo {modelo_id!r}",
         )
     if semantic_map.design_epoch != intermediate.source.design_epoch:
         raise RegistryValidationError(
@@ -109,11 +112,12 @@ def _validate_scope(
         )
 
 
-def validate_snapshot_source_authority(
+def validate_inspection_source_authority(
     intermediate: RecordDesignIntermediate,
-    snapshot: RegistrySnapshot,
+    inspection: RegistryRevisionInspection,
 ) -> None:
-    source = snapshot.sources.get(intermediate.source.source_ref)
+    """Require parser evidence to belong to the selected static revision."""
+    source = inspection.sources.get(intermediate.source.source_ref)
     if source is None:
         raise RegistryValidationError(
             f"parser intermediate source {intermediate.source.source_ref!r} is absent from the target "
@@ -132,10 +136,10 @@ def validate_snapshot_source_authority(
             f"parser intermediate source {source.id!r} design epoch {intermediate.source.design_epoch!r} "
             "does not match the target registry catalogue",
         )
-    if intermediate.source.source_ref not in snapshot.revision.source_refs:
+    if intermediate.source.source_ref not in inspection.revision_source_refs:
         raise RegistryValidationError(
             f"parser intermediate source {intermediate.source.source_ref!r} is not an authority of selected "
-            f"revision {snapshot.revision.id!r}",
+            f"revision {inspection.revision_id!r}",
         )
 
 
@@ -255,7 +259,15 @@ def _validate_exact_bijection(
         )
 
 
-def _validate_entry_references(semantic_map: SemanticMap, snapshot: RegistrySnapshot) -> None:
+def _validate_entry_references(
+    semantic_map: SemanticMap,
+    *,
+    casilla_ids: frozenset[str],
+    binding_ids: frozenset[str],
+    projection_endpoints: tuple[ProjectionEndpointDeclaration, ...],
+    legal_ref_ids: frozenset[str],
+    source_refs: frozenset[str],
+) -> None:
     duplicate_export_ids = _duplicate_string_keys(tuple(str(entry.export_field_id) for entry in semantic_map.entries))
     if duplicate_export_ids:
         raise RegistryValidationError(
@@ -263,9 +275,7 @@ def _validate_entry_references(semantic_map: SemanticMap, snapshot: RegistrySnap
             f"{', '.join(duplicate_export_ids)}",
         )
 
-    casilla_ids = casillas_by_id(snapshot.revision)
-    binding_ids = {binding.id for binding in snapshot.revision.bindings}
-    _validate_projection_ref_admission(semantic_map, snapshot)
+    _validate_projection_ref_admission(semantic_map, projection_endpoints=projection_endpoints)
     for entry in semantic_map.entries:
         if entry.casilla_id is not None and entry.casilla_id not in casilla_ids:
             raise RegistryValidationError(
@@ -277,10 +287,14 @@ def _validate_entry_references(semantic_map: SemanticMap, snapshot: RegistrySnap
                 f"semantic map export field {entry.export_field_id!r} references unknown target-revision "
                 f"binding {entry.binding!r}",
             )
-        _validate_catalogue_refs(entry, snapshot)
+        _validate_catalogue_refs(entry, legal_ref_ids=legal_ref_ids, source_refs=source_refs)
 
 
-def _validate_projection_ref_admission(semantic_map: SemanticMap, snapshot: RegistrySnapshot) -> None:
+def _validate_projection_ref_admission(
+    semantic_map: SemanticMap,
+    *,
+    projection_endpoints: tuple[ProjectionEndpointDeclaration, ...],
+) -> None:
     """Require an exact semantic-map/declaration projection bijection.
 
     The selected immutable revision owns this declaration index. Map anchors
@@ -293,12 +307,13 @@ def _validate_projection_ref_admission(semantic_map: SemanticMap, snapshot: Regi
     if any(projection_ref is None for projection_ref in projection_refs):
         raise RegistryValidationError("projection semantic-map entries must carry a typed projection_ref")
     typed_refs = tuple(projection_ref for projection_ref in projection_refs if projection_ref is not None)
-    _validate_projection_ref_bijection(typed_refs, snapshot)
+    _validate_projection_ref_bijection(typed_refs, projection_endpoints=projection_endpoints)
 
 
 def _validate_projection_ref_bijection(
     projection_refs: tuple[FilingProjectionRef, ...],
-    snapshot: RegistrySnapshot,
+    *,
+    projection_endpoints: tuple[ProjectionEndpointDeclaration, ...],
 ) -> None:
     """Require typed map refs to be the exact selected-revision declaration set."""
     typed_refs = projection_refs
@@ -308,7 +323,7 @@ def _validate_projection_ref_bijection(
             "semantic map contains duplicate projection references: "
             f"{tuple(sorted(repr(projection_ref) for projection_ref in duplicate_refs))}",
         )
-    admitted = snapshot.revision.projection_endpoint_index()
+    admitted = _projection_endpoint_index(projection_endpoints)
     for projection_ref in typed_refs:
         declarations = admitted.get(projection_ref)
         if declarations is None:
@@ -360,17 +375,32 @@ def _validate_exact_record_bijection(
         )
 
 
-def _validate_catalogue_refs(entry: SemanticMapEntry, snapshot: RegistrySnapshot) -> None:
-    unknown_legal = tuple(sorted(set(entry.legal_refs) - set(snapshot.legal)))
+def _validate_catalogue_refs(
+    entry: SemanticMapEntry,
+    *,
+    legal_ref_ids: frozenset[str],
+    source_refs: frozenset[str],
+) -> None:
+    unknown_legal = tuple(sorted(set(entry.legal_refs) - legal_ref_ids))
     if unknown_legal:
         raise RegistryValidationError(
             f"semantic map export field {entry.export_field_id!r} has unresolved legal refs: {unknown_legal!r}",
         )
-    unknown_sources = tuple(sorted(set(entry.source_refs) - set(snapshot.sources)))
+    unknown_sources = tuple(sorted(set(entry.source_refs) - source_refs))
     if unknown_sources:
         raise RegistryValidationError(
             f"semantic map export field {entry.export_field_id!r} has unresolved source refs: {unknown_sources!r}",
         )
+
+
+def _projection_endpoint_index(
+    projection_endpoints: tuple[ProjectionEndpointDeclaration, ...],
+) -> dict[FilingProjectionRef, tuple[ProjectionEndpointDeclaration, ...]]:
+    """Index static declarations without giving the map an inferred owner."""
+    index: dict[FilingProjectionRef, list[ProjectionEndpointDeclaration]] = {}
+    for declaration in projection_endpoints:
+        index.setdefault(declaration.projection_ref, []).append(declaration)
+    return {projection_ref: tuple(declarations) for projection_ref, declarations in index.items()}
 
 
 def _intermediate_anchor_key(field: RecordDesignIntermediateField) -> _AnchorKey:

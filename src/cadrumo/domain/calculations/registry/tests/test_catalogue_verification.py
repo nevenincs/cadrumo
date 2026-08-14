@@ -28,7 +28,6 @@ _PUBLICATION_BOUND_RECORD_DESIGN_EXCEPTIONS = {
     ("193", "2024-y-siguientes", 2026): "aeat-dr-193-2025",
     ("200", "2024-y-siguientes", 2026): "aeat-dr-200-2025",
     ("220", "2024-y-siguientes", 2026): "aeat-dr-220-2025",
-    ("390", "2010-y-siguientes", 2026): "aeat-dr-390-2025",
 }
 
 

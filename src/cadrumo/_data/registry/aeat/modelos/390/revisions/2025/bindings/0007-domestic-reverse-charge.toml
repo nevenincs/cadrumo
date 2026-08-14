@@ -1,0 +1,28 @@
+# Domestic reverse-charge (inversion del sujeto pasivo, LIVA art. 84.Uno.2)
+# bindings feeding boxes [27]/[28]. Rate-blind by design -- see the casillas
+# file header -- mirroring Modelo 303's own domestic_reverse_charge binding,
+# which likewise sums general/reduced/super_reduced together.
+
+[[revisions."2025".bindings]]
+id = "modelo-390-iva-autorepercutido-interior-base"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2025".bindings]]
+id = "modelo-390-iva-autorepercutido-interior-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]

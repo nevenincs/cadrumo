@@ -124,7 +124,12 @@ from ._applicability import (
     modelo_202_modality_from_inputs,
     taxpayer_model_is_declared,
 )
-from ._authority import ValidatedRegistryAuthority, bundled_authority, stamp_bundled_registry_verdict
+from ._authority import (
+    ValidatedRegistryAuthority,
+    bundled_authority,
+    bundled_revision_inspection,
+    stamp_bundled_registry_verdict,
+)
 from ._bindings import (
     INVOICE_BINDING_SOURCE_KINDS,
     LEDGER_BINDING_SOURCE_KINDS,
@@ -549,6 +554,9 @@ from ._schema import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
     ExportSemanticPayloadAxis,
+    M303EnvelopePrefixFieldDeclaration,
+    M303EnvelopePrefixRole,
+    M303FilingEnvelopeDefinition,
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
     FormulaDefinition,
@@ -579,6 +587,7 @@ from ._schema import (
     WorkbookParityReference,
 )
 from ._schema_scalars import registry_scalar_value_type, validate_registry_text_scalar
+from ._static_inspection import RegistryRevisionInspection
 from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_rounding import RegistryRoundingCode
 from ._schema_verification import (
@@ -918,8 +927,11 @@ __all__ = [
     "M303AnnualOrdenSourceCensus",
     "M303DifferentiatedDeductionEndpointValue",
     "M303DifferentiatedDeductionRowProjection",
+    "M303EnvelopePrefixFieldDeclaration",
+    "M303EnvelopePrefixRole",
     "M303Exonerado390FieldProjection",
     "M303Exonerado390RecordProjection",
+    "M303FilingEnvelopeDefinition",
     "M303ProrrataActivityEndpointValue",
     "M303ProrrataActivityRowProjection",
     "M303RegimenSimplificadoAnnualSummaryRequirement",
@@ -1013,6 +1025,7 @@ __all__ = [
     "RegistryQueryService",
     "RegistryRelationHandoffApplicabilityAudit",
     "RegistryRelationHandoffAudit",
+    "RegistryRevisionInspection",
     "RegistryRoundingCode",
     "RegistrySnapshot",
     "RegistrySnapshotError",
@@ -1106,6 +1119,7 @@ __all__ = [
     "build_snapshot",
     "build_support_matrix",
     "bundled_authority",
+    "bundled_revision_inspection",
     "calculate_registry_snapshot",
     "calculation_closure_casilla_ids",
     "calculation_closure_legal_refs",

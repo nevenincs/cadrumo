@@ -1,8 +1,9 @@
 # CI workflow for Cadrumo.
 # Per-push verification split for the ten-minute wall (operator directive
 # 2026-07-20: "we cannot have a test or build infrastructure that takes 50
-# mins per step"): two parallel jobs — static checks and the unit suite —
-# sized against the two Linux runners. The slow conformance surfaces
+# mins per step"): three parallel jobs — static checks, the unit suite, and
+# the dedicated deterministic harness verdict — sized against the two Linux
+# runners. The slow conformance surfaces
 # (nitpicky docs build, CVE audit, pre-commit hook replay) moved to
 # ci-full.yml (manual dispatch only — operator ruling 2026-07-21: no
 # scheduled runs) and gate releases and on-demand full verification.
@@ -300,3 +301,38 @@ jobs:
         # local `auto` default for this machine-aware sizing.
         run: CADRUMO_PYTEST_WORKERS=8 just test-unit 50
         # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
+
+  cadrumo-test-harness:
+    name: Cadrumo / test harness / Python 3.13
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, X64]
+    # The dedicated proof performs a full-corpus child collection; cap a wedge
+    # independently from the routine unit and integration verdicts.
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: false
+
+      - name: CI Bootstrap
+        # Keep the harness verdict attributable to the checked-in lock, as the
+        # unit and static verdicts are.
+        run: |
+          uv sync --frozen
+          uv run vaultspec-core install --force
+
+      - name: Test (harness)
+        # The recipe owns the explicit `-n0` outer-serial selection and its
+        # non-vacuous membership contract. Its own job gives installed-hook and
+        # full-corpus proofs a verdict separate from unit and integration runs.
+        run: just test-harness
