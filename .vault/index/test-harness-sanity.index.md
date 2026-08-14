@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:9af1d0f1a654761380866e3651dddf5ae763afb42a12c71572f06858cc2da2d6'
+body_hash: 'sha256:55758f4eb1d34d7f1768cc3ddddc807bec6ef41dae62f2cde0f72dc33f78c16a'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -16,6 +16,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W06-P17-S52]]'
   - '[[2026-08-14-test-harness-sanity-W07-P18-S53]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S71]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P23-S75]]'
   - '[[2026-08-14-test-harness-sanity-audit]]'
   - '[[2026-08-14-test-harness-sanity-plan]]'
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -46,6 +47,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W06-P17-S52` - Prove the harness recipe selects every declared member and fails when membership collapses
 - `2026-08-14-test-harness-sanity-W07-P18-S53` - Canonicalize duplicated LLM secure-runtime fixtures at their narrowest common owner
 - `2026-08-14-test-harness-sanity-W07-P22-S71` - Promote banned-live-import enforcement into the shared root policy helper
+- `2026-08-14-test-harness-sanity-W07-P23-S75` - Replace the OFX optional-extra monkeypatch with real behavior
 
 ### plan
 

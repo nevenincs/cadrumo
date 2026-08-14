@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-14'
-body_hash: 'sha256:e3c519ac78dc6ac70fc7160044a85f83a9abe0ac014643b7edede92bba32b5e6'
+body_hash: 'sha256:c280632927647d10856dc01d9c92642f0f9045fbddaefe2806248f43dcd2de9a'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -117,7 +117,7 @@ Apply collection policy exactly once from the root and prove domain-local live r
 
 Replace every reported production mutation with real input or explicit production seams.
 
-- [ ] `W07.P23.S75` - Replace the OFX optional-extra monkeypatch with real behavior; `src/cadrumo/adapters/inbound/financial/providers/tests/test_ofx.py`.
+- [x] `W07.P23.S75` - Replace the OFX optional-extra monkeypatch with real behavior; `src/cadrumo/adapters/inbound/financial/providers/tests/test_ofx.py`.
 - [ ] `W07.P23.S76` - Replace previous-filing exception mutation with reachable real behavior; `src/cadrumo/application/calculations/tests/test_previous_filing_absence_versus_malformed.py`.
 - [ ] `W07.P23.S77` - Replace relation-allowance mutation with an explicit production input; `src/cadrumo/domain/calculations/registry/tests/test_relation_closure.py`.
 - [ ] `W07.P23.S78` - Replace previous-filing revision-selector mutation with real registry input; `src/cadrumo/domain/calculations/registry/tests/test_validate_previous_filing_year_coverage.py`.
