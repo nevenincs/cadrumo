@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-13'
-body_hash: 'sha256:b379d1c7e443246f8e30f1fb800235535f1b8e23c2cde96866018816285022b1'
+body_hash: 'sha256:215d93aa00f8c9aedd9c879b0ea6771b44d20cb94e201b9ad91be6275895a8d3'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -42,8 +42,8 @@ Implement supervised password wrapping, optional recovery, sentinels, capsules, 
 
 - [x] `W01.P02.S03` - Have Terra XHigh implement finite-grid Argon2id calibration and a supervised child with ready-before-secret, framed-DEK-only results, and parent sentinel proof; `src/cadrumo/adapters/persistence/storage/custody/`.
 - [x] `W01.P02.S04` - Have Terra XHigh implement password and optional recovery envelopes, strict external recovery artifacts, DEK sentinel proof, and immutable capsule publication; `src/cadrumo/adapters/persistence/storage/custody/`.
-- [ ] `W01.P02.S05` - Have Terra XHigh implement custody and deletion journals, root-profile locks, no-follow inventory, legal-hold confirmation, receipts, pointer CAS, and atomic deletion; `src/cadrumo/application/user_profile/`.
-- [ ] `W01.P02.S06` - Have Sol Medium jointly review KDF calibration and supervision, envelope and artifact AAD, capsule publication, journal recovery, and application-owned local deletion safety; `src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/application/user_profile/`.
+- [x] `W01.P02.S05` - Have Terra XHigh implement custody and deletion journals, root-profile locks, no-follow inventory, legal-hold confirmation, receipts, pointer CAS, and atomic deletion; `src/cadrumo/application/user_profile/`.
+- [x] `W01.P02.S06` - Have Sol Medium jointly review KDF calibration and supervision, envelope and artifact AAD, capsule publication, journal recovery, and application-owned local deletion safety; `src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/application/user_profile/`.
 
 ## Wave `W02` - profile lifecycle and sessions
 

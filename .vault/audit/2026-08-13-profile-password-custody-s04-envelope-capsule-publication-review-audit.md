@@ -5,30 +5,11 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:1e46ab1e55bdf49113bd5a7e128c84648f3916da938353b7024fc2185add5cf9'
+body_hash: 'sha256:d25ccdbc4718862eac73323ad5e726fda4fc4fd6bd8a2937f66b5b536989cb59'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
   - "[[2026-08-13-profile-password-custody-rollup-adr]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace profile-password-custody with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `profile-password-custody` audit: `S04 envelope, recovery artifact, sentinel, and capsule publication review`
 
@@ -37,15 +18,6 @@ related:
 Independent review of `W01.P02.S04` only: password and optional recovery envelope authority, portable recovery artifact boundaries, DEK sentinel proof, immutable capsule commit markers, one-rename publication, normal-unlock isolation, hostile filesystem handling, public exports, and real-behavior tests against the accepted custody decisions and binding plan. The review does not authorize production edits, plan closure, Git operations, later Steps, product storage, remote state, or service state.
 
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### S04 envelope, recovery artifact, sentinel, and capsule publication review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. S04 envelope, recovery artifact, sentinel, and capsule publication review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### filesystem-publication | high | Path-based publication does not establish hostile-filesystem or crash-safe atomicity
 
