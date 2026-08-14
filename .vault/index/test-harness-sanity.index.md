@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:26964dc762889f398d0c981ee581bc48c5bbb5c8b503871946fdc22756b68661'
+body_hash: 'sha256:66744ca75039e34eed74afbbd19072a9af64d9de3a1041db884d7c3aac9b8cad'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -32,6 +32,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P21-S104]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S105]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S106]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P21-S108]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S109]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S110]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S66]]'
@@ -118,6 +119,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P21-S104` - Collapse every identical-constraint fixture cluster to one definition preserving scope and autouse reach
 - `2026-08-14-test-harness-sanity-W07-P21-S105` - Key the ownership manifest disposition on full constraint shape rather than repeated name
 - `2026-08-14-test-harness-sanity-W07-P21-S106` - Detect one fixture behaviour living under many names by keying the census on body rather than name
+- `2026-08-14-test-harness-sanity-W07-P21-S108` - Adjudicate the substitutable secure-storage-root fixture pair the manifest now refuses on
 - `2026-08-14-test-harness-sanity-W07-P21-S109` - Classify factory-bound fixtures as manifest rows with per-binding identity and argument evidence
 - `2026-08-14-test-harness-sanity-W07-P21-S110` - Sweep test helper functions assertion helpers and builders for drift the fixture census cannot see
 - `2026-08-14-test-harness-sanity-W07-P21-S66` - Adjudicate and canonicalize every remaining source-tree fixture cluster in the census
