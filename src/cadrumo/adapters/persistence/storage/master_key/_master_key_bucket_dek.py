@@ -104,8 +104,9 @@ def load_or_mint_bucket_dek(
             write_wrapped_bucket_dek(path, wrapped)
             return dek
         raise MasterKeyMaterialMissingError(
-            f"bucket {bucket_id!r} has no manifest; run `aeat config profile create NAME` "
-            "to create a profile before invoking commands that decrypt or persist stored records.",
+            f"bucket {bucket_id!r} has no manifest; run `aeat config login NAME` to unlock "
+            "an existing profile before invoking commands that decrypt or persist stored "
+            "records. If no profile exists yet, this build has no command that creates one.",
         )
 
     if key_schedule is BucketKeySchedule.BUCKET_DEK_V1:

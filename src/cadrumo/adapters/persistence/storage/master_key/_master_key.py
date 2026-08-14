@@ -277,8 +277,8 @@ class KeyringMasterKeyProvider:
             return self._decode_stored_master_key(stored)
         raise MasterKeyMaterialMissingError(
             "OS keychain master key is not provisioned; run "
-            "`aeat config profile create NAME` to create and unlock a profile, "
-            "or `aeat config login NAME` for an existing profile.",
+            "`aeat config login NAME` to unlock an existing profile. If no profile "
+            "exists yet, this build has no command that creates one.",
         )
 
     def provision_master_key(self) -> bytes:
@@ -524,8 +524,9 @@ class FileFallbackMasterKeyProvider:
             else:
                 raise MasterKeyMaterialMissingError(
                     f"file-fallback at {self._store_dir} is not provisioned; run "
-                    "`aeat config profile create NAME` to create and unlock a profile "
-                    "before invoking commands that decrypt or persist stored records.",
+                    "`aeat config login NAME` to unlock an existing profile before "
+                    "invoking commands that decrypt or persist stored records. If no "
+                    "profile exists yet, this build has no command that creates one.",
                 )
         return key
 
@@ -867,9 +868,9 @@ def _provider_enter(
     bucket_id = resolve_active_bucket_id() or fallback_bucket_id
     if not bucket_id:
         raise NoActiveBucketError(
-            "no active profile resolves; run `aeat config profile create NAME` "
-            "or `aeat config login NAME` before invoking commands that "
-            "decrypt stored records.",
+            "no active profile resolves; run `aeat config login NAME` before "
+            "invoking commands that decrypt stored records. `aeat config profile list` "
+            "shows which profiles exist.",
         )
 
     settings = load_settings()
@@ -1233,8 +1234,8 @@ def get_master_key_provider(
             "may already hold a different one — the resulting two master keys would render "
             "any record encrypted under either key unreadable when the other backend is "
             "active. Either unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
-            "or set CADRUMO_SECRET_STORE_BACKEND=file to explicitly choose the passphrase backend "
-            "and provision a file-fallback master key with `aeat config profile create NAME`.",
+            "or set CADRUMO_SECRET_STORE_BACKEND=file to explicitly choose the passphrase "
+            "backend, which provisions a file-fallback master key on the next profile unlock.",
         ) from exc
     except MasterKeyMaterialMissingError:
         file_fallback_exists = (store_dir / _MASTER_KEY_FILENAME).exists() and (
