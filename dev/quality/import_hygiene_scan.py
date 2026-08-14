@@ -1149,18 +1149,112 @@ def find_dev_path_reach_violations(
 
 
 # ---------------------------------------------------------------------------
+# Violation family 7: production import of a demoted registry raw-loader symbol
+# ---------------------------------------------------------------------------
+
+REGISTRY_LOADER_PACKAGE: Final[str] = "cadrumo.domain.calculations.registry"
+
+#: Raw-loader-and-unguarded-entry-point names demoted from the registry
+#: package's public ``__all__`` (W01.P04.S10 for the four loader names,
+#: W01.P04.S34 for ``build_snapshot`` -- the plan's own text calls it "the
+#: same unguarded-entry-point class as the raw loader family"). Each had zero
+#: cross-package production OR test consumers at demotion time, EXCEPT
+#: ``build_snapshot``, whose sole external caller is a test fixture (confirmed
+#: by an AST scan over ``walk_module_imports``, not a text grep -- a
+#: multi-line ``from ... import (...)`` block hides a name from a per-line
+#: regex, which is exactly how ``collect_registry_tree_fingerprints`` was
+#: nearly misclassified here). The eight raw-loader siblings that stayed
+#: exported (``load_registry_tree``, ``load_legal_parameters_only``,
+#: ``load_catalogue_file``, ``load_modelo_directory``, ``load_modelo_file``,
+#: ``load_modelo_path``, ``clear_fingerprint_cache``,
+#: ``collect_registry_tree_fingerprints``) each answer a real external need
+#: documented at their call sites -- import-time cycle avoidance for the
+#: IRPF/IVA/transactions parameter readers, a deliberate unvalidated-tree read
+#: for conformance auditing, or the runtime schema loader's own TTL cache
+#: layered atop the canonical fingerprint collector -- and are out of scope
+#: for this family; only demoted names are gated.
+DEMOTED_REGISTRY_LOADER_SYMBOLS: Final[frozenset[str]] = frozenset(
+    {
+        "ModeloRevisionSource",
+        "ModeloSource",
+        "build_snapshot",
+        "discover_modelo_sources",
+        "load_modelo_source",
+    }
+)
+
+
+@dataclass
+class RegistryLoaderImportViolation:
+    """A production import of a demoted registry raw-loader symbol."""
+
+    importer_mod: str
+    importer_path: str
+    lineno: int
+    imported_names: list[str]
+
+
+def find_registry_loader_import_violations(
+    all_sites: list[ImportSite], *, src_root: Path = SRC_ROOT
+) -> list[RegistryLoaderImportViolation]:
+    """Return every PRODUCTION import site naming a demoted raw-loader symbol.
+
+    Scoped to non-test sites outside the registry package itself, which still
+    reaches its own loader internals directly (an intra-package private
+    import, always permitted, never routed through this facade).
+
+    Args:
+        all_sites: Import sites to scan, from :func:`walk_module_imports`.
+        src_root: Source root ``importer_path`` is resolved relative to;
+            injectable so a caller can scan a synthetic tree (matches the
+            convention of the other planted-import families in this module).
+    """
+    violations: list[RegistryLoaderImportViolation] = []
+    for site in all_sites:
+        if site.is_test:
+            continue
+        if site.target_mod != REGISTRY_LOADER_PACKAGE:
+            continue
+        if site.importer_mod == REGISTRY_LOADER_PACKAGE or site.importer_mod.startswith(REGISTRY_LOADER_PACKAGE + "."):
+            continue
+        hit = [name for name in site.imported_names if name in DEMOTED_REGISTRY_LOADER_SYMBOLS]
+        if not hit:
+            continue
+        violations.append(
+            RegistryLoaderImportViolation(
+                importer_mod=site.importer_mod,
+                importer_path=str(site.importer_path.relative_to(src_root)).replace("\\", "/"),
+                lineno=site.lineno,
+                imported_names=hit,
+            )
+        )
+    return sorted(violations, key=lambda v: (v.importer_path, v.lineno))
+
+
+# ---------------------------------------------------------------------------
 # Violation family 2: shim / pure re-export / alias modules
 # ---------------------------------------------------------------------------
 
 
 @dataclass
 class ShimModule:
-    """A module flagged as a shim / pure re-export / English-alias surface."""
+    """A module flagged as a shim / pure re-export / English-alias surface.
+
+    ``is_test`` mirrors :attr:`ImportSite.is_test`: the scanner still WALKS the
+    test tree (unlike an early `continue` on :func:`is_test_module`, which would
+    make the family's reach silently narrower than the codebase-wide "no
+    standing non-``__init__`` re-export bridge modules" rule it is named for),
+    but the strict Family-2 baseline equality gate governs the production
+    (``is_test=False``) subset only -- the same split Family 1 already applies
+    to :attr:`ImportSite.is_test`. A test-tree bridge is reported as its own
+    named category rather than silently absent from every count.
+    """
 
     mod: str
     path: str
     reason: str
     detail: str
+    is_test: bool
 
 
 SPANISH_ALIAS_HINTS = {
@@ -1268,13 +1362,15 @@ def find_shim_modules(py_files: list[Path], facades: dict[str, FacadeInfo]) -> l
         except (FileNotFoundError, SyntaxError, UnicodeDecodeError):
             continue
         mod = module_name_for(path)
-        if is_test_module(mod, path):
-            continue
+        test_flag = is_test_module(mod, path)
 
         n_imports, n_defs, n_all = module_body_defs(tree)
 
         # Pure re-export shape: only imports (+ optional __all__), zero
-        # real function/class definitions, and at least one import.
+        # real function/class definitions, and at least one import. Walked
+        # for the test tree too (never skipped): a test-only bridge is a
+        # different policy question from a production one, but it must be
+        # counted, not silently invisible to this family's reach.
         if n_imports > 0 and n_defs == 0:
             shims.append(
                 ShimModule(
@@ -1282,6 +1378,7 @@ def find_shim_modules(py_files: list[Path], facades: dict[str, FacadeInfo]) -> l
                     path=str(path.relative_to(REPO_ROOT)).replace("\\", "/"),
                     reason="pure_reexport_shape",
                     detail=f"{n_imports} import stmt(s), 0 real defs, __all__={'yes' if n_all else 'no'}",
+                    is_test=test_flag,
                 )
             )
 
@@ -1299,6 +1396,7 @@ def find_shim_modules(py_files: list[Path], facades: dict[str, FacadeInfo]) -> l
                             path=str(path.relative_to(REPO_ROOT)).replace("\\", "/"),
                             reason="english_alias_over_spanish_stem",
                             detail=f"hint='{en_hint}' sibling='{sibling_es.relative_to(REPO_ROOT)}'",
+                            is_test=test_flag,
                         )
                     )
 
@@ -1312,6 +1410,7 @@ def find_shim_modules(py_files: list[Path], facades: dict[str, FacadeInfo]) -> l
                         path=str(path.relative_to(REPO_ROOT)).replace("\\", "/"),
                         reason="compat_naming_marker",
                         detail=f"marker='{marker}'",
+                        is_test=test_flag,
                     )
                 )
     return shims
@@ -1878,7 +1977,11 @@ def main() -> int:
     underscore_in_all = find_underscore_in_all_violations(facades)
     dev_tooling_imports = find_dev_tooling_import_violations(py_files)
     dev_path_reaches = find_dev_path_reach_violations(py_files)
-    tui_migration_rows = generate_tui_migration_manifest()
+    registry_loader_imports = find_registry_loader_import_violations(all_sites)
+    # The accepted-census pin is enforced after reporting, not here: it refuses any
+    # change to one sub-census, and raising mid-run discarded the six unrelated
+    # families already computed above without printing any of them.
+    tui_migration_rows = generate_tui_migration_manifest(accepted_identity_sha256=None)
 
     # ---- Reporting ----
     print(f"Scanned {len(py_files)} .py files under {PKG_ROOT}")
@@ -1910,12 +2013,15 @@ def main() -> int:
     print()
 
     print(f"=== FAMILY 2: shim/alias/pure-reexport modules: {len(shims)} total ===")
+    shims_non_test = [s for s in shims if not s.is_test]
+    shims_test = [s for s in shims if s.is_test]
+    print(f"  production: {len(shims_non_test)}   test-tree: {len(shims_test)}")
     by_reason = Counter(s.reason for s in shims)
     for reason, cnt in by_reason.most_common():
         print(f"  {cnt:4d}  {reason}")
     print()
     for s in shims:
-        print(f"  [{s.reason}] {s.path} :: {s.detail}")
+        print(f"  [{'test' if s.is_test else 'prod'}][{s.reason}] {s.path} :: {s.detail}")
     print()
 
     by_confidence = Counter(m.confidence for m in multi_sourced)
@@ -1959,6 +2065,14 @@ def main() -> int:
     print("   depends on an artifact absent from the wheel; move it under src/cadrumo/_data/)")
     for reach in dev_path_reaches:
         print(f"  [{reach.form}] {reach.module_path}:{reach.lineno} -> {reach.detail!r}")
+    print()
+
+    print(
+        f"=== FAMILY 7: production imports of a demoted registry raw-loader symbol: {len(registry_loader_imports)} total ==="
+    )
+    print(f"  (demoted set: {sorted(DEMOTED_REGISTRY_LOADER_SYMBOLS)})")
+    for v in registry_loader_imports:
+        print(f"  {v.importer_path}:{v.lineno} imports {v.imported_names} from {REGISTRY_LOADER_PACKAGE}")
     print()
 
     print(f"=== FIX STRATEGY: precondition promotions vs. simple consumer rewrites ({len(fix_classes)} pairs) ===")
@@ -2005,6 +2119,7 @@ def main() -> int:
     print(f"  underscore-named __all__ entries (Family 4): {len(underscore_in_all)}")
     print(f"  shipped modules importing dev/ tooling (Family 5): {len(dev_tooling_imports)}")
     print(f"  shipped modules reaching a dev/ path (Family 6): {len(dev_path_reaches)}")
+    print(f"  production imports of a demoted registry raw-loader symbol (Family 7): {len(registry_loader_imports)}")
     print(f"  exact legacy TUI migration rows: {len(tui_migration_rows)}")
     print()
 
@@ -2032,7 +2147,10 @@ def main() -> int:
                 }
                 for v in priv_violations
             ],
-            "shim_modules": [{"mod": s.mod, "path": s.path, "reason": s.reason, "detail": s.detail} for s in shims],
+            "shim_modules": [
+                {"mod": s.mod, "path": s.path, "reason": s.reason, "detail": s.detail, "is_test": s.is_test}
+                for s in shims
+            ],
             "multi_sourced_symbols": [
                 {
                     "symbol": m.symbol,
@@ -2075,10 +2193,24 @@ def main() -> int:
             "underscore_in_all_violations": [
                 {"package": v.package, "path": v.path, "name": v.name} for v in underscore_in_all
             ],
+            "registry_loader_import_violations": [
+                {
+                    "importer_mod": v.importer_mod,
+                    "importer_path": v.importer_path,
+                    "lineno": v.lineno,
+                    "imported_names": v.imported_names,
+                }
+                for v in registry_loader_imports
+            ],
             "tui_migration_manifest": tui_manifest,
         }
         args.json.write_text(json.dumps(payload, indent=2), encoding=_UTF_8, newline="\n")
         print(f"Wrote full JSON inventory to {args.json}")
+
+    _require_accepted_tui_migration_identities(
+        tui_migration_rows,
+        accepted_sha256=_ACCEPTED_TUI_MIGRATION_IDENTITY_SHA256,
+    )
 
     return 0
 
