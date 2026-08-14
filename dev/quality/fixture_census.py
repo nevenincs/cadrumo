@@ -504,6 +504,32 @@ def _keyword_map(call: ast.Call | None) -> dict[str, ast.expr]:
     return keywords
 
 
+def _performs_no_work(body: list[ast.stmt]) -> bool:
+    """Return whether a fixture body carries no behaviour to share.
+
+    Two shapes qualify, and both alias by CONSTRUCTION rather than by copying:
+
+    A body that only ``raise``s is a required-override scaffold -- a default that
+    exists to force the consuming module to supply its own. Every such scaffold
+    in the tree normalises identically no matter what concept it scaffolds.
+
+    A body that calls nothing, opens no context and branches nowhere is a value
+    binding: ``return _BUCKET_ID`` is the same AST in every module while the
+    constant behind it differs in each. Reporting eleven per-module overrides as
+    one duplicated behaviour inverts the truth -- they are eleven DIFFERENT
+    values wearing one trivial shape.
+
+    Grouping either kind reports identical absence of behaviour as duplication,
+    and a detector that fires on non-duplicates is one reviewers learn to skip.
+    """
+    if not body:
+        return False
+    if all(isinstance(statement, ast.Raise) for statement in body):
+        return True
+    operations = (ast.Call, ast.With, ast.AsyncWith, ast.For, ast.AsyncFor, ast.While, ast.If, ast.Try)
+    return not any(isinstance(node, operations) for statement in body for node in ast.walk(statement))
+
+
 def _is_deferred_to_call_site(value: ast.expr, deferred_names: frozenset[str]) -> bool:
     """Return whether this value is an enclosing factory's parameter.
 
@@ -762,9 +788,7 @@ class _ModuleVisitor(ast.NodeVisitor):
                 annotate_fields=True,
                 include_attributes=False,
             )
-            raises_without_producing = bool(executable_body) and all(
-                isinstance(statement, ast.Raise) for statement in executable_body
-            )
+            raises_without_producing = _performs_no_work(executable_body)
             record = FixtureRecord(
                 path=relative,
                 line=node.lineno,
