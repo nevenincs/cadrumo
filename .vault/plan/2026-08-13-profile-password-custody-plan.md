@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-14'
-body_hash: 'sha256:7db24fc04f1df515b9af4ab77f06b96caa3a437e672306b12c4e1be1a9286a42'
+body_hash: 'sha256:1760bc028dc59eb55c1f1216a0ffb110897c0bf99a883419c6cf5960d8adb59c'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -140,6 +140,8 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S67` - Have Terra XHigh delete the retired workspace-initialisation package in one atomic commit, its entry point being an unconditional refusal with no callers kept alive only by two string references, re-homing the four genuinely valuable tests it hosts onto the package that owns active-profile registration and deleting the typing test that keeps a retired contract alive, the atomicity mattering because removing the package without updating both string references reds the import-smoke inventory; `src/cadrumo/application/setup/ and src/cadrumo/tests/test_layout_import_smoke.py`.
 - [ ] `W04.P07.S68` - Have Terra XHigh widen the substrate signatures that force ten delegate sites to narrow a handle and then hand the same object back to a substrate demanding its concrete type, one of which returns a type guard, since the interim fail-closed identity check correctly refuses a structurally conforming stand-in the substrate never minted but is a guard standing in for a boundary that should not need one; `src/cadrumo/adapters/persistence/storage/master_key/ and src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/adapters/persistence/storage/bucket/ and src/cadrumo/application/profile_custody/`.
 - [ ] `W04.P07.S69` - Have Terra XHigh remove the second bucket-root creator that survives as dead production code, since the layout helper creating a bucket directory with its database and blob children outside publication has zero production callers and is reached only from tests, making it exactly the class of second creator the new bucket-root guard exists to refuse, and leaving it in the production package invites it being wired back up; `src/cadrumo/adapters/persistence/storage/bucket/_layout.py`.
+- [ ] `W04.P07.S70` - Have Sol Medium triage the one hundred and fifty-one rehoming-ledger findings the repaired gate can now report, being one hundred and two fingerprint-multiset divergences, forty-three closed-owner violations and six zero-disposition entries, assigning an owner per code and establishing for each code whether the ledger is stale against live source or the source is genuinely wrong, since the gate was structurally unable to say any of this while it aborted on the first unprovable facade; `dev/tests/test_error_code_default_recovery_rehoming.py and dev/quality/error_code_default_recovery_rehoming.py`.
+- [ ] `W04.P07.S71` - Have Sol Medium rule on the rehoming analyser asymmetry that accepts a module attribute fetched through a guarded variable while refusing the same fetch through a string literal, even though a literal is strictly the more determinate of the two, since that inversion is what made a genuinely closed command-line loader look unprovable and two independent pinned tests currently enshrine it, so overturning it means changing deliberately authored cases rather than fixing an oversight; `dev/quality/error_code_default_recovery_rehoming.py`.
 
 ## Wave `W05` - end-to-end proof
 
