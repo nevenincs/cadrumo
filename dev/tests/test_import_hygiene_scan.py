@@ -580,3 +580,68 @@ def test_find_delegate_wrapper_shims_tolerates_a_file_removed_after_discovery(tm
     generated.unlink()
 
     assert find_delegate_wrapper_shims([generated]) == []
+
+
+def test_find_delegate_wrapper_shims_sees_a_forward_to_a_type_checking_bound_name(tmp_path: Path) -> None:
+    """Deferring an import to type-check time does not change which package owns the name.
+
+    The same reading the cross-package private-import family already applies:
+    the ownership rule governs WHERE a symbol lives, never WHEN its module
+    executes. A wrapper cannot escape this scan by moving its import under the
+    guard.
+    """
+    functions = _wrapper_functions(
+        tmp_path,
+        "application.deferred",
+        "from typing import TYPE_CHECKING\n"
+        "\n"
+        "if TYPE_CHECKING:\n"
+        "    from ..adapters.persistence.storage import read_record\n"
+        "\n"
+        "def load_record(path, *, maximum_bytes):\n"
+        "    return read_record(path, maximum_bytes=maximum_bytes)\n",
+    )
+
+    assert functions == ["load_record"]
+
+
+def test_module_import_bindings_prefer_the_runtime_binding_over_the_guarded_one() -> None:
+    """A name imported for real and re-imported for typing resolves to the runtime package.
+
+    Both bindings are real, so the map must not be left at the mercy of walk
+    order: the wrapper forwards into whichever package the runtime import named.
+    """
+    import ast
+
+    from ..quality.import_hygiene_scan import module_import_bindings
+
+    tree = ast.parse(
+        "from typing import TYPE_CHECKING\n"
+        "from cadrumo.adapters.persistence.storage import read_record\n"
+        "if TYPE_CHECKING:\n"
+        "    from cadrumo.application.user_profile._ports import read_record\n"
+    )
+
+    bindings = module_import_bindings(tree, "cadrumo.application.ports", is_package=False)
+
+    assert bindings["read_record"] == "cadrumo.adapters.persistence.storage"
+
+
+def test_tui_migration_census_drift_reports_instead_of_raising() -> None:
+    """One check disagreeing must not decide whether every other finding is printed.
+
+    The refusal keeps its teeth through the caller's exit code; what it loses
+    is the power to abort the report, which is what made an unrelated census
+    mismatch hide every shim, boundary, and duplicate finding behind a
+    traceback.
+    """
+    from ..quality.import_hygiene_scan import _tui_migration_identity_sha256, tui_migration_census_drift
+
+    matching = _tui_migration_identity_sha256(())
+
+    assert tui_migration_census_drift((), accepted_sha256=matching) is None
+
+    drift = tui_migration_census_drift((), accepted_sha256="0" * 64)
+    assert drift is not None
+    assert matching in drift, "the drift message must name the found census so it can be investigated"
+    assert "0" * 64 in drift, "the drift message must name the accepted census it was compared against"

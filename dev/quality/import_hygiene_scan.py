@@ -355,6 +355,26 @@ class ImportSite:
     in_type_checking: bool
 
 
+def type_checking_guarded_nodes(tree: ast.Module) -> set[int]:
+    """Return the ``id()`` of every node under an ``if TYPE_CHECKING:`` guard.
+
+    The one canonical answer to "is this statement type-only?", shared by the
+    import walk and the wrapper-binding map so the two cannot disagree about
+    what the guard covers.
+    """
+    guarded: set[int] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.If):
+            continue
+        test = node.test
+        is_guard = (isinstance(test, ast.Name) and test.id == "TYPE_CHECKING") or (
+            isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
+        )
+        if is_guard:
+            guarded.update(id(child) for child in ast.walk(node))
+    return guarded
+
+
 def walk_module_imports(path: Path, *, src_root: Path = SRC_ROOT) -> list[ImportSite]:
     """Parse a module and return every resolved import site it contains.
 
@@ -373,21 +393,7 @@ def walk_module_imports(path: Path, *, src_root: Path = SRC_ROOT) -> list[Import
     sites: list[ImportSite] = []
     test_flag = is_test_module(mod, path)
 
-    # Track TYPE_CHECKING guard membership via a simple ancestor stack walk.
-    type_checking_nodes: set[int] = set()
-
-    def mark_type_checking(node: ast.If) -> None:
-        test_expr = node.test
-        is_tc = (isinstance(test_expr, ast.Name) and test_expr.id == "TYPE_CHECKING") or (
-            isinstance(test_expr, ast.Attribute) and test_expr.attr == "TYPE_CHECKING"
-        )
-        if is_tc:
-            for child in ast.walk(node):
-                type_checking_nodes.add(id(child))
-
-    for node in ast.walk(tree):
-        if isinstance(node, ast.If):
-            mark_type_checking(node)
+    type_checking_nodes = type_checking_guarded_nodes(tree)
 
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
@@ -1489,19 +1495,31 @@ def module_import_bindings(tree: ast.Module, mod: str, *, is_package: bool) -> d
     ``cadrumo.adapters.persistence.storage`` -- the module the name came from,
     not the name's own dotted path -- because that is the package whose surface
     a wrapper around ``custody.<anything>`` reaches into.
+
+    A binding made under ``if TYPE_CHECKING:`` still counts, on the same
+    reading the cross-package private-import family already applies: the
+    ownership rule governs WHERE a symbol lives, never WHEN its module
+    executes, so deferring an import to type-check time does not change which
+    package owns the name. A runtime binding of the same name WINS, though --
+    a module that imports a symbol for real and re-imports it under the guard
+    for typing reaches the runtime one, and that is the package the wrapper
+    actually forwards into.
     """
-    bindings: dict[str, str] = {}
+    guarded = type_checking_guarded_nodes(tree)
+    runtime: dict[str, str] = {}
+    type_only: dict[str, str] = {}
     for node in ast.walk(tree):
+        sink = type_only if id(node) in guarded else runtime
         if isinstance(node, ast.ImportFrom):
             target = resolve_relative_import(mod, is_package, node.level, node.module)
             if not target:
                 continue
             for alias in node.names:
-                bindings[alias.asname or alias.name] = target
+                sink[alias.asname or alias.name] = target
         elif isinstance(node, ast.Import):
             for alias in node.names:
-                bindings[alias.asname or alias.name.split(".", 1)[0]] = alias.name
-    return bindings
+                sink[alias.asname or alias.name.split(".", 1)[0]] = alias.name
+    return {**type_only, **runtime}
 
 
 def iter_module_level_callables(tree: ast.Module) -> Iterable[tuple[str, ast.FunctionDef | ast.AsyncFunctionDef]]:
@@ -2007,6 +2025,29 @@ def _require_accepted_tui_migration_identities(
         )
 
 
+def tui_migration_census_drift(
+    rows: tuple[TuiMigrationRow, ...],
+    *,
+    accepted_sha256: str = _ACCEPTED_TUI_MIGRATION_IDENTITY_SHA256,
+) -> str | None:
+    """Return the census-drift message, or ``None`` when the census matches.
+
+    The reporting counterpart of :func:`_require_accepted_tui_migration_identities`.
+    A scan is a diagnostic that answers several independent questions, and one
+    check disagreeing must not decide whether the other answers are printed:
+    a tool that refuses to report anything because one of its many checks is
+    unhappy stops being run at all, and the findings it was consulted for
+    become unreadable behind an unrelated traceback. The refusal keeps its
+    teeth through the caller's exit code; only its power to abort the report
+    is removed.
+    """
+    try:
+        _require_accepted_tui_migration_identities(rows, accepted_sha256=accepted_sha256)
+    except TuiMigrationManifestError as drift:
+        return str(drift)
+    return None
+
+
 def _qualified_tui_references(tree: ast.Module) -> tuple[tuple[int, str, str | None], ...]:
     """Return fully-qualified legacy-TUI references embedded in Python strings."""
     found: list[tuple[int, str, str | None]] = []
@@ -2216,6 +2257,7 @@ def main() -> int:
     # change to one sub-census, and raising mid-run discarded the six unrelated
     # families already computed above without printing any of them.
     tui_migration_rows = generate_tui_migration_manifest(accepted_identity_sha256=None)
+    census_drift = tui_migration_census_drift(tui_migration_rows)
 
     # ---- Reporting ----
     print(f"Scanned {len(py_files)} .py files under {PKG_ROOT}")
@@ -2461,12 +2503,14 @@ def main() -> int:
         args.json.write_text(json.dumps(payload, indent=2), encoding=_UTF_8, newline="\n")
         print(f"Wrote full JSON inventory to {args.json}")
 
-    _require_accepted_tui_migration_identities(
-        tui_migration_rows,
-        accepted_sha256=_ACCEPTED_TUI_MIGRATION_IDENTITY_SHA256,
-    )
-
-    return 0
+    if census_drift is None:
+        return 0
+    print("=== LEGACY TUI MIGRATION CENSUS: DRIFTED ===")
+    print(f"  {census_drift}")
+    print("  Every finding above was still scanned and printed; this refusal decides the exit")
+    print("  code only. Establish whether the new identities are legitimate before touching the")
+    print("  accepted constant -- refreshing it to silence this says nothing about the census.")
+    return 1
 
 
 if __name__ == "__main__":
