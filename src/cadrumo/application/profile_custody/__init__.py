@@ -1,27 +1,43 @@
 """Application-owned ports for profile-custody local records.
 
 Application services consume this narrow record store instead of reaching into
-the persistence adapter. The default provider resolves the real custody
-adapter at the composition boundary; callers can inject the same port when a
-different storage root or lifecycle is being composed.
+the persistence adapter. The ports declare the minimum shape each collaborator
+needs; the default providers bind them to the real custody adapter, which this
+package imports directly because no cycle runs the other way.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Iterator
+from collections.abc import Generator, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from importlib import import_module
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, NoReturn, Protocol, TypeGuard, cast
+from typing import TYPE_CHECKING, NoReturn, Protocol, TypeGuard, cast
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.storage import (
+    STORAGE_NAMESPACE_REGISTRY,
+    USER_PROFILE_VALUE_NAMESPACE,
+    KeyringUnavailableError,
+    MasterKeyKeychainLockedError,
+    MasterKeyMaterialMissingError,
+    MasterKeyPassphraseMismatchError,
+    SecureObjectRepository,
+    bucket,
+    create_engine_from_settings,
+    crypto,
+    custody,
+    master_key,
+    secure_object_repository_for_active_bucket,
+    secure_object_repository_for_bucket,
+)
 from ...core import ProfileSessionRefusalReason, SecureObjectWrite, StorageCategory, storage_location
 from ...core.classification import SensitivityClass
-from ...core.config import SecretStoreBackend, Settings
+from ...core.config import Settings
 from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from ...core.paths import effective_storage_root
 
@@ -100,60 +116,93 @@ class ProfileCustodyRecordSessionMaterial:
     dek: bytes
 
 
-class _PersistenceKdfCalibration(Protocol):
-    parameters: object
-
-
-class _PersistenceRegistrationModule(Protocol):
-    calibrate_profile_kdf: Callable[..., _PersistenceKdfCalibration]
-    create_profile_custody_password_envelope: Callable[..., ProfileCustodyEnvelopePort]
-    create_profile_custody_sentinel: Callable[..., ProfileCustodySentinelPort]
-
-
 class ProfileCustodyPasswordMaterialPort(Protocol):
-    """Normal-password material exposed by the custody read boundary."""
+    """Normal-password material exposed by the custody read boundary.
 
-    envelope: ProfileCustodyEnvelopePort
-    sentinel: ProfileCustodySentinelPort
+    Every record-shaped port here declares its fields read-only.  The custody
+    records these narrow are frozen, and a mutable protocol member is invariant,
+    so a read-write declaration would make the real record unassignable to the
+    very port that exists to narrow it.  Read-only is also the truthful shape:
+    the application observes committed custody state, it never writes back
+    through the narrowed view.
+    """
+
+    @property
+    def envelope(self) -> ProfileCustodyEnvelopePort:
+        """The committed password envelope for this profile."""
+        ...
+
+    @property
+    def sentinel(self) -> ProfileCustodySentinelPort:
+        """The committed DEK sentinel proving an unwrap succeeded."""
+        ...
 
 
 class ProfileCustodyUnlockPort(Protocol):
     """A current-envelope DEK accepted only after the sentinel proof."""
 
-    profile_id: UUID
-    envelope_digest: str
-    dek: bytes
+    @property
+    def profile_id(self) -> UUID:
+        """The profile whose envelope produced this key material."""
+        ...
 
+    @property
+    def envelope_digest(self) -> str:
+        """The digest of the exact envelope that was unwrapped."""
+        ...
 
-class _PersistencePasswordModule(Protocol):
-    load_committed_profile_password_material: Callable[..., ProfileCustodyPasswordMaterialPort]
-    unlock_profile_custody: Callable[..., ProfileCustodyUnlockPort]
+    @property
+    def dek(self) -> bytes:
+        """The authenticated data-encryption key."""
+        ...
 
 
 class ProfileCustodyBucketSessionPort(Protocol):
     """The live-session fields needed by an authenticated record reader."""
 
-    bucket_id: str
-    dek: bytes
+    @property
+    def bucket_id(self) -> str:
+        """The bucket this live session was opened against."""
+        ...
 
-
-class ProfileMasterKeyProviderPort(Protocol):
-    """Master-key provider capability exposed to profile application services."""
-
-    def get_master_key(self) -> bytes:
-        """Unwrap and return the authenticated master key."""
+    @property
+    def dek(self) -> bytes:
+        """The session's bound data-encryption key."""
         ...
 
 
 class ProfileBucketSessionPort(Protocol):
     """Live bucket-session capability exposed across the application boundary."""
 
-    bucket_id: str
-    dek: bytes
-    idle_deadline: datetime
-    absolute_deadline: datetime
-    opened_at: datetime
-    unsecured_backend: bool
+    @property
+    def bucket_id(self) -> str:
+        """The bucket this live session was opened against."""
+        ...
+
+    @property
+    def dek(self) -> bytes:
+        """The session's bound data-encryption key."""
+        ...
+
+    @property
+    def idle_deadline(self) -> datetime:
+        """The sliding deadline the next activity advances."""
+        ...
+
+    @property
+    def absolute_deadline(self) -> datetime:
+        """The immutable cap no activity can extend."""
+        ...
+
+    @property
+    def opened_at(self) -> datetime:
+        """When this session was authenticated."""
+        ...
+
+    @property
+    def unsecured_backend(self) -> bool:
+        """Whether the session was opened over the explicitly unsecured backend."""
+        ...
 
     def touch(self, now: datetime) -> None:
         """Advance the sliding idle deadline."""
@@ -171,47 +220,136 @@ class ProfileBucketSessionPort(Protocol):
 class ProfilePersistedSessionPort(Protocol):
     """Persisted session record fields needed by login orchestration."""
 
-    bucket_id: str
-    backend_kind: SecretStoreBackend
-    authenticated_at: datetime
-    idle_deadline: datetime
-    absolute_deadline: datetime
+    @property
+    def profile_id(self) -> UUID:
+        """The profile this receipt accelerates."""
+        ...
+
+    @property
+    def session_id(self) -> UUID:
+        """The receipt's own identity."""
+        ...
+
+    @property
+    def custody_generation(self) -> int:
+        """The custody generation this receipt was minted against."""
+        ...
+
+    @property
+    def dek_epoch(self) -> str:
+        """The DEK epoch this receipt was minted against."""
+        ...
+
+    @property
+    def issued_at(self) -> datetime:
+        """When the receipt was minted."""
+        ...
+
+    @property
+    def idle_deadline(self) -> datetime:
+        """The sliding deadline a resume may advance."""
+        ...
+
+    @property
+    def absolute_deadline(self) -> datetime:
+        """The immutable cap no resume can extend."""
+        ...
 
 
 class ProfileSessionResumeOutcomePort(Protocol):
     """Fail-closed persisted-session evaluation result."""
 
-    resumed: bool
-    refusal: ProfileSessionRefusalReason | None
-    record: ProfilePersistedSessionPort | None
+    @property
+    def resumed(self) -> bool:
+        """Whether the persisted receipt was accepted."""
+        ...
+
+    @property
+    def refusal(self) -> ProfileSessionRefusalReason | None:
+        """The typed reason a resume was refused, if it was."""
+        ...
+
+    @property
+    def record(self) -> ProfilePersistedSessionPort | None:
+        """The evaluated receipt, present whether or not it was accepted."""
+        ...
 
 
 class ProfileLoginThrottleEvaluationPort(Protocol):
     """Failed-login backoff decision exposed to the application."""
 
-    throttled: bool
-    remaining_seconds: int
+    @property
+    def throttled(self) -> bool:
+        """Whether the caller must wait before another attempt."""
+        ...
+
+    @property
+    def remaining_seconds(self) -> int:
+        """Seconds left on the current backoff window."""
+        ...
 
 
 class ProfileCustodySecureObjectRawRowPort(Protocol):
     """Metadata and payload fields exposed by one secure-object row."""
 
-    namespace: str
-    object_key: bytes
-    payload: bytes
-    revision_id: str | None
-    previous_revision_id: str | None
-    payload_hash: str | None
-    ciphertext_hash: str | None
-    write_provenance: str | None
-    source_event_id: str | None
+    @property
+    def namespace(self) -> str:
+        """The registered namespace this row was written under."""
+        ...
+
+    @property
+    def object_key(self) -> bytes:
+        """The opaque digest addressing this row within its namespace."""
+        ...
+
+    @property
+    def payload(self) -> bytes:
+        """The row's stored ciphertext."""
+        ...
+
+    @property
+    def revision_id(self) -> str | None:
+        """The row's current CAS revision token."""
+        ...
+
+    @property
+    def previous_revision_id(self) -> str | None:
+        """The revision this row replaced."""
+        ...
+
+    @property
+    def payload_hash(self) -> str | None:
+        """The plaintext digest recorded at write time."""
+        ...
+
+    @property
+    def ciphertext_hash(self) -> str | None:
+        """The ciphertext digest recorded at write time."""
+        ...
+
+    @property
+    def write_provenance(self) -> str | None:
+        """The recorded origin of this row's most recent write."""
+        ...
+
+    @property
+    def source_event_id(self) -> str | None:
+        """The lifecycle event that produced this row, if any."""
+        ...
 
 
 class ProfileCustodySecureObjectRecordPort(Protocol):
     """Decrypted secure-object payload and its CAS revision token."""
 
-    revision_id: str
-    payload: bytes
+    @property
+    def revision_id(self) -> str:
+        """The record's current CAS revision token."""
+        ...
+
+    @property
+    def payload(self) -> bytes:
+        """The decrypted record bytes."""
+        ...
 
 
 class ProfileCustodySecureObjectRepositoryPort(Protocol):
@@ -275,52 +413,6 @@ class ProfileCustodyBucketEventHistoryPort(Protocol):
         ...
 
 
-class _PersistenceMasterKeyModule(Protocol):
-    current_active_bucket_session: Callable[..., object | None]
-    session_serves_bucket: Callable[..., bool]
-
-
-class _PersistenceSecureObjectModule(Protocol):
-    STORAGE_NAMESPACE_REGISTRY: object
-    USER_PROFILE_VALUE_NAMESPACE: _PersistenceNamespaceDefinition
-    SecureObjectRepository: Callable[..., ProfileCustodySecureObjectRepositoryPort]
-
-
-class _PersistenceNamespaceDefinition(Protocol):
-    namespace: str
-    sensitivity: SensitivityClass
-    schema_version: int
-
-
-class _PersistenceRuntimeRepositoryModule(Protocol):
-    secure_object_repository_for_bucket: Callable[..., ProfileCustodySecureObjectRepositoryPort]
-
-
-class _PersistenceSqlEngineModule(Protocol):
-    create_engine_from_settings: Callable[..., _PersistenceEngine]
-
-
-class _PersistenceEngine(Protocol):
-    def dispose(self) -> None: ...
-
-
-class _PersistenceBucketPathModule(Protocol):
-    bucket_paths: Callable[..., _PersistenceBucketPaths]
-
-
-class _PersistenceBucketPaths(Protocol):
-    database_file: Path
-
-
-class _PersistenceBucketEventModule(Protocol):
-    BucketEventHistoryRepository: Callable[..., ProfileCustodyBucketEventHistoryPort]
-
-
-class _PersistenceProfileDataModule(Protocol):
-    load_committed_profile_custody_data_file: Callable[..., bytes]
-    replace_committed_profile_custody_data_file: Callable[..., None]
-
-
 class ProfileCustodyLocalRecordStore(Protocol):
     """The filesystem capabilities needed by custody-owner authorities."""
 
@@ -348,14 +440,55 @@ class ProfileCustodyLocalRecordStore(Protocol):
         """Remove one anchored local record without following its leaf."""
         ...
 
+    def compare_and_replace(
+        self,
+        path: Path,
+        *,
+        expected: bytes | None,
+        replacement: bytes,
+        maximum_bytes: int,
+    ) -> None:
+        """CAS-replace one local record without a separate app-layer read."""
+        ...
+
+    def compare_and_replace_same_or_predecessor(
+        self,
+        path: Path,
+        *,
+        current: bytes,
+        predecessor: bytes | None,
+        maximum_bytes: int,
+    ) -> None:
+        """Idempotently CAS one local record without an app-layer read."""
+        ...
+
+    def compare_and_clear(self, path: Path, *, expected: bytes, maximum_bytes: int) -> None:
+        """CAS-clear one local record without a separate app-layer read."""
+        ...
+
 
 class ProfileBucketStoragePathsPort(Protocol):
     """Resolved filesystem paths for one profile bucket."""
 
-    bucket_dir: Path
-    db_dir: Path
-    blobs_dir: Path
-    database_file: Path
+    @property
+    def bucket_dir(self) -> Path:
+        """The bucket's own directory."""
+        ...
+
+    @property
+    def db_dir(self) -> Path:
+        """The directory holding the bucket's database."""
+        ...
+
+    @property
+    def blobs_dir(self) -> Path:
+        """The directory holding the bucket's content-addressed blobs."""
+        ...
+
+    @property
+    def database_file(self) -> Path:
+        """The bucket's encrypted database file."""
+        ...
 
 
 class ProfileBucketStoragePort(Protocol):
@@ -384,6 +517,26 @@ class ProfileSecureObjectInventoryPort(Protocol):
     def list_keys(self, namespace: str) -> tuple[str, ...]:
         """Return object keys present in one namespace."""
         ...
+
+
+def _substrate_handle[T](value: object, expected: type[T], subject: str) -> T:
+    """Re-widen a narrowed custody handle to the substrate type that minted it.
+
+    The record-shaped ports above narrow what the application may READ.  A few
+    of the delegates below then hand the same object straight back to the
+    substrate, which requires its own concrete type, and a narrowed view is not
+    that type.  The reconciliation is a real check rather than an assertion:
+    each of these handles is opaque to the application, so an object that did
+    not come from the substrate is a composition error and custody refuses it
+    instead of forwarding it.
+
+    The round trip itself is the defect this papers over -- a handle should not
+    have to be narrowed on the way out and widened again on the way back in --
+    and it disappears when the substrate stops being reached through delegates.
+    """
+    if not isinstance(value, expected):
+        raise TypeError(f"{subject} did not originate from the custody substrate: {type(value).__name__}")
+    return value
 
 
 def canonical_snapshot_payload(model: BaseModel) -> dict[str, object]:
@@ -433,101 +586,79 @@ def ensure_profile_custody_owner_root(store: ProfileCustodyLocalRecordStore, roo
         store.ensure_directory(directory)
 
 
-class _PersistenceCustodyModule(Protocol):
-    clear_profile_custody_local_record: Callable[[Path], None]
-    ensure_profile_custody_local_directory: Callable[[Path], None]
-    profile_custody_local_lock: Callable[..., AbstractContextManager[None]]
-    read_profile_custody_local_record: Callable[..., bytes]
-    read_optional_profile_custody_local_record: Callable[..., bytes | None]
-    write_profile_custody_local_record: Callable[..., None]
-
-
-class _PersistenceBucketStorageModule(Protocol):
-    bucket_paths: Callable[..., ProfileBucketStoragePathsPort]
-    acquire_lock: Callable[..., None]
-    release_lock: Callable[..., None]
-
-
-class _PersistenceActiveStorageModule(Protocol):
-    secure_object_repository_for_active_bucket: Callable[..., ProfileSecureObjectInventoryPort]
-
-
-class _PersistenceEncryptedBlob(Protocol):
-    nonce: bytes
-    ciphertext: bytes
-
-
-class _PersistenceCryptoModule(Protocol):
-    EncryptedBlob: Callable[..., _PersistenceEncryptedBlob]
-    encrypt_record: Callable[..., _PersistenceEncryptedBlob]
-    decrypt_record: Callable[..., bytes]
-
-
 class _PersistenceProfileCustodyLocalRecordStore:
     """Adapt the real persistence facade to the application-owned port."""
 
-    def __init__(self) -> None:
-        custody = cast(
-            _PersistenceCustodyModule,
-            import_module("cadrumo.adapters.persistence.storage.custody"),
-        )
-        self._clear = custody.clear_profile_custody_local_record
-        self._ensure_directory = custody.ensure_profile_custody_local_directory
-        self._lock = custody.profile_custody_local_lock
-        self._read = custody.read_profile_custody_local_record
-        self._read_optional = custody.read_optional_profile_custody_local_record
-        self._write = custody.write_profile_custody_local_record
-
     def ensure_directory(self, path: Path) -> None:
-        self._ensure_directory(path)
+        custody.ensure_profile_custody_local_directory(path)
 
     def lock(self, path: Path, *, timeout_seconds: float = 30.0) -> AbstractContextManager[None]:
-        return self._lock(path, timeout_seconds=timeout_seconds)
+        return custody.profile_custody_local_lock(path, timeout_seconds=timeout_seconds)
 
     def read(self, path: Path, *, maximum_bytes: int) -> bytes:
-        return self._read(path, maximum_bytes=maximum_bytes)
+        return custody.read_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
 
     def read_optional(self, path: Path, *, maximum_bytes: int) -> bytes | None:
-        return self._read_optional(path, maximum_bytes=maximum_bytes)
+        return custody.read_optional_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
 
     def write(self, path: Path, payload: bytes, *, publish_once: bool) -> None:
-        self._write(path, payload, publish_once=publish_once)
+        custody.write_profile_custody_local_record(path, payload, publish_once=publish_once)
 
     def clear(self, path: Path) -> None:
-        self._clear(path)
+        custody.clear_profile_custody_local_record(path)
+
+    def compare_and_replace(
+        self,
+        path: Path,
+        *,
+        expected: bytes | None,
+        replacement: bytes,
+        maximum_bytes: int,
+    ) -> None:
+        custody.compare_and_replace_profile_custody_local_record(
+            path,
+            expected=expected,
+            replacement=replacement,
+            maximum_bytes=maximum_bytes,
+        )
+
+    def compare_and_clear(self, path: Path, *, expected: bytes, maximum_bytes: int) -> None:
+        custody.compare_and_clear_profile_custody_local_record(path, expected=expected, maximum_bytes=maximum_bytes)
+
+    def compare_and_replace_same_or_predecessor(
+        self,
+        path: Path,
+        *,
+        current: bytes,
+        predecessor: bytes | None,
+        maximum_bytes: int,
+    ) -> None:
+        custody.compare_and_replace_same_or_predecessor_profile_custody_local_record(
+            path,
+            current=current,
+            predecessor=predecessor,
+            maximum_bytes=maximum_bytes,
+        )
 
 
 class _PersistenceProfileBucketStorage:
     """Adapt canonical bucket layout and locking to the application port."""
 
-    def __init__(self) -> None:
-        bucket = cast(
-            _PersistenceBucketStorageModule,
-            import_module("cadrumo.adapters.persistence.storage.bucket"),
-        )
-        self._resolve = bucket.bucket_paths
-        self._acquire = bucket.acquire_lock
-        self._release = bucket.release_lock
-
     def resolve(self, root: Path, bucket_id: str) -> ProfileBucketStoragePathsPort:
-        return self._resolve(root, bucket_id)
+        return bucket.bucket_paths(root, bucket_id)
 
     def acquire_lock(self, paths: ProfileBucketStoragePathsPort, *, wait_seconds: float) -> None:
-        self._acquire(paths, wait_seconds=wait_seconds)
+        bucket.acquire_lock(_substrate_handle(paths, bucket.BucketPaths, "bucket paths"), wait_seconds=wait_seconds)
 
     def release_lock(self, paths: ProfileBucketStoragePathsPort) -> None:
-        self._release(paths)
+        bucket.release_lock(_substrate_handle(paths, bucket.BucketPaths, "bucket paths"))
 
 
 class _PersistenceProfileSecureObjectInventory:
     """Adapt the active runtime repository to the inventory port."""
 
     def __init__(self) -> None:
-        storage = cast(
-            _PersistenceActiveStorageModule,
-            import_module("cadrumo.adapters.persistence.storage"),
-        )
-        repository = storage.secure_object_repository_for_active_bucket()
+        repository = secure_object_repository_for_active_bucket()
         self._list_namespaces = repository.list_namespaces
         self._list_keys = repository.list_keys
 
@@ -541,15 +672,6 @@ class _PersistenceProfileSecureObjectInventory:
 class _PersistenceProfileRecordCrypto:
     """Adapt the real persistence crypto facade to the application port."""
 
-    def __init__(self) -> None:
-        crypto = cast(
-            _PersistenceCryptoModule,
-            import_module("cadrumo.adapters.persistence.storage.crypto"),
-        )
-        self._encrypted_blob = crypto.EncryptedBlob
-        self._encrypt = crypto.encrypt_record
-        self._decrypt = crypto.decrypt_record
-
     def encrypt_record(
         self,
         plaintext: bytes,
@@ -558,7 +680,7 @@ class _PersistenceProfileRecordCrypto:
         associated_data: bytes | None = None,
     ) -> ProfileRecordEncryptedBlob:
         try:
-            blob = self._encrypt(plaintext, key=key, associated_data=associated_data)
+            blob = crypto.encrypt_record(plaintext, key=key, associated_data=associated_data)
             return ProfileRecordEncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext)
         except Exception as exc:
             raise ProfileRecordCryptoError("profile record encryption failed") from exc
@@ -571,8 +693,8 @@ class _PersistenceProfileRecordCrypto:
         associated_data: bytes | None = None,
     ) -> bytes:
         try:
-            adapter_blob = self._encrypted_blob(nonce=blob.nonce, ciphertext=blob.ciphertext)
-            return self._decrypt(adapter_blob, key=key, associated_data=associated_data)
+            adapter_blob = crypto.EncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext)
+            return crypto.decrypt_record(adapter_blob, key=key, associated_data=associated_data)
         except Exception as exc:
             raise ProfileRecordCryptoError("profile record decryption failed") from exc
 
@@ -606,10 +728,6 @@ def create_profile_custody_registration_material(
     salt: bytes,
 ) -> ProfileCustodyRegistrationMaterial:
     """Mint the password envelope and DEK sentinel at the custody boundary."""
-    custody = cast(
-        _PersistenceRegistrationModule,
-        import_module("cadrumo.adapters.persistence.storage.custody"),
-    )
     calibration = custody.calibrate_profile_kdf(salt=salt)
     envelope = custody.create_profile_custody_password_envelope(
         profile_id=profile_id,
@@ -628,10 +746,6 @@ def load_profile_custody_password_material(
     root: Path | None = None,
 ) -> ProfileCustodyPasswordMaterialPort:
     """Load the normal-password envelope through the custody provider."""
-    custody = cast(
-        _PersistencePasswordModule,
-        import_module("cadrumo.adapters.persistence.storage.custody"),
-    )
     return custody.load_committed_profile_password_material(profile_id, root=root)
 
 
@@ -648,22 +762,20 @@ def unlock_profile_custody_password(
     material already loaded from the exact target capsule, so a caller cannot
     resolve one profile and unwrap another through ambient state.
     """
-    custody = cast(
-        _PersistencePasswordModule,
-        import_module("cadrumo.adapters.persistence.storage.custody"),
+    return custody.unlock_profile_custody(
+        _substrate_handle(material.envelope, custody.ProfileCustodyEnvelope, "password envelope"),
+        password,
+        sentinel=_substrate_handle(material.sentinel, custody.ProfileCustodySentinelRecord, "DEK sentinel"),
     )
-    return custody.unlock_profile_custody(material.envelope, password, sentinel=material.sentinel)
 
 
 def profile_is_password_authentication_failure(error: BaseException) -> bool:
     """Recognise only the current custody password-proof refusal."""
-    custody = import_module("cadrumo.adapters.persistence.storage.custody")
     return isinstance(error, custody.ProfileCustodyPasswordError)
 
 
 def refuse_profile_login_without_password_channel() -> NoReturn:
     """Raise the current custody refusal for an absent explicit password channel."""
-    custody = import_module("cadrumo.adapters.persistence.storage.custody")
     raise custody.ProfileCustodyPasswordError("profile login requires an explicit password channel")
 
 
@@ -673,43 +785,11 @@ def profile_custody_record_session_material(
     root: Path | None = None,
 ) -> ProfileCustodyRecordSessionMaterial | None:
     """Return record material only when the live session serves this profile."""
-    master_key = cast(
-        _PersistenceMasterKeyModule,
-        import_module("cadrumo.adapters.persistence.storage.master_key"),
-    )
-    active = master_key.current_active_bucket_session()
-    session = cast(ProfileCustodyBucketSessionPort | None, active)
+    session = master_key.current_active_bucket_session()
     if session is None or not master_key.session_serves_bucket(session, str(profile_id)):
         return None
     material = load_profile_custody_password_material(profile_id, root=root)
     return ProfileCustodyRecordSessionMaterial(envelope=material.envelope, dek=session.dek)
-
-
-def profile_get_master_key_provider(
-    *,
-    passphrase_callback: Callable[[], str] | None = None,
-) -> ProfileMasterKeyProviderPort:
-    """Resolve the configured master-key provider at the custody boundary."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    return cast(
-        ProfileMasterKeyProviderPort, master_key.get_master_key_provider(passphrase_callback=passphrase_callback)
-    )
-
-
-def profile_master_key_backend_kind(provider: ProfileMasterKeyProviderPort) -> SecretStoreBackend:
-    """Map one resolved provider to the public backend-kind enum."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    if isinstance(provider, master_key.KeyringMasterKeyProvider):
-        return SecretStoreBackend.KEYRING
-    if isinstance(provider, master_key.FileFallbackMasterKeyProvider):
-        return SecretStoreBackend.FILE
-    return SecretStoreBackend.UNSECURED
-
-
-def profile_master_key_is_unsecured(provider: ProfileMasterKeyProviderPort) -> bool:
-    """Return whether the resolved provider is the explicitly unsecured backend."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    return isinstance(provider, master_key.UnsecuredMasterKeyProvider)
 
 
 def profile_bucket_session_open(
@@ -724,19 +804,15 @@ def profile_bucket_session_open(
     storage_root: Path,
 ) -> ProfileBucketSessionPort:
     """Open an authenticated bucket session through the custody substrate."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    return cast(
-        ProfileBucketSessionPort,
-        master_key.BucketSession.open(
-            bucket_id=bucket_id,
-            kek=kek,
-            dek=dek,
-            idle_minutes=idle_minutes,
-            absolute_minutes=absolute_minutes,
-            opened_at=opened_at,
-            unsecured_backend=unsecured_backend,
-            storage_root=storage_root,
-        ),
+    return master_key.BucketSession.open(
+        bucket_id=bucket_id,
+        kek=kek,
+        dek=dek,
+        idle_minutes=idle_minutes,
+        absolute_minutes=absolute_minutes,
+        opened_at=opened_at,
+        unsecured_backend=unsecured_backend,
+        storage_root=storage_root,
     )
 
 
@@ -751,42 +827,35 @@ def profile_bucket_session_open_resumed(
     storage_root: Path,
 ) -> ProfileBucketSessionPort:
     """Re-open a persisted DEK-only bucket session through custody."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    return cast(
-        ProfileBucketSessionPort,
-        master_key.BucketSession.open_resumed(
-            bucket_id=bucket_id,
-            dek=dek,
-            idle_minutes=idle_minutes,
-            opened_at=opened_at,
-            idle_deadline=idle_deadline,
-            absolute_deadline=absolute_deadline,
-            storage_root=storage_root,
-        ),
+    return master_key.BucketSession.open_resumed(
+        bucket_id=bucket_id,
+        dek=dek,
+        idle_minutes=idle_minutes,
+        opened_at=opened_at,
+        idle_deadline=idle_deadline,
+        absolute_deadline=absolute_deadline,
+        storage_root=storage_root,
     )
 
 
 def profile_current_bucket_session() -> ProfileBucketSessionPort | None:
     """Return the process's current live bucket session, if any."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    return cast(ProfileBucketSessionPort | None, master_key.current_active_bucket_session())
+    return master_key.current_active_bucket_session()
 
 
 def profile_session_serves_bucket(session: ProfileBucketSessionPort | None, bucket_id: str) -> bool:
     """Return whether a live bucket session serves the exact profile UUID."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    return bool(master_key.session_serves_bucket(session, bucket_id))
+    resolved = None if session is None else _substrate_handle(session, master_key.BucketSession, "bucket session")
+    return bool(master_key.session_serves_bucket(resolved, bucket_id))
 
 
 def profile_bind_bucket_session(session: ProfileBucketSessionPort) -> None:
     """Bind one authenticated bucket session to the process context."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    master_key.bind_active_bucket_session(session)
+    master_key.bind_active_bucket_session(_substrate_handle(session, master_key.BucketSession, "bucket session"))
 
 
 def profile_close_bucket_session() -> None:
     """Close and clear the current live bucket session."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
     master_key.close_active_bucket_session()
 
 
@@ -797,48 +866,42 @@ def profile_load_or_mint_bucket_dek(
     bucket_id: str,
 ) -> bytes:
     """Load the existing wrapped bucket DEK without permitting bootstrap minting."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    return cast(
-        bytes,
-        master_key.load_or_mint_bucket_dek(
-            kek=kek,
-            storage_root=storage_root,
-            bucket_id=bucket_id,
-            allow_bootstrap_mint=False,
-        ),
+    return master_key.load_or_mint_bucket_dek(
+        kek=kek,
+        storage_root=storage_root,
+        bucket_id=bucket_id,
+        allow_bootstrap_mint=False,
     )
 
 
 def profile_refuse_unsecured_bucket_with_real_profile(session: ProfileBucketSessionPort) -> None:
     """Apply the real-profile refusal to an unsecured session."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    master_key.refuse_unsecured_bucket_with_real_profile(session)
+    master_key.refuse_unsecured_bucket_with_real_profile(
+        _substrate_handle(session, master_key.BucketSession, "bucket session")
+    )
 
 
 def profile_zeroise(buffer: object) -> None:
     """Zeroise one custody-owned mutable key buffer."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
     master_key.zeroise(buffer)
 
 
 def profile_is_authentication_failure(error: BaseException) -> bool:
     """Recognise the typed authentication refusals without leaking adapter types."""
-    errors = cast(Any, import_module("cadrumo.adapters.persistence.storage.errors"))
     return isinstance(
         error,
         (
-            errors.MasterKeyPassphraseMismatchError,
-            errors.MasterKeyKeychainLockedError,
-            errors.KeyringUnavailableError,
-            errors.MasterKeyMaterialMissingError,
+            MasterKeyPassphraseMismatchError,
+            MasterKeyKeychainLockedError,
+            KeyringUnavailableError,
+            MasterKeyMaterialMissingError,
         ),
     )
 
 
 def profile_is_keyring_unavailable(error: BaseException) -> bool:
     """Recognise a keychain persistence refusal for the process-scoped fallback."""
-    errors = cast(Any, import_module("cadrumo.adapters.persistence.storage.errors"))
-    return isinstance(error, errors.KeyringUnavailableError)
+    return isinstance(error, KeyringUnavailableError)
 
 
 def profile_evaluate_login_throttle(
@@ -848,28 +911,21 @@ def profile_evaluate_login_throttle(
     now: datetime,
 ) -> ProfileLoginThrottleEvaluationPort:
     """Evaluate the shared failed-login backoff."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    return cast(
-        ProfileLoginThrottleEvaluationPort,
-        master_key.evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=now),
-    )
+    return master_key.evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=now)
 
 
 def profile_record_login_failure(*, storage_root: Path, bucket_id: str, now: datetime) -> None:
     """Record one failed authentication attempt in the shared backoff."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
     master_key.record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now)
 
 
 def profile_reset_login_throttle(*, storage_root: Path, bucket_id: str) -> None:
     """Clear the failed-login backoff after successful authentication."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
     master_key.reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
 
 
 def profile_session_idle_minutes(*, storage_root: Path, bucket_id: str, default_minutes: int) -> int:
     """Resolve the current profile's sliding idle window."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
     return int(
         master_key.idle_minutes_for_bucket(
             storage_root=storage_root,
@@ -881,7 +937,6 @@ def profile_session_idle_minutes(*, storage_root: Path, bucket_id: str, default_
 
 def profile_session_absolute_minutes(*, storage_root: Path, bucket_id: str, default_minutes: int) -> int:
     """Resolve the current profile's immutable session cap."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
     return int(
         master_key.session_absolute_minutes_for_bucket(
             storage_root=storage_root,
@@ -891,118 +946,90 @@ def profile_session_absolute_minutes(*, storage_root: Path, bucket_id: str, defa
     )
 
 
-def profile_session_path(*, storage_root: Path, bucket_id: str) -> Path:
+def profile_session_path(*, storage_root: Path, profile_id: UUID) -> Path:
     """Return the persisted profile-session sidecar path."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    return cast(Path, master_key.profile_session_path(storage_root=storage_root, bucket_id=bucket_id))
+    return master_key.profile_session_path(storage_root=storage_root, profile_id=profile_id)
 
 
-def profile_load_session_key(*, bucket_id: str) -> bytes | None:
-    """Load the split-knowledge session key from custody."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    return cast(bytes | None, master_key.load_profile_session_key(bucket_id=bucket_id))
-
-
-def profile_delete_session(*, storage_root: Path, bucket_id: str) -> None:
-    """Delete both persisted session artefacts for one bucket."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    master_key.delete_profile_session(storage_root=storage_root, bucket_id=bucket_id)
+def profile_delete_session(*, storage_root: Path, profile_id: UUID) -> None:
+    """Revoke the exact persisted session acceleration for one profile."""
+    master_key.delete_profile_session(storage_root=storage_root, profile_id=profile_id)
 
 
 def profile_resume_session(
     *,
     storage_root: Path,
-    bucket_id: str,
+    profile_id: UUID,
+    custody_generation: int,
+    dek_epoch: str,
     now: datetime,
 ) -> tuple[ProfileSessionResumeOutcomePort, bytes | None]:
     """Evaluate and, when valid, unwrap a persisted profile session."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    return cast(
-        tuple[ProfileSessionResumeOutcomePort, bytes | None],
-        master_key.resume_profile_session(storage_root=storage_root, bucket_id=bucket_id, now=now),
+    return master_key.resume_profile_session(
+        storage_root=storage_root,
+        profile_id=profile_id,
+        custody_generation=custody_generation,
+        dek_epoch=dek_epoch,
+        now=now,
     )
 
 
 def profile_advance_session_idle_deadline(
     *,
+    storage_root: Path,
+    profile_id: UUID,
     record: ProfilePersistedSessionPort,
-    session_key: bytes,
     new_idle_deadline: datetime,
 ) -> ProfilePersistedSessionPort:
-    """Advance and rewrap one persisted session record."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    return cast(
-        ProfilePersistedSessionPort,
-        master_key.advance_profile_session_idle_deadline(
-            record=record,
-            session_key=session_key,
-            new_idle_deadline=new_idle_deadline,
-        ),
+    """Advance one receipt without exposing its keychain key to the app."""
+    return master_key.advance_persisted_profile_session_idle_deadline(
+        storage_root=storage_root,
+        profile_id=profile_id,
+        record=_substrate_handle(record, master_key.PersistedProfileSession, "persisted session receipt"),
+        new_idle_deadline=new_idle_deadline,
     )
-
-
-def profile_write_session(
-    *,
-    storage_root: Path,
-    bucket_id: str,
-    record: ProfilePersistedSessionPort,
-) -> None:
-    """Persist one authenticated profile-session record."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    master_key.write_profile_session(storage_root=storage_root, bucket_id=bucket_id, record=record)
 
 
 def profile_mint_session(
     *,
     storage_root: Path,
-    bucket_id: str,
+    profile_id: UUID,
+    custody_generation: int,
+    dek_epoch: str,
     dek: bytes,
     now: datetime,
     idle_minutes: int,
     absolute_minutes: int,
 ) -> ProfilePersistedSessionPort:
     """Mint and custody one optional keyring-accelerated DEK session."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
-    return cast(
-        ProfilePersistedSessionPort,
-        master_key.mint_profile_session(
-            storage_root=storage_root,
-            bucket_id=bucket_id,
-            # This field describes the session-key custodian, never the
-            # password authority. Normal login authenticates through the
-            # profile's current envelope and sentinel before it reaches here.
-            backend_kind=SecretStoreBackend.KEYRING,
-            dek=dek,
-            now=now,
-            idle_minutes=idle_minutes,
-            absolute_minutes=absolute_minutes,
-        ),
+    return master_key.mint_profile_session(
+        storage_root=storage_root,
+        profile_id=profile_id,
+        custody_generation=custody_generation,
+        dek_epoch=dek_epoch,
+        dek=dek,
+        now=now,
+        idle_minutes=idle_minutes,
+        absolute_minutes=absolute_minutes,
     )
 
 
 def profile_is_persisted_session(record: object) -> TypeGuard[ProfilePersistedSessionPort]:
     """Return whether an outcome record is the custody-owned persisted model."""
-    master_key = cast(Any, import_module("cadrumo.adapters.persistence.storage.master_key"))
     return isinstance(record, master_key.PersistedProfileSession)
 
 
 def profile_custody_secure_object_namespace() -> ProfileCustodySecureObjectNamespace:
     """Resolve the registered current-profile value namespace at the app boundary."""
-    storage = cast(
-        _PersistenceSecureObjectModule,
-        import_module("cadrumo.adapters.persistence.storage"),
-    )
-    definition = storage.USER_PROFILE_VALUE_NAMESPACE
     return ProfileCustodySecureObjectNamespace(
-        namespace=definition.namespace,
-        sensitivity=definition.sensitivity,
-        schema_version=definition.schema_version,
+        namespace=USER_PROFILE_VALUE_NAMESPACE.namespace,
+        sensitivity=USER_PROFILE_VALUE_NAMESPACE.sensitivity,
+        schema_version=USER_PROFILE_VALUE_NAMESPACE.schema_version,
     )
 
 
 def profile_custody_secure_object_key_digest(object_key: str) -> bytes:
     """Derive the opaque object-key digest through the custody provider."""
-    crypto = import_module("cadrumo.adapters.persistence.storage.crypto")
     return crypto.secure_object_key_digest(object_key)
 
 
@@ -1020,39 +1047,22 @@ def profile_custody_secure_object_repository(
     staging session needed before a capsule has been published. Application
     authorities consume only this narrow repository port.
     """
-    master_key = import_module("cadrumo.adapters.persistence.storage.master_key")
     active = master_key.current_active_bucket_session()
     if database_file is None and master_key.session_serves_bucket(active, str(profile_id)):
-        runtime = cast(
-            _PersistenceRuntimeRepositoryModule,
-            import_module("cadrumo.adapters.persistence.storage.runtime_repository"),
-        )
         settings = Settings(cadrumo_local_storage_root=root, cadrumo_active_profile=str(profile_id))
-        yield runtime.secure_object_repository_for_bucket(str(profile_id), settings)
+        yield secure_object_repository_for_bucket(str(profile_id), settings)
         return
 
     if database_file is None:
-        buckets = cast(
-            _PersistenceBucketPathModule,
-            import_module("cadrumo.adapters.persistence.storage.bucket"),
-        )
-        database_file = buckets.bucket_paths(root, str(profile_id)).database_file
+        database_file = bucket.bucket_paths(root, str(profile_id)).database_file
     database_file.parent.mkdir(parents=True, exist_ok=True)
     settings = Settings(cadrumo_database_url=f"sqlite:///{database_file.as_posix()}")
     with _temporary_profile_custody_session(profile_id=profile_id, dek=dek, root=root):
-        sql = cast(
-            _PersistenceSqlEngineModule,
-            import_module("cadrumo.adapters.persistence.storage.sql.engine"),
-        )
-        storage = cast(
-            _PersistenceSecureObjectModule,
-            import_module("cadrumo.adapters.persistence.storage"),
-        )
-        engine = sql.create_engine_from_settings(settings)
+        engine = create_engine_from_settings(settings)
         try:
-            yield storage.SecureObjectRepository(
+            yield SecureObjectRepository(
                 engine=engine,
-                namespace_registry=storage.STORAGE_NAMESPACE_REGISTRY,
+                namespace_registry=STORAGE_NAMESPACE_REGISTRY,
                 active_session_bucket_id=str(profile_id),
                 require_secure_active_session=True,
             )
@@ -1063,7 +1073,6 @@ def profile_custody_secure_object_repository(
 @contextmanager
 def _temporary_profile_custody_session(*, profile_id: UUID, dek: bytes, root: Path) -> Generator[None]:
     """Bind the just-minted DEK while staging a not-yet-published capsule."""
-    master_key = import_module("cadrumo.adapters.persistence.storage.master_key")
     now = datetime.now(UTC)
     bridge = master_key.BucketSession.open_resumed(
         bucket_id=str(profile_id),
@@ -1088,10 +1097,6 @@ def load_profile_custody_data_file(
     root: Path | None = None,
 ) -> bytes:
     """Read one committed capsule data member through the custody provider."""
-    custody = cast(
-        _PersistenceProfileDataModule,
-        import_module("cadrumo.adapters.persistence.storage.custody"),
-    )
     return custody.load_committed_profile_custody_data_file(profile_id, relative_name, root=root)
 
 
@@ -1104,10 +1109,6 @@ def replace_profile_custody_data_file(
     root: Path | None = None,
 ) -> None:
     """CAS-replace one committed capsule data member through custody."""
-    custody = cast(
-        _PersistenceProfileDataModule,
-        import_module("cadrumo.adapters.persistence.storage.custody"),
-    )
     custody.replace_committed_profile_custody_data_file(
         profile_id,
         relative_name,
@@ -1122,11 +1123,10 @@ def default_profile_bucket_event_history_repository(
     objects: ProfileCustodySecureObjectRepositoryPort | None = None,
 ) -> ProfileCustodyBucketEventHistoryPort:
     """Resolve the encrypted bucket-event repository at the app boundary."""
-    buckets = cast(
-        _PersistenceBucketEventModule,
-        import_module("cadrumo.adapters.persistence.profile.buckets"),
+    resolved = (
+        None if objects is None else _substrate_handle(objects, SecureObjectRepository, "secure-object repository")
     )
-    return buckets.BucketEventHistoryRepository(objects=objects)
+    return BucketEventHistoryRepository(objects=resolved)
 
 
 __all__ = [
@@ -1145,7 +1145,6 @@ __all__ = [
     "ProfileCustodySecureObjectRepositoryPort",
     "ProfileCustodyUnlockPort",
     "ProfileLoginThrottleEvaluationPort",
-    "ProfileMasterKeyProviderPort",
     "ProfilePersistedSessionPort",
     "ProfileRecordCryptoError",
     "ProfileRecordCryptoPort",
@@ -1177,15 +1176,11 @@ __all__ = [
     "profile_custody_secure_object_repository",
     "profile_delete_session",
     "profile_evaluate_login_throttle",
-    "profile_get_master_key_provider",
     "profile_is_authentication_failure",
     "profile_is_keyring_unavailable",
     "profile_is_password_authentication_failure",
     "profile_is_persisted_session",
     "profile_load_or_mint_bucket_dek",
-    "profile_load_session_key",
-    "profile_master_key_backend_kind",
-    "profile_master_key_is_unsecured",
     "profile_mint_session",
     "profile_record_login_failure",
     "profile_refuse_unsecured_bucket_with_real_profile",
@@ -1195,7 +1190,6 @@ __all__ = [
     "profile_session_idle_minutes",
     "profile_session_path",
     "profile_session_serves_bucket",
-    "profile_write_session",
     "profile_zeroise",
     "refuse_profile_login_without_password_channel",
     "replace_profile_custody_data_file",
