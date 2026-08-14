@@ -60,6 +60,17 @@ A third net reports a reach into a *private* submodule anywhere under the
 persistence-storage substrate, which the architecture rule binds a string-built
 dynamic target to exactly as it binds a static one.
 
+Proving the root, not the matcher
+---------------------------------
+An absence gate has two independent ways to lie, and only one of them is about
+detection.  Proving the detector reds on material it was always going to reach
+says nothing about whether it reaches the material that matters, and a scope
+proof that derives its expectation from the scan root agrees with itself at any
+width -- reproducing the original defect one level up.  The coverage assertion
+below therefore anchors to the layer directory, which the scan root cannot
+influence.  Keep it that way: it is the only part of this module that fails when
+the root is wrong rather than when the matcher is.
+
 Nothing passes here by omission
 -------------------------------
 ``user_profile/_bundle_encryption.py`` imports ``KdfParams`` and
@@ -398,10 +409,14 @@ def test_scan_root_covers_every_sibling_package_of_the_layer() -> None:
     package, so every sibling was invisible and the assertion passed by never
     looking.
 
-    The expected membership is derived from the layer directory, never from
-    ``_SCAN_ROOT``, because a root that supplies its own expectation agrees with
-    itself at any width -- which is exactly how the original passed.  Narrow the
-    scan back to any single package and this fails naming what went dark.
+    The expected membership is therefore derived from the layer directory, never
+    from ``_SCAN_ROOT``.  A root that supplies its own expectation agrees with
+    itself at any width, so a scope proof written that way reproduces the very
+    failure it is meant to catch, one level up: it restates the root instead of
+    checking it, and stays green while the scan narrows to nothing.  Anchoring
+    the expectation to something the root cannot influence is what makes this a
+    proof.  Narrow the scan back to any single package and it fails naming every
+    package that went dark.
     """
     scanned = {module.resolve() for module in _production_modules(_SCAN_ROOT)}
     packages = [
