@@ -10,11 +10,10 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.core import Period
 from cadrumo.domain.calculations.registry import (
     ModeloId,
     ProjectionEndpointDeclaration,
-    RegistrySnapshot,
+    RegistryRevisionInspection,
     RevisionId,
 )
 
@@ -33,7 +32,10 @@ from ._semantic_map import (
     SemanticMapEntry,
     SemanticMapRecord,
 )
-from ._semantic_map_validation import SemanticMapAnomalyException, validate_semantic_map
+from ._semantic_map_validation import (
+    SemanticMapAnomalyException,
+    validate_semantic_map,
+)
 
 __all__ = [
     "JoinedM303VariableEnvelope",
@@ -104,7 +106,6 @@ class JoinedRecordDesign(_StrictModel):
     modelo: ModeloId
     source: RecordDesignIntermediateSource
     revision_id: RevisionId | None = None
-    filing_period: Period | None = None
     records: tuple[JoinedRecordDesignRecord, ...] = Field(min_length=1)
     fields: tuple[JoinedRecordDesignField, ...] = Field(min_length=1)
     projection_endpoints: tuple[ProjectionEndpointDeclaration, ...] = ()
@@ -135,32 +136,40 @@ class JoinedRecordDesign(_StrictModel):
                 raise ValueError("joined DP30300 parser envelope requires reviewed semantic composition")
         elif parser_m303_envelopes != (self.m303_variable_envelope.parser_envelope,):
             raise ValueError("joined M303 variable envelope must be the sole parser DP30300 wrapper")
-        elif self.revision_id is None or self.filing_period is None:
-            raise ValueError(
-                "joined M303 variable envelope requires the exact selected snapshot revision and filing period",
-            )
+        elif self.revision_id is None:
+            raise ValueError("joined M303 variable envelope requires the exact selected revision")
         return self
 
 
 def join_record_design_semantics(
     semantic_map: SemanticMap,
     intermediate: RecordDesignIntermediate,
-    snapshot: RegistrySnapshot,
+    inspection: RegistryRevisionInspection,
     *,
     anomaly_exceptions: tuple[SemanticMapAnomalyException, ...] = (),
 ) -> JoinedRecordDesign:
-    """Pair every parser field with exactly one reviewed semantic entry.
-
-    Validation precedes indexing, so the direct lookup below is reachable only
-    for a source/applicability-valid complete bijection.  Iteration follows the
-    parser-owned sheet and field order unchanged.
-    """
+    """Join static parser/map evidence through a non-filing revision inspection."""
     validate_semantic_map(
         semantic_map,
         intermediate,
-        snapshot,
+        inspection,
         anomaly_exceptions=anomaly_exceptions,
     )
+    return _join_record_design_semantics(
+        semantic_map,
+        intermediate,
+        revision_id=inspection.revision_id,
+        projection_endpoints=inspection.projection_endpoints,
+    )
+
+
+def _join_record_design_semantics(
+    semantic_map: SemanticMap,
+    intermediate: RecordDesignIntermediate,
+    *,
+    revision_id: RevisionId,
+    projection_endpoints: tuple[ProjectionEndpointDeclaration, ...],
+) -> JoinedRecordDesign:
     entries_by_anchor = {_semantic_anchor_key(entry.anchor): entry for entry in semantic_map.entries}
     records_by_anchor = {_semantic_record_key(record): record for record in semantic_map.records}
     joined_records = tuple(
@@ -180,11 +189,10 @@ def join_record_design_semantics(
     return JoinedRecordDesign(
         modelo=semantic_map.modelo,
         source=intermediate.source,
-        revision_id=snapshot.revision.id,
-        filing_period=snapshot.filing_period,
+        revision_id=revision_id,
         records=joined_records,
         fields=tuple(field for record in joined_records for field in record.fields),
-        projection_endpoints=snapshot.revision.projection_endpoints,
+        projection_endpoints=projection_endpoints,
         variable_envelopes=intermediate.variable_envelopes,
         auxiliary_envelope_headers=intermediate.auxiliary_envelope_headers,
         m303_variable_envelope=(

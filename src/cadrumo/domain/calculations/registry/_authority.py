@@ -37,6 +37,8 @@ from ._m303_orden_projection_models import (
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 from ._snapshot import build_validated_snapshot
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
+from ._static_inspection import RegistryRevisionInspection
+from ._temporal import select_revision
 from ._validate import RegistryValidator
 from ._validate_evidence import flush_corpus_text_cache
 from ._validate_verdict import (
@@ -105,6 +107,33 @@ class ValidatedRegistryAuthority:
                 flush_corpus_text_cache()
             self._validated_modelos.add(modelo_id)
         return modelo
+
+    def inspect_revision(
+        self,
+        modelo_id: str,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None = None,
+    ) -> RegistryRevisionInspection:
+        """Project static admission facts for one canonically selected revision.
+
+        The request coordinate selects one revision through the canonical
+        temporal resolver, but the returned projection retains neither filing
+        year nor period.  It validates the full registry and never constructs
+        a :class:`RegistrySnapshot`; callers that need filing eligibility must
+        use :meth:`snapshot` instead.
+        """
+        self.validate_registry()
+        modelo = self.modelo(modelo_id)
+        revision = select_revision(modelo, filing_year=filing_year, period=period, on=on)
+        return RegistryRevisionInspection.from_revision(
+            modelo=modelo,
+            revision=revision,
+            source_root=self.source_root,
+            sources=self.catalogues.sources,
+            legal_ref_ids=frozenset(self.catalogues.legal),
+        )
 
     def validate_registry(self) -> None:
         """Validate the full registry tree once."""
@@ -272,6 +301,29 @@ def bundled_authority() -> ValidatedRegistryAuthority:
     return ValidatedRegistryAuthority.load(root, source_root=_bundled_path())
 
 
+def bundled_revision_inspection(
+    modelo_id: str,
+    *,
+    filing_year: int,
+    period: str,
+    on: date | None = None,
+) -> RegistryRevisionInspection:
+    """Return a static revision inspection without entering the filing gate.
+
+    The authority fully validates the bundled registry and its supporting
+    catalogues, then canonically selects the request's revision.  It
+    intentionally does not certify legal-review status or construct a filing
+    snapshot, because source-design inspection is not a filing operation and
+    must not be represented as one.
+    """
+    return bundled_authority().inspect_revision(
+        modelo_id,
+        filing_year=filing_year,
+        period=period,
+        on=on,
+    )
+
+
 @lru_cache(maxsize=16)
 def _load_authority(
     root: Path,
@@ -279,6 +331,34 @@ def _load_authority(
     _registry_fingerprint: tuple[tuple[str, int, int, str], ...],
     _source_evidence_fingerprint: tuple[tuple[str, int, int], ...],
 ) -> ValidatedRegistryAuthority:
+    authority = _construct_authority(root, source_root, _source_evidence_fingerprint)
+    # A persisted green verdict keyed by the exact
+    # fingerprint tuples this lru_cache already keys on lets an immutable tree
+    # skip the multi-second re-validation. The build and continuous integration
+    # are the validation gate; the runtime asserts fingerprint identity only. A
+    # mismatch or a foreign verdict re-validates in full and rewrites the verdict.
+    verdict_key = compute_verdict_key(
+        registry_fingerprints=_registry_fingerprint,
+        source_evidence_fingerprints=_source_evidence_fingerprint,
+    )
+    if registry_validation_is_certified(
+        root,
+        verdict_key=verdict_key,
+        registry_fingerprints=_registry_fingerprint,
+    ):
+        authority.mark_registry_validated()
+    else:
+        authority.validate_registry()
+        certify_registry_validation(root, verdict_key=verdict_key)
+    return authority
+
+
+def _construct_authority(
+    root: Path,
+    source_root: Path,
+    source_evidence_fingerprint: tuple[tuple[str, int, int], ...],
+) -> ValidatedRegistryAuthority:
+    """Compile registry material before either filing or inspection admission."""
     modelos, catalogues = load_registry_tree(root)
     # Compile the cross-cutting Convenio doble imposición treaty tree and fold it
     # onto the shared catalogues so every snapshot projects the same authority.
@@ -320,7 +400,7 @@ def _load_authority(
         _validator=RegistryValidator(
             catalogues,
             source_root=source_root,
-            source_evidence_fingerprint=_source_evidence_fingerprint,
+            source_evidence_fingerprint=source_evidence_fingerprint,
         ),
         _registry_validated=False,
         _validated_modelos=set(),
@@ -331,24 +411,6 @@ def _load_authority(
         # so this lru_cache invalidates when the manifest changes on disk.
         _authorization_manifest=load_authorization_manifest(root),
     )
-    # A persisted green verdict keyed by the exact
-    # fingerprint tuples this lru_cache already keys on lets an immutable tree
-    # skip the multi-second re-validation. The build and continuous integration
-    # are the validation gate; the runtime asserts fingerprint identity only. A
-    # mismatch or a foreign verdict re-validates in full and rewrites the verdict.
-    verdict_key = compute_verdict_key(
-        registry_fingerprints=_registry_fingerprint,
-        source_evidence_fingerprints=_source_evidence_fingerprint,
-    )
-    if registry_validation_is_certified(
-        root,
-        verdict_key=verdict_key,
-        registry_fingerprints=_registry_fingerprint,
-    ):
-        authority.mark_registry_validated()
-    else:
-        authority.validate_registry()
-        certify_registry_validation(root, verdict_key=verdict_key)
     return authority
 
 

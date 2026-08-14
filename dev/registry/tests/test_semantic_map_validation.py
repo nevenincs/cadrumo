@@ -13,7 +13,7 @@ from cadrumo.core import (
     M303ProrrataActivityProjectionRef,
     validated_casilla_id,
 )
-from cadrumo.domain.calculations.registry import RegistryValidationError, bundled_authority
+from cadrumo.domain.calculations.registry import RegistryValidationError, bundled_revision_inspection
 
 from .. import _semantic_map_validation
 from .._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
@@ -25,12 +25,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 @pytest.fixture
 def _m200_snapshot():
-    return bundled_authority().snapshot("200", filing_year=2025, period="0A")
+    return bundled_revision_inspection("200", filing_year=2025, period="0A")
 
 
 @pytest.fixture
 def _m303_snapshot():
-    return bundled_authority().snapshot("303", filing_year=2025, period="4T")
+    return bundled_revision_inspection("303", filing_year=2025, period="4T")
 
 
 def _intermediate_payload(*, source_sha256: str = "0" * 64) -> dict[str, object]:
@@ -195,13 +195,10 @@ def test_validation_refuses_catalogued_parser_source_absent_from_selected_revisi
             ),
         ),
     )
-    selected_revision_without_parser_source = _m200_snapshot.revision.model_copy(
-        update={
-            "source_refs": tuple(ref for ref in _m200_snapshot.revision.source_refs if ref != source_ref),
-        },
-    )
     snapshot_without_parser_source = _m200_snapshot.model_copy(
-        update={"revision": selected_revision_without_parser_source},
+        update={
+            "revision_source_refs": tuple(ref for ref in _m200_snapshot.revision_source_refs if ref != source_ref),
+        },
     )
 
     with pytest.raises(RegistryValidationError, match="is not an authority of selected revision"):
@@ -387,12 +384,18 @@ def test_validation_refuses_projection_ref_not_admitted_by_the_selected_snapshot
 
 def test_projection_admission_uses_the_real_revision_declaration_bijection(_m303_snapshot) -> None:
     """A selected M303 snapshot admits its complete typed endpoint matrix only."""
-    references = tuple(declaration.projection_ref for declaration in _m303_snapshot.revision.projection_endpoints)
+    references = tuple(declaration.projection_ref for declaration in _m303_snapshot.projection_endpoints)
 
-    _semantic_map_validation._validate_projection_ref_bijection(references, _m303_snapshot)
+    _semantic_map_validation._validate_projection_ref_bijection(
+        references,
+        projection_endpoints=_m303_snapshot.projection_endpoints,
+    )
 
     with pytest.raises(RegistryValidationError, match="omits target-revision projection declarations"):
-        _semantic_map_validation._validate_projection_ref_bijection(references[1:], _m303_snapshot)
+        _semantic_map_validation._validate_projection_ref_bijection(
+            references[1:],
+            projection_endpoints=_m303_snapshot.projection_endpoints,
+        )
 
 
 def test_anomaly_exception_is_hash_pinned_and_cannot_supply_coordinates(_m200_snapshot) -> None:
