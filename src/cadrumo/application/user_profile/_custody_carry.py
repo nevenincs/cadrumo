@@ -62,7 +62,7 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage.envelope import Envelope
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
-from ...core.hashing import sha256_hex
+from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...domain.evidence_consent import (
     EvidenceConsentLedgerEntry,
     evidence_consent_ledger_entry_object_key,
@@ -624,7 +624,7 @@ def _rebound_payload(carried: CarriedSecureObject, *, target_bucket_id: str) -> 
         return carried.payload
     envelope = json.loads(carried.payload.decode(_UTF_8))
     envelope["payload"]["bucket_id"] = target_bucket_id
-    return json.dumps(envelope).encode(_UTF_8)
+    return canonical_json_bytes(envelope)
 
 
 __all__ = [

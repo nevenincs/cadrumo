@@ -9,11 +9,9 @@ retired custody layout.
 
 from __future__ import annotations
 
-import json
 import os
 from datetime import datetime
 from enum import StrEnum
-from hashlib import sha256
 from pathlib import Path
 from typing import Any, ClassVar, Literal, TypeVar, cast
 from uuid import UUID
@@ -28,6 +26,11 @@ from ...core import (
     STRICT_FROZEN_CONFIG,
 )
 from ...core.errors import CadrumoError
+from ...core.hashing import (
+    bounded_canonical_json_bytes,
+    prefixed_digest,
+    validate_prefixed_digest,
+)
 from ...core.identity import ProfileLabel
 from ...core.time import validate_utc_aware
 from ._custody_hold_models import ProfileCustodyHoldAssessment, ProfileCustodyHoldEvidence
@@ -37,7 +40,6 @@ CUSTODY_TRANSACTION_SCHEMA_VERSION = 1
 CUSTODY_TRANSACTION_MAX_BYTES = 16 * 1024
 CUSTODY_RECEIPT_SCHEMA_VERSION = 1
 CUSTODY_RECEIPT_MAX_BYTES = 4 * 1024
-_SHA256_PREFIX = "sha256:"
 _EXTERNAL_STATE_RETAINED: tuple[str, ...] = (
     "remote registrations retained",
     "external backups retained",
@@ -85,28 +87,15 @@ class ProfileCustodyTransactionState(StrEnum):
     ROLLED_BACK = "rolled_back"
 
 
-def _digest(value: bytes) -> str:
-    return f"{_SHA256_PREFIX}{sha256(value).hexdigest()}"
-
-
 def validate_sha256_digest(value: str, *, subject: str) -> str:
-    if (
-        len(value) != 71
-        or not value.startswith(_SHA256_PREFIX)
-        or any(character not in "0123456789abcdef" for character in value[7:])
-    ):
-        raise ValueError(f"{subject} must be a lowercase sha256 digest")
-    return value
+    return validate_prefixed_digest(value, field_name=subject)
 
 
 def _canonical_bytes(value: object, *, maximum_bytes: int, subject: str) -> bytes:
     try:
-        encoded = json.dumps(value, ensure_ascii=True, sort_keys=True, separators=(",", ":")).encode("ascii")
+        return bounded_canonical_json_bytes(value, maximum_bytes=maximum_bytes, subject=subject)
     except (TypeError, ValueError) as exc:
         raise ProfileCustodyTransactionCorruptError(f"{subject} cannot be canonically encoded") from exc
-    if len(encoded) > maximum_bytes:
-        raise ProfileCustodyTransactionCorruptError(f"{subject} exceeds its byte limit")
-    return encoded
 
 
 def canonical_model_bytes(model: BaseModel, *, maximum_bytes: int, subject: str) -> bytes:
@@ -115,7 +104,7 @@ def canonical_model_bytes(model: BaseModel, *, maximum_bytes: int, subject: str)
 
 def canonical_payload_digest(payload: object, *, maximum_bytes: int, subject: str) -> str:
     """Digest an already-JSON-shaped payload under the one canonical encoding."""
-    return _digest(_canonical_bytes(payload, maximum_bytes=maximum_bytes, subject=subject))
+    return prefixed_digest(_canonical_bytes(payload, maximum_bytes=maximum_bytes, subject=subject))
 
 
 def _payload_without_self_digest(model: BaseModel) -> dict[str, object]:
@@ -125,7 +114,9 @@ def _payload_without_self_digest(model: BaseModel) -> dict[str, object]:
 
 
 def _computed_self_digest(model: BaseModel, *, maximum_bytes: int, subject: str) -> str:
-    return _digest(_canonical_bytes(_payload_without_self_digest(model), maximum_bytes=maximum_bytes, subject=subject))
+    return prefixed_digest(
+        _canonical_bytes(_payload_without_self_digest(model), maximum_bytes=maximum_bytes, subject=subject)
+    )
 
 
 def _model_json_with_self_digest(
@@ -136,7 +127,7 @@ def _model_json_with_self_digest(
     subject: str,
 ) -> bytes:
     payload = cast(dict[str, object], model_type.model_construct(**values, self_digest="").model_dump(mode="json"))
-    payload["self_digest"] = _digest(
+    payload["self_digest"] = prefixed_digest(
         _canonical_bytes(
             {key: value for key, value in payload.items() if key != "self_digest"},
             maximum_bytes=maximum_bytes,

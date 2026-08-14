@@ -8,10 +8,8 @@ valuation, refusing inputs that would consume more stock than available.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -22,16 +20,13 @@ from .....domain.contribuyente.inventory import (
     MovementRecord,
     ValuationMethod,
 )
-from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from .....tests.secure_sql import TestRuntimeProfile
+from ...tests.runtime_profile_fixture import _runtime_profile
 from ..inventory import InventoryLedgerRepository, load_inventory, record_movement, save_inventory
 
+__all__ = ["_runtime_profile"]
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-@pytest.fixture(autouse=True)
-def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        yield profile
 
 
 def _movement(kind: MovementKind, quantity: str, unit_cost: str, day: int) -> MovementRecord:

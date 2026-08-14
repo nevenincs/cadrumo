@@ -10,9 +10,7 @@ and no silent coercion (per the modelo-036-037 foundation contract
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -20,7 +18,9 @@ from ....adapters.persistence.profile.usage_ratios import (
     load_usage_ratios_with_censo_guard,
     save_usage_ratios,
 )
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....adapters.persistence.tests.runtime_profile_fixture import (
+    bucket_scoped_runtime_profile_fixture,
+)
 from ...categories import SpendingCategory
 from .. import (
     CensoRatioMismatchError,
@@ -31,11 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "73737373-7373-4373-8373-737373737311"
 
-
-@pytest.fixture(autouse=True)
-def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+_runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
 
 def test_load_returns_profile_when_no_home_office_overrides() -> None:

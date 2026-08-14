@@ -20,17 +20,13 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from dev.ci.lane_reachability import tracked_test_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REPO_ROOT: Final = Path(__file__).resolve().parents[3]
 
-#: Directories that carry no first-party test corpus. ``var`` is excluded
-#: because this module plants deliberately-broken samples there; the others
-#: are dependency, tooling, or build output.
-_NON_CORPUS_DIRECTORIES: Final = frozenset(
-    {".git", ".venv", ".vault", ".vaultspec", ".ruff_cache", ".pytest_cache", "node_modules", "var", "htmlcov"},
-)
+_UTF_8: Final = "utf-8"
 
 #: The short-summary form pytest uses for a module it could not import.
 _COLLECT_ERROR = re.compile(r"^ERROR (\S+)")
@@ -46,28 +42,70 @@ _MINIMUM_PLAUSIBLE_MODULE_COUNT: Final = 500
 
 
 def discover_test_roots() -> tuple[Path, ...]:
-    """Return every top-level directory that carries a test module.
+    """Return every top-level directory that carries a git-tracked test module.
 
-    Discovered rather than listed. A hardcoded set would silently exclude the
-    next ``dev/<thing>/tests`` somebody adds, which is the same shape of
-    invisibility this gate exists to close — a new corpus would sit outside
-    the gate reporting nothing.
+    Discovered rather than listed, in both directions. A hardcoded set of
+    INCLUDED roots would silently miss the next ``dev/<thing>/tests`` somebody
+    adds; a hardcoded set of EXCLUDED directory names rots the same way, and
+    did. Scratch trees are gitignored but were not on that name list, so a
+    campaign that copied the whole repository under ``tmp/`` was walked as
+    first-party corpus and reported roughly two thousand of its own modules as
+    uncollectable -- a red verdict that said nothing about this repository's
+    tests, and, in the other direction, a plausibility floor a scratch copy
+    could satisfy on its own.
+
+    The predicate is therefore what the repository itself declares, via the
+    same ``git ls-files`` question :func:`~dev.ci.lane_reachability.tracked_test_files`
+    already answers precisely: a top-level directory counts only when it holds
+    at least one test module git actually tracks. Neither an inclusion nor an
+    exclusion list can drift out of date, because there is no list.
     """
-    roots: list[Path] = []
-    for entry in sorted(_REPO_ROOT.iterdir()):
-        if not entry.is_dir() or entry.name in _NON_CORPUS_DIRECTORIES or entry.name.startswith("."):
-            continue
-        if next(entry.rglob("test_*.py"), None) is not None:
-            roots.append(entry)
-    return tuple(roots)
+    top_level_names = {module.parts[0] for module in tracked_test_files(_REPO_ROOT) if module.parts}
+    return tuple(sorted(_REPO_ROOT / name for name in top_level_names))
 
 
 def discovered_test_modules(roots: tuple[Path, ...]) -> tuple[Path, ...]:
-    """Return every ``test_*.py`` beneath ``roots``, repo-relative."""
-    modules: list[Path] = []
-    for root in roots:
-        modules.extend(path.relative_to(_REPO_ROOT) for path in root.rglob("test_*.py"))
-    return tuple(sorted(modules))
+    """Return every git-tracked test module beneath ``roots``, repo-relative.
+
+    Filtered from :func:`~dev.ci.lane_reachability.tracked_test_files` rather
+    than walked with ``rglob``: a filesystem walk would offer an untracked
+    scratch directory nested INSIDE a tracked root (a peer's uncommitted work
+    under ``src/cadrumo/something-untracked/``, say) as first-party corpus,
+    exactly the failure mode :func:`discover_test_roots` closes at the
+    top level. Deriving the module list from git's own record closes it at
+    every level, not only the top one.
+    """
+    root_names = {root.name for root in roots}
+    return tuple(module for module in tracked_test_files(_REPO_ROOT) if module.parts and module.parts[0] in root_names)
+
+
+def _nested_untracked_test_directories(targets: tuple[Path, ...]) -> tuple[str, ...]:
+    """Return directories STRICTLY below ``targets`` that hold an untracked test module.
+
+    ``discovered_test_modules`` answers the counting question entirely from
+    git, so it cannot be fooled by a scratch directory nested inside a tracked
+    root. But :func:`collection_report` hands pytest the ROOT DIRECTORY, and
+    pytest walks whatever is on disk beneath it -- so an untracked directory
+    nested inside a tracked root (``src/cadrumo/something-untracked/``, say)
+    would still be walked into and collected. This computes ``--ignore``
+    targets for exactly that gap.
+
+    A target itself is never reported, even when the target sits under a
+    gitignored path (a planted sample directory under ``var/`` always does):
+    only genuine descendants below a target are in scope, so a caller's
+    intended corpus can never exclude itself.
+    """
+    tracked = frozenset(tracked_test_files(_REPO_ROOT))
+    directories: set[Path] = set()
+    for target in targets:
+        if not target.is_dir():
+            continue
+        for on_disk in target.rglob("test_*.py"):
+            if on_disk.parent == target:
+                continue
+            if on_disk.relative_to(_REPO_ROOT) not in tracked:
+                directories.add(on_disk.parent)
+    return tuple(str(directory) for directory in sorted(directories))
 
 
 def collection_report(targets: tuple[Path, ...]) -> tuple[tuple[str, ...], int]:
@@ -100,6 +138,7 @@ def collection_report(targets: tuple[Path, ...]) -> tuple[tuple[str, ...], int]:
             "--no-header",
             "-n0",
             "--continue-on-collection-errors",
+            *(f"--ignore={directory}" for directory in _nested_untracked_test_directories(targets)),
             *(str(target) for target in targets),
         ],
         cwd=_REPO_ROOT,
@@ -160,6 +199,54 @@ def test_discovery_finds_the_real_corpus() -> None:
         f"discovery found only {len(modules)} test modules, below the plausibility floor "
         f"of {_MINIMUM_PLAUSIBLE_MODULE_COUNT} — discovery is probably broken rather than the corpus shrunk"
     )
+
+
+def test_discovery_excludes_a_real_gitignored_scratch_tree() -> None:
+    """A gitignored top-level tree carrying test modules is not first-party corpus.
+
+    Planted for real rather than simulated: the tree is created under a
+    genuinely gitignored path, carries a genuinely broken test module, and the
+    assertion is that discovery does not offer it to the collector. Without
+    this, the boundary would be a claim in a docstring -- and the name list it
+    replaced failed in exactly this way, silently, for as long as a scratch
+    copy sat in the tree.
+    """
+    scratch_root = _REPO_ROOT / "tmp" / f"corpus-boundary-sample-{uuid.uuid4().hex[:8]}"
+    scratch_root.mkdir(parents=True)
+    try:
+        git = shutil.which("git")
+        assert git is not None, "the control requires git to confirm the planted tree is genuinely ignored"
+        ignore_check = subprocess.run(
+            [git, "check-ignore", str(scratch_root)],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            check=False,
+        )
+        # `git check-ignore` exits 0 when the path IS ignored -- the control is
+        # void unless the planted tree is genuinely gitignored, not merely new.
+        assert ignore_check.returncode == 0, "the control is void unless the planted tree is genuinely gitignored"
+        planted = _plant(
+            scratch_root,
+            "test_scratch_copy_is_not_corpus",
+            """
+            from cadrumo.a_module_that_does_not_exist import missing
+
+            def test_never_reached() -> None:
+                assert missing
+            """,
+        )
+
+        roots = discover_test_roots()
+        modules = discovered_test_modules(roots)
+    finally:
+        shutil.rmtree(scratch_root, ignore_errors=True)
+
+    assert scratch_root.name not in {root.name for root in roots}
+    assert planted not in modules, "discovery offered a gitignored scratch tree to the collector as first-party corpus"
+    assert not [module for module in modules if module.parts and module.parts[0] == "tmp"], (
+        "discovery offered a gitignored scratch tree to the collector as first-party corpus"
+    )
+    assert roots, "the exclusion must not have emptied discovery"
 
 
 def test_detector_reports_a_module_it_cannot_import() -> None:

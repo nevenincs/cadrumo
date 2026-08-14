@@ -90,12 +90,12 @@ from ._kdf_supervision import (
     unlock_profile_custody_material,
     wrap_profile_custody_material,
 )
-from ._label_head import (
+from ._label_head_models import (
     LABEL_HEAD_MAX_BYTES,
     ProfileLabelHead,
     ProfileLabelHeadPendingAdvance,
-    ProfileLabelHeadRepository,
 )
+from ._label_head_repository import ProfileLabelHeadRepository
 from ._paths import profile_custody_path
 from ._records import (
     PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,

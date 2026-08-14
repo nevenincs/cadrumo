@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import base64
-import hashlib
 import json
-from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, Literal, cast
 from uuid import UUID
@@ -14,6 +12,13 @@ from pydantic import BaseModel, Field, ValidationError, field_validator, model_v
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.hashing import (
+    bounded_canonical_json_bytes,
+    canonical_json_digest,
+    reject_duplicate_json_members,
+    reject_json_constant,
+    validate_prefixed_digest,
+)
 from ._errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
 from ._kdf_supervision import (
     unlock_profile_custody_material,
@@ -33,57 +38,6 @@ PROFILE_CUSTODY_RECOVERY_SCHEMA_VERSION: Final = 1
 PROFILE_CUSTODY_RECOVERY_MAX_BYTES: Final = 1024
 PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES: Final = 1024
 PROFILE_CUSTODY_RECOVERY_FILENAME: Final = "recovery.v1.json"
-_SHA256_DIGEST_PREFIX: Final = "sha256:"
-_SHA256_DIGEST_LENGTH: Final = len(_SHA256_DIGEST_PREFIX) + 64
-
-
-def _canonical_json_bytes(payload: Mapping[str, object], *, maximum_bytes: int, subject: str) -> bytes:
-    encoded = json.dumps(
-        payload,
-        allow_nan=False,
-        ensure_ascii=False,
-        separators=(",", ":"),
-        sort_keys=True,
-    ).encode(_UTF_8_ENCODING)
-    if len(encoded) > maximum_bytes:
-        raise ValueError(f"{subject} exceeds its canonical byte limit")
-    return encoded
-
-
-def _canonical_digest(payload: Mapping[str, object], *, maximum_bytes: int, subject: str) -> str:
-    canonical = _canonical_json_bytes(payload, maximum_bytes=maximum_bytes, subject=subject)
-    return f"sha256:{hashlib.sha256(canonical).hexdigest()}"
-
-
-def _reject_duplicate_members(pairs: Sequence[tuple[str, object]]) -> dict[str, object]:
-    result: dict[str, object] = {}
-    for key, member in pairs:
-        if key in result:
-            raise ValueError(f"duplicate JSON member {key!r}")
-        result[key] = member
-    return result
-
-
-def _reject_json_constant(value: str) -> None:
-    raise ValueError(f"non-finite JSON constant {value!r} is forbidden")
-
-
-# These narrow helpers are shared by the two current-format record modules;
-# their callers still supply each record's independent byte ceiling and subject.
-canonical_custody_json_bytes = _canonical_json_bytes
-canonical_custody_digest = _canonical_digest
-reject_duplicate_custody_members = _reject_duplicate_members
-reject_custody_json_constant = _reject_json_constant
-
-
-def validate_profile_custody_digest(value: str, *, field_name: str) -> str:
-    if (
-        len(value) != _SHA256_DIGEST_LENGTH
-        or not value.startswith(_SHA256_DIGEST_PREFIX)
-        or any(character not in "0123456789abcdef" for character in value[len(_SHA256_DIGEST_PREFIX) :])
-    ):
-        raise ValueError(f"{field_name} must be a lowercase sha256 digest")
-    return value
 
 
 def validate_profile_custody_dek_epoch(value: str) -> str:
@@ -138,7 +92,7 @@ class _RecoveryPayload(BaseModel):
     def _validate_previous_digest(cls, value: str | None) -> str | None:
         if value is None:
             return None
-        return validate_profile_custody_digest(value, field_name="previous_recovery_digest")
+        return validate_prefixed_digest(value, field_name="previous_recovery_digest")
 
 
 class ProfileCustodyRecoveryEnvelope(_RecoveryPayload):
@@ -149,7 +103,7 @@ class ProfileCustodyRecoveryEnvelope(_RecoveryPayload):
     @field_validator("self_digest")
     @classmethod
     def _validate_self_digest(cls, value: str) -> str:
-        return validate_profile_custody_digest(value, field_name="self_digest")
+        return validate_prefixed_digest(value, field_name="self_digest")
 
     @model_validator(mode="after")
     def _verify_self_digest(self) -> ProfileCustodyRecoveryEnvelope:
@@ -165,14 +119,14 @@ class ProfileCustodyRecoveryEnvelope(_RecoveryPayload):
 
     @property
     def computed_self_digest(self) -> str:
-        return _canonical_digest(
+        return canonical_json_digest(
             self.canonical_payload,
             maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES,
             subject="profile recovery envelope",
         )
 
     def canonical_json_bytes(self) -> bytes:
-        return _canonical_json_bytes(
+        return bounded_canonical_json_bytes(
             self.model_dump(mode="json"),
             maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES,
             subject="profile recovery envelope",
@@ -200,13 +154,13 @@ class ProfileCustodyRecoveryEnvelope(_RecoveryPayload):
                 aad=_RECOVERY_AAD,
                 previous_recovery_digest=previous_recovery_digest,
             ).model_dump(mode="json")
-            payload["self_digest"] = _canonical_digest(
+            payload["self_digest"] = canonical_json_digest(
                 payload,
                 maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES,
                 subject="profile recovery envelope",
             )
             return cls.model_validate_json(
-                _canonical_json_bytes(
+                bounded_canonical_json_bytes(
                     payload,
                     maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES,
                     subject="profile recovery envelope",
@@ -223,13 +177,13 @@ def parse_profile_custody_recovery_envelope(value: bytes) -> ProfileCustodyRecov
     try:
         parsed = json.loads(
             value.decode(_UTF_8_ENCODING, errors="strict"),
-            object_pairs_hook=_reject_duplicate_members,
-            parse_constant=_reject_json_constant,
+            object_pairs_hook=reject_duplicate_json_members,
+            parse_constant=reject_json_constant,
         )
         if not isinstance(parsed, dict):
             raise ValueError("profile recovery envelope must be a JSON object")
         envelope = ProfileCustodyRecoveryEnvelope.model_validate_json(
-            _canonical_json_bytes(
+            bounded_canonical_json_bytes(
                 cast(dict[str, object], parsed),
                 maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES,
                 subject="profile recovery envelope",
@@ -297,11 +251,11 @@ def profile_custody_recovery_aad_for(
     kdf: ProfileCustodyKdfParameters,
     aad: ProfileCustodyRecoveryAad,
 ) -> bytes:
-    return _canonical_json_bytes(
+    return bounded_canonical_json_bytes(
         {
             "aad": aad.model_dump(mode="json"),
             "dek_epoch": dek_epoch,
-            "kdf_digest": _canonical_digest(
+            "kdf_digest": canonical_json_digest(
                 kdf.model_dump(mode="json"),
                 maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES,
                 subject="profile recovery KDF",
@@ -361,12 +315,8 @@ __all__ = [
     "ProfileCustodyRecoveryAad",
     "ProfileCustodyRecoveryEnvelope",
     "ProfileCustodyRecoveryUnlock",
-    "canonical_custody_digest",
-    "canonical_custody_json_bytes",
     "create_profile_custody_recovery_envelope",
     "parse_profile_custody_recovery_envelope",
     "profile_custody_recovery_aad",
-    "reject_custody_json_constant",
-    "reject_duplicate_custody_members",
     "unlock_profile_custody_recovery",
 ]

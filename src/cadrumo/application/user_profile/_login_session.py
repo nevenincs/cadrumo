@@ -48,6 +48,11 @@ from ...core import (
     storage_location,
 )
 from ...core.config import load_settings
+from ...core.hashing import (
+    bounded_canonical_json_bytes,
+    reject_duplicate_json_members,
+    reject_json_constant,
+)
 from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...core.paths import effective_storage_root
@@ -60,7 +65,6 @@ from ..profile_custody import (
     ProfileCustodyPasswordMaterialPort,
     ProfilePersistedSessionPort,
     ProfileSessionResumeOutcomePort,
-    canonical_json_bytes,
     default_profile_bucket_event_history_repository,
     default_profile_custody_local_record_store,
     load_profile_custody_password_material,
@@ -196,10 +200,10 @@ class _ProfileLoginHandoverJournal(BaseModel):
 
     def canonical_json_bytes(self) -> bytes:
         """Return the journal's one bounded, byte-exact persistence form."""
-        return canonical_json_bytes(
+        return bounded_canonical_json_bytes(
             self.model_dump(mode="json"),
             maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
-            limit_error="profile login handover journal exceeds its byte limit",
+            subject="profile login handover journal",
         )
 
 
@@ -339,21 +343,6 @@ def _handover_journal_directory(storage_root: Path) -> Path:
     return storage_root / storage_location(StorageCategory.OPERATION_JOURNAL).relative_path()
 
 
-def _reject_duplicate_handover_member(pairs: list[tuple[str, object]]) -> dict[str, object]:
-    """Reject duplicate JSON keys before Pydantic can normalise them away."""
-    document: dict[str, object] = {}
-    for key, value in pairs:
-        if key in document:
-            raise ValueError(f"duplicate handover journal member {key!r}")
-        document[key] = value
-    return document
-
-
-def _reject_handover_json_constant(value: str) -> NoReturn:
-    """Reject non-finite JSON constants from the one durable recovery record."""
-    raise ValueError(f"non-finite handover journal constant {value!r}")
-
-
 def _parse_handover_journal(payload: bytes) -> _ProfileLoginHandoverJournal:
     """Decode only the journal's exact bounded canonical JSON form."""
     if len(payload) > _HANDOVER_JOURNAL_MAX_BYTES:
@@ -361,15 +350,15 @@ def _parse_handover_journal(payload: bytes) -> _ProfileLoginHandoverJournal:
     try:
         document = json.loads(
             payload.decode("utf-8", errors="strict"),
-            object_pairs_hook=_reject_duplicate_handover_member,
-            parse_constant=_reject_handover_json_constant,
+            object_pairs_hook=reject_duplicate_json_members,
+            parse_constant=reject_json_constant,
         )
         if not isinstance(document, dict):
             raise ValueError("handover journal must be a JSON object")
-        canonical = canonical_json_bytes(
+        canonical = bounded_canonical_json_bytes(
             cast(dict[str, object], document),
             maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
-            limit_error="profile login handover journal exceeds its byte limit",
+            subject="profile login handover journal",
         )
         journal = _ProfileLoginHandoverJournal.model_validate_json(canonical)
         if journal.canonical_json_bytes() != payload:

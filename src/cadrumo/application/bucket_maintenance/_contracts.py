@@ -303,18 +303,16 @@ class ExportBucketCommand(BaseModel):
     """Operator request to export a bucket as a sealed archive.
 
     The ``output_path`` is operator-specified; the service refuses to
-    overwrite an existing target. The ``recovery_wrap_passphrase``
-    field is optional: when present the service derives a
-    recovery-passphrase KEK and emits a 3-member archive (including
-    ``recovery.wrap``); when absent the service uses the bucket's
-    active KEK and emits a 2-member archive without recovery-wrap.
+    overwrite an existing target. The archive is sealed under the
+    profile's own custody and carries committed profile data only; a
+    profile's recovery record is an exclusive separate artifact with its
+    own export grammar and is never folded into this transport.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     output_path: Path
-    recovery_wrap_passphrase: str | None = Field(default=None, min_length=8, max_length=512)
 
 
 class ExportBucketResult(BaseModel):
@@ -332,7 +330,6 @@ class ExportBucketResult(BaseModel):
     bucket_id: BucketId
     output_path: Path
     manifest_digest: ContentDigest
-    recovery_wrap_present: bool
     occurred_at: UtcInstant
 
 
@@ -341,16 +338,15 @@ class ImportBucketCommand(BaseModel):
 
     The ``source_path`` is operator-specified. The service refuses
     when the archive's ``bucket_id`` collides with an existing live
-    profile unless ``force_replace`` is ``True``; when the source
-    archive carries a recovery-wrap member, the operator MUST supply
-    the matching ``recovery_wrap_passphrase``.
+    profile unless ``force_replace`` is ``True``. Import is authorised
+    by the profile's own password; it never discovers, requires, or
+    falls back to recovery material.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     source_path: Path
     force_replace: bool = False
-    recovery_wrap_passphrase: str | None = Field(default=None, min_length=8, max_length=512)
 
 
 class ImportBucketResult(BaseModel):
@@ -375,9 +371,8 @@ class InspectBucketArchiveCommand(BaseModel):
     """Operator request to inspect a sealed bucket archive without restoring it.
 
     Read-only: the source archive is neither decrypted nor written to. This
-    lets an operator confirm which bucket a backup file holds, when it was
-    written, and whether it carries a recovery-wrap member, without needing
-    the sealing key.
+    lets an operator confirm which bucket a backup file holds and when it was
+    written, without needing the sealing key.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -400,7 +395,6 @@ class InspectBucketArchiveResult(BaseModel):
 
     bucket_id: BucketId
     manifest_digest: ContentDigest
-    recovery_wrap_present: bool
     archive_schema_version: int = Field(ge=1)
     created_at: UtcInstant
     size_bytes: int = Field(ge=0)

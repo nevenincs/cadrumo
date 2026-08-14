@@ -22,7 +22,7 @@ from .test_every_test_module_is_collectable import (
     discover_test_roots,
 )
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.harness]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 
 def test_every_test_module_in_the_tree_is_collectable() -> None:

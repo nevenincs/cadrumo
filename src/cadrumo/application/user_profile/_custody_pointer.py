@@ -11,15 +11,8 @@ from typing import Any
 from pydantic import BaseModel, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, StorageCategory, storage_location
+from ...core.hashing import prefixed_digest as _digest
 from ...core.paths import effective_storage_root
-
-_SHA256_PREFIX = "sha256:"
-
-
-def _digest(value: bytes) -> str:
-    import hashlib
-
-    return f"{_SHA256_PREFIX}{hashlib.sha256(value).hexdigest()}"
 
 
 def _default_custody_adapters() -> Any:

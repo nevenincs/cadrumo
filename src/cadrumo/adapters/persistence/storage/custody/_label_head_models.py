@@ -8,9 +8,9 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 from .....core import STRICT_FROZEN_CONFIG
+from .....core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from ._capsule_records import ProfileCustodyCapsuleLabel
 from ._errors import ProfileCustodyRecordError
-from ._recovery import canonical_custody_digest, canonical_custody_json_bytes
 
 LABEL_HEAD_MAX_BYTES = 4 * 1024
 """Bounded durable head and pending-advance records share one strict budget."""
@@ -33,14 +33,14 @@ class _CustodyDigestModel(BaseModel):
 
     @property
     def computed_self_digest(self) -> str:
-        return canonical_custody_digest(
+        return canonical_json_digest(
             _payload_without_self_digest(self),
             maximum_bytes=self._digest_maximum_bytes,
             subject=self._digest_subject,
         )
 
     def canonical_json_bytes(self) -> bytes:
-        return canonical_custody_json_bytes(
+        return bounded_canonical_json_bytes(
             cast(dict[str, object], self.model_dump(mode="json")),
             maximum_bytes=self._digest_maximum_bytes,
             subject=self._digest_subject,
@@ -50,13 +50,13 @@ class _CustodyDigestModel(BaseModel):
     def _create_with_self_digest(cls: type[_ModelT], values: dict[str, Any], error_message: str) -> _ModelT:
         try:
             payload = cls.model_construct(**values, self_digest="").model_dump(mode="json")
-            payload["self_digest"] = canonical_custody_digest(
+            payload["self_digest"] = canonical_json_digest(
                 cast(dict[str, object], {key: value for key, value in payload.items() if key != "self_digest"}),
                 maximum_bytes=cls._digest_maximum_bytes,
                 subject=cls._digest_subject,
             )
             return cls.model_validate_json(
-                canonical_custody_json_bytes(
+                bounded_canonical_json_bytes(
                     cast(dict[str, object], payload),
                     maximum_bytes=cls._digest_maximum_bytes,
                     subject=cls._digest_subject,

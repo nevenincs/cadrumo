@@ -4,16 +4,13 @@ from __future__ import annotations
 
 import base64
 import ctypes
-import hashlib
-import json
 import os
 import queue
 import struct
-from collections.abc import Mapping
 from contextlib import suppress
 from typing import Final, cast
 
-from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from ._errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
 from ._records import ProfileCustodyKdfParameters
 
@@ -25,21 +22,14 @@ KDF_FRAME_HEADER: Final = struct.Struct("!4sBBHI")
 _FRAME_MAX_BYTES: Final = 8 * 1024
 
 
-def canonical_json_bytes(payload: Mapping[str, object]) -> bytes:
-    encoded = json.dumps(
-        payload,
-        allow_nan=False,
-        ensure_ascii=False,
-        separators=(",", ":"),
-        sort_keys=True,
-    ).encode(_UTF_8_ENCODING)
-    if len(encoded) > _FRAME_MAX_BYTES:
-        raise ValueError("profile KDF frame exceeds its bounded transport")
-    return encoded
+def canonical_frame_bytes(payload: object) -> bytes:
+    """Encode one supervised-KDF frame body under the canonical encoding."""
+    return bounded_canonical_json_bytes(payload, maximum_bytes=_FRAME_MAX_BYTES, subject="profile KDF frame")
 
 
-def canonical_digest(payload: Mapping[str, object]) -> str:
-    return f"sha256:{hashlib.sha256(canonical_json_bytes(payload)).hexdigest()}"
+def canonical_frame_digest(payload: object) -> str:
+    """Digest one supervised-KDF frame body under the canonical encoding."""
+    return canonical_json_digest(payload, maximum_bytes=_FRAME_MAX_BYTES, subject="profile KDF frame")
 
 
 def decode_canonical_b64(value: str, *, field_name: str, expected_bytes: int | None) -> bytes:
@@ -54,19 +44,6 @@ def decode_canonical_b64(value: str, *, field_name: str, expected_bytes: int | N
     if base64.b64encode(decoded).decode("ascii") != value:
         raise ValueError(f"{field_name} must be canonical base64")
     return decoded
-
-
-def reject_duplicate_members(pairs: list[tuple[str, object]]) -> dict[str, object]:
-    result: dict[str, object] = {}
-    for key, member in pairs:
-        if key in result:
-            raise ValueError(f"duplicate JSON member {key!r}")
-        result[key] = member
-    return result
-
-
-def reject_json_constant(value: str) -> None:
-    raise ValueError(f"non-finite JSON constant {value!r} is forbidden")
 
 
 def kdf_strength(parameters: ProfileCustodyKdfParameters) -> tuple[int, int, int]:

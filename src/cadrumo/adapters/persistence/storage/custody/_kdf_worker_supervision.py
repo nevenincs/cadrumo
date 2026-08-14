@@ -26,7 +26,7 @@ from ._kdf_codec import (
     write_kdf_frame,
 )
 from ._kdf_codec import (
-    canonical_json_bytes as _canonical_json_bytes,
+    canonical_frame_bytes as _canonical_frame_bytes,
 )
 from ._kdf_codec import (
     close_fd as _close_fd,
@@ -181,7 +181,7 @@ class _SupervisedKdfWorker:
     def _write_request(self, payload: dict[str, object]) -> None:
         if self._request_fd is None:
             raise _supervision_refusal()
-        encoded = _canonical_json_bytes(payload)
+        encoded = _canonical_frame_bytes(payload)
         try:
             write_kdf_frame(self._request_fd, encoded, kind=KDF_FRAME_CONTROL)
         except OSError:

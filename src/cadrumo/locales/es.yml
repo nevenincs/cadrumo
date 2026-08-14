@@ -602,6 +602,9 @@ application:
           NAME` antes de configurar la autenticación.
         provider_not_configured: No hay ningún proveedor de autenticación configurado;
           indica --provider o configura uno primero.
+        requires_custody_session: La operación de autenticación apunta al perfil '%{bucket_id}'
+          en %{storage_root}, pero ese perfil no tiene una sesión de custodia abierta.
+          Ejecute aeat config login para ese perfil y vuelva a intentarlo.
         scope_conflict: Elige --provider o --all, pero no ambos.
         unreadable_active_profile: 'El perfil activo ''%{active_profile}'' tiene un
           manifiesto de bucket pero no tiene un registro de perfil legible (status=%{status}).
@@ -709,8 +712,6 @@ application:
         a otro perfil.
       archive_not_confirmed: Archivar es una transición de estado reversible, pero
         requiere confirmación explícita.
-      archive_schema_version_from_future: La versión de esquema del archivo {archive_schema_version}
-        es más reciente de lo que admite esta aplicación (hasta {max_supported}).
       delete_active_bucket: No se puede eliminar el bucket activo; inicia sesión primero
         en otro perfil con aeat config login NAME.
       delete_not_confirmed: Esta operación es destructiva. Vuelve a ejecutar con --yes
@@ -722,17 +723,8 @@ application:
         y vuelve a exportarlo.'
       import_payload_invalid: El contenido del archivo de perfil no es válido o está
         dañado.
-      import_recovery_passphrase_required: Este archivo incluye un sobre de recuperación
-        cifrado; indica la frase de contraseña de recuperación para importarlo.
-      import_recovery_wrap_invalid: La frase de contraseña de recuperación indicada
-        no pudo desenvolver el sobre cifrado.
-      import_recovery_wrap_missing: El archivo declara un sobre de recuperación pero
-        no contiene sus bytes; el archivo está incompleto o dañado.
       restore_not_archived: El bucket no está archivado (dado de baja); no hay nada
         que recuperar.
-      unsupported_archive_schema_version: La versión de esquema del archivo {archive_schema_version}
-        es anterior a la admitida por esta aplicación; no puede restaurarse sin una
-        migración.
   calculations:
     binding_prefill:
       errors:
@@ -2075,6 +2067,8 @@ application:
         de pregunta desconocido.
       profile_flag_required: El asistente requiere --profile NAME (sin valor por defecto
         'default' implícito).
+      profile_label_taken: Ya existe un perfil llamado %{label}. Elija otro nombre
+        o ejecute el flujo de edición para modificar ese perfil.
       quiet_missing_flags: 'A esta ejecución con --quiet le faltan datos obligatorios.
         Añade estos flags y vuelve a ejecutar el comando: %{missing_flags}. O ejecútalo
         sin --quiet desde una terminal interactiva para usar el asistente guiado.'
@@ -4402,9 +4396,6 @@ cli:
           por correo o transferirlo entre equipos.
         export_name_help: Perfil a respaldar; por defecto el activo.
         export_out_help: Ruta de destino del archivo.
-        export_recovery_wrap_help: Frase de paso opcional para sellar el archivo,
-          en lugar de la clave activa del bucket; obligatoria si el archivo saldrá
-          de este equipo.
         help: Copia de seguridad y restauración de un perfil como archivo sellado
           y cifrado AEAD (el transporte de recuperación de custodia completa).
         import_active_switch_info: El perfil restaurado {name} es ahora el perfil
@@ -4413,8 +4404,6 @@ cli:
           de bucket del archivo.
         import_help: Restaura un perfil desde un archivo sellado y cifrado en RUTA.
         import_path_help: Ruta del archivo sellado.
-        import_recovery_wrap_help: Frase de paso para desellar el archivo; obligatoria
-          si se exportó con una.
         inspect_help: Muestra la cabecera de un archivo sellado sin descifrarlo ni
           restaurarlo.
         inspect_path_help: Ruta del archivo sellado.

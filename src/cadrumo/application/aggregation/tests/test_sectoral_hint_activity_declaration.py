@@ -23,16 +23,14 @@ called them sectoral; the declaration says otherwise and now wins.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
 
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
 from .._retencion_rate_advisory import _profile_suggests_sectoral_activity
+from ._secure_objects_fixtures import secure_profile_backend  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -42,10 +40,8 @@ _BUCKET_ID = _PROFILE_ID
 
 
 @pytest.fixture
-def secure_profile_backend(tmp_path: Path) -> Iterator[None]:
-    """Real encrypted profile storage scoped to this test's bucket."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        yield
+def secure_profile_bucket_id() -> str:
+    return _BUCKET_ID
 
 
 def _save_profile(*facts: UserProfileFact) -> None:
@@ -60,14 +56,14 @@ def _save_profile(*facts: UserProfileFact) -> None:
     )
 
 
-def test_a_declared_sectorial_activity_answers_the_hint(secure_profile_backend: None) -> None:
+def test_a_declared_sectorial_activity_answers_the_hint(secure_profile_backend: None) -> None:  # noqa: F811
     """A SECTORIAL declaration alone resolves the hint, with no surrogate present."""
     _save_profile(UserProfileFact(path="irpf.activity_kind", value="sectorial"))
 
     assert _profile_suggests_sectoral_activity(_BUCKET_ID) is True
 
 
-def test_a_declared_professional_activity_answers_the_hint(secure_profile_backend: None) -> None:
+def test_a_declared_professional_activity_answers_the_hint(secure_profile_backend: None) -> None:  # noqa: F811
     """A PROFESIONAL declaration alone resolves the hint negatively.
 
     Previously unreachable without an estimación directa régimen: a profile
@@ -79,7 +75,7 @@ def test_a_declared_professional_activity_answers_the_hint(secure_profile_backen
     assert _profile_suggests_sectoral_activity(_BUCKET_ID) is False
 
 
-def test_the_declaration_outranks_the_estimacion_objetiva_surrogate(secure_profile_backend: None) -> None:
+def test_the_declaration_outranks_the_estimacion_objetiva_surrogate(secure_profile_backend: None) -> None:  # noqa: F811
     """PROFESIONAL wins over objetiva -- the one case where the ordering shows.
 
     This is the assertion that would fail if the declaration were consulted
@@ -94,7 +90,7 @@ def test_the_declaration_outranks_the_estimacion_objetiva_surrogate(secure_profi
     assert _profile_suggests_sectoral_activity(_BUCKET_ID) is False
 
 
-def test_the_objetiva_surrogate_still_answers_an_undeclared_profile(secure_profile_backend: None) -> None:
+def test_the_objetiva_surrogate_still_answers_an_undeclared_profile(secure_profile_backend: None) -> None:  # noqa: F811
     """Without a declaration the surrogate is unchanged -- the fallback survives.
 
     Anti-regression counterpart to the test above: proves the new branch did not
@@ -105,14 +101,14 @@ def test_the_objetiva_surrogate_still_answers_an_undeclared_profile(secure_profi
     assert _profile_suggests_sectoral_activity(_BUCKET_ID) is True
 
 
-def test_an_undeclared_silent_profile_still_yields_no_hint(secure_profile_backend: None) -> None:
+def test_an_undeclared_silent_profile_still_yields_no_hint(secure_profile_backend: None) -> None:  # noqa: F811
     """A profile silent on both axes remains unresolved rather than guessing."""
     _save_profile()
 
     assert _profile_suggests_sectoral_activity(_BUCKET_ID) is None
 
 
-def test_a_declared_sectorial_activity_needs_no_agrarian_gross_figure(secure_profile_backend: None) -> None:
+def test_a_declared_sectorial_activity_needs_no_agrarian_gross_figure(secure_profile_backend: None) -> None:  # noqa: F811
     """The declaration stands alone, with the agrarian-gross surrogate absent.
 
     Guards against a reading where the new branch is redundant because a

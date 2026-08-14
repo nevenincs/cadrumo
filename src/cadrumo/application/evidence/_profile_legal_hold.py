@@ -73,14 +73,14 @@ class LegalHoldCaseSnapshot(BaseModel):
         return canonical_snapshot_digest(
             self,
             maximum_bytes=_MAX_BYTES,
-            limit_error="legal hold snapshot exceeds its byte limit",
+            subject="legal hold snapshot",
         )
 
     def canonical_json_bytes(self) -> bytes:
         return canonical_snapshot_bytes(
             self,
             maximum_bytes=_MAX_BYTES,
-            limit_error="legal hold snapshot exceeds its byte limit",
+            subject="legal hold snapshot",
         )
 
     @classmethod

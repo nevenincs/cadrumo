@@ -104,17 +104,17 @@ def load_or_mint_bucket_dek(
             write_wrapped_bucket_dek(path, wrapped)
             return dek
         raise MasterKeyMaterialMissingError(
-            f"bucket {bucket_id!r} has no manifest; run `aeat config profile create NAME` "
-            "to create a profile before invoking commands that decrypt or persist stored records.",
+            f"bucket {bucket_id!r} has no manifest; run `aeat config login NAME` to unlock "
+            "an existing profile before invoking commands that decrypt or persist stored "
+            "records. If no profile exists yet, this build has no command that creates one.",
         )
 
     if key_schedule is BucketKeySchedule.BUCKET_DEK_V1:
         if not path.is_file():
             raise MasterKeyMaterialMissingError(
                 f"bucket {bucket_id!r} is enrolled in the bucket-dek-v1 key schedule "
-                f"but its wrapped DEK is missing at {path}; run `aeat config recover` "
-                "or restore the bucket keystore from backup before decrypting or "
-                "persisting records.",
+                f"but its wrapped DEK is missing at {path}; restore the bucket "
+                "keystore from backup before decrypting or persisting records.",
             )
         wrapped = read_wrapped_bucket_dek(path)
         try:
@@ -127,7 +127,8 @@ def load_or_mint_bucket_dek(
 
     raise MasterKeyMaterialMissingError(
         f"bucket {bucket_id!r} has unsupported key schedule {key_schedule!r}; "
-        "run `aeat config recover` before decrypting or persisting records.",
+        "this build cannot open it. Restore the bucket keystore from a backup "
+        "written under a key schedule this build supports.",
     )
 
 

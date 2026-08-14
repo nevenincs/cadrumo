@@ -17,9 +17,7 @@ SQL backend, and two genuine repository instances. Nothing is mocked.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -28,18 +26,14 @@ from .....domain.bienes_inversion import (
     BienInversionIvaRecord,
     BienInversionKind,
 )
-from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "51555155-5155-4155-8155-515551555155"
 
-
-@pytest.fixture(autouse=True)
-def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+_runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
 
 def _record(identifier: str, *, year: int) -> BienInversionIvaRecord:

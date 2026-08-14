@@ -102,7 +102,7 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
     }
     effect_return_by_boundary = {
         "auth_clearing_after_effect": ("_operator.py", "reset_operator_auth"),
-        "pointer_reconciling_after_effect": ("_orchestration.py", "logout_active_profile"),
+        "pointer_reconciling_after_effect": ("_profile_pointer_transaction.py", "clear"),
         "deleting_after_effect": ("_service.py", "delete"),
     }
 
@@ -112,6 +112,12 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
             return None
         return operation.targets[0].phase.value
 
+    # A crash boundary that never matches injects nothing, and the run then
+    # completes normally -- indistinguishable from a passing test unless the
+    # miss is reported. Record whether the injection point was ever reached so
+    # the failure names which half went wrong.
+    effect_frame_seen = []
+
     def trace(frame, event, arg):
         if event != "return":
             return trace
@@ -119,6 +125,7 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
         if expected_effect is not None:
             filename, function_name = expected_effect
             if frame.f_code.co_filename.endswith(filename) and frame.f_code.co_name == function_name:
+                effect_frame_seen.append(True)
                 if durable_target_phase() == phase_by_boundary[boundary]:
                     os._exit(91)
             return trace
@@ -135,6 +142,13 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
         start_config_reset(confirmed=True)
     finally:
         config_module._settings_override.reset(token)
+    if boundary in effect_return_by_boundary and not effect_frame_seen:
+        filename, function_name = effect_return_by_boundary[boundary]
+        raise RuntimeError(
+            f"crash boundary {boundary} never reached its injection point "
+            f"{function_name} in a file ending {filename}: the effect moved or was renamed, "
+            "so this boundary was silently never injected"
+        )
     raise RuntimeError(f"reset completed without observing requested boundary: {boundary}")
     """,
 )

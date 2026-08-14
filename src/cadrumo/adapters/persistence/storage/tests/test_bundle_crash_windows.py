@@ -35,7 +35,7 @@ from pathlib import Path
 import pytest
 
 from .....domain.buckets import BucketExportError, BucketImportError
-from ..bucket import ExportArchiveHeader, read_sealed_archive, write_sealed_archive
+from ..bucket import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader, read_sealed_archive, write_sealed_archive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -52,8 +52,7 @@ def _write_valid_archive(path: Path, *, payload: bytes = _PAYLOAD, bucket_id: st
             product="cadrumo",
             bucket_id=bucket_id,
             manifest_digest=_MANIFEST_DIGEST,
-            recovery_wrap_present=False,
-            archive_schema_version=3,
+            archive_schema_version=ARCHIVE_SCHEMA_VERSION,
             created_at=_INSTANT,
         ),
         payload_envelope_bytes=payload,

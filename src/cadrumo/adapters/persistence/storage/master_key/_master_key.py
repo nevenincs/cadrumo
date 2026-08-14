@@ -277,8 +277,8 @@ class KeyringMasterKeyProvider:
             return self._decode_stored_master_key(stored)
         raise MasterKeyMaterialMissingError(
             "OS keychain master key is not provisioned; run "
-            "`aeat config profile create NAME` to create and unlock a profile, "
-            "or `aeat config login NAME` for an existing profile.",
+            "`aeat config login NAME` to unlock an existing profile. If no profile "
+            "exists yet, this build has no command that creates one.",
         )
 
     def provision_master_key(self) -> bytes:
@@ -297,8 +297,7 @@ class KeyringMasterKeyProvider:
             stored = self._read_stored_master_key(KeyringError)
             if stored is not None:
                 raise SecretAlreadyExistsError(
-                    "OS keychain master key is already provisioned; use `aeat config recover` "
-                    "or `aeat config passphrase change` for custody changes.",
+                    "OS keychain master key is already provisioned; refusing to replace live key material.",
                 )
             new_key = self._mint_and_verify_master_key(KeyringError)
             _log.info("master key minted in OS keychain (service=%s)", self._service)
@@ -502,30 +501,32 @@ class FileFallbackMasterKeyProvider:
             if len(present) == len(artefacts):
                 key = self._unwrap_existing(passphrase)
             elif present:
-                # Torn install: a previous mint or recovery crashed
-                # between the per-artefact atomic writes. Refuse to
-                # silently re-mint (which would overwrite the
-                # half-written ``master.key`` and destroy any record
-                # encrypted under the recovered key). The operator
-                # must finish recovery with `aeat config recover`,
-                # or, if the substrate was never used and no records
-                # exist yet, move the torn directory aside and create a
-                # new profile.
+                # Torn install: a previous mint crashed between the
+                # per-artefact atomic writes. Refuse to silently
+                # re-mint (which would overwrite the half-written
+                # ``master.key`` and destroy any record encrypted
+                # under the lost key). There is no in-app route out of
+                # this state: the global recovery facade was retired
+                # with the per-profile custody cutover, so the message
+                # points at the backup, not at a verb.
                 missing = [p.name for p in artefacts if not p.exists()]
                 raise MasterKeyMaterialMissingError(
                     f"file-fallback at {self._store_dir} is in a torn state — "
                     f"present={[p.name for p in present]} missing={missing}. "
-                    "A previous mint or recovery crashed between writes. Run "
-                    "`aeat config recover` (it prompts for the 24-word recovery key) "
-                    "to finish recovery, or move the torn secret-store directory "
-                    "aside and run `aeat config profile create NAME` "
-                    "only if no records were ever written under the prior key.",
+                    "A previous mint crashed between the two artefact writes. "
+                    "This build has no command that repairs a torn store: restore "
+                    "the whole secret-store directory from a backup taken before "
+                    "the crash. Do not delete it — every stored record is encrypted "
+                    "under the key it holds. Only when no records were ever written "
+                    "under the prior key is it safe to move the torn directory aside "
+                    "and set up a profile afresh.",
                 )
             else:
                 raise MasterKeyMaterialMissingError(
                     f"file-fallback at {self._store_dir} is not provisioned; run "
-                    "`aeat config profile create NAME` to create and unlock a profile "
-                    "before invoking commands that decrypt or persist stored records.",
+                    "`aeat config login NAME` to unlock an existing profile before "
+                    "invoking commands that decrypt or persist stored records. If no "
+                    "profile exists yet, this build has no command that creates one.",
                 )
         return key
 
@@ -551,17 +552,18 @@ class FileFallbackMasterKeyProvider:
             present = [p for p in artefacts if p.exists()]
             if present and not force:
                 raise SecretAlreadyExistsError(
-                    f"file-fallback at {self._store_dir} is already provisioned; use "
-                    "`aeat config recover` or `aeat config passphrase change` for custody changes.",
+                    f"file-fallback at {self._store_dir} is already provisioned; "
+                    "refusing to replace live key material.",
                 )
             if present and len(present) != len(artefacts):
                 missing = [p.name for p in artefacts if not p.exists()]
                 raise MasterKeyMaterialMissingError(
                     f"file-fallback at {self._store_dir} is in a torn state - "
-                    f"present={[p.name for p in present]} missing={missing}. Run "
-                    "`aeat config recover` (it prompts for the 24-word recovery key) to "
-                    "finish recovery, or move the torn secret-store directory aside "
-                    "only if no records were ever written under the prior key.",
+                    f"present={[p.name for p in present]} missing={missing}. "
+                    "This build has no command that repairs a torn store: restore the "
+                    "whole secret-store directory from a backup taken before the crash. "
+                    "Only when no records were ever written under the prior key is it "
+                    "safe to move the torn directory aside.",
                 )
             return self._mint_new(passphrase)
 
@@ -602,12 +604,15 @@ class FileFallbackMasterKeyProvider:
             return decrypt_record(blob, key=kek, associated_data=_MASTER_KEY_AAD)
         except (DecryptionError, EncryptionError) as exc:
             # Distinguish passphrase-mismatch from material-missing so
-            # the CLI can render an actionable hint
-            # (`aeat config recover` for forgotten
-            # passphrase vs `aeat config profile create NAME` for absent
-            # material).
+            # the CLI can render an actionable hint: a wrong passphrase
+            # is retryable, absent material is not. A forgotten
+            # passphrase has no in-app remedy — the global recovery
+            # facade was retired with the per-profile custody cutover.
             raise _master_key_passphrase_mismatch_error(
-                "passphrase did not unlock the master key; verify the passphrase or run `aeat config recover`.",
+                "passphrase did not unlock the master key; verify the passphrase and the "
+                "selected secret-store backend. A forgotten passphrase cannot be reset: "
+                "the master key is only recoverable from a backup of the secret-store "
+                "directory taken under the passphrase that unlocks it.",
             ) from exc
 
     def _mint_new(self, passphrase: bytes) -> bytes:
@@ -701,9 +706,9 @@ class FileFallbackMasterKeyProvider:
             # ``master.key`` cannot decrypt under the OLD KDF — and
             # the OLD ``master.key`` content has already been
             # overwritten — but the recovery-key wrapping at
-            # ``master.recovery.key`` is untouched, so the operator
-            # can re-run `aeat config recover` to complete the
-            # recovery.
+            # ``master.recovery.key`` is untouched, so a caller
+            # holding the recovery key can re-drive this method to
+            # complete the rewrap.
             atomic_write_secure_bytes(
                 self._master_key_path,
                 base64.b64encode(blob.to_wire()),
@@ -863,9 +868,9 @@ def _provider_enter(
     bucket_id = resolve_active_bucket_id() or fallback_bucket_id
     if not bucket_id:
         raise NoActiveBucketError(
-            "no active profile resolves; run `aeat config profile create NAME` "
-            "or `aeat config login NAME` before invoking commands that "
-            "decrypt stored records.",
+            "no active profile resolves; run `aeat config login NAME` before "
+            "invoking commands that decrypt stored records. `aeat config profile list` "
+            "shows which profiles exist.",
         )
 
     settings = load_settings()
@@ -1229,8 +1234,8 @@ def get_master_key_provider(
             "may already hold a different one — the resulting two master keys would render "
             "any record encrypted under either key unreadable when the other backend is "
             "active. Either unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
-            "or set CADRUMO_SECRET_STORE_BACKEND=file to explicitly choose the passphrase backend "
-            "and provision a file-fallback master key with `aeat config profile create NAME`.",
+            "or set CADRUMO_SECRET_STORE_BACKEND=file to explicitly choose the passphrase "
+            "backend, which provisions a file-fallback master key on the next profile unlock.",
         ) from exc
     except MasterKeyMaterialMissingError:
         file_fallback_exists = (store_dir / _MASTER_KEY_FILENAME).exists() and (

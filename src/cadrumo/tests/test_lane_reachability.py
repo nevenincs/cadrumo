@@ -56,6 +56,7 @@ from dev.ci.lane_reachability import (
     analyse_reachability,
     ci_invoked_lanes,
     ci_invoked_recipes,
+    configured_testpaths,
     declared_lanes,
     discover_test_files,
     expression_selects,
@@ -413,6 +414,152 @@ def test_marker_and_path_are_both_required() -> None:
     assert not expression_selects(right_path_wrong_marker.marker_expression, markers)
     assert expression_selects(right_marker_wrong_path.marker_expression, markers)
     assert not right_marker_wrong_path.covers(target)
+
+
+def test_an_ignore_equals_form_excludes_the_file_but_not_its_sibling(tmp_path: Path) -> None:
+    """``--ignore=PATH`` is one token, and must exclude exactly that file.
+
+    Before ``Lane`` carried ``exclusions``, it had no concept of ``--ignore`` at
+    all, so a lane whose scope was ``src`` covered a file its own invocation
+    excludes -- the exact shape ``just test-integration`` takes for the harness
+    modules, via the single-token ``{{harness_exclusions}}`` expansion.
+    """
+    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (tmp_path / "justfile").write_text(
+        "check:\n    pytest -q src -m unit --ignore=src/tests/test_excluded.py\n",
+        encoding="utf-8",
+    )
+    module = "import pytest\n\npytestmark = [pytest.mark.unit]\n\n\ndef test_a() -> None:\n    assert True\n"
+    _write_test(tmp_path / "src" / "tests" / "test_excluded.py", module)
+    _write_test(tmp_path / "src" / "tests" / "test_kept.py", module)
+
+    lanes = declared_lanes(tmp_path)
+    assert len(lanes) == 1
+    lane = lanes[0]
+    assert lane.exclusions == ("src/tests/test_excluded.py",)
+    assert lane.covers("src/tests/test_kept.py")
+    assert not lane.covers("src/tests/test_excluded.py")
+
+    report = analyse_reachability(tmp_path, files=discover_test_files(tmp_path))
+    assert [entry.path for entry in report.unreachable] == ["src/tests/test_excluded.py"]
+
+
+def test_an_ignore_space_form_excludes_the_file_the_same_way(tmp_path: Path) -> None:
+    """``--ignore PATH`` is two tokens; the exclusion must not depend on spelling."""
+    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (tmp_path / "justfile").write_text(
+        "check:\n    pytest -q src -m unit --ignore src/tests/test_excluded.py\n",
+        encoding="utf-8",
+    )
+    module = "import pytest\n\npytestmark = [pytest.mark.unit]\n\n\ndef test_a() -> None:\n    assert True\n"
+    _write_test(tmp_path / "src" / "tests" / "test_excluded.py", module)
+    _write_test(tmp_path / "src" / "tests" / "test_kept.py", module)
+
+    lane = declared_lanes(tmp_path)[0]
+    assert lane.exclusions == ("src/tests/test_excluded.py",)
+    assert lane.covers("src/tests/test_kept.py")
+    assert not lane.covers("src/tests/test_excluded.py")
+
+
+def test_justfile_variable_interpolation_resolves_before_ignore_parsing(tmp_path: Path) -> None:
+    """The real defect: an unresolved ``{{name}}`` is never a valid ``--ignore`` value.
+
+    ``just test-integration`` writes its exclusion as ``{{harness_exclusions}}``,
+    a variable this module cannot see the value of by reading justfile text
+    alone. A reader that tokenises the literal eight-character string
+    ``{{harness_exclusions}}`` either treats it as a nonsense path or silently
+    drops it -- either way the exclusion is lost and the lane reads as covering
+    a file it does not run.
+    """
+    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (tmp_path / "justfile").write_text(
+        'excluded_file := "src/tests/test_excluded.py"\n\ncheck:\n    pytest -q src -m unit --ignore={{excluded_file}}\n',
+        encoding="utf-8",
+    )
+    module = "import pytest\n\npytestmark = [pytest.mark.unit]\n\n\ndef test_a() -> None:\n    assert True\n"
+    _write_test(tmp_path / "src" / "tests" / "test_excluded.py", module)
+    _write_test(tmp_path / "src" / "tests" / "test_kept.py", module)
+
+    lane = declared_lanes(tmp_path)[0]
+    assert lane.exclusions == ("src/tests/test_excluded.py",)
+    assert lane.covers("src/tests/test_kept.py")
+    assert not lane.covers("src/tests/test_excluded.py")
+
+
+def test_the_harness_modules_are_excluded_by_the_integration_lanes_but_covered_by_the_harness_lane() -> None:
+    """The concrete defect this module was fixed to close, pinned against the real justfile.
+
+    ``just test-integration`` writes ``{{harness_exclusions}}``, which expands
+    to ``--ignore=`` for both harness modules -- so the integration lanes must
+    not cover them, even though their ``paths`` scope is ``src``. They stay
+    reachable regardless: ``just test-harness`` names them positionally and is
+    CI-invoked from ``ci.yml``, which is what keeps them off the unreachable
+    list rather than this fix accidentally orphaning them.
+    """
+    lanes = declared_lanes(_ROOT)
+    targets = (
+        "src/cadrumo/tests/test_worker_count_hook_harness.py",
+        "src/cadrumo/tests/test_full_corpus_collectability_harness.py",
+    )
+
+    integration_lanes = [lane for lane in lanes if lane.recipe in {"test-integration", "test-integration-parallel"}]
+    assert integration_lanes, "the integration recipe(s) must still be declared"
+    for lane in integration_lanes:
+        for target in targets:
+            assert not lane.covers(target), f"{lane.recipe} must not cover {target}, it is --ignore'd"
+
+    harness_lanes = [lane for lane in lanes if lane.recipe == "test-harness"]
+    assert harness_lanes, "test-harness must still be declared"
+    for target in targets:
+        assert any(lane.covers(target) for lane in harness_lanes), f"test-harness must still cover {target}"
+
+
+def test_an_unresolved_template_residue_does_not_silently_widen_a_lanes_paths() -> None:
+    """Pins the exact shape of a real defect this module carried for hours, undetected.
+
+    A justfile edit moved literal recipe paths behind `{{name}}` variables.
+    Before template resolution existed, `_paths_of` found no positional-path
+    token on the affected lines, so `_pytest_invocations` fell back to the
+    configured testpaths -- and `test-harness`'s lane silently widened from two
+    named files to the WHOLE `src/cadrumo` tree. Nothing reds when this
+    happens: a wider lane only ever makes MORE tests look reachable, so the
+    unreachable-test gate stays green throughout. The only way to catch a
+    regression here is to positively pin what a lane's paths must equal, which
+    is what this test does. Do not read either assertion as trivia -- deleting
+    them removes the only signal this failure mode has.
+
+    Two lanes, two different unresolved-residue shapes:
+
+    - `test-unit` is genuinely pathless (no positional path argument at all)
+      AND carries an unresolvable `{{ if durations == "" {...} else {...} }}`
+      construct. Its correct behaviour is to inherit `configured_testpaths`;
+      this pins that the residue does not accidentally produce a non-empty (and
+      therefore narrower-than-correct) or a wrong path list.
+    - `docs-check` carries three real explicit paths sitting next to an
+      unresolved `{{workers}}` reference. `workers` is a RECIPE PARAMETER
+      (`docs-check workers="auto":`), not a top-level justfile variable, so
+      `just --evaluate` structurally cannot resolve it -- it will never appear
+      in `_just_variables`'s output. This pins that the neighbouring bare
+      residue token does not swallow, corrupt, or crowd out the real paths.
+    """
+    lanes = declared_lanes(_ROOT)
+
+    unit_lanes = [lane for lane in lanes if lane.recipe == "test-unit"]
+    assert unit_lanes, "test-unit must still be declared"
+    for lane in unit_lanes:
+        assert lane.paths == configured_testpaths(_ROOT), (
+            "test-unit's unresolved duration-flag residue must not change its inherited "
+            f"testpaths fallback; got {lane.paths!r}"
+        )
+
+    docs_check_lanes = [lane for lane in lanes if lane.recipe == "docs-check"]
+    assert docs_check_lanes, "docs-check must still be declared"
+    for lane in docs_check_lanes:
+        assert lane.paths == (
+            "dev/docs/tests",
+            "dev/docs/apidocs/tests",
+            "src/cadrumo/tests/test_docstring_core_struct_links.py",
+        ), f"docs-check's unresolved `workers` template residue must not swallow its real paths; got {lane.paths!r}"
 
 
 @pytest.mark.parametrize(

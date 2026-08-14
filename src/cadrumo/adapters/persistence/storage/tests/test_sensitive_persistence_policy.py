@@ -144,14 +144,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "tempfile.NamedTemporaryFile",
     ): "shared streaming atomic-write primitive; writes caller-supplied chunks only, no data of its own",
     (
-        "src/cadrumo/entrypoints/cli/_config/_secure_input.py",
-        "write_to_controlling_terminal",
-        "open",
-    ): (
-        "controlling-terminal DEVICE write (CONOUT$ / /dev/tty) showing a recovery secret exactly once; "
-        "deliberately not a disk/persistence path, so secure-storage custody does not apply"
-    ),
-    (
         "src/cadrumo/entrypoints/mcp/_telemetry.py",
         "record",
         "self.path.open",

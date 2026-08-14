@@ -8,7 +8,7 @@ import sys
 from typing import Any, cast
 
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from ._kdf_codec import canonical_json_bytes as _canonical_json_bytes
+from ._kdf_codec import canonical_frame_bytes as _canonical_frame_bytes
 from ._kdf_windows_job import (
     PROFILE_CUSTODY_KDF_WORKER_CPU_SECONDS,
     PROFILE_CUSTODY_KDF_WORKER_MAX_PROCESSES,
@@ -50,7 +50,7 @@ def kdf_worker_ready_attestation() -> bytes:
     }
     if platform == "posix":
         payload["open_file_descriptors"] = _open_posix_file_descriptors()
-    return _canonical_json_bytes(payload)
+    return _canonical_frame_bytes(payload)
 
 
 def _open_posix_file_descriptors() -> list[int]:

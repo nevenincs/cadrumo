@@ -180,12 +180,14 @@ class MasterKeyKeychainLockedError(MasterKeyUnavailableError):
 class MasterKeyPassphraseMismatchError(MasterKeyUnavailableError):
     """Raised when the file-fallback passphrase does not unwrap ``master.key``.
 
-    Recoverable by re-entering the passphrase. If the passphrase has
-    been forgotten, the operator can use
-    ``aeat config recover`` to re-mint the master key
-    from a recovery-key backup. The CLI's error envelope distinguishes
-    this case from :class:`MasterKeyMaterialMissingError` so retries
-    do not waste backoff budget on missing-file errors.
+    Recoverable by re-entering the passphrase. A forgotten passphrase
+    has no in-app remedy: the global recovery facade that once re-minted
+    the master key from a recovery-key backup was retired with the
+    per-profile custody cutover, so the only route back is a backup of
+    the secret-store directory taken under the passphrase that unlocks
+    it. The CLI's error envelope distinguishes this case from
+    :class:`MasterKeyMaterialMissingError` so retries do not waste
+    backoff budget on missing-file errors.
     """
 
 
@@ -195,8 +197,7 @@ class MasterKeyMaterialMissingError(MasterKeyUnavailableError):
     Neither the keyring entry nor the file-fallback artefacts
     (``master.key`` / ``master.kdf`` / ``salt``) are present. The
     substrate has not been provisioned. The operator's actionable
-    next step is ``aeat config profile create NAME`` or, if a recovery key
-    is available, ``aeat config recover``.
+    next step is to set up a profile, which mints the material.
 
     Raised by canonical read paths to distinguish "not provisioned"
     from "wrong passphrase" without minting key material. Explicit

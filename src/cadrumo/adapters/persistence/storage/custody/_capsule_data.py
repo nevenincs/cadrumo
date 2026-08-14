@@ -5,10 +5,10 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping
 from contextlib import ExitStack, suppress
-from hashlib import sha256
 from pathlib import Path, PurePosixPath
 from uuid import uuid4
 
+from .....core.hashing import prefixed_digest
 from ._errors import ProfileCustodyRecordError
 from ._filesystem import (
     PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
@@ -180,7 +180,7 @@ def replace_data_file(
             maximum_bytes=PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
             trace=[],
         )
-        if f"sha256:{sha256(existing).hexdigest()}" != expected_sha256:
+        if prefixed_digest(existing) != expected_sha256:
             raise ProfileCustodyRecordError("profile record compare-and-swap witness is stale")
         replacement = current / f".{relative_path.name}.replace-{uuid4().hex}"
         write_exclusive_fsynced(replacement, payload)

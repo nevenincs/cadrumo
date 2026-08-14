@@ -19,10 +19,8 @@ SQL backend, independent repository instances. Nothing is mocked.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -34,7 +32,7 @@ from .....domain.contribuyente.inventory import (
     MovementRecord,
     ValuationMethod,
 )
-from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..inventory import InventoryLedgerRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -42,11 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _BUCKET_ID = "38303830-3830-4383-8383-383038303830"
 _YEAR = 2025
 
-
-@pytest.fixture(autouse=True)
-def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+_runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
 
 def _ledger(actividad_id: str, *, opening: str) -> InventoryLedger:

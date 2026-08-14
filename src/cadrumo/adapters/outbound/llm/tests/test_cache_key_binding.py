@@ -23,8 +23,8 @@ from pathlib import Path
 import pytest
 
 from .....llm import LLMCacheError, LLMProvider, LLMRequest, LLMResponse
-from .....tests.secure_sql import TestRuntimeProfile
 from .._cache import _CACHE_NAMESPACE, LLMCache
+from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine  # noqa: F401
 
 # The encrypted-SQL substrate is imported inside the helpers below, matching
 # the sibling round-trip proof. Pulling ``adapters.persistence.storage`` in at
@@ -59,19 +59,8 @@ _RESPONSE_A = _response(LLMProvider.ANTHROPIC, "claude-opus-4-7", "ANSWER-FOR-A"
 _RESPONSE_B = _response(LLMProvider.OPENAI, "gpt-model-b", "TAMPERED-B")
 
 
-_ENGINE_HOLDER: list[object] = []
-
-
 def _repository_engine():
     return _ENGINE_HOLDER[0]
-
-
-@pytest.fixture(autouse=True)
-def _bind_engine(secure_object_test_profile: TestRuntimeProfile):
-    _ENGINE_HOLDER.clear()
-    _ENGINE_HOLDER.append(secure_object_test_profile.repository._engine)
-    yield
-    _ENGINE_HOLDER.clear()
 
 
 def _row_payload(model: str) -> bytes:

@@ -95,27 +95,21 @@ DERIVED_FIELD_ISSUE_CODE: Final[str] = "derived_field_not_editable"
 """Issue code for a write aimed at a path the engine computes.
 
 Path legitimacy, not value admissibility, which is why it is judged here beside
-``unknown_field`` rather than through the value-refusal authority: it must keep
-answering once the per-year field declarations are gone and there is no
-declaration left to judge against.
+``unknown_field`` rather than through the value-refusal authority. That is now
+the only thing keeping the rule answerable: the schema declares the derived
+namespaces as ``[[derived_selectors]]`` patterns and nothing else, so the
+field index does NOT hold them and there is no declaration left to judge
+against.
 
-Evaluated BEFORE the field-index lookup. While those declarations still stand
-the lookup succeeds, so a check placed after it would never run and the write
-would be admitted by the type checks below.
-
-A CLEAR is exempt, and the exemption is load-bearing rather than a softening.
-The validator judges the whole merged fact set on every edit, so a fact stored
-at a derived path before this rule existed is re-judged on every later edit to
-any other field. Refusing a clear too would leave no way to remove it: the
-profile could not be edited, cleared or promoted through the lifecycle API at
-all, with no in-band remedy. That was measured, not reasoned.
-
-Exempting the clear costs nothing the rule was protecting. The injectors
-compute always and overwrite whatever the index holds, so a stored value at a
-derived path is already inert for calculation; the rule exists to stop a value
-being WRITTEN, and a clear writes none. What it buys is that a profile carrying
-a stale fact is recoverable instead of bricked.
+Evaluated BEFORE the ``unknown_field`` refusal, and that ordering is what makes
+the refusal instructive rather than merely correct. Both codes would block the
+write, but only this one names the entry surface that edits the source facts;
+reaching ``unknown_field`` first would tell an operator the engine's own path
+does not exist.
 """
+
+UNKNOWN_FIELD_ISSUE_CODE: Final[str] = "unknown_field"
+"""Issue code for a write aimed at a path the schema does not declare."""
 
 _ISSUE_CODE_BY_REFUSAL_KIND: Final[dict[ProfileValueRefusalKind, str]] = {
     ProfileValueRefusalKind.ENUM: ENUM_VALUE_ISSUE_CODE,
@@ -199,8 +193,55 @@ class ProfileValidationService:
         )
 
     def _validate_one_fact(self, fact: UserProfileFact) -> tuple[ProfileValidationIssue, ...]:
+        """Judge one fact's path and value, or admit it.
+
+        A CLEAR is admissible at EVERY path, declared or not, and that is the
+        load-bearing remedy for both path rules rather than a softening of
+        either. This service judges the whole MERGED fact set on every edit
+        rather than the incoming change, so a fact the schema no longer accepts
+        is re-judged on every later edit to every other field. Were the clear
+        refused too, that fact could not be removed by any door: the profile
+        could not be edited, cleared or promoted through the lifecycle API at
+        all, with no in-band remedy.
+
+        Two rules produce such a fact and the generalisation covers both,
+        because the trap is the same shape.
+
+        A DERIVED path was measured in that state, not reasoned about. The
+        exemption was once written as a ``value is not None`` guard on the
+        derived branch alone, which stopped working the moment the per-year
+        field declarations were removed: the clear fell through to a field
+        lookup that now misses, and was refused as ``unknown_field`` -- an
+        ERROR outside :data:`COMPLETENESS_ISSUE_CODES`, so blocking in both
+        ``require_complete`` modes.
+
+        A RETIRED path reaches the same place with no rule needed to put it
+        there. Retired declarations are deleted here rather than tolerated, so
+        the first field removal against a live profile still holding a fact at
+        that path bricks it.
+
+        Admitting the clear gives nothing back to either rule. Both exist to
+        stop a value being WRITTEN and a clear writes none: the injectors
+        compute always and overwrite whatever the fact index holds, and every
+        projection drops a ``None``-valued fact before a reader sees it, so a
+        cleared fact is inert wherever it sits. What it costs is refusing a
+        clear aimed at a path that does not exist -- and that refusal could
+        never name the right fact anyway, because this door judges the merged
+        set and cannot tell an operator's typo from a fact already stored.
+
+        The effective-window check still runs on a clear where a declaration
+        exists to run it against: a window recorded on a cleared fact is as
+        inert as one recorded on a valued fact, and the operator is owed the
+        same warning either way.
+        """
+        binding = self._field_index.get(section_field_key(fact.path))
+        if fact.value is None:
+            if binding is None:
+                return ()
+            cleared_section, cleared_field = binding
+            return self._validate_effective_window(cleared_section, cleared_field, fact)
         derived = derived_selector_for_path(fact.path, self._schema.derived_selectors)
-        if derived is not None and fact.value is not None:
+        if derived is not None:
             return (
                 ProfileValidationIssue(
                     severity=BaseSeverity.ERROR,
@@ -212,12 +253,11 @@ class ProfileValidationService:
                     ),
                 ),
             )
-        binding = self._field_index.get(section_field_key(fact.path))
         if binding is None:
             return (
                 ProfileValidationIssue(
                     severity=BaseSeverity.ERROR,
-                    code="unknown_field",
+                    code=UNKNOWN_FIELD_ISSUE_CODE,
                     path=fact.path,
                     message=f"path {fact.path!r} does not match any schema field",
                 ),
@@ -515,6 +555,7 @@ __all__ = [
     "ENUM_VALUE_ISSUE_CODE",
     "NUMERIC_VALUE_ISSUE_CODE",
     "REQUIRED_FIELD_MISSING_CODE",
+    "UNKNOWN_FIELD_ISSUE_CODE",
     "ProfileValidationService",
     "reject_invalid_profile_facts",
 ]

@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import re
 import shlex
-import shutil
 from pathlib import Path
 
 import pytest
 import yaml
 
 from ...packaging._command import run_command
+from ..lane_reachability import declared_lanes, resolved_recipe_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -61,10 +61,23 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
 
 _FULL_WORKFLOW = Path(__file__).resolve().parents[3] / ".github" / "workflows" / "ci-full.yml"
 _REPOSITORY_ROOT = _WORKFLOW.parents[2]
-_TEST_HARNESS_MEMBERS = (
-    "src/cadrumo/tests/test_worker_count_hook_harness.py",
-    "src/cadrumo/tests/test_full_corpus_collectability_harness.py",
-)
+_PYPROJECT = _REPOSITORY_ROOT / "pyproject.toml"
+#: Per-test wall ceiling for the harness lane's combined real-proof pass, in
+#: seconds. Deliberately above the ini default: this lane's subject is a real
+#: child pytest that collects the whole first-party corpus, which takes minutes
+#: by design rather than by defect.
+_HARNESS_WALL_CEILING_SECONDS = 900
+
+
+def _declared_harness_members() -> tuple[str, ...]:
+    """Return the harness recipe's member paths, from the one canonical parser.
+
+    Derived, never restated: the combined real-proof line is the ``test-harness``
+    lane carrying the most paths, so a member added, dropped, or renamed at its
+    one declaration site (the justfile) moves this without a second edit here.
+    """
+    harness_lanes = [lane for lane in declared_lanes(_REPOSITORY_ROOT) if lane.recipe == "test-harness"]
+    return max((lane.paths for lane in harness_lanes), key=len, default=())
 
 
 def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
@@ -106,20 +119,42 @@ def test_harness_recipe_runs_every_real_proof_outer_serially_and_non_vacuously()
     outer-serial, preventing their real child processes from nesting inside an
     xdist pool.
     """
-    recipe = re.search(
-        r"(?m)^test-harness:\r?\n((?:    @[^\r\n]+\r?\n?)+)",
-        _JUSTFILE.read_text(encoding="utf-8"),
-    )
-    assert recipe is not None, "no justfile recipe named test-harness"
-    commands = tuple(line.strip().removeprefix("@") for line in recipe.group(1).splitlines())
+    members = _declared_harness_members()
+    assert members, "no justfile recipe named test-harness declares any member"
+    commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-harness")
 
     pytest_prefix = "uv run --no-sync pytest -q -m integration"
     assert commands == (
-        *(f"{pytest_prefix} --collect-only -n0 {member}" for member in _TEST_HARNESS_MEMBERS),
-        f"{pytest_prefix} -rsf -n0 {' '.join(_TEST_HARNESS_MEMBERS)}",
+        *(f"{pytest_prefix} --collect-only -n0 {member}" for member in members),
+        f"{pytest_prefix} -rsf -n0 --timeout={_HARNESS_WALL_CEILING_SECONDS} {' '.join(members)}",
     )
     assert all("-n0" in command for command in commands)
     assert all("||" not in command and ";" not in command for command in commands)
+
+
+def test_the_harness_real_proof_outruns_the_default_per_test_wall_ceiling() -> None:
+    """The lane raises its own wall ceiling, because its subject legitimately runs minutes.
+
+    One member recursively collects the entire first-party corpus in a real
+    child pytest. Measured at 75 s on a quiet tree and 272 s on a loaded one,
+    against a 300 s ini default -- so under load the default kills a HEALTHY
+    proof and reports it as a harness failure, which is the least useful thing
+    a verdict can do. The raised ceiling belongs to the combined real-proof
+    pass only; the collect-only preflights stay on the default, since they do
+    no work beyond importing.
+    """
+    ini_ceiling = int(re.search(r"(?m)^timeout\s*=\s*(\d+)", _PYPROJECT.read_text(encoding="utf-8")).group(1))
+    commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-harness")
+    real_proof = commands[-1]
+
+    assert ini_ceiling < _HARNESS_WALL_CEILING_SECONDS, (
+        f"the harness ceiling ({_HARNESS_WALL_CEILING_SECONDS}s) must exceed the ini default ({ini_ceiling}s), "
+        "or raising it accomplishes nothing"
+    )
+    assert f"--timeout={_HARNESS_WALL_CEILING_SECONDS}" in real_proof
+    assert all("--timeout=" not in command for command in commands[:-1]), (
+        "only the combined real-proof pass needs the raised ceiling; a preflight that needs it is doing real work"
+    )
 
 
 def test_harness_member_preflight_rejects_empty_collection_even_when_another_member_exists(tmp_path: Path) -> None:
@@ -135,25 +170,13 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
         encoding="utf-8",
     )
 
-    just = shutil.which("just")
-    assert just is not None, "test-harness requires the installed just executable"
-    shown_recipe = run_command(
-        [just, "--show", "test-harness"],
-        cwd=_REPOSITORY_ROOT,
-        timeout_seconds=30,
-    )
-    assert shown_recipe.returncode == 0, (
-        f"could not render the real test-harness recipe\nstdout:\n{shown_recipe.stdout}\nstderr:\n{shown_recipe.stderr}"
-    )
+    members = _declared_harness_members()
+    commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-harness")
     preflight = next(
-        (
-            line.strip().removeprefix("@")
-            for line in shown_recipe.stdout.splitlines()
-            if "--collect-only" in line and _TEST_HARNESS_MEMBERS[0] in line
-        ),
+        (command for command in commands if "--collect-only" in command and members[0] in command),
         None,
     )
-    assert preflight is not None, "the rendered test-harness recipe has no worker-hook member preflight"
+    assert preflight is not None, "the resolved test-harness recipe has no worker-hook member preflight"
     command = shlex.split(preflight)
     assert command == [
         "uv",
@@ -165,7 +188,7 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
         "integration",
         "--collect-only",
         "-n0",
-        _TEST_HARNESS_MEMBERS[0],
+        members[0],
     ]
 
     aggregate = run_command(

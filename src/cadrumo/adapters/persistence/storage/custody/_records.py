@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import base64
 import binascii
-import hashlib
 import json
 import re
-from collections.abc import Mapping, Sequence
 from typing import Final, Literal, cast
 from uuid import UUID
 
@@ -15,6 +13,12 @@ from pydantic import BaseModel, Field, ValidationError, field_validator, model_v
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.hashing import (
+    bounded_canonical_json_bytes,
+    canonical_json_digest,
+    reject_duplicate_json_members,
+    reject_json_constant,
+)
 from ._errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
 
 PROFILE_CUSTODY_ENVELOPE_SCHEMA_VERSION: Final = 1
@@ -59,32 +63,12 @@ def _validate_digest(value: str, *, field_name: str) -> str:
     return value
 
 
-def _canonical_json_bytes(value: Mapping[str, object]) -> bytes:
-    encoded = json.dumps(
+def _canonical_json_bytes(value: object) -> bytes:
+    return bounded_canonical_json_bytes(
         value,
-        allow_nan=False,
-        ensure_ascii=False,
-        separators=(",", ":"),
-        sort_keys=True,
-    ).encode(_UTF_8_ENCODING)
-    if len(encoded) > PROFILE_CUSTODY_ENVELOPE_MAX_BYTES:
-        raise ValueError(
-            f"profile custody envelope exceeds {PROFILE_CUSTODY_ENVELOPE_MAX_BYTES}-byte canonical limit",
-        )
-    return encoded
-
-
-def _reject_duplicate_members(pairs: Sequence[tuple[str, object]]) -> dict[str, object]:
-    result: dict[str, object] = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError(f"duplicate JSON member {key!r}")
-        result[key] = value
-    return result
-
-
-def _reject_json_constant(value: str) -> None:
-    raise ValueError(f"non-finite JSON constant {value!r} is forbidden")
+        maximum_bytes=PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
+        subject="profile custody envelope",
+    )
 
 
 def validate_profile_password(password: str) -> str:
@@ -215,7 +199,11 @@ class ProfileCustodyEnvelope(_ProfileCustodyEnvelopePayload):
     @property
     def computed_self_digest(self) -> str:
         """Return the canonical SHA-256 digest for this envelope's payload."""
-        return f"sha256:{hashlib.sha256(_canonical_json_bytes(self.canonical_payload)).hexdigest()}"
+        return canonical_json_digest(
+            self.canonical_payload,
+            maximum_bytes=PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
+            subject="profile custody envelope",
+        )
 
     def canonical_json_bytes(self) -> bytes:
         """Serialise the complete envelope in its unique canonical JSON form."""
@@ -245,7 +233,11 @@ class ProfileCustodyEnvelope(_ProfileCustodyEnvelopePayload):
                 wrapped_dek=wrapped_dek,
                 previous_envelope_digest=previous_envelope_digest,
             ).model_dump(mode="json")
-            payload["self_digest"] = f"sha256:{hashlib.sha256(_canonical_json_bytes(payload)).hexdigest()}"
+            payload["self_digest"] = canonical_json_digest(
+                payload,
+                maximum_bytes=PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
+                subject="profile custody envelope",
+            )
             return cls.model_validate_json(_canonical_json_bytes(payload))
         except (ValidationError, ValueError, TypeError) as exc:
             raise ProfileCustodyRecordError("cannot construct a valid profile custody envelope") from exc
@@ -261,8 +253,8 @@ def parse_profile_custody_envelope(value: bytes) -> ProfileCustodyEnvelope:
         text = value.decode(_UTF_8_ENCODING, errors="strict")
         parsed = json.loads(
             text,
-            object_pairs_hook=_reject_duplicate_members,
-            parse_constant=_reject_json_constant,
+            object_pairs_hook=reject_duplicate_json_members,
+            parse_constant=reject_json_constant,
         )
         if not isinstance(parsed, dict):
             raise ValueError("profile custody record must be a JSON object")

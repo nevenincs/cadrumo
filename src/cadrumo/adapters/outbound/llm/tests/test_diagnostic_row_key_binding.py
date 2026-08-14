@@ -20,32 +20,18 @@ import json
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pytest
 
 from .....llm import LLMCacheError, LLMProvider, UsageRecord
-from .....tests.secure_sql import TestRuntimeProfile
 from .._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from .._usage import UsageRecorder
+from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-if TYPE_CHECKING:
-    from sqlalchemy import Engine
-
 _RECENT = datetime(2026, 5, 28, 12, 0, 0, tzinfo=UTC)
 _OLD = _RECENT - timedelta(days=400)
-
-_ENGINE_HOLDER: list[Engine] = []
-
-
-@pytest.fixture(autouse=True)
-def _bind_engine(secure_object_test_profile: TestRuntimeProfile):
-    _ENGINE_HOLDER.clear()
-    _ENGINE_HOLDER.append(secure_object_test_profile.repository._engine)
-    yield
-    _ENGINE_HOLDER.clear()
 
 
 def _usage(request_id: str, created_at: datetime) -> UsageRecord:

@@ -244,15 +244,6 @@
         "reason": "White-box roundtrip over the encrypted secure-object substrate: the test must derive the same revision id the production writer derives in order to assert an on-disk row is the one it wrote. Re-implementing the derivation in the test would make the assertion tautological against the test's own arithmetic rather than against the writer. Revision derivation is internal to the crypto layer and deliberately not on the storage facade, since a caller that can mint revision ids can defeat the optimistic-concurrency guard."
       },
       {
-        "importer_path": "src/cadrumo/adapters/persistence/storage/tests/test_bundle_crash_windows.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.bucket_maintenance._service",
-        "imported_names": [
-          "_archive_associated_data"
-        ],
-        "reason": "White-box unit test of the private AEAD associated-data builder for sealed-archive crash-window coverage. Internal to the bucket-maintenance service; not a symbol any other package should construct directly."
-      },
-      {
         "importer_path": "src/cadrumo/agent/tests/test_rule_surface_conformance.py",
         "occurrence": 1,
         "target_mod": "cadrumo.entrypoints.cli._command_suggestions",
@@ -297,33 +288,6 @@
           "_mint_diagnostic_id"
         ],
         "reason": "White-box test of the private Cl@ve Movil page-flow diagnostic-id minting helper. Internal correctness helper with no consumer outside the adapter; promoting it would expose implementation detail as public API."
-      },
-      {
-        "importer_path": "src/cadrumo/application/bucket_maintenance/tests/test_custody_completeness.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.user_profile._bundle",
-        "imported_names": [
-          "_assert_full_custody_coverage"
-        ],
-        "reason": "White-box test of the private full-custody-coverage assertion used by the sealed portable-bundle exporter. Internal defensive check for the FULL custody scope, not a reusable public primitive."
-      },
-      {
-        "importer_path": "src/cadrumo/application/bucket_maintenance/tests/test_custody_completeness.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.user_profile._bundle",
-        "imported_names": [
-          "_build_secure_object_custody_payload"
-        ],
-        "reason": "White-box test of the private secure-object custody-payload builder that composes a portable bundle's carried rows. Internal serialisation helper, not a public construction API."
-      },
-      {
-        "importer_path": "src/cadrumo/application/bucket_maintenance/tests/test_custody_completeness.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.user_profile._custody_carry",
-        "imported_names": [
-          "_natural_key_resolvers"
-        ],
-        "reason": "White-box test enumerating the private per-namespace natural-key resolver registry to confirm custody-carry coverage. Internal dispatch table, not a public registry."
       },
       {
         "importer_path": "src/cadrumo/application/calculations/tests/test_observations_repository_roundtrip.py",
@@ -457,87 +421,6 @@
           "_evaluate_import_rows"
         ],
         "reason": "Parity-of-two-paths reach: the test proves the dedup decision is identical whether a row arrives by import or by the manual path, which requires calling the import path's own row evaluator directly. The public import action also WRITES, so driving it would compare a decision against a persisted side effect rather than against the other decision. Deliberately NOT promoted: `_evaluate_import_rows` is an internal step of one action, and exposing it would offer callers a way to evaluate rows without the write the action exists to perform."
-      },
-      {
-        "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.auth._apoderado",
-        "imported_names": [
-          "_ApoderadoConfigRepository"
-        ],
-        "reason": "White-box test of the private apoderado-config repository, part of the custody-store matrix. Internal repository, not a public construction API."
-      },
-      {
-        "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
-        "occurrence": 2,
-        "target_mod": "cadrumo.application.auth._apoderado",
-        "imported_names": [
-          "_ApoderadoConfigRepository"
-        ],
-        "reason": "Same private apoderado-config repository reach as the adjacent load assertion in the same custody-store matrix test."
-      },
-      {
-        "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.live._expedientes",
-        "imported_names": [
-          "_expedientes_repository"
-        ],
-        "reason": "White-box test of the private expedientes-snapshot repository factory, part of the custody-store matrix. Internal repository-factory, not a public construction API."
-      },
-      {
-        "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
-        "occurrence": 2,
-        "target_mod": "cadrumo.application.live._expedientes",
-        "imported_names": [
-          "_expedientes_repository"
-        ],
-        "reason": "Same private expedientes-repository factory reach as the adjacent save assertion in the same custody-store matrix test."
-      },
-      {
-        "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.live._notifications",
-        "imported_names": [
-          "_notifications_repository"
-        ],
-        "reason": "White-box test of the private notifications-snapshot repository factory, part of a matrix confirming every carried secure-object namespace round-trips through custody carry. Internal repository-factory, not a public construction API."
-      },
-      {
-        "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
-        "occurrence": 2,
-        "target_mod": "cadrumo.application.live._notifications",
-        "imported_names": [
-          "_notifications_repository"
-        ],
-        "reason": "Same private notifications-repository factory reach as the adjacent save assertion in the same custody-store matrix test."
-      },
-      {
-        "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.modelo._m036_lifecycle",
-        "imported_names": [
-          "_m036_declaration_repository"
-        ],
-        "reason": "White-box test of the private M036 declaration repository factory, part of the custody-store matrix. Internal repository-factory, not a public construction API."
-      },
-      {
-        "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
-        "occurrence": 2,
-        "target_mod": "cadrumo.application.modelo._m036_lifecycle",
-        "imported_names": [
-          "_m036_declaration_repository"
-        ],
-        "reason": "Same private M036 declaration-repository factory reach as the adjacent save assertion in the same custody-store matrix test."
-      },
-      {
-        "importer_path": "src/cadrumo/application/wizard/tests/test_commands_output.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config",
-        "imported_names": [
-          "_manager_dispatch"
-        ],
-        "reason": "White-box test of the CLI config command-manager's private dispatch helper, exercising CLI wiring internals with no consumer outside the entrypoint package."
       },
       {
         "importer_path": "src/cadrumo/application/workflow/tests/test_models.py",
@@ -796,69 +679,6 @@
           "_override_locales_root"
         ],
         "reason": "White-box test-support fixture delegating to the renderer-owned private catalogue-redirection contextmanager to point locale resolution at a fixture root. The renderer owns the single implementation; this fixture is the thin package-external entry point for tests outside cadrumo.core.i18n, keeping the production facade free of test-hook overrides. The seam is deliberately private and not a public facade candidate."
-      },
-      {
-        "importer_path": "src/cadrumo/tests/test_diagnostics_and_sidecar_rationale.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.adapters.outbound.storage._local",
-        "imported_names": [
-          "LocalFileSystemProvider"
-        ],
-        "reason": "Same private-implementation-behind-Protocol rationale as test_google_sync_push.py: a white-box unit test of the concrete local-filesystem backend's sidecar diagnostics, deliberately not promoted per the package's documented Protocol boundary."
-      },
-      {
-        "importer_path": "src/cadrumo/tests/test_except_clause_narrowing.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.adapters.inbound.declaracion._parsers._pdfplumber_backend",
-        "imported_names": [
-          "_extract_pages_text_with_pdfium_cached"
-        ],
-        "reason": "White-box test of the private cached pdfium page-text extractor's except-clause narrowing against a malformed PDF. Internal parser-backend cache helper, not a public extraction API (the public surface is parse_declaracion)."
-      },
-      {
-        "importer_path": "src/cadrumo/tests/test_persisted_format_enrollment.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.adapters.persistence.storage.master_key._master_key_records",
-        "imported_names": [
-          "_WrappedBucketDekDocument"
-        ],
-        "reason": "White-box reach for the strict on-disk document model of one bucket's wrapped DEK, used by the persisted-format lineage gate to drive drift in both directions (relaxing schema_version from Literal[1] to int, or extra from forbid to ignore) and require a refusal. The model is an internal envelope shape of the master-key custody layer; promoting a private crypto document model onto the storage facade would publish an implementation detail no consumer constructs, on a security-sensitive surface. The public storage symbols this same test needs (STORAGE_NAMESPACE_REGISTRY, StoragePathKind, the namespace definitions, and the two path-name constants promoted alongside this entry) all come from the facade."
-      },
-      {
-        "importer_path": "src/cadrumo/tests/test_wizard_catalogue_error_narrowing.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.modelo._verification_actions",
-        "imported_names": [
-          "_evaluate_advisory_predicate_fires"
-        ],
-        "reason": "White-box test of the private advisory-predicate-fires evaluator's except-clause narrowing (InvalidOperation on threshold parse only). Internal verification-predicate helper, not a standalone public entry point."
-      },
-      {
-        "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._google",
-        "imported_names": [
-          "_OAuthClientWrapper"
-        ],
-        "reason": "White-box test of the private OAuth-client-payload pydantic wrapper's validate/reject behaviour. Internal Google OAuth config-loading helper, not a public CLI contract."
-      },
-      {
-        "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",
-        "occurrence": 2,
-        "target_mod": "cadrumo.entrypoints.cli._config._google",
-        "imported_names": [
-          "_OAuthClientWrapper"
-        ],
-        "reason": "Same private OAuth-client-wrapper reach as line 167 in the same file, exercising a different validation-rejection scenario."
-      },
-      {
-        "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",
-        "occurrence": 3,
-        "target_mod": "cadrumo.entrypoints.cli._config._google",
-        "imported_names": [
-          "_OAuthClientWrapper"
-        ],
-        "reason": "Same private OAuth-client-wrapper reach as lines 167/186 in the same file, exercising a third validation scenario."
       }
     ]
   }

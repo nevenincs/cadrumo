@@ -1,11 +1,13 @@
 """Sealed bucket-export archive writer.
 
 Writes a gzipped tar archive carrying the plaintext
-:class:`ExportArchiveHeader` followed by the encrypted payload bytes
-and an optional recovery-wrap member. Metadata for every tar member
-is normalised at write time (timestamps pinned to the header's
-``created_at``, mode pinned to ``0o400``, ownership cleared) so two
-same-bucket exports differ only in the header's ``created_at`` field.
+:class:`ExportArchiveHeader` followed by the encrypted payload bytes.
+The layout is fixed at exactly those two members: there is no optional
+member, so the archive's shape is a constant rather than something the
+header negotiates. Metadata for every tar member is normalised at
+write time (timestamps pinned to the header's ``created_at``, mode
+pinned to ``0o400``, ownership cleared) so two same-bucket exports
+differ only in the header's ``created_at`` field.
 """
 
 from __future__ import annotations
@@ -30,7 +32,8 @@ _log = get_logger(__name__)
 # schema version.
 HEADER_MEMBER_NAME = "header.json"
 PAYLOAD_MEMBER_NAME = "payload.envelope"
-RECOVERY_WRAP_MEMBER_NAME = "recovery.wrap"
+#: The archive's members, in the one order the reader accepts.
+SEALED_ARCHIVE_MEMBER_NAMES = (HEADER_MEMBER_NAME, PAYLOAD_MEMBER_NAME)
 CADRUMO_BUCKET_BUNDLE_SUFFIX = f".{PRODUCT_IDENTITY.python_package}-bucket.tar.gz"
 FORMER_PRODUCT_BUCKET_BUNDLE_SUFFIX = ".aeat-bucket.tar.gz"
 
@@ -69,7 +72,6 @@ def write_sealed_archive(
     *,
     header: ExportArchiveHeader,
     payload_envelope_bytes: bytes,
-    recovery_wrap_bytes: bytes | None = None,
 ) -> None:
     """Write the sealed archive at ``target_path``.
 
@@ -83,16 +85,12 @@ def write_sealed_archive(
             member.
         payload_envelope_bytes: The encrypted payload bytes (already
             wrapped in an :class:`Envelope` by the caller). Written
-            as the second archive member.
-        recovery_wrap_bytes: Optional recovery-wrap material. When
-            present the header MUST carry
-            ``recovery_wrap_present = True``; when ``None`` the header
-            MUST carry ``recovery_wrap_present = False``.
+            as the second and last archive member.
 
     Raises:
-        SealedArchiveWriteError: When ``target_path`` exists, the
-            header's ``recovery_wrap_present`` flag disagrees with
-            ``recovery_wrap_bytes``, or the underlying IO write fails.
+        SealedArchiveWriteError: When ``target_path`` carries the wrong
+            suffix, already exists, ``payload_envelope_bytes`` is empty,
+            or the underlying IO write fails.
     """
     if target_path.name.endswith(FORMER_PRODUCT_BUCKET_BUNDLE_SUFFIX):
         raise SealedArchiveWriteError(
@@ -102,25 +100,12 @@ def write_sealed_archive(
         raise SealedArchiveWriteError(
             f"sealed-archive write refused: target must end with {CADRUMO_BUCKET_BUNDLE_SUFFIX!r}",
         )
-    if recovery_wrap_bytes is not None and not header.recovery_wrap_present:
-        raise SealedArchiveWriteError(
-            "sealed-archive write refused: recovery_wrap_bytes supplied but header.recovery_wrap_present is False",
-        )
-    if recovery_wrap_bytes is None and header.recovery_wrap_present:
-        raise SealedArchiveWriteError(
-            "sealed-archive write refused: header.recovery_wrap_present is True but no recovery_wrap_bytes supplied",
-        )
-    # Both members carry encrypted material, so zero bytes is never a
+    # The payload member carries encrypted material, so zero bytes is never a
     # legitimate value. An empty payload produced a structurally valid archive
-    # that round-tripped cleanly and carried nothing to decrypt; an empty
-    # declared recovery wrap lost the material the header says is present.
+    # that round-tripped cleanly and carried nothing to decrypt.
     if not payload_envelope_bytes:
         raise SealedArchiveWriteError(
             "sealed-archive write refused: payload_envelope_bytes is empty; there would be nothing to decrypt",
-        )
-    if recovery_wrap_bytes is not None and not recovery_wrap_bytes:
-        raise SealedArchiveWriteError(
-            "sealed-archive write refused: recovery_wrap_bytes is empty but the header declares recovery material",
         )
     if target_path.exists():
         raise SealedArchiveWriteError(
@@ -143,9 +128,6 @@ def write_sealed_archive(
             archive.addfile(header_info, io.BytesIO(header_bytes))
             payload_info = _normalised_tarinfo(PAYLOAD_MEMBER_NAME, len(payload_envelope_bytes), instant)
             archive.addfile(payload_info, io.BytesIO(payload_envelope_bytes))
-            if recovery_wrap_bytes is not None:
-                recovery_info = _normalised_tarinfo(RECOVERY_WRAP_MEMBER_NAME, len(recovery_wrap_bytes), instant)
-                archive.addfile(recovery_info, io.BytesIO(recovery_wrap_bytes))
         os.replace(staging_path, target_path)
     except OSError as exc:
         _discard_staging_archive(staging_path)
@@ -178,6 +160,6 @@ __all__ = [
     "FORMER_PRODUCT_BUCKET_BUNDLE_SUFFIX",
     "HEADER_MEMBER_NAME",
     "PAYLOAD_MEMBER_NAME",
-    "RECOVERY_WRAP_MEMBER_NAME",
+    "SEALED_ARCHIVE_MEMBER_NAMES",
     "write_sealed_archive",
 ]

@@ -253,6 +253,7 @@ from ._producer_snapshot import (
     build_filing_producer_snapshot,
     resolve_m303_filing_facts,
 )
+from ._profile_filing_retention import FilingRetentionAuthority
 from ._projection import FilingProjectionValue, FilingRecordRenderContext
 from ._review import (
     ModeloApprovalStaleReason,
@@ -1204,6 +1205,7 @@ __all__ = [
     "FilingProducerSnapshotError",
     "FilingProjectionValue",
     "FilingRecordRenderContext",
+    "FilingRetentionAuthority",
     "GeneralFilingProfileFacts",
     "JustificanteImportResult",
     "M202UnsupportedProducerId",

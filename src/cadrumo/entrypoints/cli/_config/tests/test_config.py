@@ -351,40 +351,32 @@ def test_config_boundary_error_is_registered_cadrumo_error_subclass() -> None:
 
 
 # ---------------------------------------------------------------------------
-# G4: passphrase change / recover refuse instructively without interactive stdin
+# G4: a secret-taking verb refuses instructively without interactive stdin
 # ---------------------------------------------------------------------------
 
 
-def test_passphrase_change_without_interactive_stdin_refuses_instructively() -> None:
-    """`config passphrase change` with no TTY and no --secrets-stdin refuses (exit 2).
+def test_secret_taking_verb_without_interactive_stdin_refuses_instructively() -> None:
+    """A verb reading a secret with no TTY and no --secrets-stdin refuses (exit 2).
 
     Non-interactively, ``getpass`` would raise a bare EOFError that escapes to
     the generic INTERNAL boundary (exit 6, logged traceback). The isatty
     pre-check in the shared secure-input channel turns it into a REFUSED exit
     naming the ``--secrets-stdin`` path. Real boundary, no mocks: the
     in-process runner's stdin is not a TTY.
+
+    ``config auth certificate secret set`` is the carrier: it is the surviving
+    verb that resolves its secret through the shared channel unconditionally,
+    before touching the store, so the refusal fires ahead of any mutation.
+    ``config login`` deliberately does NOT hold this property — it supplies the
+    prompt callback only on a real console and otherwise defers to the storage
+    substrate's own env-var precedence and refusal.
     """
-    result = invoke_cached_cli(["config", "passphrase", "change"])
+    result = invoke_cached_cli(["config", "auth", "certificate", "secret", "set", "--name", "operator-cert"])
 
     assert result.exit_code == 2, result.output
     assert "--secrets-stdin" in result.output
     # The crash class is gone: no traceback, and the escaped exception is not the
     # bare EOFError getpass would have raised.
-    assert "Traceback" not in result.output
-    assert not isinstance(result.exception, EOFError)
-
-
-def test_recover_without_interactive_stdin_refuses_instructively() -> None:
-    """`config recover` with no TTY and no --secrets-stdin refuses (exit 2).
-
-    The secret resolution runs before any recovery-store access, and the
-    recovery code is never accepted as an ``argv`` value, so the refusal fires
-    before any custody mutation.
-    """
-    result = invoke_cached_cli(["config", "recover"])
-
-    assert result.exit_code == 2, result.output
-    assert "--secrets-stdin" in result.output
     assert "Traceback" not in result.output
     assert not isinstance(result.exception, EOFError)
 

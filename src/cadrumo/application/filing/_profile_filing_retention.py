@@ -84,14 +84,14 @@ class FilingRetentionSnapshot(BaseModel):
         return canonical_snapshot_digest(
             self,
             maximum_bytes=_MAX_BYTES,
-            limit_error="filing retention snapshot exceeds its byte limit",
+            subject="filing retention snapshot",
         )
 
     def canonical_json_bytes(self) -> bytes:
         return canonical_snapshot_bytes(
             self,
             maximum_bytes=_MAX_BYTES,
-            limit_error="filing retention snapshot exceeds its byte limit",
+            subject="filing retention snapshot",
         )
 
     @classmethod

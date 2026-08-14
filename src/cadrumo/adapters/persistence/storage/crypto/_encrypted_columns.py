@@ -49,6 +49,7 @@ from sqlalchemy import LargeBinary
 from sqlalchemy.engine import Dialect
 from sqlalchemy.types import TypeDecorator
 
+from .....core.hashing import canonical_json_bytes
 from ..errors import (
     DecryptionError,
 )
@@ -278,12 +279,7 @@ class EncryptedJSON(TypeDecorator[object]):
         if value is None:
             return None
         try:
-            serialised = json.dumps(
-                value,
-                ensure_ascii=False,
-                separators=(",", ":"),
-                sort_keys=True,
-            ).encode("utf-8")
+            serialised = canonical_json_bytes(value)
         except (TypeError, ValueError) as exc:
             raise _storage_validation_error(f"EncryptedJSON expects a JSON-serialisable value: {exc}") from exc
         key = _resolve_master_key()

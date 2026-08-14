@@ -60,11 +60,18 @@ def _run_provider_auth_operation[AuthResultT](
     """Run a provider-scoped auth operation, mapping backend refusals to CLI boundaries.
 
     ``logout`` and ``reset`` share the exact refusal fan-out: an unknown provider,
-    no active bucket, an operation-scope conflict, and an unconfigured provider each
-    map to the same translated boundary message for both verbs.
+    no active bucket, a missing custody session, an operation-scope conflict, and an
+    unconfigured provider each map to the same translated boundary message for both
+    verbs.
+
+    The custody-session refusal is mapped separately from the scope conflict on
+    purpose. Collapsing the two would render "choose either --provider or --all"
+    at an operator whose real remedy is ``aeat config login`` for the target
+    profile — an instruction that cannot resolve the refusal it answers.
     """
     from ....application.auth import (
         AuthConfigureNoActiveBucketError,
+        AuthOperationRequiresCustodySessionError,
         AuthOperationScopeConflictError,
         AuthProviderNotConfiguredError,
     )
@@ -79,6 +86,11 @@ def _run_provider_auth_operation[AuthResultT](
     except AuthConfigureNoActiveBucketError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.no_active_bucket",
+        ) from exc
+    except AuthOperationRequiresCustodySessionError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="application.auth.operator.errors.requires_custody_session",
+            context=exc.context,
         ) from exc
     except AuthOperationScopeConflictError as exc:
         raise _CliRefusedBoundaryError(

@@ -32,10 +32,8 @@ one is worse off than one who never saw it.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -49,13 +47,11 @@ from ....domain.contribuyente import (
     parse_guarderia_mensual,
 )
 from ....domain.user_profile import UserProfileFact
-from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ....tests.profile_capsule import set_active_test_profile_facts
 from ...aggregation import CalculationSourceDiagnostic
-from ...workflow import workflow_state_repository
 from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from .._minimo_descendientes_advisory import collect_guarderia_spend_shape_diagnostics
+from ._advisory_bucket_fixture import _bucket  # noqa: F401
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -73,14 +69,9 @@ _UNDER_THREE = date(_FILING_YEAR - 2, 6, 1)
 _PAST_THREE = date(_FILING_YEAR - 5, 4, 15)
 
 
-@pytest.fixture(autouse=True)
-def _bucket(tmp_path: Path) -> Iterator[None]:
-    from ... import wizard as _wizard
-
-    assert _wizard.WIZARD_FLOWS
-    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
-        workflow_state_repository().update(lambda s: register_minimal_profile(s, profile_id=_BUCKET_ID))
-        yield
+@pytest.fixture
+def _bucket_id() -> str:
+    return _BUCKET_ID
 
 
 def _operator_text(diagnostic: CalculationSourceDiagnostic) -> str:
