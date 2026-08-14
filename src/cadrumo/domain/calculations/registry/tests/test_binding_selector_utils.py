@@ -36,7 +36,7 @@ def _binding(
 def test_binding_row_set_selector_returns_none_for_an_eligible_binding_with_no_claim() -> None:
     """A row-set-eligible binding that declares none of the row-set keys is ``None``, not refused."""
     binding = _binding(
-        {"foo_bar": "unrelated"},
+        {"fact": "perceptor_count"},
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
     )
 

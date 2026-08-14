@@ -177,7 +177,7 @@ class FixtureRecord:
     #: Derived from the body by the census, which always sets it explicitly. The
     #: default exists for records built directly in tests, where a fixture that
     #: was never classified is by definition not a scaffold.
-    raises_without_producing: bool = False
+    body_performs_no_work: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -195,14 +195,11 @@ class AliasedBehaviour:
     the population a reviewer must adjudicate -- not a verdict that they are
     interchangeable.
 
-    Fixtures whose body only raises are excluded, because they carry no
-    behaviour to share. A required-override scaffold -- a base fixture whose
-    default raises so a consuming module must supply its own value -- normalises
-    to the same body as every other scaffold in the tree, no matter what concept
-    it scaffolds or which composite it serves. Grouping those together reports
-    identical absence of behaviour as duplication, and a detector that fires on
-    non-duplicates is one reviewers learn to skip. They are counted separately
-    instead of being dropped.
+    Fixtures whose body carries no behaviour are excluded -- see
+    :func:`_performs_no_work` for the two shapes and why each aliases by
+    construction rather than by copying. They are counted separately instead of
+    being dropped, because a reader comparing this figure across runs needs to
+    see what the detector declined to consider.
     """
 
     body_sha256: str
@@ -239,7 +236,7 @@ class FixtureCensus:
         """Return every fixture body reached through more than one name."""
         by_body: dict[str, list[FixtureRecord]] = {}
         for record in self.fixtures:
-            if record.raises_without_producing:
+            if record.body_performs_no_work:
                 continue
             by_body.setdefault(record.normalized_body_sha256, []).append(record)
         return tuple(
@@ -258,16 +255,21 @@ class FixtureCensus:
         return len(self.aliased_behaviours)
 
     @property
-    def required_override_scaffolds(self) -> tuple[FixtureRecord, ...]:
-        """Return every fixture whose body only raises, excluded from aliasing.
+    def behaviourless_fixtures(self) -> tuple[FixtureRecord, ...]:
+        """Return every fixture excluded from aliasing for carrying no behaviour.
 
         Surfaced rather than silently discarded: these are a real population
         with a real shape, and a reader comparing the aliasing count across two
         runs needs to see what the detector chose not to consider.
+
+        A NAMING inconsistency inside this population is still worth acting on --
+        one role reached under two names is a real finding. It is simply not the
+        finding the aliasing detector makes, which is that one BEHAVIOUR was
+        copied. Read these as a vocabulary question, not a duplication one.
         """
         return tuple(
             sorted(
-                (record for record in self.fixtures if record.raises_without_producing),
+                (record for record in self.fixtures if record.body_performs_no_work),
                 key=lambda record: (record.path, record.line),
             ),
         )
@@ -788,7 +790,7 @@ class _ModuleVisitor(ast.NodeVisitor):
                 annotate_fields=True,
                 include_attributes=False,
             )
-            raises_without_producing = _performs_no_work(executable_body)
+            body_performs_no_work = _performs_no_work(executable_body)
             record = FixtureRecord(
                 path=relative,
                 line=node.lineno,
@@ -806,7 +808,7 @@ class _ModuleVisitor(ast.NodeVisitor):
                 imported_bindings=(),
                 consumers=(),
                 autouse_reach=(),
-                raises_without_producing=raises_without_producing,
+                body_performs_no_work=body_performs_no_work,
             )
             self.fixtures.append(
                 _FixtureDraft(
@@ -1284,8 +1286,8 @@ def main(argv: list[str] | None = None) -> int:
         f"dynamic requests={len(result.dynamic_fixture_requests)}; "
         f"factory-bound fixtures={result.factory_fixture_candidate_count}; "
         f"aliased behaviours={result.aliased_behaviour_count} "
-        f"(excluding {len(result.required_override_scaffolds)} required-override "
-        f"scaffolds, whose bodies only raise and so share a body by construction)",
+        f"(excluding {len(result.behaviourless_fixtures)} behaviourless fixtures, "
+        f"which only raise or hand back a name and so share a body by construction)",
     )
     for behaviour in result.aliased_behaviours:
         print(

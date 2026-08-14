@@ -27,8 +27,13 @@ from datetime import date
 from decimal import Decimal
 from functools import cache
 
-from ....core.resources import resources
-from ...calculations.registry import resolve_parameter
+from ....core.resources import bundled_path
+from ...calculations.registry import (
+    RegistryRevisionInspection,
+    load_registry_tree,
+    resolve_parameter,
+    select_revision,
+)
 from .. import MinimoDescendientesThresholds
 
 __all__ = [
@@ -45,17 +50,36 @@ _BIRTH_ORDER_SUFFIXES = (
 )
 
 
-def _parameter(filing_year: int, suffix: str) -> Decimal:
-    """Resolve one ``minimo-descendientes`` parameter for *filing_year*.
+@cache
+def _inspection(filing_year: int) -> RegistryRevisionInspection:
+    """Non-filing static inspection of M100's *filing_year* revision.
 
-    Read through the non-filing revision inspection, not a filing-grade snapshot.
-    A regulatory ceiling is a declaration of the selected revision, and reading it
-    is not a filing operation: requesting a snapshot would demand operator review
-    of a revision these tests never file, so the lookup would refuse on an
-    attestation that has nothing to do with the ceilings it is fetching.
+    Built directly from the compile-only registry tree rather than
+    ``ValidatedRegistryAuthority.inspect_revision`` (or ``.snapshot``):
+    the authority validates every modelo in the bundled tree before it
+    returns anything, so one unrelated modelo missing filing capability
+    would break this M100-only, non-filing parameter lookup for a reason
+    that has nothing to do with it. A regulatory ceiling is a declaration
+    of the selected revision, and reading it is not a filing operation:
+    an authority-backed snapshot would additionally demand operator review
+    of a revision these tests never file.
     """
-    inspection = resources().modelos.authority.inspect_revision("100", filing_year=filing_year, period="0A")
-    by_id = {parameter.id: parameter for parameter in inspection.parameters}
+    root = bundled_path("registry", "aeat")
+    modelos, catalogues = load_registry_tree(root)
+    modelo = next(item for item in modelos if item.id == "100")
+    revision = select_revision(modelo, filing_year=filing_year, period="0A")
+    return RegistryRevisionInspection.from_revision(
+        modelo=modelo,
+        revision=revision,
+        source_root=bundled_path(),
+        sources=catalogues.sources,
+        legal_ref_ids=frozenset(catalogues.legal),
+    )
+
+
+def _parameter(filing_year: int, suffix: str) -> Decimal:
+    """Resolve one ``minimo-descendientes`` parameter for *filing_year*."""
+    by_id = {parameter.id: parameter for parameter in _inspection(filing_year).parameters}
     return resolve_parameter(
         by_id[f"renta-{filing_year}-minimo-descendientes-{suffix}-{filing_year}"],
         {"filing_period": date(filing_year, 12, 31)},
