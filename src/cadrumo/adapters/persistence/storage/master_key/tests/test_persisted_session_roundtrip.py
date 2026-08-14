@@ -164,10 +164,13 @@ class TestKeyringBoundary:
         else:
             try:
                 assert path.exists()
-                assert keyring.get_password(
-                    PROFILE_SESSION_KEYCHAIN_SERVICE,
-                    _account(profile_id, record.session_id),
-                ) is not None
+                assert (
+                    keyring.get_password(
+                        PROFILE_SESSION_KEYCHAIN_SERVICE,
+                        _account(profile_id, record.session_id),
+                    )
+                    is not None
+                )
             finally:
                 delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
 
@@ -221,7 +224,9 @@ class TestAnchoredReceiptBoundary:
             assert dek is None
             assert not path.exists()
 
-    def test_parent_link_leaf_link_and_nonregular_leaf_are_refused_without_opening_targets(self, tmp_path: Path) -> None:
+    def test_parent_link_leaf_link_and_nonregular_leaf_are_refused_without_opening_targets(
+        self, tmp_path: Path
+    ) -> None:
         profile_id = _profile_id()
         path = profile_session_path(storage_root=tmp_path, profile_id=profile_id)
         outside = tmp_path / "outside"
@@ -425,14 +430,20 @@ class TestProfileSessionAcceleration:
         second, _ = self._mint(tmp_path, profile_id)
         try:
             assert first.session_id != second.session_id
-            assert keyring.get_password(
-                PROFILE_SESSION_KEYCHAIN_SERVICE,
-                _account(profile_id, first.session_id),
-            ) is None
-            assert keyring.get_password(
-                PROFILE_SESSION_KEYCHAIN_SERVICE,
-                _account(profile_id, second.session_id),
-            ) is not None
+            assert (
+                keyring.get_password(
+                    PROFILE_SESSION_KEYCHAIN_SERVICE,
+                    _account(profile_id, first.session_id),
+                )
+                is None
+            )
+            assert (
+                keyring.get_password(
+                    PROFILE_SESSION_KEYCHAIN_SERVICE,
+                    _account(profile_id, second.session_id),
+                )
+                is not None
+            )
             assert keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, str(profile_id)) is None
         finally:
             delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
@@ -469,10 +480,13 @@ class TestProfileSessionAcceleration:
             assert outcome.refusal is ProfileSessionRefusalReason.CUSTODY_CHANGED
             assert resumed is None
             assert not path.exists()
-            assert keyring.get_password(
-                PROFILE_SESSION_KEYCHAIN_SERVICE,
-                _account(profile_id, record.session_id),
-            ) is None
+            assert (
+                keyring.get_password(
+                    PROFILE_SESSION_KEYCHAIN_SERVICE,
+                    _account(profile_id, record.session_id),
+                )
+                is None
+            )
         finally:
             delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
 
@@ -491,14 +505,20 @@ class TestProfileSessionAcceleration:
             )
             assert outcome.refusal is ProfileSessionRefusalReason.EXPIRED_IDLE
             assert resumed is None
-            assert keyring.get_password(
-                PROFILE_SESSION_KEYCHAIN_SERVICE,
-                _account(profile_id, record.session_id),
-            ) is None
-            assert keyring.get_password(
-                PROFILE_SESSION_KEYCHAIN_SERVICE,
-                _account(other_profile, other.session_id),
-            ) is not None
+            assert (
+                keyring.get_password(
+                    PROFILE_SESSION_KEYCHAIN_SERVICE,
+                    _account(profile_id, record.session_id),
+                )
+                is None
+            )
+            assert (
+                keyring.get_password(
+                    PROFILE_SESSION_KEYCHAIN_SERVICE,
+                    _account(other_profile, other.session_id),
+                )
+                is not None
+            )
         finally:
             delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
             delete_profile_session(storage_root=tmp_path, profile_id=other_profile)
@@ -521,10 +541,13 @@ class TestProfileSessionAcceleration:
             assert outcome.refusal is ProfileSessionRefusalReason.TAMPERED
             assert resumed is None
             assert not path.exists()
-            assert keyring.get_password(
-                PROFILE_SESSION_KEYCHAIN_SERVICE,
-                _account(profile_id, record.session_id),
-            ) is None
+            assert (
+                keyring.get_password(
+                    PROFILE_SESSION_KEYCHAIN_SERVICE,
+                    _account(profile_id, record.session_id),
+                )
+                is None
+            )
         finally:
             delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
 

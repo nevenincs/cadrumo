@@ -14,7 +14,6 @@ from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import _emit_envelope, active_profile_label
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
-from ._custody_secret import register_secret_custody_commands
 
 if TYPE_CHECKING:
     from ....application.user_profile import ProfileLoginOutcome
@@ -218,7 +217,7 @@ def _login_through_the_prompt(
 
         def passphrase_callback() -> str:
             """Read the profile passphrase on the hardened no-echo channel."""
-            return prompt_secret_no_echo(tr("cli.config.passphrase.current_passphrase_prompt"))
+            return prompt_secret_no_echo(tr("cli.config.login.passphrase_prompt"))
 
     try:
         return login_profile(name=name, passphrase_callback=passphrase_callback)
@@ -341,7 +340,7 @@ def _register_logout_command(app: typer.Typer) -> None:
 
 
 def register_custody_commands(app: typer.Typer) -> None:
-    """Register root-level profile custody commands.
+    """Register the current root-level profile session commands.
 
     ``login`` owns profile selection end to end (UUID or exact label)
     through the application resolver, so no pointer or label resolver is
@@ -349,4 +348,3 @@ def register_custody_commands(app: typer.Typer) -> None:
     """
     _register_login_command(app)
     _register_logout_command(app)
-    register_secret_custody_commands(app)

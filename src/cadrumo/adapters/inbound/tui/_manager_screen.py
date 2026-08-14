@@ -229,7 +229,6 @@ class ProfileManagerApp(App[None]):
     #manager-actions Button { width: 100%; margin: 0; }
     #manager-busy { display: none; height: 1; margin: 0; }
     #manager-busy.busy { display: block; }
-    #manager-recovery-boundary { width: 100%; margin: 0; }
     """
     )
 
@@ -331,14 +330,6 @@ class ProfileManagerApp(App[None]):
                         for action in self._actions:
                             yield Button(self._action_label(action), id=f"action-{action.key}")
                     yield LoadingIndicator(id="manager-busy")
-            # Stated, never a missing menu row: recovery-code creation and
-            # rotation are the one credential action that never lives here
-            # as a button, because both display 24 generated words and the
-            # show-once contract cannot survive entering the widget tree
-            # (see the recovery-mnemonic-surface ADR). Unconditional on
-            # ``self._actions`` so the boundary is visible on every manager
-            # render, not only when other actions happen to be wired.
-            yield Static(tr("flows.manager.recovery_boundary"), id="manager-recovery-boundary", classes="cadrumo-note")
             for section in self.overview.sections:
                 yield Static(id=f"section-{section.key}", classes="manager-section cadrumo-panel")
         yield Footer()

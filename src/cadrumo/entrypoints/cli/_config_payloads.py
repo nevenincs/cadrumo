@@ -400,85 +400,6 @@ class ConfigLogoutResult(OutputSchema):
     already_logged_out: bool
 
 
-@register_schema("config.passphrase.change")
-class ConfigPassphraseChangeResult(OutputSchema):
-    """JSON envelope for ``aeat config passphrase change``.
-
-    Reports the secure-store directory and whether the passphrase was rotated.
-    Neither the current nor the new passphrase, key material, nor recovery
-    phrases ever enter this payload.
-    """
-
-    secret_store_dir: str
-    changed: bool
-
-
-@register_schema("config.recover")
-class ConfigRecoverResult(OutputSchema):
-    """JSON envelope for ``aeat config recover``.
-
-    Reports the recovery file used and the local secret-store directory that was
-    recovered, without serialising the recovery secret itself.
-    """
-
-    recovery_path: str
-    secret_store_dir: str
-    recovered: bool
-
-
-@register_schema("config.recovery.status")
-class ConfigRecoveryStatusResult(OutputSchema):
-    """JSON envelope for ``aeat config recovery status``.
-
-    Reports enrollment and the non-secret recovery fingerprint only; the
-    recovery words are never serialised on any envelope.
-    """
-
-    recovery_path: str
-    recovery_enrolled: bool
-    recovery_fingerprint: str | None = None
-
-
-@register_schema("config.recovery.create")
-class ConfigRecoveryCreateResult(OutputSchema):
-    """JSON envelope for ``aeat config recovery create``.
-
-    The candidate recovery words were written to the controlling terminal and
-    retype-confirmed before commit; only the non-secret fingerprint of the
-    installed envelope rides here.
-    """
-
-    recovery_path: str
-    recovery_fingerprint: str
-    rotated: bool
-
-
-@register_schema("config.recovery.rotate")
-class ConfigRecoveryRotateResult(OutputSchema):
-    """JSON envelope for ``aeat config recovery rotate``.
-
-    Same non-secret shape as the create envelope; ``rotated`` is true because
-    a prior enrollment was replaced.
-    """
-
-    recovery_path: str
-    recovery_fingerprint: str
-    rotated: bool
-
-
-@register_schema("config.recovery.verify")
-class ConfigRecoveryVerifyResult(OutputSchema):
-    """JSON envelope for ``aeat config recovery verify``.
-
-    Confirms whether the supplied recovery material matched the encrypted local
-    recovery record; the secret phrase is not echoed back.
-    """
-
-    recovery_path: str
-    verified: bool
-    recovery_fingerprint: str | None = None
-
-
 @register_schema("config.profile.show")
 class ConfigProfileShowResult(OutputSchema):
     """JSON envelope for ``aeat config profile show``.
@@ -1285,10 +1206,7 @@ class RepairIntegrityRegistryResult(OutputSchema):
     the registry / diagnostic-check shapes locally.
     """
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class var shadows ConfigDict descriptor;
-    # mypy assignment check is incorrect.
-    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check is in...
+    model_config = ConfigDict(extra="allow")
 
 
 # Apoderado verb result schemas

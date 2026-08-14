@@ -222,6 +222,10 @@ def profile_session_failure_verdict(
             condition = ProfilePreconditionCondition.SESSION_LOGGED_IN
         case ProfileSessionRefusalReason.EXPIRED_IDLE | ProfileSessionRefusalReason.EXPIRED_ABSOLUTE:
             condition = ProfilePreconditionCondition.SESSION_CURRENT
+        case ProfileSessionRefusalReason.CUSTODY_CHANGED:
+            condition = ProfilePreconditionCondition.SESSION_CURRENT
+        case ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
+            condition = ProfilePreconditionCondition.SESSION_LOGGED_IN
         case ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH:
             condition = ProfilePreconditionCondition.SESSION_SCHEMA_CURRENT
         case ProfileSessionRefusalReason.MALFORMED:

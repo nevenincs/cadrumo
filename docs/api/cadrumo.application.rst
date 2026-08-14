@@ -29,11 +29,13 @@ Subpackages
    cadrumo.application.ledger
    cadrumo.application.live
    cadrumo.application.modelo
+   cadrumo.application.operations
    cadrumo.application.operator_actions
    cadrumo.application.operator_output
    cadrumo.application.operator_surface
    cadrumo.application.overview
    cadrumo.application.portals
+   cadrumo.application.profile_custody
    cadrumo.application.prorrata_register
    cadrumo.application.registry
    cadrumo.application.review
@@ -57,6 +59,9 @@ Submodules
    cadrumo.application._errors
    cadrumo.application._foreign_asset_thresholds
    cadrumo.application._journal_repository
+   cadrumo.application._profile_deletion_hold_contract
+   cadrumo.application._provisioning_contracts
+   cadrumo.application._provisioning_runtime
    cadrumo.application._state_projection_auth
    cadrumo.application._state_projection_readiness
    cadrumo.application._workflow_auth_models

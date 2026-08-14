@@ -65,7 +65,6 @@ from ._status_screen import (
     StatusFactRow,
     StatusPageData,
     StatusProfileRow,
-    StatusRecoveryView,
 )
 from ._theme import (
     BASE_CSS,
@@ -125,7 +124,6 @@ __all__ = [
     "StatusFactRow",
     "StatusPageData",
     "StatusProfileRow",
-    "StatusRecoveryView",
     "StatusTone",
     "TextEditScreen",
     "accepted_shape_hint",

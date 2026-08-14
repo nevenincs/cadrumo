@@ -196,12 +196,14 @@ _DECLARED_OPEN_VIOLATIONS: dict[str, _OpenViolation] = {
     ),
     "profile_custody/__init__.py": _OpenViolation(
         reason=(
-            "The delegate wrappers forward the surviving session substrate -- bucket "
-            "session open and resume, the persisted receipt, the login throttle -- "
-            "which follows the substrate out of the shared-master package as the "
-            "per-profile capsule takes over composition.  The provider family and "
-            "the dynamic string reach are both gone; what remains is one static "
-            "import of the session surface."
+            "The delegate wrappers forward the surviving master-key substrate: "
+            "bucket session open, resume, activation and binding, the persisted "
+            "session receipt with its idle deadline, the login throttle, and -- "
+            "key material rather than session bookkeeping -- bucket DEK "
+            "load-or-mint and buffer zeroise.  That substrate follows the "
+            "per-profile capsule as it takes over composition.  The provider "
+            "family and the dynamic string reach are both gone; what remains is "
+            "one static import of the master-key module."
         ),
         reaches=frozenset({_MASTER_KEY_PACKAGE}),
     ),

@@ -625,16 +625,24 @@ def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> Non
     — and every operator who leaves the screen without unlocking falls
     through to the refusals below unchanged.
     """
-    from ...adapters.persistence.storage import get_master_key_provider
+    from ...adapters.persistence.storage.errors import KeyringUnavailableError
     from ...application.profile_preconditions import profile_session_failure_verdict
-    from ...application.user_profile import resume_active_profile_session
+    from ...application.user_profile import login_profile, resume_active_profile_session
     from ._errors import CliRefusedBoundaryError
 
     refusal = resume_active_profile_session(bucket_id=bucket_id)
     if refusal is None:
         return
+    if refusal is _ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
+        # A real process-scoped login is possible only when the explicit
+        # password path is invoked by the operator.  Never treat a broken
+        # acceleration keychain as permission to revive a provider/master-key
+        # route or discard its receipt evidence.
+        raise KeyringUnavailableError("OS keychain is unavailable for profile-session acceleration")
     if _headless_secret_channel_active():
-        ctx.with_resource(get_master_key_provider())
+        # This is an explicit current-profile password authentication, not a
+        # provider or shared-master-key fallback for the session cache.
+        login_profile(name=bucket_id)
         return
     if _authenticated_at_the_gate(ctx, bucket_id=bucket_id):
         return

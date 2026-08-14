@@ -42,9 +42,7 @@ from .. import (
     StatusFactRow,
     StatusPageData,
     StatusProfileRow,
-    StatusRecoveryView,
 )
-from .._status_screen import _RECOVERY_COMMANDS
 
 pytestmark = [
     pytest.mark.unit,
@@ -69,7 +67,6 @@ _STATUS_CATALOGUE: dict[str, object] = {
                 "profile": "SEC-PROFILE",
                 "profiles": "SEC-PROFILES",
                 "auth": "SEC-AUTH",
-                "recovery": "SEC-RECOVERY",
                 "notices": "SEC-NOTICES",
             },
             "profile": {
@@ -93,13 +90,6 @@ _STATUS_CATALOGUE: dict[str, object] = {
                 "provider_none": "AUTH-NONE",
                 "login_ready": "AUTH-READY",
                 "login_not_ready": "AUTH-NOT-READY",
-            },
-            "recovery": {
-                "state": "REC-STATE",
-                "enrolled": "REC-ENROLLED",
-                "not_enrolled": "REC-NOT-ENROLLED",
-                "fingerprint": "REC-FINGERPRINT",
-                "commands_title": "REC-COMMANDS",
             },
         },
     },
@@ -136,7 +126,6 @@ def _populated_data() -> StatusPageData:
             subject="ADA LOVELACE",
             certificate_source="disk",
         ),
-        recovery=StatusRecoveryView(enrolled=True, fingerprint="ab12cd34"),
     )
 
 
@@ -145,14 +134,13 @@ def _all_cell_text(table: DataTable[str]) -> list[str]:
 
 
 @pytest.mark.asyncio
-async def test_all_four_zones_render_as_bordered_panels() -> None:
+async def test_all_status_zones_render_as_bordered_panels() -> None:
     app = StatusApp(_populated_data())
     async with app.run_test(size=_TERMINAL_SIZE):
         panels = {
             "#panel-profile": "SEC-PROFILE",
             "#panel-profiles": "SEC-PROFILES",
             "#panel-auth": "SEC-AUTH",
-            "#panel-recovery": "SEC-RECOVERY",
         }
         for panel_id, title in panels.items():
             panel = app.query_one(panel_id, Static)
@@ -240,18 +228,6 @@ async def test_auth_panel_reports_unconfigured_provider() -> None:
 
 
 @pytest.mark.asyncio
-async def test_recovery_panel_shows_enrollment_and_copyable_commands() -> None:
-    app = StatusApp(_populated_data())
-    async with app.run_test(size=_TERMINAL_SIZE):
-        state_text = str(app.query_one("#recovery-lines", Static).content)
-        assert "REC-ENROLLED" in state_text
-        assert "ab12cd34" in state_text
-        commands_text = str(app.query_one("#recovery-commands", Static).content)
-        for command in _RECOVERY_COMMANDS:
-            assert command in commands_text
-        assert all(command.startswith("aeat config") for command in _RECOVERY_COMMANDS)
-
-
 @pytest.mark.asyncio
 async def test_a_notice_paints_its_severity_glyph_message_and_resolved_action() -> None:
     """The band renders exactly what the typed Notice carries, glyph and all.
@@ -416,10 +392,6 @@ async def test_a_notice_does_not_eliminate_the_other_panels() -> None:
         assert str(auth_panel.border_title) == "SEC-AUTH"
         assert "AUTH-READY" in str(app.query_one("#auth-lines", Static).content)
 
-        recovery_panel = app.query_one("#panel-recovery", Static)
-        assert str(recovery_panel.border_title) == "SEC-RECOVERY"
-        assert "REC-ENROLLED" in str(app.query_one("#recovery-lines", Static).content)
-
 
 @pytest.mark.asyncio
 async def test_a_notice_does_not_eliminate_the_other_panels_at_a_smaller_terminal() -> None:
@@ -436,7 +408,6 @@ async def test_a_notice_does_not_eliminate_the_other_panels_at_a_smaller_termina
         assert app.query_one("#profile-facts", DataTable).row_count == 3
         assert app.query_one("#profiles-table", DataTable).row_count == 3
         assert "AUTH-READY" in str(app.query_one("#auth-lines", Static).content)
-        assert "REC-ENROLLED" in str(app.query_one("#recovery-lines", Static).content)
 
 
 def test_status_screen_never_imports_the_application_layer() -> None:
