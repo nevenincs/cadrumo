@@ -122,31 +122,11 @@ class ProfileRecordSession:
         )
 
     def close(self) -> None:
-        """Zeroise the DEK in place, retiring this authority without discarding it."""
         self._dek[:] = b"\0" * len(self._dek)
-
-    @property
-    def closed(self) -> bool:
-        """Whether the DEK has been zeroised, so this authority can no longer decrypt.
-
-        Retirement is destructive but not observable from the outside: ``close``
-        zeroises the key in place and leaves the object, its UUID and its
-        envelope binding intact, so a holder cannot tell a retired authority
-        from a live one by looking at it. Anything deciding whether to REUSE a
-        session has to ask, and before this predicate existed the only way to
-        find out was to ask for the key and catch the refusal -- an integrity
-        error raised at the point of use, far from the reuse decision that
-        caused it.
-
-        Read as the absence of key material rather than as a separate flag, so
-        there is one definition of retired rather than a boolean a future
-        ``close`` variant could forget to set.
-        """
-        return not self._dek or not any(self._dek)
 
     def encryption_key(self) -> bytes:
         """Return the DEK only to the local secure-object session bridge."""
-        if self.closed:
+        if not self._dek or not any(self._dek):
             raise ProfileRecordIntegrityError("profile record session is closed")
         return bytes(self._dek)
 

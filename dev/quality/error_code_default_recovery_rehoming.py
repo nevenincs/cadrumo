@@ -2455,6 +2455,44 @@ class _LexicalScanner(ast.NodeVisitor):
         return None
 
     def _record_guarded_getattr(self, node: ast.Call) -> bool:
+        """Record a ``getattr`` on a target-exporting module, or refuse it.
+
+        The accepted shape is a NAME whose value is guarded to a known set of
+        attribute names; each name in that set that is also a target is
+        resolved and recorded. A string LITERAL is refused instead.
+
+        That refusal is deliberate, and it is not what it looks like. The
+        instinct on meeting it -- reinforced by everything else in this file --
+        is that it must be an oversight, because a literal is *more*
+        determinate than the guarded variable this same helper accepts:
+        ``getattr(module, "app")`` reaches exactly one statically known
+        attribute, while the guarded form reaches every name in its guard set.
+        Admitting the literal would therefore widen nothing. The refusal is not
+        an analytical claim that the literal cannot be proven.
+
+        It is a CANONICAL-SPELLING rule. A module attribute is written as an
+        attribute, so a literal fetch has an exact equivalent already handled
+        elsewhere, and refusing it keeps the analyser from carrying two
+        spellings of one fact. The cost of admitting it is not unsoundness; it
+        is a second form to maintain in every proof that reads module
+        attributes, forever.
+
+        Two tests pin the rejection, so widening this will break them rather
+        than pass quietly:
+
+        * ``test_current_source_fingerprints_rejects_escaping_or_target_closed_import_module_use``,
+          case ``closed-dynamic-getattr``
+        * ``test_current_source_fingerprints_rejects_unclosed_dynamic_package_import_module_use``,
+          case ``dynamic-package-getattr``
+
+        Both live in ``dev/tests/test_error_code_default_recovery_rehoming.py``.
+        This is written down because the asymmetry has already been rediscovered
+        as a bug once: an author isolated it, extended the analyser to admit the
+        literal, and watched a purpose-built ten-case matrix pass cleanly --
+        those two tests were the only thing that caught it. If a bounded loader
+        is being refused here, the fix is to write the attribute access rather
+        than to widen this helper.
+        """
         if not isinstance(node.func, ast.Name) or node.func.id != "getattr" or not node.args:
             return False
         base = self._resolve(node.args[0])
