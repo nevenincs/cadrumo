@@ -6,10 +6,11 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:7de2912e29a87ccce3203330f127edc9fe53587ff19b2484d9dfad2f8696b1f7'
+body_hash: 'sha256:545f6ea36dd7dc772ab9294b5fa172b979a8f7ce2b3ca1b7103f2ddb6b423535'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P17-S50]]'
+  - '[[2026-08-14-test-harness-sanity-W06-P17-S51]]'
   - '[[2026-08-14-test-harness-sanity-audit]]'
   - '[[2026-08-14-test-harness-sanity-plan]]'
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -34,6 +35,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 
 - `2026-08-14-test-harness-sanity-W06-P16-S47` - Implement the AST-backed fixture census with decorator scope autouse constraint owner and consumer fields
 - `2026-08-14-test-harness-sanity-W06-P17-S50` - Define the outer-serial harness recipe with explicit membership non-vacuity and exit-status preservation
+- `2026-08-14-test-harness-sanity-W06-P17-S51` - Enroll the harness verdict in CI independently from unit and integration verdicts
 
 ### plan
 

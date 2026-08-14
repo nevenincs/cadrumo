@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-14'
-body_hash: 'sha256:2a9ffaff7a788c09c205be548131cc6053774143b4f2d0670d264ce3bd0e61ae'
+body_hash: 'sha256:134fc96c91ddfeeeb30ceb532024177809fcae4b15a0cfd2588713d14418f966'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -59,7 +59,7 @@ Produce a reproducible census that classifies every fixture before any duplicate
 Give installed-hook and full-corpus proofs one explicit outer-serial verdict before moving expensive tests.
 
 - [x] `W06.P17.S50` - Define the outer-serial harness recipe with explicit membership non-vacuity and exit-status preservation; `justfile`.
-- [ ] `W06.P17.S51` - Enroll the harness verdict in CI independently from unit and integration verdicts; `.github/workflows/ci.yml`.
+- [x] `W06.P17.S51` - Enroll the harness verdict in CI independently from unit and integration verdicts; `.github/workflows/ci.yml`.
 - [ ] `W06.P17.S52` - Prove the harness recipe selects every declared member and fails when membership collapses; `dev/ci/tests/test_ci_workflow.py`.
 
 ## Wave `W07` - execute two remediation lanes in parallel
