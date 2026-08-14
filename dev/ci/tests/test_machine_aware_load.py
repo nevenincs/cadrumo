@@ -11,17 +11,23 @@ parallelism-bounded.
 
 from __future__ import annotations
 
+import ast
 import re
+import shlex
+import sys
 from pathlib import Path
 from typing import Any, Final
 
 import pytest
 import yaml
 
+from ...packaging._command import run_command
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_WORKFLOWS_DIR: Final = Path(__file__).resolve().parents[3] / ".github" / "workflows"
-_JUSTFILE: Final = Path(__file__).resolve().parents[3] / "justfile"
+_REPOSITORY_ROOT: Final = Path(__file__).resolve().parents[3]
+_WORKFLOWS_DIR: Final = _REPOSITORY_ROOT / ".github" / "workflows"
+_JUSTFILE: Final = _REPOSITORY_ROOT / "justfile"
 _EXPLICIT_WORKERS: Final = re.compile(r"pytest\b[^\n]*\s-n\s*\d+")
 # A justfile recipe header: `name`, optional params/attributes, then a bare
 # `:` (not `:=`, which is a variable assignment). Must handle parameterized
@@ -239,3 +245,168 @@ def test_homebrew_matrix_is_parallelism_bounded_with_per_leg_make_jobs() -> None
         if step.get("name") == "Audit install and exercise Cadrumo through Homebrew"
     )
     assert audit["env"]["HOMEBREW_MAKE_JOBS"] == "${{ matrix.make_jobs }}"
+
+
+# ── Outer-serial harness lane: the multiplicative-cost boundary ──────────────
+#
+# The harness proofs reach their subject by spawning a real child pytest -- one
+# boots a full xdist worker pool, the other recursively collects the entire
+# first-party corpus. Their cost inside another lane's pool is multiplicative,
+# not additive: N outer workers each boot an inner pool, so a box sized for N
+# processes gets N*M. Holding them out is therefore a machine-load contract,
+# which is why it is gated here rather than beside the recipe's shape pins.
+#
+# Both the member set and the labelled set are DERIVED -- one from the enrolling
+# recipe, one from an AST scan of the tree -- and proven equal. Neither is a
+# hand-written list, so a new harness proof, a rename, or a deletion moves both
+# sides or fails.
+
+_HARNESS_MARKER: Final = "harness"
+# The combined real-proof line of the enrolling recipe, whose trailing arguments
+# are its declared members. The `--collect-only` preflights name one member each.
+_HARNESS_RUN_LINE: Final = re.compile(r"(?m)^test-harness:\r?\n(?:.*\r?\n)*?\s+@(?P<command>[^\r\n]*-rsf[^\r\n]*)")
+_COLLECTION_TIMEOUT_SECONDS: Final = 180
+_PYTEST_NO_TESTS_COLLECTED: Final = 5
+# A justfile `{{ ... }}` template, including the conditional form whose own
+# braces and quotes make the surrounding line unparseable as a shell word list.
+_TEMPLATE_EXPRESSION: Final = re.compile(r"\{\{.*?\}\}", re.DOTALL)
+# A path argument restricting a lane's collection, e.g. `dev/quality/tests` or
+# `src/cadrumo/tests/test_x.py`. Matched only outside quotes-bearing templates.
+_PATH_ARGUMENT: Final = re.compile(r"(?<!\S)(?!-)[\w.]+/\S*")
+
+
+def _declared_harness_members() -> tuple[str, ...]:
+    """Return the member paths the enrolling ``just test-harness`` recipe runs."""
+    match = _HARNESS_RUN_LINE.search(_JUSTFILE.read_text(encoding="utf-8"))
+    assert match is not None, "no justfile `test-harness` recipe line running the real proofs"
+    return tuple(argument for argument in shlex.split(match.group("command")) if argument.endswith(".py"))
+
+
+def _harness_labelled_modules() -> tuple[str, ...]:
+    """Return every tracked test module whose ``pytestmark`` carries the label.
+
+    Read statically rather than through pytest so the scan sees the label at
+    its declaration site even when the module is deselected everywhere, which
+    is precisely the state this contract governs.
+    """
+    labelled: list[str] = []
+    for path in sorted(_REPOSITORY_ROOT.glob("src/cadrumo/**/test_*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        marks = {
+            node.attr
+            for statement in tree.body
+            if isinstance(statement, ast.Assign)
+            and any(isinstance(target, ast.Name) and target.id == "pytestmark" for target in statement.targets)
+            for node in ast.walk(statement.value)
+            if isinstance(node, ast.Attribute)
+        }
+        if _HARNESS_MARKER in marks:
+            labelled.append(path.relative_to(_REPOSITORY_ROOT).as_posix())
+    return tuple(labelled)
+
+
+def _parallel_marker_expressions() -> tuple[tuple[str, str], ...]:
+    """Return every unrestricted parallel justfile pytest lane as (recipe, marker).
+
+    A lane is parallel unless it pins ``-n0``; a lane naming explicit paths
+    cannot reach a member it does not name, so only the path-unrestricted lanes
+    -- the ones selecting the whole corpus by marker -- are in scope here.
+    """
+    lanes: list[tuple[str, str]] = []
+    for recipe, body in _justfile_recipe_bodies().items():
+        for line in body:
+            if "pytest" not in line or "-n0" in line:
+                continue
+            marker = re.search(r"-m\s+(?P<quote>[\"'])(?P<expression>.+?)(?P=quote)", line)
+            if marker is None:
+                continue
+            if _PATH_ARGUMENT.search(_TEMPLATE_EXPRESSION.sub(" ", line)):
+                continue
+            lanes.append((recipe, marker.group("expression")))
+    return tuple(lanes)
+
+
+def _collect(marker_expression: str, members: tuple[str, ...]) -> Any:
+    """Collect the declared members under one marker expression, outer-serially."""
+    return run_command(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--collect-only",
+            "-n0",
+            "-m",
+            marker_expression,
+            *members,
+        ],
+        cwd=_REPOSITORY_ROOT,
+        timeout_seconds=_COLLECTION_TIMEOUT_SECONDS,
+    )
+
+
+def test_the_harness_label_and_the_enrolling_recipe_name_the_same_members() -> None:
+    """The label cannot remove a test from every lane without enrolling it.
+
+    ``harness`` is excluded by every routine lane, so on its own it is a mute
+    button: any red proof could wear it and silently leave automated execution.
+    Requiring exact equality with the enrolling recipe's member list makes the
+    label and the verdict that pays for it inseparable.
+    """
+    declared = _declared_harness_members()
+    labelled = _harness_labelled_modules()
+
+    assert declared, "the enrolling recipe declares no harness member"
+    assert sorted(declared) == sorted(labelled), (
+        "every `harness`-labelled module must be a declared `just test-harness` member and vice versa\n"
+        f"recipe declares: {sorted(declared)}\nmodules labelled: {sorted(labelled)}"
+    )
+
+
+def test_no_parallel_lane_collects_an_outer_serial_harness_member() -> None:
+    """No path-unrestricted parallel lane may nest a harness proof in its pool.
+
+    This runs each lane's real marker expression against the real member files,
+    so it measures what pytest selects rather than what the expression looks
+    like it excludes.
+    """
+    members = _declared_harness_members()
+    lanes = _parallel_marker_expressions()
+    assert lanes, "no path-unrestricted parallel lane found to gate"
+
+    offenders: list[tuple[str, str, str]] = []
+    for recipe, expression in lanes:
+        result = _collect(expression, members)
+        if result.returncode != _PYTEST_NO_TESTS_COLLECTED:
+            offenders.append((recipe, expression, result.stdout))
+    assert not offenders, (
+        "these parallel lanes collect an outer-serial harness member, nesting its child "
+        f"pytest pool inside their own:\n{offenders}"
+    )
+
+
+def test_the_harness_exclusion_is_what_holds_the_members_out() -> None:
+    """The control: drop the exclusion and the same lane collects the members.
+
+    Without this, the gate above would pass identically if the members were
+    renamed, deleted, or unmarked -- an empty collection proves nothing on its
+    own about which clause did the work.
+    """
+    members = _declared_harness_members()
+    lanes = _parallel_marker_expressions()
+    guarded = next(
+        (expression for _, expression in lanes if f"not {_HARNESS_MARKER}" in expression),
+        None,
+    )
+    assert guarded is not None, "no parallel lane declares the harness exclusion this control exercises"
+
+    without_exclusion = guarded.replace(f" and not {_HARNESS_MARKER}", "")
+    result = _collect(without_exclusion, members)
+
+    assert result.returncode == 0, (
+        "the control must collect the members once the exclusion is dropped; an empty "
+        f"result here means the gate above is vacuous\ncommand marker: {without_exclusion}\n{result.stdout}"
+    )
+    assert "5 tests collected" in result.stdout or " tests collected" in result.stdout, result.stdout
