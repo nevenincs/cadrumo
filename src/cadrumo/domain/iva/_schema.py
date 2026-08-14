@@ -18,7 +18,7 @@ from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, override
+from typing import Annotated, Protocol, override
 
 from pydantic import (
     BaseModel,
@@ -35,7 +35,13 @@ from ...core.parsing import parse_iso8601_date
 from ._errors import IvaValidationError
 
 
-def validate_orden_module_identities(modulos: tuple["ModuloOrdenAnual", ...]) -> None:
+class _ModuloOrdenAnualLike(Protocol):
+    order: int
+    coefficient: Decimal
+    identity: str
+
+
+def validate_orden_module_identities(modulos: tuple[_ModuloOrdenAnualLike, ...]) -> None:
     if not 1 <= len(modulos) <= 7:
         raise IvaValidationError("an Orden activity must declare one through seven modules")
     if tuple(module.order for module in modulos) != tuple(range(1, len(modulos) + 1)):

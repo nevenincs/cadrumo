@@ -351,7 +351,6 @@ class RegimenSimplificadoFilingRows(BaseModel):
 def _activities_by_kind(
     activities: tuple[RegimenSimplificadoActivity, ...],
 ) -> tuple[tuple[ActividadAgricolaSimplificado, ...], tuple[ActividadNoAgricolaSimplificado, ...]]:
-    """Partition rows by official cohort while preserving each cohort's order."""
     return (
         tuple(activity for activity in activities if activity.kind == "agricola"),
         tuple(activity for activity in activities if activity.kind == "no_agricola"),

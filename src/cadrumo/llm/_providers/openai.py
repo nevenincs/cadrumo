@@ -10,22 +10,15 @@ from __future__ import annotations
 
 from typing import override
 
-import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core import ActionEvidenceProvenance
 from ...core.config import load_settings
 from ...core.logging import get_logger
-from .._errors import LLMConfigError
 from .._models import LLMProvider
-from .._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from .base import (
     ProviderCompletion,
     ProviderRequest,
     _ProviderAdapter,
-    check_http_error,
-    parse_provider_response,
-    post_provider_request,
     require_provider_response_item,
 )
 
@@ -111,17 +104,7 @@ class OpenAIAdapter(_ProviderAdapter):
         Raises:
             LLMConfigError: When ``api_key`` is empty.
         """
-        if not api_key:
-            raise LLMConfigError(
-                context={"provider": self.provider.value, "provider_credentials_present": False},
-                precondition_verdict=llm_no_recovery_verdict(
-                    LLMPreconditionCondition.PROVIDER_CREDENTIALS_PRESENT,
-                    facts={"provider": self.provider.value, "provider_credentials_present": False},
-                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                ),
-            )
-        self._api_key = api_key
-        self._timeout_s = timeout_s
+        self._configure_api_key(api_key, timeout_s)
 
     @override
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:
@@ -141,24 +124,18 @@ class OpenAIAdapter(_ProviderAdapter):
         if request.system is not None:
             messages.append({"role": "system", "content": request.system})
         messages.append({"role": "user", "content": request.prompt})
-        async with httpx.AsyncClient(timeout=self._timeout_s) as client:
-            response = await post_provider_request(
-                client,
-                _openai_chat_url(),
-                provider_name=LLMProvider.OPENAI.value,
-                model=request.model,
-                logger=_logger,
-                headers={"Authorization": f"Bearer {self._api_key}"},
-                json={
-                    "model": request.model,
-                    "messages": messages,
-                    "max_tokens": request.max_tokens,
-                    "temperature": request.temperature,
-                },
-            )
-        check_http_error(response, provider_name=LLMProvider.OPENAI.value, model=request.model, logger=_logger)
-        parsed = parse_provider_response(
-            response, provider_name=LLMProvider.OPENAI.value, response_model=_OpenAIResponse
+        parsed = await self._request_completion(
+            request,
+            endpoint=_openai_chat_url(),
+            headers={"Authorization": f"Bearer {self._api_key}"},
+            json={
+                "model": request.model,
+                "messages": messages,
+                "max_tokens": request.max_tokens,
+                "temperature": request.temperature,
+            },
+            response_model=_OpenAIResponse,
+            logger=_logger,
         )
         choice = require_provider_response_item(
             parsed.choices,

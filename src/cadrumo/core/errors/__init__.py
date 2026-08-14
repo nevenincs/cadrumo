@@ -6,12 +6,14 @@ predictable error handling throughout the application.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
-from typing import TYPE_CHECKING, ClassVar, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, ClassVar, Protocol, TypeVar, cast, runtime_checkable
 
 if TYPE_CHECKING:
     from ._registry import ErrorEnvelope
+
+VerdictT = TypeVar("VerdictT")
 
 
 @runtime_checkable
@@ -144,6 +146,34 @@ class CadrumoError(Exception):
             super().__init__()
         self.context: dict[str, object] | None = dict(context) if context is not None else None
         self.translated_message: str | None = translated_message
+
+
+class TerminalPreconditionErrorMixin[VerdictT]:
+    """Carry one typed terminal verdict without coupling core to application models.
+
+    The mixin deliberately stores the verdict as an opaque object: the
+    application owns the concrete ``PreconditionVerdict`` record, while core
+    owns this layer-neutral exception transport behavior. It is mixed in ahead
+    of a registered error class so that class keeps its own error code.
+    """
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_verdict: VerdictT | None = None,
+    ) -> None:
+        """Initialize the parent error and retain its terminal verdict."""
+        parent_init = cast(Callable[..., None], super().__init__)
+        parent_init(message, context=context, translated_message=translated_message)
+        self._terminal_precondition_verdict = precondition_verdict
+
+    @property
+    def terminal_precondition_verdict(self) -> VerdictT | None:
+        """Return the opaque terminal verdict for the owning application boundary."""
+        return self._terminal_precondition_verdict
 
 
 class CoreError(CadrumoError):
@@ -343,6 +373,7 @@ __all__ = [
     "SiteHealthError",
     "SiteHealthEvidenceLike",
     "SiteHealthStatusLike",
+    "TerminalPreconditionErrorMixin",
     "bind_error_code",
     "build_error_envelope",
     "declared_error_codes",

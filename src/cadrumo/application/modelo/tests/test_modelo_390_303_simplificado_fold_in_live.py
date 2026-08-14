@@ -284,6 +284,97 @@ def _persist_presentado_source(
     return wu_repo, cr_repo, filing_repo, source_revision
 
 
+def _replace_source_with_new_filed_revision(
+    *,
+    work_units: WorkUnitCatalogueRepository,
+    calculations: CalculationRevisionCatalogueRepository,
+    filings: ModeloRecordCatalogueRepository,
+    previous: CalculationRevision,
+) -> CalculationRevision:
+    """Replace the live 303 source through the real revision and filing catalogues."""
+    source_work_unit = work_units.load().get(previous.work_unit_id)
+    assert source_work_unit is not None
+    previous_filing_id = source_work_unit.current_filing_record_id
+    assert previous_filing_id is not None
+    evidence = _non_agricultural_source_evidence(declared_quantity=Decimal("2"))
+    casilla_values = _source_values(evidence)
+    replacement_id = derive_calculation_revision_id(
+        work_unit_id=source_work_unit.work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values=casilla_values,
+        filing_instance_evidence=evidence,
+    )
+    replacement = CalculationRevision(
+        calculation_revision_id=replacement_id,
+        work_unit_id=source_work_unit.work_unit_id,
+        state=CalculationRevisionState.PRESENTADO,
+        casilla_values=casilla_values,
+        observations=registry_grounded_observations(
+            modelo="303",
+            filing_year=_YEAR,
+            period="4T",
+            casilla_values=casilla_values,
+        ),
+        filing_instance_evidence=evidence,
+        created_at=_T0,
+        updated_at=_T2,
+        verified_at=_T1,
+        verified_by="operator",
+        filed_at=_T2,
+        filed_by="operator-replacement",
+    )
+    replacement_filing_id = derive_filing_record_id(
+        work_unit_id=source_work_unit.work_unit_id,
+        calculation_revision_id=replacement.calculation_revision_id,
+        filed_by="operator-replacement",
+    )
+    replacement_filing = ModeloRecord(
+        filing_record_id=replacement_filing_id,
+        work_unit_id=source_work_unit.work_unit_id,
+        calculation_revision_id=replacement.calculation_revision_id,
+        bucket_id=_BUCKET_ID,
+        modelo="303",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "4T"),
+        filed_at=_T2,
+        filed_by="operator-replacement",
+        status=ModeloRecordStatus.VIGENTE,
+    )
+    previous_filing = filings.load().get(previous_filing_id)
+    assert previous_filing is not None
+    superseded = previous_filing.model_copy(
+        update={
+            "status": ModeloRecordStatus.SUPERSEDIDO,
+            "superseded_at": _T2,
+            "superseded_by_filing_record_id": replacement_filing_id,
+        },
+    )
+    calculations.save(upsert_calculation_revision(calculations.load(), replacement))
+    filings.save(
+        ModeloRecordCatalogue(
+            records={
+                superseded.filing_record_id: superseded,
+                replacement_filing.filing_record_id: replacement_filing,
+            },
+        )
+    )
+    work_units.save(
+        upsert_work_unit(
+            work_units.load(),
+            source_work_unit.model_copy(
+                update={
+                    "current_calculation_revision_id": replacement.calculation_revision_id,
+                    "filed_calculation_revision_id": replacement.calculation_revision_id,
+                    "current_filing_record_id": replacement_filing.filing_record_id,
+                    "updated_at": _T2,
+                },
+            ),
+        )
+    )
+    return replacement
+
+
 def _calculate_m390_annual(
     secure_objects: SecureObjectRepository,
     *,
