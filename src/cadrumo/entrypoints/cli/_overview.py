@@ -670,7 +670,7 @@ def _overview_calendar_all_profiles(
 
     for bucket_id, pointer in sorted(active_buckets.items(), key=lambda kv: kv[1].label):
         inputs = _profile_calendar_inputs(
-            ProfileRecordRepository(bucket_id=bucket_id),
+            ProfileRecordRepository.for_current_session(bucket_id),
             bucket_id,
             rng=rng,
             as_of=today,

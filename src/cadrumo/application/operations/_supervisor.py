@@ -253,7 +253,6 @@ class OperationSupervisor:
         self._leases = leases
         self._operands = operands
         self._owner_id = owner_id
-        self._lease_token_factory = lease_token_factory
         self._lease_token = lease_token_factory()
         self._clock = clock
         self._lease_duration = lease_duration

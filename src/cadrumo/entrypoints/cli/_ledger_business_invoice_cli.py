@@ -206,7 +206,7 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
     if bucket_id is None:
         return []
     try:
-        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return []
     except (OSError, ValueError):
