@@ -13,6 +13,7 @@ import hashlib
 import json
 import os
 import stat
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -41,13 +42,27 @@ def _hash(payload: bytes) -> str:
     return f"sha256-{hashlib.sha256(payload).hexdigest()}"
 
 
-@pytest.fixture
-def provider(tmp_path: Path) -> LocalFileSystemProvider:
-    return LocalFileSystemProvider(tmp_path / "vault")
-
-
 def test_local_provider_satisfies_runtime_protocol(provider: LocalFileSystemProvider) -> None:
     assert isinstance(provider, StorageProvider)
+
+
+def test_local_sidecar_return_type_is_mapping() -> None:
+    """The sidecar loader advertises its mapping boundary."""
+    return_hint = LocalFileSystemProvider._load_sidecar.__annotations__.get("return")
+
+    assert "Mapping" in str(return_hint)
+
+
+def test_local_sidecar_runtime_returns_mapping(tmp_path: Path) -> None:
+    """A well-formed sidecar is loaded through the real filesystem provider."""
+    sidecar = tmp_path / "test.meta.json"
+    payload: dict[str, object] = {"content_hash": "abc123", "byte_length": 42}
+    sidecar.write_text(json.dumps(payload), encoding="utf-8")
+
+    result = LocalFileSystemProvider(root=tmp_path)._load_sidecar(sidecar)
+
+    assert isinstance(result, Mapping)
+    assert result == payload
 
 
 def test_put_creates_namespace_and_writes_payload_atomically(provider: LocalFileSystemProvider) -> None:

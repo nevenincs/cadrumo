@@ -42,11 +42,6 @@ def _hash(payload: bytes) -> str:
     return f"sha256-{hashlib.sha256(payload).hexdigest()}"
 
 
-@pytest.fixture
-def provider(tmp_path: Path) -> LocalFileSystemProvider:
-    return LocalFileSystemProvider(tmp_path / "vault")
-
-
 def _store(provider: LocalFileSystemProvider) -> tuple[Path, Path]:
     """Write one real object and return ``(payload_path, sidecar_path)``."""
     metadata = provider.put(
