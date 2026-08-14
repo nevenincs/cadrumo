@@ -64,8 +64,35 @@ def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, .
     # but does not replace, the overlap-aware repeated-id hard gate above.
     failures.extend(_validate_strict_cross_revision_casilla_continuity(modelo_tuple))
     failures.extend(validate_no_label_artifacts(modelo_tuple))
-    failures.extend(_validate_semantic_role_typo_twins(modelo_tuple))
+    if _tree_can_answer_role_singleton_questions(modelo_tuple):
+        failures.extend(_validate_semantic_role_typo_twins(modelo_tuple))
     return tuple(failures)
+
+
+def _tree_can_answer_role_singleton_questions(modelos: tuple[ModeloDefinition, ...]) -> bool:
+    """Return whether this tree carries enough corpus to judge a role singleton.
+
+    The typo-twin check asks whether a ``semantic_role`` appears exactly ONCE
+    across the tree and has a near-duplicate twin, which reads as either a typo
+    or missing declarations on sibling casillas. That question is answerable
+    only over a tree that actually contains the siblings.
+
+    A tree of exactly one modelo carrying exactly one revision cannot contain
+    them: every role in it is a singleton BY CONSTRUCTION, so the check would
+    measure the pruning rather than the data. That shape is not hypothetical --
+    it is precisely what generated-export-tree validation mandates, where the
+    candidate registry must hold one modelo and one revision and nothing else.
+    Running there refused every role in the tree and would have done so for any
+    modelo, on a defect that exists only because the siblings were removed.
+
+    Deliberately narrow: one modelo with SEVERAL revisions can answer the
+    question, because a role shared across its own revisions is no longer a
+    singleton. Only the one-by-one case abstains, and abstaining is the honest
+    answer rather than a suppression -- full-tree validation still runs it.
+    """
+    if len(modelos) != 1:
+        return True
+    return len(modelos[0].revisions) != 1
 
 
 def _validate_dependency_classification_source_modelos(

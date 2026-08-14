@@ -45,7 +45,7 @@ __all__ = [
 class _IrnrLedgerIncomeSelector(BaseModel):
     """Validated selector for a Modelo 210 gross-income ledger binding."""
 
-    model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: Literal[Modelo.M210] = Modelo.M210
     target_casilla_id: CasillaId

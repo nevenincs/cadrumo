@@ -89,7 +89,7 @@ class BindingRowSetSelector(BaseModel):
 class _BindingExportProjection(BaseModel):
     """Projection model for export-specific keys embedded in source-family selectors."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="ignore")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     record: str | None = Field(default=None, min_length=1, max_length=64)
     row_field: str | None = Field(default=None, min_length=1, max_length=128)
@@ -150,7 +150,7 @@ class _BindingExportProjection(BaseModel):
 class _BindingRowSetProjection(BaseModel):
     """Projection model for row-set keys embedded in source-family selectors."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="ignore")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     fact: str | None = Field(default=None, min_length=1, max_length=64)
     row_field: str | None = Field(default=None, min_length=1, max_length=128)
@@ -209,7 +209,7 @@ class BooleanBindingEncodedValue(BaseModel):
     selector's declared ``true_value`` / ``false_value``).
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     encoded_value: str
     boolean_meaning: bool
@@ -247,6 +247,26 @@ def boolean_binding_encoded_values(
     )
 
 
+def _fields_owned_by(model_cls: type[BaseModel], raw: Mapping[str, object]) -> dict[str, object]:
+    """Return the subset of ``raw`` whose keys ``model_cls`` itself declares.
+
+    A binding's full selector dict carries every key its OWN source family
+    declares -- export-selector keys, row-set keys, and family-specific keys
+    (IVA categories, retenciones schemes, whatever the binding's actual family
+    is) all live in the same table. A narrow projection like
+    ``_BindingExportProjection`` only knows about its own slice, so filtering
+    caller-side before validation is what lets it declare ``extra="forbid"``
+    without narrowing what any binding's OWN family may declare alongside it.
+
+    Derived from ``model_cls.model_fields`` rather than a hand-listed key
+    tuple: a hand-listed set stops matching silently the moment a field is
+    added to the projection, which is exactly the drift class this campaign
+    exists to remove.
+    """
+    known = model_cls.model_fields.keys()
+    return {key: value for key, value in raw.items() if key in known}
+
+
 def binding_export_selector(binding: DataBindingDefinition) -> BindingExportSelector | None:
     """Return the typed export projection embedded in ``binding.selector``.
 
@@ -256,7 +276,9 @@ def binding_export_selector(binding: DataBindingDefinition) -> BindingExportSele
     or row-field selector instead of letting callers probe the raw selector map.
     """
     try:
-        projection = _BindingExportProjection.model_validate(selector_as_dict(binding))
+        projection = _BindingExportProjection.model_validate(
+            _fields_owned_by(_BindingExportProjection, selector_as_dict(binding)),
+        )
     except ValueError as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed export selector projection: {exc}",
@@ -277,7 +299,9 @@ def binding_row_set_selector(binding: DataBindingDefinition) -> BindingRowSetSel
         selector does not declare a row-set projection.
     """
     try:
-        projection = _BindingRowSetProjection.model_validate(selector_as_dict(binding))
+        projection = _BindingRowSetProjection.model_validate(
+            _fields_owned_by(_BindingRowSetProjection, selector_as_dict(binding)),
+        )
     except ValueError as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed row-set selector projection: {exc}",

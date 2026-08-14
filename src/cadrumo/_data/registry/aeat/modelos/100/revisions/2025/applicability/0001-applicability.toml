@@ -1,0 +1,8 @@
+[[revisions."2025".applicability]]
+id = "m100-seed"
+applicable_entity_types = ["natural_person"]
+applicable_fiscal_residencies = ["resident_irpf"]
+applicable_reason = "Modelo 100 (declaración de la Renta): una persona física residente es contribuyente del IRPF y presenta la autoliquidación anual de la Renta."
+not_applicable_reason = "Modelo 100 no aplica: la declaración de la Renta corresponde únicamente a las personas físicas residentes contribuyentes del IRPF. El tipo de contribuyente declarado no es una persona física residente, o bien es un contribuyente NON_RESIDENT_IRNR. Un contribuyente NON_RESIDENT_IRNR tributa por el IRNR y presenta el Modelo 210 por la Sede Electrónica de la AEAT, no el Modelo 100."
+cuota_bearing = true
+legal_refs = ["ley-35-2006:art-99", "ley-35-2006:art-17", "trlirnr-rdleg-5-2004:art-2"]

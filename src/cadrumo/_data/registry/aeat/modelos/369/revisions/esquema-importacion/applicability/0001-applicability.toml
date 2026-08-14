@@ -1,0 +1,8 @@
+[[revisions."esquema-importacion".applicability]]
+id = "m369-seed"
+applicable_entity_types = ["attribution_entity", "legal_entity", "natural_person"]
+required_payer_fact = "oss_enrolled"
+applicable_reason = "Modelo 369 (ventanilla única OSS/IOSS): el contribuyente esta inscrito en un regimen especial de ventanilla unica del IVA con Estado miembro de identificacion España y presenta la autoliquidacion periodica de las operaciones acogidas al regimen."
+not_applicable_reason = "Modelo 369 no aplica: solo corresponde a quien esta inscrito en un regimen especial de ventanilla unica (OSS/IOSS) del IVA con Estado miembro de identificacion España."
+cuota_bearing = false
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "ley-37-1992:art-163-octiesdecies", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-quinvicies"]

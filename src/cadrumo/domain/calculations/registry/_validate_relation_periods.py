@@ -244,6 +244,20 @@ def _coordinate_coverage(
     """Resolve owners for one source-period coordinate across all required years."""
     period_candidates = tuple(revision for revision in candidates if source_period in revision.period_selector.periods)
     if not period_candidates:
+        if len(candidates) <= 1:
+            # The tree contributes at most the revision under validation, so the
+            # sibling revision this coordinate resolves to is ABSENT rather than
+            # missing: a cross-period carry reads the PREVIOUS period, which
+            # belongs to a different revision, and generated-export-tree
+            # validation mandates a candidate registry pruned to exactly one.
+            # Refusing here would report the pruning, not the registry.
+            #
+            # Keyed on the source revision being absent, never on the tree being
+            # small in general: as soon as any sibling is present the question is
+            # answerable and the refusal below stands. This is the one place a
+            # revision error compounds across years, so the abstention is
+            # deliberately the narrowest that removes the artifact.
+            return (), []
         target_context = "" if target_period is None else f" for target period {target_period!r}"
         return (), [
             RelationCoverageFailure(

@@ -14,7 +14,7 @@ from typing import Literal, NamedTuple
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, CasillaId
+from ....core import STRICT_FROZEN_CONFIG, CasillaId, FilingPeriodCode, RegistrySelectorPeriodCode
 from ....core.aggregation import BindingSourceKind, RelationAggregationOp
 from ._authority import ValidatedRegistryAuthority
 from ._bindings import bound_casilla_binding_ids
@@ -175,13 +175,13 @@ class RelationHandoffApplicabilityRecord(BaseModel):
     target_revision: RevisionId
     relation_id: RelationId
     filing_year: int
-    target_period: str
-    relation_target_periods: tuple[str, ...]
+    target_period: RegistrySelectorPeriodCode
+    relation_target_periods: tuple[RegistrySelectorPeriodCode, ...]
     applicability: Literal["active", "not_applicable", "unresolved"]
     source_modelo: ModeloId
     source_filing_year: int | None = None
-    source_periods: tuple[str, ...] = ()
-    source_filing_periods: tuple[str, ...] = ()
+    source_periods: tuple[RegistrySelectorPeriodCode, ...] = ()
+    source_filing_periods: tuple[FilingPeriodCode, ...] = ()
     source_casilla_id: CasillaId
     target_binding: BindingId
     requirement_relation_ids: tuple[RelationId, ...] = ()

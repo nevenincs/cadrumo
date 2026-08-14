@@ -67,22 +67,46 @@ __all__ = [
 _SERIALIZER_CONVENTION: Final[str] = "rtoml-pretty-v1"
 _SAFE_IDENTIFIER_RE: Final[re.Pattern[str]] = re.compile(r"^[^/\\\x00-\x1f]+$")
 _SLUG_RE: Final[re.Pattern[str]] = re.compile(r"[^a-z0-9]+")
+# A bare trailing full stop is SENTENCE PUNCTUATION on the official content, not
+# an annotation, so each value grammar tolerates its own terminator rather than
+# the note peel removing it. Two reasons this is the right home. The peel is
+# named and contracted for one job -- it returns the stem plus the note numbers
+# it removed -- and a period carries no note number, so stripping it there would
+# mutate the stem while reporting nothing, making the peel's own accounting
+# untestable. And this file already settled the question the other way for the
+# constant and boolean-enumeration patterns, which carry their own optional
+# `\.?`; leaving three of four numeric grammars tolerant and one strict is what
+# let a design writing `15 enteros y 2 decimales.` refuse.
+#
+# The terminator is deliberately alternation rather than a stacked optional: the
+# "menor o igual que N." clause already ends in a period, so appending another
+# optional one would quietly admit a doubled `..` that no design writes.
 _DECIMAL_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
     r"^(?P<whole>\d+)\s*enteros?\s+(?:y\s+)?(?P<decimals>\d+)\s*decimales?"
-    r"(?:,\s*menor\s+o\s+igual\s+que\s+\d+\.)?$",
+    r"(?:,\s*menor\s+o\s+igual\s+que\s+\d+\.|\.)?$",
     re.IGNORECASE,
 )
 _INTEGER_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
-    r"^(?P<whole>\d+)\s*enteros?(?:\.\s*Nota\s+6)?$",
+    r"^(?P<whole>\d+)\s*enteros?\.?$",
     re.IGNORECASE,
 )
-_NOTE_REFERENCE_CONTENT_RE: Final[re.Pattern[str]] = re.compile(r"^Nota\s+\d+(?:\.\s*Nota\s+\d+)*$", re.IGNORECASE)
 _QUOTED_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
-    r'^"\d+"(?:,\s*"\d+")*(?:\s+Nota\s+\d+)?$',
+    r'^"\d+"(?:,\s*"\d+")*$',
 )
+# A trailing `Nota N` reference annotates official content without altering the
+# wire fact it states: the AEAT note tables govern which value applies in which
+# filing period (Nota 8, Nota 9), whether a slot may be filled at all (Nota 10),
+# or an optional foral value (Nota 7). Every one of those axes is carried by the
+# anchor's canonical typed owner -- casilla 154's transitional-rate parameter
+# encodes Nota 8's two windows exactly -- so the reference is peeled before the
+# value grammar runs rather than tolerated ad hoc inside each pattern.
+_TRAILING_NOTE_REFERENCE_RE: Final[re.Pattern[str]] = re.compile(
+    r"[.,;\s]*\bNota\s+\d+\s*\.?\s*$",
+    re.IGNORECASE,
+)
+_NOTE_NUMBER_RE: Final[re.Pattern[str]] = re.compile(r"Nota\s+(?P<note>\d+)", re.IGNORECASE)
 _QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
-    r'^"\d+"\s+(?:SI|NO)(?:\s+\([^)]*\))?(?:,\s*"\d+"\s+(?:SI|NO)(?:\s+\([^)]*\))?)*'
-    r"(?:\.\s*Nota\s+\d+)?$",
+    r'^"\d+"\s+(?:SI|NO)(?:\s+\([^)]*\))?(?:,\s*"\d+"\s+(?:SI|NO)(?:\s+\([^)]*\))?)*\.?$',
 )
 _QUOTED_NUMERIC_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r'"(?P<value>\d+)"')
 _DATE_FORMAT_BY_POLICY: Final[Mapping[ExportValuePolicy, str]] = {
@@ -106,13 +130,16 @@ _SINGLETON_POLICY_SHAPES: Final[Mapping[ExportValuePolicy, Literal["integer", "d
 _TEXT_TYPES: Final[frozenset[str]] = frozenset({"a", "an"})
 _NUMERIC_TYPES: Final[frozenset[str]] = frozenset({"n", "num"})
 _OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
-    r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)"
-    r"(?:\.\s*Nota\s+\d+)?\.?\s*$",
+    r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)\.?\s*$",
     re.IGNORECASE,
 )
 _OFFICIAL_BLANK_LITERAL_CONTENT: Final[str] = "En blanco"
 _MAX_FRAGMENT_LINES: Final[int] = 1_399
 _MAX_FRAGMENT_LINE_CHARS: Final[int] = 519
+#: Zero-padded width this renderer gives an administrative fragment prefix. It is the
+#: single place the width is stated: the same value formats the prefix and checks that
+#: the formatting did not overflow, so the guard cannot drift from the format it guards.
+_FRAGMENT_PREFIX_DIGITS: Final[int] = 4
 
 
 class _StrictModel(BaseModel):
@@ -441,6 +468,27 @@ def _normalise_field(
     )
 
 
+def _split_official_note_references(content: str) -> tuple[str, tuple[int, ...]]:
+    """Peel every trailing ``Nota N`` reference off official content.
+
+    Returns the value-bearing stem and the referenced note numbers in source
+    order. A stem that empties out is content consisting only of note
+    references, which the numeric derivation treats as its own form.
+    """
+    stem = content
+    notes: list[int] = []
+    while (match := _TRAILING_NOTE_REFERENCE_RE.search(stem)) is not None:
+        reference = match.group(0)
+        number = _NOTE_NUMBER_RE.search(reference)
+        if number is None:
+            raise RegistryValidationError(
+                f"official content {content!r} matched a trailing note reference {reference!r} carrying no note number",
+            )
+        notes.append(int(number.group("note")))
+        stem = stem[: match.start()]
+    return stem.strip(), tuple(reversed(notes))
+
+
 def _literal_derivation(
     joined_field: JoinedRecordDesignField,
     profile: ExportTreeTransportProfile,
@@ -456,6 +504,7 @@ def _literal_derivation(
         raise RegistryValidationError(
             f"literal field {joined_field.semantic_entry.export_field_id!r} has no exact official constant content",
         )
+    official_content, _literal_note_references = _split_official_note_references(" ".join(official_content.split()))
     blank_source_marker = official_content == _OFFICIAL_BLANK_LITERAL_CONTENT
     if blank_source_marker:
         official_literal = ""
@@ -509,6 +558,18 @@ def _numeric_derivation(
             f"official numeric field {joined_field.semantic_entry.export_field_id!r} has no unambiguous content form",
         )
     normalised_content = " ".join(content.split())
+    normalised_content, note_references = _split_official_note_references(normalised_content)
+    if not normalised_content and note_references:
+        return _schema_field(
+            joined_field,
+            data_type="integer",
+            required=_is_required(parser_field.validation),
+            padding=ExportPadding.LEFT_ZERO,
+            justification=ExportJustification.RIGHT,
+            signed=False,
+            export_record_id=export_record_id,
+            derivation_code="numeric-integer-v1",
+        )
     if normalised_content.casefold() == _DATE_FORMAT_BY_POLICY[ExportValuePolicy.YYYYMMDD]:
         if parser_field.length != 8:
             raise RegistryValidationError(
@@ -555,17 +616,6 @@ def _numeric_derivation(
             export_record_id=export_record_id,
             derivation_code="numeric-integer-v1",
         )
-    if _NOTE_REFERENCE_CONTENT_RE.fullmatch(normalised_content) is not None:
-        return _schema_field(
-            joined_field,
-            data_type="integer",
-            required=_is_required(parser_field.validation),
-            padding=ExportPadding.LEFT_ZERO,
-            justification=ExportJustification.RIGHT,
-            signed=False,
-            export_record_id=export_record_id,
-            derivation_code="numeric-integer-v1",
-        )
     if (
         _QUOTED_NUMERIC_ENUMERATION_RE.fullmatch(normalised_content) is not None
         or _QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE.fullmatch(normalised_content) is not None
@@ -591,6 +641,58 @@ def _numeric_derivation(
             export_record_id=export_record_id,
             value_policy=ExportValuePolicy.ENUMERATED_DIGITS,
             allowed_values=allowed_values,
+            derivation_code="numeric-enumeration-v1",
+        )
+    constant_match = _OFFICIAL_LITERAL_RE.fullmatch(normalised_content)
+    if constant_match is not None:
+        constant_literal = constant_match.group("literal")
+        if len(constant_literal) != parser_field.length:
+            raise RegistryValidationError(
+                f"official numeric constant {joined_field.semantic_entry.export_field_id!r} has a value "
+                "outside the declared slot width",
+            )
+        if note_references:
+            # A `Constante` carrying note references is NOT a closed wire fact:
+            # Nota 7 admits the foral "00000" and Nota 10 gates the slot to
+            # periods from 10/4T 2024, so the anchor's canonical typed owner --
+            # not this constant alone -- decides the value. Width and unsigned
+            # integer shape are still fixed by the source and derived here,
+            # while no closed value domain is asserted over them.
+            return _schema_field(
+                joined_field,
+                data_type="integer",
+                required=_is_required(parser_field.validation),
+                padding=ExportPadding.LEFT_ZERO,
+                justification=ExportJustification.RIGHT,
+                signed=False,
+                export_record_id=export_record_id,
+                derivation_code="numeric-integer-v1",
+            )
+        # An unannotated `Constante` IS a closed wire fact: the design mandates
+        # exactly this value and admits no alternative, which makes it a
+        # one-member enumeration and is derived as one, deliberately reusing the
+        # enumeration shape rather than inventing a second.
+        #
+        # Carrying it matters most where the slot is homed to a CASILLA. The
+        # emitted value then comes from the casilla's own authority -- for a
+        # transitional rate, its dated parameter table, which is where the law
+        # actually lives and which a frozen literal would stop tracking. But
+        # deriving the value from the parameter while the design mandates a
+        # constant opens a divergence, and without a closed domain nothing would
+        # catch it: the field would carry the wire SHAPE only and the mandated
+        # value would be discarded. `_require_allowed_value` refuses at encode
+        # time against exactly this tuple, so the value follows the law AND a
+        # disagreement with the design is refused instead of silently emitted.
+        return _schema_field(
+            joined_field,
+            data_type="integer",
+            required=_is_required(parser_field.validation),
+            padding=ExportPadding.LEFT_ZERO,
+            justification=ExportJustification.RIGHT,
+            signed=False,
+            export_record_id=export_record_id,
+            value_policy=ExportValuePolicy.ENUMERATED_DIGITS,
+            allowed_values=(str(int(constant_literal)),),
             derivation_code="numeric-enumeration-v1",
         )
     raise RegistryValidationError(
@@ -782,13 +884,19 @@ def _render_tree_files(
     _require_reviewable_fragment("0000-export-layout.toml", metadata_bytes)
     rendered_files = [("0000-export-layout.toml", metadata_bytes)]
     planned_paths = {"0000-export-layout.toml"}
-    for index, record in enumerate(records, start=1):
+    # One prefix per emitted fragment, not per record. A partitioned record occupies
+    # several consecutive prefixes: the loader admits one fragment per administrative
+    # prefix, and merges records in prefix order, so the prefix sequence is what makes
+    # field order survive the round trip.
+    prefix = 0
+    for record in records:
         record_id = record.get("id")
         if not isinstance(record_id, str):
             raise RegistryValidationError("validated generated export record has no string id")
         record_parts = _render_record_parts(revision_id=revision_id, layout_id=layout.id, record=record)
-        for part, fragment_bytes in enumerate(record_parts, start=1):
-            relative_path = _record_relative_path(index, part, record_id)
+        for fragment_bytes in record_parts:
+            prefix += 1
+            relative_path = _record_relative_path(prefix, record_id)
             if relative_path in planned_paths:
                 raise RegistryValidationError(f"generated export path collision at {relative_path!r}")
             planned_paths.add(relative_path)
@@ -932,13 +1040,25 @@ def _require_reviewable_fragment(relative_path: str, payload: bytes) -> None:
         )
 
 
-def _record_relative_path(index: int, part: int, record_id: object) -> str:
+def _record_relative_path(prefix: int, record_id: object) -> str:
+    """Return the fragment filename for one rendered record part.
+
+    The administrative prefix carries the whole ordering, so the filename states no
+    second one: a partitioned record appears as consecutive prefixes sharing a slug.
+    """
     raw_record_id = str(record_id)
     _require_safe_identifier(raw_record_id, subject="export record id")
     slug = _SLUG_RE.sub("-", raw_record_id.casefold()).strip("-")
     if not slug:
         raise RegistryValidationError(f"export record id {raw_record_id!r} cannot form a stable output slug")
-    return f"{index:04d}-record-{slug}-part-{part:03d}.toml"
+    rendered_prefix = f"{prefix:0{_FRAGMENT_PREFIX_DIGITS}d}"
+    if len(rendered_prefix) != _FRAGMENT_PREFIX_DIGITS:
+        raise RegistryValidationError(
+            f"generated export record {raw_record_id!r} needs fragment prefix {prefix}, which overflows the "
+            f"{_FRAGMENT_PREFIX_DIGITS}-digit prefix width; an overflowed prefix does not sort late, it stops "
+            "being a readable fragment name",
+        )
+    return f"{rendered_prefix}-record-{slug}.toml"
 
 
 def _require_semantic_map_attestation(joined: JoinedRecordDesign, semantic_map: SemanticMap) -> None:

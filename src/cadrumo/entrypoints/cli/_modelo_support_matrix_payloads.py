@@ -1,10 +1,9 @@
 """JSON payload schemas for ``aeat app modelo support-matrix``.
 
 Projects :class:`~domain.calculations.registry.ModeloEntry` (and its
-nested rename / deprecation / portal-compatibility records) onto the CLI's
-strict :class:`~core.json_contract.OutputSchema` contract. Every field
-mirrors the domain report unchanged; this module only pins the JSON transport
-shape.
+nested rename / portal-compatibility records) onto the CLI's strict
+:class:`~core.json_contract.OutputSchema` contract. Every field mirrors the
+domain report unchanged; this module only pins the JSON transport shape.
 
 See Also:
     :class:`~domain.calculations.registry.ModeloSupportMatrixReport`
@@ -28,15 +27,6 @@ class ModeloRenamePayload(OutputSchema):
     from_revision: str
     to_revision: str
     evolution_kind: str
-
-
-class ModeloSupportRemovalPayload(OutputSchema):
-    """One declared deprecation (support-removal) decision."""
-
-    subject_type: str
-    subject_id: str
-    reason: str
-    evidence_note: str
 
 
 class ModeloPortalCompatibilityRefPayload(OutputSchema):
@@ -64,9 +54,7 @@ class ModeloSupportMatrixEntryPayload(OutputSchema):
     has_extractor: bool
     extraction_profile_count: int
     renames: list[ModeloRenamePayload]
-    deprecations: list[ModeloSupportRemovalPayload]
     portal_compatibility_refs: list[ModeloPortalCompatibilityRefPayload]
-    is_deprecated: bool
 
 
 @register_schema("modelo.support_matrix")
@@ -83,5 +71,4 @@ __all__ = [
     "ModeloRenamePayload",
     "ModeloSupportMatrixEntryPayload",
     "ModeloSupportMatrixResult",
-    "ModeloSupportRemovalPayload",
 ]

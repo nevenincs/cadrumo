@@ -20,7 +20,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority
 
 from .._casilla_projection import project_casilla_search_records
 from .._concept_cards import ConceptCardRecord, project_concept_cards
@@ -43,11 +43,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 _EMPTY_CLI: dict[str, tuple[()]] = {"cli_command_records": (), "cli_option_records": ()}
 
 
-@pytest.fixture(scope="module")
-def authority() -> ValidatedRegistryAuthority:
-    """The bundled validated registry authority (loaded once for the module)."""
-    return bundled_authority()
+from ...tests._authority_fixtures import authority
 
+__all__ = ["authority"]
 
 @pytest.fixture(scope="module")
 def concept_cards() -> tuple[ConceptCardRecord, ...]:

@@ -19,11 +19,11 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from ....core import STRICT_FROZEN_CONFIG, CasillaId, Period
+from ....core import STRICT_FROZEN_CONFIG, CasillaId, Period, RegistrySelectorPeriodCode
 from ....core.aggregation import RelationAggregationOp
 from ._binding_selector_utils import unique_tuple
 from ._errors import RegistryValidationError
@@ -72,14 +72,28 @@ class RegistryFoldRequirement(BaseModel):
     source_modelo: ModeloId
     filing_year: int = Field(ge=2000, le=2099)
     filing_periods: tuple[Period, ...] = ()
-    periods: tuple[str, ...] = Field(min_length=1)
+    periods: tuple[RegistrySelectorPeriodCode, ...] = Field(min_length=1)
     source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
     binding_ids: tuple[BindingId, ...] = ()
     relation_ids: tuple[RelationId, ...] = ()
     target_bindings: tuple[BindingId, ...] = ()
-    dependency_role: str = ""
-    dependency_treatment: str = ""
-    aggregation_op: str = ""
+    # Both fold-in producers already resolve these from an already-typed
+    # source (RelationDefinition.dependency_role, a relation's resolved
+    # aggregation op, DependencyClassificationDefinition.treatment); the
+    # same-modelo previous_filing producer legitimately has no relation or
+    # aggregation to report, hence the optional shape rather than a magic
+    # empty-string sentinel.
+    dependency_role: (
+        Literal[
+            "periodic_to_annual_summary",
+            "instalment_to_final_settlement",
+            "direct_calculation",
+            "factual_evidence",
+        ]
+        | None
+    ) = None
+    dependency_treatment: Literal["direct_annual_settlement", "factual_evidence", "non_dependency"] | None = None
+    aggregation_op: RelationAggregationOp | None = None
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
@@ -235,7 +249,7 @@ def _registry_fold_requirement(
         target_bindings=tuple(sorted(values.target_bindings)),
         dependency_role=dependency_role,
         dependency_treatment=dependency_treatment,
-        aggregation_op=aggregation_op,
+        aggregation_op=RelationAggregationOp(aggregation_op),
         legal_refs=tuple(sorted(values.legal_refs)),
         source_refs=tuple(sorted(values.source_refs)),
     )

@@ -65,7 +65,6 @@ class IdReferenceChecker:
         "prefix",
         "relation_ids",
         "source_ids",
-        "support_removal_decision_ids",
         "verification_expectation_ids",
         "workbook_parity_ids",
     )
@@ -91,7 +90,6 @@ class IdReferenceChecker:
         self.application_link_ids = _record_ids(revision.application_links)
         self.deadline_window_ids = _record_ids(revision.deadline_windows)
         self.filing_schedule_ids = _record_ids(revision.filing_schedules)
-        self.support_removal_decision_ids = _record_ids(revision.support_removal_decisions)
         self.construct_ids = _record_ids(revision.constructs)
         self.dependency_classification_ids = _record_ids(revision.dependency_classifications)
         self.legal_ids = set(snapshot.legal)

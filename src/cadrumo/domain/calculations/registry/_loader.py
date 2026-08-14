@@ -123,7 +123,6 @@ _CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
         "application_links",
         "deadline_windows",
         "filing_schedules",
-        "support_removal_decisions",
         "dependency_classifications",
     },
 )

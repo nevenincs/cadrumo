@@ -115,7 +115,6 @@ from ._modelo_support_matrix_payloads import (
     ModeloRenamePayload,
     ModeloSupportMatrixEntryPayload,
     ModeloSupportMatrixResult,
-    ModeloSupportRemovalPayload,
 )
 from ._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
 from ._modelo_work_wizard_payloads import WizardPromptedCasillaPayload, WorkWizardResult
@@ -1424,7 +1423,6 @@ __all__ = [
     "ModeloRowPayload",
     "ModeloSupportMatrixEntryPayload",
     "ModeloSupportMatrixResult",
-    "ModeloSupportRemovalPayload",
     "ObservationPayload",
     "ResultSummaryRowPayload",
     "SourceProvenancePayload",

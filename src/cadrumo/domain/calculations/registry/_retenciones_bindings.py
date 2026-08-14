@@ -18,9 +18,9 @@ canonical binding values for this source family.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Literal, Protocol
+from typing import Annotated, Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, BeforeValidator, ConfigDict
 
 from ....core import BindingSourceKind, CasillaId
 from ....core.aggregation import RetencionScheme
@@ -28,6 +28,7 @@ from ._binding_selector_utils import selector_against_model
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._ids import BindingId
 from ._schema import DataBindingDefinition, ModeloRevision
+from ._schema_base import coerce_enum_tuple
 
 
 class _RetencionesAggregationProtocol(Protocol):
@@ -71,10 +72,10 @@ class _RetencionesAggregationSelector(BaseModel):
     quarterly perceptor count and taxable base.
     """
 
-    model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     target_casilla_id: CasillaId
-    schemes: tuple[RetencionScheme, ...] = ()
+    schemes: Annotated[tuple[RetencionScheme, ...], BeforeValidator(coerce_enum_tuple(RetencionScheme))] = ()
     fact: Literal["perceptor_count_distinct", "taxable_base_sum", "retencion_amount_sum"] = "perceptor_count_distinct"
 
 

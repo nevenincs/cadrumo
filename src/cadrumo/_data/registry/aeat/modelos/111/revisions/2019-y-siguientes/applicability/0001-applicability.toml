@@ -1,0 +1,8 @@
+[[revisions."2019-y-siguientes".applicability]]
+id = "m111-seed"
+applicable_entity_types = ["attribution_entity", "legal_entity", "natural_person"]
+required_payer_fact = "pays_withheld_income"
+applicable_reason = "Modelo 111 (retenciones e ingresos a cuenta del IRPF): el contribuyente paga rendimientos del trabajo o de actividades profesionales sujetos a retención y autoliquida las retenciones practicadas."
+not_applicable_reason = "Modelo 111 no aplica: la autoliquidación de retenciones del IRPF solo corresponde a quien paga rendimientos sujetos a retención."
+cuota_bearing = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-586-2011:art-1"]

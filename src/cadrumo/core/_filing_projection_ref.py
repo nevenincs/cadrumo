@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import Annotated, Literal, cast
+from typing import Annotated, Final, Literal, cast, get_args
 
 from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, model_validator
 
@@ -273,6 +273,13 @@ _STRING_WIRE_FIELDS = frozenset(
 )
 
 
+#: The typed members a compiled projection reference can be. Derived from the
+#: annotated union rather than restated, so a new member cannot be forgotten
+#: here: ``get_args`` on the Annotated alias yields the union first, whose own
+#: args are the member classes.
+_TYPED_FILING_PROJECTION_REFS: Final[tuple[type, ...]] = get_args(get_args(FilingProjectionRef)[0])
+
+
 def compile_filing_projection_ref(value: object) -> FilingProjectionRef:
     """Compile one canonical projection reference from exact persisted primitives."""
     if not isinstance(value, Mapping):
@@ -282,6 +289,14 @@ def compile_filing_projection_ref(value: object) -> FilingProjectionRef:
     for raw_key, raw_value in source.items():
         if type(raw_key) is not str:
             raise ValueError("filing projection reference keys must be exact strings")
+        # An explicit JSON null means the optional field is absent. Serialising a
+        # reference emits every declared field, so a round-tripped payload states
+        # `sub_index: null` where the model's own default is None; refusing that
+        # would refuse a value the target model accepts, and would make a
+        # reference unable to survive its own serialisation. A null on a REQUIRED
+        # field still refuses, because dropping it leaves the field missing.
+        if raw_value is None:
+            continue
         payload[raw_key] = raw_value
     for field_name in _STRING_WIRE_FIELDS.intersection(payload):
         if type(payload[field_name]) is not str:
@@ -293,6 +308,28 @@ def compile_filing_projection_ref(value: object) -> FilingProjectionRef:
         if integer_field in payload and type(payload[integer_field]) is not int:
             raise ValueError(f"filing projection reference {integer_field!r} must be an exact integer")
     return _FILING_PROJECTION_REF_ADAPTER.validate_python(payload, strict=False)
+
+
+def hydrate_filing_projection_ref(value: object) -> FilingProjectionRef:
+    """Return ``value`` as a typed reference, compiling it if it is still raw.
+
+    The one entry point every persisted boundary uses. A reference that is
+    already typed was produced by :func:`compile_filing_projection_ref` and is
+    returned unchanged; a mapping is compiled by that same function now. So the
+    invariant is "every projection reference was compiled by the one canonical
+    compiler", which is what the boundaries actually need to guarantee.
+
+    Boundaries previously asserted that invariant by demanding an
+    already-constructed model. That proxy held for TOML, where the loader
+    compiles before validating, and was impossible for JSON, where a reference
+    can only arrive as a mapping -- so a manifest could be written and never
+    read back. Compiling here reaches the same guarantee through one path
+    instead of one path and one dead end, and a malformed mapping still refuses
+    exactly as it always did, because the compiler is unchanged.
+    """
+    if isinstance(value, _TYPED_FILING_PROJECTION_REFS):
+        return cast(FilingProjectionRef, value)
+    return compile_filing_projection_ref(value)
 
 
 def filing_projection_ref_casilla_id(reference: FilingProjectionRef) -> CasillaId | None:
@@ -320,4 +357,5 @@ __all__ = [
     "M303RegimenSimplificadoModuleValue",
     "compile_filing_projection_ref",
     "filing_projection_ref_casilla_id",
+    "hydrate_filing_projection_ref",
 ]

@@ -28,7 +28,6 @@ bindings = [
     "modelo-130-actividad-economica-gastos-cumulative",
 ]
 dependency_classifications = ["modelo-130-dep-130", "modelo-130-dep-100"]
-support_removal_decisions = ["modelo-130-fichero-boe-support-removal"]
 extraction_profiles = ["modelo-130-declaracion-pdf"]
 live_cross_references = ["modelo-130-static-official", "modelo-130-filed-declarations-read"]
 workbook_parity_refs = ["modelo-130-dr-xls"]

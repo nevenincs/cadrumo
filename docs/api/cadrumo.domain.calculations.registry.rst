@@ -68,6 +68,7 @@ Submodules
    cadrumo.domain.calculations.registry._live_parity
    cadrumo.domain.calculations.registry._loader
    cadrumo.domain.calculations.registry._loader_cache
+   cadrumo.domain.calculations.registry._loader_fingerprints
    cadrumo.domain.calculations.registry._m303_differentiated_deduction_projection
    cadrumo.domain.calculations.registry._m303_exonerado_390_projection
    cadrumo.domain.calculations.registry._m303_orden_constants
@@ -104,7 +105,9 @@ Submodules
    cadrumo.domain.calculations.registry._schema
    cadrumo.domain.calculations.registry._schema_base
    cadrumo.domain.calculations.registry._schema_export_exemption
+   cadrumo.domain.calculations.registry._schema_exports
    cadrumo.domain.calculations.registry._schema_extraction
+   cadrumo.domain.calculations.registry._schema_family_coverage
    cadrumo.domain.calculations.registry._schema_formula
    cadrumo.domain.calculations.registry._schema_governance
    cadrumo.domain.calculations.registry._schema_input_kind
@@ -116,12 +119,15 @@ Submodules
    cadrumo.domain.calculations.registry._snapshot
    cadrumo.domain.calculations.registry._snapshot_coordinate
    cadrumo.domain.calculations.registry._source_evidence_fingerprint
+   cadrumo.domain.calculations.registry._static_inspection
+   cadrumo.domain.calculations.registry._supplementary_orden
    cadrumo.domain.calculations.registry._support_matrix
    cadrumo.domain.calculations.registry._temporal
    cadrumo.domain.calculations.registry._toml_helpers
    cadrumo.domain.calculations.registry._validate
    cadrumo.domain.calculations.registry._validate_algorithms
    cadrumo.domain.calculations.registry._validate_application_links
+   cadrumo.domain.calculations.registry._validate_authority_grade
    cadrumo.domain.calculations.registry._validate_cache
    cadrumo.domain.calculations.registry._validate_completeness
    cadrumo.domain.calculations.registry._validate_constructs

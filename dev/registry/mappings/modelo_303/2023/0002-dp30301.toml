@@ -409,8 +409,8 @@ record_identity = "DP30301"
 
 [[entries]]
 export_field_id = "m303-2023.dp30301.f032"
-kind = "literal"
-literal = "00500"
+kind = "casilla"
+casilla_id = "154"
 legal_refs = ["orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023"]
 [entries.anchor]

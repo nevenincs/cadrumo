@@ -1,0 +1,984 @@
+##
+## Adjudication ledger for the modelo-conditional branches outside the registry
+## package.
+##
+## The SITES are derived by ``dev.quality.regulatory_drift_census`` and read here
+## through ``dev.quality.modelo_branch_classification``; only the classification
+## and its prose are authored. A branch the derivation yields and this ledger
+## does not name is a reconciliation failure, so a branch added later cannot ship
+## unclassified. A row matching no live branch, and a group no row references,
+## are equally failures.
+##
+## classification = "orchestration_routing"
+##     The branch selects which code runs. It MUST cite, in ``selects``, a token
+##     that appears inside the guarded branch at HEAD -- the function it guards,
+##     the symbol it routes to, the refusal it raises. The gate verifies the
+##     citation, so a rename breaks the claim instead of silently outliving it,
+##     and an author who cannot point at anything has not shown the branch
+##     selects anything.
+##
+## classification = "regulatory_treatment"
+##     The branch decides a regulatory outcome the registry should declare. It
+##     carries no citation -- it is not the claim being doubted -- and must name
+##     the plan row or record that answers it.
+##
+## The test applied throughout: does the branch encode a fact about TAX LAW, or a
+## fact about how THIS CODEBASE is organised? A branch choosing which casilla
+## receives a value encodes tax law, because the registry owns casilla targets. A
+## branch refusing to run a function named for one modelo encodes code
+## organisation. Every row below was read before it was classified.
+##
+
+[meta]
+schema_version = 1
+
+# -- Shared reasonings -------------------------------------------------------
+
+[[group]]
+id = "modelo-scope-guard"
+classification = "orchestration_routing"
+justification = """
+A scope guard on a surface that exists for one modelo: the branch refuses,
+returns empty, or no-ops when the subject is a different modelo, and the
+function it guards is named for the modelo it serves. What the branch decides is
+which code is allowed to run, not what the law says. The citation names the
+guarded function, so a rename to something modelo-neutral breaks the claim and
+forces it to be made again -- which is the point, because a guard whose function
+stops being modelo-specific has stopped being a scope guard.
+"""
+
+[[group]]
+id = "modelo-path-routing"
+classification = "orchestration_routing"
+justification = """
+The branch routes to a different implementation per modelo: an aggregation, a
+projection plan, an observation shape, a producer profile, a repository write.
+The selected implementation is named for the modelo it serves and owns whatever
+regulatory content it carries; the branch itself only chooses between them. The
+citation names the selected symbol rather than the guarded function, because
+here there is something concrete to point at.
+"""
+
+[[group]]
+id = "casilla-target-selection"
+classification = "regulatory_treatment"
+reference = "2026-08-14-registry-temporal-coverage-drift-census-audit"
+justification = """
+The branch decides WHICH CASILLA a value lands in, per modelo. That mapping is
+registry data: a binding declares its ``target_casilla_id``, and the
+authority-flow rule places registry-shaped data in the authoring tree rather
+than at the call site. One of these sites says so in its own docstring -- it
+describes itself as the OUTPUT half of a fact the registry already declares --
+which is the clearest possible evidence that the branch is re-implementing a
+declaration rather than orchestrating around it.
+"""
+
+[[group]]
+id = "obligation-condition"
+classification = "regulatory_treatment"
+reference = "2026-08-14-registry-temporal-coverage-drift-census-audit"
+justification = """
+The branch decides whether an obligation applies, or what it resolves to, on a
+condition the law fixes: which counterpart verifications a modelo requires, a
+first-year modalidad-cuota suppression under LIS art. 40.2, a carry-forward
+upgraded to a refund under Ley 37/1992 art. 116. Several of these sites cite
+their governing article in a comment beside the branch, which is the tell: the
+article is doing the deciding and the registry is not carrying it.
+"""
+
+[[group]]
+id = "official-design-convention"
+classification = "regulatory_treatment"
+reference = "2026-08-14-registry-temporal-coverage-drift-census-audit"
+justification = """
+The branch encodes a convention of the official design that differs by modelo: a
+sign rule applied when rendering a value, the ordering of filing periods, which
+detail-row section satisfies a required casilla. A design convention is a
+property of the modelo's published design and belongs beside the revision that
+describes it, not in a branch at the surface that happens to render it.
+"""
+
+# -- Adjudicated branches ----------------------------------------------------
+
+[[branch]]
+path = "src/cadrumo/adapters/outbound/aeat/sede/_declarations_observations.py"
+enclosing_symbol = "_with_derived_303_compensation_available_observation"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_with_derived_303_compensation_available_observation"
+
+[[branch]]
+path = "src/cadrumo/adapters/persistence/profile/modelos_calculation.py"
+enclosing_symbol = "_calculation_revision_aggregate_context"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_calculation_revision_aggregate_context"
+
+[[branch]]
+path = "src/cadrumo/application/aggregation/_counterpart.py"
+enclosing_symbol = "_counterpart_readiness_for_modelo"
+modelo_codes = "M349"
+group = "obligation-condition"
+
+[[branch]]
+path = "src/cadrumo/application/aggregation/_modelo_bindings.py"
+enclosing_symbol = "_m130_retenciones_backend_inputs"
+modelo_codes = "M130"
+group = "casilla-target-selection"
+
+[[branch]]
+path = "src/cadrumo/application/aggregation/_modelo_bindings.py"
+enclosing_symbol = "resolve"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "resolve"
+
+[[branch]]
+path = "src/cadrumo/application/aggregation/_service.py"
+enclosing_symbol = "_aggregate_counterpart"
+modelo_codes = "M347"
+group = "modelo-path-routing"
+selects = "aggregate_counterpart_347"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_bienes_inversion_regularizacion.py"
+enclosing_symbol = "_target_inputs"
+modelo_codes = "M303"
+group = "casilla-target-selection"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_bienes_inversion_regularizacion.py"
+enclosing_symbol = "_target_inputs"
+modelo_codes = "M390"
+group = "casilla-target-selection"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_bienes_inversion_regularizacion.py"
+enclosing_symbol = "resolve"
+modelo_codes = "M303,M390"
+group = "modelo-scope-guard"
+selects = "resolve"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_bienes_inversion_regularizacion.py"
+enclosing_symbol = "resolve"
+modelo_codes = "M390"
+group = "modelo-scope-guard"
+selects = "resolve"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_binding_prefill.py"
+enclosing_symbol = "_gather_single_key_observation"
+modelo_codes = "M303"
+group = "modelo-path-routing"
+selects = "iva_history_repository"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_binding_prefill.py"
+enclosing_symbol = "extract_modelo_303_local_iva_compensation_recurrence"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "extract_modelo_303_local_iva_compensation_recurrence"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_cross_period_clean_state.py"
+enclosing_symbol = "_qualifies_for_first_year_fractional_suppression"
+modelo_codes = "M202"
+group = "obligation-condition"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_iva_compensation_annual_partition.py"
+enclosing_symbol = "resolve_iva_compensation_annual_partition_binding_values"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "resolve_iva_compensation_annual_partition_binding_values"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_iva_compensation_history.py"
+enclosing_symbol = "iva_compensation_annual_summary_from_filed_observation"
+modelo_codes = "M390"
+group = "modelo-scope-guard"
+selects = "iva_compensation_annual_summary_from_filed_observation"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_iva_wallet_reconciliation.py"
+enclosing_symbol = "reconcile_modelo_303_iva_compensation"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "reconcile_modelo_303_iva_compensation"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_iva_wallet_reconciliation.py"
+enclosing_symbol = "resolve"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "resolve"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_m111_no_retenciones.py"
+enclosing_symbol = "is_m111_no_retenciones_period"
+modelo_codes = "M111"
+group = "modelo-scope-guard"
+selects = "is_m111_no_retenciones_period"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_m303_carry_ingress.py"
+enclosing_symbol = "normalize_m303_carry_observation_envelope"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "normalize_m303_carry_observation_envelope"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_m303_carry_ingress.py"
+enclosing_symbol = "validate_normalized_m303_carry_observation_envelope"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "validate_normalized_m303_carry_observation_envelope"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_m303_regimen_simplificado_annual_summary.py"
+enclosing_symbol = "_require_target_matches_snapshot"
+modelo_codes = "M390"
+group = "modelo-scope-guard"
+selects = "_require_target_matches_snapshot"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_m303_regimen_simplificado_annual_summary.py"
+enclosing_symbol = "_source_work_unit"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_source_work_unit"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_prorrata_regularizacion.py"
+enclosing_symbol = "_modelo_303_target_inputs"
+modelo_codes = "M303"
+group = "casilla-target-selection"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_relation_prefill.py"
+enclosing_symbol = "relation_prefill_period_zero_default_binding_ids"
+modelo_codes = "M202"
+group = "modelo-scope-guard"
+selects = "relation_prefill_period_zero_default_binding_ids"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_relation_prefill.py"
+enclosing_symbol = "resolve"
+modelo_codes = "M200"
+group = "modelo-scope-guard"
+selects = "resolve"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_relation_prefill.py"
+enclosing_symbol = "resolve_relations_from_local_store"
+modelo_codes = "M202"
+group = "obligation-condition"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_export.py"
+enclosing_symbol = "_prepare_export_draft"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_prepare_export_draft"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_export.py"
+enclosing_symbol = "_projection_plan_for_layout"
+modelo_codes = "M303"
+group = "modelo-path-routing"
+selects = "build_m303_filing_projection_plan"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_export.py"
+enclosing_symbol = "_render_layout"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_render_layout"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_export.py"
+enclosing_symbol = "_validate_m303_filing_draft"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_validate_m303_filing_draft"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_export.py"
+enclosing_symbol = "_validate_m303_filing_producer"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_validate_m303_filing_producer"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_export.py"
+enclosing_symbol = "_validate_m303_filing_snapshot"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_validate_m303_filing_snapshot"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_export_xml_dictionary.py"
+enclosing_symbol = "_xml_dictionary_rendered_value"
+modelo_codes = "M100"
+group = "official-design-convention"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_export_xml_dictionary.py"
+enclosing_symbol = "render_xml_dictionary_layout"
+modelo_codes = "M100"
+group = "modelo-path-routing"
+selects = "_stamp_toma_datos_nif"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_m303_export_applicability.py"
+enclosing_symbol = "_require_m303_producer_snapshot"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_require_m303_producer_snapshot"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_m303_export_applicability.py"
+enclosing_symbol = "_validate_snapshot_selection"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_validate_snapshot_selection"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_producer_snapshot.py"
+enclosing_symbol = "_validate_snapshot_model_profile"
+modelo_codes = "M111"
+group = "modelo-scope-guard"
+selects = "_validate_snapshot_model_profile"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_producer_snapshot.py"
+enclosing_symbol = "_validate_snapshot_model_profile"
+modelo_codes = "M202"
+group = "modelo-scope-guard"
+selects = "_validate_snapshot_model_profile"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_producer_snapshot.py"
+enclosing_symbol = "_validate_snapshot_model_profile"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_validate_snapshot_model_profile"
+
+[[branch]]
+path = "src/cadrumo/application/invoices/_source_resolver.py"
+enclosing_symbol = "_invoice_observation"
+modelo_codes = "M347"
+group = "modelo-path-routing"
+selects = "_m347_invoice_observation"
+
+[[branch]]
+path = "src/cadrumo/application/invoices/_source_resolver.py"
+enclosing_symbol = "_invoice_observation"
+modelo_codes = "M349"
+group = "modelo-path-routing"
+selects = "_m347_invoice_observation"
+
+[[branch]]
+path = "src/cadrumo/application/invoices/_source_resolver.py"
+enclosing_symbol = "_m349_declarante_summary_union"
+modelo_codes = "M349"
+group = "modelo-scope-guard"
+selects = "_m349_declarante_summary_union"
+
+[[branch]]
+path = "src/cadrumo/application/invoices/_source_resolver.py"
+enclosing_symbol = "_m349_incoherent_verdict"
+modelo_codes = "M349"
+group = "modelo-scope-guard"
+selects = "_m349_incoherent_verdict"
+
+[[branch]]
+path = "src/cadrumo/application/invoices/_source_resolver.py"
+enclosing_symbol = "_m349_operador_rows_from_observations"
+modelo_codes = "M349"
+group = "modelo-scope-guard"
+selects = "_m349_operador_rows_from_observations"
+
+[[branch]]
+path = "src/cadrumo/application/invoices/_source_resolver.py"
+enclosing_symbol = "resolve"
+modelo_codes = "M349"
+group = "modelo-scope-guard"
+selects = "resolve"
+
+[[branch]]
+path = "src/cadrumo/application/live/_filed_observation_persistence.py"
+enclosing_symbol = "_filed_observation_history_period_sort_key"
+modelo_codes = "M303"
+group = "official-design-convention"
+
+[[branch]]
+path = "src/cadrumo/application/live/_filed_observation_persistence.py"
+enclosing_symbol = "persist_filed_calculation_observation"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "persist_filed_calculation_observation"
+
+[[branch]]
+path = "src/cadrumo/application/live/_filed_observation_persistence.py"
+enclosing_symbol = "persist_iva_compensation_history_observations_strict"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "persist_iva_compensation_history_observations_strict"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_amendment_actions.py"
+enclosing_symbol = "_load_amendment_baseline"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_load_amendment_baseline"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_amendment_actions.py"
+enclosing_symbol = "_m303_rectificativa_motive_is_applicable"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_m303_rectificativa_motive_is_applicable"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_amendment_actions.py"
+enclosing_symbol = "_resolve_m303_rectificativa_motive_before_identity"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_resolve_m303_rectificativa_motive_before_identity"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_amendment_actions.py"
+enclosing_symbol = "amend_modelo_revision"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "amend_modelo_revision"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_art109_activity_income.py"
+enclosing_symbol = "derive_art109_activity_income_coverage_for_work_unit"
+modelo_codes = "M130"
+group = "modelo-scope-guard"
+selects = "derive_art109_activity_income_coverage_for_work_unit"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_attribution_received_advisory.py"
+enclosing_symbol = "_attribution_received_omission_advisory_findings"
+modelo_codes = "M100"
+group = "modelo-scope-guard"
+selects = "_attribution_received_omission_advisory_findings"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_bienes_inversion_advisory.py"
+enclosing_symbol = "collect_bienes_inversion_regularizacion_diagnostics"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "collect_bienes_inversion_regularizacion_diagnostics"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_calculate_input.py"
+enclosing_symbol = "modelo_202_modality_for_work_unit"
+modelo_codes = "M202"
+group = "modelo-scope-guard"
+selects = "modelo_202_modality_for_work_unit"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_calculation_actions.py"
+enclosing_symbol = "_m210_gross_source_mode"
+modelo_codes = "M210"
+group = "modelo-path-routing"
+selects = "M210GrossIncomeSourceMode"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_calculation_modelo_adjustments.py"
+enclosing_symbol = "_detail_row_binding_values_for_calculation"
+modelo_codes = "M349"
+group = "modelo-scope-guard"
+selects = "_detail_row_binding_values_for_calculation"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_calculation_modelo_adjustments.py"
+enclosing_symbol = "_m131_objective_estimation_data_base_inputs"
+modelo_codes = "M131"
+group = "casilla-target-selection"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_calculation_modelo_adjustments.py"
+enclosing_symbol = "_m390_303_reconciliation_targets"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_m390_303_reconciliation_targets"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_calculation_modelo_adjustments.py"
+enclosing_symbol = "_raise_if_m390_303_reconciliation_would_save_silent_zero"
+modelo_codes = "M390"
+group = "modelo-scope-guard"
+selects = "_raise_if_m390_303_reconciliation_would_save_silent_zero"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_calculation_modelo_adjustments.py"
+enclosing_symbol = "_suppress_m349_row_field_template_outputs"
+modelo_codes = "M349"
+group = "modelo-scope-guard"
+selects = "_suppress_m349_row_field_template_outputs"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_calculation_preparation.py"
+enclosing_symbol = "_raise_if_m200_ledger_requires_accounting_result_input"
+modelo_codes = "M200"
+group = "modelo-scope-guard"
+selects = "_raise_if_m200_ledger_requires_accounting_result_input"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_export.py"
+enclosing_symbol = "_resolve_amendment_export_evidence"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_resolve_amendment_export_evidence"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_export.py"
+enclosing_symbol = "_resolve_export_model_profile"
+modelo_codes = "M111"
+group = "modelo-path-routing"
+selects = "Modelo202ProducerProfile"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_export.py"
+enclosing_symbol = "_resolve_export_model_profile"
+modelo_codes = "M202"
+group = "modelo-path-routing"
+selects = "Modelo202ProducerProfile"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_export.py"
+enclosing_symbol = "_resolve_export_model_profile"
+modelo_codes = "M303"
+group = "modelo-path-routing"
+selects = "Modelo202ProducerProfile"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_export.py"
+enclosing_symbol = "_resolve_modelo_export_prior_domiciliation"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_resolve_modelo_export_prior_domiciliation"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_export_amendment_evidence.py"
+enclosing_symbol = "_evidence"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_evidence"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_external_import_actions.py"
+enclosing_symbol = "import_external_filing_evidence"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "import_external_filing_evidence"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_filed_revision_observation.py"
+enclosing_symbol = "persist_filed_revision_observation"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "persist_filed_revision_observation"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_filed_revision_observation.py"
+enclosing_symbol = "require_filing_result_disposition"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "require_filing_result_disposition"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_iva_wallet_gate.py"
+enclosing_symbol = "_activity_start_proves_first_iva_period"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_activity_start_proves_first_iva_period"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_iva_wallet_gate.py"
+enclosing_symbol = "_prior_period_carry_evidence"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_prior_period_carry_evidence"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_iva_wallet_gate.py"
+enclosing_symbol = "apply_iva_compensation_decision_binding"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "apply_iva_compensation_decision_binding"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_iva_wallet_gate.py"
+enclosing_symbol = "lazily_reconcile_local_iva_compensation_for_work_unit"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "lazily_reconcile_local_iva_compensation_for_work_unit"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_iva_wallet_gate.py"
+enclosing_symbol = "load_persisted_iva_compensation_decision_for_work_unit"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "load_persisted_iva_compensation_decision_for_work_unit"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_iva_wallet_gate.py"
+enclosing_symbol = "require_persisted_iva_compensation_decision_for_work_unit"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "require_persisted_iva_compensation_decision_for_work_unit"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_iva_wallet_gate.py"
+enclosing_symbol = "require_persisted_iva_compensation_decision_matches_revision"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "require_persisted_iva_compensation_decision_matches_revision"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_iva_wallet_seed.py"
+enclosing_symbol = "_sealed_modelo_303_blocker_for_period"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_sealed_modelo_303_blocker_for_period"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_m210_agrupacion_renta.py"
+enclosing_symbol = "m210_agrupacion_renta_verification_findings"
+modelo_codes = "M210"
+group = "modelo-scope-guard"
+selects = "m210_agrupacion_renta_verification_findings"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_m210_agrupacion_renta.py"
+enclosing_symbol = "validate_m210_agrupacion_renta_rows_for_calculation"
+modelo_codes = "M210"
+group = "modelo-scope-guard"
+selects = "validate_m210_agrupacion_renta_rows_for_calculation"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_m303_filing_evidence.py"
+enclosing_symbol = "validate_m303_filing_instance_evidence_for_revision"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "validate_m303_filing_instance_evidence_for_revision"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_m303_m349_reconcile.py"
+enclosing_symbol = "m303_m349_intracom_reconcile_findings"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "m303_m349_intracom_reconcile_findings"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_m303_m349_reconcile.py"
+enclosing_symbol = "m303_m349_intracom_reconcile_findings"
+modelo_codes = "M349"
+group = "modelo-scope-guard"
+selects = "m303_m349_intracom_reconcile_findings"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_m303_regimen_simplificado_scope.py"
+enclosing_symbol = "resolve_m303_regimen_simplificado_scope"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "resolve_m303_regimen_simplificado_scope"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_m349_ledger_guard.py"
+enclosing_symbol = "raise_if_m349_intracom_ledger_rows_need_operator_rows"
+modelo_codes = "M349"
+group = "modelo-scope-guard"
+selects = "raise_if_m349_intracom_ledger_rows_need_operator_rows"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_m720_redeclaration_gate.py"
+enclosing_symbol = "modelo_720_redeclaration_findings"
+modelo_codes = "M720"
+group = "modelo-scope-guard"
+selects = "modelo_720_redeclaration_findings"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py"
+enclosing_symbol = "_guarderia_descendants"
+modelo_codes = "M100"
+group = "modelo-scope-guard"
+selects = "_guarderia_descendants"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py"
+enclosing_symbol = "collect_descendientes_count_desync_diagnostics"
+modelo_codes = "M100"
+group = "modelo-scope-guard"
+selects = "collect_descendientes_count_desync_diagnostics"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py"
+enclosing_symbol = "collect_guarderia_spend_shape_diagnostics"
+modelo_codes = "M100"
+group = "modelo-scope-guard"
+selects = "collect_guarderia_spend_shape_diagnostics"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py"
+enclosing_symbol = "collect_minimo_descendientes_dependencia_diagnostics"
+modelo_codes = "M100"
+group = "modelo-scope-guard"
+selects = "collect_minimo_descendientes_dependencia_diagnostics"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py"
+enclosing_symbol = "collect_minimo_descendientes_entry_date_missing_diagnostics"
+modelo_codes = "M100"
+group = "modelo-scope-guard"
+selects = "collect_minimo_descendientes_entry_date_missing_diagnostics"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py"
+enclosing_symbol = "collect_minimo_descendientes_prorrata_inferred_diagnostics"
+modelo_codes = "M100"
+group = "modelo-scope-guard"
+selects = "collect_minimo_descendientes_prorrata_inferred_diagnostics"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py"
+enclosing_symbol = "collect_minimo_descendientes_rentas_undeclared_diagnostics"
+modelo_codes = "M100"
+group = "modelo-scope-guard"
+selects = "collect_minimo_descendientes_rentas_undeclared_diagnostics"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py"
+enclosing_symbol = "collect_minimo_descendientes_undeclared_diagnostics"
+modelo_codes = "M100"
+group = "modelo-scope-guard"
+selects = "collect_minimo_descendientes_undeclared_diagnostics"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_prior_domiciliation.py"
+enclosing_symbol = "_require_rectificativa_baseline_link"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_require_rectificativa_baseline_link"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_prior_payment_advisory.py"
+enclosing_symbol = "collect_prior_payment_minoracion_not_captured_diagnostics"
+modelo_codes = "M130"
+group = "modelo-scope-guard"
+selects = "collect_prior_payment_minoracion_not_captured_diagnostics"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_prior_payment_advisory.py"
+enclosing_symbol = "collect_prior_payment_not_deducted_diagnostics"
+modelo_codes = "M130"
+group = "modelo-scope-guard"
+selects = "collect_prior_payment_not_deducted_diagnostics"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_profile_readiness_gate.py"
+enclosing_symbol = "_modelo_work_baseline_paths"
+modelo_codes = "M100"
+group = "modelo-scope-guard"
+selects = "_modelo_work_baseline_paths"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_projection.py"
+enclosing_symbol = "_m130_quarter_revisions"
+modelo_codes = "M130"
+group = "modelo-path-routing"
+selects = "ModeloProjectNoM130UnitsError"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_prorrata_regularizacion_advisory.py"
+enclosing_symbol = "collect_prorrata_regularizacion_diagnostics"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "collect_prorrata_regularizacion_diagnostics"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_required_binding_gate.py"
+enclosing_symbol = "missing_modelo_required_binding_ids"
+modelo_codes = "M202"
+group = "modelo-scope-guard"
+selects = "missing_modelo_required_binding_ids"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_required_binding_gate.py"
+enclosing_symbol = "require_persisted_revision_required_bindings_resolved"
+modelo_codes = "M202"
+group = "modelo-scope-guard"
+selects = "require_persisted_revision_required_bindings_resolved"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_required_binding_gate.py"
+enclosing_symbol = "resolved_required_profile_binding_values"
+modelo_codes = "M202"
+group = "modelo-scope-guard"
+selects = "resolved_required_profile_binding_values"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_result_disposition_resolution.py"
+enclosing_symbol = "_apply_modelo_303_refund_election"
+modelo_codes = "M303"
+group = "obligation-condition"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_result_disposition_resolution.py"
+enclosing_symbol = "_apply_payment_election"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_apply_payment_election"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_revision_persistence.py"
+enclosing_symbol = "_prorrata_settlement_values"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_prorrata_settlement_values"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_revision_persistence.py"
+enclosing_symbol = "_require_filing_instance_evidence_for_work_unit"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_require_filing_instance_evidence_for_work_unit"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_revision_replay_inputs.py"
+enclosing_symbol = "_m232_detail_row_replay_inputs"
+modelo_codes = "M232"
+group = "modelo-scope-guard"
+selects = "_m232_detail_row_replay_inputs"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_revision_replay_inputs.py"
+enclosing_symbol = "_m349_detail_row_replay_inputs"
+modelo_codes = "M349"
+group = "modelo-scope-guard"
+selects = "_m349_detail_row_replay_inputs"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_verification_actions.py"
+enclosing_symbol = "_detail_row_template_casilla_is_satisfied"
+modelo_codes = "M349"
+group = "official-design-convention"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_verification_actions.py"
+enclosing_symbol = "_m369_unresolved_oss_source_finding"
+modelo_codes = "M369"
+group = "modelo-scope-guard"
+selects = "_m369_unresolved_oss_source_finding"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_verification_cross_period.py"
+enclosing_symbol = "_iva_wallet_decision_covers_cross_period_dependency"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_iva_wallet_decision_covers_cross_period_dependency"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_verification_cross_period.py"
+enclosing_symbol = "_modelo_202_incomplete_modality_finding"
+modelo_codes = "M202"
+group = "modelo-scope-guard"
+selects = "_modelo_202_incomplete_modality_finding"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_work_create_policy.py"
+enclosing_symbol = "modelo_work_create_refusal_locale_key"
+modelo_codes = "M210"
+group = "modelo-scope-guard"
+selects = "modelo_work_create_refusal_locale_key"
+
+[[branch]]
+path = "src/cadrumo/application/overview/_next_actions.py"
+enclosing_symbol = "_start_work_unit_step"
+modelo_codes = "M210"
+group = "modelo-path-routing"
+selects = "MODELO_210_SEDE_ONLY"
+
+[[branch]]
+path = "src/cadrumo/application/storage_write_policy.py"
+enclosing_symbol = "_delegates_to_leaf_refusal"
+modelo_codes = "M210"
+group = "modelo-scope-guard"
+selects = "_delegates_to_leaf_refusal"
+
+[[branch]]
+path = "src/cadrumo/domain/filing/_validator.py"
+enclosing_symbol = "_required_casilla_satisfied_by_row_bindings"
+modelo_codes = "M349"
+group = "casilla-target-selection"
+
+[[branch]]
+path = "src/cadrumo/domain/modelos/_calculation_revision_aggregate.py"
+enclosing_symbol = "_require_registry_inspection"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_require_registry_inspection"
+
+[[branch]]
+path = "src/cadrumo/domain/modelos/_calculation_revision_aggregate.py"
+enclosing_symbol = "validate_calculation_revision_aggregate"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "validate_calculation_revision_aggregate"
+
+[[branch]]
+path = "src/cadrumo/domain/renta/_first_slice_routing_integrity.py"
+enclosing_symbol = "check_first_slice_routing"
+modelo_codes = "M100"
+group = "modelo-scope-guard"
+selects = "check_first_slice_routing"
+
+[[branch]]
+path = "src/cadrumo/domain/renta/_retenciones_routing_integrity.py"
+enclosing_symbol = "check_m130_retenciones_output_casilla"
+modelo_codes = "M130"
+group = "modelo-scope-guard"
+selects = "check_m130_retenciones_output_casilla"
+
+[[branch]]
+path = "src/cadrumo/entrypoints/cli/_m303_filing_evidence_input.py"
+enclosing_symbol = "m303_filing_instance_evidence_from_cli"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "m303_filing_instance_evidence_from_cli"
+
+[[branch]]
+path = "src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py"
+enclosing_symbol = "_clave_breakdown"
+modelo_codes = "M190"
+group = "modelo-scope-guard"
+selects = "_clave_breakdown"
+
+[[branch]]
+path = "src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py"
+enclosing_symbol = "_persist_cli_owned_observations"
+modelo_codes = "M190"
+group = "modelo-path-routing"
+selects = "persist_percepcion_observations"
+
+[[branch]]
+path = "src/cadrumo/entrypoints/cli/_modelo_cli_support.py"
+enclosing_symbol = "_validate_m349_detail_rows_for_work_unit"
+modelo_codes = "M349"
+group = "modelo-scope-guard"
+selects = "_validate_m349_detail_rows_for_work_unit"
+
+[[branch]]
+path = "src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py"
+enclosing_symbol = "_modelo_100_obligation_advisory_output"
+modelo_codes = "M100"
+group = "modelo-scope-guard"
+selects = "_modelo_100_obligation_advisory_output"

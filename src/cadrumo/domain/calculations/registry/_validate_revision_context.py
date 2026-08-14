@@ -31,7 +31,6 @@ from ._schema import (
     ModeloScheduleDefinition,
     ParameterDefinition,
     RelationDefinition,
-    SupportRemovalDecisionDefinition,
     WorkbookParityReference,
 )
 from ._schema_verification import VerificationExpectationDefinition
@@ -86,7 +85,6 @@ class RevisionValidationContext:
     application_link_by_id: dict[str, ApplicationLinkDefinition]
     deadline_window_by_id: dict[str, DeadlineWindowDefinition]
     filing_schedule_by_id: dict[str, ModeloScheduleDefinition]
-    support_removal_decision_by_id: dict[str, SupportRemovalDecisionDefinition]
     construct_by_id: dict[str, ConstructDefinition]
     dependency_classification_by_id: dict[str, DependencyClassificationDefinition]
     casillas: set[CasillaId]
@@ -121,7 +119,6 @@ class RevisionValidationContext:
             | ApplicationLinkDefinition
             | DeadlineWindowDefinition
             | ModeloScheduleDefinition
-            | SupportRemovalDecisionDefinition
             | DependencyClassificationDefinition,
         ],
     ]:
@@ -141,7 +138,6 @@ class RevisionValidationContext:
             "application link": self.application_link_by_id,
             "deadline window": self.deadline_window_by_id,
             "filing schedule": self.filing_schedule_by_id,
-            "support removal decision": self.support_removal_decision_by_id,
             "dependency classification": self.dependency_classification_by_id,
         }
 
@@ -183,7 +179,6 @@ def build_revision_validation_context(revision: ModeloRevision) -> RevisionValid
         application_link_by_id=_records_by_id(revision.application_links),
         deadline_window_by_id=_records_by_id(revision.deadline_windows),
         filing_schedule_by_id=_records_by_id(revision.filing_schedules),
-        support_removal_decision_by_id=_records_by_id(revision.support_removal_decisions),
         construct_by_id=_records_by_id(revision.constructs),
         dependency_classification_by_id=_records_by_id(revision.dependency_classifications),
         casillas=casillas,

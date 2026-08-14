@@ -8,13 +8,13 @@ produces :class:`RegistrySnapshot` instances on demand for each filing context.
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
 
 from .... import __version__
-from ....core import Modelo
 from ....core.access_gate import (
     AuthorizationManifest,
     ModeloAuthorization,
@@ -26,18 +26,11 @@ from ._convenio import collect_convenio_fingerprints, load_convenio_authority, v
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._ids import RevisionId
 from ._loader import collect_registry_tree_fingerprints, load_registry_tree
-from ._m303_orden_manifest import (
-    collect_m303_annual_orden_fingerprints,
-    load_m303_annual_orden_authority,
-)
-from ._m303_orden_projection_models import (
-    M303AnnualOrdenAuthority,
-    M303AnnualOrdenCompilation,
-)
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 from ._snapshot import build_validated_snapshot
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ._static_inspection import RegistryRevisionInspection
+from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes
 from ._temporal import select_revision
 from ._validate import RegistryValidator
 from ._validate_evidence import flush_corpus_text_cache
@@ -51,6 +44,40 @@ from ._validate_verdict import (
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None]
 _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
+_RegistryFingerprints = tuple[tuple[str, int, int, str], ...]
+_SourceEvidenceFingerprints = tuple[tuple[str, int, int], ...]
+
+
+@dataclass(frozen=True, slots=True, eq=False)
+class _FingerprintKey[T]:
+    """Cache key that hashes on a digest while still carrying its fingerprints.
+
+    The authority cache is keyed on the complete fingerprint of every file it
+    read, which is what makes a tree edit visible. Hashing those tuples
+    directly costs one pass over the whole corpus on every cache lookup, so the
+    key hash is taken once over the digest and the tuples ride along for the
+    body to read.
+    """
+
+    digest: str
+    fingerprints: T
+
+    def __hash__(self) -> int:
+        return hash(self.digest)
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, _FingerprintKey) and self.digest == other.digest
+
+
+def _fingerprint_key[T: tuple[tuple[object, ...], ...]](fingerprints: T) -> _FingerprintKey[T]:
+    """Digest one fingerprint tuple set into an O(1)-hashable cache key."""
+    digest = hashlib.sha256()
+    for entry in fingerprints:
+        for field in entry:
+            digest.update(str(field).encode("utf-8"))
+            digest.update(b"\x1f")
+        digest.update(b"\x1e")
+    return _FingerprintKey(digest=digest.hexdigest(), fingerprints=fingerprints)
 
 
 @dataclass(slots=True)
@@ -76,10 +103,12 @@ class ValidatedRegistryAuthority:
         return _load_authority(
             resolved_root,
             resolved_source_root,
-            collect_registry_tree_fingerprints(resolved_root)
-            + collect_convenio_fingerprints(resolved_root)
-            + collect_m303_annual_orden_fingerprints(resolved_root),
-            collect_source_evidence_fingerprints(resolved_source_root),
+            _fingerprint_key(
+                collect_registry_tree_fingerprints(resolved_root)
+                + collect_convenio_fingerprints(resolved_root)
+                + collect_supplementary_orden_fingerprints(resolved_root),
+            ),
+            _fingerprint_key(collect_source_evidence_fingerprints(resolved_source_root)),
         )
 
     def modelo(self, modelo_id: str) -> ModeloDefinition:
@@ -324,19 +353,67 @@ def bundled_revision_inspection(
     )
 
 
-@lru_cache(maxsize=16)
+#: Refusals from :func:`_load_authority`, keyed exactly as its ``lru_cache`` is.
+#:
+#: ``lru_cache`` memoises returns and NOT exceptions, so a registry that refuses
+#: re-runs the whole multi-second validation for every caller. That is invisible
+#: while the tree is green and pathological the moment it is not: with validation
+#: failing, a full test collection re-validated per module and stopped terminating.
+#: Caching the refusal changes nothing about the verdict -- the same error, with
+#: the same enumeration, is raised on every call -- it is computed once.
+_AUTHORITY_LOAD_FAILURES: dict[
+    tuple[Path, Path, _FingerprintKey[_RegistryFingerprints], _FingerprintKey[_SourceEvidenceFingerprints]],
+    Exception,
+] = {}
+
+
 def _load_authority(
     root: Path,
     source_root: Path,
-    _registry_fingerprint: tuple[tuple[str, int, int, str], ...],
-    _source_evidence_fingerprint: tuple[tuple[str, int, int], ...],
+    registry_key: _FingerprintKey[_RegistryFingerprints],
+    source_evidence_key: _FingerprintKey[_SourceEvidenceFingerprints],
 ) -> ValidatedRegistryAuthority:
+    """Load and validate one authority, memoising refusal as well as success."""
+    failure_key = (root, source_root, registry_key, source_evidence_key)
+    cached_failure = _AUTHORITY_LOAD_FAILURES.get(failure_key)
+    if cached_failure is not None:
+        raise cached_failure
+    try:
+        return _load_validated_authority(root, source_root, registry_key, source_evidence_key)
+    except Exception as exc:
+        _AUTHORITY_LOAD_FAILURES[failure_key] = exc
+        raise
+
+
+def _clear_authority_load_caches() -> None:
+    """Drop both memoised outcomes, successes and refusals together.
+
+    Clearing only the success cache would leave a refusal from a previous tree
+    state answering for a tree that has since been repaired, which is the exact
+    staleness a cache clear exists to remove.
+    """
+    _load_validated_authority.cache_clear()
+    _AUTHORITY_LOAD_FAILURES.clear()
+
+
+_load_authority.cache_clear = _clear_authority_load_caches  # type: ignore[attr-defined]
+
+
+@lru_cache(maxsize=16)
+def _load_validated_authority(
+    root: Path,
+    source_root: Path,
+    registry_key: _FingerprintKey[_RegistryFingerprints],
+    source_evidence_key: _FingerprintKey[_SourceEvidenceFingerprints],
+) -> ValidatedRegistryAuthority:
+    _registry_fingerprint = registry_key.fingerprints
+    _source_evidence_fingerprint = source_evidence_key.fingerprints
     authority = _construct_authority(root, source_root, _source_evidence_fingerprint)
-    # A persisted green verdict keyed by the exact
-    # fingerprint tuples this lru_cache already keys on lets an immutable tree
-    # skip the multi-second re-validation. The build and continuous integration
-    # are the validation gate; the runtime asserts fingerprint identity only. A
-    # mismatch or a foreign verdict re-validates in full and rewrites the verdict.
+    # A persisted green verdict keyed by the exact fingerprint tuples this
+    # lru_cache keys a digest of lets an immutable tree skip the multi-second
+    # re-validation. The build and continuous integration are the validation
+    # gate; the runtime asserts fingerprint identity only. A mismatch or a
+    # foreign verdict re-validates in full and rewrites the verdict.
     verdict_key = compute_verdict_key(
         registry_fingerprints=_registry_fingerprint,
         source_evidence_fingerprints=_source_evidence_fingerprint,
@@ -366,28 +443,22 @@ def _construct_authority(
     # the shared legal/ catalogue (which resolves to bundled BOE corpus text).
     convenio = load_convenio_authority(root / "treaties")
     validate_convenio_legal_refs(convenio, frozenset(catalogues.legal))
-    if any(modelo.id == Modelo.M303 and bool(modelo.revisions) for modelo in modelos):
-        m303_annual_orden = load_m303_annual_orden_authority(
-            root,
-            source_root=source_root,
-            modelos=modelos,
-            sources=catalogues.sources,
-        )
-    else:
-        m303_annual_orden = M303AnnualOrdenCompilation(
-            authority=M303AnnualOrdenAuthority.empty(),
-            legal={},
-        )
-    duplicate_legal_refs = set(catalogues.legal).intersection(m303_annual_orden.legal)
+    supplementary_ordenes = compile_supplementary_ordenes(
+        root,
+        source_root=source_root,
+        modelos=modelos,
+        sources=catalogues.sources,
+    )
+    duplicate_legal_refs = set(catalogues.legal).intersection(supplementary_ordenes.legal)
     if duplicate_legal_refs:
         raise RegistryValidationError(
             f"annual Orden compiler collided with hand-authored legal refs: {sorted(duplicate_legal_refs)!r}",
         )
     catalogues = catalogues.model_copy(
         update={
-            "legal": {**catalogues.legal, **m303_annual_orden.legal},
+            "legal": {**catalogues.legal, **supplementary_ordenes.legal},
             "convenio": convenio,
-            "m303_annual_orden": m303_annual_orden.authority,
+            "supplementary_ordenes": supplementary_ordenes.authorities,
         },
     )
 
@@ -432,7 +503,7 @@ def stamp_bundled_registry_verdict(registry_root: Path, *, package_version: str 
     fingerprints = (
         collect_registry_tree_fingerprints(resolved)
         + collect_convenio_fingerprints(resolved)
-        + collect_m303_annual_orden_fingerprints(resolved)
+        + collect_supplementary_orden_fingerprints(resolved)
     )
     output_path = shipped_verdict_location(resolved)
     stamp_bundled_verdict(

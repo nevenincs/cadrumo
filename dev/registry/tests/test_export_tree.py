@@ -772,8 +772,8 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
 
     assert first.output_files == (
         "0000-export-layout.toml",
-        "0001-record-generated-registro-tipo-1-part-001.toml",
-        "0002-record-generated-registro-tipo-2-part-001.toml",
+        "0001-record-generated-registro-tipo-1.toml",
+        "0002-record-generated-registro-tipo-2.toml",
     )
     assert first.field_derivations[-1].derivation_code == "numeric-decimal-v1"
     assert first.layout == second.layout
@@ -898,7 +898,7 @@ def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_f
     layout = load_modelo_directory(tmp_path / "modelos" / "200").revisions["2025"].export_layouts[0]
     export_root = revision_dir / "export"
     manifest_path = revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME
-    original_fragment = export_root / "0001-record-generated-registro-tipo-1-part-001.toml"
+    original_fragment = export_root / "0001-record-generated-registro-tipo-1.toml"
     original_bytes = original_fragment.read_bytes()
 
     original_fragment.write_bytes(original_bytes + b"# tampered\n")
@@ -1349,17 +1349,30 @@ def test_renderer_partitions_oversized_record_deterministically_and_loader_merge
         render_profile_source_evidence=_wire_evidence(),
     )
 
-    oversized_parts = tuple(path for path in first.output_files if path.startswith("0001-record-"))
-    compact_parts = tuple(path for path in compact.output_files if path.startswith("0001-record-"))
+    oversized_parts = tuple(
+        path for path in first.output_files if path.endswith("-record-generated-oversized-record.toml")
+    )
+    compact_parts = tuple(
+        path for path in compact.output_files if path.endswith("-record-generated-oversized-record.toml")
+    )
     assert len(oversized_parts) > 1
+    # Each part takes its own administrative prefix, numbered consecutively from 0001,
+    # because the loader admits exactly one fragment per prefix.
     assert oversized_parts == tuple(
-        f"0001-record-generated-oversized-record-part-{part:03d}.toml" for part in range(1, len(oversized_parts) + 1)
+        f"{prefix:04d}-record-generated-oversized-record.toml" for prefix in range(1, len(oversized_parts) + 1)
     )
     assert len(oversized_parts) > len(compact_parts)
     assert compact_parts[0] == oversized_parts[0]
-    assert first.output_files[-1] == "0002-record-generated-trailing-record-part-001.toml"
-    assert compact.output_files[-1] == first.output_files[-1]
+    # The trailing record follows the oversized record's last part rather than colliding
+    # with it, so its prefix moves as the partition count grows.
+    assert first.output_files[-1] == f"{len(oversized_parts) + 1:04d}-record-generated-trailing-record.toml"
+    assert compact.output_files[-1] == f"{len(compact_parts) + 1:04d}-record-generated-trailing-record.toml"
+    assert first.output_files[-1] != compact.output_files[-1]
     assert first.output_files == second.output_files
+    assert len(set(first.output_files)) == len(first.output_files)
+    assert [path.split("-", 1)[0] for path in first.output_files] == sorted(
+        path.split("-", 1)[0] for path in first.output_files
+    )
     assert {path.name: path.read_bytes() for path in sorted((first_revision / "export").iterdir())} == {
         path.name: path.read_bytes() for path in sorted((second_revision / "export").iterdir())
     }
@@ -1373,6 +1386,25 @@ def test_renderer_partitions_oversized_record_deterministically_and_loader_merge
     emitted_ids = tuple(str(field.id) for field in loaded_layout.records[0].fields)
     assert emitted_ids == tuple(f"generated.oversized.field-{index:03d}" for index in range(1, 246))
     assert len(emitted_ids) == len(set(emitted_ids)) == 245
+
+
+def test_renderer_refuses_a_fragment_prefix_that_overflows_its_padded_width() -> None:
+    """An overflowed prefix is refused at render rather than emitted as an unreadable name.
+
+    Reaching this by rendering would need ten thousand fragments, so the naming
+    function is exercised directly. The last in-width prefix must still render, or
+    the guard would be refusing legitimate output one short of the boundary.
+    """
+    width = _export_tree._FRAGMENT_PREFIX_DIGITS
+    last_in_width = 10**width - 1
+
+    assert (
+        _export_tree._record_relative_path(last_in_width, "generated-record")
+        == f"{last_in_width}-record-generated-record.toml"
+    )
+
+    with pytest.raises(RegistryValidationError, match="overflows"):
+        _export_tree._record_relative_path(last_in_width + 1, "generated-record")
 
 
 def test_renderer_module_has_no_old_tree_or_approximate_admission_surface() -> None:

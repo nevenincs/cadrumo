@@ -1,6 +1,6 @@
 """Referential-integrity validation for registry snapshots.
 
-Walks all 21 typed-ID reference fields across a :class:`RegistrySnapshot`
+Walks all 20 typed-ID reference fields across a :class:`RegistrySnapshot`
 and raises :class:`~cadrumo.domain.calculations.registry._errors.RegistryValidationError`
 for every dangling reference found in the :class:`ModeloRevision`.
 """
@@ -42,7 +42,7 @@ if TYPE_CHECKING:
 def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
     """Assert every typed-ID reference in the snapshot points at an existing entity.
 
-    Walks all 21 typed-ID reference fields across the snapshot's revision and
+    Walks all 20 typed-ID reference fields across the snapshot's revision and
     raises :class:`RegistryValidationError` listing every dangling reference.
     This is an existence gate only -- it does not alter any field types.
 
@@ -72,7 +72,6 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
     _check_application_link_refs(checker, revision)
     _check_deadline_window_refs(checker, revision)
     _check_filing_schedule_refs(checker, revision)
-    _check_support_removal_decision_refs(checker, revision)
     check_construct_refs(checker, revision)
     check_dependency_classification_refs(checker, revision)
     check_algorithm_provider_refs(checker, revision)
@@ -288,9 +287,3 @@ def _check_filing_schedule_refs(checker: _IdReferenceChecker, revision: ModeloRe
                 condition.legal_refs,
                 condition.source_refs,
             )
-
-
-def _check_support_removal_decision_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
-    for decision in revision.support_removal_decisions:
-        dp = f"support_removal_decision {decision.id}"
-        checker.chk_legal_source_refs(dp, decision.legal_refs, decision.source_refs)

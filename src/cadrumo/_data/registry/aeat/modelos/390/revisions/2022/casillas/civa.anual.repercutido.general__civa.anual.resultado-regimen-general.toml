@@ -49,6 +49,7 @@ input_kind = "bound"
 binding = "modelo-390-iva-soportado-interiores-cuota"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-03-casilla-soportado-interiores"]
 
 # Annual IVA soportado deducible en importaciones de bienes corrientes. Mirrors
 # the M303 import-deducible cuota (LIVA art. 17 hecho imponible + art. 92
@@ -67,6 +68,7 @@ input_kind = "bound"
 binding = "modelo-390-iva-soportado-importaciones-cuota"
 legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-03-casilla-soportado-importaciones"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.regularizacion-prorrata-definitiva"
@@ -79,6 +81,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+export_refs = ["modelo-390-page-04-casilla-regularizacion-prorrata-definitiva"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.regularizacion-bienes-inversion"
@@ -92,6 +95,7 @@ input_kind = "bound"
 binding = "modelo-390-bienes-inversion-regularizacion-casilla-63"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+export_refs = ["modelo-390-page-04-casilla-regularizacion-bienes-inversion"]
 
 # Rate-blind AIC TOTAL layer, feeding the annual devengada total formula
 # (modelo-390-iva-anual-cuota-devengada-total) so an AIC row whose rate was
@@ -132,6 +136,7 @@ input_kind = "bound"
 binding = "modelo-390-iva-recargo-equivalencia-general-cuota"
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-02-casilla-repercutido-recargo-general"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.recargo.reducido"
@@ -147,6 +152,7 @@ input_kind = "bound"
 binding = "modelo-390-iva-recargo-equivalencia-reducido-cuota"
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-02-casilla-repercutido-recargo-reducido"]
 
 # Recargo de equivalencia tipo 0.5pct - Cuota devengada anual (LIVA art. 161).
 # Mirrors the M303 casilla 158 so the annual devengada total includes the
@@ -167,6 +173,7 @@ input_kind = "bound"
 binding = "modelo-390-iva-recargo-equivalencia-super-reducido-cuota"
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-02-casilla-repercutido-recargo-super-reducido"]
 
 # Reconciliation casillas — pulled from the four 303 quarters via previous_filing.
 
@@ -222,6 +229,7 @@ binding = "modelo-390-prev-303-compensacion-ultimo-periodo"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-390-2022"] }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+export_refs = ["modelo-390-page-06-casilla-compensacion-ultimo-periodo-97"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.compensacion-generada-ejercicio-no-97"
@@ -236,6 +244,7 @@ binding = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-390-2022"] }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+export_refs = ["modelo-390-page-06-casilla-compensacion-generada-ejercicio-no-97"]
 
 # -----------------------------------------------------------------------------
 # Computed annual totals — same shape as Modelo 303 result-casillas, applied
@@ -259,6 +268,7 @@ formula = "modelo-390-iva-anual-total-bases-cuotas-iva"
 form_number = "34"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-02-casilla-total-bases-cuotas-iva"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.cuota-devengada-total"
@@ -275,6 +285,7 @@ formula = "modelo-390-iva-anual-cuota-devengada-total"
 form_number = "47"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-02-casilla-cuota-devengada-total"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.cuota-deducible-total"
@@ -291,6 +302,7 @@ formula = "modelo-390-iva-anual-cuota-deducible-total"
 form_number = "64"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-04-casilla-cuota-deducible-total"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.resultado-regimen-general"
@@ -307,6 +319,7 @@ formula = "modelo-390-iva-anual-resultado-regimen-general"
 form_number = "65"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-04-casilla-resultado-regimen-general"]
 
 # -----------------------------------------------------------------------------
 # Formulas backing the three computed annual result-casillas.

@@ -74,7 +74,6 @@ from ._modelo_payloads import (
     ModeloRowPayload,
     ModeloSupportMatrixEntryPayload,
     ModeloSupportMatrixResult,
-    ModeloSupportRemovalPayload,
 )
 from ._modelo_rendering import binding_encoded_option_lines, binding_encoded_option_payloads
 
@@ -1238,15 +1237,6 @@ def _support_matrix_entry_payload(entry: ModeloEntry) -> ModeloSupportMatrixEntr
             )
             for rename in entry.renames
         ],
-        deprecations=[
-            ModeloSupportRemovalPayload(
-                subject_type=deprecation.subject_type,
-                subject_id=deprecation.subject_id,
-                reason=deprecation.reason,
-                evidence_note=deprecation.evidence_note,
-            )
-            for deprecation in entry.deprecations
-        ],
         portal_compatibility_refs=[
             ModeloPortalCompatibilityRefPayload(
                 id=ref.id,
@@ -1255,7 +1245,6 @@ def _support_matrix_entry_payload(entry: ModeloEntry) -> ModeloSupportMatrixEntr
             )
             for ref in entry.portal_compatibility_refs
         ],
-        is_deprecated=entry.is_deprecated,
     )
 
 
@@ -1267,7 +1256,7 @@ def _register_support_matrix_command(app: typer.Typer) -> None:
             default=(
                 "Show the registry-wide per-modelo support matrix: calc-grade, "
                 "completeness manifest, export formats, extractor coverage, declared "
-                "casilla renames, deprecation decisions, and AEAT-portal cross-references."
+                "casilla renames, and AEAT-portal cross-references."
             ),
         ),
     )
@@ -1277,14 +1266,14 @@ def _register_support_matrix_command(app: typer.Typer) -> None:
         result = ModeloSupportMatrixResult(modelo_count=len(entries), entries=entries)
         lines = [
             f"{'modelo':>6}  {'revs':>4}  {'latest':<12}  {'calc':>4}  {'manifest':>8}  "
-            f"{'boe':>3}  {'xml':>3}  {'extractor':>9}  {'renames':>7}  {'deprecated':>10}",
+            f"{'boe':>3}  {'xml':>3}  {'extractor':>9}  {'renames':>7}",
         ]
         for entry in entries:
             lines.append(
                 f"{entry.modelo_id:>6}  {entry.revision_count:>4}  {entry.latest_revision_id:<12}  "
                 f"{_mark(entry.calc_grade):>4}  {_mark(entry.has_completeness_manifest):>8}  "
                 f"{_mark(entry.has_fixed_width_export):>3}  {_mark(entry.has_xml_dictionary_export):>3}  "
-                f"{_mark(entry.has_extractor):>9}  {len(entry.renames):>7}  {_mark(entry.is_deprecated):>10}",
+                f"{_mark(entry.has_extractor):>9}  {len(entry.renames):>7}",
             )
         _emit_envelope(ctx, command="modelo.support_matrix", result=result, lines=lines)
 

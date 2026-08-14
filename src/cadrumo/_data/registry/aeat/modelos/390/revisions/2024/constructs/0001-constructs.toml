@@ -234,6 +234,7 @@ live_cross_references = [
     "modelo-390-static-documentation",
     "modelo-390-filed-declarations-read",
 ]
+export_layouts = ["modelo-390-2024-fichero-boe"]
 application_links = [
     "modelo-390-portal",
     "modelo-390-filing",
@@ -244,6 +245,7 @@ application_links = [
     "modelo-390-workflow",
     "modelo-390-deadline",
     "modelo-390-calculation",
+    "modelo-390-export",
 ]
 filing_schedules = ["modelo-390-anual"]
 deadline_windows = [

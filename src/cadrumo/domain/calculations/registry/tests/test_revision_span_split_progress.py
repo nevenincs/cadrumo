@@ -41,9 +41,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
     {
         ("303", "2009-y-siguientes"),  # row #117
-        ("390", "2010-y-siguientes"),  # rows #110, #115, #118
     },
 )
+#: `("390", "2010-y-siguientes")` (rows #110, #115, #118) removed: the W04.P07.S87
+#: split replaced the open-ended revision with four exact-year revisions (2022,
+#: 2023, 2024, 2025), each claiming exactly one design year. Verified rather than
+#: assumed -- `_boundaries_for` run against each of the four returns no boundary,
+#: so the span genuinely resolved rather than moved. This is a DIFFERENT question
+#: from `test_fed_alias_beside_starved_box.py`'s `_KNOWN_PAIRINGS`: that module's
+#: box-alias mis-declaration is untouched by this split and still reports under
+#: all four new revision ids.
 
 
 def _spanning() -> set[tuple[str, str]]:

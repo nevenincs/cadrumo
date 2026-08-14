@@ -1,0 +1,8 @@
+[[revisions."2023-y-siguientes".applicability]]
+id = "m180-seed"
+applicable_entity_types = ["attribution_entity", "legal_entity", "natural_person"]
+required_payer_fact = "pays_rent_with_retencion"
+applicable_reason = "Modelo 180 (resumen anual de retenciones por arrendamiento): el contribuyente que paga alquiler de inmueble urbano sujeto a retención presenta el resumen anual de las retenciones declaradas en el Modelo 115."
+not_applicable_reason = "Modelo 180 no aplica: el resumen anual de retenciones por arrendamiento solo corresponde a quien paga alquileres sujetos a retención."
+cuota_bearing = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-108"]

@@ -16,16 +16,13 @@ re-implementing them:
 * rename tracking reads the revision's already-declared
   :class:`~domain.calculations.registry.CasillaContinuidadEvolutionDefinition`
   entries (the ``casilla_continuidad_evolutions`` field);
-* deprecation policy reads the revision's already-declared
-  :class:`~domain.calculations.registry.SupportRemovalDecisionDefinition`
-  entries (the ``support_removal_decisions`` mapping);
 * portal-compatibility tracking reads the revision's declared
   :class:`~domain.calculations.registry.LiveCrossReferenceDecision` entries
   (surface kind and evidence tier).
 
 Coverage honesty (``no-silent-under-declaration``): a modelo missing a
-capability, rename record, deprecation decision, or portal cross-reference
-reports an explicit empty/False value, never a fabricated positive.
+capability, rename record, or portal cross-reference reports an explicit
+empty/False value, never a fabricated positive.
 
 See Also:
     :func:`~domain.calculations.registry.build_support_matrix`
@@ -57,7 +54,6 @@ __all__ = [
     "ModeloEntry",
     "ModeloPortalCompatibilityRef",
     "ModeloRenameRecord",
-    "ModeloSupportRemovalRecord",
     "RevisionCapabilityProbe",
     "build_support_matrix",
     "revision_capability_probe",
@@ -99,7 +95,7 @@ class RevisionCapabilityProbe(BaseModel):
         extraction_profile_count: Extraction profiles declared on the revision.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     calc_grade: bool
     has_completeness_manifest: bool
@@ -147,34 +143,12 @@ class ModeloRenameRecord(BaseModel):
             ``"label_evolved"``, ``"repurposed"``, ``"retired"``).
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     continuidad_id: str
     from_revision: RevisionId
     to_revision: RevisionId
     evolution_kind: str
-
-
-class ModeloSupportRemovalRecord(BaseModel):
-    """One declared deprecation decision for a modelo revision.
-
-    Projects a :class:`~domain.calculations.registry.SupportRemovalDecisionDefinition`
-    already declared on the revision.
-
-    Attributes:
-        subject_type: The kind of surface removed from filing-grade support
-            (e.g. ``"export_layout"``, ``"live_cross_reference"``).
-        subject_id: The identifier of the removed surface.
-        reason: The declared regulatory/technical reason for removal.
-        evidence_note: Human-readable evidence backing the decision.
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    subject_type: str
-    subject_id: str
-    reason: str
-    evidence_note: str
 
 
 class ModeloPortalCompatibilityRef(BaseModel):
@@ -192,7 +166,7 @@ class ModeloPortalCompatibilityRef(BaseModel):
         evidence_tier: The declared evidence tier backing the cross-reference.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     id: str
     surface: str
@@ -234,15 +208,11 @@ class ModeloEntry(BaseModel):
             revision.
         renames: Declared per-ejercicio casilla continuity evolutions on the
             latest revision.
-        deprecations: Declared support-removal (deprecation) decisions on the
-            latest revision.
         portal_compatibility_refs: Declared AEAT-portal cross-references on
             the latest revision.
-        is_deprecated: ``True`` when the latest revision declares at least one
-            support-removal decision.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo_id: ModeloId
     title: str
@@ -258,13 +228,7 @@ class ModeloEntry(BaseModel):
     has_extractor: bool
     extraction_profile_count: int
     renames: tuple[ModeloRenameRecord, ...]
-    deprecations: tuple[ModeloSupportRemovalRecord, ...]
     portal_compatibility_refs: tuple[ModeloPortalCompatibilityRef, ...]
-
-    @property
-    def is_deprecated(self) -> bool:
-        """Return whether the latest revision declares a support-removal decision."""
-        return bool(self.deprecations)
 
 
 def _rename_record(evolution: CasillaContinuidadEvolutionDefinition) -> ModeloRenameRecord:
@@ -283,15 +247,6 @@ def _entry_for_modelo(modelo: ModeloDefinition) -> ModeloEntry:
         item.id for item in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
     )
     renames = tuple(_rename_record(evolution) for evolution in revision.casilla_continuidad_evolutions)
-    deprecations = tuple(
-        ModeloSupportRemovalRecord(
-            subject_type=decision.subject_type,
-            subject_id=decision.subject_id,
-            reason=decision.reason,
-            evidence_note=decision.evidence_note,
-        )
-        for decision in revision.support_removal_decisions
-    )
     portal_refs = tuple(
         ModeloPortalCompatibilityRef(
             id=str(decision.id),
@@ -315,7 +270,6 @@ def _entry_for_modelo(modelo: ModeloDefinition) -> ModeloEntry:
         has_extractor=capabilities.has_extractor,
         extraction_profile_count=capabilities.extraction_profile_count,
         renames=renames,
-        deprecations=deprecations,
         portal_compatibility_refs=portal_refs,
     )
 

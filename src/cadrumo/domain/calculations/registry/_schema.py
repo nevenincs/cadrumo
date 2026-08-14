@@ -26,9 +26,11 @@ from ....core import (
     UNDECLARED_REGISTRY_AUTHORITY_GRADE,
     CasillaId,
     FilingProjectionRef,
+    Modelo,
     Period,
     PeriodKind,
     RegistryAuthorityGrade,
+    RegistrySelectorPeriodCode,
     RevisionReviewStatus,
     TaxDomain,
     filing_projection_ref_casilla_id,
@@ -39,6 +41,7 @@ from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from ._errors import RegistryValidationError
 from ._ids import (
+    ApplicabilityRuleId,
     ApplicationLinkId,
     BindingId,
     ConstructId,
@@ -54,7 +57,6 @@ from ._ids import (
     RelationId,
     RevisionId,
     SourceRefId,
-    SupportRemovalDecisionId,
     VerificationExpectationId,
     WorkbookParityRefId,
 )
@@ -223,7 +225,6 @@ __all__ = [
     "SourceCitationText",
     "SourceReference",
     "SourceRefs",
-    "SupportRemovalDecisionDefinition",
     "TemporalApplicability",
     "VerificationExpectationDefinition",
     "VerificationPredicateDefinition",
@@ -236,6 +237,7 @@ from ._modelo_localization import resolve_modelo_localization
 from ._schema_base import (
     GOVERNANCE_STAMP,
     MANIFEST_ONLY,
+    SCHEMA_FAMILY,
     CalculationClass,
     DateAxis,
     EvidenceTier,
@@ -250,8 +252,10 @@ from ._schema_base import (
     SourceCitation,
     SourceCitationText,
     SourceRefs,
+    collection_shaped_fields,
     governance_stamp_fields,
     manifest_only_fields,
+    schema_family_fields,
 )
 from ._schema_exports import (
     ExportComputedKey,
@@ -348,33 +352,6 @@ class ApplicationLinkDefinition(RegistryModel):
     source_refs: SourceRefs
 
 
-class SupportRemovalDecisionDefinition(RegistryModel):
-    id: SupportRemovalDecisionId
-    subject_type: Literal[
-        "export_layout",
-        "extraction_profile",
-        "filing_path",
-        "application_link",
-        "live_cross_reference",
-        "workbook_parity_ref",
-        "verification_expectation",
-        "deadline_window",
-        "filing_schedule",
-    ]
-    subject_id: str = Field(min_length=1, max_length=160)
-    decision: Literal["remove_from_filing_grade"]
-    reason: Literal[
-        "missing_legal_authority",
-        "missing_official_source",
-        "unsafe_remote_state",
-        "unsupported_official_format",
-        "out_of_scope",
-    ]
-    evidence_note: str = Field(min_length=1, max_length=2048)
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-
 class ConstructDefinition(RegistryModel):
     id: ConstructId
     localization_key: str = Field(min_length=1, exclude=True, repr=False)
@@ -395,7 +372,6 @@ class ConstructDefinition(RegistryModel):
     application_links: tuple[ApplicationLinkId, ...] = ()
     deadline_windows: tuple[DeadlineWindowId, ...] = ()
     filing_schedules: tuple[str, ...] = ()
-    support_removal_decisions: tuple[SupportRemovalDecisionId, ...] = ()
     dependency_classifications: tuple[DependencyClassificationId, ...] = ()
 
     def get_title(self, locale: str) -> str:
@@ -425,7 +401,6 @@ class ConstructDefinition(RegistryModel):
         "application_links",
         "deadline_windows",
         "filing_schedules",
-        "support_removal_decisions",
         "dependency_classifications",
     )
     @classmethod
@@ -452,7 +427,6 @@ class ConstructDefinition(RegistryModel):
             self.application_links,
             self.deadline_windows,
             self.filing_schedules,
-            self.support_removal_decisions,
             self.dependency_classifications,
         )
         if not any(member_groups):
@@ -509,6 +483,74 @@ class DependencyClassificationDefinition(RegistryModel):
         if not self.target_constructs:
             raise RegistryValidationError(f"dependency classification {self.id!r} must declare target_constructs")
         return self
+
+
+class ApplicabilityRuleDefinition(RegistryModel):
+    """A registry-authored modelo-applicability rule fragment.
+
+    The TOML-authored counterpart of
+    :class:`~cadrumo.domain.calculations.registry._applicability.ModeloApplicabilityRule`.
+    Every closed-vocabulary field here is a plain string (or a set of them),
+    never a ``domain.deadlines`` enum type: importing that package from this
+    module would close an import cycle, since ``domain.deadlines`` itself
+    depends on :class:`DeadlineWindowDefinition`, declared in this same
+    module. Registry TOML stays free-form;
+    :func:`~._applicability.hydrate_applicability_rule` is the loader
+    boundary that resolves every string to its enum member, surfacing an
+    unknown token as a registry load failure naming the offending value.
+
+    Attributes:
+        id: The rule's own identifier, unique within its revision.
+        applicable_entity_types: :class:`~domain.deadlines.EntityType` token
+            strings the modelo applies to.
+        required_income_categories: :class:`~domain.deadlines.IrpfIncomeCategory`
+            token strings gating a natural person's applicability. Empty means
+            the modelo does not gate on income category.
+        required_estimation_regimes: :class:`~domain.deadlines.IrpfEstimationRegime`
+            token strings gating a natural person's applicability. Empty means
+            the modelo does not gate on estimation regime.
+        applicable_fiscal_residencies: :class:`~domain.deadlines.FiscalResidency`
+            token strings positively keeping the modelo in scope. Empty means
+            the modelo does not gate on fiscal residency.
+        applicable_iva_regimes: :class:`~domain.deadlines.IVARegime` token
+            strings positively keeping the modelo in scope. Empty means the
+            modelo does not gate on IVA regime.
+        required_payer_fact: The
+            :class:`~._applicability_payer_facts.PayerFact` token string the
+            modelo's applicability depends on, or ``None`` when the modelo
+            does not gate on a payer fact.
+        applicable_reason: Operator-facing prose for the ``APPLICABLE`` verdict.
+        not_applicable_reason: Operator-facing prose for the
+            ``NOT_APPLICABLE`` verdict.
+        cuota_bearing: ``True`` when the modelo is a cuota self-assessment
+            (see :attr:`ModeloApplicabilityRule.cuota_bearing`).
+        legal_refs: Scoped registry citation keys grounding the rule.
+    """
+
+    id: ApplicabilityRuleId
+    applicable_entity_types: Annotated[tuple[str, ...], Field(min_length=1)]
+    required_income_categories: tuple[str, ...] = ()
+    required_estimation_regimes: tuple[str, ...] = ()
+    applicable_fiscal_residencies: tuple[str, ...] = ()
+    applicable_iva_regimes: tuple[str, ...] = ()
+    required_payer_fact: str | None = None
+    applicable_reason: Annotated[str, Field(min_length=1)]
+    not_applicable_reason: Annotated[str, Field(min_length=1)]
+    cuota_bearing: bool = False
+    legal_refs: LegalRefs
+
+    @field_validator(
+        "applicable_entity_types",
+        "required_income_categories",
+        "required_estimation_regimes",
+        "applicable_fiscal_residencies",
+        "applicable_iva_regimes",
+    )
+    @classmethod
+    def _tuple_values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("applicability rule tuple entries must be unique")
+        return value
 
 
 def _parse_deadline_window_period(value: object) -> Period:
@@ -588,7 +630,7 @@ filing_schedule_period_kind_mismatches = _filing_schedule_period_kind_mismatches
 class ModeloScheduleDefinition(RegistryModel):
     id: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_.-]+$")
     period_kind: Literal["monthly", "quarterly", "annual", "ad_hoc"]
-    periods: tuple[str, ...] = Field(min_length=1)
+    periods: tuple[RegistrySelectorPeriodCode, ...] = Field(min_length=1)
     profile_condition_mode: Literal["all", "any"] = "all"
     profile_conditions: tuple[ProfilePredicateDefinition, ...] = ()
     legal_refs: LegalRefs
@@ -1009,6 +1051,27 @@ def _casilla_producer(
     return "informational", reason, _producer_provenance(casilla, "informational", reason)
 
 
+class SchemaFamilyDispositionDeclaration(RegistryModel):
+    """A revision's declared reason that one of its schema families does not apply.
+
+    The only way an empty family reads as anything but
+    :attr:`RegistrySchemaFamilyDisposition.BLOCKED_PENDING_EVIDENCE`, and it is
+    deliberately expensive to make: a substantive claim about what the law does
+    not require of this modelo, so it carries a reason somebody wrote and the
+    references it stands on.
+
+    The alternative — an allowlist of families permitted to be empty — was
+    rejected as the shape of the problem rather than its solution. An allowlist
+    entry records that somebody wanted the check quiet; this records what they
+    claim and what backs it, which is the thing a later reviewer can disagree
+    with.
+    """
+
+    reason: str = Field(min_length=1, max_length=1024)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+
 class ModeloRevision(RegistryModel):
     """A single versioned form layout and calculation ruleset for one modelo.
 
@@ -1049,30 +1112,33 @@ class ModeloRevision(RegistryModel):
     # Required by validate_orden_aplicabilidad; kept default-empty so the
     # validator can report a grounded registry failure instead of a parse error.
     orden_aplicabilidad: Annotated[tuple[LegalRefId, ...], MANIFEST_ONLY] = ()
-    parameters: tuple[ParameterDefinition, ...] = ()
-    casillas: tuple[CasillaDefinition, ...] = ()
-    formulas: tuple[FormulaDefinition, ...] = ()
-    bindings: tuple[DataBindingDefinition, ...] = ()
-    algorithm_providers: tuple[AlgorithmProviderDefinition, ...] = ()
-    algorithm_bindings: tuple[AlgorithmBindingDefinition, ...] = ()
-    relations: tuple[RelationDefinition, ...] = ()
-    projection_endpoints: tuple[ProjectionEndpointDeclaration, ...] = ()
-    export_layouts: tuple[ExportLayoutDefinition, ...] = ()
-    extraction_profiles: tuple[ExtractionProfileDefinition, ...] = ()
-    live_cross_references: tuple[LiveCrossReferenceDecision, ...] = ()
-    workbook_parity_refs: tuple[WorkbookParityReference, ...] = ()
-    verification_expectations: tuple[VerificationExpectationDefinition, ...] = ()
-    application_links: tuple[ApplicationLinkDefinition, ...] = ()
-    deadline_windows: tuple[DeadlineWindowDefinition, ...] = ()
-    filing_schedules: tuple[ModeloScheduleDefinition, ...] = ()
-    support_removal_decisions: tuple[SupportRemovalDecisionDefinition, ...] = ()
-    constructs: tuple[ConstructDefinition, ...] = ()
-    dependency_classifications: tuple[DependencyClassificationDefinition, ...] = ()
+    parameters: Annotated[tuple[ParameterDefinition, ...], SCHEMA_FAMILY] = ()
+    casillas: Annotated[tuple[CasillaDefinition, ...], SCHEMA_FAMILY] = ()
+    formulas: Annotated[tuple[FormulaDefinition, ...], SCHEMA_FAMILY] = ()
+    bindings: Annotated[tuple[DataBindingDefinition, ...], SCHEMA_FAMILY] = ()
+    algorithm_providers: Annotated[tuple[AlgorithmProviderDefinition, ...], SCHEMA_FAMILY] = ()
+    algorithm_bindings: Annotated[tuple[AlgorithmBindingDefinition, ...], SCHEMA_FAMILY] = ()
+    relations: Annotated[tuple[RelationDefinition, ...], SCHEMA_FAMILY] = ()
+    projection_endpoints: Annotated[tuple[ProjectionEndpointDeclaration, ...], SCHEMA_FAMILY] = ()
+    export_layouts: Annotated[tuple[ExportLayoutDefinition, ...], SCHEMA_FAMILY] = ()
+    extraction_profiles: Annotated[tuple[ExtractionProfileDefinition, ...], SCHEMA_FAMILY] = ()
+    live_cross_references: Annotated[tuple[LiveCrossReferenceDecision, ...], SCHEMA_FAMILY] = ()
+    workbook_parity_refs: Annotated[tuple[WorkbookParityReference, ...], SCHEMA_FAMILY] = ()
+    verification_expectations: Annotated[tuple[VerificationExpectationDefinition, ...], SCHEMA_FAMILY] = ()
+    application_links: Annotated[tuple[ApplicationLinkDefinition, ...], SCHEMA_FAMILY] = ()
+    deadline_windows: Annotated[tuple[DeadlineWindowDefinition, ...], SCHEMA_FAMILY] = ()
+    filing_schedules: Annotated[tuple[ModeloScheduleDefinition, ...], SCHEMA_FAMILY] = ()
+    constructs: Annotated[tuple[ConstructDefinition, ...], SCHEMA_FAMILY] = ()
+    dependency_classifications: Annotated[tuple[DependencyClassificationDefinition, ...], SCHEMA_FAMILY] = ()
+    applicability: Annotated[tuple[ApplicabilityRuleDefinition, ...], SCHEMA_FAMILY] = ()
     completeness_manifest: CalculationCompletenessManifest | None = None
-    verification_predicates: tuple[VerificationPredicateDefinition, ...] = ()
+    verification_predicates: Annotated[tuple[VerificationPredicateDefinition, ...], SCHEMA_FAMILY] = ()
     continuidad_validation: Literal["advisory", "strict"] = "advisory"
-    casilla_continuidad_evolutions: tuple[CasillaContinuidadEvolutionDefinition, ...] = ()
+    casilla_continuidad_evolutions: Annotated[tuple[CasillaContinuidadEvolutionDefinition, ...], SCHEMA_FAMILY] = ()
     authority_grade: Annotated[RegistryAuthorityGradeField | None, MANIFEST_ONLY] = None
+    family_dispositions: Annotated[Mapping[str, SchemaFamilyDispositionDeclaration], MANIFEST_ONLY] = Field(
+        default_factory=dict,
+    )
     engineered_by: Annotated[str | None, GOVERNANCE_STAMP] = None
     review_status: Annotated[RevisionReviewStatusField, GOVERNANCE_STAMP] = RevisionReviewStatus.PENDING_REVIEW
     reviewed_by: Annotated[str | None, GOVERNANCE_STAMP] = None
@@ -1202,6 +1268,29 @@ class ModeloRevision(RegistryModel):
         )
 
     @model_validator(mode="after")
+    def _validate_family_dispositions(self) -> ModeloRevision:
+        """Refuse an inapplicability claim that names no family or contradicts one.
+
+        Both directions are silent corruption otherwise. A declaration keyed on a
+        typo names no family, so it resolves nothing while reading as though it
+        did; and a declaration against a family that HOLDS content asserts the
+        law does not require what the revision already declares, which is a
+        contradiction the coverage projection would have to arbitrate.
+        """
+        for family in self.family_dispositions:
+            if family not in REVISION_SCHEMA_FAMILY_FIELDS:
+                raise RegistryValidationError(
+                    f"revision {self.id!r} declares a family disposition for {family!r}, which is not a schema "
+                    f"family; enrolled families are {sorted(REVISION_SCHEMA_FAMILY_FIELDS)!r}",
+                )
+            if getattr(self, family):
+                raise RegistryValidationError(
+                    f"revision {self.id!r} declares family {family!r} not applicable but also declares "
+                    f"{len(getattr(self, family))} of them; drop the disposition or drop the content",
+                )
+        return self
+
+    @model_validator(mode="after")
     def _validate_governance_stamp(self) -> ModeloRevision:
         """Bind the reviewer identity to the claim that a review happened."""
         validate_governance_stamp_coherence(
@@ -1225,6 +1314,27 @@ This set is the stamp VOCABULARY, narrower than
 :data:`REVISION_MANIFEST_ONLY_FIELDS`: it is what the conformance tooling reads
 as declared provenance and what the stamp writer emits, so a field pinned to
 the manifest for legal-grounding reasons must not appear here.
+"""
+
+REVISION_SCHEMA_FAMILY_FIELDS: frozenset[str] = schema_family_fields(ModeloRevision)
+"""Every :class:`ModeloRevision` field whose emptiness is a coverage question.
+
+The revision's declared content collections, read back off the
+:data:`SCHEMA_FAMILY` markers rather than hand-listed. This is the denominator
+of the per-revision coverage manifest: one disposition row per member, always,
+so a family nobody has built is a row saying so rather than an absence.
+
+Meant to equal :data:`REVISION_COLLECTION_SHAPED_FIELDS`, and gated against it.
+Neither set alone is sufficient - see :class:`SchemaFamilyMarker`.
+"""
+
+REVISION_COLLECTION_SHAPED_FIELDS: frozenset[str] = collection_shaped_fields(ModeloRevision)
+"""Every :class:`ModeloRevision` field annotated as a tuple of a schema model.
+
+Computed from the annotations alone, which is precisely what makes it the right
+check on :data:`REVISION_SCHEMA_FAMILY_FIELDS`: a contributor adding a
+collection cannot forget to appear here, because appearing here is a
+consequence of the type they wrote rather than a step they took.
 """
 
 REVISION_MANIFEST_ONLY_FIELDS: frozenset[str] = manifest_only_fields(ModeloRevision)
@@ -1310,7 +1420,7 @@ class RegistryCatalogues(RegistryModel):
     sources: Mapping[SourceRefId, SourceReference]
     parameters: Mapping[str, LegalParameter] = Field(default_factory=dict)
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
-    m303_annual_orden: M303AnnualOrdenAuthority = Field(default_factory=M303AnnualOrdenAuthority.empty)
+    supplementary_ordenes: Mapping[Modelo, M303AnnualOrdenAuthority] = Field(default_factory=dict)
 
 
 class RegistrySnapshot(RegistryModel):
@@ -1320,7 +1430,7 @@ class RegistrySnapshot(RegistryModel):
     filing_year: int = Field(ge=2000, le=2099)
     # Accepts normal period codes and declared event-period names; upstream
     # PeriodSelector + ModeloScheduleDefinition constrain the token set.
-    period: str = Field(min_length=1, max_length=32)
+    period: RegistrySelectorPeriodCode
     legal: Mapping[LegalRefId, LegalReference]
     sources: Mapping[SourceRefId, SourceReference]
     extraction_profiles: Mapping[ExtractionProfileId, ExtractionProfileDefinition]
@@ -1330,11 +1440,10 @@ class RegistrySnapshot(RegistryModel):
     application_links: Mapping[ApplicationLinkId, ApplicationLinkDefinition]
     deadline_windows: Mapping[DeadlineWindowId, DeadlineWindowDefinition]
     filing_schedules: Mapping[str, ModeloScheduleDefinition]
-    support_removal_decisions: Mapping[SupportRemovalDecisionId, SupportRemovalDecisionDefinition]
     constructs: Mapping[ConstructId, ConstructDefinition]
     dependency_classifications: Mapping[DependencyClassificationId, DependencyClassificationDefinition]
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
-    m303_annual_orden: M303AnnualOrdenAuthority = Field(default_factory=M303AnnualOrdenAuthority.empty)
+    supplementary_ordenes: Mapping[Modelo, M303AnnualOrdenAuthority] = Field(default_factory=dict)
 
     @staticmethod
     def _validate_identifier_keyed_map(field_name: str, values: Mapping[str, object]) -> None:
@@ -1362,7 +1471,6 @@ class RegistrySnapshot(RegistryModel):
         self._validate_identifier_keyed_map("application_links", self.application_links)
         self._validate_identifier_keyed_map("deadline_windows", self.deadline_windows)
         self._validate_identifier_keyed_map("filing_schedules", self.filing_schedules)
-        self._validate_identifier_keyed_map("support_removal_decisions", self.support_removal_decisions)
         self._validate_identifier_keyed_map("constructs", self.constructs)
         self._validate_identifier_keyed_map("dependency_classifications", self.dependency_classifications)
         return self

@@ -18,14 +18,8 @@ from ....core import (
     ExportLayoutFormat,
     FilingProducerKey,
     FilingProjectionRef,
-    M303DifferentiatedDeductionProjectionRef,
-    M303Exonerado390ActivityProjectionRef,
-    M303Exonerado390OperacionesTercerosProjectionRef,
-    M303ProrrataActivityProjectionRef,
-    M303RegimenSimplificadoActivityProjectionRef,
-    M303RegimenSimplificadoFactProjectionRef,
-    M303RegimenSimplificadoModuleProjectionRef,
     filing_projection_ref_casilla_id,
+    hydrate_filing_projection_ref,
 )
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from ._errors import RegistryValidationError
@@ -191,22 +185,21 @@ class ProjectionEndpointDeclaration(RegistryModel):
 
     @field_validator("projection_ref", mode="before")
     @classmethod
-    def _require_loader_hydrated_projection_ref(cls, value: object) -> object:
-        """Refuse raw reference payloads outside the sole registry TOML compiler."""
-        if isinstance(
-            value,
-            M303ProrrataActivityProjectionRef
-            | M303DifferentiatedDeductionProjectionRef
-            | M303RegimenSimplificadoActivityProjectionRef
-            | M303RegimenSimplificadoFactProjectionRef
-            | M303RegimenSimplificadoModuleProjectionRef
-            | M303Exonerado390ActivityProjectionRef
-            | M303Exonerado390OperacionesTercerosProjectionRef,
-        ):
-            return value
-        raise RegistryValidationError(
-            "projection_ref must be a loader-hydrated FilingProjectionRef; raw mappings and strings are forbidden",
-        )
+    def _compile_projection_ref_through_the_canonical_compiler(cls, value: object) -> object:
+        """Compile a still-raw reference through the one canonical compiler.
+
+        The declaration is persisted and re-read, so a guard demanding an
+        already-typed reference could never admit its own serialised form. The
+        invariant that matters is that the compiler produced it, and delegating
+        here keeps exactly that while refusing every malformed payload it
+        always refused.
+        """
+        try:
+            return hydrate_filing_projection_ref(value)
+        except ValueError as error:
+            raise RegistryValidationError(
+                f"projection_ref is not a valid filing projection reference: {error}",
+            ) from error
 
 
 class ExportFieldDefinition(RegistryModel):
@@ -249,22 +242,22 @@ class ExportFieldDefinition(RegistryModel):
 
     @field_validator("projection_ref", mode="before")
     @classmethod
-    def _require_loader_hydrated_projection_ref(cls, value: object) -> object:
-        """Refuse raw projection identities outside the canonical TOML loader."""
-        if value is None or isinstance(
-            value,
-            M303ProrrataActivityProjectionRef
-            | M303DifferentiatedDeductionProjectionRef
-            | M303RegimenSimplificadoActivityProjectionRef
-            | M303RegimenSimplificadoFactProjectionRef
-            | M303RegimenSimplificadoModuleProjectionRef
-            | M303Exonerado390ActivityProjectionRef
-            | M303Exonerado390OperacionesTercerosProjectionRef,
-        ):
-            return value
-        raise RegistryValidationError(
-            "projection_ref must be a loader-hydrated FilingProjectionRef; raw mappings and strings are forbidden",
-        )
+    def _compile_projection_ref_through_the_canonical_compiler(cls, value: object) -> object:
+        """Compile a still-raw projection identity through the one canonical compiler.
+
+        An export field is embedded in the provenance manifest and re-read from
+        JSON, where a reference can only arrive as a mapping. Delegating keeps
+        the invariant that the compiler produced every reference, and every
+        malformed payload refuses exactly as before.
+        """
+        if value is None:
+            return None
+        try:
+            return hydrate_filing_projection_ref(value)
+        except ValueError as error:
+            raise RegistryValidationError(
+                f"projection_ref is not a valid filing projection reference: {error}",
+            ) from error
 
     @model_validator(mode="after")
     def _validate_field_kind(self) -> ExportFieldDefinition:

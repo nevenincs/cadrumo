@@ -91,9 +91,12 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import date
 from enum import StrEnum
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
+
+if TYPE_CHECKING:
+    from ._authority import ValidatedRegistryAuthority
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Modelo
@@ -116,7 +119,9 @@ from ._applicability_modelo202 import (
 from ._applicability_payer_facts import PayerFact, payer_fact_holds
 from ._applicability_routes import TAX_ROUTE_FOR_ENTITY_TYPE as _TAX_ROUTE_FOR_ENTITY_TYPE
 from ._applicability_routes import TaxRoute
+from ._errors import RegistryValidationError
 from ._ids import LegalRefId, ModeloId
+from ._schema import ApplicabilityRuleDefinition
 
 type _OperatorReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
@@ -385,6 +390,59 @@ class ModeloApplicabilityRule(BaseModel):
         )
 
 
+def hydrate_applicability_rule(modelo: Modelo, fragment: ApplicabilityRuleDefinition) -> ModeloApplicabilityRule:
+    """Hydrate a registry-authored applicability fragment into the runtime rule.
+
+    The loader boundary for the ``applicability`` schema family
+    (W01.P03.S08): every free-form TOML string on ``fragment`` is resolved
+    here to its ``domain.deadlines`` enum member (or :class:`PayerFact`),
+    never left as a raw string for a downstream branch to compare against.
+    An unknown token raises :class:`RegistryValidationError` naming the
+    offending rule and the underlying enum-coercion error, mirroring the
+    coercion-boundary shape :data:`~._schema_base.RevisionReviewStatusField`
+    and its siblings already use.
+
+    Args:
+        modelo: The modelo the owning revision belongs to; the fragment
+            carries no self-referential ``modelo`` field to avoid a value
+            that could silently diverge from the revision it is nested in.
+        fragment: The validated :class:`ApplicabilityRuleDefinition` to hydrate.
+
+    Returns:
+        The equivalent :class:`ModeloApplicabilityRule`.
+
+    Raises:
+        RegistryValidationError: A field names a token with no matching enum
+            member.
+    """
+    try:
+        return ModeloApplicabilityRule(
+            modelo=modelo.value,
+            applicable_entity_types=frozenset(EntityType(value) for value in fragment.applicable_entity_types),
+            required_income_categories=frozenset(
+                IrpfIncomeCategory(value) for value in fragment.required_income_categories
+            ),
+            required_estimation_regimes=frozenset(
+                IrpfEstimationRegime(value) for value in fragment.required_estimation_regimes
+            ),
+            applicable_fiscal_residencies=frozenset(
+                FiscalResidency(value) for value in fragment.applicable_fiscal_residencies
+            ),
+            applicable_iva_regimes=frozenset(IVARegime(value) for value in fragment.applicable_iva_regimes),
+            required_payer_fact=PayerFact(fragment.required_payer_fact)
+            if fragment.required_payer_fact is not None
+            else None,
+            applicable_reason=fragment.applicable_reason,
+            not_applicable_reason=fragment.not_applicable_reason,
+            cuota_bearing=fragment.cuota_bearing,
+            legal_refs=fragment.legal_refs,
+        )
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"applicability rule {fragment.id!r} for modelo {modelo.value!r} does not hydrate: {exc}",
+        ) from exc
+
+
 # Scoped registry citation keys grounding the "declare your taxpayer
 # type first" answer. An undeclared profile cannot be decided, but the
 # verdict still carries the LIRPF / LIS articles that frame the question
@@ -634,574 +692,6 @@ _PAYER_FACT_ENTITY_TYPES: frozenset[EntityType] = frozenset(
 )
 
 _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
-    # Modelo 100 — declaración anual de la Renta (IRPF). Applies to every
-    # natural person who is an IRPF contribuyente, regardless of which
-    # income category they declare. It does NOT apply to a legal entity:
-    # an S.L. is a contribuyente del Impuesto sobre Sociedades and files
-    # Modelo 200, never Modelo 100.
-    Modelo.M100: ModeloApplicabilityRule(
-        modelo=Modelo.M100,
-        applicable_entity_types=_NATURAL_PERSON,
-        required_income_categories=frozenset(),
-        applicable_reason=(
-            "Modelo 100 (declaración de la Renta): una persona física "
-            "residente es contribuyente del IRPF y presenta la "
-            "autoliquidación anual de la Renta."
-        ),
-        applicable_fiscal_residencies=frozenset({FiscalResidency.RESIDENT_IRPF}),
-        not_applicable_reason=(
-            "Modelo 100 no aplica: la declaración de la Renta corresponde "
-            "únicamente a las personas físicas residentes contribuyentes del "
-            "IRPF. El tipo de contribuyente declarado no es una persona "
-            "física residente, o bien es un contribuyente NON_RESIDENT_IRNR. "
-            "Un contribuyente NON_RESIDENT_IRNR tributa por el IRNR y presenta "
-            "el Modelo 210 por la Sede Electrónica de la AEAT, no el Modelo 100."
-        ),
-        # Modelo 100 is the IRPF cuota self-assessment: an attribution
-        # entity asked about it gets the pass-through verdict.
-        cuota_bearing=True,
-        # LIRPF art. 99 — régimen general de pagos a cuenta del IRPF,
-        # que identifica al contribuyente del IRPF; art. 17 —
-        # rendimientos del trabajo, la categoría de renta más común que
-        # obliga a la persona física a presentar la Renta.
-        legal_refs=(
-            "ley-35-2006:art-99",
-            "ley-35-2006:art-17",
-            "trlirnr-rdleg-5-2004:art-2",
-        ),
-    ),
-    # Modelo 130 — pago fraccionado del IRPF, estimación DIRECTA. Triggered
-    # by the rendimientos de actividades económicas income category (LIRPF
-    # Arts. 27-32) ONLY when the activity is in estimación directa (normal
-    # o simplificada). An activity in estimación objetiva (módulos) files
-    # Modelo 131 instead — the two are mutually exclusive on the regime.
-    # A natural person whose only income is capital inmobiliario (a pure
-    # landlord), trabajo, pensión, etc. has no actividad económica and
-    # therefore no Modelo 130. A legal entity never files Modelo 130.
-    Modelo.M130: ModeloApplicabilityRule(
-        modelo=Modelo.M130,
-        applicable_entity_types=_NATURAL_PERSON,
-        required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        required_estimation_regimes=frozenset(
-            {
-                IrpfEstimationRegime.DIRECTA_NORMAL,
-                IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
-            },
-        ),
-        applicable_fiscal_residencies=frozenset({FiscalResidency.RESIDENT_IRPF}),
-        applicable_reason=(
-            "Modelo 130 (pago fraccionado del IRPF): la persona física "
-            "residente IRPF declara rendimientos de actividades económicas "
-            "en estimación directa, que generan la obligación del pago "
-            "fraccionado."
-        ),
-        not_applicable_reason=(
-            "Modelo 130 no aplica: el pago fraccionado en estimación "
-            "directa solo corresponde a la persona física residente IRPF "
-            "que obtiene rendimientos de actividades económicas determinados "
-            "por ese método. Una actividad en estimación objetiva presenta "
-            "el Modelo 131; un contribuyente NON_RESIDENT_IRNR queda en la "
-            "ruta IRNR."
-        ),
-        # Modelo 130 is an IRPF pago-fraccionado cuota self-assessment:
-        # an attribution entity asked about it gets the pass-through
-        # verdict — it runs no IRPF cuota of its own.
-        cuota_bearing=True,
-        # RD 439/2007 art. 110 — pago fraccionado del IRPF en estimación
-        # directa, importe y cálculo; Orden EHA/672/2007 art. 1 —
-        # aprobación del Modelo 130; LIRPF art. 99 — pagos fraccionados
-        # como pagos a cuenta del IRPF.
-        legal_refs=(
-            "rd-439-2007:art-110",
-            "orden-eha-672-2007:art-1",
-            "ley-35-2006:art-99",
-            "trlirnr-rdleg-5-2004:art-2",
-        ),
-    ),
-    # Modelo 131 — pago fraccionado del IRPF, estimación OBJETIVA (módulos).
-    # Triggered by the rendimientos de actividades económicas income
-    # category ONLY when the activity is determined under estimación
-    # objetiva. This is the regime counterpart of Modelo 130: an activity
-    # in estimación directa files Modelo 130, never Modelo 131. A legal
-    # entity never files Modelo 131.
-    Modelo.M131: ModeloApplicabilityRule(
-        modelo=Modelo.M131,
-        applicable_entity_types=_NATURAL_PERSON,
-        required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        required_estimation_regimes=frozenset({IrpfEstimationRegime.OBJETIVA}),
-        applicable_reason=(
-            "Modelo 131 (pago fraccionado del IRPF): la persona física "
-            "declara rendimientos de actividades económicas en estimación "
-            "objetiva (módulos), que generan la obligación del pago "
-            "fraccionado por ese método."
-        ),
-        not_applicable_reason=(
-            "Modelo 131 no aplica: el pago fraccionado en estimación "
-            "objetiva solo corresponde a la persona física cuya actividad "
-            "económica se determina por el método de módulos. Una "
-            "actividad en estimación directa presenta el Modelo 130."
-        ),
-        # Modelo 131 is an IRPF pago-fraccionado cuota self-assessment:
-        # an attribution entity asked about it gets the pass-through
-        # verdict.
-        cuota_bearing=True,
-        # RD 439/2007 art. 110 — pago fraccionado del IRPF, importe y
-        # cálculo; Orden EHA/672/2007 art. 3 — aprobación del Modelo 131;
-        # LIRPF art. 99 — pagos fraccionados como pagos a cuenta del IRPF.
-        legal_refs=(
-            "rd-439-2007:art-110",
-            "orden-eha-672-2007:art-3",
-            "ley-35-2006:art-99",
-        ),
-    ),
-    # Modelo 111 — autoliquidación de retenciones e ingresos a cuenta del
-    # IRPF (rendimientos del trabajo / actividades profesionales). It is
-    # the PAYER's obligation: a taxpayer — a natural person with actividad
-    # económica, a legal entity, or an attribution entity — who pays
-    # salaries or withholding-subject professional fees. Whether the
-    # taxpayer pays such income is a payer fact the three-axis model
-    # cannot decide on its own; a profile that does not positively
-    # declare it yields INCOMPLETE rather than a guessed NOT_APPLICABLE.
-    Modelo.M111: ModeloApplicabilityRule(
-        modelo=Modelo.M111,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.PAYS_WITHHELD_INCOME,
-        applicable_reason=(
-            "Modelo 111 (retenciones e ingresos a cuenta del IRPF): el "
-            "contribuyente paga rendimientos del trabajo o de actividades "
-            "profesionales sujetos a retención y autoliquida las "
-            "retenciones practicadas."
-        ),
-        not_applicable_reason=(
-            "Modelo 111 no aplica: la autoliquidación de retenciones del "
-            "IRPF solo corresponde a quien paga rendimientos sujetos a "
-            "retención."
-        ),
-        # LIRPF art. 99 — obligación de practicar retenciones e ingresos a
-        # cuenta; RD 439/2007 art. 108 — declaración e ingreso de las
-        # retenciones (Modelo 111); Orden EHA/586/2011 art. 1 — aprobación
-        # del Modelo 111.
-        legal_refs=(
-            "ley-35-2006:art-99",
-            "rd-439-2007:art-108",
-            "orden-eha-586-2011:art-1",
-        ),
-    ),
-    # Modelo 123 - autoliquidacion de retenciones e ingresos a cuenta
-    # sobre determinados rendimientos del capital mobiliario. This is a
-    # payer-side withholding obligation, so applicability follows the
-    # declared capital-income withholding payer fact rather than the
-    # recipient's IRPF income categories.
-    Modelo.M123: ModeloApplicabilityRule(
-        modelo=Modelo.M123,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION,
-        applicable_reason=(
-            "Modelo 123 (retenciones sobre determinados rendimientos del "
-            "capital mobiliario): el contribuyente satisface rendimientos "
-            "del capital mobiliario o determinadas rentas sujetas a retencion "
-            "y autoliquida las retenciones practicadas."
-        ),
-        not_applicable_reason=(
-            "Modelo 123 no aplica: solo corresponde a quien satisface "
-            "determinados rendimientos o rentas del capital mobiliario "
-            "sujetos a retencion."
-        ),
-        legal_refs=(
-            "ley-35-2006:art-25",
-            "ley-35-2006:art-99",
-            "orden-eha-3435-2007:anexo-ii",
-            "orden-hac-56-2024:art-1",
-            "rd-439-2007:art-108",
-            "rd-439-2007:art-90",
-            "ley-35-2006:art-101",
-        ),
-    ),
-    # Modelo 193 - resumen anual de las retenciones declaradas through
-    # Modelo 123 for determinados rendimientos del capital mobiliario.
-    # Annual companion; gated on the same payer-side capital-income
-    # withholding fact as Modelo 123.
-    Modelo.M193: ModeloApplicabilityRule(
-        modelo=Modelo.M193,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION,
-        applicable_reason=(
-            "Modelo 193 (resumen anual de retenciones sobre capital mobiliario): "
-            "el contribuyente satisface determinados rendimientos o rentas del "
-            "capital mobiliario sujetos a retencion y presenta el resumen anual "
-            "de las retenciones declaradas."
-        ),
-        not_applicable_reason=(
-            "Modelo 193 no aplica: el resumen anual solo corresponde a quien "
-            "satisface determinados rendimientos o rentas del capital mobiliario "
-            "sujetos a retencion."
-        ),
-        legal_refs=(
-            "ley-35-2006:art-25",
-            "ley-35-2006:art-99",
-            "orden-eha-3377-2011:art-1",
-            "rd-439-2007:art-108",
-            "rd-439-2007:art-90",
-            "ley-35-2006:art-101",
-            "ley-58-2003:art-93",
-        ),
-    ),
-    # Modelo 322 - IVA grupo de entidades, modelo individual. Filed by
-    # taxable persons that are member entities in the special IVA group
-    # regime. This is role-gated profile state, not a generic SII flag.
-    Modelo.M322: ModeloApplicabilityRule(
-        modelo=Modelo.M322,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.IVA_GROUP_MEMBER,
-        applicable_reason=(
-            "Modelo 322 (IVA grupo de entidades, modelo individual): el "
-            "contribuyente esta inscrito como entidad miembro de un grupo "
-            "de IVA y presenta la autoliquidacion mensual individual."
-        ),
-        not_applicable_reason=(
-            "Modelo 322 no aplica: solo corresponde a entidades miembro "
-            "de un grupo de IVA que hayan optado por el regimen especial "
-            "del grupo de entidades."
-        ),
-        legal_refs=(
-            "orden-eha-3434-2007:art-1",
-            "orden-eha-3434-2007:art-8",
-            "rd-1624-1992:art-71",
-        ),
-    ),
-    # Modelo 353 - IVA grupo de entidades, modelo agregado. Filed by
-    # the dominant entity of the group and grounded separately from the
-    # member-level Modelo 322 role.
-    Modelo.M353: ModeloApplicabilityRule(
-        modelo=Modelo.M353,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.IVA_GROUP_DOMINANT_ENTITY,
-        applicable_reason=(
-            "Modelo 353 (IVA grupo de entidades, modelo agregado): el "
-            "contribuyente esta inscrito como entidad dominante de un "
-            "grupo de IVA y presenta la autoliquidacion mensual agregada."
-        ),
-        not_applicable_reason=(
-            "Modelo 353 no aplica: solo corresponde a la entidad dominante "
-            "de un grupo de IVA que agrega las autoliquidaciones "
-            "individuales de las entidades del grupo."
-        ),
-        legal_refs=(
-            "orden-eha-3434-2007:art-2",
-            "orden-eha-3434-2007:art-8",
-            "rd-1624-1992:art-71",
-        ),
-    ),
-    # Modelo 369 — autoliquidación de los regímenes especiales de ventanilla
-    # única (OSS/IOSS) del IVA. Filed by a taxable person enrolled in the
-    # one-stop-shop Union / non-Union / import regime whose Member State of
-    # identification is Spain. Enrolment-gated profile state (iva.oss_enrolled),
-    # not a generic IVA-regime flag: OSS enrolment is an explicit opt-in.
-    Modelo.M369: ModeloApplicabilityRule(
-        modelo=Modelo.M369,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.OSS_ENROLLED,
-        applicable_reason=(
-            "Modelo 369 (ventanilla única OSS/IOSS): el contribuyente esta "
-            "inscrito en un regimen especial de ventanilla unica del IVA con "
-            "Estado miembro de identificacion España y presenta la "
-            "autoliquidacion periodica de las operaciones acogidas al regimen."
-        ),
-        not_applicable_reason=(
-            "Modelo 369 no aplica: solo corresponde a quien esta inscrito en "
-            "un regimen especial de ventanilla unica (OSS/IOSS) del IVA con "
-            "Estado miembro de identificacion España."
-        ),
-        legal_refs=(
-            "orden-hac-610-2021:art-1",
-            "orden-hac-610-2021:art-2",
-            "ley-37-1992:art-163-octiesdecies",
-            "ley-37-1992:art-163-unvicies",
-            "ley-37-1992:art-163-quinvicies",
-        ),
-    ),
-    # Modelo 194 — resumen anual de retenciones e ingresos a cuenta sobre
-    # rendimientos del capital mobiliario y transmisión/amortización de activos.
-    # Payer's obligation, gated on the capital-income withholding payer fact.
-    Modelo.M194: ModeloApplicabilityRule(
-        modelo=Modelo.M194,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION,
-        applicable_reason=(
-            "Modelo 194 (resumen anual de retenciones sobre capital mobiliario): "
-            "el contribuyente satisface rendimientos del capital mobiliario o "
-            "rentas de transmisión/amortización de activos sujetos a retención y "
-            "presenta el resumen anual de las retenciones practicadas."
-        ),
-        not_applicable_reason=(
-            "Modelo 194 no aplica: el resumen anual de retenciones sobre capital "
-            "mobiliario solo corresponde a quien satisface tales rendimientos "
-            "sujetos a retención."
-        ),
-        legal_refs=(
-            "ley-35-2006:art-99",
-            "rd-439-2007:art-108",
-            "orden-eha-3377-2011:art-1",
-        ),
-    ),
-    # Modelo 188 - resumen anual de retenciones sobre operaciones de
-    # capitalizacion y contratos de seguro de vida o invalidez (capital
-    # mobiliario). Same payer fact as Modelo 194.
-    Modelo.M188: ModeloApplicabilityRule(
-        modelo=Modelo.M188,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION,
-        applicable_reason=(
-            "Modelo 188 (resumen anual de retenciones sobre capitalizacion y "
-            "seguros de vida): el contribuyente satisface rendimientos del "
-            "capital mobiliario de operaciones de capitalizacion o seguros "
-            "sujetos a retencion y presenta el resumen anual."
-        ),
-        not_applicable_reason=(
-            "Modelo 188 no aplica: solo corresponde a quien satisface "
-            "rendimientos de capitalizacion o seguros sujetos a retencion."
-        ),
-        legal_refs=(
-            "ley-35-2006:art-99",
-            "rd-439-2007:art-108",
-            "orden-eha-3377-2011:art-1",
-        ),
-    ),
-    # Modelo 187 - acciones/participaciones de IIC y resumen anual de
-    # retenciones sobre las ganancias patrimoniales derivadas. Payer's
-    # obligation, gated on the capital-income withholding payer fact.
-    Modelo.M187: ModeloApplicabilityRule(
-        modelo=Modelo.M187,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION,
-        applicable_reason=(
-            "Modelo 187 (acciones y participaciones de IIC, resumen anual de "
-            "retenciones): el contribuyente satisface rentas o ganancias de IIC "
-            "sujetas a retencion y presenta el resumen anual."
-        ),
-        not_applicable_reason=(
-            "Modelo 187 no aplica: solo corresponde a quien satisface rentas o ganancias de IIC sujetas a retencion."
-        ),
-        legal_refs=(
-            "ley-35-2006:art-99",
-            "rd-439-2007:art-108",
-            "orden-eha-3377-2011:art-1",
-        ),
-    ),
-    # Modelo 126 - autoliquidacion de retenciones sobre rendimientos del capital
-    # mobiliario de cuentas y depositos en instituciones financieras. Payer
-    # withholding obligation, gated on the capital-income withholding payer fact.
-    Modelo.M126: ModeloApplicabilityRule(
-        modelo=Modelo.M126,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION,
-        applicable_reason=(
-            "Modelo 126 (retenciones sobre rendimientos del capital mobiliario de "
-            "cuentas y depositos): el contribuyente satisface rendimientos de "
-            "cuentas o depositos sujetos a retencion y autoliquida las retenciones."
-        ),
-        not_applicable_reason=(
-            "Modelo 126 no aplica: solo corresponde a quien satisface rendimientos "
-            "de cuentas o depositos en instituciones financieras sujetos a retencion."
-        ),
-        legal_refs=(
-            "ley-35-2006:art-99",
-            "rd-439-2007:art-108",
-            "orden-eha-3435-2007:anexo-ii",
-        ),
-    ),
-    # Modelo 128 - autoliquidacion de retenciones sobre rentas de capital
-    # mobiliario de operaciones de capitalizacion y contratos de seguro de vida
-    # o invalidez. Same payer fact.
-    Modelo.M128: ModeloApplicabilityRule(
-        modelo=Modelo.M128,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION,
-        applicable_reason=(
-            "Modelo 128 (retenciones sobre rentas de capitalizacion y seguros de "
-            "vida): el contribuyente satisface rentas de operaciones de "
-            "capitalizacion o seguros sujetas a retencion y autoliquida las "
-            "retenciones."
-        ),
-        not_applicable_reason=(
-            "Modelo 128 no aplica: solo corresponde a quien satisface rentas de "
-            "capitalizacion o seguros de vida o invalidez sujetas a retencion."
-        ),
-        legal_refs=(
-            "ley-35-2006:art-99",
-            "rd-439-2007:art-108",
-            "orden-eha-3435-2007:anexo-ii",
-        ),
-    ),
-    # Modelo 117 - autoliquidacion de retenciones e ingresos a cuenta sobre
-    # rentas o ganancias por transmision o reembolso de acciones y
-    # participaciones de IIC. Payer withholding obligation.
-    Modelo.M117: ModeloApplicabilityRule(
-        modelo=Modelo.M117,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION,
-        applicable_reason=(
-            "Modelo 117 (retenciones sobre transmision o reembolso de acciones y "
-            "participaciones de IIC): el contribuyente satisface rentas o ganancias "
-            "de IIC sujetas a retencion y autoliquida las retenciones."
-        ),
-        not_applicable_reason=(
-            "Modelo 117 no aplica: solo corresponde a quien satisface rentas o "
-            "ganancias por transmision o reembolso de participaciones de IIC "
-            "sujetas a retencion."
-        ),
-        legal_refs=(
-            "ley-35-2006:art-99",
-            "rd-439-2007:art-108",
-            "orden-eha-3435-2007:anexo-ii",
-        ),
-    ),
-    # Modelo 115 — autoliquidación de retenciones por arrendamiento de
-    # inmuebles urbanos. The PAYER's obligation: a natural person, legal
-    # entity, or attribution entity who pays rent subject to retención.
-    # Whether the taxpayer pays such rent is a payer fact the three-axis
-    # model cannot decide alone; an undeclared fact yields INCOMPLETE.
-    Modelo.M115: ModeloApplicabilityRule(
-        modelo=Modelo.M115,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.PAYS_RENT_WITH_RETENCION,
-        applicable_reason=(
-            "Modelo 115 (retenciones por arrendamiento de inmuebles "
-            "urbanos): el contribuyente paga alquiler de inmueble urbano "
-            "sujeto a retención y autoliquida las retenciones practicadas."
-        ),
-        not_applicable_reason=(
-            "Modelo 115 no aplica: la autoliquidación de retenciones por "
-            "arrendamiento solo corresponde a quien paga alquileres "
-            "sujetos a retención."
-        ),
-        # LIRPF art. 99 — obligación de practicar retenciones; RD 439/2007
-        # art. 100 — retención sobre rendimientos del arrendamiento de
-        # inmuebles urbanos; RD 439/2007 art. 108 — declaración e ingreso
-        # de las retenciones (Modelo 115).
-        legal_refs=(
-            "ley-35-2006:art-99",
-            "rd-439-2007:art-100",
-            "rd-439-2007:art-108",
-        ),
-    ),
-    # Modelo 190 — resumen anual de retenciones e ingresos a cuenta del
-    # IRPF sobre rendimientos del trabajo y de actividades económicas. The
-    # annual companion to Modelo 111: a taxpayer who files Modelo 111
-    # files Modelo 190. Gated on the same payer fact as Modelo 111.
-    Modelo.M190: ModeloApplicabilityRule(
-        modelo=Modelo.M190,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.PAYS_WITHHELD_INCOME,
-        applicable_reason=(
-            "Modelo 190 (resumen anual de retenciones del IRPF): el "
-            "contribuyente que paga rendimientos del trabajo o de "
-            "actividades profesionales sujetos a retención presenta el "
-            "resumen anual de las retenciones declaradas en el Modelo 111."
-        ),
-        not_applicable_reason=(
-            "Modelo 190 no aplica: el resumen anual de retenciones del "
-            "IRPF solo corresponde a quien paga rendimientos sujetos a "
-            "retención."
-        ),
-        # LIRPF art. 99 — obligación de retener; RD 439/2007 art. 108 —
-        # declaración trimestral/mensual y resumen anual de las retenciones
-        # e ingresos a cuenta.
-        legal_refs=(
-            "ley-35-2006:art-99",
-            "rd-439-2007:art-108",
-        ),
-    ),
-    # Modelo 180 — resumen anual de retenciones e ingresos a cuenta del
-    # IRPF sobre rendimientos del arrendamiento de inmuebles urbanos. The
-    # annual companion to Modelo 115: gated on the same payer fact.
-    Modelo.M180: ModeloApplicabilityRule(
-        modelo=Modelo.M180,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.PAYS_RENT_WITH_RETENCION,
-        applicable_reason=(
-            "Modelo 180 (resumen anual de retenciones por arrendamiento): "
-            "el contribuyente que paga alquiler de inmueble urbano sujeto "
-            "a retención presenta el resumen anual de las retenciones "
-            "declaradas en el Modelo 115."
-        ),
-        not_applicable_reason=(
-            "Modelo 180 no aplica: el resumen anual de retenciones por "
-            "arrendamiento solo corresponde a quien paga alquileres "
-            "sujetos a retención."
-        ),
-        # LIRPF art. 99 — obligación de retener; RD 439/2007 art. 100 —
-        # retención sobre el arrendamiento de inmuebles urbanos; RD
-        # 439/2007 art. 108 — declaración trimestral/mensual y resumen
-        # anual de las retenciones e ingresos a cuenta.
-        legal_refs=(
-            "ley-35-2006:art-99",
-            "rd-439-2007:art-100",
-            "rd-439-2007:art-108",
-        ),
-    ),
-    # Modelo 349 — declaración recapitulativa de operaciones
-    # intracomunitarias. Applies to a taxpayer — a natural person with
-    # actividad económica, a legal entity, or an attribution entity — who
-    # performs operaciones intracomunitarias. Whether the taxpayer trades
-    # intracommunity is a payer fact the three-axis model cannot decide
-    # alone; an undeclared fact yields INCOMPLETE.
-    Modelo.M349: ModeloApplicabilityRule(
-        modelo=Modelo.M349,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.TRADES_INTRACOMMUNITY,
-        applicable_reason=(
-            "Modelo 349 (declaración recapitulativa de operaciones "
-            "intracomunitarias): el contribuyente realiza operaciones "
-            "intracomunitarias y presenta su declaración recapitulativa."
-        ),
-        not_applicable_reason=(
-            "Modelo 349 no aplica: la declaración recapitulativa solo "
-            "corresponde a quien realiza operaciones intracomunitarias."
-        ),
-        # Orden EHA/769/2010 art. 1 — aprobación del Modelo 349; Orden
-        # HAC/174/2020 art. 1 — modificación del Modelo 349; RD
-        # 1624/1992 art. 79 — obligados a la declaración recapitulativa;
-        # LGT art. 93 — obligación de información.
-        legal_refs=(
-            "orden-eha-769-2010:art-1",
-            "orden-hac-174-2020:art-1",
-            "rd-1624-1992:art-79",
-            "ley-58-2003:art-93",
-        ),
-    ),
-    # Modelo 347 — declaración anual de operaciones con terceras personas.
-    # Applies to a natural person, legal entity, or attribution entity
-    # whose third-party transactions exceeded the declaration threshold.
-    # Whether the threshold is exceeded is a payer fact the three-axis
-    # model cannot decide alone; an undeclared fact yields INCOMPLETE.
-    Modelo.M347: ModeloApplicabilityRule(
-        modelo=Modelo.M347,
-        applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
-        required_payer_fact=PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD,
-        applicable_reason=(
-            "Modelo 347 (declaración anual de operaciones con terceras "
-            "personas): las operaciones del contribuyente con un tercero "
-            "superan el umbral de declaración y debe presentar la "
-            "declaración informativa anual."
-        ),
-        not_applicable_reason=(
-            "Modelo 347 no aplica: la declaración de operaciones con "
-            "terceros solo corresponde a quien supera el umbral de "
-            "operaciones declarable."
-        ),
-        # RD 1065/2007 art. 31 — obligados a informar sobre operaciones
-        # con terceros; Orden EHA/3012/2008 art. 1 — aprobación del
-        # Modelo 347 y obligados a presentarlo; Orden EHA/3012/2008 art.
-        # 10 — contenido de la declaración; LGT art. 93 — obligación de
-        # información sobre operaciones con terceros.
-        legal_refs=(
-            "rd-1065-2007:art-31",
-            "orden-eha-3012-2008:art-1",
-            "orden-eha-3012-2008:art-10",
-            "ley-58-2003:art-93",
-        ),
-    ),
     # Modelo 390 — declaración-resumen anual del IVA. The annual companion
     # to Modelo 303: a taxpayer in a periodic IVA self-assessment regime
     # files it. A natural person must also declare actividad económica;
@@ -1260,195 +750,6 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         # el Modelo 303.
         legal_refs=("ley-37-1992:art-99",),
     ),
-    # Modelo 200 — autoliquidación anual del Impuesto sobre Sociedades.
-    # Applies, in general, to every IS contribuyente — a legal entity with
-    # personalidad jurídica. It does NOT apply to a natural person, who
-    # files the Renta (Modelo 100).
-    Modelo.M200: ModeloApplicabilityRule(
-        modelo=Modelo.M200,
-        applicable_entity_types=_LEGAL_ENTITY,
-        required_income_categories=frozenset(),
-        applicable_fiscal_residencies=frozenset({FiscalResidency.RESIDENT_IRPF}),
-        applicable_reason=(
-            "Modelo 200 (Impuesto sobre Sociedades): una entidad jurídica "
-            "con personalidad jurídica es contribuyente del IS y presenta "
-            "la autoliquidación anual."
-        ),
-        not_applicable_reason=(
-            "Modelo 200 no aplica: la autoliquidación del Impuesto sobre "
-            "Sociedades local corresponde a entidades jurídicas "
-            "contribuyentes del IS en la ruta residente. Un perfil "
-            "NON_RESIDENT_IRNR sin eje modelado de establecimiento permanente "
-            "en España no puede tratarse como listo para Modelo 200; use la "
-            "ruta IRNR/Modelo 210 por AEAT Sede cuando actúe sin "
-            "establecimiento permanente."
-        ),
-        # Modelo 200 is the IS cuota self-assessment: an attribution
-        # entity asked about it gets the pass-through verdict — it runs
-        # no IS cuota of its own.
-        cuota_bearing=True,
-        # LIS art. 124 — obligación de presentar la declaración del
-        # Impuesto sobre Sociedades, que el Modelo 200 liquida. TRLIRNR
-        # art. 2 / 24 ground the non-resident/no-permanent-establishment
-        # exclusion until a Spanish-PE profile axis is modelled.
-        legal_refs=(
-            "ley-27-2014:art-124",
-            "trlirnr-rdleg-5-2004:art-2",
-            "trlirnr-rdleg-5-2004:art-24",
-        ),
-    ),
-    # Modelo 202 — pago fraccionado del Impuesto sobre Sociedades. Filed by
-    # IS contribuyentes in April / October / December. A natural person
-    # never files Modelo 202.
-    Modelo.M202: ModeloApplicabilityRule(
-        modelo=Modelo.M202,
-        applicable_entity_types=_LEGAL_ENTITY,
-        required_income_categories=frozenset(),
-        applicable_fiscal_residencies=frozenset({FiscalResidency.RESIDENT_IRPF}),
-        applicable_reason=(
-            "Modelo 202 (pago fraccionado del IS): una entidad jurídica "
-            "contribuyente del Impuesto sobre Sociedades presenta los "
-            "pagos fraccionados de abril, octubre y diciembre."
-        ),
-        not_applicable_reason=(
-            "Modelo 202 no aplica: el pago fraccionado del Impuesto sobre "
-            "Sociedades local solo corresponde a entidades jurídicas en la "
-            "ruta residente IS. Un perfil NON_RESIDENT_IRNR sin eje modelado "
-            "de establecimiento permanente en España no puede tratarse como "
-            "listo para pagos fraccionados del IS."
-        ),
-        # Modelo 202 is an IS pago-fraccionado cuota self-assessment:
-        # an attribution entity asked about it gets the pass-through
-        # verdict.
-        cuota_bearing=True,
-        # LIS art. 40 — pago fraccionado del Impuesto sobre Sociedades,
-        # las modalidades y el calendario de abril, octubre y diciembre
-        # que liquida el Modelo 202.
-        legal_refs=(
-            "ley-27-2014:art-40",
-            "trlirnr-rdleg-5-2004:art-2",
-        ),
-    ),
-    # Modelo 184 — declaración informativa anual de Entidades en
-    # régimen de atribución de rentas. This is the attribution entity's
-    # OWN obligation — informational, not a cuota self-assessment (the
-    # substantive tax is each member's). It applies ONLY to an
-    # attribution entity; a natural person and a legal entity never
-    # file it. Modelo 184 is not cuota-bearing: a non-attribution
-    # entity asked about it gets a plain NOT_APPLICABLE, never a
-    # pass-through verdict.
-    Modelo.M184: ModeloApplicabilityRule(
-        modelo=Modelo.M184,
-        applicable_entity_types=_ATTRIBUTION_ENTITY,
-        required_income_categories=frozenset(),
-        applicable_reason=(
-            "Modelo 184 (declaración informativa de entidades en régimen "
-            "de atribución de rentas): la entidad declara las rentas "
-            "obtenidas y las atribuibles a cada socio, comunero o "
-            "partícipe en el ejercicio. Es la obligación propia de la "
-            "entidad; la tributación de la renta corresponde a cada "
-            "miembro."
-        ),
-        not_applicable_reason=(
-            "Modelo 184 no aplica: la declaración informativa de "
-            "atribución de rentas solo corresponde a las entidades en "
-            "régimen de atribución de rentas (comunidades de bienes, "
-            "sociedades civiles sin objeto mercantil). El tipo de "
-            "contribuyente declarado no es una entidad de esta clase."
-        ),
-        cuota_bearing=False,
-        # Orden HAP/2250/2015 arts. 1-2 — aprobación del Modelo 184 y
-        # obligados a presentarlo (entidades en régimen de atribución de
-        # rentas; exención por debajo de 3.000 € sin actividad
-        # económica); art. 4 — plazo de presentación (mes de febrero).
-        legal_refs=(
-            "orden-hap-2250-2015:art-1",
-            "orden-hap-2250-2015:art-2",
-            "orden-hap-2250-2015:art-4",
-        ),
-    ),
-    # Modelo 721 — declaracion informativa sobre monedas virtuales situadas
-    # en el extranjero. The operative obligation lives in DA 18 LGT as
-    # amended by Ley 11/2021 DA 10a; the form is approved by Orden
-    # HFP/886/2023. It applies only when virtual currencies abroad exceed
-    # the declaration threshold. That is a crypto-specific threshold fact,
-    # distinct from Modelo 720's bienes/derechos extranjero fact.
-    Modelo.M721: ModeloApplicabilityRule(
-        modelo=Modelo.M721,
-        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
-        required_income_categories=frozenset(),
-        required_payer_fact=PayerFact.MONEDAS_VIRTUALES_EXTRANJERO_ABOVE_THRESHOLD,
-        applicable_reason=(
-            "Modelo 721 (declaracion informativa sobre monedas virtuales en "
-            "el extranjero): el contribuyente que posee monedas virtuales "
-            "situadas en el extranjero con valor agregado superior a 50.000 "
-            "EUR el 31 de diciembre esta obligado a presentar esta declaracion "
-            "informativa anual. La obligacion operativa esta en la DA 18 de "
-            "la LGT, introducida por la Ley 11/2021 DA 10a, y el formulario "
-            "esta aprobado por Orden HFP/886/2023. Nota: la "
-            "aplicacion no ha implementado aun el calculo completo del Modelo "
-            "721; utilice la Sede Electronica de la AEAT para presentarlo."
-        ),
-        not_applicable_reason=(
-            "Modelo 721 no aplica: la declaracion informativa sobre monedas "
-            "virtuales en el extranjero solo corresponde a personas fisicas o "
-            "entidades juridicas. El tipo de contribuyente declarado no esta "
-            "incluido en el ambito subjetivo de la Ley 11/2021 DA 10a."
-        ),
-        cuota_bearing=False,
-        # LGT DA 18 letra d — operative obligation; RD 1065/2007 Art. 42
-        # quater — threshold and reglamento base; Orden HFP/886/2023
-        # arts. 1-3 — approved form, obligados and content.
-        legal_refs=(
-            "ley-58-2003:da-18",
-            "rd-1065-2007:art-42-quater",
-            "orden-hfp-886-2023:art-1",
-            "orden-hfp-886-2023:art-2",
-            "orden-hfp-886-2023:art-3",
-        ),
-    ),
-    # Modelo 720 — declaración informativa sobre bienes y derechos situados
-    # en el extranjero. Applies to any natural person or legal entity who
-    # holds foreign assets above the declaration threshold as of 31 December
-    # (Ley 7/2012 DA 1ª introducing DA 18ª Ley 58/2003 LGT; Orden
-    # HAP/72/2013). The threshold is whether the aggregate value exceeds
-    # the applicable limit — a payer-fact the three-axis model cannot
-    # resolve alone; a profile that does not positively declare
-    # ``bienes_extranjero_above_threshold = True`` yields INCOMPLETE rather
-    # than a guessed NOT_APPLICABLE.
-    #
-    # IMPORTANT: the IRPF Art. 93 special regime (impatriados / Beckham)
-    # exempts the taxpayer from Modelo 720 for the duration of the regime.
-    # An impatriado is taxed as a non-resident (IRNR) and does not owe the
-    # obligations reserved for IRPF residents. This exemption is enforced by
-    # the pre-check in :func:`derive_modelo_applicability` before this rule
-    # is evaluated.
-    Modelo.M720: ModeloApplicabilityRule(
-        modelo=Modelo.M720,
-        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
-        required_payer_fact=PayerFact.BIENES_EXTRANJERO_ABOVE_THRESHOLD,
-        applicable_reason=(
-            "Modelo 720 (declaración informativa sobre bienes y derechos en "
-            "el extranjero): el contribuyente posee bienes o derechos situados "
-            "en el extranjero con valor agregado superior al umbral declarable "
-            "y está obligado a presentar esta declaración informativa anual. "
-            "La obligación se estableció por la Ley 7/2012 DA 1ª."
-        ),
-        not_applicable_reason=(
-            "Modelo 720 no aplica: la declaración informativa sobre bienes en "
-            "el extranjero solo corresponde a personas físicas o entidades "
-            "jurídicas. El tipo de contribuyente declarado no está incluido en "
-            "el ámbito subjetivo de la DA 18ª Ley 58/2003 LGT."
-        ),
-        cuota_bearing=False,
-        # Ley 7/2012 DA 1ª — obligación de declarar bienes y derechos en el
-        # extranjero (introducing DA 18ª Ley 58/2003 LGT); Orden HAP/72/2013
-        # Art. 1 — aprobación del Modelo 720 y obligados a presentarlo.
-        legal_refs=(
-            "ley-7-2012:da-1",
-            "orden-hap-72-2013:art-1",
-        ),
-    ),
 }
 
 MODELO_APPLICABILITY_RULES = _MODELO_APPLICABILITY_RULES
@@ -1461,20 +762,161 @@ a rationale pointing at the deferred expansion. See
 """
 
 
+#: Modelo ids whose applicability rule is authored in the registry
+#: (W01.P03.S09 migration, landed and flipped) rather than declared as a
+#: Python literal in :data:`_MODELO_APPLICABILITY_RULES` below. Every
+#: revision of every one of these 25 modelos was hydration-verified equal to
+#: the literal it replaces, through the real loader, before this set was
+#: populated and the literal deleted in the same commit. 303 and 390 stay
+#: literal in :data:`_MODELO_APPLICABILITY_RULES` -- their authoring trees
+#: are owned by the export-fragment-generator-authority campaign, not
+#: unplaced by omission.
+#:
+#: This is the single declaration of the mixed-surface state
+#: ``_MODELO_APPLICABILITY_RULES`` is now in: these 25 modelos resolve from
+#: the registry, 303 and 390 still resolve from the literal table. The
+#: literal table retires outright once the export-fragment campaign closes
+#: those two trees and they are migrated the same way; this module then
+#: stops authoring applicability data at all -- it only reads it.
+REGISTRY_RESOLVED_APPLICABILITY_MODELOS: frozenset[str] = frozenset(
+    {
+        "100",
+        "111",
+        "115",
+        "117",
+        "123",
+        "126",
+        "128",
+        "130",
+        "131",
+        "180",
+        "184",
+        "187",
+        "188",
+        "190",
+        "193",
+        "194",
+        "200",
+        "202",
+        "322",
+        "347",
+        "349",
+        "353",
+        "369",
+        "720",
+        "721",
+    },
+)
+
+
+def resolve_applicability_rule_from_authority(
+    authority: ValidatedRegistryAuthority,
+    modelo: Modelo,
+) -> ModeloApplicabilityRule:
+    """Resolve one modelo's applicability rule from an already-loaded authority.
+
+    Reads the UNVALIDATED :class:`~._schema.ModeloDefinition`
+    (``authority.modelo(...)``), not ``validate_modelo``/``snapshot``:
+    applicability derivation is a pervasive, taxpayer-facing read on every
+    profile view, and coupling its availability to full business-rule
+    validation or the review-status filing gate would make an unrelated
+    validation defect elsewhere in the tree break every taxpayer's
+    applicability answer. The fragment was already validated once, at
+    registry build time, by
+    :func:`~._validate_applicability_section.validate_applicability_section`.
+
+    This is a deliberate asymmetry with :class:`~._schema.RegistrySnapshot`,
+    which carries a same-shaped projection for every OTHER schema family:
+    applicability answers "is this modelo due, and to whom" -- the floor rung
+    of the authority-grade ladder, scheduling reach, not filing authority.
+    ``RegistrySnapshot`` is a filing-context projection one rung up. Resolving
+    applicability without filing-grade review is correct per that ladder, not
+    a gate dodged; coupling it to snapshot construction would wrongly tie a
+    floor-rung fact to filing authority it does not need.
+
+    Applicability content is uniform across a modelo's declared revisions
+    today (the migrator authors the identical rule into every one), so any
+    revision carrying the family answers the question -- the first one found
+    is used.
+
+    Split out from :func:`_resolve_registry_applicability_rule` so the real
+    logic takes its authority as a parameter and is testable against a
+    scratch :class:`ValidatedRegistryAuthority` without touching the bundled
+    tree or monkeypatching anything; the production wrapper is the only
+    caller that hardcodes :func:`~._authority.bundled_authority`.
+
+    Raises:
+        RegistryValidationError: No declared revision carries an
+            ``applicability`` rule, or the rule fails to hydrate.
+    """
+    definition = authority.modelo(modelo.value)
+    for revision in definition.revisions.values():
+        if revision.applicability:
+            return hydrate_applicability_rule(modelo, revision.applicability[0])
+    raise RegistryValidationError(
+        f"modelo {modelo.value!r} is declared in REGISTRY_RESOLVED_APPLICABILITY_MODELOS but no "
+        "declared revision carries an applicability rule",
+    )
+
+
+def _resolve_registry_applicability_rule(modelo: Modelo) -> ModeloApplicabilityRule:
+    """Resolve one modelo's applicability rule from the bundled registry authoring tree.
+
+    The import is function-local by necessity, not preference: ``_authority``
+    transitively imports THIS module already, through the build-validation
+    dispatch chain (``_authority`` -> ``_snapshot`` -> ``_validate`` ->
+    ``_validate_revision_sections`` -> ``_validate_applicability_section`` ->
+    here), so a module-level import of :func:`~._authority.bundled_authority`
+    would close a real cycle. Resolving on first call, long after both
+    modules have finished importing, is the same discipline
+    :func:`~._loader.load_legal_parameters_only`'s own cycle-safe entry point
+    already documents -- module-body evaluation is the hazard, first-call
+    resolution is not.
+
+    No local cache sits in front of this call: :func:`~._authority.bundled_authority`
+    is itself fingerprint-bounded (W01.P02.S28), so calling it here costs one
+    O(1) cache-key hash, not a re-parse, and a tree edit is seen on the very
+    next call. Caching here would re-introduce the path-only registry cache
+    the authority-flow rule forbids -- exactly the defect S28 removed.
+    """
+    from ._authority import bundled_authority
+
+    return resolve_applicability_rule_from_authority(bundled_authority(), modelo)
+
+
+def _modelo_applicability_rule(modelo: str) -> ModeloApplicabilityRule | None:
+    """Return ``modelo``'s applicability rule, resolved from the registry or the literal table.
+
+    The single seam every consumer (:func:`derive_modelo_applicability`,
+    :func:`has_applicability_rule`, :func:`iter_modelo_applicability_rules`)
+    reads through, so the mixed-surface split (registry-resolved vs.
+    still-literal) is decided in exactly one place. An unrecognised
+    ``modelo`` string -- not a member of either surface -- returns ``None``,
+    matching the pre-cutover dict-lookup behaviour exactly; it is never an
+    error to ask about an unruled modelo.
+    """
+    if modelo in REGISTRY_RESOLVED_APPLICABILITY_MODELOS:
+        return _resolve_registry_applicability_rule(Modelo(modelo))
+    return _MODELO_APPLICABILITY_RULES.get(modelo)
+
+
 def has_applicability_rule(modelo: str) -> bool:
-    """Return whether a seed applicability rule exists for ``modelo``."""
-    return modelo in _MODELO_APPLICABILITY_RULES
+    """Return whether an applicability rule exists for ``modelo``."""
+    return _modelo_applicability_rule(modelo) is not None
 
 
 def iter_modelo_applicability_rules() -> tuple[ModeloApplicabilityRule, ...]:
-    """Return the registry-owned seed :class:`ModeloApplicabilityRule` instances.
+    """Return every registry-resolved or seed-literal :class:`ModeloApplicabilityRule`.
 
-    The returned tuple is ordered by modelo id for deterministic audits
-    and tests. Callers receive rule objects, not the mutable module-level
-    dictionary, so the registry rule table remains read-only from the
-    public API.
+    The returned tuple is ordered by modelo id for deterministic audits and
+    tests. Callers receive rule objects, not the mutable module-level
+    dictionary, so the registry rule table remains read-only from the public
+    API.
     """
-    return tuple(_MODELO_APPLICABILITY_RULES[modelo] for modelo in sorted(_MODELO_APPLICABILITY_RULES))
+    known_modelos = sorted(
+        {str(modelo) for modelo in _MODELO_APPLICABILITY_RULES} | REGISTRY_RESOLVED_APPLICABILITY_MODELOS,
+    )
+    return tuple(rule for modelo in known_modelos if (rule := _modelo_applicability_rule(modelo)) is not None)
 
 
 def taxpayer_model_is_declared(profile: TaxpayerProfile) -> bool:
@@ -1594,7 +1036,7 @@ def derive_modelo_applicability(
             reason=_IMPATRIADO_M720_EXEMPT_REASON,
             legal_refs=_IMPATRIADO_M720_LEGAL_REFS,
         )
-    rule = _MODELO_APPLICABILITY_RULES.get(modelo)
+    rule = _modelo_applicability_rule(modelo)
     if rule is None:
         return _incomplete_applicability(modelo, unruled=True)
     return rule.evaluate(profile)

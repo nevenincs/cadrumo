@@ -119,7 +119,7 @@ def previous_filing_observation_requirements(
     source_casilla_ids_by_key: dict[tuple[ModeloId, int, str], set[CasillaId]] = {}
     legal_refs_by_key: dict[tuple[ModeloId, int, str], set[LegalRefId]] = {}
     source_refs_by_key: dict[tuple[ModeloId, int, str], set[SourceRefId]] = {}
-    dependency_treatment_by_key: dict[tuple[ModeloId, int, str], str] = {}
+    dependency_treatment_by_key: dict[tuple[ModeloId, int, str], str | None] = {}
     classifications_by_source = {
         classification.source_modelo: classification for classification in revision.dependency_classifications
     }
@@ -137,7 +137,7 @@ def previous_filing_observation_requirements(
             legal_refs_by_key.setdefault(key, set()).update(binding.legal_refs)
             source_refs_by_key.setdefault(key, set()).update(binding.source_refs)
             classification = classifications_by_source.get(selector.source_modelo)
-            dependency_treatment_by_key[key] = "" if classification is None else str(classification.treatment)
+            dependency_treatment_by_key[key] = None if classification is None else classification.treatment
     return tuple(
         RegistryFoldRequirement(
             source_modelo=modelo,

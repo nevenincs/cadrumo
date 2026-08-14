@@ -805,7 +805,7 @@ nitpick_ignore_regex = [
         r"ApplicationLinkId|BindingId|CasillaId|ConstructId|CrossReferenceId|"
         r"DeadlineWindowId|DependencyClassificationId|ExportFieldId|ExportLayoutId|"
         r"ExtractionProfileId|FormulaId|LegalRefId|ModeloId|OracleId|ParameterId|"
-        r"RecordId|RelationId|RevisionId|SourceRefId|SupportRemovalDecisionId|"
+        r"RecordId|RelationId|RevisionId|SourceRefId|"
         r"VerificationExpectationId|WorkbookFixtureId|WorkbookOutputId|WorkbookParityRefId)$",
     ),
     # ``OneBasedExportOffset`` is the same category as the registry typed-id

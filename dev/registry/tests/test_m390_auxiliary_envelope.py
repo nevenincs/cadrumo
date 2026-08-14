@@ -10,7 +10,11 @@ from pydantic import ValidationError
 
 from cadrumo.core import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity, Period
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import RegistryValidationError, bundled_authority, load_catalogue_file
+from cadrumo.domain.calculations.registry import (
+    RegistryValidationError,
+    bundled_revision_inspection,
+    load_catalogue_file,
+)
 
 from .. import _m390_auxiliary_envelope
 from .._m390_auxiliary_envelope import (
@@ -228,9 +232,12 @@ def test_refuses_missing_product_software_identity_and_non_annual_period() -> No
 
 
 def test_refuses_current_unreviewed_registry_revision_as_a_prospective_target() -> None:
+    # Naming the current revision is revision selection, not filing: a filing
+    # snapshot would refuse the very revision this test needs, because being
+    # unreviewed is the property under test.
     intermediate = _intermediate("aeat-dr-390-2025", 2025, "2025")
-    current_snapshot = bundled_authority().snapshot("390", filing_year=2025, period="0A")
-    generation_input = _input(intermediate, str(current_snapshot.revision.id), "2025", 2025)
+    current = bundled_revision_inspection("390", filing_year=2025, period="0A")
+    generation_input = _input(intermediate, str(current.revision_id), "2025", 2025)
 
     with pytest.raises(RegistryValidationError, match="has no reviewed source binding"):
         _validate(intermediate, generation_input)

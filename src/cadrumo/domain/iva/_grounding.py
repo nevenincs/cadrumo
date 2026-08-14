@@ -10,7 +10,7 @@ parses exactly like one naming a provision the BOE actually carries.
 This module is the one place an IVA table's citations are turned into verified
 grounding, and it does it by delegating to the registry's own evidence validator
 rather than by re-implementing a check beside each table. That delegation is the
-load-bearing part. :func:`~domain.calculations.registry.verify_legal_reference`
+load-bearing part. :func:`~domain.calculations.registry.verify_legal_reference_grounding`
 resolves the cited catalogue entry's ``corpus_ref`` to the ANCHORED unit of the
 bundled consolidated text and checks the entry's ``required_text`` inside that
 unit; a check written locally against a whole consolidated law would pass on any
@@ -34,9 +34,12 @@ typed rows, so a table cannot be covered by accident and cannot be skipped by
 one.
 
 See Also:
-    :func:`~domain.calculations.registry.verify_legal_reference`
+    :func:`~domain.calculations.registry.verify_legal_reference_grounding`
         The registry's evidence validator, and the anchor-scoped resolution
-        every citation here is checked through.
+        every citation here is checked through. The grounding-only variant: a
+        rate table's citations are checked for real corpus backing, which is a
+        different question from whether an operator has countersigned them for
+        filing, and a table that loads is not thereby a table that may be filed.
     :class:`~domain.iva.IvaRateRecord`
         The rate row whose ``legal_refs`` were the first to be routed this way.
 """
@@ -106,7 +109,7 @@ def legal_ref_failures(
         One message per failure, empty when every citation verified.
     """
     # Keep this import local: see :func:`registry_catalogues`.
-    from ..calculations.registry import RegistryValidationError, verify_legal_reference
+    from ..calculations.registry import RegistryValidationError, verify_legal_reference_grounding
 
     failures: list[str] = []
     for ref_id in reference_ids:
@@ -117,7 +120,7 @@ def legal_ref_failures(
             failures.append(f"{row}: unknown legal_ref {ref_id!r}")
             continue
         try:
-            verify_legal_reference(reference, source_root=source_root)
+            verify_legal_reference_grounding(reference, source_root=source_root)
         except RegistryValidationError as exc:
             failures.append(f"{row}: invalid legal_ref {ref_id!r}: {exc}")
             continue

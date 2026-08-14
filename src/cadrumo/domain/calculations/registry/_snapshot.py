@@ -19,7 +19,7 @@ from datetime import date
 from pathlib import Path
 from typing import Protocol
 
-from ....core import RevisionReviewStatus
+from ....core import RegistryAuthorityGrade, RevisionReviewStatus
 from ._errors import RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
 from ._ids import RevisionId
@@ -187,6 +187,7 @@ def build_snapshot(
     period: str,
     on: date | None = None,
     revision_id: RevisionId | None = None,
+    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
 ) -> RegistrySnapshot:
     """Validate ``modelo`` and return the selected immutable snapshot.
 
@@ -194,6 +195,13 @@ def build_snapshot(
     checks. It cannot validate cross-model relation closure because it does not
     receive the full modelo tree; production callers should request snapshots
     through :class:`ValidatedRegistryAuthority`.
+
+    ``grade`` defaults to :attr:`RegistryAuthorityGrade.FILING`, so this function is
+    strict by default rather than by request. It is exported on the package facade
+    and returns a full :class:`RegistrySnapshot`, which made the previous permissive
+    default a door: importing the obvious-looking name yielded an unattested,
+    filing-shaped snapshot with none of the three gates run. A caller needing a
+    lower rung now names it.
 
     Args:
         modelo: The :class:`ModeloDefinition` to validate and snapshot.
@@ -203,12 +211,16 @@ def build_snapshot(
         period: The filing period to select a revision for.
         on: Optional reference date for revision selection.
         revision_id: Optional explicit revision identifier to select.
+        grade: The rung of authority the caller needs. Defaults to
+            :attr:`RegistryAuthorityGrade.FILING`, which runs the revision-review,
+            filing-capability and legal-review checks; a lower rung skips the
+            checks that belong to claims the caller is not making.
 
     Returns:
         The validated :class:`RegistrySnapshot` for the requested filing context.
     """
     source_root_key = str(source_root.expanduser().resolve())
-    key = (id(modelo), id(catalogues), source_root_key, filing_year, period, on, revision_id)
+    key = (id(modelo), id(catalogues), source_root_key, filing_year, period, on, revision_id, grade)
     cached = _SNAPSHOT_CACHE.get(key)
     if cached is not None and cached[0] is modelo and cached[1] is catalogues:
         return cached[2]
@@ -221,6 +233,7 @@ def build_snapshot(
         period=period,
         on=on,
         revision_id=revision_id,
+        grade=grade,
     )
     _SNAPSHOT_CACHE[key] = (modelo, catalogues, snapshot)
     return snapshot
@@ -259,12 +272,24 @@ def _build_validated_snapshot(
     period: str,
     on: date | None = None,
     revision_id: RevisionId | None = None,
-    require_operator_review: bool = False,
+    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
 ) -> RegistrySnapshot:
-    """Return a selected snapshot after the caller has validated ``modelo``."""
+    """Return a selected snapshot after the caller has validated ``modelo``.
+
+    ``grade`` names the rung of authority the CALLER needs, and it defaults to the
+    strictest one. That default is the point: it was a ``bool`` defaulting to
+    ``False``, so a caller that said nothing silently skipped the revision-review,
+    filing-capability and legal-review checks and received a filing-shaped snapshot
+    it had not earned. Now a caller that says nothing gets the strict path, and a
+    caller needing less must opt DOWN explicitly, in typed and greppable form.
+
+    A lower rung is a narrower claim, never a weaker check of the same claim: a
+    caller asking when a modelo is due is not making a filing assertion, and
+    forcing it to would make a scheduling question unanswerable rather than safe.
+    """
     _install_cross_domain_snapshot_checks()
     revision = select_revision(modelo, filing_year=filing_year, period=period, on=on, revision_id=revision_id)
-    if require_operator_review:
+    if grade is RegistryAuthorityGrade.FILING:
         _check_snapshot_revision_review_status(modelo, revision)
     legal_applicability_failures = validate_orden_aplicabilidad(
         f"snapshot modelo {modelo.id} revision {revision.id}",
@@ -299,8 +324,10 @@ def _build_validated_snapshot(
     period = registry_period_for_request(revision.period_selector.periods, period) or period
     revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
     _validate_materialized_export_record_families(revision)
+    if grade is RegistryAuthorityGrade.FILING:
+        _check_snapshot_filing_capability(modelo, revision)
     legal_ids, source_ids = _collect_snapshot_ref_ids(modelo, revision)
-    if require_operator_review:
+    if grade is RegistryAuthorityGrade.FILING:
         _check_snapshot_legal_review_status(modelo, revision, catalogues, legal_ids)
     _check_revision_scoped_legal_windows(modelo, revision, catalogues)
     _check_revision_scoped_source_windows(modelo, revision, catalogues)
@@ -319,11 +346,10 @@ def _build_validated_snapshot(
         application_links=_records_by_id(revision.application_links),
         deadline_windows=_records_by_id(revision.deadline_windows),
         filing_schedules=_records_by_id(revision.filing_schedules),
-        support_removal_decisions=_records_by_id(revision.support_removal_decisions),
         constructs=_records_by_id(revision.constructs),
         dependency_classifications=_records_by_id(revision.dependency_classifications),
         convenio=catalogues.convenio,
-        m303_annual_orden=catalogues.m303_annual_orden,
+        supplementary_ordenes=catalogues.supplementary_ordenes,
     )
     check_all_id_references(snapshot)
     return snapshot
@@ -340,6 +366,33 @@ def _check_snapshot_revision_review_status(
     raise RegistryValidationError(
         f"modelo {modelo.id} revision {revision.id} is {status!r}; "
         "filing-grade snapshot requires operator_reviewed revision",
+    )
+
+
+def _check_snapshot_filing_capability(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+) -> None:
+    """Refuse a filing artifact from a revision that can emit nothing.
+
+    A filing-grade snapshot is the entry to producing a draft and an export, so a
+    revision declaring no export layout cannot honour the request no matter what
+    else it carries. Refusing here rather than downstream keeps the absence from
+    reading as an empty-but-valid result: the completeness gate in ``export_draft``
+    checks that every required casilla carries a value, and over an absent layout it
+    has nothing to check and passes.
+
+    The check runs after layouts are derived from bindings, so a revision that
+    declares none inline but derives one is capable and is not refused. There is no
+    allowance, allowlist or per-modelo exemption: a modelo the application cannot
+    file is a capability that has not been built yet, never a settled state.
+    """
+    if revision.export_layouts:
+        return
+    raise RegistryValidationError(
+        f"modelo {modelo.id} revision {revision.id} declares no export layout, so no filing artifact "
+        "can be produced from it. Author the revision's fixed-width export layout, or the bindings it "
+        "derives from, before requesting a filing-grade snapshot, draft or export.",
     )
 
 
@@ -400,7 +453,7 @@ def build_validated_snapshot(
         period=period,
         on=on,
         revision_id=revision_id,
-        require_operator_review=True,
+        grade=RegistryAuthorityGrade.FILING,
     )
 
 
@@ -635,7 +688,6 @@ def _collect_snapshot_ref_ids(
         revision.workbook_parity_refs,
         revision.verification_expectations,
         revision.application_links,
-        revision.support_removal_decisions,
         revision.constructs,
         revision.dependency_classifications,
     )

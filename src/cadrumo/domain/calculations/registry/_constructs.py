@@ -108,11 +108,6 @@ _CONSTRUCT_MEMBER_INDEXES: tuple[tuple[str, str, _RevisionIndex], ...] = (
     ("deadline window", "deadline_windows", lambda revision: _index(revision.deadline_windows)),
     ("filing schedule", "filing_schedules", lambda revision: _index(revision.filing_schedules)),
     (
-        "support removal decision",
-        "support_removal_decisions",
-        lambda revision: _index(revision.support_removal_decisions),
-    ),
-    (
         "dependency classification",
         "dependency_classifications",
         lambda revision: _index(revision.dependency_classifications),

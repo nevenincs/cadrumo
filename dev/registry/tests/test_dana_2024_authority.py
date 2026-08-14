@@ -50,7 +50,7 @@ from cadrumo.domain.calculations.registry import (
     SourceReference,
     legal_reference_quotes_corpus,
     load_registry_tree,
-    verify_legal_catalogue,
+    verify_legal_catalogue_grounding,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -189,10 +189,16 @@ def _source_pinning(authority: DanaAuthority, reference: LegalReference) -> Sour
 
 
 def test_the_dana_catalogue_verifies_against_the_bundled_corpus() -> None:
-    """Every DANA citation's required text is really in the artefact it cites."""
+    """Every DANA citation's required text is really in the artefact it cites.
+
+    Grounding is the subject here, so the audit that excludes review eligibility
+    is the right one: whether an operator has countersigned these references is
+    a separate question, answered where a filing snapshot selects its legal
+    slice, and an unfinished countersignature must not mask a corpus defect.
+    """
     authority = dana_authority()
 
-    verify_legal_catalogue(authority.legal, source_root=authority.source_root)
+    verify_legal_catalogue_grounding(authority.legal, source_root=authority.source_root)
 
 
 def test_a_municipal_geography_without_a_consolidation_date_is_refused() -> None:

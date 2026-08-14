@@ -1,0 +1,9 @@
+[[revisions."2025".applicability]]
+id = "m131-seed"
+applicable_entity_types = ["natural_person"]
+required_income_categories = ["actividad_economica"]
+required_estimation_regimes = ["objetiva"]
+applicable_reason = "Modelo 131 (pago fraccionado del IRPF): la persona física declara rendimientos de actividades económicas en estimación objetiva (módulos), que generan la obligación del pago fraccionado por ese método."
+not_applicable_reason = "Modelo 131 no aplica: el pago fraccionado en estimación objetiva solo corresponde a la persona física cuya actividad económica se determina por el método de módulos. Una actividad en estimación directa presenta el Modelo 130."
+cuota_bearing = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "ley-35-2006:art-99"]

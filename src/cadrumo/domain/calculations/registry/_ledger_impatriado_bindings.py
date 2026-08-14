@@ -114,7 +114,7 @@ class _ImpatriadoLedgerIncomeSelector(BaseModel):
       credited, which is neither gross of retención nor IVA-exclusive.
     """
 
-    model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: Literal[Modelo.M151] = Modelo.M151
     target_casilla_id: CasillaId

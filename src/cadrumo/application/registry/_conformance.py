@@ -579,7 +579,6 @@ class RevisionCapabilityFacts(ConformanceModel):
             revision. Zero means the revision reconciles nothing at all, which
             is why a grounding coverage of ``0.0`` and an absent coverage are
             different answers.
-        support_removal_decision_count: Declared deprecation decisions.
         live_cross_reference_count: Declared AEAT-portal cross-references.
         casilla_continuidad_evolution_count: Declared per-ejercicio casilla
             continuity evolutions.
@@ -594,7 +593,6 @@ class RevisionCapabilityFacts(ConformanceModel):
     formula_count: int = Field(ge=0)
     binding_count: int = Field(ge=0)
     verification_expectation_count: int = Field(ge=0)
-    support_removal_decision_count: int = Field(ge=0)
     live_cross_reference_count: int = Field(ge=0)
     casilla_continuidad_evolution_count: int = Field(ge=0)
 
@@ -621,11 +619,7 @@ class LatestRevisionSupportProbe(ConformanceModel):
         has_extractor: Whether the probed revision registers any extractor.
         rename_count: Declared casilla continuity evolutions on the probed
             revision.
-        deprecation_count: Declared support-removal decisions on it.
         portal_compatibility_ref_count: Declared AEAT-portal cross-references.
-        is_deprecated: The support matrix's own deprecation verdict for the
-            modelo, which is :data:`False` by construction while no revision in
-            the tree declares a support-removal decision.
     """
 
     probed_revision: _RevisionId
@@ -636,9 +630,7 @@ class LatestRevisionSupportProbe(ConformanceModel):
     has_xml_dictionary_export: bool
     has_extractor: bool
     rename_count: int = Field(ge=0)
-    deprecation_count: int = Field(ge=0)
     portal_compatibility_ref_count: int = Field(ge=0)
-    is_deprecated: bool
 
 
 class RevisionModelLawCoverage(ConformanceModel):
@@ -1295,7 +1287,6 @@ def _capability_facts(revision: _ModeloRevision, *, modelo_id: str) -> RevisionC
         formula_count=len(revision.formulas),
         binding_count=len(revision.bindings),
         verification_expectation_count=len(revision.verification_expectations),
-        support_removal_decision_count=len(revision.support_removal_decisions),
         live_cross_reference_count=len(revision.live_cross_references),
         casilla_continuidad_evolution_count=len(revision.casilla_continuidad_evolutions),
     )
@@ -1312,9 +1303,7 @@ def _support_probe(entry: _ModeloEntry, *, revision_id: _RevisionId) -> LatestRe
         has_xml_dictionary_export=entry.has_xml_dictionary_export,
         has_extractor=entry.has_extractor,
         rename_count=len(entry.renames),
-        deprecation_count=len(entry.deprecations),
         portal_compatibility_ref_count=len(entry.portal_compatibility_refs),
-        is_deprecated=entry.is_deprecated,
     )
 
 

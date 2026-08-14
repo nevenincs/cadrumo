@@ -24,7 +24,7 @@ from typing import Literal, TypeGuard
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core import OBJECT_TUPLE_ADAPTER, STRICT_FROZEN_CONFIG, CasillaId, Period
+from ....core import OBJECT_TUPLE_ADAPTER, STRICT_FROZEN_CONFIG, CasillaId, FilingPeriodCode, Period
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, CounterpartSourceKind
 from ...iva_compensation import (
     M303_COMPENSATION_APLICADA_CASILLA,
@@ -418,7 +418,7 @@ class RegistryModeloObservation(BaseModel):
     modelo: ModeloId
     filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
-    period: str = Field(min_length=1, max_length=32)
+    period: FilingPeriodCode
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="before")
@@ -911,7 +911,7 @@ class M303RegimenSimplificadoAnnualSummaryRequirement(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     source_modelo: ModeloId
-    source_period: str
+    source_period: FilingPeriodCode
     source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
     binding_ids_by_summary_casilla_id: Mapping[CasillaId, BindingId] = Field(min_length=1)
     dependency_treatment: str = ""

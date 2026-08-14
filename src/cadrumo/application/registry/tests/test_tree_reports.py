@@ -42,7 +42,6 @@ class _RevisionDetailPayload(TypedDict, total=False):
     filing_schedule_count: int
     portal_guard_policy_ids: tuple[str, ...]
     workbook_parity: tuple[RegistryWorkbookParityDetailReport, ...]
-    support_removal_decision_count: int
 
 
 _REVISION_INVALID_REF_CASES: tuple[_RevisionDetailPayload, ...] = (
@@ -88,7 +87,6 @@ def _revision_detail_report(**updates: object) -> RegistryRevisionDetailReport:
         "filing_schedule_count": 0,
         "portal_guard_policy_ids": (),
         "workbook_parity": (_workbook_parity_report(),),
-        "support_removal_decision_count": 0,
     }
     payload: _RevisionDetailPayload = {**base, **updates}  # type: ignore[typeddict-unknown-key]
     return RegistryRevisionDetailReport(**payload)

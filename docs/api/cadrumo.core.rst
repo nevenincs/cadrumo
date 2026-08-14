@@ -39,6 +39,7 @@ Submodules
    cadrumo.core._aeat_csv
    cadrumo.core._amendment_kind_regime
    cadrumo.core._auth_provider
+   cadrumo.core._authority_grade
    cadrumo.core._bucket_pointer
    cadrumo.core._bucket_pointer_io
    cadrumo.core._capabilities
@@ -88,6 +89,7 @@ Submodules
    cadrumo.core._iva_compensation_provenance
    cadrumo.core._iva_deduction_fact
    cadrumo.core._ledger_sort
+   cadrumo.core._legal_review
    cadrumo.core._link_safety
    cadrumo.core._lockfile_unlink
    cadrumo.core._model_catalogue
@@ -102,6 +104,7 @@ Submodules
    cadrumo.core._operator_progress
    cadrumo.core._optional_extras
    cadrumo.core._orden_anual_html
+   cadrumo.core._orden_anual_sections
    cadrumo.core._payment_election
    cadrumo.core._period
    cadrumo.core._pid_liveness
@@ -118,6 +121,7 @@ Submodules
    cadrumo.core._rescate_type
    cadrumo.core._result_disposition
    cadrumo.core._revision_review
+   cadrumo.core._schema_family_disposition
    cadrumo.core._spanish_stemming
    cadrumo.core._storage_taxonomy
    cadrumo.core._storage_taxonomy_locations
@@ -145,6 +149,7 @@ Submodules
    cadrumo.core.locks_errors
    cadrumo.core.logging
    cadrumo.core.manual_corpus_sidecar
+   cadrumo.core.operations
    cadrumo.core.output_rendering
    cadrumo.core.paths
    cadrumo.core.product_identity

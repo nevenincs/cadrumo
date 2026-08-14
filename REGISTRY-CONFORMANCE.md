@@ -85,7 +85,7 @@ census review_status=pending_review revisions=90
 row modelo=036 revision=2025-02-03-y-siguientes registry_validated=true
   review_status=pending_review engineered_by=n/a reviewed_by_attribution=n/a
   reviewed_at=n/a calc_grade=true casillas=31 formulas=0 bindings=1 ...
-unused_axis axis=revision.support_removal_decisions population=90
+unused_axis axis=extraction_profile.confidence.review_required population=43
 note n/a means NOT MEASURED or NO CLAIM MADE, never zero, while '-' is a real
   empty list; ...
 ```

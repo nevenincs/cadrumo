@@ -260,7 +260,6 @@ class RegistryRevisionDetailReport(BaseModel):
     filing_schedule_count: int
     portal_guard_policy_ids: tuple[str, ...]
     workbook_parity: tuple[RegistryWorkbookParityDetailReport, ...]
-    support_removal_decision_count: int
 
 
 class FiledStateVerificationReport(BaseModel):
@@ -534,7 +533,6 @@ def _revision_details(modelos: tuple[_ModeloDefinition, ...]) -> tuple[RegistryR
                         sorted({decision.guard_policy_id for decision in revision.live_cross_references}),
                     ),
                     workbook_parity=workbook_parity,
-                    support_removal_decision_count=len(revision.support_removal_decisions),
                 ),
             )
     return tuple(reports)

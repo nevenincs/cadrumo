@@ -29,8 +29,8 @@ from ....domain.user_profile import UserProfileFact
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import set_active_test_profile_facts
+from ....tests.registry_revision import active_registry_revision_id
 from ._modelo_review_package_support import seed_exportable_modelo_revision
-from ._registry_cli_support import _active_registry_revision_id
 from ._strict_cli_fixture_support import binding_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -201,7 +201,7 @@ def test_review_package_build_refuses_draft_revision(tmp_path: Path) -> None:
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    revision_id = _active_registry_revision_id(modelo="111", filing_year=2026, period="1T")
+    revision_id = active_registry_revision_id(modelo="111", filing_year=2026, period="1T")
     filing_period = Period.from_year_and_code(2026, "1T")
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,

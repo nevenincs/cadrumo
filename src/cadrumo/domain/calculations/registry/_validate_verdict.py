@@ -54,7 +54,7 @@ class RegistryValidationVerdict(BaseModel):
     key equals the freshly recomputed key.
     """
 
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
 
     verdict_key: str
     package_version: str
