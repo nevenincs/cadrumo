@@ -1,6 +1,7 @@
 {
   "modelo": "303",
   "filing_year": 2024,
+  "period": "1T",
   "source_kind": "aeat_manual_worked_example",
   "scenario_id": "m303-2024-regimen-general-1t-recargo-intracomunitaria-importacion",
   "raw_evidence_locator": "corpus/manuals/iva/2024/source.pdf#Pag.293-294",

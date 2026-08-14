@@ -209,24 +209,6 @@ binding = "modelo-390-prev-303-resultado-regimen-general"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
-# Box 79 of the régimen simplificado apartado: the annual IVA devengado del
-# régimen simplificado ("Total cuota resultante"). Régimen simplificado settles
-# annually in the 4T Modelo 303; this casilla carries that 4T cuota devengada
-# (M303 casilla 54) onto the resumen anual via the relation_prefill binding, so an
-# estimación-objetiva filer's simplificado cuota devengada flows into the M390.
-[[revisions."2010-y-siguientes".casillas]]
-id = "iva.anual.reconciliacion.devengada-simplificado-303"
-number = "79"
-section = ["iva", "anual", "regimen_simplificado"]
-data_type = "money"
-semantic_role = "iva_anual_reconciliacion_devengada_simplificado_303"
-continuidad_id = "iva-anual-reconciliacion-devengada-simplificado-303"
-required = false
-input_kind = "bound"
-binding = "modelo-390-prev-303-cuota-devengada-simplificado"
-legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025"]
-
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.compensacion-ultimo-periodo-97"
 number = "97"
