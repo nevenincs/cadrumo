@@ -254,7 +254,7 @@ def test_operation_journal_refuses_raw_history_corruption(tmp_path: Path, corrup
         case "timestamp":
             history[0]["timestamp"] = "2026-08-13T20:03:00Z"
         case "revision":
-            history[1]["revision"] = 2
+            history[1]["revision"] = 3
         case "terminal":
             history[0] = _terminal_event().model_dump(mode="json")
         case "snapshot_tail":
