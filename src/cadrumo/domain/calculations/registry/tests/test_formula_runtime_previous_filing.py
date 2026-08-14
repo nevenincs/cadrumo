@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from decimal import Decimal
 
 import pytest
@@ -31,18 +30,10 @@ from ._formula_runtime_support import (
     _M115_RETENCIONES_CASILLA,
     _M130_SALDO_NEGATIVO_CASILLA,
     _PREVIOUS_YEAR_NET_INCOME_BINDING,
-    _committed_modelo_180_snapshot,
     _previous_year_net_income_binding,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-@pytest.fixture
-def committed_modelo_180_snapshot(
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
-) -> RegistrySnapshot:
-    return _committed_modelo_180_snapshot(registry_snapshot)
 
 
 def test_previous_filing_binding_resolves_from_observed_irpf_casillas(
