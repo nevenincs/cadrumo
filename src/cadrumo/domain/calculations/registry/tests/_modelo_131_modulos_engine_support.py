@@ -564,3 +564,29 @@ def _run_modulos_engine(
         values["modulos-rendimiento-neto-modulos"],
         values["modulos-rendimiento-neto-actividad"],
     )
+
+
+def _assert_fase4_reduccion_general(epigrafe: str, **modulos: Decimal) -> None:
+    """Assert Fase 4ª (reducción general del 5%, disposición adicional primera).
+
+    Shared body for the per-activity-class ``test_fase_4_...`` method repeated
+    verbatim across the M131 módulos-engine suites (base + food +
+    retail_services): only Fase 4 is mechanically identical across activity
+    classes — Fases 1-3 differ substantively per epígrafe and stay their own
+    per-class tests. ``modulos`` forwards the epígrafe's declared módulo unit
+    counts (``modulo_1``..``modulo_7``, whichever the epígrafe uses) straight
+    through to the real engine and to the Fase 2ª oracle's ``modulo_1``.
+    """
+    previo, minorado, modulos_value, actividad = _run_modulos_engine(epigrafe, **modulos)
+    expected_minorado = _expected_minorado(
+        previo,
+        epigrafe=epigrafe,
+        modulo_1=modulos.get("modulo_1", Decimal("0")),
+        modulo_1_anterior=modulos.get("modulo_1_anterior", Decimal("0")),
+        modulo_1_coefficient=_module_1_coefficient(epigrafe),
+    )
+    expected_modulos = _expected_modulos(minorado, epigrafe=epigrafe)
+    expected_actividad = round_to_cents(modulos_value - modulos_value * _REDUCCION_GENERAL_2025)
+    assert minorado == expected_minorado
+    assert modulos_value == expected_modulos
+    assert actividad == expected_actividad

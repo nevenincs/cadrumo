@@ -48,7 +48,7 @@ from ....domain.calculations.registry import (
 )
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
+from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest, assert_two_ejercicio_round_trip
 from .._observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -167,33 +167,34 @@ def test_year_n_observation_persists_and_reloads_strictly(tmp_path: Path) -> Non
     All values are non-default. The reload via iter_modelo asserts strict pydantic
     model equality so a save-drops-field regression surfaces.
     """
-    obs_n = _year_n_observation()
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(repo.prepare_observation_envelope(obs_n, source_kind="app_filing", captured_at=_CLOCK_N))
-        loaded = _find_observation(repo, filing_year=_YEAR_N, period="0A")
-
-        assert loaded is not None, f"year-N observation not found for ({_MODELO!r}, {_YEAR_N}, '0A') after save"
-        assert loaded.observation == obs_n, (
-            "year-N 184 observation did not survive the encrypted-SQL roundtrip; "
-            "at least one casilla was silently dropped, coerced, or defaulted away"
-        )
-        assert loaded.source_kind == "app_filing"
-        assert loaded.captured_at == _CLOCK_N
+    assert_two_ejercicio_round_trip(
+        tmp_path=tmp_path,
+        stage="year_n",
+        modelo=_MODELO,
+        period="0A",
+        obs_n=_year_n_observation(),
+        obs_n_plus_1=_year_n_plus_1_observation(),
+        year_n=_YEAR_N,
+        year_n_plus_1=_YEAR_N_PLUS_1,
+        clock_n=_CLOCK_N,
+        clock_n_plus_1=_CLOCK_N_PLUS_1,
+    )
 
 
 def test_year_n_plus_1_observation_persists_and_reloads_strictly(tmp_path: Path) -> None:
     """Year-N+1 184 casilla values survive the roundtrip with non-year-N amounts."""
-    obs_n1 = _year_n_plus_1_observation()
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(repo.prepare_observation_envelope(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1))
-        loaded = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period="0A")
-
-        assert loaded is not None
-        assert loaded.observation == obs_n1
-        assert loaded.source_kind == "app_filing"
-        assert loaded.captured_at == _CLOCK_N_PLUS_1
+    assert_two_ejercicio_round_trip(
+        tmp_path=tmp_path,
+        stage="year_n_plus_1",
+        modelo=_MODELO,
+        period="0A",
+        obs_n=_year_n_observation(),
+        obs_n_plus_1=_year_n_plus_1_observation(),
+        year_n=_YEAR_N,
+        year_n_plus_1=_YEAR_N_PLUS_1,
+        clock_n=_CLOCK_N,
+        clock_n_plus_1=_CLOCK_N_PLUS_1,
+    )
 
 
 def test_year_n_and_year_n_plus_1_are_independently_retrievable(tmp_path: Path) -> None:
@@ -205,32 +206,30 @@ def test_year_n_and_year_n_plus_1_are_independently_retrievable(tmp_path: Path) 
     - Year-N attribution amount (7,200) must not appear in year-N+1 (9,000).
     - Provenance timestamps are distinct.
     """
-    obs_n = _year_n_observation()
-    obs_n1 = _year_n_plus_1_observation()
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(repo.prepare_observation_envelope(obs_n, source_kind="app_filing", captured_at=_CLOCK_N))
-        repo.save(repo.prepare_observation_envelope(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1))
-        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period="0A")
-        loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period="0A")
+    loaded_n, loaded_n1 = assert_two_ejercicio_round_trip(
+        tmp_path=tmp_path,
+        stage="both",
+        modelo=_MODELO,
+        period="0A",
+        obs_n=_year_n_observation(),
+        obs_n_plus_1=_year_n_plus_1_observation(),
+        year_n=_YEAR_N,
+        year_n_plus_1=_YEAR_N_PLUS_1,
+        clock_n=_CLOCK_N,
+        clock_n_plus_1=_CLOCK_N_PLUS_1,
+    )
+    assert loaded_n is not None
+    assert loaded_n1 is not None
 
-        assert loaded_n is not None
-        assert loaded_n1 is not None
-        assert loaded_n.observation == obs_n
-        assert loaded_n1.observation == obs_n1
+    n_vals = loaded_n.observation.casilla_values
+    n1_vals = loaded_n1.observation.casilla_values
 
-        n_vals = loaded_n.observation.casilla_values
-        n1_vals = loaded_n1.observation.casilla_values
-
-        assert n_vals[_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA] == _BASE_N_A, (
-            f"year-N importe should be {_BASE_N_A}; got {n_vals[_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA]}"
-        )
-        assert n1_vals[_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA] == _BASE_N1_A, (
-            f"year-N+1 importe should be {_BASE_N1_A}; got {n1_vals[_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA]}"
-        )
-
-        assert loaded_n.captured_at == _CLOCK_N
-        assert loaded_n1.captured_at == _CLOCK_N_PLUS_1
+    assert n_vals[_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA] == _BASE_N_A, (
+        f"year-N importe should be {_BASE_N_A}; got {n_vals[_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA]}"
+    )
+    assert n1_vals[_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA] == _BASE_N1_A, (
+        f"year-N+1 importe should be {_BASE_N1_A}; got {n1_vals[_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA]}"
+    )
 
 
 def test_member_nif_identity_persists_across_both_exercises(tmp_path: Path) -> None:

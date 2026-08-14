@@ -722,6 +722,84 @@ def _box_set_evidence(before_boxes: dict[str, int], after_boxes: dict[str, int])
     )
 
 
+def _position_content(path: Path) -> dict[tuple[str, int, int], str]:
+    """``(sheet, offset, length) -> normalised description`` for EVERY field, boxed or not.
+
+    Unlike :func:`_unnumbered_labels`, NOT filtered to box-token-free slots -- every
+    field's declared content at its position. This is what lets
+    :func:`_position_set_evidence` see a field added or removed where no box number
+    exists to key membership on at all, closing a class of blindness measured
+    directly: 62 of 174 bundled designs carry ZERO bracketed box numbers anywhere
+    (29 modelos, including 111, 180, 232, 349, 360, 369 and 720 -- three of which
+    can already file today), so :func:`_box_set_evidence`'s key never exists for
+    them, not merely loses precision on them.
+
+    ABSTAINS on a flattened PDF parse, for the same reason :func:`_unnumbered_labels`
+    does: the synthetic single-sheet shape makes ``(sheet, offset, length)`` collide
+    across unrelated pages.
+    """
+    sheets = _design_sheets(path)
+    if len(sheets) == 1 and sheets[0].name == _PDF_FLATTENED_SHEET:
+        return {}
+    table: dict[tuple[str, int, int], str] = {}
+    for sheet in sheets:
+        for field in sheet.fields:
+            table.setdefault((sheet.name, field.offset, field.length), " ".join(field.description.split()))
+    return table
+
+
+def _position_set_evidence(earlier: Path, later: Path) -> str | None:
+    """FIFTH SIGNAL: a field added or removed at a position, independent of box number.
+
+    Generalises :func:`_box_set_evidence`'s membership idea past its box-number key,
+    the same relationship the box-SET signal has to the displacement check: a
+    SEPARATE signal, not a refinement, because a field one side declares and the
+    other does not falls outside a shared-key loop entirely. The box-SET signal is
+    structurally blind wherever no bracketed box number exists to key on at all --
+    a bracket-free field cannot be a member of a box-number SET, period, not merely
+    an imprecisely-tracked one.
+
+    KEYED ON ``(sheet, offset, length)``, NEVER ON DESCRIPTION TEXT, so a genuine
+    content CHANGE at an UNMOVED position is deliberately NOT reported here -- that
+    is :func:`_description_flip_evidence`'s job, including its no-separable-leaf
+    branch. This signal reports only when a POSITION exists in one design and not
+    the other: a field the later design declares that the earlier one has nowhere
+    to put, or one the earlier design declares that the later one no longer
+    reserves space for. The two signals are complementary rather than redundant --
+    each answers a question the other structurally cannot.
+
+    RESERVED POSITIONS ARE EXCLUDED, and this exclusion is measured, not assumed.
+    Modelo 202's two 2019-era designs (the May 2020 and September 2019 updates)
+    declare the identical reserved byte range 516-689 -- one as a single 173-byte
+    ``Reservado para la Administracion`` field, the other split into a 1-byte field
+    at 516 and a 172-byte field at 517. A first version of this signal, without the
+    exclusion, reported that as one field added and two removed: a false positive
+    from re-partitioning empty space, not a real layout change. A reserved slot
+    changing SHAPE while staying reserved on both sides is not a field appearing or
+    disappearing; a reserved slot changing OCCUPANCY (becoming real, or a real slot
+    becoming reserved) is the occupancy signal's own job and stays there rather than
+    being double-reported here.
+    """
+    before, after = _position_content(earlier), _position_content(later)
+    added = sorted(key for key in set(after) - set(before) if not _RESERVED_FIELD.search(after[key]))
+    removed = sorted(key for key in set(before) - set(after) if not _RESERVED_FIELD.search(before[key]))
+    if not added and not removed:
+        return None
+    parts = []
+    if added:
+        parts.append(
+            f"{len(added)} added (e.g. {', '.join(f'{sheet} offset {offset}' for sheet, offset, _l in added[:3])})"
+        )
+    if removed:
+        parts.append(
+            f"{len(removed)} removed (e.g. {', '.join(f'{sheet} offset {offset}' for sheet, offset, _l in removed[:3])})"
+        )
+    return (
+        f"field SET changed at these positions: {' and '.join(parts)} -- independent of box number, "
+        "so this catches a field added or removed where no bracket exists to key membership on"
+    )
+
+
 #: Marks a boundary whose ONLY evidence is the description-keyed pass, which is the
 #: least precise signal here. Used by the verdict text and by the review assertion.
 _DESCRIPTION_ONLY = "DESCRIPTION-KEYED PASS ONLY"
@@ -956,6 +1034,10 @@ def _compare_design_pair(earlier: Path, later: Path) -> list[str]:
         evidence.append(f"{headline}: {before_lengths} vs {after_lengths}")
 
     evidence.extend(_occupancy_evidence(earlier, later))
+
+    position_membership = _position_set_evidence(earlier, later)
+    if position_membership:
+        evidence.append(position_membership)
 
     description = _description_flip_evidence(earlier, later)
     if description:

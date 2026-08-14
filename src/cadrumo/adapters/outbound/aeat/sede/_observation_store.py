@@ -6,8 +6,11 @@ Persists each filed-declaration observation as an
 by declaration identity so a prior filing can be retrieved without re-fetching
 it from the sede. Each envelope is classified at
 :class:`~adapters.persistence.storage.SensitivityClass` ``FINANCIAL`` and
-encrypted via the active
-:class:`~adapters.persistence.storage.MasterKeyProvider`.
+encrypted under the authenticated bucket session's own key, resolved through
+:func:`~adapters.persistence.storage.secure_object_repository_for_active_bucket`.
+The store takes no key material and no provider: it holds a taxpayer's filed
+declarations, so the session that unwrapped the profile's DEK is the only thing
+that may open them.
 
 Artefact bytes are stored under
 :data:`adapters.persistence.storage.AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE`
@@ -50,7 +53,6 @@ from ....persistence.storage import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
     AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
-    MasterKeyProvider,
     SecureBoundRepository,
     SecureObjectRepository,
     SecureObjectRowIdentityError,
@@ -210,10 +212,8 @@ class FiledDeclaracionObservationStore:
         self,
         root: Path,
         *,
-        master_key_provider: MasterKeyProvider | None = None,
         objects: SecureObjectRepository | None = None,
     ) -> None:
-        del master_key_provider
         self._root = Path(root)
         self._objects = objects
         self._observation_repository: FiledDeclaracionObservationRepository | None = None

@@ -42,16 +42,13 @@ from ._modelo_131_modulos_engine_support import (
     _QUIOSCOS_PRENSA_659_4B,
     _QUIOSCOS_SERVICIOS_675,
     _RECAMBIOS_654_2,
-    _REDUCCION_GENERAL_2025,
     _REPARACION_CALZADO_691_9A,
     _REPARACION_OTROS_BIENES_691_9B,
     _REPARACION_VEHICULOS_691_2,
     _TEXTIL_651_1,
     _TINTORERIA_971_1,
     _TRANSPORTE_URBANO_721_1,
-    _expected_minorado,
-    _expected_modulos,
-    _module_1_coefficient,
+    _assert_fase4_reduccion_general,
     _run_modulos_engine,
 )
 
@@ -93,24 +90,12 @@ class TestTextil6511EstimacionObjetiva:
         assert previo == expected_previo == Decimal("17529.19")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "651.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
             modulo_4=Decimal("20"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="651.1",
-            modulo_1=Decimal("1"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("651.1"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="651.1")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
 
 class TestMuebles6531EstimacionObjetiva:
@@ -197,24 +182,12 @@ class TestHospedajeHotel681EstimacionObjetiva:
         assert previo == expected_previo == Decimal("34094.40")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "681",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("20"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="681",
-            modulo_1=Decimal("1"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("681"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="681")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
 
 class TestReparacionVehiculos6912EstimacionObjetiva:
@@ -252,24 +225,12 @@ class TestTransporteUrbano7211EstimacionObjetiva:
         assert previo == expected_previo == Decimal("25621.01")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "721.1",
             modulo_1=Decimal("2"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("30"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="721.1",
-            modulo_1=Decimal("2"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("721.1"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="721.1")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
 
 class TestPapeleria6594AEstimacionObjetiva:
@@ -296,7 +257,7 @@ class TestPapeleria6594AEstimacionObjetiva:
         assert previo == expected_previo == Decimal("23981.75")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "659.4a",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -304,18 +265,6 @@ class TestPapeleria6594AEstimacionObjetiva:
             modulo_4=Decimal("15"),
             modulo_5=Decimal("1"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="659.4a",
-            modulo_1=Decimal("1"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("659.4a"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="659.4a")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
 
 class TestQuioscosPrensa6594BEstimacionObjetiva:
@@ -337,24 +286,12 @@ class TestQuioscosPrensa6594BEstimacionObjetiva:
         assert previo == expected_previo == Decimal("24627.57")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "659.4b",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("10"),
             modulo_4=Decimal("4"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="659.4b",
-            modulo_1=Decimal("0"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("659.4b"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="659.4b")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
     def test_bare_unsuffixed_epigrafe_collision_code_stays_untabled(self) -> None:
         # The bare "659.4" (no "a"/"b" disambiguating suffix) must NOT resolve
@@ -386,23 +323,11 @@ class TestReparacionCalzado6919AEstimacionObjetiva:
         assert previo == expected_previo == Decimal("12534.18")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "691.9a",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("20"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="691.9a",
-            modulo_1=Decimal("0"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("691.9a"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="691.9a")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
 
 class TestReparacionOtrosBienes6919BEstimacionObjetiva:
@@ -421,23 +346,11 @@ class TestReparacionOtrosBienes6919BEstimacionObjetiva:
         assert previo == expected_previo == Decimal("5227.85")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "691.9b",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("25"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="691.9b",
-            modulo_1=Decimal("1"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("691.9b"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="691.9b")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
     def test_bare_unsuffixed_epigrafe_collision_code_stays_untabled(self) -> None:
         previo, minorado, modulos, actividad = _run_modulos_engine(
@@ -468,24 +381,12 @@ class TestEngraseLavado7515EstimacionObjetiva:
         assert previo == expected_previo == Decimal("25068.33")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "751.5",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("40"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="751.5",
-            modulo_1=Decimal("1"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("751.5"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="751.5")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
 
 class TestMudanzas757EstimacionObjetiva:
@@ -502,23 +403,11 @@ class TestMudanzas757EstimacionObjetiva:
         assert previo == expected_previo == Decimal("10896.33")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "757",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("15"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="757",
-            modulo_1=Decimal("0"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("757"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="757")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
 
 class TestMensajeria8495EstimacionObjetiva:
@@ -535,23 +424,11 @@ class TestMensajeria8495EstimacionObjetiva:
         assert previo == expected_previo == Decimal("3107.22")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "849.5",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("3"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="849.5",
-            modulo_1=Decimal("1"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("849.5"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="849.5")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
 
 class TestAutoescuela9331EstimacionObjetiva:
@@ -575,25 +452,13 @@ class TestAutoescuela9331EstimacionObjetiva:
         assert previo == expected_previo == Decimal("26246.27")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "933.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("2"),
             modulo_4=Decimal("4"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="933.1",
-            modulo_1=Decimal("1"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("933.1"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="933.1")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
 
 class TestOtrasEnsenanzas9339EstimacionObjetiva:
@@ -612,23 +477,11 @@ class TestOtrasEnsenanzas9339EstimacionObjetiva:
         assert previo == expected_previo == Decimal("18222.02")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "933.9",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("40"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="933.9",
-            modulo_1=Decimal("0"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("933.9"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="933.9")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
 
 class TestEscuelasDeporte9672EstimacionObjetiva:
@@ -647,23 +500,11 @@ class TestEscuelasDeporte9672EstimacionObjetiva:
         assert previo == expected_previo == Decimal("9076.15")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "967.2",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("60"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="967.2",
-            modulo_1=Decimal("1"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("967.2"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="967.2")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
 
 class TestTintoreria9711EstimacionObjetiva:
@@ -685,24 +526,12 @@ class TestTintoreria9711EstimacionObjetiva:
         assert previo == expected_previo == Decimal("22706.49")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "971.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("30"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="971.1",
-            modulo_1=Decimal("1"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("971.1"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="971.1")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
 
 class TestInstitutosBelleza9722EstimacionObjetiva:
@@ -724,24 +553,12 @@ class TestInstitutosBelleza9722EstimacionObjetiva:
         assert previo == expected_previo == Decimal("19532.01")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "972.2",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("40"),
             modulo_4=Decimal("20"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="972.2",
-            modulo_1=Decimal("0"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("972.2"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="972.2")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
 
 class TestCopisteria9733EstimacionObjetiva:
@@ -758,23 +575,11 @@ class TestCopisteria9733EstimacionObjetiva:
         assert previo == expected_previo == Decimal("18669.07")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "973.3",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("3"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="973.3",
-            modulo_1=Decimal("0"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("973.3"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="973.3")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
 
 class TestFrutasVerduras641EstimacionObjetiva:
@@ -799,25 +604,13 @@ class TestFrutasVerduras641EstimacionObjetiva:
         assert previo == expected_previo == Decimal("15212.04")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "641",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("30"),
             modulo_5=Decimal("500"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="641",
-            modulo_1=Decimal("1"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("641"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="641")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
 
 class TestQuioscosServicios675EstimacionObjetiva:
@@ -839,24 +632,12 @@ class TestQuioscosServicios675EstimacionObjetiva:
         assert previo == expected_previo == Decimal("15261.45")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "675",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("5"),
             modulo_4=Decimal("10"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="675",
-            modulo_1=Decimal("0"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("675"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="675")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
 
 
 class TestChocolaterias676EstimacionObjetiva:
@@ -880,22 +661,10 @@ class TestChocolaterias676EstimacionObjetiva:
         assert previo == expected_previo == Decimal("5952.19")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        _assert_fase4_reduccion_general(
             "676",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("3"),
             modulo_4=Decimal("5"),
             modulo_5=Decimal("1"),
         )
-        expected_minorado = _expected_minorado(
-            previo,
-            epigrafe="676",
-            modulo_1=Decimal("1"),
-            modulo_1_anterior=Decimal("0"),
-            modulo_1_coefficient=_module_1_coefficient("676"),
-        )
-        expected_modulos = _expected_modulos(minorado, epigrafe="676")
-        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
-        assert minorado == expected_minorado
-        assert modulos == expected_modulos
-        assert actividad == expected_actividad
