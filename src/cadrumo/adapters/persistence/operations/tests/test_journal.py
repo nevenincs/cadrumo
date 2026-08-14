@@ -18,6 +18,7 @@ from .....application.operations import (
     OperationReplayStatus,
     OperationTerminalEvent,
     OperationTerminalReceipt,
+    operation_conflict_scope_reference,
 )
 from .....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...storage import RepositoryError
@@ -56,6 +57,7 @@ def _snapshot(*, revision: int, sequence: int) -> OperationPersistedSnapshot:
 def _lease(operation_id: str = "a" * 64) -> OperationOwnerLease:
     return OperationOwnerLease(
         operation_id=operation_id,
+        scope_ref=operation_conflict_scope_reference(definition_id="test.operation", subject_ref="subject"),
         owner_id="b" * 64,
         token="c" * 64,
         acquired_at=_STARTED,

@@ -10,13 +10,13 @@ from typing import Final
 
 from ..crypto import encrypt_record
 from ._errors import ProfileCustodyRecordError
-from ._kdf_supervision import (
+from ._records import ProfileCustodyEnvelope
+from ._sentinel_contract import (
     ProfileCustodySentinelRecord,
     parse_profile_custody_sentinel_record,
     profile_custody_sentinel_aad,
     profile_custody_sentinel_plaintext,
 )
-from ._records import ProfileCustodyEnvelope
 
 PROFILE_CUSTODY_SENTINEL_FILENAME: Final = "dek.sentinel.v1.json"
 PROFILE_CUSTODY_SENTINEL_MAX_BYTES: Final = 8 * 1024

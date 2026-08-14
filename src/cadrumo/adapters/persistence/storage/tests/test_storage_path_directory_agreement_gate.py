@@ -213,6 +213,7 @@ _EXPECTED_RENDERED_GRAMMARS: Final[dict[str, str]] = {
     "login_throttle": "<root>/keystore/<bucket_id>/login-throttle.json",
     "secret_index": "<root>/secrets/index.json",
     "config_reset_journal": "<root>/reset-operations/<operation_id>.json",
+    "operation_journal": "<root>/operation-journals/<operation_id>.json",
     "secure_objects_table": "db://secure_objects/<namespace>/<object_key>",
     "blob_manifest": "<root>/blobs/<sha256[:2]>/<sha256>.manifest.json",
     "blob_content_plaintext": "<root>/blobs/<sha256[:2]>/<sha256>",

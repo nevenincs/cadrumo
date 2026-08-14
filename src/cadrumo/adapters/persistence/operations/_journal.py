@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import json
 import os
 from datetime import datetime
 from itertools import pairwise
 from pathlib import Path
-from typing import override
+from typing import cast, override
 
 from pydantic import BaseModel, model_validator
 
@@ -15,6 +16,7 @@ from ....application.operations import (
     OperationEvent,
     OperationEventCursor,
     OperationEventStream,
+    OperationIdempotencyClaim,
     OperationJournal,
     OperationOwnerLease,
     OperationPersistedSnapshot,
@@ -23,10 +25,16 @@ from ....application.operations import (
     OperationReplayStatus,
     OperationRevision,
     OperationTerminalEvent,
+    operation_conflict_scope_reference,
 )
 from ....core import STRICT_FROZEN_CONFIG, StorageCategory, exclusive_file_lock, storage_location
 from ..storage import RepositoryError
 from ._lease import OperationLeaseStorage
+
+
+def _raise_if(condition: bool, message: str, error_type: type[Exception]) -> None:
+    if condition:
+        raise error_type(message)
 
 
 class _OperationReplayRequest(BaseModel):
@@ -56,8 +64,11 @@ class _OperationJournalRecord(BaseModel):
 
     @model_validator(mode="after")
     def _validate_history(self) -> _OperationJournalRecord:
-        if any(event.identity != self.snapshot.identity for event in self.history):
-            raise ValueError("operation journal history identity does not match the snapshot")
+        _raise_if(
+            any(event.identity != self.snapshot.identity for event in self.history),
+            "operation journal history identity does not match the snapshot",
+            ValueError,
+        )
         self._validate_history_sequence()
         self._validate_history_timestamps()
         self._validate_history_revisions()
@@ -67,42 +78,83 @@ class _OperationJournalRecord(BaseModel):
 
     def _validate_history_sequence(self) -> None:
         if not self.history:
-            if self.snapshot.event_cursor != 0:
-                raise ValueError("empty operation journal history requires snapshot cursor zero")
+            _raise_if(
+                self.snapshot.event_cursor != 0,
+                "empty operation journal history requires snapshot cursor zero",
+                ValueError,
+            )
             return
-        if self.history[0].sequence != 1:
-            raise ValueError("operation journal history must begin at sequence one")
-        if any(current.sequence != previous.sequence + 1 for previous, current in pairwise(self.history)):
-            raise ValueError("operation journal history sequences must be contiguous")
-        if self.history[-1].sequence != self.snapshot.event_cursor:
-            raise ValueError("operation journal history must end at the snapshot cursor")
+        _raise_if(self.history[0].sequence != 1, "operation journal history must begin at sequence one", ValueError)
+        _raise_if(
+            any(current.sequence != previous.sequence + 1 for previous, current in pairwise(self.history)),
+            "operation journal history sequences must be contiguous",
+            ValueError,
+        )
+        _raise_if(
+            self.history[-1].sequence != self.snapshot.event_cursor,
+            "operation journal history must end at the snapshot cursor",
+            ValueError,
+        )
 
     def _validate_history_timestamps(self) -> None:
-        if any(current.timestamp < previous.timestamp for previous, current in pairwise(self.history)):
-            raise ValueError("operation journal history timestamps must be nondecreasing")
+        _raise_if(
+            any(current.timestamp < previous.timestamp for previous, current in pairwise(self.history)),
+            "operation journal history timestamps must be nondecreasing",
+            ValueError,
+        )
 
     def _validate_history_revisions(self) -> None:
         if not self.history:
             return
         revisions = tuple(event.revision for event in self.history)
-        if revisions[0] not in {0, 1}:
-            raise ValueError("operation journal history must begin at revision zero or one")
-        if any(current < previous or current > previous + 1 for previous, current in pairwise(revisions)):
-            raise ValueError("operation journal history revisions must be ordered unit advances")
-        if revisions[-1] != self.snapshot.revision:
-            raise ValueError("operation journal history must end at the snapshot revision")
+        _raise_if(
+            revisions[0] not in {0, 1}, "operation journal history must begin at revision zero or one", ValueError
+        )
+        _raise_if(
+            any(current < previous or current > previous + 1 for previous, current in pairwise(revisions)),
+            "operation journal history revisions must be ordered unit advances",
+            ValueError,
+        )
+        _raise_if(
+            revisions[-1] != self.snapshot.revision,
+            "operation journal history must end at the snapshot revision",
+            ValueError,
+        )
 
     def _validate_terminal_position(self) -> None:
-        if any(isinstance(event, OperationTerminalEvent) for event in self.history[:-1]):
-            raise ValueError("operation journal terminal event must be final in complete history")
+        _raise_if(
+            any(isinstance(event, OperationTerminalEvent) for event in self.history[:-1]),
+            "operation journal terminal event must be final in complete history",
+            ValueError,
+        )
 
     def _validate_snapshot_tail(self) -> None:
         if not self.snapshot.events:
-            if self.history:
-                raise ValueError("eventful operation journal history requires a latest snapshot event tail")
+            _raise_if(
+                bool(self.history),
+                "eventful operation journal history requires a latest snapshot event tail",
+                ValueError,
+            )
             return
-        if self.history[-len(self.snapshot.events) :] != self.snapshot.events:
-            raise ValueError("operation journal history tail must exactly match the latest snapshot events")
+        _raise_if(
+            self.history[-len(self.snapshot.events) :] != self.snapshot.events,
+            "operation journal history tail must exactly match the latest snapshot events",
+            ValueError,
+        )
+
+
+def _parse_operation_journal_record(raw: str | bytes) -> _OperationJournalRecord:
+    """Migrate the credential-free v1 snapshot before any lease decision."""
+    document = cast(dict[str, object], json.loads(raw))
+    snapshot = document.get("snapshot")
+    if isinstance(snapshot, dict):
+        snapshot_document = cast(dict[str, object], snapshot)
+        if snapshot_document.get("schema_version") == 1:
+            snapshot_document["schema_version"] = 2
+            snapshot_document.setdefault("idempotency_claim", None)
+            snapshot_document.setdefault("pending_interaction", None)
+            snapshot_document.setdefault("consumed_interactions", [])
+    return _OperationJournalRecord.model_validate_json(json.dumps(document))
 
 
 class _SnapshotJournalRepository(JournalRepositoryBase[_OperationJournalRecord]):
@@ -112,7 +164,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[_OperationJournalRecord])
         super().__init__(
             journal_dirname=storage_location(StorageCategory.OPERATION_JOURNAL).subpath,
             storage_root=storage_root,
-            parse_operation=_OperationJournalRecord.model_validate_json,
+            parse_operation=_parse_operation_journal_record,
             error_type=RepositoryError,
             not_found_type=RepositoryError,
             corrupt_type=RepositoryError,
@@ -120,6 +172,38 @@ class _SnapshotJournalRepository(JournalRepositoryBase[_OperationJournalRecord])
             id_subject="operation",
         )
         self._lease_storage = OperationLeaseStorage(storage_root=storage_root)
+
+    def claim_idempotency(self, claim: OperationIdempotencyClaim) -> str:
+        """Atomically create or resolve one durable retry claim under the journal lock."""
+        self._ensure_root()
+        claim_path = self.root / f"claim-{claim.key_digest}.json"
+        with exclusive_file_lock(self.lock_target):
+            if claim_path.exists():
+                try:
+                    current = OperationIdempotencyClaim.model_validate_json(claim_path.read_bytes())
+                except Exception as exc:
+                    raise RepositoryError("invalid operation idempotency claim") from exc
+                if (
+                    current.definition_id,
+                    current.subject_ref,
+                    current.key_digest,
+                    current.request_reference,
+                ) != (
+                    claim.definition_id,
+                    claim.subject_ref,
+                    claim.key_digest,
+                    claim.request_reference,
+                ):
+                    raise RepositoryError("operation idempotency key is bound to a different request")
+                return current.operation_id
+            self._write_claim(claim_path, claim)
+            return claim.operation_id
+
+    def _write_claim(self, path: Path, claim: OperationIdempotencyClaim) -> None:
+        """Reuse the hardened writer without introducing a second persistence authority."""
+        from ....core.atomic_write import atomic_write_hardened_text
+
+        atomic_write_hardened_text(path, claim.model_dump_json(indent=2), mode=0o600)
 
     def commit(
         self,
@@ -133,7 +217,12 @@ class _SnapshotJournalRepository(JournalRepositoryBase[_OperationJournalRecord])
         self._ensure_root()
         path = self.path_for(snapshot.operation_id)
         with exclusive_file_lock(self.lock_target):
-            self._lease_storage.require_live_exact_unlocked(lease, observed_at=snapshot.updated_at)
+            self._lease_storage.require_live_exact_unlocked(
+                scope_ref=lease.scope_ref,
+                operation_id=snapshot.operation_id,
+                lease=lease,
+                observed_at=snapshot.updated_at,
+            )
             if path.exists():
                 current = super().load(snapshot.operation_id)
                 self._validate_advance(current.snapshot, snapshot, expected_revision)
@@ -147,6 +236,12 @@ class _SnapshotJournalRepository(JournalRepositoryBase[_OperationJournalRecord])
     def _validate_lease(snapshot: OperationPersistedSnapshot, lease: OperationOwnerLease) -> None:
         if lease.operation_id != snapshot.operation_id:
             raise RepositoryError("operation lease does not match the persisted snapshot identity")
+        expected_scope_ref = operation_conflict_scope_reference(
+            definition_id=snapshot.identity.definition_id,
+            subject_ref=snapshot.identity.subject_ref,
+        )
+        if lease.scope_ref != expected_scope_ref:
+            raise RepositoryError("operation lease does not match the persisted snapshot conflict scope")
 
     @staticmethod
     def _validate_create(snapshot: OperationPersistedSnapshot, expected_revision: OperationRevision) -> None:
@@ -165,20 +260,91 @@ class _SnapshotJournalRepository(JournalRepositoryBase[_OperationJournalRecord])
         snapshot: OperationPersistedSnapshot,
         expected_revision: OperationRevision,
     ) -> None:
-        if expected_revision != current.revision:
-            raise RepositoryError("operation journal compare-and-swap revision is stale")
-        if snapshot.revision != current.revision + 1:
-            raise RepositoryError("operation journal successor revision must advance exactly once")
-        if snapshot.identity != current.identity:
-            raise RepositoryError("operation journal transition cannot change operation identity")
-        if snapshot.request_reference != current.request_reference:
-            raise RepositoryError("operation journal transition cannot change the request reference")
-        if snapshot.started_at != current.started_at:
-            raise RepositoryError("operation journal transition cannot change the start time")
-        if current.lifecycle.value == "terminal":
-            raise RepositoryError("operation journal transition cannot advance a terminal operation")
-        if not snapshot.events or snapshot.events[0].sequence != current.event_cursor + 1:
-            raise RepositoryError("operation journal transition event cursor is not contiguous")
+        _validate_advance_revision(current, snapshot, expected_revision)
+        _validate_advance_identity(current, snapshot)
+        _validate_advance_consumed_interactions(current, snapshot)
+        _validate_advance_lifecycle(current)
+        _validate_advance_events(current, snapshot)
+
+
+def _validate_advance_revision(
+    current: OperationPersistedSnapshot,
+    snapshot: OperationPersistedSnapshot,
+    expected_revision: OperationRevision,
+) -> None:
+    _raise_if(
+        expected_revision != current.revision, "operation journal compare-and-swap revision is stale", RepositoryError
+    )
+    _raise_if(
+        snapshot.revision != current.revision + 1,
+        "operation journal successor revision must advance exactly once",
+        RepositoryError,
+    )
+
+
+def _validate_advance_identity(
+    current: OperationPersistedSnapshot,
+    snapshot: OperationPersistedSnapshot,
+) -> None:
+    _raise_if(
+        snapshot.identity != current.identity,
+        "operation journal transition cannot change operation identity",
+        RepositoryError,
+    )
+    _raise_if(
+        snapshot.request_reference != current.request_reference,
+        "operation journal transition cannot change the request reference",
+        RepositoryError,
+    )
+    _raise_if(
+        snapshot.started_at != current.started_at,
+        "operation journal transition cannot change the start time",
+        RepositoryError,
+    )
+    _raise_if(
+        snapshot.idempotency_claim != current.idempotency_claim,
+        "operation journal transition cannot change the idempotency claim",
+        RepositoryError,
+    )
+
+
+def _validate_advance_consumed_interactions(
+    current: OperationPersistedSnapshot,
+    snapshot: OperationPersistedSnapshot,
+) -> None:
+    consumed_before = tuple(item.interaction_id for item in current.consumed_interactions)
+    consumed_after = tuple(item.interaction_id for item in snapshot.consumed_interactions)
+    _raise_if(
+        consumed_after[: len(consumed_before)] != consumed_before,
+        "operation journal transition cannot rewrite consumed interaction history",
+        RepositoryError,
+    )
+
+
+def _validate_advance_lifecycle(current: OperationPersistedSnapshot) -> None:
+    _raise_if(
+        current.lifecycle.value == "terminal",
+        "operation journal transition cannot advance a terminal operation",
+        RepositoryError,
+    )
+
+
+def _validate_advance_events(
+    current: OperationPersistedSnapshot,
+    snapshot: OperationPersistedSnapshot,
+) -> None:
+    if snapshot.events:
+        _raise_if(
+            snapshot.events[0].sequence != current.event_cursor + 1,
+            "operation journal transition event cursor is not contiguous",
+            RepositoryError,
+        )
+        return
+    _raise_if(
+        snapshot.event_cursor != current.event_cursor,
+        "event-free operation transition cannot advance the event cursor",
+        RepositoryError,
+    )
 
 
 class OperationJournalRepository(OperationJournal, OperationEventStream):
@@ -191,6 +357,10 @@ class OperationJournalRepository(OperationJournal, OperationEventStream):
     async def load(self, operation_id: str) -> OperationPersistedSnapshot:
         """Load the latest credential-free snapshot for one operation."""
         return self._repository.load(operation_id).snapshot
+
+    @override
+    async def claim_idempotency(self, claim: OperationIdempotencyClaim) -> str:
+        return self._repository.claim_idempotency(claim)
 
     @override
     async def read_after(

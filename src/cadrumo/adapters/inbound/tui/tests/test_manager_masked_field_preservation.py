@@ -31,7 +31,7 @@ from .....application.user_profile import (
     MASKED_PLACEHOLDER,
     ProfileFieldChoice,
     ProfileFieldView,
-    ProfileRepository,
+    ProfileRecordAggregateRepository,
     build_profile_overview,
     register_profile_with_credentials,
 )
@@ -62,7 +62,7 @@ _ENUM_PATH = "renta_taxpayer.sex"
 
 
 def _live_overview():
-    aggregate = ProfileRepository().load(require_active_bucket_id())
+    aggregate = ProfileRecordAggregateRepository().load(require_active_bucket_id())
     return build_profile_overview(aggregate.record, label=_LABEL)
 
 
@@ -72,7 +72,7 @@ def _persist(path: str, value: str):
 
 
 def _stored() -> dict[str, object | None]:
-    reloaded = ProfileRepository().load(require_active_bucket_id()).record
+    reloaded = ProfileRecordAggregateRepository().load(require_active_bucket_id()).record
     return {fact.path: fact.value for fact in reloaded.facts}
 
 

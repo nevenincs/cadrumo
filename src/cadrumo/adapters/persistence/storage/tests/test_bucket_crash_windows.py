@@ -126,7 +126,7 @@ class TestRenameProfileCrashWindow:
     def test_partial_rename_leaves_a_drift_the_integrity_gate_refuses(self, backend: Path) -> None:
         from .....application.user_profile import (
             ProfileIntegrityError,
-            ProfileRepository,
+            ProfileRecordAggregateRepository,
             RenameProfileCommand,
             build_lifecycle_service,
             profile_storage_session,
@@ -152,7 +152,7 @@ class TestRenameProfileCrashWindow:
         # The integrity gate run on every load refuses the drifted profile,
         # naming the label-drift stores — never serving the stale label.
         with profile_storage_session(_RENAME_PROFILE_ID), pytest.raises(ProfileIntegrityError) as excinfo:
-            ProfileRepository().load(_RENAME_PROFILE_ID)
+            ProfileRecordAggregateRepository().load(_RENAME_PROFILE_ID)
         assert excinfo.value.context is not None
         assert "label" in str(excinfo.value.context["mismatches"])
 
@@ -160,7 +160,7 @@ class TestRenameProfileCrashWindow:
         # Anti-tautology: the full rename keeps the record and manifest labels
         # in sync, so the load succeeds — proving the drift test's refusal is
         # caused by the partial write, not by rename per se.
-        from .....application.user_profile import ProfileRepository, profile_storage_session
+        from .....application.user_profile import ProfileRecordAggregateRepository, profile_storage_session
         from ..bucket import read_manifest
 
         _create_profile(_RENAME_PROFILE_ID, label="Original Label", facts=_VALID_FACTS)
@@ -168,8 +168,9 @@ class TestRenameProfileCrashWindow:
         paths = bucket_paths(root, _RENAME_PROFILE_ID)
 
         with profile_storage_session(_RENAME_PROFILE_ID):
-            ProfileRepository().rename(_RENAME_PROFILE_ID, new_label="Renamed Label")
-            aggregate = ProfileRepository().load(_RENAME_PROFILE_ID)
+            repository = ProfileRecordAggregateRepository()
+            repository.rename(_RENAME_PROFILE_ID, new_label="Renamed Label")
+            aggregate = repository.load(_RENAME_PROFILE_ID)
 
         assert aggregate.label == "Renamed Label"
         assert read_manifest(paths).label == "Renamed Label"

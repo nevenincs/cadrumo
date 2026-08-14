@@ -22,6 +22,7 @@ from .....application.operations import (
     OperationPersistedSnapshot,
     OperationPhaseEvent,
     OperationReplayStatus,
+    operation_conflict_scope_reference,
 )
 from .....core import OperationEffect, OperationLifecycle
 from ...storage import RepositoryError
@@ -35,6 +36,10 @@ _REQUEST_REFERENCE = "d" * 64
 _IDENTITY = OperationIdentity(
     operation_id=_OPERATION_ID, definition_id="operations.persistence.integration", subject_ref="test-subject"
 )
+_SCOPE_REF = operation_conflict_scope_reference(
+    definition_id=_IDENTITY.definition_id,
+    subject_ref=_IDENTITY.subject_ref,
+)
 
 
 def _lease(
@@ -46,6 +51,7 @@ def _lease(
 ) -> OperationOwnerLease:
     return OperationOwnerLease(
         operation_id=_OPERATION_ID,
+        scope_ref=_SCOPE_REF,
         owner_id=owner_id,
         token=token,
         acquired_at=acquired_at,
@@ -228,7 +234,7 @@ def test_public_persistence_facades_enforce_exact_owner_across_conflict_takeover
     )
     assert renewal.disposition is OperationLeaseDisposition.RENEWED
     assert (
-        asyncio.run(leases.inspect(_OPERATION_ID, observed_at=takeover_time)).disposition
+        asyncio.run(leases.inspect(_SCOPE_REF, _OPERATION_ID, observed_at=takeover_time)).disposition
         is OperationLeaseObservationDisposition.EXPIRED
     )
     takeover = asyncio.run(leases.compare_and_swap(renewed_owner, replacement_owner, observed_at=takeover_time))
@@ -247,7 +253,9 @@ def test_public_persistence_facades_enforce_exact_owner_across_conflict_takeover
     released = asyncio.run(leases.release(replacement_owner, observed_at=takeover_time + timedelta(minutes=1)))
     assert released.disposition is OperationLeaseDisposition.RELEASED
     assert (
-        asyncio.run(leases.inspect(_OPERATION_ID, observed_at=takeover_time + timedelta(minutes=1))).disposition
+        asyncio.run(
+            leases.inspect(_SCOPE_REF, _OPERATION_ID, observed_at=takeover_time + timedelta(minutes=1))
+        ).disposition
         is OperationLeaseObservationDisposition.ABSENT
     )
 
@@ -313,10 +321,12 @@ def test_public_persistence_facades_serialize_expired_takeover_races_without_res
 
     assert dispositions == [OperationLeaseDisposition.OWNER_LOST.value, OperationLeaseDisposition.TAKEN_OVER.value]
     current = asyncio.run(
-        OperationLeaseFilesystemRepository(storage_root=tmp_path).inspect(_OPERATION_ID, observed_at=observed_at)
+        OperationLeaseFilesystemRepository(storage_root=tmp_path).inspect(
+            _SCOPE_REF, _OPERATION_ID, observed_at=observed_at
+        )
     ).current
     assert current in successors
-    lease_path = tmp_path / "operation-journals" / f"{_OPERATION_ID}.lease.json"
+    lease_path = tmp_path / "operation-journals" / f"{_SCOPE_REF}.lease.json"
     stable_bytes = lease_path.read_bytes()
     assert (
         asyncio.run(leases.release(predecessor, observed_at=observed_at)).disposition

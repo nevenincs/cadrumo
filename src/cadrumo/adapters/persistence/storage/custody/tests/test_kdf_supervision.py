@@ -35,6 +35,7 @@ from .. import (
     propose_profile_kdf_ratchet,
     unlock_profile_custody,
 )
+from .._kdf_process import terminate_process_tree as _terminate_process_tree
 from .._kdf_supervision import (
     KDF_FRAME_CONTROL,
     KDF_FRAME_HEADER,
@@ -42,10 +43,9 @@ from .._kdf_supervision import (
     KDF_FRAME_VERSION,
     _select_profile_kdf_calibration,
     _SupervisedKdfWorker,
-    _terminate_process_tree,
-    _WindowsJob,
     read_kdf_frame,
 )
+from .._kdf_windows_job import _WindowsJob
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

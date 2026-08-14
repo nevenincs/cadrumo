@@ -31,7 +31,11 @@ from textual.css.query import NoMatches
 from textual.widgets import Button, DataTable, Input, Static
 
 from .....application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection
-from .....application.user_profile import ProfileRepository, build_profile_overview, register_profile_with_credentials
+from .....application.user_profile import (
+    ProfileRecordAggregateRepository,
+    build_profile_overview,
+    register_profile_with_credentials,
+)
 from .....core import require_active_bucket_id
 from .....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from .....tests.manager_pilot import wait_until_settled
@@ -753,7 +757,7 @@ async def test_a_modal_secret_never_paints_its_value(tmp_path: Path) -> None:
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
-        aggregate = ProfileRepository().load(require_active_bucket_id())
+        aggregate = ProfileRecordAggregateRepository().load(require_active_bucket_id())
         from .....entrypoints.cli._config._manager_actions import manager_actions
         from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
 

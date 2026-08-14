@@ -271,8 +271,6 @@ def test_modelo_369_exterior_export_pull_matches_normal_calculation_reference(
         binding_values={edit.binding: Decimal("0") for edit in binding_edits},
         relation_values={edit.relation: Decimal("0") for edit in relation_edits},
         date_context={"filing_period": calculation_filing_date(period)},
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
 
     assert plan.metadata.period == period

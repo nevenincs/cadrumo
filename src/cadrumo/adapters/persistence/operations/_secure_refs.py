@@ -1,0 +1,113 @@
+"""Encrypted, content-addressed secure operands for durable operations."""
+
+from __future__ import annotations
+
+from datetime import datetime
+
+from pydantic import BaseModel, ValidationError
+
+from ....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
+from ....core.hashing import sha256_hex
+from ....core.identity import ContentDigest
+from ....core.time import validate_utc_aware
+from ..storage import (
+    RepositoryError,
+    SecureObjectNamespaceDefinition,
+    SecureObjectRepository,
+)
+
+_SECURE_REFERENCE_SCHEMA_VERSION = 1
+_CONTENT_DIGEST_OBJECT_KEY_GRAMMAR = "{content_digest}"
+_PERMITTED_SENSITIVITIES = frozenset(
+    (SensitivityClass.IDENTITY, SensitivityClass.FINANCIAL, SensitivityClass.AUDIT),
+)
+
+
+class OperationSecureReferenceRepository:
+    """Persist typed operation operands in an injected encrypted namespace.
+
+    The journal carries only the SHA-256 content digest.  The corresponding
+    serialized operand is encrypted by :class:`SecureObjectRepository`, which
+    is injected by the caller that owns secure-storage routing and namespace
+    registration.
+    """
+
+    def __init__(
+        self,
+        *,
+        objects: SecureObjectRepository,
+        namespace: SecureObjectNamespaceDefinition,
+    ) -> None:
+        self._validate_namespace(namespace)
+        self._objects = objects
+        self._namespace = namespace
+
+    @staticmethod
+    def _validate_namespace(namespace: SecureObjectNamespaceDefinition) -> None:
+        if namespace.schema_version != _SECURE_REFERENCE_SCHEMA_VERSION:
+            raise ValueError("operation secure-reference namespace must use schema version 1")
+        if namespace.object_key_grammar != _CONTENT_DIGEST_OBJECT_KEY_GRAMMAR:
+            raise ValueError("operation secure-reference namespace must be keyed by {content_digest}")
+        if namespace.sensitivity not in _PERMITTED_SENSITIVITIES:
+            raise ValueError("operation secure-reference namespace has unsuitable sensitivity")
+        if default_policy_for(namespace.sensitivity).at_rest is not AtRestTreatment.CIPHERTEXT_REQUIRED:
+            raise ValueError("operation secure-reference namespace must require ciphertext at rest")
+
+    @staticmethod
+    def _serialized_operand(operand: BaseModel) -> bytes:
+        """Return the exact typed JSON bytes addressed by the content digest."""
+        return operand.model_dump_json(
+            by_alias=True,
+            exclude_defaults=False,
+            exclude_none=False,
+            exclude_unset=False,
+        ).encode("utf-8")
+
+    async def put(self, operand: BaseModel, *, written_at: datetime) -> ContentDigest:
+        """Encrypt ``operand`` under its exact typed-content digest."""
+        validate_utc_aware(written_at)
+        payload = self._serialized_operand(operand)
+        reference = sha256_hex(payload)
+        existing = self._objects.load(
+            self._namespace.namespace,
+            reference,
+            expected_class=self._namespace.sensitivity,
+            max_supported_version=self._namespace.schema_version,
+        )
+        if existing is not None:
+            self._require_matching_digest(reference, existing.payload)
+            return reference
+        self._objects.save(
+            namespace=self._namespace.namespace,
+            object_key=reference,
+            classification=self._namespace.sensitivity,
+            schema_version=self._namespace.schema_version,
+            written_at=written_at,
+            payload=payload,
+        )
+        return reference
+
+    async def resolve[OperandT: BaseModel](
+        self,
+        reference: ContentDigest,
+        operand_type: type[OperandT],
+    ) -> OperandT:
+        """Load, re-hash, and strictly hydrate one typed secure operand."""
+        record = self._objects.load(
+            self._namespace.namespace,
+            reference,
+            expected_class=self._namespace.sensitivity,
+            max_supported_version=self._namespace.schema_version,
+        )
+        if record is None:
+            raise RepositoryError("operation secure reference is absent")
+        self._require_matching_digest(reference, record.payload)
+        try:
+            return operand_type.model_validate_json(record.payload, strict=True)
+        except ValidationError as exc:
+            raise RepositoryError("operation secure reference payload does not match requested operand type") from exc
+
+    @staticmethod
+    def _require_matching_digest(reference: ContentDigest, payload: bytes) -> None:
+        if sha256_hex(payload) != reference:
+            raise RepositoryError("operation secure reference content digest mismatch")

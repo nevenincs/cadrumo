@@ -24,7 +24,7 @@ from textual.widgets import DataTable, OptionList
 from textual.widgets._footer import FooterKey
 
 from .....application.user_profile import (
-    ProfileRepository,
+    ProfileRecordAggregateRepository,
     build_profile_overview,
     register_profile_with_credentials,
 )
@@ -94,7 +94,7 @@ def _register_in(language: str) -> None:
 
 
 def _manager() -> ProfileManagerApp:
-    aggregate = ProfileRepository().load(require_active_bucket_id())
+    aggregate = ProfileRecordAggregateRepository().load(require_active_bucket_id())
     return ProfileManagerApp(
         build_profile_overview(aggregate.record, label=_LABEL),
         persist=lambda path, value: persist_active_profile_field(path, value, label=_LABEL),
@@ -242,7 +242,7 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
             )
             app.exit(None)
 
-        record = ProfileRepository().load(require_active_bucket_id()).record
+        record = ProfileRecordAggregateRepository().load(require_active_bucket_id()).record
         stored = {fact.path: fact.value for fact in record.facts}
         assert stored.get(_OUTPUT_LANGUAGE_PATH) == _TARGET_LANGUAGE, (
             "the choice must reach the encrypted record through the ordinary write door"

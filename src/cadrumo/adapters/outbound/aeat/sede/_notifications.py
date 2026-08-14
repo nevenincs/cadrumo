@@ -309,45 +309,41 @@ def _rows_from_table_body(
     return rows
 
 
+_NOTIFICATION_COLUMN_MATCHERS: tuple[tuple[tuple[str, ...], str], ...] = (
+    (("certificado",), "certificado"),
+    (("concepto",), "concepto"),
+    (("tipo",), "tipo"),
+    (("destinatario",), "destinatario"),
+    (("titular",), "titular"),
+    (("modo",), "modo"),
+    # The summary renders "Fecha de emisión"; the query renders "Fecha
+    # emisión". Article-free stems keep both AEAT surfaces addressable.
+    (("fecha", "notificaci"), "fecha_notificacion"),
+    (("fecha", "emisi"), "fecha_emision"),
+    # "Leída" / "Leida" — accented or not.
+    (("le", "da"), "leida"),
+)
+
+
+def _notification_column_key(lower: str) -> str | None:
+    """Return the semantic key for one normalized notification header.
+
+    The order is intentional: ``modo`` must claim ``Modo notificación``
+    before the date branches inspect the same label.
+    """
+    return next(
+        (key for tokens, key in _NOTIFICATION_COLUMN_MATCHERS if all(token in lower for token in tokens)),
+        None,
+    )
+
+
 def _index_columns(headers: list[str]) -> dict[str, int]:
-    """Map normalised column labels to column indices so column order can drift safely."""
-    idx: dict[str, int] = {}
-    for i, h in enumerate(headers):
-        lower = h.lower()
-        if "certificado" in lower:
-            idx["certificado"] = i
-        elif "concepto" in lower:
-            idx["concepto"] = i
-        elif "tipo" in lower:
-            idx["tipo"] = i
-        elif "destinatario" in lower:
-            idx["destinatario"] = i
-        elif "titular" in lower:
-            idx["titular"] = i
-        elif "modo" in lower:
-            idx["modo"] = i
-        # The two sede surfaces label these columns DIFFERENTLY, and matching
-        # only one spelling silently emptied the other surface. The summary
-        # renders "Fecha de emisión"; the query renders "Fecha emisión", with no
-        # "de". Keyed on the article-free stems, both forms index.
-        #
-        # This mattered far more than a column label usually does.
-        # ``_row_from_cells`` treats an unresolvable ``fecha_emision`` as an
-        # unclassifiable row and returns ``None``, so an unindexed date column
-        # did not surface as a missing FIELD -- it dropped every ROW. The query
-        # verb reported a clean ``row_count 0`` against a populated AEAT inbox,
-        # with no error and no warning.
-        #
-        # ``modo`` is matched above and therefore claims "Modo notificación"
-        # before this branch sees it; keep that ordering.
-        elif "fecha" in lower and "notificaci" in lower:
-            idx["fecha_notificacion"] = i
-        elif "fecha" in lower and "emisi" in lower:
-            idx["fecha_emision"] = i
-        elif "le" in lower and "da" in lower:
-            # "Leída" / "Leida" — accented or not.
-            idx["leida"] = i
-    return idx
+    """Map normalized column labels to indices so column order can drift safely."""
+    return {
+        key: index
+        for index, header in enumerate(headers)
+        if (key := _notification_column_key(header.lower())) is not None
+    }
 
 
 def _row_from_cells(

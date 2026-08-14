@@ -1,0 +1,762 @@
+"""Identity-anchored local filesystem substrate for profile custody."""
+
+from __future__ import annotations
+
+import os
+import stat
+import sys
+import threading
+import time
+from collections.abc import Generator, Mapping
+from contextlib import ExitStack, contextmanager, suppress
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Final, Literal, cast
+from uuid import uuid4
+
+from ._errors import ProfileCustodyRecordError
+from ._filesystem_primitives import (
+    PROFILE_CUSTODY_COMMIT_FILENAME,
+    ProfileCustodyPasswordReadOperation,
+    ensure_profile_custody_local_directory,
+)
+from ._filesystem_primitives import (
+    anchor_directory as _anchor_directory,
+)
+from ._filesystem_primitives import (
+    ensure_real_directory as _ensure_real_directory,
+)
+from ._filesystem_primitives import (
+    is_reparse_metadata as _is_reparse_metadata,
+)
+from ._filesystem_primitives import (
+    posix_directory_fd as _posix_directory_fd,
+)
+from ._filesystem_primitives import (
+    posix_mkdir_child_directory as _posix_mkdir_child_directory,
+)
+from ._filesystem_primitives import (
+    posix_open_child_directory as _posix_open_child_directory,
+)
+from ._filesystem_primitives import (
+    windows_create_file_api as _windows_create_file_api,
+)
+from ._filesystem_primitives import (
+    windows_file_information_type as _windows_file_information_type,
+)
+from ._filesystem_primitives import (
+    write_exclusive_fsynced as _write_exclusive_fsynced,
+)
+from ._filesystem_primitives import (
+    write_exclusive_fsynced_fd as _write_exclusive_fsynced_fd,
+)
+
+PROFILE_CUSTODY_DATA_MAX_ENTRIES: Final = 1024
+PROFILE_CUSTODY_DATA_FILE_MAX_BYTES: Final = 64 * 1024 * 1024
+
+
+@dataclass(slots=True)
+class _ProfileCustodyRootLockOwnership:
+    """One thread-local re-entrant ownership entry for a custody storage root."""
+
+    pid: int
+    thread_id: int
+    depth: int
+
+
+_PROFILE_CUSTODY_ROOT_LOCKS = threading.local()
+
+
+@contextmanager
+def profile_custody_local_lock(path: Path, *, timeout_seconds: float = 30.0) -> Generator[None]:
+    """Hold a no-follow, parent-anchored cross-process custody lock.
+
+    On POSIX the descriptor is opened relative to a pinned parent and locked
+    with ``flock``.  Windows opens the exact no-reparse leaf with no sharing;
+    the kernel releases that exclusion when a process dies.  Neither platform
+    relies on a stale lock-file convention.
+    """
+    if timeout_seconds <= 0:
+        raise ProfileCustodyRecordError("local custody lock timeout must be positive")
+    if os.name != "nt":
+        with _profile_custody_posix_lock(path, timeout_seconds=timeout_seconds):
+            yield
+        return
+
+    with _profile_custody_windows_lock(path, timeout_seconds=timeout_seconds):
+        yield
+
+
+@contextmanager
+def profile_custody_root_lock(root: Path, *, timeout_seconds: float = 30.0) -> Generator[None]:
+    """Hold the single re-entrant root lock for every current custody pointer mutation.
+
+    This is deliberately a separate primitive from leaf locks: both the
+    application active-pointer transaction and custody compare-and-swap use
+    this exact root lock identity.  Re-entry is limited to the same process,
+    thread, and effective root; sibling processes retain kernel-enforced
+    exclusion through :func:`profile_custody_local_lock`.
+    """
+    current_pid = os.getpid()
+    current_thread_id = threading.get_ident()
+    configured_owners = getattr(_PROFILE_CUSTODY_ROOT_LOCKS, "owners", None)
+    if configured_owners is None:
+        owners: dict[Path, _ProfileCustodyRootLockOwnership] = {}
+        _PROFILE_CUSTODY_ROOT_LOCKS.owners = owners
+    else:
+        owners = cast(dict[Path, _ProfileCustodyRootLockOwnership], configured_owners)
+    ownership = owners.get(root)
+    if ownership is not None:
+        if ownership.pid != current_pid or ownership.thread_id != current_thread_id:
+            raise ProfileCustodyRecordError("profile custody root lock ownership is not live in this thread")
+        ownership.depth += 1
+        try:
+            yield
+        finally:
+            ownership.depth -= 1
+        return
+
+    # Pointer creation is a normal first-profile operation.  Anchor the one
+    # storage-root component before opening its lock leaf so first use neither
+    # follows a substituted root nor requires an unrelated bootstrap write.
+    ensure_profile_custody_local_directory(root)
+    with profile_custody_local_lock(root / ".profile-custody-root.lock", timeout_seconds=timeout_seconds):
+        owners[root] = _ProfileCustodyRootLockOwnership(
+            pid=current_pid,
+            thread_id=current_thread_id,
+            depth=1,
+        )
+        try:
+            yield
+        finally:
+            ownership = owners.pop(root)
+            if ownership.pid != current_pid or ownership.thread_id != current_thread_id or ownership.depth != 1:
+                raise ProfileCustodyRecordError("profile custody root lock ownership changed before release")
+
+
+@contextmanager
+def _profile_custody_posix_lock(path: Path, *, timeout_seconds: float) -> Generator[None]:
+    import errno
+    import fcntl
+
+    flock = getattr(fcntl, "flock", None)
+    lock_ex = getattr(fcntl, "LOCK_EX", None)
+    lock_nb = getattr(fcntl, "LOCK_NB", None)
+    lock_un = getattr(fcntl, "LOCK_UN", None)
+    if (
+        not callable(flock)
+        or not isinstance(lock_ex, int)
+        or not isinstance(lock_nb, int)
+        or not isinstance(lock_un, int)
+    ):
+        raise ProfileCustodyRecordError("local custody flock support is unavailable")
+
+    with _posix_directory_fd(path.parent) as parent_fd:
+        try:
+            descriptor = os.open(
+                path.name,
+                os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0),
+                0o600,
+                dir_fd=parent_fd,
+            )
+        except OSError as exc:
+            raise ProfileCustodyRecordError("local custody lock cannot be no-follow opened") from exc
+        try:
+            deadline = time.monotonic() + timeout_seconds
+            while True:
+                try:
+                    flock(descriptor, lock_ex | lock_nb)
+                    break
+                except OSError as exc:
+                    if exc.errno not in {errno.EACCES, errno.EAGAIN} or time.monotonic() >= deadline:
+                        raise ProfileCustodyRecordError("local custody lock cannot be exclusively opened") from exc
+                    time.sleep(0.025)
+            yield
+        finally:
+            flock(descriptor, lock_un)
+            os.close(descriptor)
+
+
+@contextmanager
+def _profile_custody_windows_lock(path: Path, *, timeout_seconds: float) -> Generator[None]:
+    ctypes, wintypes, kernel32, create_file = _windows_create_file_api()
+    file_information_type = _windows_file_information_type()
+    invalid_handle = wintypes.HANDLE(-1).value
+    deadline = time.monotonic() + timeout_seconds
+    with ExitStack() as anchors:
+        _anchor_directory(anchors, path.parent, final_access=0x80000000)
+        while True:
+            handle = create_file(
+                str(path),
+                0x80000000 | 0x40000000,
+                0,
+                None,
+                4,  # OPEN_ALWAYS: one kernel-owned lock object, never replace it.
+                0x00200000,  # FILE_FLAG_OPEN_REPARSE_POINT
+                None,
+            )
+            if handle != invalid_handle:
+                break
+            error = ctypes.get_last_error()
+            if error not in {32, 33} or time.monotonic() >= deadline:  # sharing/lock violation
+                raise ProfileCustodyRecordError("local custody lock cannot be exclusively opened")
+            time.sleep(0.025)
+        try:
+            info = file_information_type()
+            if not kernel32.GetFileInformationByHandle(handle, ctypes.byref(info)):
+                raise ProfileCustodyRecordError("local custody lock leaf cannot be identity-verified")
+            if info.dwFileAttributes & 0x400 or info.dwFileAttributes & 0x10:
+                raise ProfileCustodyRecordError("local custody lock leaf is a reparse point or non-file")
+            yield
+        finally:
+            kernel32.CloseHandle(handle)
+
+
+def _read_regular_file(
+    path: Path,
+    *,
+    maximum_bytes: int,
+    trace: list[ProfileCustodyPasswordReadOperation] | None = None,
+) -> bytes:
+    _record_read_operation(trace, "open", path)
+    if os.name != "nt":
+        with _posix_directory_fd(path.parent) as parent_fd:
+            return _read_regular_file_open(
+                path,
+                maximum_bytes=maximum_bytes,
+                trace=trace,
+                parent_fd=parent_fd,
+            )
+    with ExitStack() as anchors:
+        _anchor_directory(anchors, path.parent, final_access=0x80000000)
+        with _windows_regular_file_anchor(path):
+            return _read_regular_file_open(path, maximum_bytes=maximum_bytes, trace=trace)
+
+
+def read_profile_custody_local_record(path: Path, *, maximum_bytes: int) -> bytes:
+    """Read an auxiliary local custody record through the same anchored no-follow primitive."""
+    return _read_regular_file(path, maximum_bytes=maximum_bytes)
+
+
+def write_profile_custody_local_record(path: Path, payload: bytes, *, publish_once: bool) -> None:
+    """Durably write an auxiliary local custody record under pinned ancestry.
+
+    ``publish_once`` uses a no-replace publication; mutable journals are first
+    read through the paired no-follow primitive and then atomically replaced.
+    """
+    if os.name != "nt":
+        with _posix_directory_fd(path.parent) as parent_fd:
+            temporary_name = f".{path.name}.{os.getpid()}.{uuid4().hex}.tmp"
+            descriptor = _posix_open_exclusive_file(parent_fd, temporary_name)
+            try:
+                _write_descriptor_fsynced(descriptor, payload)
+                if publish_once:
+                    os.link(temporary_name, path.name, src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+                    os.unlink(temporary_name, dir_fd=parent_fd)
+                else:
+                    os.replace(temporary_name, path.name, src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+                os.fsync(parent_fd)
+            except OSError as exc:
+                with suppress(FileNotFoundError):
+                    os.unlink(temporary_name, dir_fd=parent_fd)
+                raise ProfileCustodyRecordError("local custody record cannot be atomically written") from exc
+            finally:
+                os.close(descriptor)
+        return
+    with ExitStack() as anchors:
+        _anchor_directory(anchors, path.parent, final_access=0x80000000)
+        if publish_once:
+            try:
+                descriptor = os.open(
+                    path,
+                    os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0),
+                    0o600,
+                )
+            except FileExistsError as exc:
+                raise ProfileCustodyRecordError("local custody record destination already exists") from exc
+            except OSError as exc:
+                raise ProfileCustodyRecordError("local custody record cannot be exclusively created") from exc
+            try:
+                _write_descriptor_fsynced(descriptor, payload)
+            finally:
+                os.close(descriptor)
+            return
+        try:
+            from .....core.atomic_write import atomic_write_hardened_bytes
+
+            atomic_write_hardened_bytes(path, payload, mode=0o600)
+        except OSError as exc:
+            raise ProfileCustodyRecordError("local custody record cannot be atomically written") from exc
+
+
+def clear_profile_custody_local_record(path: Path) -> None:
+    """Remove one local record without following a link or reparse leaf."""
+    if os.name != "nt":
+        with _posix_directory_fd(path.parent) as parent_fd:
+            try:
+                metadata = os.stat(path.name, dir_fd=parent_fd, follow_symlinks=False)
+            except FileNotFoundError:
+                return
+            if not stat.S_ISREG(metadata.st_mode):
+                raise ProfileCustodyRecordError("local custody record is not a regular file")
+            os.unlink(path.name, dir_fd=parent_fd)
+            os.fsync(parent_fd)
+        return
+    with ExitStack() as anchors:
+        _anchor_directory(anchors, path.parent, final_access=0x80000000)
+        if not os.path.lexists(path):
+            return
+        with _windows_regular_file_anchor(path):
+            path.unlink()
+
+
+def _posix_open_exclusive_file(parent_fd: int, name: str) -> int:
+    try:
+        return os.open(
+            name,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0),
+            0o600,
+            dir_fd=parent_fd,
+        )
+    except OSError as exc:
+        raise ProfileCustodyRecordError("local custody record cannot be exclusively staged") from exc
+
+
+def _write_descriptor_fsynced(descriptor: int, payload: bytes) -> None:
+    offset = 0
+    while offset < len(payload):
+        written = os.write(descriptor, payload[offset:])
+        if written <= 0:
+            raise OSError("local custody record short write")
+        offset += written
+    os.fsync(descriptor)
+
+
+def _read_regular_file_open(
+    path: Path,
+    *,
+    maximum_bytes: int,
+    trace: list[ProfileCustodyPasswordReadOperation] | None,
+    parent_fd: int | None = None,
+) -> bytes:
+    try:
+        if parent_fd is None:
+            descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0))
+        else:
+            descriptor = os.open(
+                path.name,
+                os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0),
+                dir_fd=parent_fd,
+            )
+    except OSError as exc:
+        raise ProfileCustodyRecordError("profile capsule record is unavailable") from exc
+    try:
+        _record_read_operation(trace, "stat", path)
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_size < 1 or metadata.st_size > maximum_bytes:
+            raise ProfileCustodyRecordError("profile capsule record is not a bounded regular file")
+        _record_read_operation(trace, "read", path)
+        payload = os.read(descriptor, maximum_bytes + 1)
+        if len(payload) != metadata.st_size or len(payload) > maximum_bytes:
+            raise ProfileCustodyRecordError("profile capsule record changed during its bounded read")
+        return payload
+    except OSError as exc:
+        raise ProfileCustodyRecordError("profile capsule record cannot be read") from exc
+    finally:
+        os.close(descriptor)
+
+
+def _read_regular_file_fd(
+    parent_fd: int,
+    name: str,
+    *,
+    display_path: Path,
+    maximum_bytes: int,
+    trace: list[ProfileCustodyPasswordReadOperation] | None,
+) -> bytes:
+    _record_read_operation(trace, "open", display_path)
+    return _read_regular_file_open(
+        Path(name),
+        maximum_bytes=maximum_bytes,
+        trace=trace,
+        parent_fd=parent_fd,
+    )
+
+
+@contextmanager
+def _windows_regular_file_anchor(path: Path):
+    """Reject a final reparse point, then lock the verified leaf against replacement."""
+    ctypes, wintypes, kernel32, create_file = _windows_create_file_api()
+    file_information_type = _windows_file_information_type()
+    handle = create_file(str(path), 0, 0x00000001 | 0x00000002, None, 3, 0x00200000, None)
+    if handle == wintypes.HANDLE(-1).value:
+        raise ProfileCustodyRecordError("profile capsule record cannot be no-follow opened")
+    try:
+        info = file_information_type()
+        if not kernel32.GetFileInformationByHandle(handle, ctypes.byref(info)):
+            raise ProfileCustodyRecordError("profile capsule record identity cannot be verified")
+        if info.dwFileAttributes & 0x400 or info.dwFileAttributes & 0x10:
+            raise ProfileCustodyRecordError("profile capsule record must not be a reparse point or directory")
+        yield
+    finally:
+        kernel32.CloseHandle(handle)
+
+
+def _lexists(path: Path, *, trace: list[ProfileCustodyPasswordReadOperation] | None) -> bool:
+    _record_read_operation(trace, "stat", path)
+    if os.name == "nt":
+        return os.path.lexists(path)
+    try:
+        with _posix_directory_fd(path.parent) as parent_fd:
+            os.stat(path.name, dir_fd=parent_fd, follow_symlinks=False)
+    except FileNotFoundError:
+        return False
+    except OSError as exc:
+        raise ProfileCustodyRecordError("profile capsule path cannot be no-follow inspected") from exc
+    return True
+
+
+def _posix_child_exists(
+    parent_fd: int,
+    name: str,
+    *,
+    trace: list[ProfileCustodyPasswordReadOperation] | None,
+    display_path: Path,
+) -> bool:
+    _record_read_operation(trace, "stat", display_path)
+    try:
+        os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+    except FileNotFoundError:
+        return False
+    except OSError as exc:
+        raise ProfileCustodyRecordError("profile capsule path cannot be no-follow inspected") from exc
+    return True
+
+
+def _record_read_operation(
+    trace: list[ProfileCustodyPasswordReadOperation] | None,
+    operation: Literal["stat", "open", "read"],
+    path: Path,
+) -> None:
+    if trace is not None:
+        trace.append(ProfileCustodyPasswordReadOperation(operation=operation, path=path))
+
+
+def _remove_posix_staging_if_same(parent_fd: int, name: str, identity: os.stat_result) -> None:
+    try:
+        current = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+    except FileNotFoundError:
+        return
+    except OSError as exc:
+        raise ProfileCustodyRecordError("unpublished profile capsule staging cannot be inspected") from exc
+    if (current.st_dev, current.st_ino) != (identity.st_dev, identity.st_ino):
+        raise ProfileCustodyRecordError("unpublished profile capsule staging identity changed before cleanup")
+    _remove_posix_tree(parent_fd, name)
+
+
+def _remove_posix_tree(parent_fd: int, name: str) -> None:
+    target_fd = _posix_open_child_directory(parent_fd, name)
+    try:
+        with os.scandir(target_fd) as entries:
+            for entry in entries:
+                if entry.is_dir(follow_symlinks=False):
+                    _remove_posix_tree(target_fd, entry.name)
+                else:
+                    os.unlink(entry.name, dir_fd=target_fd)
+    finally:
+        os.close(target_fd)
+    os.rmdir(name, dir_fd=parent_fd)
+
+
+def _fsync_directory(path: Path) -> None:
+    if os.name == "nt":
+        # Windows does not expose a directory FlushFileBuffers contract. Every
+        # staged file is already fsynced; publication uses MoveFileEx
+        # WRITE_THROUGH below as the mandatory metadata durability fence.
+        return
+    descriptor: int
+    try:
+        descriptor = os.open(path, os.O_RDONLY)
+    except OSError as exc:
+        raise ProfileCustodyRecordError("profile capsule directory cannot be opened for durability") from exc
+    else:
+        try:
+            os.fsync(descriptor)
+        except OSError as exc:
+            raise ProfileCustodyRecordError("profile capsule directory could not be fsynced") from exc
+        finally:
+            os.close(descriptor)
+
+
+def _rename_directory_noreplace(
+    staging: Path,
+    destination: Path,
+    *,
+    root_handle: int | None,
+    staging_handle: int | None = None,
+) -> None:
+    """Publish exactly once; fail closed where the platform has no no-replace rename."""
+    if os.name == "nt":
+        if root_handle is None:
+            raise ProfileCustodyRecordError("profile capsule root is not identity-anchored")
+        if staging_handle is None:
+            raise ProfileCustodyRecordError("profile capsule staging is not identity-anchored")
+        _rename_windows_directory_by_handle(staging_handle, destination, root_handle=root_handle)
+        return
+    if sys.platform.startswith("linux"):
+        if staging.parent != destination.parent:
+            raise ProfileCustodyRecordError("profile capsule staging and destination roots must match")
+        with _posix_directory_fd(staging.parent) as parent_fd:
+            _renameat2_noreplace(
+                source_fd=parent_fd,
+                source_name=staging.name,
+                destination_fd=parent_fd,
+                destination_name=destination.name,
+            )
+        return
+    raise ProfileCustodyRecordError("atomic no-replace profile capsule publication is unavailable on this platform")
+
+
+def _renameat2_noreplace(*, source_fd: int, source_name: str, destination_fd: int, destination_name: str) -> None:
+    import ctypes
+    import errno
+
+    renameat2 = getattr(ctypes.CDLL(None, use_errno=True), "renameat2", None)
+    if renameat2 is None:
+        raise ProfileCustodyRecordError("atomic no-replace profile capsule publication is unavailable")
+    renameat2.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+    renameat2.restype = ctypes.c_int
+    if renameat2(source_fd, os.fsencode(source_name), destination_fd, os.fsencode(destination_name), 1) == 0:
+        return
+    error = ctypes.get_errno()
+    if error in {errno.EEXIST, errno.ENOTEMPTY}:
+        raise ProfileCustodyRecordError("profile capsule destination already exists") from None
+    raise ProfileCustodyRecordError("atomic no-replace profile capsule publication failed") from OSError(
+        error, os.strerror(error)
+    )
+
+
+def _rename_windows_directory_by_handle(staging_handle: int, destination: Path, *, root_handle: int) -> None:
+    """Rename the exact open stage while the complete destination ancestry is locked."""
+    import ctypes
+    from ctypes import wintypes
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+
+    class _FileRenameInfo(ctypes.Structure):
+        _fields_ = [
+            ("replace_if_exists", wintypes.BOOLEAN),
+            ("root_directory", wintypes.HANDLE),
+            ("file_name_length", wintypes.DWORD),
+            ("file_name", wintypes.WCHAR * 1),
+        ]
+
+    # A mapped/network volume may reject a non-null RootDirectory.  The source
+    # is still renamed by its already-open handle, while the component-wise
+    # root anchor makes this absolute destination immutable for the call.
+    destination_name = str(destination)
+    encoded_name = destination_name.encode("utf-16-le")
+    name_offset = _FileRenameInfo.file_name.offset
+    # FILE_RENAME_INFO declares one WCHAR in the flexible tail.  The Win32
+    # information length is the declared structure plus the remaining UTF-16
+    # code units, not the structure's alignment padding.
+    rename_buffer = ctypes.create_string_buffer(
+        ctypes.sizeof(_FileRenameInfo) + len(encoded_name) - ctypes.sizeof(wintypes.WCHAR)
+    )
+    rename = _FileRenameInfo.from_buffer(rename_buffer)
+    rename.replace_if_exists = False
+    rename.root_directory = wintypes.HANDLE()
+    rename.file_name_length = len(encoded_name)
+    ctypes.memmove(ctypes.addressof(rename_buffer) + name_offset, encoded_name, len(encoded_name))
+    set_information = kernel32.SetFileInformationByHandle
+    set_information.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
+    set_information.restype = wintypes.BOOL
+    if set_information(
+        wintypes.HANDLE(staging_handle),
+        3,  # FileRenameInfo: ReplaceIfExists=False is the no-replace contract.
+        ctypes.byref(rename),
+        len(rename_buffer),
+    ):
+        return
+    error = ctypes.get_last_error()
+    if error in {80, 183}:
+        raise ProfileCustodyRecordError("profile capsule destination already exists") from None
+    raise ProfileCustodyRecordError("atomic no-replace profile capsule publication failed") from OSError(
+        error, "SetFileInformationByHandle(FileRenameInfo)"
+    )
+
+
+def _write_through_windows_publication_fence(destination: Path, *, root_handle: int | None) -> None:
+    """Commit the prior handle-relative rename through Windows' supported fence."""
+    if root_handle is None:
+        raise ProfileCustodyRecordError("profile capsule root is not identity-anchored for durability")
+    import ctypes
+    from ctypes import wintypes
+
+    # FlushFileBuffers rejects directory handles on the supported filesystem
+    # stack here.  MoveFileExW with MOVEFILE_WRITE_THROUGH is the documented
+    # Windows metadata durability contract and remains safe because the entire
+    # absolute ancestry is held by no-delete, no-reparse anchors.
+    move_file = ctypes.WinDLL("kernel32", use_last_error=True).MoveFileExW
+    move_file.argtypes = [ctypes.c_wchar_p, ctypes.c_wchar_p, wintypes.DWORD]
+    move_file.restype = wintypes.BOOL
+    if not move_file(str(destination), str(destination), 0x00000008):
+        error = ctypes.get_last_error()
+        if error == 109:  # ERROR_BROKEN_PIPE from a mapped/server volume.
+            _fsync_windows_published_commit(destination)
+            return
+        raise ProfileCustodyRecordError("profile capsule root durability fence failed") from OSError(
+            error, "MoveFileExW(MOVEFILE_WRITE_THROUGH)"
+        )
+
+
+def _fsync_windows_published_commit(destination: Path) -> None:
+    """Use the server-backed commit record as the remote-volume durability fence."""
+    try:
+        descriptor = os.open(
+            destination / PROFILE_CUSTODY_COMMIT_FILENAME,
+            os.O_RDWR | getattr(os, "O_BINARY", 0),
+        )
+    except OSError as exc:
+        raise ProfileCustodyRecordError("published profile capsule commit cannot be durability-fenced") from exc
+    try:
+        import ctypes
+        import msvcrt
+        from ctypes import wintypes
+
+        flush = ctypes.WinDLL("kernel32", use_last_error=True).FlushFileBuffers
+        flush.argtypes = [wintypes.HANDLE]
+        flush.restype = wintypes.BOOL
+        if not flush(wintypes.HANDLE(msvcrt.get_osfhandle(descriptor))):
+            raise OSError(ctypes.get_last_error(), "FlushFileBuffers")
+    except OSError as exc:
+        raise ProfileCustodyRecordError("published profile capsule commit durability fence failed") from exc
+    finally:
+        os.close(descriptor)
+
+
+def _windows_stage_snapshot(staging: Path) -> dict[str, tuple[int, int, bool]]:
+    """Capture the exact transaction-owned tree before any cleanup can occur."""
+    try:
+        snapshot: dict[str, tuple[int, int, bool]] = {}
+        for current, directories, files in os.walk(staging, topdown=True, followlinks=False):
+            current_path = Path(current)
+            relative = current_path.relative_to(staging).as_posix()
+            metadata = current_path.lstat()
+            if stat.S_ISLNK(metadata.st_mode) or is_reparse_metadata(metadata):
+                raise ProfileCustodyRecordError("unpublished profile capsule staging contains a reparse point")
+            snapshot[relative] = (metadata.st_dev, metadata.st_ino, True)
+            for name in [*directories, *files]:
+                entry = current_path / name
+                entry_metadata = entry.lstat()
+                if stat.S_ISLNK(entry_metadata.st_mode) or is_reparse_metadata(entry_metadata):
+                    raise ProfileCustodyRecordError("unpublished profile capsule staging contains a reparse point")
+                snapshot[entry.relative_to(staging).as_posix()] = (
+                    entry_metadata.st_dev,
+                    entry_metadata.st_ino,
+                    stat.S_ISDIR(entry_metadata.st_mode),
+                )
+        return snapshot
+    except OSError as exc:
+        raise ProfileCustodyRecordError("unpublished profile capsule staging cannot be identity-inventoried") from exc
+
+
+def _remove_windows_unpublished_staging(
+    staging: Path,
+    *,
+    staging_handle: int | None,
+    snapshot: Mapping[str, tuple[int, int, bool]],
+) -> None:
+    """Delete only entries proven unchanged while the exact stage is pinned."""
+    if staging_handle is None:
+        raise ProfileCustodyRecordError("unpublished profile capsule staging is not identity-anchored")
+    current_snapshot = _windows_stage_snapshot(staging)
+    if current_snapshot != snapshot:
+        raise ProfileCustodyRecordError("unpublished profile capsule staging changed before safe cleanup")
+    # A native delete disposition is attached to an exact no-reparse handle;
+    # postorder guarantees directory emptiness and refuses any swap before it
+    # can be marked for removal.
+    entries = sorted(snapshot.items(), key=lambda item: item[0].count("/"), reverse=True)
+    for relative_name, expected in entries:
+        if relative_name == ".":
+            continue
+        target = staging if relative_name == "." else staging.joinpath(*relative_name.split("/"))
+        _windows_delete_exact_entry(target, expected)
+    _windows_mark_handle_for_deletion(staging_handle)
+
+
+def _windows_delete_exact_entry(target: Path, expected: tuple[int, int, bool]) -> None:
+    ctypes, wintypes, kernel32, create_file = _windows_create_file_api()
+    file_information_type = _windows_file_information_type()
+    handle = create_file(str(target), 0x00010000, 0x00000001 | 0x00000002, None, 3, 0x02000000 | 0x00200000, None)
+    if handle == wintypes.HANDLE(-1).value:
+        raise ProfileCustodyRecordError("unpublished profile capsule entry cannot be identity-opened")
+    try:
+        info = file_information_type()
+        if not kernel32.GetFileInformationByHandle(handle, ctypes.byref(info)):
+            raise ProfileCustodyRecordError("unpublished profile capsule entry identity cannot be verified")
+        # Python's volume/inode identity is the stable comparison surface used
+        # for the recorded inventory; lstat immediately follows each native
+        # handle operation so a provider with a different mapping still fails
+        # closed if the path changed.
+        metadata = target.lstat()
+        actual = (metadata.st_dev, metadata.st_ino, stat.S_ISDIR(metadata.st_mode))
+        if actual != expected or is_reparse_metadata(metadata) or stat.S_ISLNK(metadata.st_mode):
+            raise ProfileCustodyRecordError("unpublished profile capsule entry changed before safe cleanup")
+        _windows_mark_handle_for_deletion(int(handle))
+    finally:
+        kernel32.CloseHandle(handle)
+
+
+def _windows_mark_handle_for_deletion(handle: int) -> None:
+    import ctypes
+    from ctypes import wintypes
+
+    class _FileDispositionInfo(ctypes.Structure):
+        _fields_ = [("delete_file", wintypes.BOOLEAN)]
+
+    disposition = _FileDispositionInfo(True)
+    set_information = ctypes.WinDLL("kernel32", use_last_error=True).SetFileInformationByHandle
+    set_information.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
+    set_information.restype = wintypes.BOOL
+    if not set_information(wintypes.HANDLE(handle), 4, ctypes.byref(disposition), ctypes.sizeof(disposition)):
+        raise ProfileCustodyRecordError("unpublished profile capsule entry cannot be safely removed")
+
+
+# Capsule publication is the sole consumer of these component-level primitives.
+# They are intentionally public to this custody package so the capsule does not
+# reach across a module boundary through private names.
+anchor_directory = _anchor_directory
+ensure_real_directory = _ensure_real_directory
+fsync_directory = _fsync_directory
+fsync_windows_published_commit = _fsync_windows_published_commit
+is_reparse_metadata = _is_reparse_metadata
+lexists = _lexists
+posix_child_exists = _posix_child_exists
+posix_directory_fd = _posix_directory_fd
+posix_mkdir_child_directory = _posix_mkdir_child_directory
+posix_open_child_directory = _posix_open_child_directory
+read_regular_file = _read_regular_file
+read_regular_file_fd = _read_regular_file_fd
+remove_posix_staging_if_same = _remove_posix_staging_if_same
+remove_posix_tree = _remove_posix_tree
+remove_windows_unpublished_staging = _remove_windows_unpublished_staging
+rename_directory_noreplace = _rename_directory_noreplace
+rename_windows_directory_by_handle = _rename_windows_directory_by_handle
+renameat2_noreplace = _renameat2_noreplace
+windows_regular_file_anchor = _windows_regular_file_anchor
+windows_stage_snapshot = _windows_stage_snapshot
+write_exclusive_fsynced = _write_exclusive_fsynced
+write_exclusive_fsynced_fd = _write_exclusive_fsynced_fd
+write_through_windows_publication_fence = _write_through_windows_publication_fence
+
+
+__all__ = [
+    "ProfileCustodyPasswordReadOperation",
+    "clear_profile_custody_local_record",
+    "ensure_profile_custody_local_directory",
+    "profile_custody_local_lock",
+    "profile_custody_root_lock",
+    "read_profile_custody_local_record",
+    "write_profile_custody_local_record",
+]

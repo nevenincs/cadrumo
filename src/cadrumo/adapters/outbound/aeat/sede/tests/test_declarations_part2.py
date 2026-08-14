@@ -332,8 +332,6 @@ class TestSubmittedFileObservation:
             inputs=input_values,
             date_context={"filing_period": date(2026, 3, 31)},
             binding_values=binding_values,
-            m303_regimen_simplificado_scope=None,
-            m303_annual_orden=None,
         )
 
         assert {casilla_id: calculated.values[casilla_id] for casilla_id in _MODELO_130_COMPUTED_CASILLAS} == {

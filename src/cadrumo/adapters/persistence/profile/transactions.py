@@ -112,6 +112,7 @@ from .bienes_inversion import BienesInversionIvaRegisterRepository
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import (
         SecureObjectDeletion,
+        SecureObjectNamespaceDefinition,
         SecureObjectRepository,
         SecureObjectWrite,
     )
@@ -530,6 +531,64 @@ class TransactionCatalogueRepository:
             rectifies_ledger_id=transaction.rectifies_ledger_id,
         )
 
+    def _migration_investment_links(
+        self,
+        transactions: Iterable[Transaction],
+    ) -> dict[int, list[InvestmentAssetAcquisitionLink]]:
+        """Group migrated investment deductions by filing year."""
+        links_by_year: dict[int, list[InvestmentAssetAcquisitionLink]] = {}
+        for transaction in transactions:
+            if not (
+                transaction.deduction_fact_kind is not None
+                and transaction.deduction_fact_kind.is_investment_acquisition
+            ):
+                continue
+            investment_asset_id = transaction.investment_asset_id
+            if investment_asset_id is None:
+                raise LedgerStorageError(
+                    f"transaction {transaction.transaction_id!r} has an investment "
+                    "deduction kind without an asset link",
+                )
+            transaction_date = transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date
+            links_by_year.setdefault(transaction_date.year, []).append(
+                InvestmentAssetAcquisitionLink(
+                    ledger_id=transaction.transaction_id,
+                    transaction_date=transaction_date,
+                    deduction_fact_kind=transaction.deduction_fact_kind,
+                    investment_asset_id=investment_asset_id,
+                    prorrata_sector_id=transaction.prorrata_sector_id,
+                ),
+            )
+        return links_by_year
+
+    def _validate_iva_authority_migration(
+        self,
+        payloads: Mapping[tuple[str, str], bytes],
+        *,
+        bienes_definition: SecureObjectNamespaceDefinition,
+        bienes_key: str,
+        asset_profile_id: str,
+    ) -> None:
+        """Validate upgraded transaction rows against reciprocal bienes authority."""
+        transaction_payloads = {
+            key: payload for (namespace, key), payload in payloads.items() if namespace == TX_BUCKET_NAMESPACE
+        }
+        transactions = self._validated_migrated_transactions(transaction_payloads)
+        register_payload = payloads.get((bienes_definition.namespace, bienes_key))
+        if register_payload is None:
+            raise LedgerStorageError("bienes-inversion register is absent during IVA authority migration")
+        register = BienesInversionIvaRegister.model_validate_json(register_payload)
+        links_by_year = self._migration_investment_links(transactions)
+        years = sorted(set(links_by_year) | {record.acquisition_year for record in register.records})
+        for filing_year in years:
+            validate_investment_asset_reciprocity(
+                observations=tuple(links_by_year.get(filing_year, [])),
+                register=register,
+                ledger_profile_id=self._bucket_id,
+                asset_profile_id=asset_profile_id,
+                filing_year=filing_year,
+            )
+
     def migrate_iva_deduction_authority(
         self,
         *,
@@ -549,53 +608,6 @@ class TransactionCatalogueRepository:
         bienes_definition = PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
         bienes_key = bienes_definition.require_default_object_key()
 
-        def validate(payloads: Mapping[tuple[str, str], bytes]) -> None:
-            transaction_payloads = {
-                key: payload for (namespace, key), payload in payloads.items() if namespace == TX_BUCKET_NAMESPACE
-            }
-            transactions = self._validated_migrated_transactions(transaction_payloads)
-            register_payload = payloads.get((bienes_definition.namespace, bienes_key))
-            if register_payload is None:
-                raise LedgerStorageError("bienes-inversion register is absent during IVA authority migration")
-            register = BienesInversionIvaRegister.model_validate_json(register_payload)
-            links_by_year: dict[int, list[InvestmentAssetAcquisitionLink]] = {}
-            for transaction in transactions:
-                if (
-                    transaction.deduction_fact_kind is not None
-                    and transaction.deduction_fact_kind.is_investment_acquisition
-                ):
-                    investment_asset_id = transaction.investment_asset_id
-                    if investment_asset_id is None:
-                        raise LedgerStorageError(
-                            f"transaction {transaction.transaction_id!r} has an investment "
-                            "deduction kind without an asset link"
-                        )
-                    transaction_date = (
-                        transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date
-                    )
-                    links = links_by_year.get(transaction_date.year)
-                    if links is None:
-                        links = []
-                        links_by_year[transaction_date.year] = links
-                    links.append(
-                        InvestmentAssetAcquisitionLink(
-                            ledger_id=transaction.transaction_id,
-                            transaction_date=transaction_date,
-                            deduction_fact_kind=transaction.deduction_fact_kind,
-                            investment_asset_id=investment_asset_id,
-                            prorrata_sector_id=transaction.prorrata_sector_id,
-                        )
-                    )
-            years = sorted(set(links_by_year) | {record.acquisition_year for record in register.records})
-            for filing_year in years:
-                validate_investment_asset_reciprocity(
-                    observations=tuple(links_by_year.get(filing_year, [])),
-                    register=register,
-                    ledger_profile_id=self._bucket_id,
-                    asset_profile_id=asset_profile_id,
-                    filing_year=filing_year,
-                )
-
         self._objects.migrate_targets_atomically(
             (
                 *(
@@ -614,7 +626,12 @@ class TransactionCatalogueRepository:
                     bienes_definition.schema_version,
                 ),
             ),
-            validate_upgraded_payloads=validate,
+            validate_upgraded_payloads=lambda payloads: self._validate_iva_authority_migration(
+                payloads,
+                bienes_definition=bienes_definition,
+                bienes_key=bienes_key,
+                asset_profile_id=asset_profile_id,
+            ),
             write_provenance="transaction-catalogue:iva-deduction-migration",
         )
         return BienesInversionIvaRegisterRepository(bucket_id=asset_profile_id).load()
