@@ -19,10 +19,8 @@ layer beneath the identity check. Nothing is mocked.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -38,9 +36,9 @@ from .....domain.filing import (
     registry_schema_version,
 )
 from .....domain.submission import ModeloDraftStatus
-from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...storage import FILING_AMENDMENTS_NAMESPACE, Envelope, SecureObjectRowIdentityError
 from ...storage.sql.secure_objects import SecureObjectRepository
+from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..filing_amendments import ModeloAmendmentRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -51,11 +49,7 @@ _MODELO = "130"
 _REVISION_ID = "2019-y-siguientes"
 _NOW = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
 
-
-@pytest.fixture(autouse=True)
-def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+_runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
 
 def _amendment(amendment_id: str) -> ModeloComplementaria:

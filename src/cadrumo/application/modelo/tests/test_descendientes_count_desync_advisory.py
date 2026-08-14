@@ -19,20 +19,16 @@ sibling undeclared-advisory treats it as, not a fault.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
-from pathlib import Path
 
 import pytest
 
 from ....core import Modelo
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile import UserProfileFact
-from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
-from ...workflow import workflow_state_repository
+from ....tests.profile_capsule import set_active_test_profile_facts
 from .._minimo_descendientes_advisory import collect_descendientes_count_desync_diagnostics
+from ._advisory_bucket_fixture import _bucket  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,14 +36,9 @@ _BUCKET_ID = "9a9a9a9a-9a9a-4a9a-8a9a-9a9a9a9a9a9a"
 _COUNT_PATH = "renta_family.descendientes_count"
 
 
-@pytest.fixture(autouse=True)
-def _bucket(tmp_path: Path) -> Iterator[None]:
-    from ... import wizard as _wizard
-
-    assert _wizard.WIZARD_FLOWS
-    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
-        workflow_state_repository().update(lambda s: register_minimal_profile(s, profile_id=_BUCKET_ID))
-        yield
+@pytest.fixture
+def _bucket_id() -> str:
+    return _BUCKET_ID
 
 
 def _write(*facts: UserProfileFact) -> None:

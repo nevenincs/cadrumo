@@ -20,26 +20,20 @@ SQL backend, and genuine repository instances. Nothing is mocked.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from .....core import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from .....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
-from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..prorrata_register import ProrrataRegisterRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "51355135-5135-4135-8135-513551355135"
 
-
-@pytest.fixture(autouse=True)
-def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+_runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
 
 def _entry(ejercicio: int, *, percentage: str) -> ProrrataRegisterEntry:

@@ -7,9 +7,7 @@ and the classification gate enforcement on the audit envelope.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
 
@@ -20,15 +18,18 @@ from .....domain.submission import (
     SubmissionStatus,
     make_submission_id,
 )
-from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from .....tests.secure_sql import TestRuntimeProfile
 from ...profile.submission import (
     SubmissionRepository,
 )
+from ...tests.runtime_profile_fixture import _runtime_profile
 from .. import (
     SensitivityClass,
 )
 from ..errors import ClassificationError
 from ..sql.secure_objects import SecureObjectRepository
+
+__all__ = ["_runtime_profile"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -68,12 +69,6 @@ def _save_two_filings(repo: SubmissionRepository) -> tuple[ModeloPresentado, Mod
     repo.save(f1)
     repo.save(f2)
     return f1, f2
-
-
-@pytest.fixture(autouse=True)
-def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        yield profile
 
 
 def _database_bytes(profile: TestRuntimeProfile) -> bytes:

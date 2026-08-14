@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from functools import cache
-from pathlib import Path
 
 import pytest
 from pydantic import AnyHttpUrl
@@ -21,10 +19,10 @@ from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionSourceResolver, reconcile_iva_compensation_wallet
 from ...modelo import resolve_profile_sourced_bindings
 from .. import CalculationSourceContext, ProfileSourceResolver
+from ._secure_objects_fixtures import secure_profile_backend  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -52,9 +50,8 @@ _DERIVED_FACT_PROFILE_BINDINGS = frozenset(
 
 
 @pytest.fixture
-def secure_profile_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        yield
+def secure_profile_bucket_id() -> str:
+    return _BUCKET_ID
 
 
 @cache
@@ -155,7 +152,7 @@ def test_profile_source_resolver_matches_direct_profile_binding_resolution() -> 
 
 
 def test_profile_source_resolver_fingerprints_storage_loaded_profile(
-    secure_profile_backend: None,
+    secure_profile_backend: None,  # noqa: F811
 ) -> None:
     snapshot = _modelo_100_snapshot()
     seed_test_profile_record(_profile_with_ccaa("madrid"))

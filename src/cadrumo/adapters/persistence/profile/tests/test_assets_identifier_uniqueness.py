@@ -17,10 +17,8 @@ encrypted secure-object backend. Nothing is mocked.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -31,7 +29,7 @@ from .....domain.contribuyente.assets import (
     AssetRecordError,
     AssetsLedgerDocument,
 )
-from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..assets import AssetsLedgerRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -39,11 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _BUCKET_ID = "50505050-5050-4050-8050-505050505050"
 _DUPLICATE_ID = "dup"
 
-
-@pytest.fixture(autouse=True)
-def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+_runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
 
 def _asset(identifier: str, *, description: str, cost: str) -> AssetRecord:

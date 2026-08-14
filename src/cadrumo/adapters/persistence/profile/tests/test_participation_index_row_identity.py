@@ -18,9 +18,7 @@ beneath the identity check. Nothing is mocked.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
 
@@ -30,9 +28,9 @@ from .....domain.modelos import (
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
 )
-from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...storage import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE, Envelope, SecureObjectRowIdentityError
 from ...storage.sql.secure_objects import SecureObjectRepository
+from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..participation_index import TransactionParticipationIndexRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -50,11 +48,7 @@ def _hex(seed: str) -> str:
 _TX_A = _hex("a")
 _TX_B = _hex("b")
 
-
-@pytest.fixture(autouse=True)
-def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+_runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
 
 def _index(transaction_id: str, *, revision_seed: str) -> TransactionRevisionParticipationIndex:

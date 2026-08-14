@@ -16,9 +16,7 @@ encrypted secure-object backend. Nothing is mocked.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -29,7 +27,7 @@ from .....domain.contribuyente.inventory import (
     InventoryLedgerError,
     ValuationMethod,
 )
-from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..inventory import InventoryLedgerRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -38,11 +36,7 @@ _BUCKET_ID = "51515151-5151-4151-8151-515151515151"
 _ACTIVIDAD = "retail"
 _YEAR = 2025
 
-
-@pytest.fixture(autouse=True)
-def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+_runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
 
 def _ledger(*, actividad_id: str = _ACTIVIDAD, year: int = _YEAR, opening: str) -> InventoryLedger:
