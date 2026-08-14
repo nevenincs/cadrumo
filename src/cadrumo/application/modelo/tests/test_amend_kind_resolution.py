@@ -99,14 +99,7 @@ _READY_PROFILE_FACTS = (
 )
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_M303_RESULT_CASILLA: CasillaId = _casilla_id("71")
+_M303_RESULT_CASILLA: CasillaId = validated_casilla_id("71")
 
 
 @pytest.fixture

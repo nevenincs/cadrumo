@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from decimal import Decimal
 from pathlib import Path
 
@@ -20,9 +19,10 @@ from ....domain.iva_compensation import (
     IvaCompensationExpiryReviewState,
     IvaCompensationSeedConflictError,
 )
+from ....tests.cli_envelope import require_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_runtime_profile
-from ._iva_wallet_inspector_support import _NIF, _SEED_BUCKET_ID, _store_profile_with_nif, _unwrap_envelope
+from ._iva_wallet_inspector_support import _NIF, _SEED_BUCKET_ID, _store_profile_with_nif
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -160,7 +160,7 @@ def test_cli_seed_verb_happy_path(tmp_path: Path) -> None:
         stored = repo.load_period(Period.from_year_and_code(2024, "4T"))
 
     assert result.exit_code == 0, result.output
-    payload = _unwrap_envelope(json.loads(result.output))
+    payload = require_schema_envelope(result.output)
     assert payload["operation"] == "modelo.iva_wallet.seed"
     assert payload["filing_year"] == 2024
     assert payload["period"] == {"filing_year": 2024, "code": "4T"}
@@ -268,7 +268,7 @@ def test_cli_override_verb_records_taxpayer_override_decision(tmp_path: Path) ->
         )
 
     assert result.exit_code == 0, result.output
-    payload = _unwrap_envelope(json.loads(result.output))
+    payload = require_schema_envelope(result.output)
     assert payload["operation"] == "modelo.iva_wallet.override"
     assert payload["filing_year"] == 2025
     assert payload["period"] == {"filing_year": 2025, "code": "2T"}

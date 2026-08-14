@@ -36,11 +36,7 @@ from .._renta_web_open_oracle import RentaWebOpenReplayDriver
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    return validated_casilla_id(value, surface="renta replay envelope parity test casilla id")
-
-
-_CASILLA: CasillaId = _casilla_id("0001")
+_CASILLA: CasillaId = validated_casilla_id("0001", surface="renta replay envelope parity test casilla id")
 _SHORT_LOCATOR = "corpus/aeat_official/renta_web_open/sample.json"
 #: Longer than the generic replay envelope's former 512 cap, well inside the
 #: bundled-oracle bound, so it separates the two contracts precisely.

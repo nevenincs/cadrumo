@@ -19,16 +19,12 @@ from ._scenarios import (
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
-def _casilla_id(value: object) -> CasillaId:
-    return validated_casilla_id(value, surface="test_registry_scenarios.casilla")
-
-
 def _operand_refs(*values: object) -> tuple[str, ...]:
     return tuple(str(value) for value in values)
 
 
 def _operand_casilla_refs(*values: object) -> tuple[CasillaId, ...]:
-    return tuple(_casilla_id(value) for value in values)
+    return tuple(validated_casilla_id(value, surface="test_registry_scenarios.casilla") for value in values)
 
 
 def _inputs(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
@@ -92,7 +88,7 @@ def _expected(
     if operand_refs and operand_casilla_refs is None:
         raise AssertionError("scenario expectations with operand_refs must declare operand_casilla_refs explicitly")
     expected_operand_casilla_refs = () if operand_casilla_refs is None else operand_casilla_refs
-    target_casilla_id = _casilla_id(target)
+    target_casilla_id = validated_casilla_id(target, surface="test_registry_scenarios.casilla")
     default_legal_refs, default_source_refs = _m100_2025_refs_by_target()[target_casilla_id]
     return RegistryScenarioExpectedOutput(
         target_casilla_id=target_casilla_id,

@@ -40,17 +40,10 @@ from .._relation_prefill import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"relation prefill fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M115_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
-_M115_BASE_CASILLA: CasillaId = _casilla_id("02")
-_M115_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
-_M130_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("19")
+_M115_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01")
+_M115_BASE_CASILLA: CasillaId = validated_casilla_id("02")
+_M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03")
+_M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19")
 _M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-2023-2024-pagos-fraccionados-anteriores"
 
 

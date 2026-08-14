@@ -38,17 +38,17 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from ....core import CasillaId, validated_casilla_id
-from ....core.resources import bundled_path, resources
+from ....core.resources import resources
 from ....domain.calculations.registry import (
     ManualWorkedExamplePayload,
     calculate_registry_snapshot,
     resolve_available_bound_inputs_by_casilla_id,
 )
+from ....domain.calculations.registry.tests import read_manual_worked_example
 from ....domain.iva import (
     InputClassification,
     ProrrataInputs,
@@ -61,9 +61,7 @@ from .._prorrata_regularizacion import project_prorrata_regularizacion_feed
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_ORACLE_PATH = Path(
-    bundled_path("corpus", "manual_oracles", "modelo-303-2025-prorrata-general-regularizacion.json"),
-)
+_ORACLE_PAYLOAD_NAME = "modelo-303-2025-prorrata-general-regularizacion.json"
 _PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surface="test casilla id")
 _VOLUMEN_TOTAL_ID: CasillaId = validated_casilla_id("iva.prorrata-volumen-total", surface="test casilla id")
 _VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
@@ -141,17 +139,6 @@ def _m303_zero_bindings() -> dict[str, Decimal]:
     }
 
 
-def _oracle_payload() -> ManualWorkedExamplePayload:
-    """Read the bundled oracle through the registry's own strict payload model.
-
-    Replaces a local ``json.loads`` of the same file. An untyped read here would let
-    this module accept a payload shape the grounding fold refuses, so the two could
-    disagree about what a valid oracle is -- and this module would be the one that
-    kept passing.
-    """
-    return ManualWorkedExamplePayload.model_validate_json(_ORACLE_PATH.read_text(encoding="utf-8"))
-
-
 def _declared_annual_volumes() -> dict[CasillaId, Decimal]:
     """The manual's current-year volumes, read FROM the oracle rather than retyped here.
 
@@ -165,8 +152,8 @@ def _declared_annual_volumes() -> dict[CasillaId, Decimal]:
     of and the formula line that uses it, rather than pointing at a total the page does
     not display.
     """
-    declared = _oracle_payload().declared_inputs
-    assert declared is not None, f"{_ORACLE_PATH.name} must declare its scenario inputs"
+    declared = read_manual_worked_example(_ORACLE_PAYLOAD_NAME).declared_inputs
+    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
     return {
         validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
         for casilla_id, value in declared.by_casilla_id.items()
@@ -201,7 +188,7 @@ def test_m303_prorrata_regularizacion_reproduces_aeat_manual_oracle() -> None:
             Result carrier whose provisional, definitive, importe, and direction
             fields are compared against the manual figures.
     """
-    payload = _oracle_payload()
+    payload = read_manual_worked_example(_ORACLE_PAYLOAD_NAME)
 
     definitive_percentage = _m303_prorrata_percentage_from_manual_annual_volumes(payload)
     assert definitive_percentage == _oracle_expected(payload, _PORCENTAJE_ID)

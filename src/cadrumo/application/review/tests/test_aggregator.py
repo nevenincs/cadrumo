@@ -37,7 +37,7 @@ from ....domain.transactions import (
 )
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import workflow_state_repository
+from ...workflow import WorkflowState
 from .. import (
     ReviewItemKind,
     ReviewQueue,
@@ -74,12 +74,14 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
     """Materialise one pending item in every source under tmp_path."""
     settings = _build_settings(tmp_path)
     with open_test_profile_session(_PROFILE_ID):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id=_PROFILE_ID,
-                overrides={"identity.tax_id": "00000000T"},
-            ),
+        # Seeded through a detached WorkflowState, never a repository read:
+        # the capsule publishes by an atomic no-replace rename onto
+        # ``buckets/<profile-id>``, which a workflow-state repository
+        # construction would otherwise materialise first and collide with.
+        register_minimal_profile(
+            WorkflowState(),
+            profile_id=_PROFILE_ID,
+            overrides={"identity.tax_id": "00000000T"},
         )
 
         raw = RawTransaction(

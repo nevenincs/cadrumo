@@ -46,13 +46,6 @@ def _general_m303_scope() -> M303RegimenSimplificadoScopeDecision:
     )
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
 def _binding_id(value: object) -> BindingId:
     try:
         return _BINDING_ID_ADAPTER.validate_python(value)
@@ -76,10 +69,10 @@ _M303_COMPENSACION_PENDIENTE_ANTERIORES_BINDING: BindingId = _binding_id(
 )
 _M303_AUTOCONSUMO_PROMOTOR_BASE_BINDING: BindingId = _binding_id("modelo-303-autoconsumo-promotor-base")
 _M303_STATE_ATTRIBUTION_RATIO_BINDING: BindingId = _binding_id("modelo-303-profile-state-attribution-ratio")
-_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
-_DECL_PERIODO_CASILLA: CasillaId = _casilla_id("decl.periodo")
-_M303_PRORRATA_PORCENTAJE_CASILLA: CasillaId = _casilla_id("iva.prorrata-porcentaje")
-_M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA: CasillaId = _casilla_id("iva.prorrata-volumen-con-derecho")
+_DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")
+_DECL_PERIODO_CASILLA: CasillaId = validated_casilla_id("decl.periodo")
+_M303_PRORRATA_PORCENTAJE_CASILLA: CasillaId = validated_casilla_id("iva.prorrata-porcentaje")
+_M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA: CasillaId = validated_casilla_id("iva.prorrata-volumen-con-derecho")
 
 
 def _modelo_303_1t_inputs() -> ModeloInputs:

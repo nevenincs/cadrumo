@@ -55,15 +55,8 @@ _ESTADO_MIEMBRO_N = Decimal("276")  # claimant established in Germany in year N
 _ESTADO_MIEMBRO_N_PLUS_1 = Decimal("250")  # claimant moves to France for year N+1
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M360 ad-hoc fidelity fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
-_DECL_ESTADO_MIEMBRO_CASILLA: CasillaId = _casilla_id("decl.estado-miembro")
+_DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")
+_DECL_ESTADO_MIEMBRO_CASILLA: CasillaId = validated_casilla_id("decl.estado-miembro")
 
 
 def _find_observation(repo: CalculationObservationRepository, *, filing_year: int, period: str):

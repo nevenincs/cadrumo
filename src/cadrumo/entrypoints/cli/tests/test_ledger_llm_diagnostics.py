@@ -38,6 +38,8 @@ from ....domain.transactions import (
     set_classification,
 )
 from ....llm import LLMProvider, LLMResponse
+from ....tests.cli_envelope import unwrap_cli_result as _json_result
+from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -47,8 +49,6 @@ from .._ledger_rule_payloads import (
     LlmConfidenceProviderPayload,
     LlmUsageCostProviderPayload,
 )
-from .envelope_helpers import unwrap_cli_result as _json_result
-from .envelope_helpers import unwrap_envelope_notices
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

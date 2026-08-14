@@ -75,27 +75,20 @@ _YEAR_N_PLUS_1 = 2026
 _CLOCK = datetime(2027, 2, 1, 9, 0, 0, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M193/123 reconciliation fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M123_RENTAS_DIVIDENDOS_CASILLA: CasillaId = _casilla_id("01")
-_M123_RENTAS_RESTO_CASILLA: CasillaId = _casilla_id("02")
-_M123_RENTAS_TOTAL_CASILLA: CasillaId = _casilla_id("03")
-_M123_BASE_DIVIDENDOS_CASILLA: CasillaId = _casilla_id("04")
-_M123_BASE_RESTO_CASILLA: CasillaId = _casilla_id("05")
-_M123_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("06")
-_M123_RETENCIONES_DIVIDENDOS_CASILLA: CasillaId = _casilla_id("07")
-_M123_RETENCIONES_RESTO_CASILLA: CasillaId = _casilla_id("08")
-_M123_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("09")
-_M123_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("10")
-_M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: CasillaId = _casilla_id("11")
-_M193_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
-_M193_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
-_M193_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
+_M123_RENTAS_DIVIDENDOS_CASILLA: CasillaId = validated_casilla_id("01")
+_M123_RENTAS_RESTO_CASILLA: CasillaId = validated_casilla_id("02")
+_M123_RENTAS_TOTAL_CASILLA: CasillaId = validated_casilla_id("03")
+_M123_BASE_DIVIDENDOS_CASILLA: CasillaId = validated_casilla_id("04")
+_M123_BASE_RESTO_CASILLA: CasillaId = validated_casilla_id("05")
+_M123_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id("06")
+_M123_RETENCIONES_DIVIDENDOS_CASILLA: CasillaId = validated_casilla_id("07")
+_M123_RETENCIONES_RESTO_CASILLA: CasillaId = validated_casilla_id("08")
+_M123_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("09")
+_M123_PREVIOUS_RESULT_CASILLA: CasillaId = validated_casilla_id("10")
+_M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: CasillaId = validated_casilla_id("11")
+_M193_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("decl.total-perceptores")
+_M193_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.base-total")
+_M193_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.retenciones-total")
 
 # ---------------------------------------------------------------------------
 # 123 quarterly scenarios.

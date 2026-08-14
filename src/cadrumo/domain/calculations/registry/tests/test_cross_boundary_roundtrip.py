@@ -48,16 +48,9 @@ from .._schema import LiveCrossReferenceDecision
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"cross-boundary fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_IVA_DEVENGADO_CASILLA: CasillaId = _casilla_id("iva.devengado")
-_IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.deducible")
-_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
+_IVA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id("iva.devengado")
+_IVA_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id("iva.deducible")
+_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
 _IVA_RESULTADO_OPERANDS: tuple[CasillaId, CasillaId] = (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
 _DRAFT_TIMESTAMP = datetime(2026, 5, 28, 10, 0, 0, tzinfo=UTC)
 _WORKFLOW_STEP_STARTED_AT = datetime(2026, 5, 28, 10, 5, 0, tzinfo=UTC)
@@ -168,12 +161,27 @@ def test_registry_filing_observation_preserves_observation_tuple() -> None:
 
 
 def test_registry_filing_observation_refuses_display_period_drift() -> None:
-    with pytest.raises(ValueError, match="filing_period code must match period"):
+    # ``period`` is now typed ``FilingPeriodCode``, so a display-format string
+    # ("YYYY code") is refused at the field boundary rather than reaching the
+    # cross-field filing_period/period consistency check.
+    with pytest.raises(ValueError, match="invalid period code '2025 1T'"):
         RegistryModeloObservation(
             modelo="303",
             filing_year=2025,
             filing_period=Period.from_year_and_code(2025, "1T"),
             period="2025 1T",
+            observations=(),
+        )
+
+
+def test_registry_filing_observation_refuses_mismatched_filing_period() -> None:
+    # A shape-valid but wrong bare code still reaches the cross-field check.
+    with pytest.raises(ValueError, match="filing_period code must match period"):
+        RegistryModeloObservation(
+            modelo="303",
+            filing_year=2025,
+            filing_period=Period.from_year_and_code(2025, "1T"),
+            period="2T",
             observations=(),
         )
 

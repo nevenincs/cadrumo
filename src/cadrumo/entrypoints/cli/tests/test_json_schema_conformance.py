@@ -80,7 +80,6 @@ from .. import _config_bucket_history_payloads as _config_bucket_history_payload
 from .. import _config_descendiente_payloads as _config_descendiente_payloads
 from .. import _config_payloads as _config_payloads
 from .. import _config_sandbox_payloads as _config_sandbox_payloads
-from .._config_payloads import ConfigRecoveryCreateResult
 from ._lazy_command_tree import materialise_lazy_subcommands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -838,12 +837,6 @@ _SECRET_BEARING_FIELD_NAMES = frozenset(
 #: inspection, so adding a field to one of these results must fail here and be
 #: reviewed rather than silently reaching an operator envelope.
 _CUSTODY_SCHEMA_FIELDS: dict[str, frozenset[str]] = {
-    "config.passphrase.change": frozenset({"secret_store_dir", "changed"}),
-    "config.recover": frozenset({"recovery_path", "secret_store_dir", "recovered"}),
-    "config.recovery.status": frozenset({"recovery_path", "recovery_enrolled", "recovery_fingerprint"}),
-    "config.recovery.create": frozenset({"recovery_path", "recovery_fingerprint", "rotated"}),
-    "config.recovery.rotate": frozenset({"recovery_path", "recovery_fingerprint", "rotated"}),
-    "config.recovery.verify": frozenset({"recovery_path", "verified", "recovery_fingerprint"}),
     "config.reset.start": frozenset({"operation"}),
     "config.reset.status": frozenset({"operation"}),
     "config.reset.resume": frozenset({"operation"}),
@@ -954,9 +947,6 @@ def test_secret_field_scan_detects_a_planted_secret() -> None:
 
     assert "_PlantedResult.passphrase" in found, f"direct secret field not detected; scan returned {found}"
     assert any(path.endswith(".mnemonic") for path in found), f"nested secret field not detected; scan returned {found}"
-    assert not _secret_bearing_field_paths(ConfigRecoveryCreateResult), (
-        "the live recovery-create envelope must remain secret-free"
-    )
 
 
 def test_custody_schema_keys_are_registered_with_distinct_schemas() -> None:

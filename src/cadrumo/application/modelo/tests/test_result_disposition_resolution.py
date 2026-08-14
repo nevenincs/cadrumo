@@ -49,13 +49,6 @@ _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA: CasillaId = validated_casilla_i
 )
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="result-disposition resolver test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"resolver test casilla key {value!r} is not a canonical casilla.id") from exc
-
-
 def _work_unit(*, modelo: str, filing_year: int, period_code: str, revision_id: str) -> WorkUnit:
     period = Period.from_year_and_code(filing_year, period_code)
     work_unit_id = derive_work_unit_id(
@@ -153,8 +146,13 @@ def _registry_work_unit(*, modelo: str, filing_year: int, period_code: str) -> W
 @pytest.mark.parametrize(
     ("filing_year", "period_code", "revision_id", "result_casilla"),
     (
-        (2023, "4T", "2019-2023", _casilla_id("08")),
-        (2026, "1T", "2024-y-siguientes", _casilla_id("14")),
+        (2023, "4T", "2019-2023", validated_casilla_id("08", surface="result-disposition resolver test casilla id")),
+        (
+            2026,
+            "1T",
+            "2024-y-siguientes",
+            validated_casilla_id("14", surface="result-disposition resolver test casilla id"),
+        ),
     ),
 )
 def test_m123_result_disposition_uses_revision_specific_canonical_result_casilla(

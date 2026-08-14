@@ -14,7 +14,7 @@ from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import workflow_state_repository
+from ...workflow import WorkflowState
 from .. import create_work_unit
 from .._calculate_input import (
     ModeloCalculateCasillaInputError,
@@ -53,17 +53,19 @@ def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(tmp
 
     bucket_id = _PROFILE_ID
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id=bucket_id,
-                overrides={
-                    "identity.tax_id": "B66012345",
-                    "identity.legal_name": "Calculate Input SL",
-                    "taxpayer_type.entity_type": "legal_entity",
-                    "taxpayer_type.legal_entity_form": "sl",
-                },
-            ),
+        # Seeded through a detached WorkflowState, never a repository read:
+        # the capsule publishes by an atomic no-replace rename onto
+        # ``buckets/<profile-id>``, which a workflow-state repository
+        # construction would otherwise materialise first and collide with.
+        register_minimal_profile(
+            WorkflowState(),
+            profile_id=bucket_id,
+            overrides={
+                "identity.tax_id": "B66012345",
+                "identity.legal_name": "Calculate Input SL",
+                "taxpayer_type.entity_type": "legal_entity",
+                "taxpayer_type.legal_entity_form": "sl",
+            },
         )
         work_unit = create_work_unit(
             bucket_id=bucket_id,
@@ -131,17 +133,19 @@ def _m200_bundle_with_casilla_value(raw_value: str, *, tmp_path: Path) -> WorkCa
     snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period=period.registry_token)
     bucket_id = _DECIMAL_GRAMMAR_PROFILE_ID
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id=bucket_id,
-                overrides={
-                    "identity.tax_id": "B66012345",
-                    "identity.legal_name": "Calculate Input SL",
-                    "taxpayer_type.entity_type": "legal_entity",
-                    "taxpayer_type.legal_entity_form": "sl",
-                },
-            ),
+        # Seeded through a detached WorkflowState, never a repository read:
+        # the capsule publishes by an atomic no-replace rename onto
+        # ``buckets/<profile-id>``, which a workflow-state repository
+        # construction would otherwise materialise first and collide with.
+        register_minimal_profile(
+            WorkflowState(),
+            profile_id=bucket_id,
+            overrides={
+                "identity.tax_id": "B66012345",
+                "identity.legal_name": "Calculate Input SL",
+                "taxpayer_type.entity_type": "legal_entity",
+                "taxpayer_type.legal_entity_form": "sl",
+            },
         )
         work_unit = create_work_unit(
             bucket_id=bucket_id,
@@ -198,17 +202,19 @@ def _m303_bundle_with_period_override(raw_value: str, *, tmp_path: Path) -> Work
     snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period=period.registry_token)
     bucket_id = _M303_PROFILE_ID
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id=bucket_id,
-                overrides={
-                    "identity.tax_id": "B66012345",
-                    "identity.legal_name": "Calculate Input SL",
-                    "taxpayer_type.entity_type": "legal_entity",
-                    "taxpayer_type.legal_entity_form": "sl",
-                },
-            ),
+        # Seeded through a detached WorkflowState, never a repository read:
+        # the capsule publishes by an atomic no-replace rename onto
+        # ``buckets/<profile-id>``, which a workflow-state repository
+        # construction would otherwise materialise first and collide with.
+        register_minimal_profile(
+            WorkflowState(),
+            profile_id=bucket_id,
+            overrides={
+                "identity.tax_id": "B66012345",
+                "identity.legal_name": "Calculate Input SL",
+                "taxpayer_type.entity_type": "legal_entity",
+                "taxpayer_type.legal_entity_form": "sl",
+            },
         )
         work_unit = create_work_unit(
             bucket_id=bucket_id,
@@ -286,12 +292,14 @@ def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_eve
     descendant_overrides = dict(descendant_facts_from_list((child,)))
 
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_MATERNIDAD_BUCKET_ID):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id=_MATERNIDAD_BUCKET_ID,
-                overrides=descendant_overrides,
-            ),
+        # Seeded through a detached WorkflowState, never a repository read:
+        # the capsule publishes by an atomic no-replace rename onto
+        # ``buckets/<profile-id>``, which a workflow-state repository
+        # construction would otherwise materialise first and collide with.
+        register_minimal_profile(
+            WorkflowState(),
+            profile_id=_MATERNIDAD_BUCKET_ID,
+            overrides=descendant_overrides,
         )
         work_unit = create_work_unit(
             bucket_id=_MATERNIDAD_BUCKET_ID,

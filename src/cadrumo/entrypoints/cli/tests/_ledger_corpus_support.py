@@ -28,14 +28,7 @@ def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"ledger corpus journey fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_REVISION_CASILLA: CasillaId = _casilla_id("01")
+_REVISION_CASILLA: CasillaId = validated_casilla_id("01")
 
 
 def _oracle_rules() -> list[dict[str, Any]]:

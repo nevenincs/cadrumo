@@ -81,32 +81,25 @@ _TEST_SOURCE_REF = "test-actions-source"
 _BUCKET_ID = "ac42089b-a822-458e-99e6-333861181de7"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"actions test fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_SOURCE_BOUND_CASILLA: CasillaId = _casilla_id("0001")
-_PREDICATE_REQUIRED_LEFT_CASILLA: CasillaId = _casilla_id("0001")
-_PREDICATE_REQUIRED_RIGHT_CASILLA: CasillaId = _casilla_id("0002")
-_PREDICATE_OPTIONAL_LEFT_CASILLA: CasillaId = _casilla_id("0003")
-_PREDICATE_OPTIONAL_RIGHT_CASILLA: CasillaId = _casilla_id("0004")
-_DT12_INGRESO_CASILLA: CasillaId = _casilla_id("0003")
-_DT12_REDUCCION_CASILLA: CasillaId = _casilla_id("0011")
-_ART20_RNT_CASILLA: CasillaId = _casilla_id("0022")
-_ART20_REDUCCION_CASILLA: CasillaId = _casilla_id("0023")
-_ART52_REDUCCION_CASILLA: CasillaId = _casilla_id("0468")
-_ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: CasillaId = _casilla_id("0426")
-_ART52_EMPRESARIAL_CASILLA: CasillaId = _casilla_id("0427")
-_ART52_AUTONOMOS_EMPRESARIOS_CASILLA: CasillaId = _casilla_id("0499")
-_DT12_ANTIQUITY_REDUCCION_CASILLA: CasillaId = _casilla_id("0011")
-_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
-_M130_GASTOS_CASILLA: CasillaId = _casilla_id("02")
+_SOURCE_BOUND_CASILLA: CasillaId = validated_casilla_id("0001")
+_PREDICATE_REQUIRED_LEFT_CASILLA: CasillaId = validated_casilla_id("0001")
+_PREDICATE_REQUIRED_RIGHT_CASILLA: CasillaId = validated_casilla_id("0002")
+_PREDICATE_OPTIONAL_LEFT_CASILLA: CasillaId = validated_casilla_id("0003")
+_PREDICATE_OPTIONAL_RIGHT_CASILLA: CasillaId = validated_casilla_id("0004")
+_DT12_INGRESO_CASILLA: CasillaId = validated_casilla_id("0003")
+_DT12_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0011")
+_ART20_RNT_CASILLA: CasillaId = validated_casilla_id("0022")
+_ART20_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0023")
+_ART52_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0468")
+_ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: CasillaId = validated_casilla_id("0426")
+_ART52_EMPRESARIAL_CASILLA: CasillaId = validated_casilla_id("0427")
+_ART52_AUTONOMOS_EMPRESARIOS_CASILLA: CasillaId = validated_casilla_id("0499")
+_DT12_ANTIQUITY_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0011")
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
 _SOURCE_BOUND_BINDING: BindingId = "ledger_iva_base"
-_M100_ACTIVIDAD_ECONOMICA_INCOME_CASILLA: CasillaId = _casilla_id("0171")
-_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
+_M100_ACTIVIDAD_ECONOMICA_INCOME_CASILLA: CasillaId = validated_casilla_id("0171")
+_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")
 
 
 def _test_casilla_definition(

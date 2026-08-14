@@ -40,16 +40,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _CAPTURED = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00501")
-_SKIPPED_MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00502")
-_EMPTY_MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00503")
+_MANUAL_FACT_CASILLA: CasillaId = validated_casilla_id("00501")
+_SKIPPED_MANUAL_FACT_CASILLA: CasillaId = validated_casilla_id("00502")
+_EMPTY_MANUAL_FACT_CASILLA: CasillaId = validated_casilla_id("00503")
 _LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-37-1992:art-99",)
 _SOURCE_REFS: tuple[SourceRefId, ...] = ("boe-modelo-303-2025-form",)
 

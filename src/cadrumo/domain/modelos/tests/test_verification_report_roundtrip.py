@@ -49,16 +49,9 @@ _VERIFICATION_CATALOGUE_VERSION = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE
 _BUCKET_ID = "modelo-runtime"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"verification-report fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_IVA_DEVENGADO_CASILLA: CasillaId = _casilla_id("iva.devengado")
-_IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.deducible")
-_IVA_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_IVA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id("iva.devengado")
+_IVA_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id("iva.deducible")
+_IVA_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
 _IVA_RESOLVED_CASILLA_IDS = (_IVA_DEDUCIBLE_CASILLA, _IVA_RESULTADO_CASILLA)
 _IVA_MISSING_REQUIRED_CASILLA_IDS = (_IVA_DEVENGADO_CASILLA,)
 _TEST_FINDING_LEGAL_REFS = ("ley-58-2003:art-119",)

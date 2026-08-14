@@ -40,31 +40,24 @@ _WWW1_HOST = aeat_host("www1")
 _WWW6_HOST = aeat_host("www6")
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
-    "iva.compensacion-pendiente-periodos-anteriores",
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores"
 )
-_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
-_M303_POSTERIOR_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
-_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
-_M303_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
-_M303_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
-_M303_AUTOCONSUMO_PROMOTOR_BASE_CASILLA: CasillaId = _casilla_id("iva.autoconsumo.promotor.base")
-_M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA: CasillaId = _casilla_id("iva.autoconsumo.promotor.cuota")
-_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
-_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
-_M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA: CasillaId = _casilla_id("iva.prorrata-volumen-con-derecho")
-_M303_PRORRATA_VOLUMEN_TOTAL_CASILLA: CasillaId = _casilla_id("iva.prorrata-volumen-total")
-_M303_PRORRATA_PORCENTAJE_CASILLA: CasillaId = _casilla_id("iva.prorrata-porcentaje")
-_M303_BIENES_INVERSION_REGULARIZACION_CASILLA: CasillaId = _casilla_id("43")
+_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
+_M303_POSTERIOR_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+_M303_GENERADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-generada-periodo")
+_M303_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_AUTOCONSUMO_PROMOTOR_BASE_CASILLA: CasillaId = validated_casilla_id("iva.autoconsumo.promotor.base")
+_M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA: CasillaId = validated_casilla_id("iva.autoconsumo.promotor.cuota")
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
+_M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA: CasillaId = validated_casilla_id("iva.prorrata-volumen-con-derecho")
+_M303_PRORRATA_VOLUMEN_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.prorrata-volumen-total")
+_M303_PRORRATA_PORCENTAJE_CASILLA: CasillaId = validated_casilla_id("iva.prorrata-porcentaje")
+_M303_BIENES_INVERSION_REGULARIZACION_CASILLA: CasillaId = validated_casilla_id("43")
 _M303_BIENES_INVERSION_REGULARIZACION_BINDING = "modelo-303-bienes-inversion-regularizacion-casilla-43"
-_M303_PRORRATA_REGULARIZACION_CASILLA: CasillaId = _casilla_id("44")
+_M303_PRORRATA_REGULARIZACION_CASILLA: CasillaId = validated_casilla_id("44")
 _M303_PRORRATA_REGULARIZACION_BINDING = "modelo-303-prorrata-regularizacion-casilla-44"
 _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS: tuple[CasillaId, ...] = (
     _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
@@ -803,10 +796,6 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         "modelo-303-iva-repercutido-general-cuota": Decimal("1000.00"),
         "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
         "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
-        # The two RD-ley 4/2024 transitional rungs carry no cuota in these
-        # scenarios; they are supplied because every bound casilla needs a fact.
-        "modelo-303-iva-repercutido-reducido-transitorio-cuota": Decimal("0.00"),
-        "modelo-303-iva-repercutido-super-reducido-transitorio-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-importaciones-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
@@ -828,8 +817,6 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         "modelo-303-iva-repercutido-general-base": Decimal("0"),
         "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
         "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),
-        "modelo-303-iva-repercutido-reducido-transitorio-base": Decimal("0"),
-        "modelo-303-iva-repercutido-super-reducido-transitorio-base": Decimal("0"),
         "modelo-303-iva-soportado-interiores-base": Decimal("0"),
         "modelo-303-recargo-equivalencia-general-cuota": Decimal("0"),
         "modelo-303-recargo-equivalencia-reducido-cuota": Decimal("0"),
@@ -1012,10 +999,6 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         "modelo-303-iva-repercutido-general-cuota": Decimal("0.00"),
         "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
         "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
-        # The two RD-ley 4/2024 transitional rungs carry no cuota in these
-        # scenarios; they are supplied because every bound casilla needs a fact.
-        "modelo-303-iva-repercutido-reducido-transitorio-cuota": Decimal("0.00"),
-        "modelo-303-iva-repercutido-super-reducido-transitorio-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-importaciones-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
@@ -1037,8 +1020,6 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         "modelo-303-iva-repercutido-general-base": Decimal("0"),
         "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
         "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),
-        "modelo-303-iva-repercutido-reducido-transitorio-base": Decimal("0"),
-        "modelo-303-iva-repercutido-super-reducido-transitorio-base": Decimal("0"),
         "modelo-303-iva-soportado-interiores-base": Decimal("0"),
         "modelo-303-recargo-equivalencia-general-cuota": Decimal("0"),
         "modelo-303-recargo-equivalencia-reducido-cuota": Decimal("0"),
@@ -1091,10 +1072,6 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
         "modelo-303-iva-repercutido-general-cuota": Decimal("0.00"),
         "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
         "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
-        # The two RD-ley 4/2024 transitional rungs carry no cuota in these
-        # scenarios; they are supplied because every bound casilla needs a fact.
-        "modelo-303-iva-repercutido-reducido-transitorio-cuota": Decimal("0.00"),
-        "modelo-303-iva-repercutido-super-reducido-transitorio-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-importaciones-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
@@ -1116,8 +1093,6 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
         "modelo-303-iva-repercutido-general-base": Decimal("0"),
         "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
         "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),
-        "modelo-303-iva-repercutido-reducido-transitorio-base": Decimal("0"),
-        "modelo-303-iva-repercutido-super-reducido-transitorio-base": Decimal("0"),
         "modelo-303-iva-soportado-interiores-base": Decimal("0"),
         "modelo-303-recargo-equivalencia-general-cuota": Decimal("0"),
         "modelo-303-recargo-equivalencia-reducido-cuota": Decimal("0"),

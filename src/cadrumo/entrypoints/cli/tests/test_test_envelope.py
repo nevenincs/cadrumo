@@ -7,7 +7,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from .envelope_helpers import require_schema_envelope, unwrap_schema_envelope
+from ....tests.cli_envelope import require_schema_envelope, unwrap_schema_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

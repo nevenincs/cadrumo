@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ._modelo_empty_profile_fixture import _isolated_backend
 from ._profile_cli_support import create_quiet_profile
-from .envelope_helpers import unwrap_schema_envelope as _payload
+
+__all__ = ["_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -24,16 +24,6 @@ _MISSING_M202_BINDINGS = {
     _M202_INCN_BINDING,
     _M202_CUOTA_BASE_BINDING,
 }
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        try:
-            yield
-        finally:
-            dispose_engine()
 
 
 def _create_laura_taller_sol_profile() -> None:

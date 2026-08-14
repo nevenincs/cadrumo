@@ -28,14 +28,12 @@ from __future__ import annotations
 
 import pytest
 
+from ._m210_snapshot_fixture import m210_snapshot
+
+__all__ = ["m210_snapshot"]
+
 from ....core import validated_casilla_id
-from ....core.resources import bundled_path
-from ....domain.calculations.registry import (
-    RegistrySnapshot,
-    build_snapshot,
-    load_convenio_authority,
-    load_registry_tree,
-)
+from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from .._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding
@@ -43,22 +41,6 @@ from .._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _TIPO_RENTA = validated_casilla_id("tipo_renta", surface="test_m210_convenio_lob_advisory")
-
-
-@pytest.fixture(scope="module")
-def m210_snapshot() -> RegistrySnapshot:
-    """M210 / 2025 / EVENT-1 snapshot carrying the cross-cutting ConvenioAuthority.
-
-    Mirrors the fixture in ``test_modelo_210_convenio_rate_resolution.py``: a
-    compile-only registry load plus the real bundled treaty tree, so this
-    module's assertions exercise the real registry data rather than a
-    hand-built stand-in.
-    """
-    root = bundled_path("registry", "aeat")
-    modelos, catalogues = load_registry_tree(root)
-    catalogues = catalogues.model_copy(update={"convenio": load_convenio_authority(root / "treaties")})
-    modelo = next(modelo for modelo in modelos if modelo.id == "210")
-    return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="EVENT-1")
 
 
 def _irnr_profile(country_code: str) -> TaxpayerProfile:

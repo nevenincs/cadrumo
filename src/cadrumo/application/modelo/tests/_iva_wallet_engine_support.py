@@ -47,20 +47,13 @@ _TARGET_PERIOD = "2T"
 _DECIDED_AT = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
-    "iva.compensacion-pendiente-periodos-anteriores",
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores"
 )
-_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
-_M303_POSTERIOR_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
-_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
-_M303_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
+_M303_POSTERIOR_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+_M303_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
 
 
 def _period(filing_year: int, period: str) -> Period:

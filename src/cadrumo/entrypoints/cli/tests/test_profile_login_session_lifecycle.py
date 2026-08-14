@@ -21,12 +21,9 @@ either half drifts, on a healthy host and a degraded one alike.
 from __future__ import annotations
 
 import json
-import os
 import subprocess
-import sys
 from collections.abc import Iterator
 from pathlib import Path
-from textwrap import dedent
 from typing import Any
 from uuid import UUID
 
@@ -34,6 +31,7 @@ import pytest
 
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.secure_sql import reap_profile_session_keys
+from ....tests.subprocess_cli import run_cadrumo_subprocess
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -61,54 +59,6 @@ def _reap_session_keys(tmp_path: Path) -> Iterator[None]:
         reap_profile_session_keys(tmp_path / _STORAGE_DIRNAME)
 
 
-#: Harness that runs the production entrypoint against a scoped storage
-#: root. ``with_passphrase`` decides whether the sanctioned headless
-#: secret channel is configured: the login gate only engages when it is
-#: NOT, so the session assertions below run with it withheld.
-_CLI_HARNESS = dedent(
-    """
-    from __future__ import annotations
-
-    import sys
-    from pathlib import Path
-
-    from cadrumo.core import config as config_module
-    from cadrumo.core.config import Settings
-
-    storage_root = Path(sys.argv[1])
-    with_passphrase = sys.argv[2] == "1"
-    passphrase = sys.argv[3]
-    cli_args = sys.argv[4:]
-    overrides = {}
-    if with_passphrase:
-        overrides["cadrumo_secret_passphrase"] = passphrase
-    settings = Settings(
-        _env_file=None,
-        cadrumo_local_storage_root=storage_root,
-        cadrumo_secret_store_dir=storage_root / "fallback-store",
-        cadrumo_secret_store_backend="file",
-        cadrumo_output_language="en",
-        **overrides,
-    )
-    token = config_module._settings_override.set(settings)
-    try:
-        sys.argv = ["cadrumo", *cli_args]
-        from cadrumo.entrypoints.cli import main
-
-        main()
-    finally:
-        config_module._settings_override.reset(token)
-    """,
-)
-
-
-def _env() -> dict[str, str]:
-    """Return a parent environment stripped of ambient Cadrumo/pytest state."""
-    env = {key: value for key, value in os.environ.items() if not key.startswith(("AEAT_", "CADRUMO_", "PYTEST_"))}
-    env.update({"PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"})
-    return env
-
-
 def _run(
     storage_root: Path,
     args: tuple[str, ...],
@@ -120,31 +70,25 @@ def _run(
     """Run one real CLI invocation in a fresh interpreter.
 
     ``--format`` is a ROOT-level flag, so it is prepended ahead of the
-    subcommand path rather than appended to it.
+    subcommand path rather than appended to it. ``with_passphrase`` decides
+    whether the sanctioned headless secret channel is configured: the login
+    gate only engages when it is NOT, so the session assertions in this
+    module run with it withheld by default.
     """
     root_flags = ("--format", "json") if as_json else ()
-    passphrase_flag = "1" if with_passphrase else "0"
-    argv = [
-        sys.executable,
-        "-c",
-        _CLI_HARNESS,
-        str(storage_root),
-        passphrase_flag,
-        _PASSPHRASE,
-        *root_flags,
-        *args,
-    ]
-    return subprocess.run(
-        argv,
-        cwd=Path(__file__).parents[3],
-        env=_env(),
-        input=stdin_payload,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        capture_output=True,
-        check=False,
-        timeout=120.0,
+    settings: dict[str, object] = {
+        "cadrumo_local_storage_root": storage_root,
+        "cadrumo_secret_store_dir": storage_root / "fallback-store",
+        "cadrumo_secret_store_backend": "file",
+        "cadrumo_output_language": "en",
+    }
+    if with_passphrase:
+        settings["cadrumo_secret_passphrase"] = _PASSPHRASE
+    return run_cadrumo_subprocess(
+        [*root_flags, *args],
+        settings=settings,
+        env_strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
+        stdin_payload=stdin_payload,
     )
 
 

@@ -49,19 +49,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _Sign = Literal["any", "non_negative", "non_positive"]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"Google apply-adapter fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_TEST_CASILLA: CasillaId = _casilla_id("test.casilla")
-_ANY_CASILLA: CasillaId = _casilla_id("any.casilla")
-_SOME_CASILLA: CasillaId = _casilla_id("some.casilla")
-_IVA_COMPENSACION_ANTERIORES_CASILLA: CasillaId = _casilla_id("iva.compensacion-anteriores")
-_IVA_PRORRATA_PORCENTAJE_CASILLA: CasillaId = _casilla_id("iva.prorrata-porcentaje")
-_IVA_RESULTADO_NEGATIVO_CASILLA: CasillaId = _casilla_id("iva.resultado-negativo")
+_TEST_CASILLA: CasillaId = validated_casilla_id("test.casilla")
+_ANY_CASILLA: CasillaId = validated_casilla_id("any.casilla")
+_SOME_CASILLA: CasillaId = validated_casilla_id("some.casilla")
+_IVA_COMPENSACION_ANTERIORES_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-anteriores")
+_IVA_PRORRATA_PORCENTAJE_CASILLA: CasillaId = validated_casilla_id("iva.prorrata-porcentaje")
+_IVA_RESULTADO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id("iva.resultado-negativo")
 _DEFAULT_CONSTRAINT_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-37-1992:art-99",)
 
 

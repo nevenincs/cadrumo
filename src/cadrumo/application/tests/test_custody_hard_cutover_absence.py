@@ -196,21 +196,14 @@ _DECLARED_OPEN_VIOLATIONS: dict[str, _OpenViolation] = {
     ),
     "profile_custody/__init__.py": _OpenViolation(
         reason=(
-            "A forwarding port of mirror protocols and delegate wrappers reaches the "
-            "shared-master package dynamically and still forwards the provider "
-            "family; it collapses into one canonical, exclusive route to the "
-            "session and custody surface.  A change removing any of these names "
-            "drops it from this entry in the same commit."
+            "The delegate wrappers forward the surviving session substrate -- bucket "
+            "session open and resume, the persisted receipt, the login throttle -- "
+            "which follows the substrate out of the shared-master package as the "
+            "per-profile capsule takes over composition.  The provider family and "
+            "the dynamic string reach are both gone; what remains is one static "
+            "import of the session surface."
         ),
-        reaches=frozenset(
-            {
-                _MASTER_KEY_PACKAGE_ABSOLUTE,
-                "get_master_key_provider",
-                "KeyringMasterKeyProvider",
-                "FileFallbackMasterKeyProvider",
-                "UnsecuredMasterKeyProvider",
-            }
-        ),
+        reaches=frozenset({_MASTER_KEY_PACKAGE}),
     ),
     "repair_integrity.py": _OpenViolation(
         reason=(

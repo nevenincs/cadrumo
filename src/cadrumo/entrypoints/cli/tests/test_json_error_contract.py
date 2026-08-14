@@ -45,8 +45,8 @@ from typing import Final
 
 import pytest
 
-from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.json_contract import ENVELOPE_SCHEMA_VERSION
+from ....tests.cli_envelope import require_error_document
 from ....tests.cli_runner import invoke_cached_cli
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 
@@ -61,15 +61,6 @@ crash's traceback must reach; both the directory and the leaf filename are
 asserted directly against the real DEFAULT-derived path, not an injected
 value.
 """
-
-
-def _error_document(output: str) -> dict[str, object]:
-    """Parse the single-line shared-spine error document from CLI output."""
-    for line in output.splitlines():
-        candidate = line.strip()
-        if candidate.startswith("{"):
-            return STR_KEYED_MAPPING_ADAPTER.validate_json(candidate)
-    raise AssertionError(f"no JSON document found in output:\n{output}")
 
 
 def _object_member(document: dict[str, object], key: str) -> dict[str, object]:
@@ -98,7 +89,7 @@ def test_json_usage_error_emits_shared_spine_document() -> None:
     """A parse-time bad value emits the error document, exit 2 preserved."""
     result = invoke_cached_cli(["--format", "json", "app", "ledger", "view", "not-hex!"])
     assert result.exit_code == 2, result.output
-    error = _assert_shared_spine(_error_document(result.output))
+    error = _assert_shared_spine(require_error_document(result.output))
     assert error["category"] == "REFUSED"
     assert "Usage:" not in result.output
 
@@ -107,7 +98,7 @@ def test_json_unknown_command_emits_shared_spine_document() -> None:
     """An unknown subcommand emits the error document, exit 2 preserved."""
     result = invoke_cached_cli(["--format", "json", "config", "nosuchcmd"])
     assert result.exit_code == 2, result.output
-    error = _assert_shared_spine(_error_document(result.output))
+    error = _assert_shared_spine(require_error_document(result.output))
     assert "nosuchcmd" in str(error["message"])
 
 
@@ -125,7 +116,7 @@ def test_json_boundary_refusal_emits_shared_spine_document() -> None:
         ["--format", "json", "config", "reset", "start", "--yes", "--override-retention"],
     )
     assert result.exit_code == 2, result.output
-    error = _assert_shared_spine(_error_document(result.output))
+    error = _assert_shared_spine(require_error_document(result.output))
     assert error["code"] == "REFUSED_CLI_BOUNDARY"
     context = _object_member(error, "context")
     assert context["option"] == "--reason"
@@ -206,7 +197,7 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
     )
     assert json_run.returncode == 6, json_run.stderr
     assert "Traceback" not in json_run.stderr
-    error = _assert_shared_spine(_error_document(json_run.stderr))
+    error = _assert_shared_spine(require_error_document(json_run.stderr))
     assert error["code"] == "INTERNAL_CLI_UNEXPECTED_BOUNDARY"
 
     text_run = subprocess.run(

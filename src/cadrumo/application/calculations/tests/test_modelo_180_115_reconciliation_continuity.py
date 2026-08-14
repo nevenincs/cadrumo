@@ -81,26 +81,19 @@ _YEAR_N_PLUS_1 = 2026
 _CLOCK = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M180/115 reconciliation fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M115_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
-_M115_BASE_CASILLA: CasillaId = _casilla_id("02")
-_M115_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
-_M115_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("04")
+_M115_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01")
+_M115_BASE_CASILLA: CasillaId = validated_casilla_id("02")
+_M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03")
+_M115_PREVIOUS_RESULT_CASILLA: CasillaId = validated_casilla_id("04")
 _M115_PERCEPTORES_BINDING: BindingId = "modelo-115-perceptores"
 _M115_BASE_RETENCIONES_BINDING: BindingId = "modelo-115-base-retenciones"
 _M115_BOUND_BINDINGS_BY_CASILLA: dict[CasillaId, BindingId] = {
     _M115_PERCEPTORES_CASILLA: _M115_PERCEPTORES_BINDING,
     _M115_BASE_CASILLA: _M115_BASE_RETENCIONES_BINDING,
 }
-_M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
-_M180_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
-_M180_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
+_M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("decl.total-perceptores")
+_M180_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.base-total")
+_M180_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.retenciones-total")
 
 # ---------------------------------------------------------------------------
 # 115 quarterly scenarios — distinct values per quarter and per year so any

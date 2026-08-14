@@ -143,9 +143,9 @@ _EXPECTED_OS_KEYCHAIN_TEST_IDS = frozenset(
         "src/cadrumo/tests/test_secure_sql.py"
         "::TestHarnessReapsSessionKeys::test_login_inside_the_harness_leaves_no_keychain_entry",
         # The destroy-path reaps. Each asserts on the KEYCHAIN half of the
-        # split-knowledge session specifically — that
-        # ``load_profile_session_key`` returns nothing once the profile is
-        # gone — so a host with no credential store cannot mint the key whose
+        # split-knowledge session specifically — that the UUID-paired
+        # keychain receipt is absent once the profile is gone — so a host
+        # with no credential store cannot mint the key whose
         # absence is the subject, and the case would pass vacuously. The
         # on-disk half of the same contract is deliberately left in the
         # default lane (``test_tombstone_removes_the_persisted_record``), so

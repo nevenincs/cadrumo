@@ -17,9 +17,9 @@ from __future__ import annotations
 
 import pytest
 
+from ....tests.cli_envelope import unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
-from .envelope_helpers import unwrap_schema_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -45,7 +45,6 @@ def test_support_matrix_modelo_303_reports_calc_grade_and_fichero_boe_export() -
     assert m303["calc_grade"] is True
     assert m303["has_completeness_manifest"] is True
     assert m303["has_fixed_width_export"] is True
-    assert m303["is_deprecated"] is False
 
 
 def test_support_matrix_modelo_100_carries_typed_renames_and_portal_refs() -> None:

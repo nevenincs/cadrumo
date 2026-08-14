@@ -18,10 +18,10 @@ from openpyxl import Workbook
 from ....application.calculations import CalculationObservationRepository, resolve_bindings_from_local_store
 from ....core import Period
 from ....core.resources import resources
+from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from .envelope_helpers import unwrap_envelope_notices, unwrap_schema_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

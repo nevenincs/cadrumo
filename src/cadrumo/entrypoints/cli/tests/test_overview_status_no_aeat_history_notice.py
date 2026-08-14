@@ -21,8 +21,8 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage
 
 __all__ = ["isolated_profile_storage"]
+from ....tests.cli_envelope import unwrap_envelope_notices
 from ._profile_cli_support import create_quiet_profile as _create_profile
-from .envelope_helpers import unwrap_envelope_notices
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

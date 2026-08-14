@@ -15,15 +15,17 @@ that is new.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
+from ....tests.consent_profile_fixture import consent_profile
+
+__all__ = ["consent_profile"]
+
 from ....core import FieldGroundingOutcome, FieldOrigin
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile
 from .._evidence_draft import (
     FieldAmbiguityCandidate,
     FieldProvenance,
@@ -44,13 +46,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _REFERENCE = "ev-structured-001"
-
-
-@pytest.fixture
-def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    """A real isolated runtime profile: real key provider, real SQLite engine."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as resolved:
-        yield resolved
 
 
 def _two_rate_draft() -> InvoiceDraft:

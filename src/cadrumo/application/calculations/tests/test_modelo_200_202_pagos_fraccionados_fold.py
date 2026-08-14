@@ -34,15 +34,8 @@ _REL_40_2: RelationId = "modelo-200-2024-rel-202-pagos-fraccionados-40-2"
 _REL_40_3: RelationId = "modelo-200-2024-rel-202-pagos-fraccionados"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M200/M202 pagos fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M202_MODALIDAD_CUOTA_PAGO_CASILLA: CasillaId = _casilla_id("03")
-_M202_MODALIDAD_BASE_PAGO_CASILLA: CasillaId = _casilla_id("34")
+_M202_MODALIDAD_CUOTA_PAGO_CASILLA: CasillaId = validated_casilla_id("03")
+_M202_MODALIDAD_BASE_PAGO_CASILLA: CasillaId = validated_casilla_id("34")
 
 
 def _m202_observation(

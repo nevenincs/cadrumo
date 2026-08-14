@@ -22,11 +22,11 @@ from click.testing import Result
 from ....adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
+from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from .envelope_helpers import unwrap_cli_result as _json_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

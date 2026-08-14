@@ -19,13 +19,6 @@ from ....tests.filing import build_registry_filing_draft, build_registry_filing_
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
 def _period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
 
@@ -33,17 +26,17 @@ def _period(year: int, code: str) -> Period:
 _ANNUAL_2026 = _period(2026, "0A")
 _Q1_2024 = _period(2024, "1T")
 _Q1_2026 = _period(2026, "1T")
-_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
-_M130_GASTOS_CASILLA: CasillaId = _casilla_id("02")
-_M130_PAGO_FRACCIONADO_CASILLA: CasillaId = _casilla_id("05")
-_M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
-_M130_RENDIMIENTO_NETO_PREVIO_CASILLA: CasillaId = _casilla_id("08")
-_M130_MINORACION_CASILLA: CasillaId = _casilla_id("10")
-_M130_RESULTADOS_NEGATIVOS_CASILLA: CasillaId = _casilla_id("15")
-_M130_DEDUCCION_ART_110_3_CASILLA: CasillaId = _casilla_id("16")
-_M130_RETENCIONES_ARRENDAMIENTOS_CASILLA: CasillaId = _casilla_id("18")
-_M130_RESULTADO_CASILLA: CasillaId = _casilla_id("19")
-_RENTA_MINIMO_ESTATAL_CASILLA: CasillaId = _casilla_id("0511")
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
+_M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id("05")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
+_M130_RENDIMIENTO_NETO_PREVIO_CASILLA: CasillaId = validated_casilla_id("08")
+_M130_MINORACION_CASILLA: CasillaId = validated_casilla_id("10")
+_M130_RESULTADOS_NEGATIVOS_CASILLA: CasillaId = validated_casilla_id("15")
+_M130_DEDUCCION_ART_110_3_CASILLA: CasillaId = validated_casilla_id("16")
+_M130_RETENCIONES_ARRENDAMIENTOS_CASILLA: CasillaId = validated_casilla_id("18")
+_M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("19")
+_RENTA_MINIMO_ESTATAL_CASILLA: CasillaId = validated_casilla_id("0511")
 
 
 def _valid_inputs(*, ingresos: Decimal = Decimal("10000")) -> dict[CasillaId, Decimal]:

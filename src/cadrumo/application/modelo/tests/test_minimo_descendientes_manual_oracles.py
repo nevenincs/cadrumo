@@ -31,13 +31,13 @@ notes and all reproduced by the author against the extraction before use:
 from __future__ import annotations
 
 from decimal import Decimal
-from pathlib import Path
 from typing import Any
 
 import pytest
 
-from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import ManualWorkedExamplePayload, RegistrySnapshot
+from ....core.resources import resources
+from ....domain.calculations.registry import RegistrySnapshot
+from ....domain.calculations.registry.tests import read_manual_worked_example
 from ....domain.contribuyente import RentaMaritalStatus
 from ....domain.user_profile import UserProfileFactValue
 from .._profile_binding import (
@@ -54,22 +54,9 @@ _VALENCIANA_ORACLE = "modelo-100-2024-minimo-descendientes-declaracion-propia-va
 _RIOJA_ORACLE = "modelo-100-2024-minimo-descendientes-adopcion-mayor-de-tres-rioja.json"
 
 
-def _oracle(name: str) -> ManualWorkedExamplePayload:
-    """Read a bundled fixture through the registry's own strict payload model.
-
-    Deliberately NOT a local ``json.loads`` helper. The registry already owns
-    the model these payloads are parsed through, and it refuses an undeclared
-    key rather than ignoring it — so a fixture that drifts from the shape the
-    grounding fold consumes fails here rather than being read two different
-    ways by two different readers.
-    """
-    path = Path(bundled_path("corpus", "manual_oracles")) / name
-    return ManualWorkedExamplePayload.model_validate_json(path.read_text(encoding="utf-8"))
-
-
 def _expected(name: str, casilla_id: str) -> Decimal:
     """Return the AEAT-printed figure for *casilla_id*, from the fixture on disk."""
-    return Decimal(_oracle(name).expected_by_casilla_id[casilla_id])
+    return Decimal(read_manual_worked_example(name).expected_by_casilla_id[casilla_id])
 
 
 def _snapshot() -> RegistrySnapshot:
@@ -106,7 +93,7 @@ def _aggregates(facts: dict[str, UserProfileFactValue]) -> tuple[Decimal, Decima
 
 def test_both_oracle_fixtures_load_and_declare_their_provenance() -> None:
     for name in (_ASTURIAS_ORACLE, _VALENCIANA_ORACLE):
-        payload = _oracle(name)
+        payload = read_manual_worked_example(name)
         assert payload.modelo == "100", name
         assert payload.filing_year == _ORACLE_YEAR, name
         assert payload.source_kind == "aeat_manual_worked_example", name
@@ -123,8 +110,8 @@ def test_the_valenciana_oracle_grounds_only_the_estatal_casilla() -> None:
     point: the omission must stay deliberate rather than decay into an
     oversight.
     """
-    assert set(_oracle(_VALENCIANA_ORACLE).expected_by_casilla_id) == {"0513"}
-    assert set(_oracle(_ASTURIAS_ORACLE).expected_by_casilla_id) == {"0513", "0514"}
+    assert set(read_manual_worked_example(_VALENCIANA_ORACLE).expected_by_casilla_id) == {"0513"}
+    assert set(read_manual_worked_example(_ASTURIAS_ORACLE).expected_by_casilla_id) == {"0513", "0514"}
 
 
 # ---------------------------------------------------------------------------
@@ -177,7 +164,7 @@ def test_asturias_oracle_does_not_assert_the_artefacted_contribuyente_row() -> N
     estatal column against 5.550 in the autonómico one. Neither figure belongs
     to casilla 0513/0514, and this asserts the fixture never smuggled one in.
     """
-    expected = _oracle(_ASTURIAS_ORACLE).expected_by_casilla_id.values()
+    expected = read_manual_worked_example(_ASTURIAS_ORACLE).expected_by_casilla_id.values()
     assert Decimal("5500") not in {Decimal(value) for value in expected}
     assert Decimal("5550") not in {Decimal(value) for value in expected}
 
@@ -348,7 +335,7 @@ def test_the_printed_conjunta_total_is_a_recorded_gap_not_an_expectation() -> No
     silent one. The moment membership becomes expressible, this test is what
     says the fixture may claim it.
     """
-    payload = _oracle(_VALENCIANA_ORACLE)
+    payload = read_manual_worked_example(_VALENCIANA_ORACLE)
     assert set(payload.expected_by_casilla_id) == {"0513"}
     assert Decimal(payload.expected_by_casilla_id["0513"]) == Decimal("2550"), (
         "the grounded expectation is the individual case"

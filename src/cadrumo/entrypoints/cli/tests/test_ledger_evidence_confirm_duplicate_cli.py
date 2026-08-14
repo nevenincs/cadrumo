@@ -22,14 +22,14 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ._ledger_ux_support import _invoke, _open_ledger_ux_session
+from ._ledger_ux_support import _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["_open_bucket_session"]
 
 # The bundled structured fixture the application-level confirm suites read.
 _FACTURAE_FIXTURE = (
@@ -40,12 +40,6 @@ _FACTURAE_FIXTURE = (
     / "_evidence_corpus"
     / "facturae_32_recargo_invoice.xml"
 )
-
-
-@pytest.fixture(autouse=True)
-def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
-    with _open_ledger_ux_session(tmp_path):
-        yield
 
 
 def _add_the_document(tmp_path: Path, *, filename: str = "factura.xml") -> str:

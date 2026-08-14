@@ -12,12 +12,12 @@ from __future__ import annotations
 
 import pytest
 
+from .....core import validated_casilla_id
 from ._verification_chain_support import (
     _M303_2023_ONWARDS_PARAMS,
     _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
     CasillaId,
     _assert_m303_printed_resultado_regimen_general_arithmetic,
-    _casilla_id,
     _extracted_m303_decimal,
     _parse_extracted_declaracion_values,
 )
@@ -25,10 +25,10 @@ from ._verification_chain_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
-_M303_SUMA_RESULTADOS_CASILLA: CasillaId = _casilla_id("64")
-_M303_ATRIBUIBLE_ESTADO_CASILLA: CasillaId = _casilla_id("66")
-_M303_RESULTADO_AUTOLIQUIDACION_CASILLA: CasillaId = _casilla_id("iva.resultado")
-_M303_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("71")
+_M303_SUMA_RESULTADOS_CASILLA: CasillaId = validated_casilla_id("64")
+_M303_ATRIBUIBLE_ESTADO_CASILLA: CasillaId = validated_casilla_id("66")
+_M303_RESULTADO_AUTOLIQUIDACION_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+_M303_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("71")
 _M303_SYNTHETIC_CLOSURE_CASES: tuple[tuple[CasillaId, str, CasillaId, str, str], ...] = (
     (
         _M303_SUMA_RESULTADOS_CASILLA,

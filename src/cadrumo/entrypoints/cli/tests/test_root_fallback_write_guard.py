@@ -11,11 +11,8 @@ shape a refusal test must not risk.
 
 from __future__ import annotations
 
-import os
 import subprocess
-import sys
 from pathlib import Path
-from textwrap import dedent
 from typing import Final
 
 import pytest
@@ -24,7 +21,9 @@ from ....application.storage_write_policy import (
     PROFILE_BOUND_WRITE_VERB_PATHS,
     is_profile_bound_write_verb_path,
 )
+from ....core.config import StorageRouteKind
 from ....tests import REPO_ROOT
+from ....tests.subprocess_cli import run_cadrumo_subprocess
 from .._bootstrap_exempt import is_bootstrap_exempt
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -77,111 +76,35 @@ _UNGARDED_PREDICATE_PATHS: tuple[str, ...] = (
     "config auth status",
 )
 
-_CLI_HARNESS = dedent(
-    """
-    from __future__ import annotations
-
-    import sys
-    from pathlib import Path
-
-    from cadrumo.core import config as config_module
-    from cadrumo.core.config import Settings, StorageRouteKind, classify_storage_route
-
-    storage_root = Path(sys.argv[1])
-    cli_args = sys.argv[2:]
-    settings = Settings(
-        _env_file=None,
-        cadrumo_local_storage_root=storage_root,
-        cadrumo_active_profile=" ",
-        cadrumo_secret_store_backend="unsecured",
-        cadrumo_allow_unencrypted="1",
-        cadrumo_output_language="en",
-    )
-    token = config_module._settings_override.set(settings)
-    try:
-        route = classify_storage_route()
-        assert route.kind is StorageRouteKind.ROOT_FALLBACK_DATABASE, route
-        sys.argv = ["cadrumo", *cli_args]
-        from cadrumo.entrypoints.cli import main
-
-        main()
-    finally:
-        config_module._settings_override.reset(token)
-    """,
-)
-
-_EXPLICIT_DATABASE_HARNESS = dedent(
-    """
-    from __future__ import annotations
-
-    import sys
-    from pathlib import Path
-
-    from cadrumo.core import config as config_module
-    from cadrumo.core.config import Settings, StorageRouteKind, classify_storage_route
-
-    storage_root = Path(sys.argv[1])
-    cli_args = sys.argv[2:]
-    settings = Settings(
-        _env_file=None,
-        cadrumo_local_storage_root=storage_root,
-        cadrumo_database_url=f"sqlite:///{(storage_root / 'explicit.db').as_posix()}",
-        cadrumo_active_profile="operator",
-        cadrumo_secret_store_backend="unsecured",
-        cadrumo_allow_unencrypted="1",
-        cadrumo_output_language="en",
-    )
-    token = config_module._settings_override.set(settings)
-    try:
-        route = classify_storage_route()
-        assert route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL, route
-        sys.argv = ["cadrumo", *cli_args]
-        from cadrumo.entrypoints.cli import main
-
-        main()
-    finally:
-        config_module._settings_override.reset(token)
-    """,
-)
-
-
-def _root_fallback_env(storage_root: Path) -> dict[str, str]:
-    del storage_root
-    env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
-    env.update(
-        {
-            "PYTHONIOENCODING": "utf-8",
-            "PYTHONUTF8": "1",
-        },
-    )
-    return env
-
 
 def _run_cadrumo(storage_root: Path, args: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        [sys.executable, "-c", _CLI_HARNESS, str(storage_root), *args],
-        cwd=Path(__file__).parents[3],
-        env=_root_fallback_env(storage_root),
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        capture_output=True,
-        check=False,
-        timeout=120.0,
+    return run_cadrumo_subprocess(
+        args,
+        settings={
+            "cadrumo_local_storage_root": storage_root,
+            "cadrumo_active_profile": " ",
+            "cadrumo_secret_store_backend": "unsecured",
+            "cadrumo_allow_unencrypted": "1",
+            "cadrumo_output_language": "en",
+        },
+        expected_storage_route_kind=StorageRouteKind.ROOT_FALLBACK_DATABASE,
+        env_strip_prefixes=("AEAT_",),
     )
 
 
 def _run_cadrumo_explicit_database(storage_root: Path, args: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        [sys.executable, "-c", _EXPLICIT_DATABASE_HARNESS, str(storage_root), *args],
-        cwd=Path(__file__).parents[3],
-        env=_root_fallback_env(storage_root),
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        capture_output=True,
-        check=False,
-        timeout=120.0,
+    return run_cadrumo_subprocess(
+        args,
+        settings={
+            "cadrumo_local_storage_root": storage_root,
+            "cadrumo_database_url": f"sqlite:///{(storage_root / 'explicit.db').as_posix()}",
+            "cadrumo_active_profile": "operator",
+            "cadrumo_secret_store_backend": "unsecured",
+            "cadrumo_allow_unencrypted": "1",
+            "cadrumo_output_language": "en",
+        },
+        expected_storage_route_kind=StorageRouteKind.EXPLICIT_DATABASE_URL,
+        env_strip_prefixes=("AEAT_",),
     )
 
 

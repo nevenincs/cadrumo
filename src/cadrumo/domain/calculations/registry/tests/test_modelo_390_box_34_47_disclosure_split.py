@@ -44,7 +44,6 @@ from ._gate_support import fragment_declaring
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REVISION_ID = "2010-y-siguientes"
 _CASILLA_BOX_34 = "iva.anual.total-bases-cuotas-iva"
 _CASILLA_BOX_47 = "iva.anual.cuota-devengada-total"
 _FORMULA_BOX_34 = "modelo-390-iva-anual-total-bases-cuotas-iva"
@@ -58,10 +57,32 @@ _NON_RECARGO_TERMS = frozenset(
 )
 
 
-def _m390_revision(root: Path):
+def _m390_revisions(root: Path) -> dict[str, object]:
+    """Return every Modelo 390 revision declaring the box-34 casilla.
+
+    Derived rather than pinned to a revision id: annual epochs are split as AEAT
+    re-lays out the record, so a pinned id either disappears with a split or, if
+    a rename restores it elsewhere, leaves this gate passing over a revision it
+    never checked.
+    """
     modelos, _catalogues = load_registry_tree(root)
     m390 = next(m for m in modelos if m.id == "390")
-    return m390.revisions[_REVISION_ID]
+    return {
+        revision_id: revision
+        for revision_id, revision in m390.revisions.items()
+        if any(casilla.id == _CASILLA_BOX_34 for casilla in revision.casillas)
+    }
+
+
+def _positions(revision, casilla_id: str) -> set[tuple[str, int]]:
+    """Return every ``(record, offset)`` the revision's layouts export a casilla at."""
+    return {
+        (record.id, field.offset)
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if field.casilla_id == casilla_id and getattr(field, "offset", None) is not None
+    }
 
 
 def _bundled_registry_root() -> Path:
@@ -83,33 +104,72 @@ def _export_field(revision, *, record_id: str, offset: int):
     raise AssertionError(f"no field at {record_id}:{offset}")
 
 
-def test_box_34_and_box_47_are_distinct_casillas_at_their_official_positions() -> None:
-    revision = _m390_revision(_bundled_registry_root())
-    casillas = {c.id: c for c in revision.casillas}
+def test_at_least_one_revision_declares_the_box_34_casilla() -> None:
+    """Anchor the derivation, so a retired or renamed revision cannot empty this gate."""
+    revisions = _m390_revisions(_bundled_registry_root())
+    assert revisions, (
+        f"no Modelo 390 revision declares {_CASILLA_BOX_34!r}. Either the split "
+        "dropped the box-34 disclosure or the casilla was renamed; this gate is "
+        "inert until that is resolved, so diagnose rather than delete it."
+    )
 
-    box_34 = casillas[_CASILLA_BOX_34]
-    box_47 = casillas[_CASILLA_BOX_47]
 
-    assert box_34.form_number == "34"
-    assert box_47.form_number == "47"
-    assert box_34.id != box_47.id
+def test_box_34_and_box_47_are_distinct_casillas_in_every_revision() -> None:
+    """Every revision carrying the split must keep the two totals separate."""
+    for revision_id, revision in sorted(_m390_revisions(_bundled_registry_root()).items()):
+        casillas = {c.id: c for c in revision.casillas}
+        assert _CASILLA_BOX_47 in casillas, f"{revision_id} declares box 34 without box 47"
 
-    field_34 = _export_field(revision, record_id="modelo-390-page-02", offset=1628)
-    field_47 = _export_field(revision, record_id="modelo-390-page-02b", offset=353)
+        box_34 = casillas[_CASILLA_BOX_34]
+        box_47 = casillas[_CASILLA_BOX_47]
 
-    assert field_34.casilla_id == _CASILLA_BOX_34
-    assert field_47.casilla_id == _CASILLA_BOX_47
+        assert box_34.form_number == "34", revision_id
+        assert box_47.form_number == "47", revision_id
+        assert box_34.id != box_47.id, revision_id
+
+
+def test_each_total_is_exported_to_its_own_position_in_every_revision() -> None:
+    """Neither total may go unwritten, and they may never share one position.
+
+    Positions are asserted as disjoint rather than as fixed offsets: AEAT moves
+    these between design epochs, which is why the revisions are split at all.
+    Where a layout does declare the page-02 offset-1628 slot, that slot is the
+    box-34 slot, which is the exact identity the original defect inverted.
+
+    A revision that exports neither total is a failure here, not an excused case.
+    Modelo 390 currently declares no export layout, so this test fails until one
+    is authored -- which is the honest report: the disclosure this gate protects
+    cannot be printed at all today.
+    """
+    for revision_id, revision in sorted(_m390_revisions(_bundled_registry_root()).items()):
+        positions_34 = _positions(revision, _CASILLA_BOX_34)
+        positions_47 = _positions(revision, _CASILLA_BOX_47)
+
+        assert positions_34, f"{revision_id} exports box 47 but never box 34"
+        assert positions_47, f"{revision_id} exports box 34 but never box 47"
+        assert not (positions_34 & positions_47), (
+            f"{revision_id} exports box 34 and box 47 to the same position "
+            f"{sorted(positions_34 & positions_47)!r}, so one total overwrites the other"
+        )
+
+        if ("modelo-390-page-02", 1628) in positions_34 | positions_47:
+            assert ("modelo-390-page-02", 1628) in positions_34, (
+                f"{revision_id} prints the recargo-inclusive total at the box-34 slot"
+            )
 
 
 def test_box_34_formula_excludes_every_recargo_term() -> None:
-    revision = _m390_revision(_bundled_registry_root())
-    formulas = {f.id: f for f in revision.formulas}
-    formula = formulas[_FORMULA_BOX_34]
+    """The box-34 total is IVA-only; a recargo term there re-inflates box 34."""
+    for revision_id, revision in sorted(_m390_revisions(_bundled_registry_root()).items()):
+        formulas = {f.id: f for f in revision.formulas}
+        if _FORMULA_BOX_34 not in formulas:
+            continue
+        formula = formulas[_FORMULA_BOX_34]
 
-    arg_casilla_ids = {arg.casilla_id for arg in formula.expression.args if arg.casilla_id is not None}
+        arg_casilla_ids = {arg.casilla_id for arg in formula.expression.args if arg.casilla_id is not None}
 
-    assert arg_casilla_ids == _NON_RECARGO_TERMS
-    assert not any("recargo" in casilla_id for casilla_id in arg_casilla_ids)
+        assert arg_casilla_ids == _NON_RECARGO_TERMS, revision_id
+        assert not any("recargo" in casilla_id for casilla_id in arg_casilla_ids), revision_id
 
 
 def test_mutation_repointing_offset_1628_to_the_recargo_inclusive_total_reds_the_gate(tmp_path: Path) -> None:
@@ -150,21 +210,31 @@ def test_mutation_repointing_offset_1628_to_the_recargo_inclusive_total_reds_the
         elif source.exists():
             shutil.copy2(source, scratch_root / catalogue_dir)
 
-    export_layout_path = fragment_declaring(
-        scratch_root / "modelos" / "390" / "revisions" / _REVISION_ID / "export_layouts",
-        'casilla_id = "iva.anual.total-bases-cuotas-iva"',
+    target_revision_id = next(
+        revision_id
+        for revision_id, revision in sorted(_m390_revisions(bundled_root).items())
+        if _FORMULA_BOX_34 in {formula.id for formula in revision.formulas}
     )
-    original = export_layout_path.read_text(encoding="utf-8")
-    mutated = original.replace(
-        'casilla_id = "iva.anual.total-bases-cuotas-iva"',
-        'casilla_id = "iva.anual.cuota-devengada-total"',
+    formula_path = fragment_declaring(
+        scratch_root / "modelos" / "390" / "revisions" / target_revision_id / "formulas",
+        _FORMULA_BOX_34,
+    )
+    original = formula_path.read_text(encoding="utf-8")
+    # The fragment declares several formulas, so the mutation is applied inside
+    # the box-34 declaration rather than at the file's first matching term.
+    declaration = original.index(f'id = "{_FORMULA_BOX_34}"')
+    head, tail = original[:declaration], original[declaration:]
+    mutated = head + tail.replace(
+        '{ casilla_id = "iva.anual.repercutido.general" }',
+        '{ casilla_id = "iva.anual.recargo-equivalencia.general" }',
         1,
     )
     assert mutated != original, "the mutation target string was not found -- test is stale"
-    export_layout_path.write_text(mutated, encoding="utf-8")
+    formula_path.write_text(mutated, encoding="utf-8")
 
-    mutated_revision = _m390_revision(scratch_root)
-    mutated_field_34 = _export_field(mutated_revision, record_id="modelo-390-page-02", offset=1628)
+    mutated_revision = _m390_revisions(scratch_root)[target_revision_id]
+    mutated_formula = {formula.id: formula for formula in mutated_revision.formulas}[_FORMULA_BOX_34]
+    mutated_terms = {arg.casilla_id for arg in mutated_formula.expression.args if arg.casilla_id is not None}
 
-    assert mutated_field_34.casilla_id != _CASILLA_BOX_34
-    assert mutated_field_34.casilla_id == _CASILLA_BOX_47
+    assert mutated_terms != _NON_RECARGO_TERMS
+    assert any("recargo" in casilla_id for casilla_id in mutated_terms)

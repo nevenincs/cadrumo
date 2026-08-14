@@ -14,13 +14,14 @@ or invoked anywhere in this module.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from pathlib import Path
-
 import pytest
 
+from ....tests.consent_profile_fixture import consent_profile
+
+__all__ = ["consent_profile"]
+
 from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile
 from .._consent_withdrawal import (
     ConsentRederivationError,
     artefact_is_cloud_derived,
@@ -35,7 +36,6 @@ from .._extraction_draft_store import read_extraction_draft, write_extraction_dr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _DIGEST = "d" * 64
 _CLOUD_STAMP = "llm:openai-text-extract:gpt-4.1:rates-2026A-abcdef"
 _LOCAL_STAMP = "llm:local-text-extract:qwen2.5:3b:rates-2026A-abcdef"
@@ -46,13 +46,6 @@ _TEXT_LAYER = TranscriberIdentity(
     name="pdfplumber-text-layer",
     revision="0.11.4",
 )
-
-
-@pytest.fixture
-def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    """A real isolated runtime profile -- real key provider, real SQLite engine."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as resolved:
-        yield resolved
 
 
 def _seed_cloud_draft(

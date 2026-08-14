@@ -29,22 +29,6 @@ _GUIDANCE_NIF = "87654321X"
 _SEED_BUCKET_ID = "21212121-2121-4121-8121-212121212121"
 
 
-def _unwrap_envelope(payload: object) -> dict[str, object]:
-    """Return the inner ``result`` payload from a CLI emit envelope."""
-    if not isinstance(payload, dict):
-        raise AssertionError(f"unexpected JSON shape: {type(payload).__name__}")
-    # ``isinstance(payload, dict)`` only proves *some* dict — this is always
-    # parsed JSON envelope output, so re-keying with ``str(k)`` gives an
-    # honestly-typed ``dict[str, object]`` rather than casting the bare dict.
-    typed_payload = {str(k): v for k, v in payload.items()}
-    if "result" not in typed_payload or "schema_version" not in typed_payload:
-        raise AssertionError(f"missing CLI output envelope keys: {sorted(typed_payload)}")
-    result_obj = typed_payload["result"]
-    if isinstance(result_obj, dict):
-        return {str(k): v for k, v in result_obj.items()}
-    raise AssertionError(f"result field is not a dict: {type(result_obj).__name__}")
-
-
 def _state(
     *,
     filing_year: int,

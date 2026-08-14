@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
@@ -41,13 +40,6 @@ def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> N
             updated_at=_T0,
         ),
     )
-
-
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"dormant resolver fixture casilla key {value!r} is not a CasillaId") from exc
 
 
 def _revision(modelo: str, revision_id: str) -> ModeloRevision:

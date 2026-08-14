@@ -37,14 +37,7 @@ _LEGAL_REFS = ("ley-35-2006:art-99",)
 _SOURCE_REFS = ("boe-modelo-130-2025-form",)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="prior filing staleness unit test")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_M130_RESULTADO_CASILLA: CasillaId = _casilla_id("19")
+_M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("19", surface="prior filing staleness unit test")
 
 
 def _prior_observation(*, value: str) -> RegistryModeloObservation:

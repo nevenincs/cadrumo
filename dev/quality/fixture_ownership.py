@@ -14,11 +14,17 @@ import tempfile
 import tomllib
 from collections import Counter
 from collections.abc import Mapping
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Final
 
-from .fixture_census import FixtureCensus, FixtureRecord, census, iter_source_files
+from .fixture_census import (
+    FactoryFixtureCandidate,
+    FixtureCensus,
+    FixtureRecord,
+    census,
+    iter_source_files,
+)
 
 MANIFEST_PATH: Final[Path] = Path(__file__).with_name("fixture_ownership.toml")
 _SCHEMA: Final[str] = "fixture-ownership-v6"
@@ -238,8 +244,140 @@ def _binding_semantics(
     return {"name": name, "runtime_ast": _runtime_dump(node), "dependencies": dependencies}
 
 
+def _factory_binding_call_node(tree: ast.Module, candidate: FactoryFixtureCandidate) -> ast.Call:
+    """Locate the module-level ``name = call(...)`` assignment a candidate names.
+
+    Mirrors the exact shape ``fixture_census._module_level_factory_candidates``
+    used to discover the candidate in the first place, so the node found here
+    is provably the same one that made this a candidate.
+    """
+    call_node = next(
+        (
+            statement.value
+            for statement in tree.body
+            if isinstance(statement, ast.Assign)
+            and isinstance(statement.value, ast.Call)
+            and statement.lineno == candidate.line
+            and any(isinstance(target, ast.Name) and target.id == candidate.bound_name for target in statement.targets)
+        ),
+        None,
+    )
+    if call_node is None:
+        raise FixtureOwnershipError(
+            f"cannot locate factory call assignment for {candidate.path}:{candidate.line}:{candidate.bound_name}"
+        )
+    return call_node
+
+
+def _closure_record_for_candidate(
+    fixtures_by_path: Mapping[str, list[FixtureRecord]],
+    candidate: FactoryFixtureCandidate,
+) -> FixtureRecord:
+    """Return the nested ``@pytest.fixture`` closure a resolved candidate produces.
+
+    ``resolved_factory`` names the OUTER factory function, not the closure
+    itself, so the closure is the sole direct-child fixture whose qualname
+    prefix is that outer function's name -- the same nesting shape
+    ``fixture_census._fixture_factory_fact`` required to recognize the factory.
+    """
+    factory_path, _line, factory_function_name = candidate.resolved_factory.rsplit(":", 2)
+    matches = [
+        record
+        for record in fixtures_by_path.get(factory_path, [])
+        if record.qualname != factory_function_name and record.qualname.rsplit(".", 1)[0] == factory_function_name
+    ]
+    if len(matches) != 1:
+        raise FixtureOwnershipError(
+            "cannot uniquely resolve the nested fixture closure for factory "
+            f"{candidate.resolved_factory} bound at {candidate.path}:{candidate.line}:{candidate.bound_name}"
+        )
+    return matches[0]
+
+
+def _factory_binding_record(
+    candidate: FactoryFixtureCandidate,
+    closure_record: FixtureRecord,
+    call_node: ast.Call,
+) -> FixtureRecord:
+    """Materialize the fixture one factory binding actually produces.
+
+    The decorator lives on the closure, not the binding: scope, autouse and
+    parameters are properties of the produced fixture, so they are the
+    closure's, copied verbatim. The closure's own body is shared by every
+    binding of the same factory, so it cannot distinguish them on its own --
+    the call arguments at this binding site are folded into the body digest so
+    two bindings of the same factory with different arguments are not treated
+    as clones by name/body grouping alone.
+    """
+    has_explicit_name = closure_record.decorator.name_expression is not None
+    effective_name = closure_record.effective_name if has_explicit_name else candidate.bound_name
+    call_dump = ast.dump(call_node, annotate_fields=True, include_attributes=False)
+    normalized_body = "\n".join((closure_record.normalized_body, call_dump))
+    normalized_body_sha256 = hashlib.sha256(normalized_body.encode("utf-8")).hexdigest()
+    owner_kind = "conftest" if Path(candidate.path).name == "conftest.py" else "module"
+    return FixtureRecord(
+        path=candidate.path,
+        line=candidate.line,
+        column=candidate.column,
+        qualname=candidate.bound_name,
+        function_name=candidate.bound_name,
+        effective_name=effective_name,
+        owner_kind=owner_kind,
+        decorator=closure_record.decorator,
+        parameters=closure_record.parameters,
+        dependencies=closure_record.dependencies,
+        body_ast_format=closure_record.body_ast_format,
+        normalized_body=normalized_body,
+        normalized_body_sha256=normalized_body_sha256,
+        imported_bindings=(),
+        consumers=(),
+        autouse_reach=(),
+    )
+
+
+def _factory_binding_records(result: FixtureCensus) -> tuple[FixtureRecord, ...]:
+    """Return one synthetic FixtureRecord per resolved factory-bound candidate.
+
+    A factory function returns an ``@pytest.fixture``-decorated closure, and a
+    module binds that closure to a name through a plain call assignment. The
+    assignment carries no decorator, so the decorator-only walk that fills
+    ``FixtureCensus.fixtures`` cannot see it, and this binding would otherwise
+    never reach a disposition. Each returned record represents the fixture the
+    binding actually produces, keyed by its own binding-site identity so it is
+    never confused with the closure definition it wraps.
+    """
+    root = Path(result.root)
+    fixtures_by_path: dict[str, list[FixtureRecord]] = {}
+    for record in result.fixtures:
+        fixtures_by_path.setdefault(record.path, []).append(record)
+    parsed_trees: dict[str, ast.Module] = {}
+    records: list[FixtureRecord] = []
+    for candidate in result.factory_fixture_candidates:
+        closure_record = _closure_record_for_candidate(fixtures_by_path, candidate)
+        tree = parsed_trees.get(candidate.path)
+        if tree is None:
+            source = (root / candidate.path).read_text(encoding="utf-8")
+            tree = ast.parse(source, filename=candidate.path)
+            parsed_trees[candidate.path] = tree
+        call_node = _factory_binding_call_node(tree, candidate)
+        records.append(_factory_binding_record(candidate, closure_record, call_node))
+    return tuple(records)
+
+
+def _with_factory_bindings(result: FixtureCensus) -> FixtureCensus:
+    """Return one census view where every resolved factory binding is a fixture too."""
+    return replace(result, fixtures=result.fixtures + _factory_binding_records(result))
+
+
 def _owner_global_sha256(result: FixtureCensus) -> dict[str, str]:
-    """Fingerprint only module bindings referenced by each fixture body."""
+    """Fingerprint only module bindings referenced by each fixture body.
+
+    A factory-bound record (see ``_factory_binding_record``) has no function
+    body of its own at its binding-site line -- it is a call assignment, not a
+    def. Its distinguishing content is the call arguments at that site, so
+    when no function is found, the call assignment itself stands in as the
+    node whose free variables get fingerprinted.
+    """
     root = Path(result.root)
     parsed: dict[str, tuple[ast.Module, dict[str, ast.AST]]] = {}
     fingerprints: dict[str, str] = {}
@@ -260,27 +398,44 @@ def _owner_global_sha256(result: FixtureCensus) -> dict[str, str]:
             ),
             None,
         )
-        if function is None:
-            raise FixtureOwnershipError(f"cannot locate fixture body for {fixture_id(record)}")
-        semantic_nodes: list[ast.AST] = [
-            ast.Module(body=_executable_body(function.body), type_ignores=[]),
-            *function.args.defaults,
-            *(default for default in function.args.kw_defaults if default is not None),
-        ]
-        fixture_decorator = next(
-            (
-                decorator
-                for decorator in function.decorator_list
-                if ast.unparse(decorator) == record.decorator.expression
-            ),
-            None,
-        )
-        if isinstance(fixture_decorator, ast.Call):
-            semantic_nodes.extend(
-                keyword.value
-                for keyword in fixture_decorator.keywords
-                if keyword.arg not in {"autouse", "name", "scope"}
+        if function is not None:
+            semantic_nodes: list[ast.AST] = [
+                ast.Module(body=_executable_body(function.body), type_ignores=[]),
+                *function.args.defaults,
+                *(default for default in function.args.kw_defaults if default is not None),
+            ]
+            fixture_decorator = next(
+                (
+                    decorator
+                    for decorator in function.decorator_list
+                    if ast.unparse(decorator) == record.decorator.expression
+                ),
+                None,
             )
+            if isinstance(fixture_decorator, ast.Call):
+                semantic_nodes.extend(
+                    keyword.value
+                    for keyword in fixture_decorator.keywords
+                    if keyword.arg not in {"autouse", "name", "scope"}
+                )
+        else:
+            call_node = next(
+                (
+                    statement.value
+                    for statement in tree.body
+                    if isinstance(statement, ast.Assign)
+                    and isinstance(statement.value, ast.Call)
+                    and statement.lineno == record.line
+                    and any(
+                        isinstance(target, ast.Name) and target.id == record.function_name
+                        for target in statement.targets
+                    )
+                ),
+                None,
+            )
+            if call_node is None:
+                raise FixtureOwnershipError(f"cannot locate fixture body for {fixture_id(record)}")
+            semantic_nodes = [call_node]
         referenced = sorted(
             {
                 name
@@ -388,6 +543,7 @@ def _fixture_rows(
     result: FixtureCensus,
     repeated_dispositions: Mapping[str, str] | None,
 ) -> list[dict[str, object]]:
+    result = _with_factory_bindings(result)
     name_counts = Counter(record.effective_name for record in result.fixtures)
     body_counts = Counter(record.normalized_body_sha256 for record in result.fixtures)
     repeated_ids = {
@@ -488,7 +644,7 @@ def build_manifest(
         "schema": _SCHEMA,
         "census_algorithm": "dev.quality.fixture_census:census",
         "snapshot_source": "stable-working-tree",
-        "fixture_count": result.fixture_count,
+        "fixture_count": len(rows),
         "source_count": len(result.sources),
         "dynamic_request_count": len(result.dynamic_fixture_requests),
         "dynamic_requests_sha256": _sha256(
@@ -558,11 +714,12 @@ def validate_manifest(result: FixtureCensus, payload: Mapping[str, object]) -> N
             raise FixtureOwnershipError(f"duplicate ownership row: {record_id}")
         dispositions[record_id] = disposition
 
-    name_counts = Counter(record.effective_name for record in result.fixtures)
-    body_counts = Counter(record.normalized_body_sha256 for record in result.fixtures)
+    augmented_result = _with_factory_bindings(result)
+    name_counts = Counter(record.effective_name for record in augmented_result.fixtures)
+    body_counts = Counter(record.normalized_body_sha256 for record in augmented_result.fixtures)
     repeated_ids = {
         fixture_id(record)
-        for record in result.fixtures
+        for record in augmented_result.fixtures
         if name_counts[record.effective_name] > 1 or body_counts[record.normalized_body_sha256] > 1
     }
     repeated_dispositions = {

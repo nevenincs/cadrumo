@@ -130,7 +130,7 @@ import pytest
 
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.resources import bundled_path
-from .. import ManualWorkedExamplePayload
+from ._manual_oracle_support import read_manual_worked_example
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -149,11 +149,6 @@ def _payload_names() -> tuple[str, ...]:
     is gating, and would refuse a file no consumer of this model ever sees.
     """
     return tuple(sorted(path.name for path in _payload_directory().glob("modelo-*.json")))
-
-
-def _payload(name: str) -> ManualWorkedExamplePayload:
-    path = _payload_directory() / name
-    return ManualWorkedExamplePayload.model_validate_json(path.read_text(encoding=UTF_8_ENCODING))
 
 
 #: Payloads that have not yet declared their scenario inputs, each with its reason.
@@ -244,7 +239,9 @@ def test_every_payload_either_declares_inputs_or_states_why_not() -> None:
     surface anywhere recording that as a gap.
     """
     undecided = sorted(
-        name for name in _payload_names() if _payload(name).declared_inputs is None and name not in _UNMIGRATED_PAYLOADS
+        name
+        for name in _payload_names()
+        if read_manual_worked_example(name).declared_inputs is None and name not in _UNMIGRATED_PAYLOADS
     )
     if undecided:
         listed = "\n  ".join(undecided)
@@ -269,7 +266,9 @@ def test_no_unmigrated_entry_outlives_its_payload() -> None:
     names = set(_payload_names())
     vanished = sorted(name for name in _UNMIGRATED_PAYLOADS if name not in names)
     already_migrated = sorted(
-        name for name in _UNMIGRATED_PAYLOADS if name in names and _payload(name).declared_inputs is not None
+        name
+        for name in _UNMIGRATED_PAYLOADS
+        if name in names and read_manual_worked_example(name).declared_inputs is not None
     )
     problems = [f"{name}: payload no longer exists" for name in vanished]
     problems += [f"{name}: payload now declares inputs, so the entry is stale" for name in already_migrated]
@@ -297,7 +296,7 @@ def test_no_declared_input_is_also_an_expected_output() -> None:
     """
     offenders: dict[str, list[str]] = {}
     for name in _payload_names():
-        payload = _payload(name)
+        payload = read_manual_worked_example(name)
         if payload.declared_inputs is None:
             continue
         both = sorted(set(payload.declared_inputs.by_casilla_id) & set(payload.expected_by_casilla_id))
@@ -317,7 +316,7 @@ def test_declared_inputs_survive_the_strict_payload_model() -> None:
     """
     for name in _payload_names():
         raw = json.loads((_payload_directory() / name).read_text(encoding=UTF_8_ENCODING))
-        declared = _payload(name).declared_inputs
+        declared = read_manual_worked_example(name).declared_inputs
         assert (declared is not None) == ("declared_inputs" in raw), (
             f"{name}: declared_inputs presence disagrees between the raw file and the parsed model"
         )

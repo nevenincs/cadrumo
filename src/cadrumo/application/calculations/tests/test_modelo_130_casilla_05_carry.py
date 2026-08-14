@@ -60,20 +60,13 @@ _BUCKET_ID = "13005000-0000-4000-8000-000000000130"
 _FILING_YEAR = 2026
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M130 casilla-05 carry fixture key {value!r} is not a CasillaId") from exc
-
-
-_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
-_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = _casilla_id("1479")
-_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = _casilla_id("1553")
-_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = _casilla_id("1577")
-_M130_PAGO_FRACCIONADO_CASILLA: CasillaId = _casilla_id("07")
-_M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
-_M130_SALDO_NEGATIVO_CASILLA: CasillaId = _casilla_id("saldo-negativo-fin-periodo")
+_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")
+_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = validated_casilla_id("1479")
+_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = validated_casilla_id("1553")
+_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = validated_casilla_id("1577")
+_M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id("07")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
+_M130_SALDO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id("saldo-negativo-fin-periodo")
 
 
 @pytest.fixture

@@ -12,13 +12,6 @@ from ....core import CasillaId, validated_casilla_id
 from ._generate_base import _SEDE_ORIGIN
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="justificante fixture casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"justificante fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
 @dataclass(frozen=True)
 class _Modelo232Fixture:
     """Sanitized M232 declaracion informativa fixture.
@@ -171,34 +164,34 @@ _MODELO_123_2024_RENDER_ROWS: tuple[tuple[CasillaId, str, str], ...] = (
     #   [12] = [09] + [11]  =  2.850,00 + 0,00 = 2.850,00
     #   [14] = [12] - [13]  =  2.850,00 - 0,00 = 2.850,00
     # Integer casillas use NN,00 format so SPANISH_AMOUNT_GROUP regex (requires comma) matches.
-    (_casilla_id("01"), "01", "5,00"),
-    (_casilla_id("02"), "02", "3,00"),
-    (_casilla_id("03"), "03", "8,00"),
-    (_casilla_id("04"), "04", "10.000,00"),
-    (_casilla_id("05"), "05", "5.000,00"),
-    (_casilla_id("06"), "06", "15.000,00"),
-    (_casilla_id("07"), "07", "1.900,00"),
-    (_casilla_id("08"), "08", "950,00"),
-    (_casilla_id("09"), "09", "2.850,00"),
-    (_casilla_id("10"), "10", "0,00"),
-    (_casilla_id("11"), "11", "0,00"),
-    (_casilla_id("12"), "12", "2.850,00"),
-    (_casilla_id("13"), "13", "0,00"),
-    (_casilla_id("14"), "14", "2.850,00"),
+    (validated_casilla_id("01", surface="justificante fixture casilla id"), "01", "5,00"),
+    (validated_casilla_id("02", surface="justificante fixture casilla id"), "02", "3,00"),
+    (validated_casilla_id("03", surface="justificante fixture casilla id"), "03", "8,00"),
+    (validated_casilla_id("04", surface="justificante fixture casilla id"), "04", "10.000,00"),
+    (validated_casilla_id("05", surface="justificante fixture casilla id"), "05", "5.000,00"),
+    (validated_casilla_id("06", surface="justificante fixture casilla id"), "06", "15.000,00"),
+    (validated_casilla_id("07", surface="justificante fixture casilla id"), "07", "1.900,00"),
+    (validated_casilla_id("08", surface="justificante fixture casilla id"), "08", "950,00"),
+    (validated_casilla_id("09", surface="justificante fixture casilla id"), "09", "2.850,00"),
+    (validated_casilla_id("10", surface="justificante fixture casilla id"), "10", "0,00"),
+    (validated_casilla_id("11", surface="justificante fixture casilla id"), "11", "0,00"),
+    (validated_casilla_id("12", surface="justificante fixture casilla id"), "12", "2.850,00"),
+    (validated_casilla_id("13", surface="justificante fixture casilla id"), "13", "0,00"),
+    (validated_casilla_id("14", surface="justificante fixture casilla id"), "14", "2.850,00"),
 )
 
 _MODELO_123_2023_RENDER_ROWS: tuple[tuple[CasillaId, str, str], ...] = (
     # 2019-2023 revision: 8 casillas using official bare box numbers (01..08).
     # Amounts satisfy: [06]=[03]+[05]=1.520,00+0,00=1.520,00, [08]=[06]-[07]=1.520,00-0,00=1.520,00
     # Integer casilla uses N,00 format so SPANISH_AMOUNT_GROUP regex (requires comma) matches.
-    (_casilla_id("01"), "01", "4,00"),
-    (_casilla_id("02"), "02", "8.000,00"),
-    (_casilla_id("03"), "03", "1.520,00"),
-    (_casilla_id("04"), "04", "0,00"),
-    (_casilla_id("05"), "05", "0,00"),
-    (_casilla_id("06"), "06", "1.520,00"),
-    (_casilla_id("07"), "07", "0,00"),
-    (_casilla_id("08"), "08", "1.520,00"),
+    (validated_casilla_id("01", surface="justificante fixture casilla id"), "01", "4,00"),
+    (validated_casilla_id("02", surface="justificante fixture casilla id"), "02", "8.000,00"),
+    (validated_casilla_id("03", surface="justificante fixture casilla id"), "03", "1.520,00"),
+    (validated_casilla_id("04", surface="justificante fixture casilla id"), "04", "0,00"),
+    (validated_casilla_id("05", surface="justificante fixture casilla id"), "05", "0,00"),
+    (validated_casilla_id("06", surface="justificante fixture casilla id"), "06", "1.520,00"),
+    (validated_casilla_id("07", surface="justificante fixture casilla id"), "07", "0,00"),
+    (validated_casilla_id("08", surface="justificante fixture casilla id"), "08", "1.520,00"),
 )
 
 _MODELO_123_FIXTURES: tuple[_Modelo123Fixture, ...] = (

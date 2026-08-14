@@ -25,9 +25,9 @@ from click.testing import Result
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....domain.categories import SpendingCategory
 from ....domain.iva import IvaCategory
+from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_runner import invoke_cached_cli
 from ._isolated_profile_storage_fixtures import llm_profile_isolated_backend
-from .envelope_helpers import unwrap_cli_result as _json_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["llm_profile_isolated_backend"]

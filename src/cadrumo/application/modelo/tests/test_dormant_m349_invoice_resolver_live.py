@@ -14,7 +14,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import CasillaId, Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, derive_invoice_id
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.secure_sql import isolated_runtime_profile
@@ -23,7 +23,7 @@ from .. import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
 )
-from ._dormant_resolver_live_support import _T0, _T1, _casilla_id, _revision, _seed_ready_profile
+from ._dormant_resolver_live_support import _T0, _T1, _revision, _seed_ready_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -33,9 +33,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _M349_BUCKET = "34900000-0000-4000-8000-000000000013"
 _M349_REVISION = "2020-y-siguientes"
 _M349_YEAR = 2026
-_M349_IMPORTE_CASILLA: CasillaId = _casilla_id("decl.importe-operaciones")
+_M349_IMPORTE_CASILLA: CasillaId = validated_casilla_id("decl.importe-operaciones")
 _M349_IMPORTE_BINDING = "iva-349-declarante-importe-operaciones"
-_M349_OPERADORES_CASILLA: CasillaId = _casilla_id("decl.numero-operadores")
+_M349_OPERADORES_CASILLA: CasillaId = validated_casilla_id("decl.numero-operadores")
 
 # Three DISTINCT non-equal ISSUED intra-community supply bases (clave E) to three
 # distinct EU operators, all issued inside 1T (Jan-Mar). decl.importe-operaciones

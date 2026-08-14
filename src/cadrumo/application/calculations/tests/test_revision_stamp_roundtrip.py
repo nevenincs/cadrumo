@@ -47,15 +47,8 @@ _CLOCK = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _DIVERGENT_REVISION_ID = "definitely-not-the-right-revision-id-xyzzy"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"revision stamp fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
-_M303_CARRY_SOURCE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+_M303_CARRY_SOURCE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
 
 
 def _filing_period(year: int = _YEAR, period: str = _PERIOD) -> Period:

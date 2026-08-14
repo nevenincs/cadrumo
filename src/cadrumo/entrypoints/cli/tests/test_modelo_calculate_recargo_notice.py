@@ -36,13 +36,13 @@ from ....application.modelo import ModeloWorkDeadlinePosture
 from ....core import Period
 from ....core.resources import resources
 from ....domain.deadlines import resolve_filing_closes_on
+from ....tests.cli_envelope import unwrap_envelope_notices
+from ....tests.cli_envelope import unwrap_schema_envelope as _result
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_storage  # noqa: F401 - autouse fixture
 from .._modelo_rendering import _work_unit_deadline_output_from_posture
 from ._m130_source_support import seed_m130_income_transaction
-from .envelope_helpers import unwrap_envelope_notices
-from .envelope_helpers import unwrap_schema_envelope as _result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

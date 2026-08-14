@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import IvaDeductionFactKind
+from .....core import IvaDeductionFactKind, validated_casilla_id
 from ....iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     CustomerTaxStatus,
@@ -36,7 +36,6 @@ from ._ledger_iva_aggregation_support import (
     _M303_SOPORTADO_IMPORTACIONES_CASILLA,
     _binding,
     _calculate_303_from_observations,
-    _casilla_id,
     _modelo_303_revision,
     _observation,
     _revision_with_bindings,
@@ -50,9 +49,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # intracomunitarias de bienes y servicios corrientes - Cuota" on the deducible
 # side. Both titles cover goods AND services; box [13] is "Otras operaciones con
 # inversión del sujeto pasivo (excepto. adq. intracom)", which excludes them.
-_OFFICIAL_AIC_DEVENGADO_CUOTA_BOX = _casilla_id("11")
-_OFFICIAL_AIC_DEDUCIBLE_CUOTA_BOX = _casilla_id("37")
-_OFFICIAL_OTRAS_ISP_DEVENGADO_CUOTA_BOX = _casilla_id("13")
+_OFFICIAL_AIC_DEVENGADO_CUOTA_BOX = validated_casilla_id("11")
+_OFFICIAL_AIC_DEDUCIBLE_CUOTA_BOX = validated_casilla_id("37")
+_OFFICIAL_OTRAS_ISP_DEVENGADO_CUOTA_BOX = validated_casilla_id("13")
 
 
 def test_resolve_aic_official_box_parity_routes_devengado_and_deducible_net_zero() -> None:

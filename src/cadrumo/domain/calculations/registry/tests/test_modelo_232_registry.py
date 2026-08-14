@@ -204,7 +204,6 @@ def test_committed_modelo_232_construct_includes_profile_and_expectation_and_ext
             "portal",
             "filing",
             "extractor",
-            "verification",
             "deadline",
             "review",
             "approval",

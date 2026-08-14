@@ -61,20 +61,13 @@ _BUCKET_ID = "bucket-m303-refund"
 #: The law-determined Modelo 303 revision for 2025/4T. Stamped on the persisted
 #: carry observation so the cross-period carry gate re-confirms it (a divergent
 #: stamp would silently drop the carry).
-_REVISION = resources().modelos.authority.snapshot("303", filing_year=2025, period="4T").revision.id
+_REVISION = resources().modelos.authority.inspect_revision("303", filing_year=2025, period="4T").revision_id
 
 _CARRY_RELATION: RelationId = "modelo-303-rel-self-compensacion-anteriores"
 _CARRY_BINDING = "modelo-303-compensacion-pendiente-anteriores"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_M303_SALDO_COMPENSACION_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_SALDO_COMPENSACION_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
 
 #: Profile-gap workaround bindings (mirror the carry-continuity contract module;
 #: the direct-calculate path does not run the profile resolver).

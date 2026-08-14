@@ -11,7 +11,7 @@ See Also:
         Backend state enum asserted after command transitions.
     :func:`~application.modelo.read_m145_communication_record`
         Backend read path used to verify real command effects.
-    :mod:`~entrypoints.cli.tests.envelope_helpers`
+    :mod:`~tests.cli_envelope`
         Schema-envelope helper used to inspect CLI JSON output.
 
 The ``"secrets"`` literal in ``isolated_m145_cli_backend`` below is not an
@@ -35,9 +35,9 @@ import pytest
 
 from ....application.modelo import M145CommunicationRecordState, read_m145_communication_record
 from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....tests.cli_envelope import unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile
-from .envelope_helpers import unwrap_schema_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

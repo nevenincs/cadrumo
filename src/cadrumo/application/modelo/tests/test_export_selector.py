@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
+
+from ._export_test_support import isolated_backend
+
+__all__ = ["isolated_backend"]
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -22,15 +24,9 @@ from ....domain.modelos import (
 from ....tests.registry_observations import registry_grounded_observations
 from .. import create_work_unit
 from .._selectors import ModeloCalculationRevisionSelectorStateError, select_exportable_revision
-from ._export_test_support import _M130_INPUT_CASILLA, _seed_profile, isolated_backend_context
+from ._export_test_support import _M130_INPUT_CASILLA, _seed_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@pytest.fixture
-def isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_backend_context(tmp_path):
-        yield
 
 
 def test_exportable_selector_refuses_verified_fallback_when_current_draft_conflicts(

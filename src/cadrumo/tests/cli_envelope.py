@@ -1,8 +1,10 @@
-"""Canonical CLI success-envelope decoder for cross-package tests.
+"""Canonical CLI envelope decoders for cross-package tests.
 
-The helper validates the shared outer contract through the production
-``SchemaEnvelope`` model while allowing each command's registered result fields.
-Tests that need a command-specific payload schema continue to validate that schema
+The success-side helper validates the shared outer contract through the
+production ``SchemaEnvelope`` model while allowing each command's registered
+result fields. The error-side helper validates the same outer spine through
+the production ``ErrorEnvelope`` model nested under ``error``. Tests that need
+a command-specific payload schema continue to validate that schema
 separately; this module owns only transport-envelope decoding and unwrapping.
 """
 
@@ -11,9 +13,10 @@ from __future__ import annotations
 import json
 from typing import Any, Protocol
 
-from pydantic import ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
-from ..core.json_contract import ENVELOPE_SCHEMA_VERSION, OutputSchema, SchemaEnvelope
+from ..core.errors import ErrorEnvelope
+from ..core.json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus, Notice, OutputSchema, SchemaEnvelope
 
 
 class _ArbitraryCommandResult(OutputSchema):
@@ -95,7 +98,54 @@ def unwrap_cli_result(result: CliResultLike) -> dict[str, Any]:
     return require_schema_envelope(result.output)
 
 
+class _ErrorDocument(BaseModel):
+    """Stable outer envelope wrapping a failed command's error body.
+
+    Mirrors :class:`SchemaEnvelope`'s outer spine, but nests the production
+    :class:`ErrorEnvelope` under ``error`` instead of a command ``result``. An
+    error document carries no ``result`` key, so :class:`SchemaEnvelope`
+    structurally cannot validate it — this is that missing counterpart.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    schema_version: str = Field(min_length=1)
+    command: str | None
+    active_profile: str | None = None
+    status: EnvelopeStatus
+    error: ErrorEnvelope
+    notices: list[Notice] = Field(default_factory=list)
+
+
+def require_error_document(output: str) -> dict[str, Any]:
+    """Return the validated stderr/stdout error document as a plain mapping.
+
+    CLI output mixes prose, Rich panels, and log lines around the single-line
+    JSON document; each candidate line is stripped before the ``{`` probe so a
+    document indented by a surrounding frame is still found — a bare
+    ``line.startswith("{")`` silently misses indented JSON. The full outer
+    spine plus the nested ``error`` body is validated through the real
+    :class:`_ErrorDocument`/:class:`ErrorEnvelope` models, not a two-key
+    presence check.
+    """
+    for line in output.splitlines():
+        candidate = line.strip()
+        if candidate.startswith("{"):
+            raw = json.loads(candidate)
+            if not isinstance(raw, dict):
+                raise TypeError("CLI JSON error document must be an object")
+            document = _ErrorDocument.model_validate_json(candidate)
+            if document.schema_version != ENVELOPE_SCHEMA_VERSION:
+                raise ValueError(
+                    "Unsupported CLI error envelope schema version "
+                    f"{document.schema_version!r}; expected {ENVELOPE_SCHEMA_VERSION!r}",
+                )
+            return raw
+    raise AssertionError(f"no JSON error document found in output:\n{output}")
+
+
 __all__ = [
+    "require_error_document",
     "require_schema_envelope",
     "unwrap_cli_result",
     "unwrap_envelope_notices",

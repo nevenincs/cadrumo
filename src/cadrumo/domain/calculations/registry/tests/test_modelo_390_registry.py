@@ -30,52 +30,35 @@ from ._registry_schema_support import _committed_modelo, _committed_snapshot
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"modelo 390 registry fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
-_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
-_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
-_M303_COMPENSACION_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
-_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
-_M303_COMPENSACION_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
-_M303_COMPENSACION_POSTERIOR_CASILLA: CasillaId = _casilla_id(
-    "iva.compensacion-pendiente-periodos-posteriores",
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
+_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
+_M303_COMPENSACION_GENERADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-generada-periodo")
+_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
+_M303_COMPENSACION_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_COMPENSACION_POSTERIOR_CASILLA: CasillaId = validated_casilla_id(
+    "iva.compensacion-pendiente-periodos-posteriores"
 )
 _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS: tuple[CasillaId, ...] = (
-    _casilla_id("iva.cuota-deducible-total"),
-    _casilla_id("iva.prorrata-volumen-con-derecho"),
-    _casilla_id("iva.prorrata-volumen-total"),
-    _casilla_id("iva.prorrata-porcentaje"),
+    validated_casilla_id("iva.cuota-deducible-total"),
+    validated_casilla_id("iva.prorrata-volumen-con-derecho"),
+    validated_casilla_id("iva.prorrata-volumen-total"),
+    validated_casilla_id("iva.prorrata-porcentaje"),
 )
 _M303_PRORRATA_REGULARIZACION_SOURCE_PERIODS = ("1T", "2T", "3T", "4T")
-_M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-devengada-total")
-_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-deducible-total")
-_M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.anual.resultado-regimen-general")
-_M390_PRORRATA_REGULARIZACION_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.regularizacion-prorrata-definitiva",
+_M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.cuota-devengada-total")
+_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.cuota-deducible-total")
+_M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.resultado-regimen-general")
+_M390_PRORRATA_REGULARIZACION_CASILLA: CasillaId = validated_casilla_id("iva.anual.regularizacion-prorrata-definitiva")
+_M390_BIENES_INVERSION_REGULARIZACION_CASILLA: CasillaId = validated_casilla_id(
+    "iva.anual.regularizacion-bienes-inversion"
 )
-_M390_BIENES_INVERSION_REGULARIZACION_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.regularizacion-bienes-inversion",
-)
-_M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.reconciliacion.devengada-303",
-)
-_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.reconciliacion.deducible-303",
-)
-_M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.reconciliacion.resultado-303",
-)
-_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.compensacion-ultimo-periodo-97",
-)
-_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.compensacion-generada-ejercicio-no-97",
+_M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.devengada-303")
+_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.deducible-303")
+_M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.resultado-303")
+_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = validated_casilla_id("iva.anual.compensacion-ultimo-periodo-97")
+_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = validated_casilla_id(
+    "iva.anual.compensacion-generada-ejercicio-no-97"
 )
 _M390_CONSTRUCT_ID = "modelo-390-iva-resumen-anual"
 _M390_RECONCILIATION_PREDICATES = (

@@ -679,7 +679,6 @@ def test_public_export_default_loads_persisted_justificante_authority(tmp_path: 
             )
 
 
-
 def test_m303_motive_is_refused_for_another_modelo_snapshot() -> None:
     with pytest.raises(FilingProducerSnapshotError, match="valid only for modelo 303"):
         build_filing_producer_snapshot(

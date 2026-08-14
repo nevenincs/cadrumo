@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from decimal import Decimal
 from pathlib import Path
 
@@ -13,9 +12,10 @@ from ....application.calculations import (
     seed_iva_compensation_period,
 )
 from ....core import Period
+from ....tests.cli_envelope import require_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_runtime_profile
-from ._iva_wallet_inspector_support import _NIF, _SEED_BUCKET_ID, _store_profile_with_nif, _unwrap_envelope
+from ._iva_wallet_inspector_support import _NIF, _SEED_BUCKET_ID, _store_profile_with_nif
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -83,7 +83,7 @@ def test_cli_correct_verb_happy_path_overwrites_seed(tmp_path: Path) -> None:
         stored = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2024, "4T"))
 
     assert result.exit_code == 0, result.output
-    payload = _unwrap_envelope(json.loads(result.output))
+    payload = require_schema_envelope(result.output)
     assert payload["operation"] == "modelo.iva_wallet.correct"
     assert payload["amount"] == "1200.50"
     assert payload["previous_amount"] == "500.00"

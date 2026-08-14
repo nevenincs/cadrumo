@@ -4,8 +4,10 @@ import json
 
 import pytest
 
+from ._isolated_profile_storage_fixtures import live_fx_isolated_backend
 from ._ledger_corpus_support import _CORPUS, _FILES, _import_corpus, _invoke, _list_rows
-from ._ledger_corpus_support import _isolated_backend as _isolated_backend
+
+__all__ = ["live_fx_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

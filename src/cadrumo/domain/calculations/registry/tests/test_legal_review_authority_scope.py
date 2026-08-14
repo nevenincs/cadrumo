@@ -10,7 +10,9 @@ from .....core import RevisionReviewStatus
 from .....core.resources import bundled_path
 from .. import ValidatedRegistryAuthority
 from .._errors import RegistryValidationError
-from .._snapshot import build_validated_snapshot
+from .._export import derive_export_layouts_from_bindings
+from .._loader import load_registry_tree
+from .._snapshot import _check_snapshot_filing_capability, build_validated_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -69,3 +71,60 @@ def test_build_validated_snapshot_refuses_real_m182_non_operator_revision(
             period="0A",
             revision_id="2007-y-siguientes",
         )
+
+
+def _committed_registry():
+    """Load the tree through the compiler, so this proof survives a red validation gate."""
+    return load_registry_tree(bundled_path("registry", "aeat"))
+
+
+def test_filing_grade_snapshot_refuses_a_reviewed_revision_that_declares_no_export_layout() -> None:
+    """Operator review does not by itself make a revision filable.
+
+    M182 declares no export layout. Stamping it operator-reviewed clears the review
+    gate and the request then reaches the filing-capability check, which is the wiring
+    this test exists to prove: without it a reviewed-but-layoutless revision would
+    yield a snapshot, and the completeness gate in ``export_draft`` would then have an
+    absent layout to check and would pass over it.
+    """
+    modelos, catalogues = _committed_registry()
+    modelo = next(candidate for candidate in modelos if candidate.id == "182")
+    revision = modelo.revisions["2007-y-siguientes"]
+    assert not revision.export_layouts, "fixture drift: M182 gained an export layout, pick another subject"
+    reviewed = revision.model_copy(
+        update={
+            "review_status": RevisionReviewStatus.OPERATOR_REVIEWED,
+            "reviewed_by": "operator",
+            "reviewed_at": date(2026, 5, 5),
+        },
+    )
+    mutated = modelo.model_copy(update={"revisions": {**modelo.revisions, reviewed.id: reviewed}})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"modelo 182 revision 2007-y-siguientes declares no export layout",
+    ):
+        build_validated_snapshot(
+            mutated,
+            catalogues,
+            filing_year=2025,
+            period="0A",
+            revision_id="2007-y-siguientes",
+        )
+
+
+def test_the_filing_capability_check_passes_a_revision_that_can_emit() -> None:
+    """The control: without this, the refusal above could be firing on every revision."""
+    modelos, _catalogues = _committed_registry()
+    emitting = [
+        (modelo, revision)
+        for modelo in modelos
+        for revision in modelo.revisions.values()
+        if derive_export_layouts_from_bindings(revision)
+    ]
+    assert emitting, "no revision in the registry declares an export layout, so this control cannot run"
+
+    modelo, revision = emitting[0]
+    resolved = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
+
+    _check_snapshot_filing_capability(modelo, resolved)

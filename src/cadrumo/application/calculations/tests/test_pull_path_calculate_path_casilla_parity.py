@@ -140,26 +140,19 @@ _PRORRATA_T0 = datetime(_PRORRATA_YEAR, 1, 10, 10, 0, tzinfo=UTC)
 _PRORRATA_T1 = datetime(_PRORRATA_YEAR, 3, 31, 14, 0, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"pull/calculate parity fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M115_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
-_M115_BASE_CASILLA: CasillaId = _casilla_id("02")
-_M115_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
-_M115_ANTERIORES_CASILLA: CasillaId = _casilla_id("04")
-_M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
-_M180_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
-_M180_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
+_M115_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01")
+_M115_BASE_CASILLA: CasillaId = validated_casilla_id("02")
+_M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03")
+_M115_ANTERIORES_CASILLA: CasillaId = validated_casilla_id("04")
+_M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("decl.total-perceptores")
+_M180_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.base-total")
+_M180_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.retenciones-total")
 _M180_PERCEPTOR_NIFS: tuple[str, ...] = ("11111111H", "22222222J")
-_M303_SOPORTADO_INTERIORES_CASILLA: CasillaId = _casilla_id("iva.soportado.interiores")
-_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
-    "iva.compensacion-pendiente-periodos-anteriores",
+_M303_SOPORTADO_INTERIORES_CASILLA: CasillaId = validated_casilla_id("iva.soportado.interiores")
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores"
 )
-_M303_OFICIAL_DEDUCIBLE_INTERIORES_CUOTA: CasillaId = _casilla_id("29")
+_M303_OFICIAL_DEDUCIBLE_INTERIORES_CUOTA: CasillaId = validated_casilla_id("29")
 _M303_DEDUCIBLE_CUOTA_BINDING: BindingId = "modelo-303-iva-soportado-interiores-cuota"
 _M303_COMPENSACION_PENDIENTE_ANTERIORES_BINDING: BindingId = "modelo-303-compensacion-pendiente-anteriores"
 _M303_AUTOCONSUMO_PROMOTOR_BASE_BINDING: BindingId = "modelo-303-autoconsumo-promotor-base"

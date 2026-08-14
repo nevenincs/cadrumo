@@ -95,28 +95,21 @@ def _m130_revision(period: str) -> ModeloRevision:
     return resources().modelos.authority.snapshot("130", filing_year=_YEAR, period=period).revision
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M130 prior-payment advisory fixture key {value!r} is not a CasillaId") from exc
-
-
-_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
-_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = _casilla_id("1479")
-_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = _casilla_id("1553")
-_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = _casilla_id("1577")
-_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
-_M130_PAGO_FRACCIONADO_PREVIO_CASILLA: CasillaId = _casilla_id("04")
-_PRIOR_PAYMENT_CASILLA: CasillaId = _casilla_id("05")
-_M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
-_M130_PAGO_FRACCIONADO_CASILLA: CasillaId = _casilla_id("07")
-_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
-_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = _casilla_id("10")
-_M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
-_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
-_M130_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("19")
-_M130_SALDO_NEGATIVO_CASILLA: CasillaId = _casilla_id("saldo-negativo-fin-periodo")
+_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")
+_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = validated_casilla_id("1479")
+_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = validated_casilla_id("1553")
+_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = validated_casilla_id("1577")
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
+_M130_PAGO_FRACCIONADO_PREVIO_CASILLA: CasillaId = validated_casilla_id("04")
+_PRIOR_PAYMENT_CASILLA: CasillaId = validated_casilla_id("05")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
+_M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id("07")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
+_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
+_M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19")
+_M130_SALDO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id("saldo-negativo-fin-periodo")
 
 # The prior 1T pago fraccionado the casilla-05 carry deducts at 2T.
 _PRIOR_1T_CASILLA_07 = Decimal("200")

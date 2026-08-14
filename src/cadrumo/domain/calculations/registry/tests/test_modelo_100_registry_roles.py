@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId
+from .....core import CasillaId, validated_casilla_id
 from ._modelo_100_registry_support import (
     _ANEXO_C_ENERGY_EXCESS_ROLE_PREFIX,
     _ANEXO_C_ENERGY_EXCESS_ROLES,
@@ -45,7 +45,6 @@ from ._modelo_100_registry_support import (
     _SAVINGS_BASE_ART_49_ONLY_ROLES,
     _SAVINGS_BASE_ART_49_REF,
     _SAVINGS_BASE_GYP_LIMIT_CASILLA,
-    _casilla_id,
     _loaded_registry,
     _modelo_100_snapshot,
 )
@@ -66,11 +65,17 @@ def test_modelo_100_trabajo_otros_gastos_role_is_decimal_across_revisions() -> N
         otros_gastos = next(casilla for casilla in revision.casillas if casilla.semantic_role == role)
         found_years.add(revision_id)
 
-        assert otros_gastos.id == _casilla_id("0019")
+        assert otros_gastos.id == validated_casilla_id("0019", surface="test_modelo_100_registry.casilla")
         assert otros_gastos.data_type == "decimal"
         assert "ley-35-2006:art-19" in otros_gastos.legal_refs
-        assert casillas_by_id[_casilla_id("0018")].data_type == "decimal"
-        assert casillas_by_id[_casilla_id("0022")].data_type == "decimal"
+        assert (
+            casillas_by_id[validated_casilla_id("0018", surface="test_modelo_100_registry.casilla")].data_type
+            == "decimal"
+        )
+        assert (
+            casillas_by_id[validated_casilla_id("0022", surface="test_modelo_100_registry.casilla")].data_type
+            == "decimal"
+        )
 
     assert found_years == expected_years
 
@@ -448,7 +453,11 @@ def test_modelo_100_reserva_inversiones_roles_follow_official_section() -> None:
         forbidden_ref,
     ) in expected_cases:
         revision = _modelo_100_snapshot(filing_year).revision
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id(casilla_id))
+        casilla = next(
+            casilla
+            for casilla in revision.casillas
+            if casilla.id == validated_casilla_id(casilla_id, surface="test_modelo_100_registry.casilla")
+        )
 
         assert tuple(casilla.section) == expected_section, (filing_year, casilla_id)
         assert label_fragment in casilla.label, (filing_year, casilla_id)
@@ -477,7 +486,11 @@ def test_modelo_100_reserva_inversiones_split_axes_use_regime_specific_roles() -
 def test_modelo_100_ev_charging_point_deduction_keeps_da_58_grounding() -> None:
     for filing_year in range(2023, 2026):
         revision = _modelo_100_snapshot(filing_year).revision
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("1935"))
+        casilla = next(
+            casilla
+            for casilla in revision.casillas
+            if casilla.id == validated_casilla_id("1935", surface="test_modelo_100_registry.casilla")
+        )
 
         assert tuple(casilla.section) == _EV_CHARGING_POINT_RESULTS_SECTION, filing_year
         assert casilla.semantic_role == _EV_CHARGING_POINT_DEDUCTION_ROLE, filing_year
@@ -539,7 +552,11 @@ def test_modelo_100_anexo_c_protected_patrimony_current_year_excess_role_is_grou
 
     for filing_year in range(2020, 2026):
         revision = modelo.revisions[str(filing_year)]
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("1362"))
+        casilla = next(
+            casilla
+            for casilla in revision.casillas
+            if casilla.id == validated_casilla_id("1362", surface="test_modelo_100_registry.casilla")
+        )
         expected_sources = {
             f"aeat-dr-100-{filing_year}-dictionary",
             f"aeat-dr-100-{filing_year}-input-dictionary",
@@ -580,7 +597,11 @@ def test_modelo_100_prevision_social_0383_splits_income_threshold_polarity() -> 
 
     for filing_year, (expected_role, label_fragment) in expected_by_year.items():
         revision = modelo.revisions[str(filing_year)]
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0383"))
+        casilla = next(
+            casilla
+            for casilla in revision.casillas
+            if casilla.id == validated_casilla_id("0383", surface="test_modelo_100_registry.casilla")
+        )
 
         assert tuple(casilla.section) == ("toma_datos_ampliada", "red_base_imponible", "red_prevision_social")
         assert casilla.semantic_role == expected_role
@@ -610,7 +631,11 @@ def test_modelo_100_derechos_transmission_global_role_spans_revisions() -> None:
 
     for filing_year in range(2020, 2026):
         revision = modelo.revisions[str(filing_year)]
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0343"))
+        casilla = next(
+            casilla
+            for casilla in revision.casillas
+            if casilla.id == validated_casilla_id("0343", surface="test_modelo_100_registry.casilla")
+        )
 
         assert tuple(casilla.section) == ("toma_datos_ampliada", "gp_derechos", "entidad_derecho")
         assert casilla.semantic_role == expected_role
@@ -641,7 +666,11 @@ def test_modelo_100_premios_0303_splits_historical_emancipation_grant_from_renta
 
     for filing_year, (expected_role, label_fragment) in expected_by_year.items():
         revision = modelo.revisions[str(filing_year)]
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0303"))
+        casilla = next(
+            casilla
+            for casilla in revision.casillas
+            if casilla.id == validated_casilla_id("0303", surface="test_modelo_100_registry.casilla")
+        )
 
         assert tuple(casilla.section) == ("toma_datos_ampliada", "gp_premios", "otras")
         assert casilla.semantic_role == expected_role
@@ -662,7 +691,11 @@ def test_modelo_100_2020_0356_is_gp_otros_ordinal_element_number() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
     revision_2020 = modelo.revisions["2020"]
-    casilla = next(casilla for casilla in revision_2020.casillas if casilla.id == _casilla_id("0356"))
+    casilla = next(
+        casilla
+        for casilla in revision_2020.casillas
+        if casilla.id == validated_casilla_id("0356", surface="test_modelo_100_registry.casilla")
+    )
 
     assert casilla.label == "Número de orden del elemento"
     assert tuple(casilla.section) == ("toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial")
@@ -675,7 +708,7 @@ def test_modelo_100_2020_0356_is_gp_otros_ordinal_element_number() -> None:
         filing_year: next(
             casilla.semantic_role
             for casilla in modelo.revisions[str(filing_year)].casillas
-            if casilla.id == _casilla_id("0356")
+            if casilla.id == validated_casilla_id("0356", surface="test_modelo_100_registry.casilla")
         )
         for filing_year in range(2022, 2026)
     }
@@ -687,8 +720,12 @@ def test_modelo_100_tfi_operation_counts_are_integer_until_restructure() -> None
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
     expected_roles = {
-        _casilla_id("0414"): "irpf_re_especial_tfi_declarante_num_operaciones",
-        _casilla_id("0416"): "irpf_re_especial_tfi_conyuge_num_operaciones",
+        validated_casilla_id(
+            "0414", surface="test_modelo_100_registry.casilla"
+        ): "irpf_re_especial_tfi_declarante_num_operaciones",
+        validated_casilla_id(
+            "0416", surface="test_modelo_100_registry.casilla"
+        ): "irpf_re_especial_tfi_conyuge_num_operaciones",
     }
 
     for filing_year in range(2020, 2023):
@@ -709,7 +746,11 @@ def test_modelo_100_tfi_operation_counts_are_integer_until_restructure() -> None
             )
 
     revision_2025 = modelo.revisions["2025"]
-    casilla_0414_2025 = next(casilla for casilla in revision_2025.casillas if casilla.id == _casilla_id("0414"))
+    casilla_0414_2025 = next(
+        casilla
+        for casilla in revision_2025.casillas
+        if casilla.id == validated_casilla_id("0414", surface="test_modelo_100_registry.casilla")
+    )
 
     assert casilla_0414_2025.semantic_role == "irpf_deduccion_obtencion_rendimientos_trabajo"
     assert tuple(casilla_0414_2025.section) == ("resultado_declaracion",)
@@ -719,8 +760,16 @@ def test_modelo_100_2025_coti_fund_loss_role_matches_loss_label() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
     revision = modelo.revisions["2025"]
-    coti_loss = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("2233"))
-    general_loss = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0321"))
+    coti_loss = next(
+        casilla
+        for casilla in revision.casillas
+        if casilla.id == validated_casilla_id("2233", surface="test_modelo_100_registry.casilla")
+    )
+    general_loss = next(
+        casilla
+        for casilla in revision.casillas
+        if casilla.id == validated_casilla_id("0321", surface="test_modelo_100_registry.casilla")
+    )
 
     assert coti_loss.label == "Pérdidas patrimoniales"
     assert tuple(coti_loss.section) == ("toma_datos_ampliada", "gp_fondos_coti", "fondo")
@@ -747,7 +796,11 @@ def test_modelo_100_inmueble_0080_activity_use_days_are_integer() -> None:
 
     for filing_year in range(2020, 2026):
         revision = modelo.revisions[str(filing_year)]
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0080"))
+        casilla = next(
+            casilla
+            for casilla in revision.casillas
+            if casilla.id == validated_casilla_id("0080", surface="test_modelo_100_registry.casilla")
+        )
 
         assert (
             casilla.label == "Número de días en que ha tenido este uso: Bien inmueble afecto a actividades económicas"
@@ -767,11 +820,11 @@ def test_modelo_100_spouse_disability_marriage_months_are_integer_months() -> No
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
     expected_rows = {
-        _casilla_id("0246"): (
+        validated_casilla_id("0246", surface="test_modelo_100_registry.casilla"): (
             "Primer mes",
             "irpf_conyuge_discapacidad_matrimonio_mes_inicio",
         ),
-        _casilla_id("0247"): (
+        validated_casilla_id("0247", surface="test_modelo_100_registry.casilla"): (
             "Último mes completo",
             "irpf_conyuge_discapacidad_matrimonio_mes_fin",
         ),
@@ -827,14 +880,14 @@ def test_modelo_100_disability_minimum_headcounts_are_integer_counts() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
     expected_rows = {
-        _casilla_id("0618"): (
+        validated_casilla_id("0618", surface="test_modelo_100_registry.casilla"): (
             "descendientes",
             ("resultados", "calculo_impuesto_res", "deduc_descendiente_disc_res"),
             "irpf_descendiente_num_contribuyentes_derecho",
             Decimal("1"),
             Decimal("9"),
         ),
-        _casilla_id("0629"): (
+        validated_casilla_id("0629", surface="test_modelo_100_registry.casilla"): (
             "ascendientes",
             ("resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"),
             "irpf_ascendiente_num_contribuyentes_derecho",
@@ -884,7 +937,11 @@ def test_modelo_100_family_numerosa_ascendant_count_is_integer_count() -> None:
 
     for filing_year in range(2020, 2026):
         revision = modelo.revisions[str(filing_year)]
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0652"))
+        casilla = next(
+            casilla
+            for casilla in revision.casillas
+            if casilla.id == validated_casilla_id("0652", surface="test_modelo_100_registry.casilla")
+        )
         constraints = casilla.constraints
         expected_sources = {
             f"aeat-dr-100-{filing_year}-dictionary",
@@ -913,7 +970,11 @@ def test_modelo_100_inmueble_0076_habitual_residence_days_are_integer() -> None:
 
     for filing_year in range(2020, 2026):
         revision = modelo.revisions[str(filing_year)]
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0076"))
+        casilla = next(
+            casilla
+            for casilla in revision.casillas
+            if casilla.id == validated_casilla_id("0076", surface="test_modelo_100_registry.casilla")
+        )
 
         assert casilla.label == f"Número de días en que el inmueble ha sido su vivienda habitual en {filing_year}"
         assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
@@ -932,7 +993,11 @@ def test_modelo_100_inmueble_0079_use_days_are_integer() -> None:
 
     for filing_year in range(2020, 2026):
         revision = modelo.revisions[str(filing_year)]
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0079"))
+        casilla = next(
+            casilla
+            for casilla in revision.casillas
+            if casilla.id == validated_casilla_id("0079", surface="test_modelo_100_registry.casilla")
+        )
 
         assert casilla.label == "Número de días en que la vivienda ha tenido este uso"
         assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
@@ -951,7 +1016,11 @@ def test_modelo_100_inmueble_0085_disposal_days_are_integer() -> None:
 
     for filing_year in range(2020, 2026):
         revision = modelo.revisions[str(filing_year)]
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0085"))
+        casilla = next(
+            casilla
+            for casilla in revision.casillas
+            if casilla.id == validated_casilla_id("0085", surface="test_modelo_100_registry.casilla")
+        )
 
         assert casilla.label == "Número de días a disposición del contribuyente"
         assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
@@ -970,7 +1039,11 @@ def test_modelo_100_inmueble_0088_mixed_use_days_are_integer() -> None:
 
     for filing_year in range(2020, 2026):
         revision = modelo.revisions[str(filing_year)]
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0088"))
+        casilla = next(
+            casilla
+            for casilla in revision.casillas
+            if casilla.id == validated_casilla_id("0088", surface="test_modelo_100_registry.casilla")
+        )
 
         assert casilla.label == "Número de días"
         assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
@@ -994,7 +1067,11 @@ def test_modelo_100_inmueble_rented_days_are_integer() -> None:
     for filing_year in range(2020, 2026):
         revision = modelo.revisions[str(filing_year)]
         for casilla_id, expected_label in expected_labels.items():
-            casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id(casilla_id))
+            casilla = next(
+                casilla
+                for casilla in revision.casillas
+                if casilla.id == validated_casilla_id(casilla_id, surface="test_modelo_100_registry.casilla")
+            )
 
             assert casilla.label == expected_label
             assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
@@ -1020,7 +1097,11 @@ def test_modelo_100_eo_module_units_are_decimal() -> None:
     for filing_year in range(2020, 2026):
         revision = modelo.revisions[str(filing_year)]
         for casilla_id in ("1445", "1448", "1451", "1454", "1457", "1460", "1463"):
-            casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id(casilla_id))
+            casilla = next(
+                casilla
+                for casilla in revision.casillas
+                if casilla.id == validated_casilla_id(casilla_id, surface="test_modelo_100_registry.casilla")
+            )
 
             assert casilla.label == "Nº de unidades"
             assert tuple(casilla.section) == (
@@ -1059,12 +1140,19 @@ def test_modelo_100_eo_correction_indices_are_decimal() -> None:
         casillas_by_id = {
             casilla.id: casilla
             for casilla in revision.casillas
-            if casilla.id in {_casilla_id(casilla_id) for casilla_id in expected_roles}
+            if casilla.id
+            in {
+                validated_casilla_id(casilla_id, surface="test_modelo_100_registry.casilla")
+                for casilla_id in expected_roles
+            }
         }
 
-        assert set(casillas_by_id) == {_casilla_id(casilla_id) for casilla_id in expected_roles}
+        assert set(casillas_by_id) == {
+            validated_casilla_id(casilla_id, surface="test_modelo_100_registry.casilla")
+            for casilla_id in expected_roles
+        }
         for casilla_id, expected_role in expected_roles.items():
-            casilla = casillas_by_id[_casilla_id(casilla_id)]
+            casilla = casillas_by_id[validated_casilla_id(casilla_id, surface="test_modelo_100_registry.casilla")]
 
             assert "Índice corrector" in casilla.label
             assert tuple(casilla.section) == (
@@ -1093,7 +1181,11 @@ def test_modelo_100_eo_agricultural_activity_key_is_integer() -> None:
 
     for filing_year in range(2020, 2026):
         revision = modelo.revisions[str(filing_year)]
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("1486"))
+        casilla = next(
+            casilla
+            for casilla in revision.casillas
+            if casilla.id == validated_casilla_id("1486", surface="test_modelo_100_registry.casilla")
+        )
 
         assert casilla.label == "Actividad realizada. Clave"
         assert tuple(casilla.section) == (
@@ -1120,7 +1212,7 @@ def test_modelo_100_eo_agricultural_product_indices_are_decimal() -> None:
         "ley-35-2006:art-32",
     }
     expected_ids = {
-        _casilla_id(casilla_id)
+        validated_casilla_id(casilla_id, surface="test_modelo_100_registry.casilla")
         for casilla_id in (
             "1489",
             "1492",
@@ -1145,7 +1237,7 @@ def test_modelo_100_eo_agricultural_product_indices_are_decimal() -> None:
         revision = modelo.revisions[str(filing_year)]
         ids_for_year = set(expected_ids)
         if filing_year == 2025:
-            ids_for_year.add(_casilla_id("0158"))
+            ids_for_year.add(validated_casilla_id("0158", surface="test_modelo_100_registry.casilla"))
         casillas_by_id = {
             casilla.id: casilla for casilla in revision.casillas if casilla.semantic_role == "irpf_eo_agr_indice"
         }
@@ -1194,12 +1286,19 @@ def test_modelo_100_eo_agricultural_indices_are_decimal() -> None:
         casillas_by_id = {
             casilla.id: casilla
             for casilla in revision.casillas
-            if casilla.id in {_casilla_id(casilla_id) for casilla_id in roles_for_year}
+            if casilla.id
+            in {
+                validated_casilla_id(casilla_id, surface="test_modelo_100_registry.casilla")
+                for casilla_id in roles_for_year
+            }
         }
 
-        assert set(casillas_by_id) == {_casilla_id(casilla_id) for casilla_id in roles_for_year}
+        assert set(casillas_by_id) == {
+            validated_casilla_id(casilla_id, surface="test_modelo_100_registry.casilla")
+            for casilla_id in roles_for_year
+        }
         for casilla_id, expected_role in roles_for_year.items():
-            casilla = casillas_by_id[_casilla_id(casilla_id)]
+            casilla = casillas_by_id[validated_casilla_id(casilla_id, surface="test_modelo_100_registry.casilla")]
 
             assert tuple(casilla.section) == (
                 "toma_datos_ampliada",
@@ -1220,7 +1319,11 @@ def test_modelo_100_re_attribution_inmueble_days_are_integer() -> None:
 
     for filing_year in range(2020, 2026):
         revision = modelo.revisions[str(filing_year)]
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("1618"))
+        casilla = next(
+            casilla
+            for casilla in revision.casillas
+            if casilla.id == validated_casilla_id("1618", surface="test_modelo_100_registry.casilla")
+        )
 
         assert casilla.label == "Nº de días"
         assert tuple(casilla.section) == ("toma_datos_ampliada", "regimenes_especiales", "re_at_rentas")
@@ -1235,8 +1338,8 @@ def test_modelo_100_re_attribution_inmueble_days_are_integer() -> None:
 def test_modelo_100_2022_maternity_child_counts_are_integer() -> None:
     revision = _modelo_100_snapshot(2022).revision
     expected_roles = {
-        _casilla_id("1911"): "irpf_num_hijos_maternidad_2020",
-        _casilla_id("1914"): "irpf_num_hijos_maternidad_2021",
+        validated_casilla_id("1911", surface="test_modelo_100_registry.casilla"): "irpf_num_hijos_maternidad_2020",
+        validated_casilla_id("1914", surface="test_modelo_100_registry.casilla"): "irpf_num_hijos_maternidad_2021",
     }
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_roles}
 
@@ -1275,12 +1378,19 @@ def test_modelo_100_la_rioja_municipality_codes_are_integer() -> None:
         casillas_by_id = {
             casilla.id: casilla
             for casilla in revision.casillas
-            if casilla.id in {_casilla_id(casilla_id) for casilla_id in expected_roles}
+            if casilla.id
+            in {
+                validated_casilla_id(casilla_id, surface="test_modelo_100_registry.casilla")
+                for casilla_id in expected_roles
+            }
         }
 
-        assert set(casillas_by_id) == {_casilla_id(casilla_id) for casilla_id in expected_roles}
+        assert set(casillas_by_id) == {
+            validated_casilla_id(casilla_id, surface="test_modelo_100_registry.casilla")
+            for casilla_id in expected_roles
+        }
         for casilla_id, expected_role in expected_roles.items():
-            casilla = casillas_by_id[_casilla_id(casilla_id)]
+            casilla = casillas_by_id[validated_casilla_id(casilla_id, surface="test_modelo_100_registry.casilla")]
 
             assert casilla.label in {"Código del municipio", "Código del municipio:", "Código del pequeño municipio:"}
             assert tuple(casilla.section) == ("resultados", "deduccion_autonomica_res", "la_rioja_res")
@@ -1304,7 +1414,11 @@ def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> Non
 
     for filing_year in range(2023, 2026):
         revision = modelo.revisions[str(filing_year)]
-        casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("1971"))
+        casilla = next(
+            casilla
+            for casilla in revision.casillas
+            if casilla.id == validated_casilla_id("1971", surface="test_modelo_100_registry.casilla")
+        )
 
         assert tuple(casilla.section) == ("toma_datos_ampliada", "rdto_trabajo", "retrib_especie_anexo_c")
         assert casilla.semantic_role == expected_role

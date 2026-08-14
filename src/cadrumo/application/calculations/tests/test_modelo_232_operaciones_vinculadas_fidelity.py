@@ -71,18 +71,11 @@ _CLOCK_N = datetime(2025, 1, 25, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2026, 1, 25, 10, 0, 0, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M232 operaciones vinculadas fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
-_DECL_TIPO_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.tipo-ejercicio")
-_VINCULADA_NIF_CASILLA: CasillaId = _casilla_id("vinculada-1-nif")
-_VINCULADA_TIPO_VINCULACION_CASILLA: CasillaId = _casilla_id("vinculada-1-tipo-vinculacion")
-_VINCULADA_IMPORTE_CASILLA: CasillaId = _casilla_id("vinculada-1-importe")
+_DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")
+_DECL_TIPO_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.tipo-ejercicio")
+_VINCULADA_NIF_CASILLA: CasillaId = validated_casilla_id("vinculada-1-nif")
+_VINCULADA_TIPO_VINCULACION_CASILLA: CasillaId = validated_casilla_id("vinculada-1-tipo-vinculacion")
+_VINCULADA_IMPORTE_CASILLA: CasillaId = validated_casilla_id("vinculada-1-importe")
 
 
 def _find_observation(

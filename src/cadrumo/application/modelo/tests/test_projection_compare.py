@@ -34,14 +34,7 @@ _BUCKET_ID = "13013013-0130-4130-8130-130130130130"
 _M130_REVISION_ID = "2019-y-siguientes"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="projection compare test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"projection compare fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="projection compare test casilla id")
 
 
 def _m130_ingresos_registry_provenance() -> tuple[tuple[str, ...], tuple[str, ...]]:

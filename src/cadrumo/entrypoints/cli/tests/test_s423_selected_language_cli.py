@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-import os
 import re
 import subprocess
-import sys
 import textwrap
 from pathlib import Path
 
 import pytest
 
 from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....tests.subprocess_cli import run_subprocess_cli_harness
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -61,25 +60,12 @@ print(json.dumps({"report": report.model_dump(mode="json"), "report_count": len(
 
 
 def _run_cli(storage_root: Path, args: list[str]) -> subprocess.CompletedProcess[str]:
-    env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
-    env.update({"PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"})
-    return subprocess.run(  # noqa: S603 - fixed interpreter argv with controlled test inputs.
-        [
-            sys.executable,
-            "-c",
-            textwrap.dedent(_CLI_HARNESS),
-            str(storage_root),
-            str(storage_root / "fallback-store"),
-            *args,
-        ],
+    return run_subprocess_cli_harness(
+        textwrap.dedent(_CLI_HARNESS),
+        [str(storage_root), str(storage_root / "fallback-store"), *args],
+        env_strip_prefixes=("AEAT_",),
         cwd=Path.cwd(),
-        env=env,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        capture_output=True,
-        check=False,
-        timeout=120,
+        timeout=120.0,
     )
 
 
@@ -88,25 +74,12 @@ def _combined_output(result: subprocess.CompletedProcess[str]) -> str:
 
 
 def _persisted_report(storage_root: Path, verification_report_id: str) -> dict[str, object]:
-    env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
-    env.update({"PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"})
-    result = subprocess.run(  # noqa: S603 - fixed interpreter argv with controlled test inputs.
-        [
-            sys.executable,
-            "-c",
-            textwrap.dedent(_PERSISTED_REPORT_HARNESS),
-            str(storage_root),
-            str(storage_root / "fallback-store"),
-            verification_report_id,
-        ],
+    result = run_subprocess_cli_harness(
+        textwrap.dedent(_PERSISTED_REPORT_HARNESS),
+        [str(storage_root), str(storage_root / "fallback-store"), verification_report_id],
+        env_strip_prefixes=("AEAT_",),
         cwd=Path.cwd(),
-        env=env,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        capture_output=True,
-        check=False,
-        timeout=120,
+        timeout=120.0,
     )
     assert result.returncode == 0, _combined_output(result)
     return STR_KEYED_MAPPING_ADAPTER.validate_json(result.stdout)

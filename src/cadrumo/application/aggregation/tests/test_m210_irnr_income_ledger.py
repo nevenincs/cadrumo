@@ -34,6 +34,7 @@ from ...modelo import (
     create_work_unit,
     verify_modelo_revision,
 )
+from ...tests import register_wizard_catalogue
 from .. import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
@@ -53,10 +54,7 @@ _PERIOD = Period.from_year_and_code(2025, "0A")
 _M210_REGISTRY_DIR = Path(__file__).resolve().parents[3] / "_data" / "registry" / "aeat" / "modelos" / "210"
 
 
-@pytest.fixture(autouse=True, scope="session")
-def _register_wizard_catalogue() -> None:
-    """Register the production setup catalogue required by M210 work creation."""
-    from ...wizard import _catalogue  # noqa: F401
+__all__ = ["register_wizard_catalogue"]
 
 
 def _classification(code: str, gross_income_amount: Decimal) -> M210IncomeClassification:

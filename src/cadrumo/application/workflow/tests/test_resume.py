@@ -117,14 +117,7 @@ def _patch_secure_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_RESUME_CASILLA: CasillaId = _casilla_id("01")
+_RESUME_CASILLA: CasillaId = validated_casilla_id("01")
 
 
 def _period(year: int, code: str) -> Period:

@@ -30,6 +30,7 @@ from pydantic import ValidationError
 from ....application.flows import run_scripted_flow
 from ....core import resolve_active_bucket_id
 from ....core.flows import FlowMode
+from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
@@ -45,7 +46,6 @@ from .._modelo_work_wizard_cli import (
 from .._modelo_work_wizard_payloads import WizardPromptedCasillaPayload
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from ._modelo_work_ux_support import _create_m130_work_unit
-from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -4,20 +4,26 @@ from __future__ import annotations
 
 import pytest
 
+from .....core import validated_casilla_id
 from ._parser_boundary_support import (
     _MODELO_193_SYNTHETIC_FIXTURE,
     CasillaId,
     Decimal,
-    _casilla_id,
     _expected_period,
     parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
-_DECL_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
-_DECL_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
-_DECL_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
+_DECL_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id(
+    "decl.total-perceptores", surface="declaracion_parser_boundary.casilla"
+)
+_DECL_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id(
+    "decl.base-total", surface="declaracion_parser_boundary.casilla"
+)
+_DECL_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id(
+    "decl.retenciones-total", surface="declaracion_parser_boundary.casilla"
+)
 _M193_EXPECTED_VALUES: dict[CasillaId, Decimal] = {
     _DECL_TOTAL_PERCEPTORES_CASILLA: Decimal("2"),
     _DECL_BASE_TOTAL_CASILLA: Decimal("8000.00"),

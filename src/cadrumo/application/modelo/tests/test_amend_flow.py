@@ -105,25 +105,18 @@ _READY_PROFILE_FACTS = (
 )
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_AMEND_INCOME_CASILLA: CasillaId = _casilla_id("01")
-_AMEND_EXPENSE_CASILLA: CasillaId = _casilla_id("02")
-_AMEND_WITHHELD_CASILLA: CasillaId = _casilla_id("05")
-_AMEND_PREVIOUS_PAYMENT_CASILLA: CasillaId = _casilla_id("06")
-_AMEND_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
-_AMEND_AGRARIAN_WITHHELD_CASILLA: CasillaId = _casilla_id("10")
-_AMEND_CARRY_FORWARD_CASILLA: CasillaId = _casilla_id("15")
-_AMEND_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
-_AMEND_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
-_UNKNOWN_AMEND_CASILLA: CasillaId = _casilla_id("9999")
-_M303_RESULT_CASILLA: CasillaId = _casilla_id("iva.resultado")
-_M303_PRINTED_RESULT_TOKEN: CasillaId = _casilla_id("69")
+_AMEND_INCOME_CASILLA: CasillaId = validated_casilla_id("01")
+_AMEND_EXPENSE_CASILLA: CasillaId = validated_casilla_id("02")
+_AMEND_WITHHELD_CASILLA: CasillaId = validated_casilla_id("05")
+_AMEND_PREVIOUS_PAYMENT_CASILLA: CasillaId = validated_casilla_id("06")
+_AMEND_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08")
+_AMEND_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10")
+_AMEND_CARRY_FORWARD_CASILLA: CasillaId = validated_casilla_id("15")
+_AMEND_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
+_AMEND_PRIOR_RETURN_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
+_UNKNOWN_AMEND_CASILLA: CasillaId = validated_casilla_id("9999")
+_M303_RESULT_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+_M303_PRINTED_RESULT_TOKEN: CasillaId = validated_casilla_id("69")
 
 
 @dataclass(frozen=True, slots=True)

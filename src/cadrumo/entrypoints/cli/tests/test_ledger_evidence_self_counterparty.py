@@ -20,7 +20,6 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from io import BytesIO
 from pathlib import Path
 
@@ -28,9 +27,10 @@ import pytest
 
 from ....application.wizard import load_active_taxpayer_profile
 from ....application.workflow import workflow_state_repository
-from ._ledger_ux_support import _invoke, _open_ledger_ux_session
+from ._ledger_ux_support import _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["_open_bucket_session"]
 
 # A real Spanish CIF distinct from any profile identifier: the legitimate
 # counterparty on a received invoice.
@@ -62,12 +62,6 @@ def _invoice_lines(tax_id: str, *, number: str) -> tuple[str, ...]:
         "Cuota IVA: 21,00",
         "Total factura: 121,00",
     )
-
-
-@pytest.fixture(autouse=True)
-def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
-    with _open_ledger_ux_session(tmp_path):
-        yield
 
 
 def _own_tax_id() -> str:

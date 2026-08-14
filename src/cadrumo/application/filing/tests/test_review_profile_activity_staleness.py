@@ -43,7 +43,7 @@ from ....domain.user_profile import UserProfileFact
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import workflow_state_repository
+from ...workflow import WorkflowState
 from .. import (
     ModeloApprovalStaleReason,
     approval_stale_reasons,
@@ -86,13 +86,15 @@ def _schema_provider() -> CasillaSchemaProvider:
 
 
 def _create_profile_with_activity(activity: str) -> None:
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(
-            state,
-            profile_id=_PROFILE_ID,
-            display_name="auton",
-            overrides={"identity.tax_id": _TAX_ID, "activities.description": activity},
-        ),
+    # Seeded through a detached WorkflowState, never a repository read: the
+    # capsule publishes by an atomic no-replace rename onto
+    # ``buckets/<profile-id>``, which a workflow-state repository
+    # construction would otherwise materialise first and collide with.
+    register_minimal_profile(
+        WorkflowState(),
+        profile_id=_PROFILE_ID,
+        display_name="auton",
+        overrides={"identity.tax_id": _TAX_ID, "activities.description": activity},
     )
 
 

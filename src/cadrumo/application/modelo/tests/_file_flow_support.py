@@ -327,35 +327,28 @@ _DEFAULT_130_BINDING_VALUES = {
 }
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_M130_INCOME_CASILLA: CasillaId = _casilla_id("01")
-_M130_EXPENSE_CASILLA: CasillaId = _casilla_id("02")
-_M130_NET_RESULT_CASILLA: CasillaId = _casilla_id("03")
-_M130_PREVIOUS_PAYMENTS_CASILLA: CasillaId = _casilla_id("05")
-_M130_WITHHELD_CASILLA: CasillaId = _casilla_id("06")
-_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
-_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = _casilla_id("10")
-_M130_CARRY_FORWARD_CASILLA: CasillaId = _casilla_id("15")
-_M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
-_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
-_M130_SALDO_NEGATIVO_CASILLA: CasillaId = _casilla_id("saldo-negativo-fin-periodo")
-_M111_EMPLOYMENT_WITHHELD_CASILLA: CasillaId = _casilla_id("03")
-_M111_PROFESSIONAL_WITHHELD_CASILLA: CasillaId = _casilla_id("06")
-_M111_PRIZE_WITHHELD_CASILLA: CasillaId = _casilla_id("09")
-_M111_IMAGE_RIGHTS_WITHHELD_CASILLA: CasillaId = _casilla_id("12")
-_M111_FORESTRY_WITHHELD_CASILLA: CasillaId = _casilla_id("15")
-_M111_IMPUTED_INCOME_WITHHELD_CASILLA: CasillaId = _casilla_id("18")
-_M111_ACTIVITY_COUNT_CASILLA: CasillaId = _casilla_id("21")
-_M111_ACTIVITY_AMOUNT_CASILLA: CasillaId = _casilla_id("24")
-_M111_ACTIVITY_WITHHELD_CASILLA: CasillaId = _casilla_id("27")
-_M111_TOTAL_WITHHELD_CASILLA: CasillaId = _casilla_id("29")
-_M180_PERCEPTOR_BASE_CASILLA: CasillaId = _casilla_id("perc.base")
+_M130_INCOME_CASILLA: CasillaId = validated_casilla_id("01")
+_M130_EXPENSE_CASILLA: CasillaId = validated_casilla_id("02")
+_M130_NET_RESULT_CASILLA: CasillaId = validated_casilla_id("03")
+_M130_PREVIOUS_PAYMENTS_CASILLA: CasillaId = validated_casilla_id("05")
+_M130_WITHHELD_CASILLA: CasillaId = validated_casilla_id("06")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10")
+_M130_CARRY_FORWARD_CASILLA: CasillaId = validated_casilla_id("15")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
+_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
+_M130_SALDO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id("saldo-negativo-fin-periodo")
+_M111_EMPLOYMENT_WITHHELD_CASILLA: CasillaId = validated_casilla_id("03")
+_M111_PROFESSIONAL_WITHHELD_CASILLA: CasillaId = validated_casilla_id("06")
+_M111_PRIZE_WITHHELD_CASILLA: CasillaId = validated_casilla_id("09")
+_M111_IMAGE_RIGHTS_WITHHELD_CASILLA: CasillaId = validated_casilla_id("12")
+_M111_FORESTRY_WITHHELD_CASILLA: CasillaId = validated_casilla_id("15")
+_M111_IMPUTED_INCOME_WITHHELD_CASILLA: CasillaId = validated_casilla_id("18")
+_M111_ACTIVITY_COUNT_CASILLA: CasillaId = validated_casilla_id("21")
+_M111_ACTIVITY_AMOUNT_CASILLA: CasillaId = validated_casilla_id("24")
+_M111_ACTIVITY_WITHHELD_CASILLA: CasillaId = validated_casilla_id("27")
+_M111_TOTAL_WITHHELD_CASILLA: CasillaId = validated_casilla_id("29")
+_M180_PERCEPTOR_BASE_CASILLA: CasillaId = validated_casilla_id("perc.base")
 
 _DEFAULT_130_BASELINE_INPUTS: dict[CasillaId, Decimal] = {
     _M130_INCOME_CASILLA: Decimal("10000"),  # economic-activity gross income

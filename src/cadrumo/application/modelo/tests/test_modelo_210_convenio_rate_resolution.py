@@ -27,17 +27,17 @@ from decimal import Decimal
 
 import pytest
 
+from ._m210_snapshot_fixture import m210_snapshot
+
+__all__ = ["m210_snapshot"]
+
 from ....core import ConvenioOverrideKind, TipoRentaIrnr
-from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
     ConvenioAuthority,
     RegistryCalculationUnresolvedOutcome,
     RegistrySnapshot,
     RegistryUnresolvedOutcomeReason,
     VerificationPredicateDefinition,
-    build_snapshot,
-    load_convenio_authority,
-    load_registry_tree,
 )
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import ModeloVerificationFindingKind
@@ -106,22 +106,6 @@ def _snapshot_with_mutated_convenio_row(
     new_treaty = treaty.model_copy(update={"overrides": new_overrides})
     new_convenio = ConvenioAuthority(treaties={**base.convenio.treaties, country_code: new_treaty})
     return base.model_copy(update={"convenio": new_convenio})
-
-
-@pytest.fixture(scope="module")
-def m210_snapshot() -> RegistrySnapshot:
-    """M210 / 2025 / EVENT-1 snapshot carrying the cross-cutting ConvenioAuthority.
-
-    Built via a compile-only registry load plus M210-scoped validation so the
-    resolution regressions are independent of unrelated peer modelo churn while
-    still projecting the real treaty tree onto the snapshot.
-    """
-
-    root = bundled_path("registry", "aeat")
-    modelos, catalogues = load_registry_tree(root)
-    catalogues = catalogues.model_copy(update={"convenio": load_convenio_authority(root / "treaties")})
-    modelo = next(modelo for modelo in modelos if modelo.id == "210")
-    return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="EVENT-1")
 
 
 def test_committed_convenio_rows_resolve_corrected_legal_anchors(

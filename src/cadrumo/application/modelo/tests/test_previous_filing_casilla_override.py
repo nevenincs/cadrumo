@@ -49,24 +49,17 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 )
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_M130_INCOME_CASILLA: CasillaId = _casilla_id("01")
-_M130_EXPENSE_CASILLA: CasillaId = _casilla_id("02")
-_M130_PREVIOUS_PAYMENTS_CASILLA: CasillaId = _casilla_id("05")
-_M130_WITHHELD_CASILLA: CasillaId = _casilla_id("06")
-_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
-_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = _casilla_id("10")
-_M130_DIFERENCIA_PREVIA_CASILLA: CasillaId = _casilla_id("14")
-_M130_CARRY_FORWARD_CASILLA: CasillaId = _casilla_id("15")
-_M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
-_M130_DIFFERENCE_CASILLA: CasillaId = _casilla_id("17")
-_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
+_M130_INCOME_CASILLA: CasillaId = validated_casilla_id("01")
+_M130_EXPENSE_CASILLA: CasillaId = validated_casilla_id("02")
+_M130_PREVIOUS_PAYMENTS_CASILLA: CasillaId = validated_casilla_id("05")
+_M130_WITHHELD_CASILLA: CasillaId = validated_casilla_id("06")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10")
+_M130_DIFERENCIA_PREVIA_CASILLA: CasillaId = validated_casilla_id("14")
+_M130_CARRY_FORWARD_CASILLA: CasillaId = validated_casilla_id("15")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
+_M130_DIFFERENCE_CASILLA: CasillaId = validated_casilla_id("17")
+_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
 
 # ---------------------------------------------------------------------------
 # Fixtures

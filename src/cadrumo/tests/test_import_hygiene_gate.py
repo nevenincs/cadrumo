@@ -90,12 +90,15 @@ import pytest
 from dev.quality.import_hygiene_scan import (
     _ACCEPTED_TUI_TEXTUAL_EDGE_SHA256,
     CANONICAL_TUI_PACKAGE,
+    DEMOTED_REGISTRY_LOADER_SYMBOLS,
     PKG_ROOT,
+    REGISTRY_LOADER_PACKAGE,
     TuiBoundaryViolationKind,
     discover_facades,
     find_dev_tooling_import_violations,
     find_multi_sourced_symbols,
     find_private_import_violations,
+    find_registry_loader_import_violations,
     find_shim_modules,
     find_tui_boundary_violations,
     find_underscore_in_all_violations,
@@ -476,6 +479,14 @@ def test_family2_shim_modules_are_exactly_the_dynamic_baseline() -> None:
     A new undocumented shim fails (something is bypassing a facade with an
     ad-hoc re-export module); a baseline entry silently ceasing to be a shim
     also fails (the baseline must be updated deliberately, not drift unnoticed).
+
+    Scoped to ``is_test=False``: this baseline governs the PRODUCTION shim
+    policy ("no standing non-``__init__`` re-export bridge modules"). The
+    test-tree subset :func:`find_shim_modules` also now walks is a distinct,
+    separately-reported category -- see
+    ``test_family2_test_tree_shims_are_reported_not_silent`` below -- not
+    silently merged into this equality, and not silently dropped from the
+    scan either.
     """
     baseline = _load_baseline()
     baseline_paths = frozenset(baseline["family2_shim_modules"]["paths"])
@@ -483,7 +494,7 @@ def test_family2_shim_modules_are_exactly_the_dynamic_baseline() -> None:
     py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
     facades = discover_facades()
     shims = find_shim_modules(py_files, facades)
-    current_paths = frozenset(shim.path for shim in shims)
+    current_paths = frozenset(shim.path for shim in shims if not shim.is_test)
 
     extra = sorted(current_paths - baseline_paths)
     missing = sorted(baseline_paths - current_paths)
@@ -491,6 +502,51 @@ def test_family2_shim_modules_are_exactly_the_dynamic_baseline() -> None:
     assert missing == [], (
         f"documented Family-2 bridge(s) no longer classified as a shim (baseline drift, update "
         f"{repo_relative(_BASELINE_PATH)}): {missing}"
+    )
+
+
+def test_family2_test_tree_shims_are_reported_not_silent() -> None:
+    """The scanner must not go blind at the ``tests/`` boundary.
+
+    ``find_shim_modules`` used to ``continue`` past every test-tree module
+    before running any of its three shape/naming checks, so the family's
+    reach was silently narrower than the "no standing non-``__init__``
+    re-export bridge modules" rule it enforces: a hand-authored pure-reexport
+    module living under a ``tests/`` directory was invisible to this scan no
+    matter how many consumers it served. The scanner now walks the test tree
+    too and tags every hit with ``is_test``; this test proves that tagging is
+    load-bearing (every ``is_test=True`` hit really is a test module by the
+    same two-clause definition :func:`is_test_module` applies -- a ``tests/``
+    path component, or a bare ``conftest.py``/``test_*.py`` stem outside one
+    -- so the split cannot be vacuously true) and that the category is not
+    itself silently empty (a floor, not an exact tally -- this does not pin
+    how many exist, only that the reach did not regress back to blind).
+    """
+
+    def _looks_like_test_module(path_str: str) -> bool:
+        p = Path(path_str)
+        if "tests" in p.parts:
+            return True
+        stem = p.stem
+        return stem == "conftest" or stem.startswith("test_")
+
+    py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
+    facades = discover_facades()
+    shims = find_shim_modules(py_files, facades)
+
+    test_shims = [s for s in shims if s.is_test]
+    non_test_shims = [s for s in shims if not s.is_test]
+
+    assert test_shims, (
+        "Family 2 found zero test-tree shim/pure-reexport modules; if this is genuinely now "
+        "empty, this floor assertion should be relaxed deliberately -- do not let it pass "
+        "silently on a regressed (blind) scan reach."
+    )
+    misclassified_as_test = [s.path for s in test_shims if not _looks_like_test_module(s.path)]
+    assert misclassified_as_test == [], f"is_test=True but not a test module by name/path: {misclassified_as_test}"
+    misclassified_as_prod = [s.path for s in non_test_shims if _looks_like_test_module(s.path)]
+    assert misclassified_as_prod == [], (
+        f"is_test=False but looks like a test module by name/path: {misclassified_as_prod}"
     )
 
 
@@ -587,6 +643,115 @@ def test_family4_no_underscore_named_entries_in_any_facade_all() -> None:
         f"private-named symbol: {offenders}. Promote the symbol to a public name (rename + "
         "sweep every consumer in one commit) or drop it from __all__ (it stays importable "
         "intra-package via its owning private submodule)."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Family 7: a production module must not import a demoted registry raw-loader
+# symbol from cadrumo.domain.calculations.registry
+# ---------------------------------------------------------------------------
+#
+# W01.P04.S10 demoted four raw-loader names (ModeloRevisionSource, ModeloSource,
+# discover_modelo_sources, load_modelo_source) and W01.P04.S34 demoted
+# build_snapshot -- "the same unguarded-entry-point class as the raw loader
+# family", per the plan's own text -- from the registry package's public
+# __all__. Every one of the five had zero cross-package PRODUCTION consumers
+# at demotion time (build_snapshot's sole external caller is a test fixture).
+# The Python import itself still succeeds -- __all__ only governs star-imports
+# and introspection -- so this family is the actual enforcement: it reds a NEW
+# production import of any of these five names, keeping the demotion from
+# being silently reopened.
+#
+# Hard zero, no allowlist: the current production count is zero, and every one
+# of the eight raw-loader siblings that stayed exported (each with a
+# documented, real external need this scanner does not gate) is excluded by
+# name from DEMOTED_REGISTRY_LOADER_SYMBOLS itself, not by a per-site
+# allowlist entry.
+
+
+def test_no_production_import_of_a_demoted_registry_loader_symbol() -> None:
+    """No production module may import a demoted registry raw-loader symbol.
+
+    Hard-zero check: at demotion time none of the five names had a live
+    production or test consumer, so any hit here is new. A genuine future need
+    is served by keeping the symbol on the facade with a stated per-caller
+    reason (the pattern already used for the seven siblings that stayed
+    exported), never by adding an allowlist entry to this gate.
+    """
+    py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
+    assert py_files, f"no shipped modules found under {PKG_ROOT}; a hard-zero gate over an empty scan is not a zero"
+    all_sites = [site for path in py_files for site in walk_module_imports(path)]
+    violations = find_registry_loader_import_violations(all_sites)
+
+    offenders = [f"{v.importer_path}:{v.lineno} imports {v.imported_names}" for v in violations]
+    assert offenders == [], (
+        "production import(s) of a demoted registry raw-loader symbol found: "
+        f"{offenders}. Route through ValidatedRegistryAuthority, or state the real per-caller "
+        "need and keep the symbol on the facade (as already done for load_registry_tree and its "
+        "six siblings) -- do not add an allowlist entry to this gate."
+    )
+
+
+def test_the_registry_loader_gate_catches_a_planted_production_import(tmp_path: Path) -> None:
+    """Anti-tautology: a planted production import of a demoted symbol MUST be caught.
+
+    Covers both demotion rows in one proof: ``load_modelo_source`` (S10's raw
+    loader family) and ``build_snapshot`` (S34's unguarded entry point).
+    """
+    planted = _plant_module(
+        tmp_path,
+        "cadrumo/planted_registry_loader.py",
+        f"from {REGISTRY_LOADER_PACKAGE} import build_snapshot, load_modelo_source\n",
+    )
+    all_sites = walk_module_imports(planted, src_root=tmp_path)
+
+    violations = find_registry_loader_import_violations(all_sites, src_root=tmp_path)
+
+    assert [(v.importer_path, sorted(v.imported_names)) for v in violations] == [
+        ("cadrumo/planted_registry_loader.py", ["build_snapshot", "load_modelo_source"])
+    ], f"the gate failed to catch a planted production demoted-loader import; it detected {violations!r}"
+
+
+def test_the_registry_loader_gate_permits_a_planted_test_import(tmp_path: Path) -> None:
+    """The gate is production-only: an identical import in a test module is NOT a violation."""
+    planted = _plant_module(
+        tmp_path,
+        "cadrumo/tests/test_planted_registry_loader.py",
+        f"from {REGISTRY_LOADER_PACKAGE} import discover_modelo_sources\n",
+    )
+    all_sites = walk_module_imports(planted, src_root=tmp_path)
+
+    assert find_registry_loader_import_violations(all_sites) == [], (
+        "the registry-loader gate fired on a test module; this family is scoped to production imports only"
+    )
+
+
+def test_the_registry_loader_gate_permits_a_planted_import_of_a_kept_symbol(tmp_path: Path) -> None:
+    """The gate is precise: a production import of a symbol that stayed exported is NOT a violation."""
+    planted = _plant_module(
+        tmp_path,
+        "cadrumo/planted_registry_loader_clean.py",
+        f"from {REGISTRY_LOADER_PACKAGE} import load_registry_tree\n",
+    )
+    all_sites = walk_module_imports(planted, src_root=tmp_path)
+
+    assert find_registry_loader_import_violations(all_sites) == [], (
+        "the registry-loader gate fired on a symbol that was deliberately kept on the facade"
+    )
+    assert "load_registry_tree" not in DEMOTED_REGISTRY_LOADER_SYMBOLS
+
+
+def test_the_registry_loader_gate_permits_an_intra_package_import(tmp_path: Path) -> None:
+    """The registry package's own modules may still reach a demoted name directly."""
+    planted = _plant_module(
+        tmp_path,
+        "cadrumo/domain/calculations/registry/planted_internal.py",
+        f"from {REGISTRY_LOADER_PACKAGE} import load_modelo_source\n",
+    )
+    all_sites = walk_module_imports(planted, src_root=tmp_path)
+
+    assert find_registry_loader_import_violations(all_sites) == [], (
+        "the registry-loader gate fired on an intra-package import, which is always permitted"
     )
 
 

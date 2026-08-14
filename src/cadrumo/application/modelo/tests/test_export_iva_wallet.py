@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+
+from ._export_test_support import isolated_backend
+
+__all__ = ["isolated_backend"]
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -38,7 +41,6 @@ from ._export_test_support import (
     _profile,
     _seed_profile,
     _seed_revision,
-    isolated_backend_context,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -51,12 +53,6 @@ def _wallet_decision_repository_at(sidecar_db: Path) -> tuple[IvaWalletDecisionR
         namespace_registry=STORAGE_NAMESPACE_REGISTRY,
     )
     return IvaWalletDecisionRepository(objects=objects), settings
-
-
-@pytest.fixture
-def isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_backend_context(tmp_path):
-        yield
 
 
 def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(

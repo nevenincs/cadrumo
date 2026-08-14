@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....core import validated_casilla_id
 from ._parser_boundary_m130_support import _M130_CORPUS_IDS, _M130_CORPUS_PARAMS
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M130,
@@ -11,28 +12,27 @@ from ._verification_chain_support import (
     CasillaId,
     Decimal,
     _calculate_engine_values_from_inputs,
-    _casilla_id,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
-_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
-_M130_GASTOS_CASILLA: CasillaId = _casilla_id("02")
-_M130_RENDIMIENTO_NETO_CASILLA: CasillaId = _casilla_id("03")
-_M130_RESULTADO_CASILLA: CasillaId = _casilla_id("19")
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
+_M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03")
+_M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("19")
 _M130_FORMULA_CHAIN_CASILLAS: tuple[CasillaId, ...] = (
     _M130_RENDIMIENTO_NETO_CASILLA,
-    _casilla_id("04"),
-    _casilla_id("05"),
-    _casilla_id("06"),
-    _casilla_id("07"),
-    _casilla_id("13"),
-    _casilla_id("14"),
-    _casilla_id("15"),
-    _casilla_id("17"),
-    _casilla_id("18"),
+    validated_casilla_id("04"),
+    validated_casilla_id("05"),
+    validated_casilla_id("06"),
+    validated_casilla_id("07"),
+    validated_casilla_id("13"),
+    validated_casilla_id("14"),
+    validated_casilla_id("15"),
+    validated_casilla_id("17"),
+    validated_casilla_id("18"),
     _M130_RESULTADO_CASILLA,
 )
 

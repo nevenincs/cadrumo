@@ -25,7 +25,7 @@ against a phantom bucket — the success-path test is what closes that hole.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -34,9 +34,11 @@ from ....adapters.persistence.storage.custody import list_current_profile_custod
 from ....core import read_pointer
 from ....core.config import load_settings
 from ....domain.user_profile import ProfileSchemaValidationError, UserProfileFact
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.profile_storage_root_fixture import profile_storage_root_fixture
 from ...user_profile import register_profile_with_credentials
 from ...workflow import read_profile_bucket
+
+__all__ = ["profile_storage_root_fixture"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -63,13 +65,6 @@ _SURVIVOR_LABEL = "Rollback Survivor"
 _PASSPHRASE = "atomic-create-rollback-operator-secret"  # noqa: S105 - synthetic test fixture
 
 
-@pytest.fixture
-def _backend(tmp_path: Path) -> Iterator[Path]:
-    """Per-bucket storage root with file-backed custody."""
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        yield storage_root
-
-
 def _register(label: str, *, facts: Mapping[str, str]) -> None:
     """Run the real create door for ``label`` against ``facts``."""
     register_profile_with_credentials(
@@ -79,7 +74,7 @@ def _register(label: str, *, facts: Mapping[str, str]) -> None:
     )
 
 
-def test_failed_atomic_create_raises_and_leaves_no_profile(_backend: Path) -> None:
+def test_failed_atomic_create_raises_and_leaves_no_profile(profile_storage_root: Path) -> None:
     """A refused create commits no capsule, no label, and no pointer.
 
     The undeclared path makes the create door's fact judgement refuse before
@@ -97,7 +92,7 @@ def test_failed_atomic_create_raises_and_leaves_no_profile(_backend: Path) -> No
     assert read_profile_bucket(_VICTIM_LABEL) is None, "a refused create left a phantom label projection"
 
 
-def test_successful_atomic_create_lands_the_artifacts_a_failure_clears(_backend: Path) -> None:
+def test_successful_atomic_create_lands_the_artifacts_a_failure_clears(profile_storage_root: Path) -> None:
     """Anti-tautology proof: a *successful* create lands what a failure must not.
 
     If the rollback under test silently no-opped, the absent-artifact

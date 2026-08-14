@@ -32,22 +32,21 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import validated_casilla_id
 from .....tests import FIXTURES_DIR
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M111,
     CasillaId,
     _calculate_engine_values_from_inputs,
-    _casilla_id,
-    _casilla_ids,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
-_M111_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("28")
-_M111_PAGOS_ANTERIORES_CASILLA: CasillaId = _casilla_id("29")
-_M111_RESULTADO_CASILLA: CasillaId = _casilla_id("30")
+_M111_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("28")
+_M111_PAGOS_ANTERIORES_CASILLA: CasillaId = validated_casilla_id("29")
+_M111_RESULTADO_CASILLA: CasillaId = validated_casilla_id("30")
 
 #: The nine epígrafe totals the órden names as the operands of casilla 28.
 #:
@@ -55,15 +54,15 @@ _M111_RESULTADO_CASILLA: CasillaId = _casilla_id("30")
 #: registry formula ``modelo-111-total-retenciones-ingresos``'s declared operand
 #: set, and this test exists to prove the engine sums exactly these.
 _M111_RETENCIONES_TOTAL_LEAVES: tuple[CasillaId, ...] = (
-    _casilla_id("03"),
-    _casilla_id("06"),
-    _casilla_id("09"),
-    _casilla_id("12"),
-    _casilla_id("15"),
-    _casilla_id("18"),
-    _casilla_id("21"),
-    _casilla_id("24"),
-    _casilla_id("27"),
+    validated_casilla_id("03"),
+    validated_casilla_id("06"),
+    validated_casilla_id("09"),
+    validated_casilla_id("12"),
+    validated_casilla_id("15"),
+    validated_casilla_id("18"),
+    validated_casilla_id("21"),
+    validated_casilla_id("24"),
+    validated_casilla_id("27"),
 )
 
 #: One distinct probe per epígrafe, plus a distinct prior-autoliquidación amount.
@@ -76,27 +75,27 @@ _M111_RETENCIONES_TOTAL_LEAVES: tuple[CasillaId, ...] = (
 #: is why the committed renders — every amount redacted to ``1000.00`` — cannot
 #: carry this assertion however authentic the document they came from.
 _M111_EPIGRAFE_PROBES: dict[CasillaId, Decimal] = {
-    _casilla_id("03"): Decimal("111.11"),
-    _casilla_id("06"): Decimal("222.22"),
-    _casilla_id("09"): Decimal("333.33"),
-    _casilla_id("12"): Decimal("444.44"),
-    _casilla_id("15"): Decimal("555.55"),
-    _casilla_id("18"): Decimal("666.66"),
-    _casilla_id("21"): Decimal("777.77"),
-    _casilla_id("24"): Decimal("888.88"),
-    _casilla_id("27"): Decimal("999.99"),
+    validated_casilla_id("03"): Decimal("111.11"),
+    validated_casilla_id("06"): Decimal("222.22"),
+    validated_casilla_id("09"): Decimal("333.33"),
+    validated_casilla_id("12"): Decimal("444.44"),
+    validated_casilla_id("15"): Decimal("555.55"),
+    validated_casilla_id("18"): Decimal("666.66"),
+    validated_casilla_id("21"): Decimal("777.77"),
+    validated_casilla_id("24"): Decimal("888.88"),
+    validated_casilla_id("27"): Decimal("999.99"),
 }
 _M111_PAGOS_ANTERIORES_PROBE = Decimal("1234.56")
 
 _M111_QUARTER_CASES = (
     # (pdf_stem, year, period, the casilla set this render prints)
-    ("2024-1T", 2024, "1T", _casilla_ids("07", "08", "09", "28", "30")),
-    ("2024-2T", 2024, "2T", _casilla_ids("07", "08", "09", "28", "30")),
-    ("2024-3T", 2024, "3T", _casilla_ids("07", "08", "09", "28", "30")),
+    ("2024-1T", 2024, "1T", frozenset(validated_casilla_id(_v) for _v in ("07", "08", "09", "28", "30"))),
+    ("2024-2T", 2024, "2T", frozenset(validated_casilla_id(_v) for _v in ("07", "08", "09", "28", "30"))),
+    ("2024-3T", 2024, "3T", frozenset(validated_casilla_id(_v) for _v in ("07", "08", "09", "28", "30"))),
     # The 4T render prints casilla 30 alone. Pinning that explicitly is what
     # makes this case assert something: before the set was pinned, 4T supplied
     # no inputs, executed no assertion, and still reported success.
-    ("2024-4T", 2024, "4T", _casilla_ids("30")),
+    ("2024-4T", 2024, "4T", frozenset(validated_casilla_id(_v) for _v in ("30",))),
 )
 
 

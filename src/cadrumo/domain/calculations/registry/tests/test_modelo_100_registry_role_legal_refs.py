@@ -6,7 +6,7 @@ from functools import lru_cache
 
 import pytest
 
-from ._modelo_100_legal_refs_support import (
+from ._modelo_100_registry_support import (
     _ANDALUCIA_EJERCICIO_FISICO_ROLE,
     _C_VALENCIANA_LABORES_NO_REMUNERADAS_ROLE,
     _CANARIAS_DONACION_DESCENDIENTES_ROLE,

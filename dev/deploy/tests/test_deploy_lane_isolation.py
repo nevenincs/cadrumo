@@ -28,12 +28,13 @@ from __future__ import annotations
 
 import json
 import re
-import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
 import yaml
+
+from ...ci.lane_reachability import resolve_just_executable
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -75,8 +76,7 @@ def _dump(justfile: Path) -> dict[str, object]:
     recipe graph is exactly what ``just`` would execute, so asking any other
     parser risks gating a graph the tool does not agree with.
     """
-    just = shutil.which("just")
-    assert just is not None, "just is required to read the recipe graph"
+    just = resolve_just_executable()
     result = subprocess.run(  # noqa: S603 - execute the resolved real just binary against repository recipes.
         [
             just,

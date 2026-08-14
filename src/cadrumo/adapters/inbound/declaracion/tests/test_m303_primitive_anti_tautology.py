@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....core import validated_casilla_id
 from ._verification_chain_support import (
     _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
     _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
@@ -47,7 +48,6 @@ from ._verification_chain_support import (
     Decimal,
     _assert_m303_printed_resultado_regimen_general_arithmetic,
     _calculate_m303_engine_values_from_inputs,
-    _casilla_id,
 )
 
 pytestmark = [
@@ -55,7 +55,7 @@ pytestmark = [
     pytest.mark.hex_inbound_adapter,
 ]
 
-_IVA_REPERCUTIDO_GENERAL_CASILLA: CasillaId = _casilla_id("iva.repercutido.general")
+_IVA_REPERCUTIDO_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.repercutido.general")
 
 
 def _run_engine(inputs: dict[CasillaId, Decimal], year: int, period: str) -> dict[CasillaId, Decimal]:

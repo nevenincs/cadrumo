@@ -26,7 +26,6 @@ from .. import (
     RegistryValidationError,
     RegistryValidator,
     RemoteOperation,
-    SupportRemovalDecisionDefinition,
     assert_remote_operation_allowed,
     build_snapshot,
     parse_export_payload,
@@ -64,7 +63,6 @@ _SNAPSHOT_IDENTIFIER_KEYED_MAPS = (
     "application_links",
     "deadline_windows",
     "filing_schedules",
-    "support_removal_decisions",
     "constructs",
     "dependency_classifications",
 )
@@ -93,19 +91,6 @@ def _snapshot_with_populated_identifier_map(field_name: str) -> tuple[RegistrySn
         return snapshot, snapshot.filing_schedules
 
     snapshot = _modelo_100_snapshot()
-    if field_name == "support_removal_decisions":
-        decision = SupportRemovalDecisionDefinition(
-            id="snapshot-key-parity-removal",
-            subject_type="filing_schedule",
-            subject_id="modelo-100-unused-schedule",
-            decision="remove_from_filing_grade",
-            reason="out_of_scope",
-            evidence_note="Typed removal decision used to prove snapshot map-key identity enforcement.",
-            legal_refs=(next(iter(snapshot.legal)),),
-            source_refs=(next(iter(snapshot.sources)),),
-        )
-        return snapshot, {decision.id: decision}
-
     values = cast(Mapping[str, object], getattr(snapshot, field_name))
     assert values, f"real Modelo 100 snapshot must populate {field_name}"
     return snapshot, values

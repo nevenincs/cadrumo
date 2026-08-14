@@ -39,7 +39,7 @@ import ast
 import pytest
 
 from ...application.calculations import assert_enrollment_matches_manifest
-from ...tests._inventory import repo_path
+from ...tests import repo_path
 from ..access_gate import (
     CANONICAL_MODELO_FLEET,
     FLEET_SIZE,

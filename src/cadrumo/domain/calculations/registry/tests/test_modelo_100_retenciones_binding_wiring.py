@@ -36,7 +36,6 @@ from .. import (
     RelationId,
     calculate_registry_snapshot,
 )
-from .._authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -140,11 +139,6 @@ def _base_binding_values_2025(
     if m193 is not None:
         values["renta-2025-modelo-193-retenciones-anuales"] = m193
     return values
-
-
-@pytest.fixture
-def m100_2025_snapshot(registry_authority: ValidatedRegistryAuthority):
-    return registry_authority.snapshot("100", filing_year=2025, period="0A")
 
 
 def test_m190_annual_retenciones_binding_populates_2025_casilla_0596(

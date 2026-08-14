@@ -6,9 +6,9 @@ from ..wizard import _catalogue
 
 
 @pytest.fixture(autouse=True, scope="session")
-def _register_wizard_catalogue() -> None:
+def register_wizard_catalogue() -> None:
     if _catalogue is None:
         raise AssertionError("wizard catalogue registration import failed")
 
 
-__all__ = ["_register_wizard_catalogue"]
+__all__ = ["register_wizard_catalogue"]

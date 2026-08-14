@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import validated_casilla_id
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -30,35 +30,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _YEARS = ("2020", "2021", "2022", "2023")
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test_modelo_100_historical_credit_chain casilla id")
-    except ValueError as exc:
-        raise AssertionError(
-            f"historical credit-chain fixture casilla key {value!r} is not a canonical casilla.id",
-        ) from exc
-
-
-_C0596 = _casilla_id("0596")
-_C0597 = _casilla_id("0597")
-_C0609 = _casilla_id("0609")
+_C0596 = validated_casilla_id("0596", surface="test_modelo_100_historical_credit_chain casilla id")
+_C0597 = validated_casilla_id("0597", surface="test_modelo_100_historical_credit_chain casilla id")
+_C0609 = validated_casilla_id("0609", surface="test_modelo_100_historical_credit_chain casilla id")
 
 # The credit casillas the total-pagos-a-cuenta formula sums (form-native order).
 _CREDIT_SUM_CASILLAS = (
-    _casilla_id("0592"),
-    _casilla_id("0593"),
-    _casilla_id("0594"),
+    validated_casilla_id("0592", surface="test_modelo_100_historical_credit_chain casilla id"),
+    validated_casilla_id("0593", surface="test_modelo_100_historical_credit_chain casilla id"),
+    validated_casilla_id("0594", surface="test_modelo_100_historical_credit_chain casilla id"),
     _C0596,
     _C0597,
-    _casilla_id("0598"),
-    _casilla_id("0599"),
-    _casilla_id("0600"),
-    _casilla_id("0601"),
-    _casilla_id("0602"),
-    _casilla_id("0603"),
-    _casilla_id("0604"),
-    _casilla_id("0605"),
-    _casilla_id("0606"),
+    validated_casilla_id("0598", surface="test_modelo_100_historical_credit_chain casilla id"),
+    validated_casilla_id("0599", surface="test_modelo_100_historical_credit_chain casilla id"),
+    validated_casilla_id("0600", surface="test_modelo_100_historical_credit_chain casilla id"),
+    validated_casilla_id("0601", surface="test_modelo_100_historical_credit_chain casilla id"),
+    validated_casilla_id("0602", surface="test_modelo_100_historical_credit_chain casilla id"),
+    validated_casilla_id("0603", surface="test_modelo_100_historical_credit_chain casilla id"),
+    validated_casilla_id("0604", surface="test_modelo_100_historical_credit_chain casilla id"),
+    validated_casilla_id("0605", surface="test_modelo_100_historical_credit_chain casilla id"),
+    validated_casilla_id("0606", surface="test_modelo_100_historical_credit_chain casilla id"),
 )
 
 

@@ -65,54 +65,41 @@ def _deduction_provenance(
     )
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"ledger IVA aggregation fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA: CasillaId = _casilla_id(
-    "iva.autorepercutido.interior.devengado",
+_M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA: CasillaId = validated_casilla_id(
+    "iva.autorepercutido.interior.devengado"
 )
-_M303_AUTOREPERCUTIDO_INTERIOR_DEDUCIBLE_CASILLA: CasillaId = _casilla_id(
-    "iva.autorepercutido.interior.deducible",
+_M303_AUTOREPERCUTIDO_INTERIOR_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id(
+    "iva.autorepercutido.interior.deducible"
 )
-_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA: CasillaId = _casilla_id(
-    "iva.autorepercutido.intracomunitaria.devengado",
+_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id(
+    "iva.autorepercutido.intracomunitaria.devengado"
 )
-_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id(
-    "iva.autorepercutido.intracomunitaria.deducible",
+_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id(
+    "iva.autorepercutido.intracomunitaria.deducible"
 )
-_M303_SOPORTADO_IMPORTACIONES_CASILLA: CasillaId = _casilla_id("iva.soportado.importaciones")
-_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
-_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
-_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
-_M303_COMPENSACION_GENERADA_PERIODO_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
-_M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-devengada-total")
-_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-deducible-total")
-_M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.anual.resultado-regimen-general")
-_M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.reconciliacion.devengada-303",
+_M303_SOPORTADO_IMPORTACIONES_CASILLA: CasillaId = validated_casilla_id("iva.soportado.importaciones")
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
+_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
+_M303_COMPENSACION_GENERADA_PERIODO_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-generada-periodo")
+_M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.cuota-devengada-total")
+_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.cuota-deducible-total")
+_M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.resultado-regimen-general")
+_M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.devengada-303")
+_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.deducible-303")
+_M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.resultado-303")
+_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA: CasillaId = validated_casilla_id(
+    "iva.anual.compensacion-ultimo-periodo-97"
 )
-_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.reconciliacion.deducible-303",
+_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = validated_casilla_id(
+    "iva.anual.compensacion-generada-ejercicio-no-97"
 )
-_M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.reconciliacion.resultado-303",
-)
-_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.compensacion-ultimo-periodo-97",
-)
-_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.compensacion-generada-ejercicio-no-97",
-)
-_M303_REPERCUTIDO_GENERAL_BASE_CASILLA: CasillaId = _casilla_id("07")
-_M303_SOPORTADO_INTERIORES_BASE_CASILLA: CasillaId = _casilla_id("28")
-_M303_REPERCUTIDO_GENERAL_CUOTA_CASILLA: CasillaId = _casilla_id("09")
-_M303_SOPORTADO_INTERIORES_CUOTA_CASILLA: CasillaId = _casilla_id("29")
-_M303_REPERCUTIDO_SUPER_REDUCIDO_BASE_CASILLA: CasillaId = _casilla_id("01")
-_M303_REPERCUTIDO_REDUCIDO_BASE_CASILLA: CasillaId = _casilla_id("04")
+_M303_REPERCUTIDO_GENERAL_BASE_CASILLA: CasillaId = validated_casilla_id("07")
+_M303_SOPORTADO_INTERIORES_BASE_CASILLA: CasillaId = validated_casilla_id("28")
+_M303_REPERCUTIDO_GENERAL_CUOTA_CASILLA: CasillaId = validated_casilla_id("09")
+_M303_SOPORTADO_INTERIORES_CUOTA_CASILLA: CasillaId = validated_casilla_id("29")
+_M303_REPERCUTIDO_SUPER_REDUCIDO_BASE_CASILLA: CasillaId = validated_casilla_id("01")
+_M303_REPERCUTIDO_REDUCIDO_BASE_CASILLA: CasillaId = validated_casilla_id("04")
 
 
 @lru_cache(maxsize=1)

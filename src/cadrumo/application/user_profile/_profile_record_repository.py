@@ -89,19 +89,33 @@ def close_active_profile_record_session() -> None:
 
 
 def require_profile_record_session(profile_id: str | UUID) -> ProfileRecordSession:
-    """Return the active session only when it serves this exact UUID."""
+    """Return the record authority that serves this exact UUID.
+
+    The installed authority is process-local, so a second profile becoming
+    the live custody session in the same process would otherwise be read
+    through the first profile's latched authority -- or, because the identity
+    guard refuses that, not be readable at all until the process restarts.
+    An authority that does not serve the requested UUID is therefore re-derived
+    rather than refused outright.
+
+    Re-derivation stays as narrow as the first derivation: it succeeds only
+    from the requested profile's already-open custody session, so an
+    unauthenticated profile remains unreadable, and installing the derived
+    authority retires the one it replaces so a switch cannot leave facts
+    decryptable through a prior session.
+    """
     try:
         identity = UUID(str(profile_id))
     except ValueError as exc:
         raise ProfileNotFoundError("profile identity is not a canonical UUID") from exc
     session = _ACTIVE_RECORD_SESSION.get()
-    if session is None:
-        session = _record_session_from_live_custody_session(identity)
-        if session is not None:
-            activate_profile_record_session(session)
-    if session is None or session.profile_id != identity:
+    if session is not None and session.profile_id == identity:
+        return session
+    derived = _record_session_from_live_custody_session(identity)
+    if derived is None:
         raise ProfileNotFoundError("profile facts require an authenticated session for this committed capsule")
-    return session
+    activate_profile_record_session(derived)
+    return derived
 
 
 def _record_session_from_live_custody_session(profile_id: UUID) -> ProfileRecordSession | None:

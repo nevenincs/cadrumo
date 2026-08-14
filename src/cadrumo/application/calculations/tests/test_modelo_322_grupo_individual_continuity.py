@@ -72,16 +72,9 @@ _YEAR_IVA: dict[int, tuple[Decimal, Decimal]] = {
 }
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M322 continuity fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
-_IVA_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
-_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
+_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+_IVA_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
+_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
 
 
 def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva: Decimal) -> IvaLedgerObservation:

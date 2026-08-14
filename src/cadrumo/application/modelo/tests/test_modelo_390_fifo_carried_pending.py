@@ -95,21 +95,14 @@ _T1 = datetime(2026, 1, 20, 11, 0, tzinfo=UTC)
 _YEAR = 2025
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M390 FIFO fixture casilla key {value!r} is not a CasillaId") from exc
-
-
 # M303 compensacion casillas the annual partition source reads to build each period's state.
-_GENERADA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
-_APLICADA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
-_DISPONIBLE: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
+_GENERADA: CasillaId = validated_casilla_id("iva.compensacion-generada-periodo")
+_APLICADA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
+_DISPONIBLE: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
 
 # M390 annual carry boxes the partition overrides.
-_M390_BOX_97: CasillaId = _casilla_id("iva.anual.compensacion-ultimo-periodo-97")
-_M390_BOX_662: CasillaId = _casilla_id("iva.anual.compensacion-generada-ejercicio-no-97")
+_M390_BOX_97: CasillaId = validated_casilla_id("iva.anual.compensacion-ultimo-periodo-97")
+_M390_BOX_662: CasillaId = validated_casilla_id("iva.anual.compensacion-generada-ejercicio-no-97")
 
 # Carried-pending chain: every quarter generates credit, none is consumed, and
 # each quarter's disponible accumulates the prior quarters' unconsumed saldo, so

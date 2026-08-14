@@ -43,15 +43,8 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_RENTA_2025_BORRADOR_RENTA_FAMILIAR_CASILLA: CasillaId = _casilla_id("0695")
-_UNDECLARED_MANUAL_RULE_CASILLA: CasillaId = _casilla_id("not-real")
+_RENTA_2025_BORRADOR_RENTA_FAMILIAR_CASILLA: CasillaId = validated_casilla_id("0695")
+_UNDECLARED_MANUAL_RULE_CASILLA: CasillaId = validated_casilla_id("not-real")
 
 
 def _topic_catalogue_for_legal_ref() -> TopicCatalogue:

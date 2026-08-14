@@ -19,8 +19,10 @@ from datetime import date
 import pytest
 import typer
 
-from ....core.config import override_settings
-from ....core.i18n import clear_output_language_cache
+from ._english_locale_fixture import english_locale_fixture
+
+__all__ = ["english_locale_fixture"]
+
 from .._common import (
     _parse_iso_date,
     _parse_iso_date_str,
@@ -31,14 +33,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 # Non-ISO orderings that the gate MUST refuse for an ``invoice_date`` input.
 _REJECTED = ("15/01/2026", "01-15-2026", "2026/01/15", "15-01-2026", "2026.01.15", "not-a-date", "")
-
-
-@pytest.fixture(autouse=True)
-def _english_locale() -> object:
-    with override_settings(cadrumo_output_language="en"):
-        clear_output_language_cache()
-        yield
-    clear_output_language_cache()
 
 
 def test_parse_iso_date_refuses_non_iso() -> None:

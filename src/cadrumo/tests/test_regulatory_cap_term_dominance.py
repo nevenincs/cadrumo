@@ -79,21 +79,11 @@ _NON_REGULATORY_EXEMPTIONS: Mapping[_SiteKey, str] = {
     ("adapters/persistence/storage/master_key/_login_throttle.py", "_required_wait_seconds"): (
         "Authentication backoff is a security control, not a tax limit."
     ),
-    ("llm/_client.py", "backoff_for"): (
-        "Transport retry backoff is not a regulatory cap."
-    ),
-    ("application/flows/_engine.py", "set_instance_count"): (
-        "A form-authoring instance bound is not a tax cap."
-    ),
-    ("application/flows/_engine.py", "_instance_count"): (
-        "A form-authoring instance bound is not a tax cap."
-    ),
-    ("application/flows/_engine.py", "_refresh_instance_counts"): (
-        "A form-authoring instance bound is not a tax cap."
-    ),
-    ("application/flows/_resume.py", "_seed_counts"): (
-        "A form-authoring instance bound is not a tax cap."
-    ),
+    ("llm/_client.py", "backoff_for"): ("Transport retry backoff is not a regulatory cap."),
+    ("application/flows/_engine.py", "set_instance_count"): ("A form-authoring instance bound is not a tax cap."),
+    ("application/flows/_engine.py", "_instance_count"): ("A form-authoring instance bound is not a tax cap."),
+    ("application/flows/_engine.py", "_refresh_instance_counts"): ("A form-authoring instance bound is not a tax cap."),
+    ("application/flows/_resume.py", "_seed_counts"): ("A form-authoring instance bound is not a tax cap."),
     ("application/user_profile/_section_rows.py", "next_section_row_index"): (
         "A non-negative row-index floor is not a tax cap."
     ),
@@ -107,8 +97,7 @@ def test_every_discovered_cap_site_is_enrolled() -> None:
     unenrolled = sorted(key for key in discovered if key not in enrolled)
     if unenrolled:
         listed = "\n  ".join(
-            f"{path}::{function}  bound={sorted(discovered[(path, function)])}"
-            for path, function in unenrolled
+            f"{path}::{function}  bound={sorted(discovered[(path, function)])}" for path, function in unenrolled
         )
         raise AssertionError(f"{len(unenrolled)} unenrolled min/max cap site(s):\n  {listed}")
 
@@ -117,9 +106,7 @@ def test_no_enrolment_outlives_its_site() -> None:
     """A witness or exemption cannot outlive its production site."""
     discovered = set(_discovered_cap_sites())
     stale = sorted(
-        key
-        for key in (set(REGULATORY_CAP_WITNESSES) | set(_NON_REGULATORY_EXEMPTIONS))
-        if key not in discovered
+        key for key in (set(REGULATORY_CAP_WITNESSES) | set(_NON_REGULATORY_EXEMPTIONS)) if key not in discovered
     )
     if stale:
         listed = "\n  ".join(f"{path}::{function}" for path, function in stale)

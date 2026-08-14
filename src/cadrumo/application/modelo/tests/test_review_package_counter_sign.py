@@ -44,6 +44,9 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from pydantic import ValidationError
 
+from ....adapters.persistence.storage import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE
+from ....adapters.persistence.storage.sql import SecureObjectRow
+from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import Period, validated_casilla_id
 from ....domain.calculations.registry import CasillaObservation
 from ....domain.modelos import (
@@ -54,11 +57,6 @@ from ....domain.modelos import (
     WorkUnitState,
     derive_calculation_revision_id,
     derive_work_unit_id,
-)
-from ....tests.review_package_adapters import (
-    MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE,
-    SecureObjectRow,
-    session_scope,
 )
 from ....tests.secure_sql import MultiBucketTestRuntime, isolated_two_bucket_runtime
 from .._review_package import build_review_package

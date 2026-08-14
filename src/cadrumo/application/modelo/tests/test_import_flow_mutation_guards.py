@@ -71,13 +71,6 @@ __all__ = ["repos"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _casilla_id(value: object):
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
 def test_import_refuses_discarded_work_unit(repos: _Repos) -> None:
     """A discarded work unit cannot accept new imports."""
 
@@ -135,7 +128,7 @@ def test_external_import_refuses_m303_without_complete_filing_evidence(repos: _R
     with pytest.raises(ExternalModeloImportError, match="external_import_m303_filing_evidence_required"):
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
-            casilla_values={_casilla_id("07"): Decimal("0")},
+            casilla_values={validated_casilla_id("07"): Decimal("0")},
             evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             evidence_reference_id="operator:m303:no-filing-evidence",
             work_unit_repository=wu_repo,
@@ -298,13 +291,13 @@ def test_calculate_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: P
         assert len(cr_repo.load()) == 0
 
 
-_GUARD_EXPENSE_CASILLA = _casilla_id("02")
-_GUARD_WITHHELD_CASILLA = _casilla_id("05")
-_GUARD_PREVIOUS_PAYMENT_CASILLA = _casilla_id("06")
-_GUARD_AGRARIAN_VOLUME_CASILLA = _casilla_id("08")
-_GUARD_AGRARIAN_WITHHELD_CASILLA = _casilla_id("10")
-_GUARD_HOME_DEDUCTION_CASILLA = _casilla_id("16")
-_GUARD_PRIOR_RETURN_RESULT_CASILLA = _casilla_id("18")
+_GUARD_EXPENSE_CASILLA = validated_casilla_id("02")
+_GUARD_WITHHELD_CASILLA = validated_casilla_id("05")
+_GUARD_PREVIOUS_PAYMENT_CASILLA = validated_casilla_id("06")
+_GUARD_AGRARIAN_VOLUME_CASILLA = validated_casilla_id("08")
+_GUARD_AGRARIAN_WITHHELD_CASILLA = validated_casilla_id("10")
+_GUARD_HOME_DEDUCTION_CASILLA = validated_casilla_id("16")
+_GUARD_PRIOR_RETURN_RESULT_CASILLA = validated_casilla_id("18")
 
 
 def test_the_foreign_import_target_is_genuinely_present(tmp_path: Path) -> None:

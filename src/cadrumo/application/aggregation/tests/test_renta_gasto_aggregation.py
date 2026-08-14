@@ -14,12 +14,15 @@ the IVA-exclusive deductible base of OUTGOING business expenses.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+
+from ._secure_objects_fixtures import secure_objects
+
+__all__ = ["secure_objects"]
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -45,7 +48,6 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests.secure_sql import isolated_runtime_profile
 from .._renta_gasto_ledger import (
     RentaGastoLedgerAggregationIssueReason,
     RentaGastoObservation,
@@ -69,20 +71,7 @@ _Q1_2024 = _period(2024, "1T")
 _Q2_2024 = _period(2024, "2T")
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"renta gasto aggregation fixture key {value!r} is not a CasillaId") from exc
-
-
-_M130_GASTOS_CASILLA: CasillaId = _casilla_id("02")
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="test") as profile:
-        yield profile.repository
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
 
 
 def _raw_transaction(

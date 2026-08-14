@@ -59,6 +59,14 @@ def open_test_profile_session(profile_id: str | UUID) -> Iterator[str]:
     callers use this context while building a synthetic current capsule.  A
     later read against that capsule still opens the exact durable DEK written
     by the first call; no key or repository is faked.
+
+    The record authority is retired on both edges because this helper owns
+    the custody span the authority is bound to: retiring on entry is exactly
+    what a real profile switch does, and retiring on exit zeroises the DEK
+    this span unlocked instead of leaving it latched past the session that
+    justified it.  Reachability of a second profile does not depend on either
+    edge -- ``require_profile_record_session`` re-derives whenever the latched
+    authority does not serve the requested identity.
     """
     identity = str(UUID(str(profile_id)))
     from ..adapters.persistence.storage.errors import (
@@ -69,6 +77,7 @@ def open_test_profile_session(profile_id: str | UUID) -> Iterator[str]:
         activate_master_key_provider,
         get_master_key_provider,
     )
+    from ..application.user_profile._profile_record_repository import close_active_profile_record_session
     from ..core.config import override_settings
 
     provider = get_master_key_provider()
@@ -77,15 +86,19 @@ def open_test_profile_session(profile_id: str | UUID) -> Iterator[str]:
     except MasterKeyMaterialMissingError:
         with suppress(SecretAlreadyExistsError):
             provider.provision_master_key()
-    with (
-        override_settings(cadrumo_active_profile=identity),
-        activate_master_key_provider(
-            provider,
-            fallback_bucket_id=identity,
-            allow_bucket_dek_enrollment=True,
-        ),
-    ):
-        yield identity
+    close_active_profile_record_session()
+    try:
+        with (
+            override_settings(cadrumo_active_profile=identity),
+            activate_master_key_provider(
+                provider,
+                fallback_bucket_id=identity,
+                allow_bucket_dek_enrollment=True,
+            ),
+        ):
+            yield identity
+    finally:
+        close_active_profile_record_session()
 
 
 def _new_test_envelope(profile_id: UUID) -> ProfileCustodyEnvelope:

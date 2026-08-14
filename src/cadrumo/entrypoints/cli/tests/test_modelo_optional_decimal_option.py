@@ -19,9 +19,10 @@ from decimal import Decimal
 import pytest
 import typer
 
-from ....core.config import override_settings
-from ....core.i18n import clear_output_language_cache
 from .._modelo_cli_support import optional_decimal_option
+from ._strict_cli_fixture_support import english_locale_fixture
+
+__all__ = ["english_locale_fixture"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -66,15 +67,6 @@ _ACCEPTED = (
     # Surrounding whitespace is stripped; the number itself is canonical.
     ("  1200.50  ", Decimal("1200.50")),
 )
-
-
-@pytest.fixture(autouse=True)
-def _english_locale() -> object:
-    """Pin output language to English so refusal rendering is deterministic."""
-    with override_settings(cadrumo_output_language="en"):
-        clear_output_language_cache()
-        yield
-    clear_output_language_cache()
 
 
 @pytest.mark.parametrize("raw", _REFUSED)

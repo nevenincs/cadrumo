@@ -1,5 +1,3 @@
-from collections.abc import Iterator
-
 # serial: shares the process-global master-key-provider / active-profile state
 # that flakes under `-n auto` worker interleaving; runs in the serial (-n0) pass.
 from datetime import UTC, datetime
@@ -9,6 +7,10 @@ import pytest
 from pydantic import ValidationError
 
 from .....tests.cli_runner import invoke_typer_app
+from ._isolated_storage_fixture import isolated_storage
+
+__all__ = ["isolated_storage"]
+
 from .....tests.secure_sql import isolated_profile_storage_root
 from ... import app as root_app
 from ..._config_payloads import (
@@ -20,17 +22,6 @@ from ..._config_payloads import (
 from ..__init__ import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
-
-
-@pytest.fixture
-def _per_bucket_backend(tmp_path: Path) -> Iterator[Path]:
-    """Per-bucket storage with the production file-backed custody path.
-
-    Each profile bucket resolves its own SQLite file from the
-    active-profile pointer chain — the production cold-start path.
-    """
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        yield storage_root
 
 
 def test_apoderado_status_fails_without_profile(tmp_path: Path) -> None:
@@ -76,7 +67,7 @@ def test_apoderado_service_importable_and_has_cli_callers() -> None:
     assert "GENERALNT" in scope_codes
 
 
-def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) -> None:
+def test_apoderado_happy_path_against_active_profile(isolated_storage: Path) -> None:
     """status/configure/clear succeed against the active profile.
 
     The active-profile pointer carries the immutable UUID identity; the
@@ -192,7 +183,7 @@ def _create_active_profile() -> None:
     assert create.exit_code == 0, f"create failed: {create.output}"
 
 
-def test_apoderado_configure_without_nif_refuses_naming_the_flags(_per_bucket_backend: Path) -> None:
+def test_apoderado_configure_without_nif_refuses_naming_the_flags(isolated_storage: Path) -> None:
     """The interactive door under a non-interactive host names the recovery flags.
 
     Invoked without ``--represented-nif`` the verb opens the paged flow; the
@@ -211,7 +202,7 @@ def test_apoderado_configure_without_nif_refuses_naming_the_flags(_per_bucket_ba
     assert "--represented-nif" in result.output, result.output
 
 
-def test_apoderado_configure_without_scope_lists_the_accepted_codes(_per_bucket_backend: Path) -> None:
+def test_apoderado_configure_without_scope_lists_the_accepted_codes(isolated_storage: Path) -> None:
     """A missing --scope refuses by enumerating the accepted catalogue codes."""
     from .....adapters.persistence.storage.sql.engine import dispose_engine
 
@@ -229,7 +220,7 @@ def test_apoderado_configure_without_scope_lists_the_accepted_codes(_per_bucket_
     assert "GENERALNT" in result.output, result.output
 
 
-def test_apoderado_configure_rejects_invalid_nif_on_the_flags_path(_per_bucket_backend: Path) -> None:
+def test_apoderado_configure_rejects_invalid_nif_on_the_flags_path(isolated_storage: Path) -> None:
     """The flags path validates the represented NIF through the same identity authority.
 
     A malformed ``--represented-nif`` refuses (parity with the interactive
@@ -249,7 +240,7 @@ def test_apoderado_configure_rejects_invalid_nif_on_the_flags_path(_per_bucket_b
     assert "NOTANIF" not in result.output, f"raw represented NIF leaked: {result.output!r}"
 
 
-def test_apoderado_configure_leaves_profile_facts_untouched(_per_bucket_backend: Path) -> None:
+def test_apoderado_configure_leaves_profile_facts_untouched(isolated_storage: Path) -> None:
     """Configuring apoderado writes only to the ApoderadoService namespace.
 
     Representation is NOT a profile fact: the door routes writes to the

@@ -40,10 +40,10 @@ from ....domain.filing import (
     registry_schema_version,
 )
 from ....domain.submission import ModeloDraftStatus
+from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.filing import build_registry_filing_draft
 from .._common import resolve_notice_action
-from .envelope_helpers import unwrap_envelope_notices
 
 pytestmark = [
     pytest.mark.integration,

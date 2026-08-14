@@ -58,15 +58,8 @@ _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 _BUCKET_ID = "13131313-1313-4313-8313-131313131313"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00501")
-_REVISION_CASILLA: CasillaId = _casilla_id("01")
+_MANUAL_FACT_CASILLA: CasillaId = validated_casilla_id("00501")
+_REVISION_CASILLA: CasillaId = validated_casilla_id("01")
 _LEGAL_REFS = ("ley-37-1992:art-99",)
 _SOURCE_REFS = ("boe-modelo-303-2025-form",)
 

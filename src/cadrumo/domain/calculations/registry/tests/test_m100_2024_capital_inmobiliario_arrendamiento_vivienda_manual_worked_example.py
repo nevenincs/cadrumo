@@ -102,16 +102,15 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .. import (
-    ManualWorkedExamplePayload,
     ValidatedRegistryAuthority,
 )
+from ._manual_oracle_support import read_manual_worked_example
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -184,12 +183,6 @@ _REDUCCION_FLAG_INPUT: dict[CasillaId, Decimal] = {
 }
 
 
-def _oracle_payload() -> ManualWorkedExamplePayload:
-    """Read the bundled oracle through the registry's own strict payload model."""
-    path = Path(bundled_path("corpus", "manual_oracles")) / _ORACLE_PAYLOAD_NAME
-    return ManualWorkedExamplePayload.model_validate_json(path.read_text(encoding="utf-8"))
-
-
 def _declared_inmobiliario_inputs() -> dict[CasillaId, Decimal]:
     """The manual's own ingreso/gasto figures, read FROM the oracle rather than retyped.
 
@@ -198,7 +191,7 @@ def _declared_inmobiliario_inputs() -> dict[CasillaId, Decimal]:
     conservación 157,50 -- so its locator spans both rather than citing whichever
     happens to appear first.
     """
-    declared = _oracle_payload().declared_inputs
+    declared = read_manual_worked_example(_ORACLE_PAYLOAD_NAME).declared_inputs
     assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
     return {
         validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)

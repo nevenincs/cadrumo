@@ -233,15 +233,8 @@ _BUCKET_A_ATTACHMENT_PAYLOAD = f"{_BUCKET_A_ID} attachment payload".encode("asci
 _BUCKET_B_ATTACHMENT_PAYLOAD = f"{_BUCKET_B_ID} attachment payload".encode("ascii")
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_CALCULATION_INPUT_CASILLA: CasillaId = _casilla_id("base")
-_CALCULATION_OUTPUT_CASILLA: CasillaId = _casilla_id("casilla-01")
+_CALCULATION_INPUT_CASILLA: CasillaId = validated_casilla_id("base")
+_CALCULATION_OUTPUT_CASILLA: CasillaId = validated_casilla_id("casilla-01")
 
 
 @contextmanager
@@ -425,7 +418,7 @@ def _modelo_draft(label: str) -> ModeloDraft:
     )
     values = (
         ModeloValue(
-            casilla_id=_casilla_id(f"iva.devengado.{label}"),
+            casilla_id=validated_casilla_id(f"iva.devengado.{label}"),
             value=Decimal("100.00"),
             kind=ModeloValueKind.LITERAL,
             source="runtime attached repository test",
@@ -459,7 +452,7 @@ def _modelo_amendment(label: str) -> ModeloComplementaria:
     draft = _modelo_draft(label)
     delta = (
         CasillaChange(
-            casilla_id=_casilla_id("iva.devengado"),
+            casilla_id=validated_casilla_id("iva.devengado"),
             old_value=Decimal("100.00"),
             new_value=Decimal("121.00"),
             reason=f"runtime attached amendment {label}",
@@ -641,7 +634,7 @@ def _verification_catalogue(label: str) -> VerificationReportCatalogue:
         calculation_revision_id=revision_id,
         completeness_status=VerificationCompletenessStatus.COMPLETE,
         findings=(),
-        resolved_casilla_ids=(_casilla_id("iva.devengado"),),
+        resolved_casilla_ids=(validated_casilla_id("iva.devengado"),),
         missing_required_casilla_ids=(),
         run_at=run_at,
         verified_by="aeat.cli.modelo.verify",

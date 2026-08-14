@@ -43,7 +43,6 @@ from .._schema import (
     RegistrySnapshot,
     RelationDefinition,
     SourceReference,
-    SupportRemovalDecisionDefinition,
     WorkbookParityReference,
 )
 from .._schema_verification import VerificationExpectationDefinition
@@ -233,7 +232,6 @@ def _minimal_revision(
     extraction_profiles: tuple[ExtractionProfileDefinition, ...] = (),
     live_cross_references: tuple[LiveCrossReferenceDecision, ...] = (),
     verification_expectations: tuple[VerificationExpectationDefinition, ...] = (),
-    support_removal_decisions: tuple[SupportRemovalDecisionDefinition, ...] = (),
     constructs: tuple[ConstructDefinition, ...] = (),
     dependency_classifications: tuple[DependencyClassificationDefinition, ...] = (),
     export_layouts: tuple[ExportLayoutDefinition, ...] = (),
@@ -262,7 +260,6 @@ def _minimal_revision(
         extraction_profiles=extraction_profiles,
         live_cross_references=live_cross_references,
         verification_expectations=verification_expectations,
-        support_removal_decisions=support_removal_decisions,
         constructs=constructs,
         dependency_classifications=dependency_classifications,
         export_layouts=export_layouts,

@@ -267,6 +267,7 @@ from ._review import (
     refresh_review_status,
     unapprove_draft,
 )
+from ._runtime_repository import modelo_record_repository_for_application
 from .errors import ModeloApplicationError, ModeloCalculateError
 from .runtime import (
     ModeloOperatorProfile,
@@ -1251,6 +1252,7 @@ __all__ = [
     "load_amendment",
     "load_default_filing_profile",
     "m303_rectificativa_motive_producer_values",
+    "modelo_record_repository_for_application",
     "project_m303_exonerado_390_value_arrival",
     "refresh_review_status",
     "render_m303_filing_envelope",

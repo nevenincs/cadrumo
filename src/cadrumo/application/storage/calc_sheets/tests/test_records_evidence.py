@@ -26,15 +26,8 @@ from .._records import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"calc-sheet evidence fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_IVA_DEVENGADO_CUOTA_CASILLA: CasillaId = _casilla_id("iva.devengado.cuota")
-_RESULTADO_CONTABLE_CASILLA: CasillaId = _casilla_id("resultado.contable")
+_IVA_DEVENGADO_CUOTA_CASILLA: CasillaId = validated_casilla_id("iva.devengado.cuota")
+_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("resultado.contable")
 _LEGAL_REFS = ("ley-37-1992:art-99",)
 _SOURCE_REFS = ("boe-modelo-303-2025-form",)
 

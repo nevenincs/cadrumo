@@ -18,9 +18,9 @@ from ....adapters.persistence.storage.bucket import (
 )
 from ....core.config import load_settings
 from ....tests.cli_runner import invoke_cached_cli
-from ._isolated_profile_storage_fixtures import _isolated_backend
+from ....tests.secure_sql import isolated_profile_storage
 
-__all__ = ["_isolated_backend"]
+__all__ = ["isolated_profile_storage"]
 from ._profile_lifecycle_support import create_profile_via_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

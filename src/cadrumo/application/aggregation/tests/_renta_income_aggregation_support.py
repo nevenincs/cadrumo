@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
-from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.transactions import (
     BusinessClassification,
@@ -17,7 +14,6 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ....tests.secure_sql import isolated_runtime_profile
 
 
 def _period(year: int, code: str) -> Period:
@@ -29,23 +25,10 @@ _Q1_2024 = _period(2024, "1T")
 _Q2_2024 = _period(2024, "2T")
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"renta income aggregation fixture key {value!r} is not a CasillaId") from exc
-
-
-_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
-_M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
-_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA: CasillaId = _casilla_id("0171")
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
+_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA: CasillaId = validated_casilla_id("0171")
 _M130_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
-
-
-@contextmanager
-def isolated_renta_income_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="test") as profile:
-        yield profile.repository
 
 
 def _raw_transaction(

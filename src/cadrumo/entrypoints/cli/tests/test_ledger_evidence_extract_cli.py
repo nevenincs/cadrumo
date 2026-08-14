@@ -31,15 +31,15 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterator
 from io import BytesIO
 from pathlib import Path
 
 import pytest
 
-from ._ledger_ux_support import _invoke, _open_ledger_ux_session
+from ._ledger_ux_support import _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["_open_bucket_session"]
 
 _SUPPLIER_CIF = "B12345674"
 
@@ -85,12 +85,6 @@ def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:
         y -= 20
     page.save()
     return buf.getvalue()
-
-
-@pytest.fixture(autouse=True)
-def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
-    with _open_ledger_ux_session(tmp_path):
-        yield
 
 
 def _add_evidence(tmp_path: Path, lines: tuple[str, ...], *, filename: str = "factura.pdf") -> str:

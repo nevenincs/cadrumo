@@ -73,13 +73,9 @@ _MODELO_193 = "193"
 _FILING_YEAR = 2025
 
 
-def _casilla_id(value: str) -> CasillaId:
-    return validated_casilla_id(value, surface="test casilla id")
-
-
-_M193_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
-_M193_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
-_M193_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
+_M193_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.base-total")
+_M193_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.retenciones-total")
+_M193_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("decl.total-perceptores")
 
 # The two Modelo 123 quarterly-relation sums feeding decl.base-total /
 # decl.retenciones-total. This test's unit under test is the parity CHECK, not

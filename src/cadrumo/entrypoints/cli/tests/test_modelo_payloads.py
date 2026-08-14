@@ -56,16 +56,9 @@ _NOW = "2025-01-01T00:00:00+00:00"
 _REVISION_TIMESTAMP = datetime(2025, 1, 1, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_PAYLOAD_CASILLA: CasillaId = _casilla_id("001")
-_INPUT_EJERCICIO_CASILLA: CasillaId = _casilla_id("ejercicio")
-_INPUT_PERIODO_CASILLA: CasillaId = _casilla_id("periodo")
+_PAYLOAD_CASILLA: CasillaId = validated_casilla_id("001")
+_INPUT_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("ejercicio")
+_INPUT_PERIODO_CASILLA: CasillaId = validated_casilla_id("periodo")
 _NON_CANONICAL_KEY = "bad key"
 _RELATION_OVERRIDE: RelationId = "renta-2024-rel-130-pagos-fraccionados"
 

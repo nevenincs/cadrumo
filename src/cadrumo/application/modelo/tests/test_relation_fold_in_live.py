@@ -77,20 +77,13 @@ _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _YEAR = 2025
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"relation fold-in fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M115_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
-_M115_BASE_CASILLA: CasillaId = _casilla_id("02")
-_M115_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
-_M115_ANTERIORES_CASILLA: CasillaId = _casilla_id("04")
-_M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
-_M180_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
-_M180_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
+_M115_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01")
+_M115_BASE_CASILLA: CasillaId = validated_casilla_id("02")
+_M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03")
+_M115_ANTERIORES_CASILLA: CasillaId = validated_casilla_id("04")
+_M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("decl.total-perceptores")
+_M180_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.base-total")
+_M180_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.retenciones-total")
 
 # Distinct per-quarter bases so a cross-quarter contamination surfaces as a
 # mismatch. Casillas 01/02 resolve through the M115 retenciones aggregation

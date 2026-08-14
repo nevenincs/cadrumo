@@ -27,7 +27,7 @@ from typing import ClassVar, override
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.workflow import workflow_state_repository
+from ....application.workflow import WorkflowState
 from ....core import ConfirmationBlockReason, DraftDiscrepancyKind
 from ....core.config import load_settings, override_settings
 from ....domain.iva import InvoiceKind
@@ -216,9 +216,11 @@ def live_document(tmp_path: Path, reader_url: str):
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_PROFILE_ID),
     ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id=_PROFILE_ID, display_name="tester"),
-        )
+        # Seeded through a detached WorkflowState, never a repository read:
+        # the capsule publishes by an atomic no-replace rename onto
+        # ``buckets/<profile-id>``, which a workflow-state repository
+        # construction would otherwise materialise first and collide with.
+        register_minimal_profile(WorkflowState(), profile_id=_PROFILE_ID, display_name="tester")
         set_active_test_profile_facts(
             (UserProfileFact(path=FILER_TAX_ID_FACT_PATH, value=_FILER_CIF),),
         )

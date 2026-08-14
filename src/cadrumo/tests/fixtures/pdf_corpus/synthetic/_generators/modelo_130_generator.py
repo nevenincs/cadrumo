@@ -48,50 +48,121 @@ from ._generator_shared import (
 # 08-19 occupy y_mm=140..250 with a 10 mm vertical pitch.
 
 
-def _casilla_id(value: object) -> CasillaId:
-    return validated_casilla_id(value, surface="modelo_130_pdf_fixture._MODELO_130_BOXES")
-
-
 _MODELO_130_BOXES: tuple[CasillaBox, ...] = (
-    CasillaBox(casilla_id=_casilla_id("01"), label_es="Ingresos integros del periodo", x_mm=20, y_mm=60),
-    CasillaBox(casilla_id=_casilla_id("02"), label_es="Gastos deducibles del periodo", x_mm=20, y_mm=70),
-    CasillaBox(casilla_id=_casilla_id("03"), label_es="Rendimiento neto (01 - 02)", x_mm=20, y_mm=80),
-    CasillaBox(casilla_id=_casilla_id("04"), label_es="Pago fraccionado bruto (20% de 03)", x_mm=20, y_mm=90),
-    CasillaBox(casilla_id=_casilla_id("05"), label_es="Retenciones soportadas en el periodo", x_mm=20, y_mm=105),
     CasillaBox(
-        casilla_id=_casilla_id("06"),
+        casilla_id=validated_casilla_id("01", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
+        label_es="Ingresos integros del periodo",
+        x_mm=20,
+        y_mm=60,
+    ),
+    CasillaBox(
+        casilla_id=validated_casilla_id("02", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
+        label_es="Gastos deducibles del periodo",
+        x_mm=20,
+        y_mm=70,
+    ),
+    CasillaBox(
+        casilla_id=validated_casilla_id("03", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
+        label_es="Rendimiento neto (01 - 02)",
+        x_mm=20,
+        y_mm=80,
+    ),
+    CasillaBox(
+        casilla_id=validated_casilla_id("04", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
+        label_es="Pago fraccionado bruto (20% de 03)",
+        x_mm=20,
+        y_mm=90,
+    ),
+    CasillaBox(
+        casilla_id=validated_casilla_id("05", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
+        label_es="Retenciones soportadas en el periodo",
+        x_mm=20,
+        y_mm=105,
+    ),
+    CasillaBox(
+        casilla_id=validated_casilla_id("06", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
         label_es="Pagos fraccionados de periodos anteriores",
         x_mm=20,
         y_mm=115,
     ),
-    CasillaBox(casilla_id=_casilla_id("07"), label_es="Resultado a ingresar (04 - 05 - 06)", x_mm=20, y_mm=125),
     CasillaBox(
-        casilla_id=_casilla_id("08"),
+        casilla_id=validated_casilla_id("07", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
+        label_es="Resultado a ingresar (04 - 05 - 06)",
+        x_mm=20,
+        y_mm=125,
+    ),
+    CasillaBox(
+        casilla_id=validated_casilla_id("08", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
         label_es="Volumen de ingresos del trimestre (Apartado II)",
         x_mm=20,
         y_mm=140,
     ),
-    CasillaBox(casilla_id=_casilla_id("09"), label_es="Pago fraccionado bruto agraria (2% de 08)", x_mm=20, y_mm=150),
-    CasillaBox(casilla_id=_casilla_id("10"), label_es="Retenciones del trimestre (Apartado II)", x_mm=20, y_mm=160),
-    CasillaBox(casilla_id=_casilla_id("11"), label_es="Resultado parcial Apartado II (09 - 10)", x_mm=20, y_mm=170),
-    CasillaBox(casilla_id=_casilla_id("12"), label_es="Suma de resultados parciales (clamp >= 0)", x_mm=20, y_mm=180),
-    CasillaBox(casilla_id=_casilla_id("13"), label_es="Minoracion por rendimientos netos <= 12 000", x_mm=20, y_mm=190),
-    CasillaBox(casilla_id=_casilla_id("14"), label_es="Neto tras minoracion (12 - 13)", x_mm=20, y_mm=200),
-    CasillaBox(casilla_id=_casilla_id("15"), label_es="Arrastre de negativos trimestres anteriores", x_mm=20, y_mm=210),
     CasillaBox(
-        casilla_id=_casilla_id("16"),
+        casilla_id=validated_casilla_id("09", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
+        label_es="Pago fraccionado bruto agraria (2% de 08)",
+        x_mm=20,
+        y_mm=150,
+    ),
+    CasillaBox(
+        casilla_id=validated_casilla_id("10", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
+        label_es="Retenciones del trimestre (Apartado II)",
+        x_mm=20,
+        y_mm=160,
+    ),
+    CasillaBox(
+        casilla_id=validated_casilla_id("11", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
+        label_es="Resultado parcial Apartado II (09 - 10)",
+        x_mm=20,
+        y_mm=170,
+    ),
+    CasillaBox(
+        casilla_id=validated_casilla_id("12", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
+        label_es="Suma de resultados parciales (clamp >= 0)",
+        x_mm=20,
+        y_mm=180,
+    ),
+    CasillaBox(
+        casilla_id=validated_casilla_id("13", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
+        label_es="Minoracion por rendimientos netos <= 12 000",
+        x_mm=20,
+        y_mm=190,
+    ),
+    CasillaBox(
+        casilla_id=validated_casilla_id("14", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
+        label_es="Neto tras minoracion (12 - 13)",
+        x_mm=20,
+        y_mm=200,
+    ),
+    CasillaBox(
+        casilla_id=validated_casilla_id("15", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
+        label_es="Arrastre de negativos trimestres anteriores",
+        x_mm=20,
+        y_mm=210,
+    ),
+    CasillaBox(
+        casilla_id=validated_casilla_id("16", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
         label_es="Deduccion por inversion en vivienda habitual",
         x_mm=20,
         y_mm=220,
     ),
-    CasillaBox(casilla_id=_casilla_id("17"), label_es="Diferencia (14 - 15 - 16)", x_mm=20, y_mm=230),
     CasillaBox(
-        casilla_id=_casilla_id("18"),
+        casilla_id=validated_casilla_id("17", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
+        label_es="Diferencia (14 - 15 - 16)",
+        x_mm=20,
+        y_mm=230,
+    ),
+    CasillaBox(
+        casilla_id=validated_casilla_id("18", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
         label_es="Resultado a ingresar de autoliquidaciones anteriores",
         x_mm=20,
         y_mm=240,
     ),
-    CasillaBox(casilla_id=_casilla_id("19"), label_es="Resultado final (17 - 18)", x_mm=20, y_mm=250),
+    CasillaBox(
+        casilla_id=validated_casilla_id("19", surface="modelo_130_pdf_fixture._MODELO_130_BOXES"),
+        label_es="Resultado final (17 - 18)",
+        x_mm=20,
+        y_mm=250,
+    ),
 )
 
 

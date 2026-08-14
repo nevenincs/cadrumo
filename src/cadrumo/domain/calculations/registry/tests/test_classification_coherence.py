@@ -218,7 +218,6 @@ def test_axis_census_reports_every_tracked_axis_once_against_a_real_population(
     manifests = tuple(revision for revision in revisions if revision.completeness_manifest)
     expected_population: dict[str, int] = {
         "calculation_class.summary": len(bundled_modelos),
-        "revision.support_removal_decisions": len(revisions),
         "extraction_profile.confidence.review_required": len(profiles),
         "extraction_profile.verification_source.real_aeat_corpus_pdf": len(profiles),
         "completeness_manifest.manual_extraction": len(manifests),

@@ -33,9 +33,9 @@ from pathlib import Path
 import pytest
 
 from ....application.invoices import BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
+from ....tests.cli_envelope import require_schema_envelope as _json_result
 from ....tests.cli_runner import invoke_cached_cli
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
-from .envelope_helpers import require_schema_envelope as _json_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["active_profile_isolated_backend"]

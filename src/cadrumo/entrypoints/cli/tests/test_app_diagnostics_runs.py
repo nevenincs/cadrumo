@@ -17,9 +17,9 @@ import pytest
 from click.testing import Result
 
 from ....adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
+from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_runner import invoke_cached_cli
 from ._strict_cli_fixture_support import diagnostics_isolated_backend
-from .envelope_helpers import unwrap_cli_result as _json_result
 
 __all__ = ["diagnostics_isolated_backend"]
 

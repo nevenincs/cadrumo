@@ -19,16 +19,16 @@ before any state access.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
-from pathlib import Path
+from collections.abc import Sequence
 
 import pytest
 
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
-from ....tests.secure_sql import isolated_sessionless_storage_root
+from ._isolated_profile_storage_fixtures import _isolated_state
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["_isolated_state"]
 
 # The option string we assert must appear in every target command's help.
 _OPTION_FLAG = "--output-language"
@@ -91,12 +91,6 @@ _SUB_NOUN_GROUP_COMMANDS = (
     ("app", "ledger", "ratios", "eligible"),
     ("app", "ledger", "ratios", "validate"),
 )
-
-
-@pytest.fixture(autouse=True)
-def _isolated_state(tmp_path: Path) -> Iterator[None]:
-    with isolated_sessionless_storage_root(tmp_path=tmp_path):
-        yield
 
 
 def _assert_output_language_registered(args: Sequence[str]) -> None:

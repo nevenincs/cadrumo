@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+
+from ._export_test_support import isolated_backend
+
+__all__ = ["isolated_backend"]
 
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....application.calculations import (
@@ -46,15 +49,8 @@ from .._action_errors import (
 from .._export import ModeloExportCommand, ModeloExportOutputPathError, export_modelo_revision
 from .._revision_persistence import persist_filed_revision
 from ._export_modelo_303_support import _build_verified_modelo_303_revision
-from ._export_test_support import isolated_backend_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@pytest.fixture
-def isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_backend_context(tmp_path):
-        yield
 
 
 def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wallet_provenance(

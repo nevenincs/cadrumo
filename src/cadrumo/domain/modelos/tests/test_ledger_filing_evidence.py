@@ -15,14 +15,7 @@ from .._ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, M
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_EVIDENCE_CASILLA: CasillaId = _casilla_id("00501")
+_EVIDENCE_CASILLA: CasillaId = validated_casilla_id("00501")
 _LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-37-1992:art-99",)
 _SOURCE_REFS: tuple[SourceRefId, ...] = ("boe-modelo-303-2025-form",)
 _TRANSACTION_ID = "c" * 64

@@ -48,16 +48,9 @@ _NAIVE_AMENDMENT_CREATED_AT = datetime(2026, 5, 25, 15, 0, 0)
 _OFFSET_AMENDMENT_CREATED_AT = datetime(2026, 5, 25, 16, 0, 0, tzinfo=timezone(timedelta(hours=1)))
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"amendment roundtrip fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_IVA_DEVENGADO_CASILLA: CasillaId = _casilla_id("iva.devengado")
-_IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.deducible")
-_IVA_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_IVA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id("iva.devengado")
+_IVA_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id("iva.deducible")
+_IVA_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
 _IVA_RESULTADO_OPERANDS = (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
 _NONCANONICAL_IVA_DEVENGADO_CASILLA_ID = " iva.devengado "
 

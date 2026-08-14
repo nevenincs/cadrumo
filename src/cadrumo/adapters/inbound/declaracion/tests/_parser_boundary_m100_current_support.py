@@ -23,13 +23,8 @@ from __future__ import annotations
 
 from .....core import CasillaId, validated_casilla_id
 
-
-def _casilla_id(value: object) -> CasillaId:
-    return validated_casilla_id(value, surface="m100_current_year_pdf_fixture")
-
-
 M100_CURRENT_YEAR_EXPECTED_CASILLAS: frozenset[CasillaId] = frozenset(
-    _casilla_id(value)
+    validated_casilla_id(value, surface="m100_current_year_pdf_fixture")
     for value in (
         "0545",
         "0546",

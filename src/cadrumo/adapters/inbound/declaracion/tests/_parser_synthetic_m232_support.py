@@ -4,16 +4,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ._parser_boundary_support import (
-    _MODELO_232_2016_SYNTHETIC_FIXTURE,
-    _MODELO_232_2018_SYNTHETIC_FIXTURE,
-    CasillaId,
-    _casilla_id,
-)
+from .....core import validated_casilla_id
+from ._parser_boundary_support import _MODELO_232_2016_SYNTHETIC_FIXTURE, _MODELO_232_2018_SYNTHETIC_FIXTURE, CasillaId
 
-_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
-_DECL_TIPO_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.tipo-ejercicio")
-_DECL_CNAE_CASILLA: CasillaId = _casilla_id("decl.cnae")
+_DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
+    "decl.ejercicio", surface="declaracion_parser_boundary.casilla"
+)
+_DECL_TIPO_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
+    "decl.tipo-ejercicio", surface="declaracion_parser_boundary.casilla"
+)
+_DECL_CNAE_CASILLA: CasillaId = validated_casilla_id("decl.cnae", surface="declaracion_parser_boundary.casilla")
 _M232_PROFILE_CASILLAS: frozenset[CasillaId] = frozenset(
     {
         _DECL_EJERCICIO_CASILLA,

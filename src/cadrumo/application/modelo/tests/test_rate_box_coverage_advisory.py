@@ -41,7 +41,7 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...aggregation import CalculationSourceDiagnostic
-from ...workflow import workflow_state_repository
+from ...workflow import WorkflowState
 from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from .._rate_box_advisory import collect_rate_box_coverage_diagnostics
 
@@ -65,7 +65,11 @@ _BOX_4PCT: CasillaId = validated_casilla_id("02", surface="test.rate_box.box")
 @pytest.fixture(autouse=True)
 def _bucket(tmp_path: Path) -> Iterator[None]:
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
-        workflow_state_repository().update(lambda s: register_minimal_profile(s, profile_id=_BUCKET_ID))
+        # Seeded through a detached WorkflowState, never a repository read:
+        # the capsule publishes by an atomic no-replace rename onto
+        # ``buckets/<profile-id>``, which a workflow-state repository
+        # construction would otherwise materialise first and collide with.
+        register_minimal_profile(WorkflowState(), profile_id=_BUCKET_ID)
         yield
 
 

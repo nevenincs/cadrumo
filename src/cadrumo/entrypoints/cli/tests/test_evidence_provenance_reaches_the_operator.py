@@ -34,15 +34,15 @@ of the claim the tree can currently honour.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-from ._ledger_ux_support import _invoke, _open_ledger_ux_session
+from ._ledger_ux_support import _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["_open_bucket_session"]
 
 #: The in-repo corpus, shared with the application-layer tests. Deliberately
 #: in-repo: a durable gate must not depend on a tree outside the repository,
@@ -54,12 +54,6 @@ _STRUCTURED_INVOICE = "facturae_32_series_and_parties_invoice.xml"
 #: What the structured reader recovers from the bundled document, so an override
 #: below is provably a DISPLACEMENT of a read value rather than a fill of a blank.
 _READ_INVOICE_NUMBER = "0031"
-
-
-@pytest.fixture(autouse=True)
-def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
-    with _open_ledger_ux_session(tmp_path):
-        yield
 
 
 def _add_structured_evidence(tmp_path: Path) -> str:

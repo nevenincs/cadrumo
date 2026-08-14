@@ -18,31 +18,24 @@ from ._registry_schema_support import _committed_modelo, _committed_snapshot
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M123 registry test casilla key {value!r} is not a CasillaId") from exc
-
-
-_M123_RENTAS_DIVIDENDOS_CASILLA: CasillaId = _casilla_id("01")
-_M123_RENTAS_RESTO_CASILLA: CasillaId = _casilla_id("02")
-_M123_RENTAS_TOTAL_CASILLA: CasillaId = _casilla_id("03")
-_M123_BASE_DIVIDENDOS_CASILLA: CasillaId = _casilla_id("04")
-_M123_BASE_RESTO_CASILLA: CasillaId = _casilla_id("05")
-_M123_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("06")
-_M123_RETENCIONES_DIVIDENDOS_CASILLA: CasillaId = _casilla_id("07")
-_M123_RETENCIONES_RESTO_CASILLA: CasillaId = _casilla_id("08")
-_M123_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("10")
-_M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: CasillaId = _casilla_id("11")
-_M123_A_INGRESAR_CASILLA: CasillaId = _casilla_id("13")
-_M123_2019_2023_NPERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
-_M123_2019_2023_BASE_CASILLA: CasillaId = _casilla_id("02")
-_M123_2019_2023_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
-_M123_2019_2023_REGULARIZACION_CASILLA: CasillaId = _casilla_id("04")
-_M123_2019_2023_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("05")
-_M123_2019_2023_RESULTADO_CASILLA: CasillaId = _casilla_id("06")
-_M123_2019_2023_INGRESO_CASILLA: CasillaId = _casilla_id("07")
+_M123_RENTAS_DIVIDENDOS_CASILLA: CasillaId = validated_casilla_id("01")
+_M123_RENTAS_RESTO_CASILLA: CasillaId = validated_casilla_id("02")
+_M123_RENTAS_TOTAL_CASILLA: CasillaId = validated_casilla_id("03")
+_M123_BASE_DIVIDENDOS_CASILLA: CasillaId = validated_casilla_id("04")
+_M123_BASE_RESTO_CASILLA: CasillaId = validated_casilla_id("05")
+_M123_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id("06")
+_M123_RETENCIONES_DIVIDENDOS_CASILLA: CasillaId = validated_casilla_id("07")
+_M123_RETENCIONES_RESTO_CASILLA: CasillaId = validated_casilla_id("08")
+_M123_PREVIOUS_RESULT_CASILLA: CasillaId = validated_casilla_id("10")
+_M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: CasillaId = validated_casilla_id("11")
+_M123_A_INGRESAR_CASILLA: CasillaId = validated_casilla_id("13")
+_M123_2019_2023_NPERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01")
+_M123_2019_2023_BASE_CASILLA: CasillaId = validated_casilla_id("02")
+_M123_2019_2023_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03")
+_M123_2019_2023_REGULARIZACION_CASILLA: CasillaId = validated_casilla_id("04")
+_M123_2019_2023_PREVIOUS_RESULT_CASILLA: CasillaId = validated_casilla_id("05")
+_M123_2019_2023_RESULTADO_CASILLA: CasillaId = validated_casilla_id("06")
+_M123_2019_2023_INGRESO_CASILLA: CasillaId = validated_casilla_id("07")
 
 
 def test_modelo_123_guidance_and_layout_sources_are_separated() -> None:

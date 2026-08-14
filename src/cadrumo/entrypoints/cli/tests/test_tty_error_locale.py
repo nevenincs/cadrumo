@@ -69,9 +69,6 @@ _SECURE_INPUT_REFUSAL_KEYS = (
     "cli.config.custody.errors.secrets_stdin_invalid_json",
     "cli.config.custody.errors.secrets_stdin_missing_fields",
     "cli.config.custody.errors.secrets_stdin_too_large",
-    "cli.config.recovery.errors.interactive_terminal_required",
-    "cli.config.recovery.errors.retype_mismatch",
-    "cli.config.recover.errors.recovery_code_rejected",
 )
 
 

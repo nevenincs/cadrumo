@@ -41,13 +41,6 @@ from ....core import CasillaId, validated_casilla_id
 from ._generate_base import _SEDE_ORIGIN
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="modelo_100_current_year_fixture casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M100 current-year fixture casilla key {value!r} is not canonical") from exc
-
-
 @dataclass(frozen=True)
 class _Modelo100CurrentYearFixture:
     """Sanitized M100 current-year declaracion fixture -- named_label layout."""
@@ -63,47 +56,107 @@ class _Modelo100CurrentYearFixture:
 # (the year-specific formula tail on 0218/0235/0595 does not affect the
 # registry profile's tail-agnostic label_pattern anchors).
 _M100_CURRENT_YEAR_RENDER_ROWS: tuple[tuple[CasillaId, str, str], ...] = (
-    (_casilla_id("0171"), "Ingresos de explotacion", "1.000,00"),
-    (_casilla_id("0180"), "Total ingresos computables ( Suma [0171] a [0179] )", "1.000,00"),
-    (_casilla_id("0218"), "Suma ( [0181] a [0195] + [0198] a [0200] )", "0,00"),
-    (_casilla_id("0223"), "Total gastos deducibles ( [0218] + [0222] )", "0,00"),
-    (_casilla_id("0224"), "Rendimiento neto ( [0180] - [0220] o [0180] - [0223] )", "1.000,00"),
-    (_casilla_id("0226"), "Rendimiento neto reducido ( [0224] - [0225] - [0236] )", "1.000,00"),
     (
-        _casilla_id("0231"),
+        validated_casilla_id("0171", surface="modelo_100_current_year_fixture casilla id"),
+        "Ingresos de explotacion",
+        "1.000,00",
+    ),
+    (
+        validated_casilla_id("0180", surface="modelo_100_current_year_fixture casilla id"),
+        "Total ingresos computables ( Suma [0171] a [0179] )",
+        "1.000,00",
+    ),
+    (
+        validated_casilla_id("0218", surface="modelo_100_current_year_fixture casilla id"),
+        "Suma ( [0181] a [0195] + [0198] a [0200] )",
+        "0,00",
+    ),
+    (
+        validated_casilla_id("0223", surface="modelo_100_current_year_fixture casilla id"),
+        "Total gastos deducibles ( [0218] + [0222] )",
+        "0,00",
+    ),
+    (
+        validated_casilla_id("0224", surface="modelo_100_current_year_fixture casilla id"),
+        "Rendimiento neto ( [0180] - [0220] o [0180] - [0223] )",
+        "1.000,00",
+    ),
+    (
+        validated_casilla_id("0226", surface="modelo_100_current_year_fixture casilla id"),
+        "Rendimiento neto reducido ( [0224] - [0225] - [0236] )",
+        "1.000,00",
+    ),
+    (
+        validated_casilla_id("0231", surface="modelo_100_current_year_fixture casilla id"),
         "Suma de rendimientos netos reducidos de las actividades economicas en estimacion directa",
         "1.000,00",
     ),
     (
-        _casilla_id("0235"),
+        validated_casilla_id("0235", surface="modelo_100_current_year_fixture casilla id"),
         "Rendimiento neto reducido total de las actividades economicas en estimacion directa ( [0231] - [0232] )",
         "1.000,00",
     ),
     (
-        _casilla_id("0432"),
+        validated_casilla_id("0432", surface="modelo_100_current_year_fixture casilla id"),
         "Saldo neto de los rendimientos a integrar en la base imponible general",
         "1.000,00",
     ),
-    (_casilla_id("0500"), "Base liquidable general", "1.000,00"),
-    (_casilla_id("0505"), "Base liquidable general sometida a gravamen", "1.000,00"),
-    (_casilla_id("0510"), "Base liquidable del ahorro", "0,00"),
-    (_casilla_id("0545"), "Cuota integra estatal: Parte estatal", "100,00"),
-    (_casilla_id("0546"), "Cuota integra autonomica: Parte autonomica", "100,00"),
     (
-        _casilla_id("0585"),
+        validated_casilla_id("0500", surface="modelo_100_current_year_fixture casilla id"),
+        "Base liquidable general",
+        "1.000,00",
+    ),
+    (
+        validated_casilla_id("0505", surface="modelo_100_current_year_fixture casilla id"),
+        "Base liquidable general sometida a gravamen",
+        "1.000,00",
+    ),
+    (
+        validated_casilla_id("0510", surface="modelo_100_current_year_fixture casilla id"),
+        "Base liquidable del ahorro",
+        "0,00",
+    ),
+    (
+        validated_casilla_id("0545", surface="modelo_100_current_year_fixture casilla id"),
+        "Cuota integra estatal: Parte estatal",
+        "100,00",
+    ),
+    (
+        validated_casilla_id("0546", surface="modelo_100_current_year_fixture casilla id"),
+        "Cuota integra autonomica: Parte autonomica",
+        "100,00",
+    ),
+    (
+        validated_casilla_id("0585", surface="modelo_100_current_year_fixture casilla id"),
         "Cuota liquida estatal incrementada ( [0585] = [0570] + [0568] ): Parte estatal",
         "100,00",
     ),
     (
-        _casilla_id("0586"),
+        validated_casilla_id("0586", surface="modelo_100_current_year_fixture casilla id"),
         "Cuota liquida autonomica incrementada ( [0586] = [0571] + [0569] ): Parte autonomica",
         "100,00",
     ),
-    (_casilla_id("0587"), "Cuota liquida incrementada total ( [0585] + [0586] )", "200,00"),
-    (_casilla_id("0595"), "Cuota resultante de la autoliquidacion ( [0587] - [0588] - [0589] )", "200,00"),
-    (_casilla_id("0604"), "Pagos fraccionados ingresados (actividades economicas)", "50,00"),
-    (_casilla_id("0610"), "Cuota diferencial", "150,00"),
-    (_casilla_id("0670"), "Resultado de la declaracion ( [0610] - [0611] + [0612] )", "150,00"),
+    (
+        validated_casilla_id("0587", surface="modelo_100_current_year_fixture casilla id"),
+        "Cuota liquida incrementada total ( [0585] + [0586] )",
+        "200,00",
+    ),
+    (
+        validated_casilla_id("0595", surface="modelo_100_current_year_fixture casilla id"),
+        "Cuota resultante de la autoliquidacion ( [0587] - [0588] - [0589] )",
+        "200,00",
+    ),
+    (
+        validated_casilla_id("0604", surface="modelo_100_current_year_fixture casilla id"),
+        "Pagos fraccionados ingresados (actividades economicas)",
+        "50,00",
+    ),
+    (validated_casilla_id("0610", surface="modelo_100_current_year_fixture casilla id"), "Cuota diferencial", "150,00"),
+    (
+        validated_casilla_id("0670", surface="modelo_100_current_year_fixture casilla id"),
+        "Resultado de la declaracion ( [0610] - [0611] + [0612] )",
+        "150,00",
+    ),
 )
 
 _MODELO_100_CURRENT_YEAR_FIXTURES: tuple[_Modelo100CurrentYearFixture, ...] = (

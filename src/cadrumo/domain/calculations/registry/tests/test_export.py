@@ -440,30 +440,17 @@ def _discriminante_divergence_risks(field: ExportFieldDefinition) -> list[str]:
     return risks
 
 
-def test_the_discriminante_detector_reports_both_ways_the_sites_can_diverge() -> None:
-    """M200's partial envelope is withdrawn instead of carrying two authorities."""
-    revision = _committed_modelo("200").revisions["2024-y-siguientes"]
-
-    assert revision.export_layouts == ()
-    decisions = {
-        decision.subject_id: decision
-        for decision in revision.support_removal_decisions
-        if decision.subject_type == "export_layout"
-    }
-    assert decisions
-    assert all(decision.decision == "remove_from_filing_grade" for decision in decisions.values())
-
-
 def test_the_modelo_200_envelope_discriminante_stays_an_unmodelled_literal() -> None:
-    """The withdrawal decision remains grounded in legal and layout evidence."""
+    """M200's 2024 revision declares no fixed-width envelope, so it carries no discriminante authority to diverge.
+
+    Nothing here is a regulatory withdrawal: the envelope layout has simply
+    never been built for this revision, so there is exactly one authority for
+    the discriminante literal (none) rather than a modelled one and a
+    hardcoded one disagreeing.
+    """
     revision = _committed_modelo("200").revisions["2024-y-siguientes"]
-    decisions = tuple(
-        decision for decision in revision.support_removal_decisions if decision.subject_type == "export_layout"
-    )
 
     assert revision.export_layouts == ()
-    assert decisions
-    assert all(decision.legal_refs and decision.source_refs and decision.evidence_note for decision in decisions)
 
 
 def test_no_typed_declaration_channel_names_an_accounts_regime_concept() -> None:

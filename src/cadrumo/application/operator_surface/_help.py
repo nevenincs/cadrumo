@@ -436,18 +436,6 @@ def _config_help() -> HelpDocument:
                         command="aeat config logout",
                         description=tr("cli.operator_surface.help.config.profile_logout"),
                     ),
-                    HelpEntry(
-                        command="aeat config profile delete NAME",
-                        description=tr("cli.operator_surface.help.config.profile_delete"),
-                    ),
-                    HelpEntry(
-                        command="aeat config profile duplicate SRC DST",
-                        description=tr("cli.operator_surface.help.config.profile_duplicate"),
-                    ),
-                    HelpEntry(
-                        command="aeat config profile rename SRC DST",
-                        description=tr("cli.operator_surface.help.config.profile_rename"),
-                    ),
                 ),
             ),
             HelpSection(
@@ -468,14 +456,6 @@ def _config_help() -> HelpDocument:
                     HelpEntry(
                         command="aeat config profile history [PROFILE]",
                         description=tr("cli.operator_surface.help.config.profile_history"),
-                    ),
-                    HelpEntry(
-                        command="aeat config profile export",
-                        description=tr("cli.operator_surface.help.config.profile_export"),
-                    ),
-                    HelpEntry(
-                        command="aeat config profile subject-access-request",
-                        description=tr("cli.operator_surface.help.config.profile_sar"),
                     ),
                 ),
             ),

@@ -26,6 +26,7 @@ from ....application.modelo import maritime_facts_from_active_profile
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....core.errors import ErrorCategory, get_error_exit_code
+from ....tests.cli_envelope import unwrap_schema_envelope as _unwrap
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -33,7 +34,6 @@ from ....tests.user_profile import register_minimal_profile
 from .._modelo_payloads import (
     WorkPreviewMaritimeExemptionResult,
 )
-from .envelope_helpers import unwrap_schema_envelope as _unwrap
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

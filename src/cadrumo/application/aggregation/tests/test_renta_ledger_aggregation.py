@@ -73,15 +73,8 @@ def _period(year: int, code: str) -> Period:
 _PERIOD_2025 = _period(2025, "0A")
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"renta ledger aggregation fixture key {value!r} is not a CasillaId") from exc
-
-
-_M100_AUTONOMOS_SS_CASILLA: CasillaId = _casilla_id("0186")
-_M100_ASESORIA_CASILLA: CasillaId = _casilla_id("0199")
+_M100_AUTONOMOS_SS_CASILLA: CasillaId = validated_casilla_id("0186")
+_M100_ASESORIA_CASILLA: CasillaId = validated_casilla_id("0199")
 
 
 # ---------------------------------------------------------------------------

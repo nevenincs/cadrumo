@@ -9,8 +9,6 @@ retains a prose compatibility field.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -27,23 +25,15 @@ from .....application.provisioning import (
 from .....core import AcceleratorKind, ContentionCause
 from .....core.config import override_settings
 from .....tests.cli_runner import invoke_cached_cli
-from .....tests.secure_sql import isolated_profile_storage_root
 from .._check_hardware_rows import CONTENTION_ROW_ID, contention_row
 from .._check_payloads import CheckDependencyPayload
+from ._isolated_storage_fixture import config_check_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["config_check_isolated_backend"]
 
 _GIB = 1024**3
 _HARDWARE_ROW_ID = "local-inference-hardware"
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path / "storage", cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-    ):
-        yield
 
 
 def _config_check_payload() -> dict[str, Any]:

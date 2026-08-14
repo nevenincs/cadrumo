@@ -20,7 +20,7 @@ import pytest
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import workflow_state_repository
+from ...workflow import WorkflowState
 
 
 @pytest.fixture
@@ -37,5 +37,9 @@ def _bucket(tmp_path: Path, _bucket_id: str) -> Iterator[None]:
 
     assert _wizard.WIZARD_FLOWS
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_bucket_id):
-        workflow_state_repository().update(lambda s: register_minimal_profile(s, profile_id=_bucket_id))
+        # Seeded through a detached WorkflowState, never a repository read:
+        # the capsule publishes by an atomic no-replace rename onto
+        # ``buckets/<profile-id>``, which a workflow-state repository
+        # construction would otherwise materialise first and collide with.
+        register_minimal_profile(WorkflowState(), profile_id=_bucket_id)
         yield
