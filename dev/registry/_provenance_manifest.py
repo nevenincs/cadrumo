@@ -183,6 +183,7 @@ type ExportFieldDerivationCode = Literal[
     "literal-exact-v1",
     "numeric-date-aaaammdd-v1",
     "numeric-decimal-v1",
+    "numeric-enumeration-v1",
     "numeric-integer-v1",
     "text-a-v1",
     "text-an-v1",

@@ -76,10 +76,20 @@ _SERIALIZER_CONVENTION: Final[str] = "rtoml-pretty-v1"
 _SAFE_IDENTIFIER_RE: Final[re.Pattern[str]] = re.compile(r"^[^/\\\x00-\x1f]+$")
 _SLUG_RE: Final[re.Pattern[str]] = re.compile(r"[^a-z0-9]+")
 _DECIMAL_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
-    r"^(?P<whole>\d+)\s*enteros?\s+y\s+(?P<decimals>\d+)\s*decimales?$",
+    r"^(?P<whole>\d+)\s*enteros?\s+(?:y\s+)?(?P<decimals>\d+)\s*decimales?"
+    r"(?:,\s*menor\s+o\s+igual\s+que\s+\d+\.)?$",
     re.IGNORECASE,
 )
 _INTEGER_CONTENT_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<whole>\d+)\s*enteros?$", re.IGNORECASE)
+_NOTE_REFERENCE_CONTENT_RE: Final[re.Pattern[str]] = re.compile(r"^Nota\s+\d+(?:\.\s*Nota\s+\d+)*$", re.IGNORECASE)
+_QUOTED_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
+    r'^"\d+"(?:,\s*"\d+")*(?:\s+Nota\s+\d+)?$',
+)
+_QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
+    r'^"\d+"\s+(?:SI|NO)(?:\s+\([^)]*\))?(?:,\s*"\d+"\s+(?:SI|NO)(?:\s+\([^)]*\))?)*'
+    r'(?:\.\s*Nota\s+\d+)?$',
+)
+_QUOTED_NUMERIC_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r'"(?P<value>\d+)"')
 _DATE_FORMAT_BY_POLICY: Final[Mapping[ExportValuePolicy, str]] = {
     ExportValuePolicy.YYYYMMDD: "aaaammdd",
     ExportValuePolicy.DDMMYYYY: "ddmmaaaa",
@@ -101,9 +111,11 @@ _SINGLETON_POLICY_SHAPES: Final[Mapping[ExportValuePolicy, Literal["integer", "d
 _TEXT_TYPES: Final[frozenset[str]] = frozenset({"a", "an"})
 _NUMERIC_TYPES: Final[frozenset[str]] = frozenset({"n", "num"})
 _OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
-    r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)\.?\s*$",
+    r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)"
+    r"(?:\.\s*Nota\s+\d+)?\.?\s*$",
     re.IGNORECASE,
 )
+_OFFICIAL_BLANK_LITERAL_CONTENT: Final[str] = "En blanco"
 _MAX_FRAGMENT_LINES: Final[int] = 1_399
 _MAX_FRAGMENT_LINE_CHARS: Final[int] = 519
 
@@ -539,13 +551,17 @@ def _literal_derivation(
         raise RegistryValidationError(
             f"literal field {joined_field.semantic_entry.export_field_id!r} has no exact official constant content",
         )
-    match = _OFFICIAL_LITERAL_RE.fullmatch(official_content)
-    if match is None:
-        raise RegistryValidationError(
-            f"literal field {joined_field.semantic_entry.export_field_id!r} has ambiguous official constant "
-            f"content {official_content!r}",
-        )
-    official_literal = match.group("literal")
+    blank_source_marker = official_content == _OFFICIAL_BLANK_LITERAL_CONTENT
+    if blank_source_marker:
+        official_literal = ""
+    else:
+        match = _OFFICIAL_LITERAL_RE.fullmatch(official_content)
+        if match is None:
+            raise RegistryValidationError(
+                f"literal field {joined_field.semantic_entry.export_field_id!r} has ambiguous official constant "
+                f"content {official_content!r}",
+            )
+        official_literal = match.group("literal")
     try:
         literal_bytes = literal.encode(profile.encoding)
         official_literal_bytes = official_literal.encode(profile.encoding)
@@ -559,7 +575,7 @@ def _literal_derivation(
             "with the exact official constant content",
         )
     literal_length = len(literal_bytes)
-    if literal_length != parser_field.length:
+    if not blank_source_marker and literal_length != parser_field.length:
         raise RegistryValidationError(
             f"literal field {joined_field.semantic_entry.export_field_id!r} has {literal_length} encoded bytes, "
             f"but the official slot is {parser_field.length} bytes",
@@ -633,6 +649,44 @@ def _numeric_derivation(
             signed=False,
             export_record_id=export_record_id,
             derivation_code="numeric-integer-v1",
+        )
+    if _NOTE_REFERENCE_CONTENT_RE.fullmatch(normalised_content) is not None:
+        return _schema_field(
+            joined_field,
+            data_type="integer",
+            required=_is_required(parser_field.validation),
+            padding=ExportPadding.LEFT_ZERO,
+            justification=ExportJustification.RIGHT,
+            signed=False,
+            export_record_id=export_record_id,
+            derivation_code="numeric-integer-v1",
+        )
+    if (
+        _QUOTED_NUMERIC_ENUMERATION_RE.fullmatch(normalised_content) is not None
+        or _QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE.fullmatch(normalised_content) is not None
+    ):
+        raw_values = tuple(match.group("value") for match in _QUOTED_NUMERIC_TOKEN_RE.finditer(normalised_content))
+        if any(len(value) != parser_field.length for value in raw_values):
+            raise RegistryValidationError(
+                f"official numeric enumeration {joined_field.semantic_entry.export_field_id!r} has values "
+                "outside the declared slot width",
+            )
+        allowed_values = tuple(str(int(value)) for value in raw_values)
+        if len(set(allowed_values)) != len(allowed_values):
+            raise RegistryValidationError(
+                f"official numeric enumeration {joined_field.semantic_entry.export_field_id!r} has duplicate values",
+            )
+        return _schema_field(
+            joined_field,
+            data_type="integer",
+            required=_is_required(parser_field.validation),
+            padding=ExportPadding.LEFT_ZERO,
+            justification=ExportJustification.RIGHT,
+            signed=False,
+            export_record_id=export_record_id,
+            value_policy=ExportValuePolicy.ENUMERATED_DIGITS,
+            allowed_values=allowed_values,
+            derivation_code="numeric-enumeration-v1",
         )
     raise RegistryValidationError(
         f"official numeric field {joined_field.semantic_entry.export_field_id!r} has ambiguous content {content!r}",

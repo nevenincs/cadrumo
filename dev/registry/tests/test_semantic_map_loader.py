@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import M303ProrrataActivityProjectionField, M303ProrrataActivityProjectionRef
-from cadrumo.domain.calculations.registry import RegistryValidationError
+from cadrumo.domain.calculations.registry import ExportComputedKey, ExportDraftAttribute, RegistryValidationError
 
 from .. import SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION, load_semantic_map
 
@@ -61,6 +61,36 @@ sheet = "Registro tipo 1"
 source_row = 14
 source_cell = "A14"
 ordinal = 1
+record_identity = "registro-tipo-1"
+"""
+
+_DRAFT_AND_COMPUTED_ENTRIES = """
+[[entries]]
+export_field_id = "registro-tipo-1.filing-year"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[entries.anchor]
+sheet = "Registro tipo 1"
+source_row = 15
+source_cell = "A15"
+ordinal = 2
+record_identity = "registro-tipo-1"
+
+[[entries]]
+export_field_id = "registro-tipo-1.no-activity"
+kind = "computed"
+computed_key = "m303_no_activity_marker"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[entries.anchor]
+sheet = "Registro tipo 1"
+source_row = 16
+source_cell = "A16"
+ordinal = 3
 record_identity = "registro-tipo-1"
 """
 
@@ -159,6 +189,22 @@ def test_loader_is_the_sole_projection_ref_hydration_boundary(tmp_path: Path) ->
     assert projection_ref.slot == 1
     assert projection_ref.field is M303ProrrataActivityProjectionField.CNAE
     assert projection_ref.casilla_id == "500"
+
+
+def test_loader_hydrates_draft_and_computed_tokens_once_into_the_closed_vocabulary(tmp_path: Path) -> None:
+    """Real authored tokens enter the map through the same strict loader boundary."""
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    _write(
+        root / "0001-authority.toml",
+        _fragment(fragment_id="authority", body=_RECORD + _DRAFT_AND_COMPUTED_ENTRIES),
+    )
+
+    semantic_map = load_semantic_map(root)
+
+    draft_entry, computed_entry = semantic_map.entries
+    assert draft_entry.draft_attribute is ExportDraftAttribute.FILING_YEAR
+    assert computed_entry.computed_key is ExportComputedKey.M303_NO_ACTIVITY_MARKER
 
 
 def test_loader_preserves_projection_record_occurrence_authority(tmp_path: Path) -> None:
@@ -451,7 +497,13 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
             "freeze_toml",
             "read_toml",
         },
-        "cadrumo.domain.calculations.registry": {"ModeloId", "RegistryValidationError", "SourceRefId"},
+        "cadrumo.domain.calculations.registry": {
+            "ExportComputedKey",
+            "ExportDraftAttribute",
+            "ModeloId",
+            "RegistryValidationError",
+            "SourceRefId",
+        },
         "_semantic_map": {"M303VariableEnvelopeSemantic", "SemanticMap", "SemanticMapEntry", "SemanticMapRecord"},
     }
     assert direct_imports == {("re", None)}
