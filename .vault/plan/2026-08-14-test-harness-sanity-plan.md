@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-14'
-body_hash: 'sha256:25c54333050bac75a9699948214278582eca501adeb7c829055126005e74051e'
+body_hash: 'sha256:d18609ecc4aa1b9307981e36f707312c64f7beffef12d5cba58fd3a4fbd607ac'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -119,7 +119,7 @@ Replace every reported production mutation with real input or explicit productio
 
 - [x] `W07.P23.S75` - Replace the OFX optional-extra monkeypatch with real behavior; `src/cadrumo/adapters/inbound/financial/providers/tests/test_ofx.py`.
 - [x] `W07.P23.S76` - Replace previous-filing exception mutation with reachable real behavior; `src/cadrumo/application/calculations/tests/test_previous_filing_absence_versus_malformed.py`.
-- [ ] `W07.P23.S77` - Replace relation-allowance mutation with an explicit production input; `src/cadrumo/domain/calculations/registry/tests/test_relation_closure.py`.
+- [x] `W07.P23.S77` - Replace relation-allowance mutation with an explicit production input; `src/cadrumo/domain/calculations/registry/tests/test_relation_closure.py`.
 - [ ] `W07.P23.S78` - Replace previous-filing revision-selector mutation with real registry input; `src/cadrumo/domain/calculations/registry/tests/test_validate_previous_filing_year_coverage.py`.
 - [ ] `W07.P23.S79` - Restore the no-monkeypatch gate and discriminating controls to green; `src/cadrumo/tests/test_monkeypatch_inventory.py`.
 

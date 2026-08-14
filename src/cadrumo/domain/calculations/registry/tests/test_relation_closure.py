@@ -22,7 +22,11 @@ from .._relations import (
 from .._schema import ModeloDefinition, ModeloRevision
 from .._schema_surfaces import RelationDefinition, RelationPeriodAlignment, RelationRevisionSelector
 from .._validate import RegistryValidator
-from .._validate_relation_sources import validate_relation_closure, validate_slot_source_hygiene
+from .._validate_relation_sources import (
+    RelationSourceYearCoverageAllowance,
+    validate_relation_closure,
+    validate_slot_source_hygiene,
+)
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -649,12 +653,8 @@ def test_a_non_observation_backed_relation_is_silent_beyond_its_latest_year_but_
     assert not any(str(year) in failure for year in range(2026, 2031) for failure in failures), failures
 
 
-def test_allowance_suppresses_the_genuine_gap_and_reports_a_stale_entry(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_allowance_suppresses_the_genuine_gap_and_reports_a_stale_entry() -> None:
     """A matching allowance suppresses its finding; a non-matching one is reported stale."""
-    from .. import _validate_relation_sources as _module
-
     modelos, _catalogues = _committed_tree()
     mutated_modelos, relation = _m130_relation_reading_m100(
         modelos,
@@ -662,7 +662,7 @@ def test_allowance_suppresses_the_genuine_gap_and_reports_a_stale_entry(
     )
     modelos_by_id = {modelo.id: modelo for modelo in mutated_modelos}
 
-    matching_allowance = _module._RelationSourceYearCoverageAllowance(
+    matching_allowance = RelationSourceYearCoverageAllowance(
         relation_id=relation.id,
         source_modelo="100",
         source_period="0A",
@@ -671,7 +671,7 @@ def test_allowance_suppresses_the_genuine_gap_and_reports_a_stale_entry(
         reason="test fixture: Modelo 100's own corpus floor (2020) postdates this relation's own start (2019).",
         discharge="Author Modelo 100 registry revisions for filing years 2018 and 2019.",
     )
-    stale_allowance = _module._RelationSourceYearCoverageAllowance(
+    stale_allowance = RelationSourceYearCoverageAllowance(
         relation_id=relation.id,
         source_modelo="100",
         source_period="0A",
@@ -680,9 +680,11 @@ def test_allowance_suppresses_the_genuine_gap_and_reports_a_stale_entry(
         reason="test fixture: an allowance that does not match any real finding.",
         discharge="n/a -- this entry exists only to prove staleness detection.",
     )
-    monkeypatch.setattr(_module, "_ALLOWANCES", (matching_allowance, stale_allowance))
-
-    failures = validate_relation_closure(mutated_modelos, modelos_by_id)
+    failures = validate_relation_closure(
+        mutated_modelos,
+        modelos_by_id,
+        source_year_coverage_allowances=(matching_allowance, stale_allowance),
+    )
 
     assert not any("2018-2019" in failure and "lacks" in failure for failure in failures), failures
     assert any(
@@ -691,9 +693,7 @@ def test_allowance_suppresses_the_genuine_gap_and_reports_a_stale_entry(
     ), failures
 
 
-def test_a_widened_gap_is_not_silently_absorbed_by_the_narrower_allowance(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_a_widened_gap_is_not_silently_absorbed_by_the_narrower_allowance() -> None:
     """The same START year with a LARGER end must not match the documented allowance.
 
     Dropping Modelo 100's 2020 revision from the candidate set widens the
@@ -701,8 +701,6 @@ def test_a_widened_gap_is_not_silently_absorbed_by_the_narrower_allowance(
     naming 2018 THROUGH 2019 specifically must not silently absorb the
     wider gap -- the match is exact, not start-year-only.
     """
-    from .. import _validate_relation_sources as _module
-
     modelos, _catalogues = _committed_tree()
     mutated_modelos, relation = _m130_relation_reading_m100(
         modelos,
@@ -715,7 +713,7 @@ def test_a_widened_gap_is_not_silently_absorbed_by_the_narrower_allowance(
     mutated_modelos = _replace_modelo(mutated_modelos, mutated_100)
     modelos_by_id = {modelo.id: modelo for modelo in mutated_modelos}
 
-    matching_allowance = _module._RelationSourceYearCoverageAllowance(
+    matching_allowance = RelationSourceYearCoverageAllowance(
         relation_id=relation.id,
         source_modelo="100",
         source_period="0A",
@@ -724,9 +722,11 @@ def test_a_widened_gap_is_not_silently_absorbed_by_the_narrower_allowance(
         reason="test fixture, deliberately too narrow for the widened gap below.",
         discharge="n/a",
     )
-    monkeypatch.setattr(_module, "_ALLOWANCES", (matching_allowance,))
-
-    failures = validate_relation_closure(mutated_modelos, modelos_by_id)
+    failures = validate_relation_closure(
+        mutated_modelos,
+        modelos_by_id,
+        source_year_coverage_allowances=(matching_allowance,),
+    )
 
     assert any("2018-2020" in failure and relation.id in failure for failure in failures), failures
     assert any("stale relation source-year-coverage allowance" in failure for failure in failures), failures
