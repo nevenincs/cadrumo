@@ -11,6 +11,7 @@ from ....application.wizard import _catalogue as _wizard_catalogue
 from ....application.wizard import _persistence as _wizard_persistence
 from ....core.aggregation import BindingSourceKind
 from ....core.resources import resources
+from ....domain.calculations.registry import select_revision
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
@@ -129,7 +130,11 @@ def _create_m303_work_unit() -> str:
         filing_year=2025,
         period="1T",
         revision=str(
-            resources().modelos.authority.inspect_revision("303", filing_year=2025, period="1T").revision_id,
+            select_revision(
+                resources().modelos.authority.modelo("303"),
+                filing_year=2025,
+                period="1T",
+            ).id,
         ),
     )
 
