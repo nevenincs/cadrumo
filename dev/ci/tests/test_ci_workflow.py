@@ -61,6 +61,12 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
 
 _FULL_WORKFLOW = Path(__file__).resolve().parents[3] / ".github" / "workflows" / "ci-full.yml"
 _REPOSITORY_ROOT = _WORKFLOW.parents[2]
+_PYPROJECT = _REPOSITORY_ROOT / "pyproject.toml"
+#: Per-test wall ceiling for the harness lane's combined real-proof pass, in
+#: seconds. Deliberately above the ini default: this lane's subject is a real
+#: child pytest that collects the whole first-party corpus, which takes minutes
+#: by design rather than by defect.
+_HARNESS_WALL_CEILING_SECONDS = 900
 
 
 def _declared_harness_members() -> tuple[str, ...]:
@@ -120,10 +126,35 @@ def test_harness_recipe_runs_every_real_proof_outer_serially_and_non_vacuously()
     pytest_prefix = "uv run --no-sync pytest -q -m integration"
     assert commands == (
         *(f"{pytest_prefix} --collect-only -n0 {member}" for member in members),
-        f"{pytest_prefix} -rsf -n0 {' '.join(members)}",
+        f"{pytest_prefix} -rsf -n0 --timeout={_HARNESS_WALL_CEILING_SECONDS} {' '.join(members)}",
     )
     assert all("-n0" in command for command in commands)
     assert all("||" not in command and ";" not in command for command in commands)
+
+
+def test_the_harness_real_proof_outruns_the_default_per_test_wall_ceiling() -> None:
+    """The lane raises its own wall ceiling, because its subject legitimately runs minutes.
+
+    One member recursively collects the entire first-party corpus in a real
+    child pytest. Measured at 75 s on a quiet tree and 272 s on a loaded one,
+    against a 300 s ini default -- so under load the default kills a HEALTHY
+    proof and reports it as a harness failure, which is the least useful thing
+    a verdict can do. The raised ceiling belongs to the combined real-proof
+    pass only; the collect-only preflights stay on the default, since they do
+    no work beyond importing.
+    """
+    ini_ceiling = int(re.search(r"(?m)^timeout\s*=\s*(\d+)", _PYPROJECT.read_text(encoding="utf-8")).group(1))
+    commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-harness")
+    real_proof = commands[-1]
+
+    assert ini_ceiling < _HARNESS_WALL_CEILING_SECONDS, (
+        f"the harness ceiling ({_HARNESS_WALL_CEILING_SECONDS}s) must exceed the ini default ({ini_ceiling}s), "
+        "or raising it accomplishes nothing"
+    )
+    assert f"--timeout={_HARNESS_WALL_CEILING_SECONDS}" in real_proof
+    assert all("--timeout=" not in command for command in commands[:-1]), (
+        "only the combined real-proof pass needs the raised ceiling; a preflight that needs it is doing real work"
+    )
 
 
 def test_harness_member_preflight_rejects_empty_collection_even_when_another_member_exists(tmp_path: Path) -> None:

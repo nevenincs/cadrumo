@@ -462,6 +462,13 @@ harness_exclusions := prepend("--ignore=", harness_members)
 test-ratchets:
     @uv run --no-sync pytest -q -p no:cacheprovider -rsf src/cadrumo/tests/test_test_inventory.py src/cadrumo/tests/test_marker_integrity.py src/cadrumo/tests/test_relative_imports_only.py src/cadrumo/tests/test_no_skip_xfail.py src/cadrumo/tests/test_mock_inventory.py src/cadrumo/tests/test_monkeypatch_inventory.py src/cadrumo/tests/test_no_broad_exception_raises.py src/cadrumo/tests/test_no_bare_except.py src/cadrumo/tests/test_no_tautology.py --tb=short
 
+# The real-proof pass raises the per-test wall ceiling above the product suite's
+# 300 s ini default, for the reason `test-dev-ci` already states: this lane's
+# subject is a real child pytest, and one member recursively collects the whole
+# first-party corpus. That legitimately runs minutes -- measured at 75 s on a
+# quiet tree and 272 s on a loaded one -- so the default ceiling kills a healthy
+# proof under load and reports it as a harness failure. Only this lane is
+# raised; 900 s still kills a genuine wedge in minutes.
 # Run the dedicated harness verdict outer-serially. Each explicit owned member
 # collects separately before the combined real-proof run, so pytest exit 5
 # exposes either collapsed proof without inventing another marker. Every call
@@ -471,7 +478,7 @@ test-ratchets:
 test-harness:
     @uv run --no-sync pytest -q -m integration --collect-only -n0 {{harness_worker_hook}}
     @uv run --no-sync pytest -q -m integration --collect-only -n0 {{harness_full_corpus}}
-    @uv run --no-sync pytest -q -m integration -rsf -n0 {{harness_members}}
+    @uv run --no-sync pytest -q -m integration -rsf -n0 --timeout=900 {{harness_members}}
 
 # Run the unit test suite in parallel, ignoring workbook parity tests. Quiet
 # progress; failures shown. `durations` is optional and, when set, prints
