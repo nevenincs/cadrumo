@@ -1679,26 +1679,18 @@ def _invoice_line_iva_observation(
             deduction_authority=deduction_authority,
         )
     category = invoice.iva_category
-    if category is None:
-        return _standard_invoice_line_iva_observation(
+    declared_flow = _DECLARED_CATEGORY_BASE_ONLY_FLOWS.get(category) if category is not None else None
+    if category is not None and declared_flow is not None and invoice.kind is InvoiceKind.ISSUED:
+        return _declared_category_base_only_observation(
             ledger_id=ledger_id,
             invoice=invoice,
             line=line,
             devengo_date=devengo_date,
             recargo_amount=recargo_amount,
+            category=category,
+            flow_direction=declared_flow,
         )
-    declared_flow = _DECLARED_CATEGORY_BASE_ONLY_FLOWS.get(category)
-    if declared_flow is not None:
-        if invoice.kind is InvoiceKind.ISSUED:
-            return _declared_category_base_only_observation(
-                ledger_id=ledger_id,
-                invoice=invoice,
-                line=line,
-                devengo_date=devengo_date,
-                recargo_amount=recargo_amount,
-                category=category,
-                flow_direction=declared_flow,
-            )
+    if category is not None and category not in _BASE_ONLY_ROUTED_CATEGORIES:
         # The declared treatment wins over the rate slot, which is what the
         # bank-transaction path has always done and what this path did not. The
         # slot cannot express a reverse charge at all: the supplier charges
@@ -1728,7 +1720,7 @@ def _invoice_line_iva_observation(
             category=category,
             deduction_authority=deduction_authority,
         )
-    if category not in _BASE_ONLY_ROUTED_CATEGORIES:
+    if category is None or category not in _BASE_ONLY_ROUTED_CATEGORIES:
         # No declared treatment at all: the rate slot is the only signal there
         # is, and the standard-case classification is the right reading of it.
         # ``category is None`` is folded into this membership test rather than
