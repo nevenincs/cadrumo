@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:eb7ef03f511e6f44188611320cd1e6536675dc66871e960643a0141cede9b5ce'
+body_hash: 'sha256:c331af28725be063a0c962b82b315fa22df5846207cdf6cade0cbefbe5d6db31'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-08-aeat-design-relayout-boundary-plan]]"
@@ -56,12 +56,23 @@ directive is being scoped and recorded as its own decision record by another
 agent, citing the sequencing audit — not this ledger, and not me.
 
 **What I independently confirmed, directly against the tree today:**
-- Exactly 6 of 73 modelos under `src/cadrumo/_data/registry/aeat/modelos/`
-  declare any `export`/`export_layouts` directory at all: `100`, `131`, `145`,
-  `180`, `349`, `720`. Modelo 303, Modelo 390, and the Impuesto sobre
-  Sociedades modelos (`200`/`220`) are not among them — so IVA and sociedades
-  currently have no path to a filing artifact, and most of the retención
-  family (everything except 131/145/180/349) does not either.
+- **CORRECTION, made explicit rather than silently fixed:** this bullet
+  originally read "exactly 6 of 73 modelos... declare any `export`/`export_layouts`
+  directory" and listed Modelo 390 as NOT among them. That was measured by a
+  raw directory grep at the time and has since been superseded — a same-session
+  independent reconciliation
+  (`2026-08-14-registry-campaign-sequencing-figure-reconciliation-audit`, using
+  `load_registry_tree` rather than a directory listing) found the true count is
+  **7 of 73**, because Modelo 390 regained all four of its revisions' real,
+  resolved export layouts after this bullet was first written (another agent's
+  work landing mid-session on this shared worktree, not an error in either
+  measurement at the time each was taken). The corrected set is `100`, `131`,
+  `145`, `180`, `349`, `390`, `720`. Modelo 303 and the Impuesto sobre
+  Sociedades modelos (`200`/`220`) are still not among them — IVA's Modelo 303
+  half and sociedades still have no path to a filing artifact, and most of the
+  retención family (everything except 131/145/180/349) still does not either —
+  so the correction narrows which modelos are blocked, it does not change the
+  standing purpose gap this item exists to report.
 - Modelo 303 does not have an `export`/`export_layouts` directory in the tree
   today; instead each revision carries a `support_removal_decisions/`
   directory. History is more tangled than "never" on a literal reading — an
@@ -73,7 +84,8 @@ agent, citing the sequencing audit — not this ledger, and not me.
 - Modelo 390 lost its export layouts THE SAME DAY, in the annual-epoch split
   commit `f9f3f77704` — confirmed directly: that commit adds
   `0001-export-layout-support-removal.toml` files alongside the split, one per
-  revision.
+  revision. It has since regained all four (see correction above); recording
+  both facts because the loss was real and dated, and so was the recovery.
 - I traced every production consumer of `support_removal_decisions` /
   `SupportRemovalDecision` myself (grep across `domain/` and `application/`,
   excluding tests): identity validation (`_validate_revision_identity.py`),

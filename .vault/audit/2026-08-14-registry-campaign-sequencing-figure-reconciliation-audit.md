@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:af2c0e8f669b767ecdd668e87ede5168e054d31dee6712058b18ad79279c93e6'
+body_hash: 'sha256:add191d96ae19586c4ea8fdf2478678eaa598690550327564fb539b30626c2d2'
 related:
   - "[[2026-08-14-registry-campaign-sequencing-audit]]"
   - "[[2026-08-14-registry-campaign-sequencing-operator-attestation-ledger-audit]]"
@@ -107,7 +107,40 @@ overlap and no shared rate value between an ordinary and a transitorio
 binding at any revision. **The retraction is independently confirmed: there
 is no double-count.**
 
-### Figure reconciliation at HEAD | critical | CONTRADICTED: the temporal-coverage classification "7 gap / 9 clean / 57 undecidable" does not hold at HEAD
+### Figure reconciliation at HEAD | critical | AMENDS the finding below: the real defect is structural, and the UNDECIDABLE verdict itself has since been retired
+
+Two corrections to the finding directly below, from team-lead, after this
+audit landed.
+
+**The structural point outranks the count.** The finding below leads with
+"UNDECIDABLE is 67 not 57" as if the headline defect were a wrong number. It
+is not. The three named categories were never mutually exclusive — modelo
+303 has revisions in BOTH the proven-gap and undecidable lists at once — so
+`7 + 9 + 57 = 73` was arithmetic performed over overlapping sets. No set of
+values could have made that framing correct, because the framing itself
+assumed one bucket per modelo when the real unit of judgement is the
+REVISION. That is the finding to lead with; the wrong counts are a
+consequence of it, not the defect itself.
+
+**Independent corroboration, for the record.** The span-gate's own author
+caught the same modelo-level-tally error independently and reported 67
+undecidable modelos, "0 of 73 fully clean," and 3 of 97 revisions passing —
+before this audit's measurement reached team-lead. Two independent
+derivations reaching the same numbers by different routes is stronger
+evidence than either alone, and is recorded here for that reason.
+
+**The UNDECIDABLE verdict itself is retired.** Since this audit's finding
+below was written, the operator has ruled the category out of existence:
+there is no longer an UNDECIDABLE verdict, only proven or failing. The
+finding below still correctly describes what was true when it was measured
+— including why the old three-bucket framing could never have been sound —
+but it must not be read as describing the CURRENT verdict space. Restating
+"proven gap / proven clean / undecidable" as a live three-way split, with any
+numbers, is now itself the same error one level up. Treat the finding below
+as a historical record of what was wrong and why, not as the present state
+of the gate.
+
+### Figure reconciliation at HEAD | critical | RETIRED (see amendment above) — CONTRADICTED: the temporal-coverage classification "7 gap / 9 clean / 57 undecidable" does not hold at HEAD
 
 Called `test_every_modelo_revision_span_is_corpus_proven_never_undecidable`
 directly (its own real implementation, not a re-derivation) and parsed its
