@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-14'
-body_hash: 'sha256:b2035639bae7d2dc61c8069a9cea52f7e00d656cf133bafdddf8ac515b7851cc'
+body_hash: 'sha256:58d8b2870bf4d23f69e2d62e74ec488621a17c6d2c1cfd21467970d403c59028'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -107,6 +107,11 @@ Complete root source development and packaging census remediation with no unclas
 - [x] `W07.P21.S103` - Give the re-export-bridge gate a declared reach over the test tree instead of silent exclusion; `dev/quality/import_hygiene_scan.py`.
 - [x] `W07.P21.S104` - Collapse every identical-constraint fixture cluster to one definition preserving scope and autouse reach; `src/cadrumo`.
 - [x] `W07.P21.S105` - Key the ownership manifest disposition on full constraint shape rather than repeated name; `dev/quality/fixture_ownership.py, dev/quality/tests/test_fixture_census.py`.
+- [x] `W07.P21.S106` - Detect one fixture behaviour living under many names by keying the census on body rather than name; `dev/quality/fixture_census.py, dev/quality/tests/test_fixture_census.py`.
+- [ ] `W07.P21.S107` - Give each aliased fixture behaviour one canonical home and one name preserving per-site lifecycle; `src/cadrumo`.
+- [x] `W07.P21.S108` - Adjudicate the substitutable secure-storage-root fixture pair the manifest now refuses on; `src/cadrumo/application/setup/tests, src/cadrumo/application/wizard/tests`.
+- [x] `W07.P21.S109` - Classify factory-bound fixtures as manifest rows with per-binding identity and argument evidence; `dev/quality/fixture_ownership.py, dev/quality/tests/test_fixture_census.py`.
+- [x] `W07.P21.S110` - Sweep test helper functions assertion helpers and builders for drift the fixture census cannot see; `src/cadrumo, dev`.
 
 ### Phase `W07.P22` - unify marker and live-import enforcement
 
