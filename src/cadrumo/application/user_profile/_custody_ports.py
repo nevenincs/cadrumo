@@ -75,6 +75,45 @@ class ProfileCustodyPasswordMaterialPort(Protocol):
         ...
 
 
+class ProfilePersistedSessionPort(Protocol):
+    """Persisted session record fields needed by login orchestration."""
+
+    @property
+    def profile_id(self) -> UUID:
+        """The profile this receipt accelerates."""
+        ...
+
+    @property
+    def session_id(self) -> UUID:
+        """The receipt's own identity."""
+        ...
+
+    @property
+    def custody_generation(self) -> int:
+        """The custody generation this receipt was minted against."""
+        ...
+
+    @property
+    def dek_epoch(self) -> str:
+        """The DEK epoch this receipt was minted against."""
+        ...
+
+    @property
+    def issued_at(self) -> datetime:
+        """When the receipt was minted."""
+        ...
+
+    @property
+    def idle_deadline(self) -> datetime:
+        """The sliding deadline a resume may advance."""
+        ...
+
+    @property
+    def absolute_deadline(self) -> datetime:
+        """The immutable cap no resume can extend."""
+        ...
+
+
 class ProfileCustodyEnvelopePort(Protocol):
     """Opaque password-envelope contract accepted by custody transactions."""
 
@@ -100,4 +139,5 @@ __all__ = [
     "ProfileCustodyPasswordMaterialPort",
     "ProfileCustodyRecoveryEnvelopePort",
     "ProfileCustodySentinelPort",
+    "ProfilePersistedSessionPort",
 ]
