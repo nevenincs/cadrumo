@@ -1,22 +1,11 @@
-"""Every test module in the tree imports cleanly under collection.
+"""Bounded real-subprocess controls for the collectability detector.
 
-A collection error is quiet in a way a failing test is not: the module
-contributes no failing test to a summary, it simply stops contributing at
-all. A rename that sweeps the code consumers and misses a test module leaves
-that module uncollectable, its cases silently absent, and the run still
-reports green. One module sat that way for three days carrying thirteen dead
-tests.
-
-The gate is absolute rather than ratcheted. The tree collects clean today, so
-there is no baseline to enshrine and no contaminated figure to get wrong: a
-gate with no stored expectation cannot be wrong about the past.
-
-WHAT THIS DOES NOT PROVE, and both gaps stay open deliberately. Collectable is
-not passing — a module that imports cleanly may still fail every case it
-carries, and this gate says nothing about that. Nor does it say anything about
-whether any lane RUNS a module: a module can be collectable, be named by a
-lane, and still never execute. That execution gap is the sibling failure this
-gate does not close, and it stays visible rather than being implied away.
+The expensive full-corpus collection proof lives in
+:mod:`cadrumo.tests.test_full_corpus_collectability_harness`, where the
+dedicated outer-serial harness verdict runs it explicitly.  These controls
+remain in the routine unit lane: they use small malformed source trees to
+prove that the detector reports import failures, and they verify that source
+discovery cannot collapse to an empty corpus.
 """
 
 from __future__ import annotations
@@ -150,23 +139,6 @@ def _plant(directory: Path, stem: str, body: str) -> Path:
     module = directory / f"{stem}.py"
     module.write_text(textwrap.dedent(body).lstrip(), encoding="utf-8")
     return module.relative_to(_REPO_ROOT)
-
-
-def test_every_test_module_in_the_tree_is_collectable() -> None:
-    """No module anywhere in the first-party corpus fails to import.
-
-    The collected tally is asserted alongside the error list because a clean
-    error list proves nothing on its own: a run that collected nothing
-    reports no errors either.
-    """
-    roots = discover_test_roots()
-    broken, collected = collection_report(roots)
-
-    assert collected >= _MINIMUM_PLAUSIBLE_MODULE_COUNT, (
-        f"collection reported only {collected} tests across {len(roots)} roots — "
-        f"the run did not reach the corpus, so a clean error list means nothing"
-    )
-    assert not broken, "test modules that cannot be collected:\n" + "\n".join(broken)
 
 
 def test_discovery_finds_the_real_corpus() -> None:

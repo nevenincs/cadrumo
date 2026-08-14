@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-14'
-body_hash: 'sha256:604d2fd454b1db7d0918ea4c7b454041e3898d0e577e6e6f09b21546756b003a'
+body_hash: 'sha256:25808ede47fd10647ba2529dd318b7533ce6978e42d097480e98ea1639076228'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -127,8 +127,8 @@ Replace every reported production mutation with real input or explicit productio
 
 Retain installed-process evidence without nested pools or recursive collection in routine unit execution.
 
-- [ ] `W07.P24.S80` - Move installed-hook worker-pool proofs out of routine unit execution; `src/cadrumo/tests/test_worker_count_hook.py`.
-- [ ] `W07.P24.S81` - Move full-corpus collectability out of unit while retaining bounded controls; `src/cadrumo/tests/test_every_test_module_is_collectable.py`.
+- [x] `W07.P24.S80` - Move installed-hook worker-pool proofs out of routine unit execution; `src/cadrumo/tests/test_worker_count_hook.py`.
+- [x] `W07.P24.S81` - Move full-corpus collectability out of unit while retaining bounded controls; `src/cadrumo/tests/test_every_test_module_is_collectable.py`.
 - [ ] `W07.P24.S82` - Align worker tests with repository-owned six-worker authority and explicit overrides; `src/cadrumo/tests/_worker_count_hook.py, src/cadrumo/tests/test_worker_count_hook.py`.
 - [ ] `W07.P24.S83` - Measure routine unit and dedicated harness runtime without nested outer xdist; `dev/ci/tests/test_machine_aware_load.py`.
 
