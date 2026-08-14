@@ -144,19 +144,11 @@ def _coerce_profile_fact_value(value: object) -> object:
     return value
 
 
-class UserProfileStatus(StrEnum):
-    """Lifecycle status for a live profile root.
+class ProfileSetupState(StrEnum):
+    """The only current fact-record readiness state."""
 
-    ``SETUP_INCOMPLETE`` marks a profile minted at the start of the
-    interactive setup flow whose answer set is still being collected: it
-    is live (listed, resumable, its tax id reserved against duplicates)
-    but not workable — modelo work is refused until setup completes and
-    the record transitions to ``ACTIVE`` via :meth:`UserProfileRecord.complete_setup`.
-    """
-
-    ACTIVE = "active"
-    SETUP_INCOMPLETE = "setup_incomplete"
-    TOMBSTONED = "tombstoned"
+    INCOMPLETE = "incomplete"
+    COMPLETE = "complete"
 
 
 def new_profile_id() -> str:
@@ -264,7 +256,7 @@ def _validate_payload_schema_identity(schema_id: str, schema_version: int, *, su
 
 
 class UserProfileRecord(BaseModel):
-    """Live secure user-profile aggregate before persistence encoding."""
+    """The current typed fact record, without label or removal projections."""
 
     model_config = _STRICT_FROZEN
 
@@ -275,27 +267,13 @@ class UserProfileRecord(BaseModel):
     # is itself a pre-current payload the identity guard has to refuse.
     schema_version: int = Field(default_factory=_canonical_payload_schema_version, ge=1)
     profile_id: _ProfileId
-    display_name: _DisplayName
-    status: UserProfileStatus = UserProfileStatus.ACTIVE
     facts: tuple[UserProfileFact, ...] = Field(default=())
-    # Lifecycle instants, held to the canonical UTC contract. The ordering and
-    # tombstone validators below compare these values, and a naive one compares
-    # against an aware one by raising rather than by being wrong -- so the
-    # invariants they enforce were only as sound as the timezone discipline of
-    # whoever constructed the record. Encrypted hydration could carry a naive
-    # value straight back into live profile state.
+    setup_state: ProfileSetupState = ProfileSetupState.COMPLETE
+    record_revision: int = Field(default=1, ge=1)
+    previous_record_digest: ContentDigest | None = None
+    content_digest: str = ""
     created_at: UtcInstant = Field(default_factory=utc_now)
     updated_at: UtcInstant = Field(default_factory=utc_now)
-    removed_at: UtcInstant | None = None
-
-    @field_validator("status", mode="before")
-    @classmethod
-    def _parse_status(cls, value: object) -> object:
-        if isinstance(value, UserProfileStatus):
-            return value
-        if isinstance(value, str):
-            return UserProfileStatus(value)
-        return value
 
     @model_validator(mode="after")
     def _validate_payload_schema(self) -> UserProfileRecord:
@@ -303,62 +281,19 @@ class UserProfileRecord(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def _validate_lifecycle(self) -> UserProfileRecord:
+    def _validate_current_record(self) -> UserProfileRecord:
         if self.created_at > self.updated_at:
             raise UserProfileValidationError("created_at must be before or equal to updated_at")
-        if self.status is not UserProfileStatus.TOMBSTONED and self.removed_at is not None:
-            raise UserProfileValidationError(f"{self.status.value} profiles must not carry removed_at")
-        if self.status is UserProfileStatus.TOMBSTONED and self.removed_at is None:
-            raise UserProfileValidationError("tombstoned profiles must carry removed_at")
+        if self.record_revision == 1 and self.previous_record_digest is not None:
+            raise UserProfileValidationError("first record revision must not carry a previous record digest")
+        if self.record_revision > 1 and self.previous_record_digest is None:
+            raise UserProfileValidationError("later record revision must carry the previous record digest")
+        computed = content_hash_hex(self.model_dump(mode="json", exclude={"content_digest"}))
+        if not self.content_digest:
+            object.__setattr__(self, "content_digest", computed)
+        elif self.content_digest != computed:
+            raise UserProfileValidationError("profile record content digest does not match its canonical content")
         return self
-
-    def complete_setup(self, *, completed_at: datetime | None = None) -> UserProfileRecord:
-        """Return an ``ACTIVE`` copy of a ``SETUP_INCOMPLETE`` profile root.
-
-        The one-way transition out of the interactive setup flow: fires at
-        the flow's final commit after flow-scope validation, never before.
-        Refuses any other source status so a tombstoned or already-active
-        record cannot be laundered through the setup transition.
-        """
-        if self.status is not UserProfileStatus.SETUP_INCOMPLETE:
-            raise UserProfileValidationError(
-                f"complete_setup requires a setup_incomplete profile; got {self.status.value}",
-            )
-        instant = completed_at or utc_now()
-        return self.model_copy(
-            update={
-                "status": UserProfileStatus.ACTIVE,
-                "updated_at": instant,
-            },
-        )
-
-    def tombstone(self, *, removed_at: datetime | None = None) -> UserProfileRecord:
-        """Return a tombstoned :class:`UserProfileRecord` copy of the live profile root."""
-        instant = removed_at or utc_now()
-        return self.model_copy(
-            update={
-                "status": UserProfileStatus.TOMBSTONED,
-                "updated_at": instant,
-                "removed_at": instant,
-            },
-        )
-
-    def reactivate(self, *, reactivated_at: datetime | None = None) -> UserProfileRecord:
-        """Return an active :class:`UserProfileRecord` copy of a tombstoned profile root.
-
-        The symmetric inverse of :meth:`tombstone`: clears ``removed_at``
-        and restores ``status`` to :attr:`UserProfileStatus.ACTIVE` so the
-        lifecycle invariant (``active`` profiles never carry
-        ``removed_at``) holds on the returned copy.
-        """
-        instant = reactivated_at or utc_now()
-        return self.model_copy(
-            update={
-                "status": UserProfileStatus.ACTIVE,
-                "updated_at": instant,
-                "removed_at": None,
-            },
-        )
 
 
 class UserProfileSnapshot(BaseModel):
