@@ -1,0 +1,743 @@
+##
+## Adjudication ledger for the derived modelo-specific registry module set.
+##
+## The SET is derived mechanically by ``dev.registry.modelo_embed_classification``
+## from three signals keyed on the core Modelo enum; only the classification and
+## its prose are authored here. A module the derivation yields and this ledger
+## does not name is a reconciliation failure, so a modelo-specific module added
+## later cannot ship unclassified.
+##
+## classification = "regulatory_data_embed"
+##     The module encodes a value the law fixes -- a rate, coefficient,
+##     threshold, ejercicio set, applicability condition, or operator-facing
+##     prose -- as a Python literal. ``justification`` names EXACTLY which
+##     content is the embed, because a module may be part embed and part
+##     machinery: the embed content migrates and is deleted, and what remains
+##     re-derives as machinery on the next run.
+## classification = "machinery"
+##     Parsing, projection, dispatch or validation code carrying no regulatory
+##     value. Every detected regulatory-literal occurrence must be answered by
+##     an ``evidence_disposition`` row, keyed by enclosing symbol, evidence kind
+##     and assigned name rather than by line number, so the reader can see why
+##     the literal is not regulatory data.
+## classification = "dead"
+##     Nothing under ``src/cadrumo`` imports the module. No derived module is
+##     dead at the time of writing.
+##
+
+[meta]
+schema_version = 1
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_applicability.py"
+classification = "regulatory_data_embed"
+justification = """
+The embed is the _MODELO_APPLICABILITY_RULES table and the reason strings it
+draws on (_ATTRIBUTION_PASS_THROUGH_REASON, the four _IMPATRIADO_* strings and
+the three _INCOMPLETE_* strings): one ModeloApplicabilityRule literal per
+modelo, each encoding who is obliged to file, on what condition, and the
+Spanish operator-facing sentence explaining the verdict. Both halves are
+registry-shaped data versioned by filing year -- the conditions belong in the
+applicability fragment family in the authoring tree, the Spanish sentences in
+the locale catalogues. What is NOT the embed, and survives: the rule model, the
+evaluation and routing functions, and the dispatch that turns a profile into a
+verdict. The 303 and 390 rows queue for the campaign-owned sweep; the rest
+migrate first, so the literal-carrying mechanism itself can only be removed
+once both halves have landed.
+"""
+destination = "registry applicability fragment family; Spanish verdict prose to the locale catalogues"
+tree_ownership = "mixed"
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_applicability_modelo202.py"
+classification = "regulatory_data_embed"
+justification = """
+The whole module is the Modelo 202 modalidad rule: which pago-fraccionado
+modality applies is fixed by LIS art. 40.2 and art. 40.3, and the four reason
+constants carry the Spanish operator-facing sentences that cite them. Both the
+condition and its prose are the applicability data the registry authoring tree
+owns. Nothing here is generic machinery -- the module exists only to state this
+one modelo's rule -- so it migrates whole and is then deleted.
+"""
+destination = "registry applicability fragment family; Spanish modality prose to the locale catalogues"
+tree_ownership = "unowned"
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_authority.py"
+classification = "machinery"
+justification = """
+Generic validated-authority construction: revision selection, snapshot assembly
+and the validation verdict. It carries no regulatory value. Its one
+Modelo.M303 branch is per-modelo SCHEMA divergence -- a generic type reaching
+for one modelo's private authority -- which is a separate defect class from a
+data embed and is tracked as such; classifying the module as an embed here
+would misdescribe the defect and put a generic authority module on a deletion
+list.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_bindings.py"
+classification = "machinery"
+justification = """
+The cross-family binding dispatch table and its re-exports. The modelo-specific
+names it carries are the M303 régimen-simplificado annual-summary SELECTOR and
+its validator: registry coordinates and a shape check, not a regulatory value.
+The values that selector routes live in registry TOML.
+"""
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "RegistryModeloObservation"
+kind = "filing_year_literal"
+symbol = "filing_year"
+reason = "pydantic ge/le bounds (2000..2099) on a filing-year field: a structural sanity range on an input, not a claim about which years the corpus covers."
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_censo_modelos.py"
+classification = "regulatory_data_embed"
+justification = """
+The embed is _CENSO_FOUNDATION_YEAR = 2025. It is a Python-resident filing year
+that decides which censo revision the foundation contract resolves and which
+snapshot cells it demands, so a corpus that gains or loses a censo year is
+answered by editing Python rather than registry data. The year belongs in the
+authoring tree alongside the other declared year data. The ownership routing
+and contract models around it are machinery and survive the extraction.
+"""
+destination = "registry authoring tree, beside the declared filing-year data"
+tree_ownership = "unowned"
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_counterpart_bindings.py"
+classification = "machinery"
+justification = """
+The counterpart aggregation resolver family: selector model, validator and the
+summation that feeds it. The one regulatory value it needs, the Modelo 347
+declaration floor, is not here -- it delegates to the single-home predicate in
+_m347_threshold, which reads the figure from the curated core constant channel.
+"""
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "CounterpartAggregationObservation"
+kind = "filing_year_literal"
+symbol = "rectified_year"
+reason = "pydantic ge/le bounds (2000..2099) on the rectified-year field: a structural sanity range on an input, not a regulatory year set."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_m347_declarable_party_ids"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') accumulator seed for the per-party summation; the sentinel zero the authority-flow rule names as an acceptable literal."
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_detail_record_bindings.py"
+classification = "machinery"
+justification = """
+The detail-record resolver family: per-row observation models and the row
+builders that project them. Its modelo-specific name, Modelo720RowObservation,
+is a record SHAPE, and every threshold that decides whether such a row is
+declarable is read from registry data rather than stated here.
+"""
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "AtributionMemberObservation._share_within_bounds"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') and Decimal('100') as the arithmetic bounds of a percentage share; a definitional range for the unit, not a rate the law fixes."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "Modelo720RowObservation._decimal_amount"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') fallback for an absent amount on a strict parse boundary; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "RefundOperationObservation._decimal_amount"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') fallback for an absent amount on a strict parse boundary; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_build_related_party_rows"
+kind = "decimal_literal"
+symbol = "bucket"
+reason = "Decimal('0') accumulator seed for the per-party bucket; a sentinel zero."
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_export_parse.py"
+classification = "regulatory_data_embed"
+justification = """
+The embed is _M100_LETTER_CASILLA_ID_FIRST_YEAR = 2024. AEAT changed the Modelo
+100 XML dictionary so casilla ids may be letters from a specific filing year;
+the year that change took effect is an AEAT publication fact versioned by
+filing year, and encoding it here makes the parser's acceptance rule
+un-versioned and invisible to registry validation. It belongs beside the export
+source declaration in the authoring tree, which already carries applies_from.
+The dictionary grammar, the parse functions and the parsed-value models are
+machinery and survive the extraction.
+"""
+destination = "registry export source declaration in the authoring tree"
+tree_ownership = "unowned"
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_formula_runtime.py"
+classification = "machinery"
+justification = """
+The formula dispatcher. It routes registry-authored operation graphs to
+evaluators and holds no rate, coefficient or threshold: every regulatory figure
+the M100 evaluators consume is resolved through the registry parameter and
+bracket accessors, so changing a rate is a registry edit and never a code edit.
+"""
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "<module>"
+kind = "decimal_literal"
+symbol = "_ONE"
+reason = "Decimal('1') arithmetic identity used as a multiplicative unit; a mathematical constant."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "<module>"
+kind = "decimal_literal"
+symbol = "_ZERO"
+reason = "Decimal('0') arithmetic identity and comparison sentinel; a mathematical constant."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_evaluate_m100_resolve_renta_inmobiliaria_imputada"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('100') converts a percentage-expressed casilla input to a fraction; unit conversion, while the imputation rate itself is resolved from a registry parameter."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_evaluate_m100_resolve_renta_inmobiliaria_imputada"
+kind = "decimal_literal"
+symbol = "share"
+reason = "Decimal('100') as the full-share denominator when no mixed-use split is declared; unit conversion, not a rate."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_m100_validate_imputation_days"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('366') caps declared days at the longest possible calendar year; a calendar constant with no AEAT-published counterpart."
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py"
+classification = "machinery"
+justification = """
+The IRNR and Modelo 210 formula-op evaluators. Every tipo de gravamen, tariff
+rung and convenio override the evaluators apply is resolved through the shared
+registry parameter, bracket and keyed-bracket accessors, and the UE/EEA country
+set the art. 24.6 expense condition tests comes from the contribuyente domain
+rather than from a literal here. The module is arithmetic and argument
+resolution over registry-authored inputs.
+"""
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "<module>"
+kind = "decimal_literal"
+symbol = "_ZERO"
+reason = "Decimal('0') arithmetic identity and comparison sentinel; a mathematical constant."
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_formula_runtime_m131.py"
+classification = "machinery"
+justification = """
+The Modelo 131 estimación-objetiva módulos evaluators. The módulo tables,
+índices correctores and minoración rates they apply are registry parameter and
+keyed-bracket rows resolved at evaluation time; the module contributes the
+Fase 1ª-3ª arithmetic and the advisory flags, not the figures. This is the
+first of the two per-modelo formula runtimes the inventory was required to
+classify rather than assume, and the evidence sweep found no encoded
+regulatory value in it.
+"""
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "<module>"
+kind = "decimal_literal"
+symbol = "_ZERO"
+reason = "Decimal('0') arithmetic identity and comparison sentinel; a mathematical constant."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "evaluate_m131_resolve_modulos_pequena_dimension_ignorado_flag"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('1') is the truthy value of an advisory boolean flag carried on a numeric casilla channel; a boolean encoding, not a rate."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "evaluate_m131_resolve_modulos_temporada_inicio_conflicto_flag"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('1') is the truthy value of an advisory boolean flag carried on a numeric casilla channel; a boolean encoding, not a rate."
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_invoice_bindings.py"
+classification = "machinery"
+justification = """
+The invoice resolver family: observation models, the per-fact aggregation, and
+the Modelo 349 operador totals parity check. Its modelo-specific names are
+record identifiers and binding-fact vocabularies; the Modelo 347 floor it needs
+is delegated to the single-home predicate in _m347_threshold, and every Modelo
+349 clave and total it builds is registry-declared.
+"""
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "<module>"
+kind = "regulatory_prose_literal"
+symbol = "_INVOICE_ALTERNATIVE_MEASURE_FACTS"
+reason = "English developer-facing rationale for an internal binding-fact classification; only the mapping's KEYS are consumed, the values are never rendered to an operator, so this is not locale-catalogue prose."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "InvoiceObservation"
+kind = "filing_year_literal"
+symbol = "rectified_year"
+reason = "pydantic ge/le bounds (2000..2099) on the rectified-year field: a structural sanity range on an input, not a regulatory year set."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "Modelo349OperadorTotalsParity"
+kind = "decimal_literal"
+symbol = "tolerance"
+reason = "Decimal('0') default parity tolerance, meaning exact equality; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_aggregate_invoice_binding"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') accumulator seed and empty-result value; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_aggregate_invoice_binding"
+kind = "decimal_literal"
+symbol = "total"
+reason = "Decimal('0') accumulator seed for the running total; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_build_operator_clave_period_rows"
+kind = "decimal_literal"
+symbol = "bucket"
+reason = "Decimal('0') accumulator seed for a per-clave period bucket; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_build_operator_clave_rows"
+kind = "decimal_literal"
+symbol = "bucket"
+reason = "Decimal('0') accumulator seed for a per-clave bucket; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_m347_declarable_party_ids"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') accumulator seed for the per-party summation handed to the shared threshold predicate; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "compute_modelo_349_operador_totals_parity"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') accumulator seed and zero-difference comparison in the parity check; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "compute_modelo_349_operador_totals_parity"
+kind = "decimal_literal"
+symbol = "base_row_total"
+reason = "Decimal('0') accumulator seed for the base-row total; a sentinel zero."
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_irnr_ledger_bindings.py"
+classification = "machinery"
+justification = """
+The IRNR ledger aggregation resolver: which ledger rows feed a Modelo 210
+income binding, and the unsupported-observation diagnostic that keeps an
+unrouted row visible. The Modelo.M210 reference is the routing coordinate; no
+rate or threshold is stated here.
+"""
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_irnr_income_aggregate"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') accumulator seed and empty-result value; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "unsupported_ledger_irnr_income_observations"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') comparison sentinel deciding whether an unrouted observation carries a magnitude worth reporting."
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_iva_wallet_relation_targets.py"
+classification = "machinery"
+justification = """
+The single declaration of the Modelo 303 compensación relation carve-out from
+the slot-source hygiene validator. Its contents are registry COORDINATES -- a
+binding id, revision ids and relation ids -- naming rows that already live in
+the authoring tree, not values the law fixes. Migrating identifiers into the
+tree they already point at would create a second spelling of the same fact.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_ledger_bindings.py"
+classification = "machinery"
+justification = """
+The ledger aggregation resolver family for the IVA, renta and OSS channels:
+observation models, per-fact aggregation and the unsupported-observation
+diagnostics. Its modelo-specific names are casilla routing sets naming
+registry-declared casillas; the rates applied to those rows arrive on the
+observations from the ledger, never as literals here.
+"""
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "<module>"
+kind = "regulatory_prose_literal"
+symbol = "_RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS"
+reason = "English developer-facing rationale for an internal binding-fact classification; only the mapping's KEYS are consumed, the values are never rendered to an operator, so this is not locale-catalogue prose."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "IvaLedgerObservation"
+kind = "decimal_literal"
+symbol = "applied_rate"
+reason = "Decimal('0') and Decimal('1') bound an applied rate expressed as a fraction; the definitional range of the unit, while the rate value itself arrives from the ledger row."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "IvaLedgerObservation"
+kind = "decimal_literal"
+symbol = "recargo_amount"
+reason = "Decimal('0') lower bound and default for a recargo amount; a sentinel zero on a non-negative money field."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_iva_aggregate"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') accumulator seed and empty-result value; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_oss_aggregate"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') accumulator seed and empty-result value; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_oss_is_declarable"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') comparison sentinel deciding whether an OSS row carries a magnitude; not a declaration threshold the law fixes."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_renta_gastos_estimacion_directa_aggregate"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') accumulator seed and empty-result value; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_renta_gastos_pago_fraccionado_aggregate"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') accumulator seed and empty-result value; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_renta_gastos_pago_fraccionado_reachability_probe"
+kind = "decimal_literal"
+symbol = "probe"
+reason = "Decimal('1.00') is the synthetic magnitude of a reachability probe observation; a fixture value with no regulatory meaning."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_renta_income_aggregate"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') accumulator seed and empty-result value; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_renta_income_is_declarable"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') comparison sentinel deciding whether a renta row carries a magnitude; not a declaration threshold the law fixes."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "unsupported_ledger_renta_gastos_estimacion_directa_observations"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') comparison sentinel deciding whether an unrouted observation carries a magnitude worth reporting."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "unsupported_ledger_renta_gastos_pago_fraccionado_observations"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') comparison sentinel deciding whether an unrouted observation carries a magnitude worth reporting."
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_ledger_impatriado_bindings.py"
+classification = "machinery"
+justification = """
+The impatriado ledger aggregation resolver for the Modelo 151 income channel.
+Whether the régimen especial applies is decided by the applicability data, not
+here; this module sums the routed rows and reports the unrouted ones.
+"""
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_impatriado_income_aggregate"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') accumulator seed and empty-result value; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_impatriado_income_is_declarable"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') comparison sentinel deciding whether an impatriado row carries a magnitude."
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_m303_differentiated_deduction_projection.py"
+classification = "machinery"
+justification = """
+Projection of the Modelo 303 differentiated-sector deduction inputs into the
+shape the calculation consumes, plus the regularisation total check. The
+prorrata percentages and sector definitions it projects arrive from registry
+data; the module contributes the reshaping and the consistency refusal.
+"""
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_sector_amounts"
+kind = "decimal_literal"
+symbol = "regularisation"
+reason = "Decimal('0') accumulator seed for the per-sector regularisation total; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_sector_amounts"
+kind = "decimal_literal"
+symbol = "total"
+reason = "Decimal('0') accumulator seed for the per-sector total; a sentinel zero."
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_validate_regularisation_total"
+kind = "decimal_literal"
+symbol = ""
+reason = "Decimal('0') zero-difference comparison asserting the sector totals reconcile; a sentinel zero."
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_m303_exonerado_390_projection.py"
+classification = "machinery"
+justification = """
+Projects whether a Modelo 303 filer is exonerated from the Modelo 390 annual
+summary into the shape the calculation consumes. The exoneration CONDITION is
+registry-declared; this module reads the declared facts and reshapes them, and
+the evidence sweep found no encoded regulatory value. It is one of the
+_m303_* modules that survive the embed teardown.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_m303_orden_constants.py"
+classification = "regulatory_data_embed"
+justification = """
+The module is orden content encoded as Python literals and migrates whole.
+SUPPORTED_EJERCICIOS is a declared filing-year set; EXPECTED_SEASONAL_INDEXES
+carries the three seasonal index coefficients and their day bands;
+EXPECTED_DIFFICULT_JUSTIFICATION_PCT is the difficult-justification percentage;
+_validate_generated_source_axis_shape states the Lorca 2022 reduction
+percentage as a Decimal('20') literal gated on the ejercicio; and
+EXPECTED_AGRICULTURAL_AXIS_COUNTS, EXPECTED_ACTIVITY_COUNT,
+EXPECTED_MODULE_COUNT and EXPECTED_MODULE_DISTRIBUTION are per-ejercicio census
+figures of the published orden's own tables. Every one is a fact the annual
+orden fixes and none can be edited without editing Python. The pinned 2022
+BOE/revision coordinate is a source reference and travels with the rest. The
+validation FUNCTIONS are a thin shell over these literals: with the data
+extracted, the shell has no independent purpose and goes with it.
+"""
+destination = "registry authoring tree: the annual-orden expectations beside the modelo 303 source declarations, and the ejercicio set in the declared filing-year data"
+tree_ownership = "campaign_owned"
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_m303_orden_keys.py"
+classification = "machinery"
+justification = """
+Deterministic key construction for annual-orden rows -- identity seeds and
+their digests. It carries no numeric literal at all beyond a digest truncation
+length, and states no regulatory fact. One of the _m303_orden_* parsing modules
+that survive the embed teardown.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_m303_orden_legal.py"
+classification = "regulatory_data_embed"
+justification = """
+The embed is the Lorca 2022 legal reference this module COMPILES rather than
+reads: its Spanish title and the 'disposición adicional cuarta.2' provision
+locator are authored here as string literals. A legal reference title and the
+provision that establishes a value are legal-catalogue content, and a Spanish
+operator-facing title is locale-catalogue content; authoring either in Python
+puts a grounding claim outside the surface registry validation checks. The
+reference-assembly functions around it are machinery and survive once the
+reference is declared in the tree.
+"""
+destination = "registry legal catalogue for the provision locator; Spanish title to the locale catalogues"
+tree_ownership = "campaign_owned"
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_m303_orden_manifest.py"
+classification = "machinery"
+justification = """
+Assembles the annual-orden manifest from the parsed source and hands it to the
+authority. It states no regulatory value: the expectations it enforces are
+imported from the constants module, so extracting those to the tree leaves this
+module reading declared data instead of a Python import. One of the
+_m303_orden_* parsing modules that survive the embed teardown.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_m303_orden_projection_compiler.py"
+classification = "machinery"
+justification = """
+Compiles the parsed raw annual-orden rows into the projection the authority
+serves. Its only numeric literal is a string truncation length. One of the
+_m303_orden_* parsing modules that survive the embed teardown.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_m303_orden_projection_models.py"
+classification = "regulatory_data_embed"
+justification = """
+Mostly machinery, with a specific embed that must come out before the rest can
+be called clean. _validate_projection_lorca_2022_reduction and
+_validate_snapshot_lorca_2022_reduction each state the Lorca reduction
+percentage as a Decimal('20') literal gated on ejercicio 2022, and
+_validate_projection_axis_shape, _validate_snapshot_source_authority and
+M303RegimenSimplificadoSnapshot's coordinate check gate on the same literal
+year. That is the same orden fact spelled a third and fourth time in Python.
+What is NOT the embed, and must survive: every projection and snapshot model in
+this module, and the pydantic ejercicio and percentage field bounds, which are
+structural ranges rather than regulatory values. With the reduction declared in
+the tree, the validators read it and the module re-derives as machinery.
+"""
+destination = "registry authoring tree: the Lorca 2022 reduction percentage and its ejercicio gate beside the modelo 303 annual-orden declarations"
+tree_ownership = "campaign_owned"
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_m303_orden_raw_models.py"
+classification = "regulatory_data_embed"
+justification = """
+Mostly machinery, with the same specific embed. _validate_source_lorca_2022_reduction
+states the Lorca reduction percentage as a Decimal('20') literal gated on
+ejercicio 2022 -- the third spelling of one orden fact across this module
+family. What is NOT the embed, and must survive: every raw parse model here,
+and their pydantic percentage (0..100), coefficient and ejercicio
+(2000..2099) field bounds, which are the definitional ranges of their units
+rather than values the orden fixes. With the reduction declared in the tree
+this module re-derives as machinery.
+"""
+destination = "registry authoring tree: the Lorca 2022 reduction percentage and its ejercicio gate beside the modelo 303 annual-orden declarations"
+tree_ownership = "campaign_owned"
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_m303_orden_resolution.py"
+classification = "machinery"
+justification = """
+Resolves an annual-orden coordinate to the projection that serves it. It states
+no regulatory value; its Modelo.M303 references are routing coordinates. One of
+the _m303_orden_* parsing modules that survive the embed teardown.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_m303_orden_source.py"
+classification = "machinery"
+justification = """
+Parses the annual-orden HTML source into raw rows. Its numeric literals are
+structural -- month and day-of-month ranges and a digest truncation length --
+and every figure it produces is read out of the source document rather than
+stated here. This is the parsing machinery the embed teardown deliberately
+keeps; deleting it would remove the only reader of the bundled orden source.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_m303_prorrata_activity_projection.py"
+classification = "machinery"
+justification = """
+Projects the Modelo 303 prorrata activity inputs into the shape the calculation
+consumes. The prorrata percentages themselves are declared inputs and registry
+data; the module contributes the reshaping. The evidence sweep found no encoded
+regulatory value. One of the _m303_* modules that survive the embed teardown.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_m303_regimen_simplificado_projection.py"
+classification = "machinery"
+justification = """
+Projects the Modelo 303 régimen simplificado inputs, including the annual-orden
+módulo coordinates, into the shape the calculation consumes. Its numeric
+literals are small structural indices; the módulo figures come from the
+annual-orden projection. One of the _m303_* modules that survive the embed
+teardown.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_m347_threshold.py"
+classification = "machinery"
+justification = """
+The single home of the Modelo 347 declarable-party comparison. The regulatory
+figure is NOT here: it is imported as M347_THRESHOLD_EUR from the curated core
+external-constants re-export layer, which the authority-flow rule grants as the
+one sanctioned channel for a regulatory leaf constant. What this module owns is
+the strictness of the comparison -- the floor is exceeded, never merely reached
+-- which is a predicate, not a value. This is the worked example of the shape
+an embed should be migrated INTO.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_queries.py"
+classification = "machinery"
+justification = """
+Generic registry query surface over a loaded snapshot. Its Modelo.M202
+reference is one routing coordinate inside otherwise modelo-agnostic lookup
+code, and it states no regulatory value.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_record_design_schema.py"
+classification = "machinery"
+justification = """
+Fixed-width record design schema and its shape validators. Its modelo-specific
+names describe the Modelo 390 auxiliary header LAYOUT and the Modelo 220
+closing-part sequence: field roles, lengths, ordinals and ordering rules read
+off the official record design. Layout is structure, not a value the law fixes,
+and the numeric literals are field widths and offsets.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_schema_exports.py"
+classification = "machinery"
+justification = """
+Export-record schema types, including the Modelo 303 filing-envelope prefix
+declarations. These describe the envelope's field STRUCTURE -- prefix roles and
+their declarations -- consumed by the generic export schema, and carry no
+regulatory value.
+"""
+
+[[classification.evidence_disposition]]
+enclosing_symbol = "_semantic_payload_failure"
+kind = "regulatory_prose_literal"
+symbol = "declared_description"
+reason = "The name matches the prose-suffix detector but the values are a ',' join separator and the literal 'none' placeholder inside a diagnostic message; neither is authored prose."
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_validate_application_links.py"
+classification = "machinery"
+justification = """
+Registry-build validator for application-link declarations. Its Modelo.M145
+reference is one routing coordinate in an otherwise modelo-agnostic check, and
+it states no regulatory value.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_validate_cross_domain_snapshot.py"
+classification = "machinery"
+justification = """
+Registry-build validator for cross-domain snapshot registration. Its
+Modelo.M100 reference is one routing coordinate and it states no regulatory
+value. It is not dead by import reachability -- _validate_references imports it
+-- but it belongs to the validator cluster whose runtime reachability is
+assessed separately; if that assessment removes it, this row goes stale and the
+reconciliation reds until the ledger is updated.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_validate_revision_rules.py"
+classification = "machinery"
+justification = """
+Registry-build revision rule validator. Its modelo-specific name is the Modelo
+210 tipo-renta code parameter PREFIX and the parity check that the projected
+codes match the registry parameters; the codes themselves live in registry
+data. Its numeric literals are month, day and sentinel bounds.
+"""
