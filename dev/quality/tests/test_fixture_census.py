@@ -3,12 +3,22 @@
 from __future__ import annotations
 
 import re
+import threading
 from pathlib import Path
 from textwrap import dedent
 
 import pytest
 
 from ..fixture_census import FixtureCensusError, _read_trees, census, iter_source_files
+from ..fixture_ownership import (
+    FixtureOwnershipError,
+    build_manifest,
+    check_manifest,
+    fixture_id,
+    parse_manifest,
+    validate_manifest,
+    write_manifest,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -42,6 +52,7 @@ def _write_complete_fixture_tree(root: Path) -> None:
             return f"{root_dependency}:{request.param}"
         """,
     )
+
     _write_source(
         root,
         "src/cadrumo/provider.py",
@@ -141,6 +152,64 @@ def _write_complete_fixture_tree(root: Path) -> None:
             assert packaging_resource == "packaging"
         """,
     )
+
+
+def _write_repeated_fixture_tree(root: Path, *, second_body: str) -> None:
+    """Create two same-name fixtures whose body relationship is caller-controlled."""
+    _write_source(root, "conftest.py", "pass\n")
+    _write_source(
+        root,
+        "src/cadrumo/first.py",
+        """
+        import pytest
+
+        @pytest.fixture
+        def shared_resource():
+            return "first"
+        """,
+    )
+    _write_source(
+        root,
+        "src/cadrumo/second.py",
+        f"""
+        import pytest
+
+        @pytest.fixture
+        def shared_resource():
+            {second_body}
+        """,
+    )
+    (root / "dev").mkdir(parents=True)
+    (root / "packaging").mkdir(parents=True)
+
+
+def test_fixture_body_digest_ignores_leading_docstrings(tmp_path: Path) -> None:
+    """Fixture prose cannot split otherwise identical executable bodies."""
+    root = tmp_path / "fixture-docstrings"
+    _write_source(root, "conftest.py", "pass\n")
+    for module_name, docstring in (("first", "first prose"), ("second", "second prose")):
+        _write_source(
+            root,
+            f"src/cadrumo/{module_name}.py",
+            f'''
+            import pytest
+
+            @pytest.fixture
+            def shared_resource():
+                """{docstring}"""
+                return "same"
+            ''',
+        )
+    (root / "dev").mkdir(parents=True)
+    (root / "packaging").mkdir(parents=True)
+
+    result = census(root)
+    payload = build_manifest(result)
+
+    assert len({record.normalized_body_sha256 for record in result.fixtures}) == 1
+    assert {row["disposition"] for row in payload["fixture"]} == {
+        "substitutable-duplicate"
+    }
 
 
 def test_census_records_fixture_identity_constraints_and_topology(tmp_path: Path) -> None:
@@ -262,6 +331,52 @@ def test_census_records_fixture_identity_constraints_and_topology(tmp_path: Path
     ]
 
 
+def test_imported_effective_name_fixture_preserves_binding_and_reach(tmp_path: Path) -> None:
+    """Imports resolve Python symbols while pytest retains explicit fixture names."""
+    root = tmp_path / "effective-name-import"
+    _write_source(root, "conftest.py", "pass\n")
+    _write_source(
+        root,
+        "src/cadrumo/provider.py",
+        """
+        import pytest
+
+        @pytest.fixture(name="public_resource", autouse=True)
+        def implementation():
+            return "resource"
+        """,
+    )
+    _write_source(
+        root,
+        "src/cadrumo/test_consumer.py",
+        """
+        from cadrumo.provider import implementation as imported_implementation
+
+        def test_explicit(public_resource):
+            assert public_resource == "resource"
+
+        def test_autouse_reach():
+            pass
+        """,
+    )
+    (root / "dev").mkdir(parents=True)
+    (root / "packaging").mkdir(parents=True)
+
+    (record,) = census(root).fixtures
+
+    assert [
+        (binding.provider_name, binding.bound_name, binding.path)
+        for binding in record.imported_bindings
+    ] == [("implementation", "public_resource", "src/cadrumo/test_consumer.py")]
+    assert ("test_explicit", "imported-parameter") in {
+        (consumer.qualname, consumer.via) for consumer in record.consumers
+    }
+    assert {consumer.qualname for consumer in record.autouse_reach} == {
+        "test_autouse_reach",
+        "test_explicit",
+    }
+
+
 def test_real_tree_source_universe_retains_each_required_root() -> None:
     """The live tree smoke proves the census starts from every maintained root."""
     repository_root = Path(__file__).resolve().parents[3]
@@ -323,3 +438,589 @@ def test_source_reader_refuses_an_unreadable_filesystem_entry(tmp_path: Path) ->
         match=re.escape("unreadable included Python unreadable.py"),
     ):
         _read_trees((unreadable_source,), tmp_path)
+
+
+def test_ownership_manifest_refuses_unclassified_repeated_fixtures(tmp_path: Path) -> None:
+    """A repeated family needs an explicit semantic disposition before rendering."""
+    root = tmp_path / "unclassified"
+    _write_repeated_fixture_tree(root, second_body='return "second"')
+
+    result = census(root)
+
+    with pytest.raises(FixtureOwnershipError, match="unclassified repeated fixtures"):
+        build_manifest(result, repeated_dispositions={})
+
+
+def test_ownership_manifest_accepts_explicitly_adjudicated_divergent_family(tmp_path: Path) -> None:
+    """A reviewed same-name family with different bodies remains valid and visible."""
+    root = tmp_path / "divergent"
+    _write_repeated_fixture_tree(root, second_body='return "second"')
+    result = census(root)
+    dispositions = {fixture_id(record): "retained-divergent" for record in result.fixtures}
+
+    payload = build_manifest(result, repeated_dispositions=dispositions)
+
+    validate_manifest(result, payload)
+    assert payload["manifest"]["retained_divergent_count"] == 2
+
+
+def test_ownership_manifest_rejects_proven_substitutable_duplicate(tmp_path: Path) -> None:
+    """An explicitly substitutable equal fixture family keeps the gate red."""
+    root = tmp_path / "substitutable"
+    _write_repeated_fixture_tree(root, second_body='return "first"')
+    result = census(root)
+    dispositions = {fixture_id(record): "substitutable-duplicate" for record in result.fixtures}
+    payload = build_manifest(result, repeated_dispositions=dispositions)
+
+    with pytest.raises(FixtureOwnershipError, match="substitutable duplicate fixtures remain"):
+        validate_manifest(result, payload)
+
+
+def test_ownership_manifest_rejects_clone_relabelled_divergent(tmp_path: Path) -> None:
+    """A bare divergent label cannot shield an exact unproven clone pair."""
+    root = tmp_path / "clone-relabelled-divergent"
+    _write_repeated_fixture_tree(root, second_body='return "first"')
+    result = census(root)
+    dispositions = {fixture_id(record): "retained-divergent" for record in result.fixtures}
+
+    with pytest.raises(FixtureOwnershipError, match="has no evidence"):
+        build_manifest(result, repeated_dispositions=dispositions)
+
+
+def test_ownership_manifest_rejects_identical_local_consumer_clones(tmp_path: Path) -> None:
+    """Different local consumer paths are drift evidence, not semantic divergence."""
+    root = tmp_path / "local-consumer-clones"
+    _write_repeated_fixture_tree(root, second_body='return "first"')
+    for module_name, test_name in (("first", "test_first"), ("second", "test_second")):
+        _write_source(
+            root,
+            f"src/cadrumo/{module_name}.py",
+            f"""
+            import pytest
+
+            @pytest.fixture
+            def shared_resource():
+                return "first"
+
+            def {test_name}(shared_resource):
+                assert shared_resource == "first"
+            """,
+        )
+
+    payload = build_manifest(census(root))
+
+    assert {row["disposition"] for row in payload["fixture"]} == {
+        "substitutable-duplicate"
+    }
+    with pytest.raises(FixtureOwnershipError, match="substitutable duplicate fixtures remain"):
+        validate_manifest(census(root), payload)
+
+
+def test_repeated_group_nominates_one_independent_canonical_owner(tmp_path: Path) -> None:
+    """Repeated declarations share one nominated owner instead of self-owning each row."""
+    root = tmp_path / "canonical-owner"
+    _write_repeated_fixture_tree(root, second_body='return "first"')
+    result = census(root)
+    payload = build_manifest(result)
+    rows = payload["fixture"]
+    fixture_ids = {row["id"] for row in rows}
+    canonical_owners = {row["owner"] for row in rows}
+
+    assert len(canonical_owners) == 1
+    assert canonical_owners <= fixture_ids
+    assert any(row["owner"] != row["id"] for row in rows)
+    assert len({row["ownership_group_id"] for row in rows}) == 1
+    assert all(row["ownership_group_member_count"] == 2 for row in rows)
+
+    tampered = {
+        "manifest": dict(payload["manifest"]),
+        "fixture": [dict(row) for row in rows],
+    }
+    tampered["fixture"][1]["owner"] = tampered["fixture"][1]["id"]
+    with pytest.raises(FixtureOwnershipError, match="does not exactly match"):
+        validate_manifest(result, tampered)
+
+
+def test_import_paths_do_not_prove_fixture_divergence(tmp_path: Path) -> None:
+    """Import aliases are preserved topology, not a semantic clone distinction."""
+    root = tmp_path / "imported-clones"
+    _write_repeated_fixture_tree(root, second_body='return "first"')
+    _write_source(
+        root,
+        "src/cadrumo/test_first.py",
+        """
+        from cadrumo.first import shared_resource as first_alias
+
+        def test_first(first_alias):
+            assert first_alias == "first"
+        """,
+    )
+    _write_source(
+        root,
+        "src/cadrumo/test_second.py",
+        """
+        from cadrumo.second import shared_resource as second_alias
+
+        def test_second(second_alias):
+            assert second_alias == "first"
+        """,
+    )
+
+    result = census(root)
+    payload = build_manifest(result)
+
+    assert {
+        (binding.provider_name, binding.bound_name)
+        for record in result.fixtures
+        for binding in record.imported_bindings
+    } == {("shared_resource", "first_alias"), ("shared_resource", "second_alias")}
+    assert {
+        (consumer.qualname, consumer.via)
+        for record in result.fixtures
+        for consumer in record.consumers
+    } == {("test_first", "imported-parameter"), ("test_second", "imported-parameter")}
+    assert {row["disposition"] for row in payload["fixture"]} == {
+        "substitutable-duplicate"
+    }
+
+
+def test_decorator_alias_and_keyword_order_do_not_change_fixture_constraints(tmp_path: Path) -> None:
+    """Decorator spelling is drift evidence, never semantic lifecycle evidence."""
+    root = tmp_path / "decorator-spelling"
+    _write_source(root, "conftest.py", "pass\n")
+    _write_source(
+        root,
+        "src/cadrumo/first.py",
+        """
+        import pytest
+
+        @pytest.fixture(scope="module", autouse=True)
+        def shared_resource():
+            return "same"
+        """,
+    )
+    _write_source(
+        root,
+        "src/cadrumo/second.py",
+        """
+        from pytest import fixture as fx
+
+        @fx(autouse=True, scope="module")
+        def shared_resource():
+            return "same"
+        """,
+    )
+    _write_source(
+        root,
+        "src/cadrumo/third.py",
+        """
+        import pytest_asyncio
+
+        @pytest_asyncio.fixture(autouse=True, scope="module")
+        def shared_resource():
+            return "same"
+        """,
+    )
+    (root / "dev").mkdir(parents=True)
+    (root / "packaging").mkdir(parents=True)
+
+    result = census(root)
+    payload = build_manifest(result)
+
+    assert {record.decorator.expression for record in result.fixtures} == {
+        "fx(autouse=True, scope='module')",
+        "pytest.fixture(scope='module', autouse=True)",
+        "pytest_asyncio.fixture(autouse=True, scope='module')",
+    }
+    assert len({row["constraints_sha256"] for row in payload["fixture"]}) == 1
+    assert {row["disposition"] for row in payload["fixture"]} == {
+        "substitutable-duplicate"
+    }
+
+
+def test_class_local_import_shadows_do_not_prove_semantic_divergence(tmp_path: Path) -> None:
+    """Distinct lexical class reach is topology and cannot retain identical fixtures."""
+    root = tmp_path / "class-overrides"
+    _write_source(root, "conftest.py", "pass\n")
+    _write_source(
+        root,
+        "src/cadrumo/providers.py",
+        """
+        import pytest
+
+        @pytest.fixture(autouse=True)
+        def first_state():
+            return "first"
+
+        @pytest.fixture(autouse=True)
+        def second_state():
+            return "second"
+        """,
+    )
+    for module_name, class_name, fixture_name in (
+        ("first", "TestFirst", "first_state"),
+        ("second", "TestSecond", "second_state"),
+    ):
+        _write_source(
+            root,
+            f"src/cadrumo/test_{module_name}.py",
+            f"""
+            from pathlib import Path
+            import pytest
+            from cadrumo.providers import {fixture_name}
+
+            class {class_name}:
+                @pytest.fixture(autouse=True)
+                def {fixture_name}(self, tmp_path: Path):
+                    yield tmp_path
+            """,
+        )
+    (root / "dev").mkdir(parents=True)
+    (root / "packaging").mkdir(parents=True)
+
+    payload = build_manifest(census(root))
+    class_rows = [row for row in payload["fixture"] if "Test" in str(row["id"])]
+
+    assert len(class_rows) == 2
+    assert {row["disposition"] for row in class_rows} == {"substitutable-duplicate"}
+    assert {row["divergence_kind"] for row in class_rows} == {""}
+
+
+def test_class_local_clones_without_import_shadows_remain_substitutable(tmp_path: Path) -> None:
+    """Class placement alone cannot shield identical unrelated fixture bodies."""
+    root = tmp_path / "unshadowed-class-clones"
+    _write_source(root, "conftest.py", "pass\n")
+    for module_name, class_name, fixture_name in (
+        ("first", "TestFirst", "first_state"),
+        ("second", "TestSecond", "second_state"),
+    ):
+        _write_source(
+            root,
+            f"src/cadrumo/test_{module_name}.py",
+            f"""
+            import pytest
+
+            class {class_name}:
+                @pytest.fixture
+                def {fixture_name}(self):
+                    return "same"
+            """,
+        )
+    (root / "dev").mkdir(parents=True)
+    (root / "packaging").mkdir(parents=True)
+
+    payload = build_manifest(census(root))
+
+    assert {row["disposition"] for row in payload["fixture"]} == {
+        "substitutable-duplicate"
+    }
+
+
+@pytest.mark.parametrize("second_docstring", ("second documentation", "first documentation"))
+def test_owner_global_helper_docstrings_do_not_prove_divergence(
+    tmp_path: Path,
+    second_docstring: str,
+) -> None:
+    """Helper prose and formatting cannot distinguish executable fixture owners."""
+    root = tmp_path / "helper-docstrings"
+    _write_source(root, "conftest.py", "pass\n")
+    for relative_root in ("dev", "packaging"):
+        (root / relative_root).mkdir(parents=True)
+    for module_name, docstring in (
+        ("first", "first documentation"),
+        ("second", second_docstring),
+    ):
+        _write_source(
+            root,
+            f"src/cadrumo/{module_name}.py",
+            f'''\
+            import pytest
+
+            def _value() -> str:
+                """{docstring}"""
+                return "same"
+
+            @pytest.fixture
+            def shared_resource():
+                return _value()
+            ''',
+        )
+
+    payload = build_manifest(census(root))
+
+    assert {row["disposition"] for row in payload["fixture"]} == {
+        "substitutable-duplicate"
+    }
+
+
+def test_owner_global_recursion_detects_executable_helper_difference(tmp_path: Path) -> None:
+    """A referenced helper's executable value is substantive owner-global evidence."""
+    root = tmp_path / "helper-semantics"
+    _write_source(root, "conftest.py", "pass\n")
+    for relative_root in ("dev", "packaging"):
+        (root / relative_root).mkdir(parents=True)
+    for module_name, value in (("first", "first"), ("second", "second")):
+        _write_source(
+            root,
+            f"src/cadrumo/{module_name}.py",
+            f'''\
+            import pytest
+
+            VALUE = "{value}"
+
+            def _value():
+                return VALUE
+
+            @pytest.fixture
+            def shared_resource():
+                return _value()
+            ''',
+        )
+
+    payload = build_manifest(census(root))
+
+    assert {row["disposition"] for row in payload["fixture"]} == {"retained-divergent"}
+    assert {row["divergence_kind"] for row in payload["fixture"]} == {"owner-global"}
+
+
+def test_ownership_manifest_rejects_live_fixture_drift(tmp_path: Path) -> None:
+    """A newly added fixture is unclassified until semantic review refreshes ownership."""
+    root = tmp_path / "drift"
+    _write_source(root, "conftest.py", "pass\n")
+    for source_root in ("src", "dev", "packaging"):
+        (root / source_root).mkdir(parents=True)
+    initial = census(root)
+    payload = build_manifest(initial, repeated_dispositions={})
+    _write_source(
+        root,
+        "src/cadrumo/test_new_fixture.py",
+        """
+        import pytest
+
+        @pytest.fixture
+        def newly_unclassified():
+            return object()
+        """,
+    )
+
+    with pytest.raises(FixtureOwnershipError, match="does not exactly match"):
+        validate_manifest(census(root), payload)
+
+
+def test_ownership_manifest_rejects_direct_consumer_topology_drift(tmp_path: Path) -> None:
+    """A new direct consumer changes canonical row topology and invalidates ownership."""
+    root = tmp_path / "consumer-drift"
+    _write_repeated_fixture_tree(root, second_body='return "second"')
+    initial = census(root)
+    dispositions = {fixture_id(record): "retained-divergent" for record in initial.fixtures}
+    payload = build_manifest(initial, repeated_dispositions=dispositions)
+    _write_source(
+        root,
+        "src/cadrumo/first.py",
+        """
+        import pytest
+
+        @pytest.fixture
+        def shared_resource():
+            return "first"
+
+        def test_shared_resource(shared_resource):
+            assert shared_resource == "first"
+        """,
+    )
+
+    with pytest.raises(FixtureOwnershipError, match="does not exactly match"):
+        validate_manifest(census(root), payload)
+
+
+def test_stable_writer_writes_and_checks_one_real_tree(tmp_path: Path) -> None:
+    """The supported writer and checker share the guarded production generator."""
+    root = tmp_path / "stable-write"
+    manifest_path = tmp_path / "fixture-ownership.toml"
+    _write_repeated_fixture_tree(root, second_body='return "second"')
+    manifest_path.write_bytes(b"previous manifest\n")
+
+    written = write_manifest(root, manifest_path)
+
+    assert parse_manifest(manifest_path) == written
+    assert check_manifest(root, manifest_path) == written
+    assert not list(tmp_path.glob(".fixture-ownership.toml.*.tmp"))
+
+
+def test_stable_writer_refuses_substitutes_and_preserves_existing_bytes(tmp_path: Path) -> None:
+    """Substitutable declarations fail before atomic replacement starts."""
+    root = tmp_path / "substitute-write"
+    manifest_path = tmp_path / "fixture-ownership.toml"
+    _write_repeated_fixture_tree(root, second_body='return "first"')
+    previous = b"trusted previous manifest\n"
+    manifest_path.write_bytes(previous)
+
+    with pytest.raises(FixtureOwnershipError, match="substitutable duplicate fixtures remain"):
+        write_manifest(root, manifest_path)
+
+    assert manifest_path.read_bytes() == previous
+    assert not list(tmp_path.glob(".fixture-ownership.toml.*.tmp"))
+
+
+def test_stable_writer_refuses_source_mutation_during_evidence_reads(tmp_path: Path) -> None:
+    """Concurrent real-file mutation cannot produce a mixed census/global snapshot."""
+    root = tmp_path / "moving-write"
+    manifest_path = tmp_path / "fixture-ownership.toml"
+    _write_repeated_fixture_tree(root, second_body='return "second"')
+    for index in range(200):
+        _write_source(root, f"dev/padding_{index}.py", f"VALUE = {index}\n")
+    moving = root / "dev/moving.py"
+    moving.write_text("VALUE = 0\n", encoding="utf-8")
+    previous = b"trusted previous manifest\n"
+    manifest_path.write_bytes(previous)
+    stop = threading.Event()
+
+    def mutate_source() -> None:
+        revision = 1
+        while not stop.is_set():
+            moving.write_text(f"VALUE = {revision}\n", encoding="utf-8")
+            revision += 1
+
+    worker = threading.Thread(target=mutate_source)
+    worker.start()
+    try:
+        with pytest.raises(FixtureOwnershipError, match="source universe changed") as error_info:
+            write_manifest(root, manifest_path)
+    finally:
+        stop.set()
+        worker.join()
+
+    diagnostic = str(error_info.value)
+    match = re.search(
+        r'\{"after_sha256":"([0-9a-f]{64})","before_sha256":"([0-9a-f]{64})",'
+        r'"path":"dev/moving\.py","status":"changed"\}',
+        diagnostic,
+    )
+    assert match is not None, diagnostic
+    assert match.group(1) != match.group(2)
+    assert "VALUE =" not in diagnostic
+    assert manifest_path.read_bytes() == previous
+    assert not list(tmp_path.glob(".fixture-ownership.toml.*.tmp"))
+
+
+def test_census_reports_resolved_and_unresolved_factory_fixture_candidates(tmp_path: Path) -> None:
+    """A factory-returned closure bound at module level is a real fixture the census must see.
+
+    ``bucket_scoped_runtime_profile_fixture`` in the live tree returns a
+    nested ``@pytest.fixture`` closure that a consuming test module binds to
+    a bare module-level name.  That call assignment carries no decorator of
+    its own, so the decorator-only walk that produces ``result.fixtures``
+    cannot see it -- it must be reported through a separate, honest channel.
+    """
+    root = tmp_path / "factory-fixture"
+    _write_source(root, "conftest.py", "pass\n")
+    _write_source(
+        root,
+        "src/cadrumo/factory.py",
+        """
+        import pytest
+
+        def bucket_scoped_runtime_profile_fixture(bucket_id):
+            @pytest.fixture(name="_runtime_profile", autouse=True)
+            def _bucket_scoped_runtime_profile():
+                return bucket_id
+            return _bucket_scoped_runtime_profile
+        """,
+    )
+    _write_source(
+        root,
+        "src/cadrumo/test_consumer.py",
+        """
+        from cadrumo.factory import bucket_scoped_runtime_profile_fixture
+
+        _runtime_profile = bucket_scoped_runtime_profile_fixture("bucket-a")
+        _opaque = some_unresolvable_call()
+
+        def test_uses_runtime_profile():
+            pass
+        """,
+    )
+    (root / "dev").mkdir(parents=True)
+    (root / "packaging").mkdir(parents=True)
+
+    result = census(root)
+
+    # The nested closure itself is still a real decorated fixture def, seen
+    # exactly once regardless of the new candidate channel.
+    assert result.fixture_count == 1
+
+    # Only the binding provably produced by a factory is a candidate, so the
+    # population is what its name claims. The opaque call is a plain value
+    # construction as far as this walk can tell.
+    (resolved,) = result.factory_fixture_candidates
+    assert resolved.bound_name == "_runtime_profile"
+    assert resolved.path == "src/cadrumo/test_consumer.py"
+    assert resolved.callee_expression == "bucket_scoped_runtime_profile_fixture"
+    assert resolved.resolved_factory == "src/cadrumo/factory.py:3:bucket_scoped_runtime_profile_fixture"
+
+    # The unfollowable callee is still reported, as the bound on this walk:
+    # a factory reached that way would be invisible, and the count says so.
+    assert result.unresolved_call_assignment_count == 1
+
+
+def test_import_binding_matcher_excludes_a_nested_closure_sharing_a_literal_name(tmp_path: Path) -> None:
+    """An import can only bind the module-level def, never a same-named nested closure.
+
+    ``provider.py`` declares two ``@pytest.fixture`` functions literally named
+    ``shared_resource``: one at module level, one nested inside a factory. A
+    consumer importing ``shared_resource`` from the module gets the
+    module-level def, per ordinary Python import semantics -- the nested
+    closure is not a module attribute and cannot be imported by that name.
+    """
+    root = tmp_path / "nested-name-collision"
+    _write_source(root, "conftest.py", "pass\n")
+    _write_source(
+        root,
+        "src/cadrumo/provider.py",
+        """
+        import pytest
+
+        @pytest.fixture
+        def shared_resource():
+            return "module-level"
+
+        def build_shared_resource_fixture():
+            @pytest.fixture
+            def shared_resource():
+                return "nested-closure"
+            return shared_resource
+        """,
+    )
+    _write_source(
+        root,
+        "src/cadrumo/test_consumer.py",
+        """
+        from cadrumo.provider import shared_resource
+
+        def test_consumes_shared_resource(shared_resource):
+            assert shared_resource == "module-level"
+        """,
+    )
+    (root / "dev").mkdir(parents=True)
+    (root / "packaging").mkdir(parents=True)
+
+    result = census(root)
+    records = {record.qualname: record for record in result.fixtures}
+
+    module_level = records["shared_resource"]
+    nested_closure = records["build_shared_resource_fixture.shared_resource"]
+
+    assert {(binding.path, binding.bound_name) for binding in module_level.imported_bindings} == {
+        ("src/cadrumo/test_consumer.py", "shared_resource")
+    }
+    assert nested_closure.imported_bindings == ()
+    assert ("test_consumes_shared_resource", "imported-parameter") in {
+        (consumer.qualname, consumer.via) for consumer in module_level.consumers
+    }
+    assert nested_closure.consumers == ()
+
+
+def test_live_fixture_ownership_manifest_is_complete_and_has_no_substitutable_duplicate() -> None:
+    """The checked manifest exactly classifies the stable production census."""
+    repository_root = Path(__file__).resolve().parents[3]
+    check_manifest(repository_root)

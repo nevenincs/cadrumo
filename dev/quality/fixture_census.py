@@ -22,6 +22,20 @@ Unlike a best-effort grep, included Python that cannot be read or parsed makes
 the census fail.  A partial fixture universe looks authoritative while hiding
 the exact source that needs review.
 
+A fixture can also be produced indirectly: a factory function returns an
+``@pytest.fixture``-decorated closure, and a module binds that closure to a
+name through a plain call assignment (``_runtime_profile =
+some_factory(...)``).  The assignment carries no decorator, so the walk above
+cannot see it, and such a fixture would otherwise be absent from the census
+entirely.  ``FactoryFixtureCandidate`` records the bindings whose callee
+resolves to an in-tree factory.
+
+Bindings whose callee cannot be followed are counted rather than recorded.
+Most module-level call assignments construct ordinary values, so listing them
+as fixture candidates would name a large population after a property almost
+none of it has.  The count is still reported, because it is this walk's honest
+bound: a factory reached through an unresolvable callee sits inside it.
+
 Usage::
 
     python -m dev.quality.fixture_census
@@ -118,6 +132,29 @@ class DynamicFixtureRequest:
 
 
 @dataclass(frozen=True, slots=True)
+class FactoryFixtureCandidate:
+    """A module-level ``name = call(...)`` binding proven to come from a fixture factory.
+
+    A factory returning an ``@pytest.fixture``-decorated closure produces a
+    real, working fixture through exactly this shape, and the decorator-only
+    walk that fills ``FixtureCensus.fixtures`` cannot see it: the assignment
+    carries no decorator of its own. Such a binding is therefore a fixture the
+    census would otherwise omit entirely.
+
+    Membership requires a resolved factory, so every member genuinely is one.
+    Assignments whose callee cannot be followed are counted, not recorded --
+    see ``FixtureCensus.unresolved_call_assignment_count`` for why.
+    """
+
+    path: str
+    line: int
+    column: int
+    bound_name: str
+    callee_expression: str
+    resolved_factory: str
+
+
+@dataclass(frozen=True, slots=True)
 class FixtureRecord:
     """The complete static identity and constraints of one fixture definition."""
 
@@ -147,11 +184,26 @@ class FixtureCensus:
     sources: tuple[str, ...]
     fixtures: tuple[FixtureRecord, ...]
     dynamic_fixture_requests: tuple[DynamicFixtureRequest, ...]
+    factory_fixture_candidates: tuple[FactoryFixtureCandidate, ...]
+    #: Module-level call assignments whose callee this walk could not follow.
+    #:
+    #: Overwhelmingly ordinary construction -- ``re.compile``, ``Decimal``,
+    #: ``frozenset`` -- which is why these are counted rather than listed as
+    #: fixture candidates: naming thousands of constants after a property
+    #: almost none of them have would report something false. The number is
+    #: still stated, because it is this walk's honest bound. A fixture factory
+    #: reached through a callee the resolver cannot follow is inside it.
+    unresolved_call_assignment_count: int
 
     @property
     def fixture_count(self) -> int:
         """Return the number of fixture definitions in the complete census."""
         return len(self.fixtures)
+
+    @property
+    def factory_fixture_candidate_count(self) -> int:
+        """Return how many module-level bindings resolve to a fixture factory."""
+        return len(self.factory_fixture_candidates)
 
 
 @dataclass(frozen=True, slots=True)
@@ -205,6 +257,29 @@ class _ImportFact:
     provider_module: str
     provider_name: str
     bound_name: str
+
+
+@dataclass(frozen=True, slots=True)
+class _FactoryCandidateDraft:
+    """A module-level call-assignment before its callee is joined to a factory."""
+
+    path: str
+    line: int
+    column: int
+    module: str
+    bound_name: str
+    callee_expression: str
+    callee_name: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class _FixtureFactoryFact:
+    """One module-level function recognized as returning a nested fixture."""
+
+    path: str
+    line: int
+    module: str
+    function_name: str
 
 
 def _relative_path(path: Path, root: Path) -> str:
@@ -396,6 +471,18 @@ def _parameters(arguments: ast.arguments) -> tuple[FixtureParameter, ...]:
     return tuple(rows)
 
 
+def _executable_body(body: list[ast.stmt]) -> list[ast.stmt]:
+    """Return function statements without a leading non-executable docstring."""
+    if (
+        body
+        and isinstance(body[0], ast.Expr)
+        and isinstance(body[0].value, ast.Constant)
+        and isinstance(body[0].value.value, str)
+    ):
+        return body[1:]
+    return body
+
+
 def _usefixtures(decorators: Iterable[ast.expr]) -> tuple[str, ...]:
     """Return static fixture names declared through ``pytest.mark.usefixtures``."""
     names: list[str] = []
@@ -540,7 +627,7 @@ class _ModuleVisitor(ast.NodeVisitor):
                 ),
             )
             normalized_body = ast.dump(
-                ast.Module(body=node.body, type_ignores=[]),
+                ast.Module(body=_executable_body(node.body), type_ignores=[]),
                 annotate_fields=True,
                 include_attributes=False,
             )
@@ -613,6 +700,161 @@ def _import_facts(path: Path, root: Path, tree: ast.Module) -> tuple[_ImportFact
     return tuple(facts)
 
 
+def _module_level_factory_candidates(path: Path, root: Path, tree: ast.Module) -> tuple[_FactoryCandidateDraft, ...]:
+    """Return every module-level ``name = call(...)`` assignment as a candidate.
+
+    Pytest discovers fixtures by looking up names in a module's globals (or a
+    class body), so only a top-level assignment can ever bind a name pytest
+    would find.  A call assigned inside a function's local scope cannot become
+    a fixture and is deliberately excluded rather than swelling the candidate
+    population with unreachable local variables.
+    """
+    relative = _relative_path(path, root)
+    module = _module_name(path, root)
+    candidates: list[_FactoryCandidateDraft] = []
+    for statement in tree.body:
+        if not isinstance(statement, ast.Assign) or not isinstance(statement.value, ast.Call):
+            continue
+        callee_name = statement.value.func.id if isinstance(statement.value.func, ast.Name) else None
+        for target in statement.targets:
+            if not isinstance(target, ast.Name):
+                continue
+            candidates.append(
+                _FactoryCandidateDraft(
+                    path=relative,
+                    line=statement.lineno,
+                    column=statement.col_offset,
+                    module=module,
+                    bound_name=target.id,
+                    callee_expression=_expression(statement.value.func) or "<expression>",
+                    callee_name=callee_name,
+                ),
+            )
+    return tuple(candidates)
+
+
+def _fixture_factory_fact(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+    *,
+    path: str,
+    module: str,
+    pytest_modules: frozenset[str],
+    fixture_aliases: frozenset[str],
+) -> _FixtureFactoryFact | None:
+    """Recognize the tree's known factory shape: define, then return, one nested fixture.
+
+    Scoped to a straight-line body -- a nested ``@pytest.fixture`` closure and
+    a bare ``return`` of its name, both as direct statements of the outer
+    function.  A factory built with a different control-flow shape is not
+    claimed here; its call sites stay unresolved candidates rather than a
+    guessed match.
+    """
+    nested_fixture_names = {
+        statement.name
+        for statement in node.body
+        if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and any(
+            _fixture_callee(decorator, pytest_modules=pytest_modules, fixture_aliases=fixture_aliases) is not None
+            for decorator in statement.decorator_list
+        )
+    }
+    if not nested_fixture_names:
+        return None
+    returns_nested = any(
+        isinstance(statement, ast.Return)
+        and isinstance(statement.value, ast.Name)
+        and statement.value.id in nested_fixture_names
+        for statement in node.body
+    )
+    if not returns_nested:
+        return None
+    return _FixtureFactoryFact(path=path, line=node.lineno, module=module, function_name=node.name)
+
+
+def _module_level_factory_functions(
+    path: Path,
+    root: Path,
+    tree: ast.Module,
+    *,
+    pytest_modules: frozenset[str],
+    fixture_aliases: frozenset[str],
+) -> tuple[_FixtureFactoryFact, ...]:
+    """Return every module-level function recognized as a fixture-returning factory."""
+    relative = _relative_path(path, root)
+    module = _module_name(path, root)
+    facts: list[_FixtureFactoryFact] = []
+    for statement in tree.body:
+        if not isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        fact = _fixture_factory_fact(
+            statement,
+            path=relative,
+            module=module,
+            pytest_modules=pytest_modules,
+            fixture_aliases=fixture_aliases,
+        )
+        if fact is not None:
+            facts.append(fact)
+    return tuple(facts)
+
+
+def _resolve_factory_candidates(
+    drafts: Iterable[_FactoryCandidateDraft],
+    factories: Iterable[_FixtureFactoryFact],
+    imports: Iterable[_ImportFact],
+) -> tuple[tuple[FactoryFixtureCandidate, ...], int]:
+    """Return the candidates provably tied to a factory, and how many were not.
+
+    Only a resolved binding is returned as a candidate, so the population is
+    what its name claims. The unresolved remainder is returned as a COUNT
+    rather than as records: it is dominated by ordinary module-level
+    construction (``re.compile``, ``Decimal``, ``frozenset``), and reporting
+    thousands of those as fixture candidates would state something false about
+    almost every member. The count is still reported, because it is the honest
+    bound on this walk -- a factory reached through a callee this resolver
+    cannot follow sits inside that number, unseen.
+    """
+    factories_by_site: dict[tuple[str, str], _FixtureFactoryFact] = {
+        (fact.module, fact.function_name): fact for fact in factories
+    }
+    imports_by_file: dict[str, list[_ImportFact]] = {}
+    for imported in imports:
+        imports_by_file.setdefault(imported.path, []).append(imported)
+    resolved: list[FactoryFixtureCandidate] = []
+    unresolved = 0
+    for draft in drafts:
+        fact = factories_by_site.get((draft.module, draft.callee_name)) if draft.callee_name else None
+        if fact is None and draft.callee_name is not None:
+            for imported in imports_by_file.get(draft.path, []):
+                if imported.bound_name != draft.callee_name:
+                    continue
+                fact = factories_by_site.get((imported.provider_module, imported.provider_name))
+                if fact is not None:
+                    break
+        if fact is None:
+            unresolved += 1
+            continue
+        resolved.append(
+            FactoryFixtureCandidate(
+                path=draft.path,
+                line=draft.line,
+                column=draft.column,
+                bound_name=draft.bound_name,
+                callee_expression=draft.callee_expression,
+                resolved_factory=f"{fact.path}:{fact.line}:{fact.function_name}",
+            ),
+        )
+    return (
+        tuple(
+            sorted(
+                resolved,
+                key=lambda candidate: (candidate.path, candidate.line, candidate.column, candidate.bound_name),
+            ),
+        ),
+        unresolved,
+    )
+
+
 def _imported_bindings(
     drafts: Iterable[_FixtureDraft],
     imports: Iterable[_ImportFact],
@@ -629,16 +871,27 @@ def _imported_bindings(
     bindings: dict[tuple[str, int, int], list[FixtureImport]] = {}
     for imported in imports:
         for draft in by_module.get(imported.provider_module, []):
-            if imported.provider_name != "*" and draft.record.effective_name != imported.provider_name:
+            if draft.record.qualname != draft.record.function_name:
+                # Not importable by its literal def name: a nested closure or
+                # a class attribute is invisible to `from module import name`,
+                # so a same-named module-level def is the only valid target.
                 continue
+            if imported.provider_name != "*" and draft.record.function_name != imported.provider_name:
+                continue
+            has_effective_name_override = draft.record.decorator.name_expression is not None
+            bound_name = (
+                draft.record.effective_name
+                if has_effective_name_override
+                else (draft.record.function_name if imported.provider_name == "*" else imported.bound_name)
+            )
             identity = (draft.record.path, draft.record.line, draft.record.column)
             bindings.setdefault(identity, []).append(
                 FixtureImport(
                     path=imported.path,
                     line=imported.line,
                     provider_module=imported.provider_module,
-                    provider_name=draft.record.effective_name,
-                    bound_name=(draft.record.effective_name if imported.provider_name == "*" else imported.bound_name),
+                    provider_name=draft.record.function_name,
+                    bound_name=bound_name,
                 ),
             )
     return {
@@ -772,6 +1025,25 @@ def census(repo_root: Path = REPO_ROOT) -> FixtureCensus:
     drafts = tuple(draft for visitor in visitors for draft in visitor.fixtures)
     imports = tuple(imported for path in sources for imported in _import_facts(path, root, trees[path]))
     bindings_by_fixture = _imported_bindings(drafts, imports)
+    factory_candidate_drafts = tuple(
+        candidate for path in sources for candidate in _module_level_factory_candidates(path, root, trees[path])
+    )
+    factory_functions = tuple(
+        fact
+        for visitor in visitors
+        for fact in _module_level_factory_functions(
+            visitor.path,
+            root,
+            trees[visitor.path],
+            pytest_modules=visitor.pytest_modules,
+            fixture_aliases=visitor.fixture_aliases,
+        )
+    )
+    factory_fixture_candidates, unresolved_call_assignments = _resolve_factory_candidates(
+        factory_candidate_drafts,
+        factory_functions,
+        imports,
+    )
     fixtures = tuple(
         sorted(
             (
@@ -807,6 +1079,8 @@ def census(repo_root: Path = REPO_ROOT) -> FixtureCensus:
                 key=lambda request: (request.path, request.line, request.qualname),
             ),
         ),
+        factory_fixture_candidates=factory_fixture_candidates,
+        unresolved_call_assignment_count=unresolved_call_assignments,
     )
 
 
@@ -819,6 +1093,9 @@ def _json_payload(result: FixtureCensus) -> dict[str, object]:
         "fixture_count": result.fixture_count,
         "fixtures": [asdict(record) for record in result.fixtures],
         "dynamic_fixture_requests": [asdict(request) for request in result.dynamic_fixture_requests],
+        "factory_fixture_candidate_count": result.factory_fixture_candidate_count,
+        "factory_fixture_candidates": [asdict(candidate) for candidate in result.factory_fixture_candidates],
+        "unresolved_call_assignment_count": result.unresolved_call_assignment_count,
     }
 
 
@@ -838,7 +1115,12 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     print(
         f"fixture census: {result.fixture_count} fixtures in {len(result.sources)} source files; "
-        f"dynamic requests={len(result.dynamic_fixture_requests)}",
+        f"dynamic requests={len(result.dynamic_fixture_requests)}; "
+        f"factory-bound fixtures={result.factory_fixture_candidate_count}",
+    )
+    print(
+        f"  {result.unresolved_call_assignment_count} module-level call assignments could not be resolved to a "
+        "definition; a fixture factory reached through such a callee would not be recognised here.",
     )
     for record in result.fixtures:
         print(
@@ -847,6 +1129,11 @@ def main(argv: list[str] | None = None) -> int:
             f"deps={','.join(record.dependencies) or '-'}  direct-consumers={len(record.consumers)}  "
             f"imports={len(record.imported_bindings)}  autouse-reach={len(record.autouse_reach)}  "
             f"body={record.normalized_body_sha256}",
+        )
+    for candidate in result.factory_fixture_candidates:
+        print(
+            f"{candidate.path}:{candidate.line}:{candidate.column}  "
+            f"{candidate.bound_name} = {candidate.callee_expression}(...)  factory={candidate.resolved_factory}",
         )
     return 0
 
