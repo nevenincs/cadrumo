@@ -47,10 +47,10 @@ from ....domain.modelos import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
-from ...user_profile import ProfileRecordRepository
 from .. import (
     AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,
@@ -139,10 +139,9 @@ def _amend_runtime(tmp_path: Path) -> Iterator[_AmendRuntime]:
     """Provision the shared ready-profile runtime used by every amend-flow test."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID, label=_PROFILE_LABEL) as profile:
         objects = profile.repository
-        ProfileRecordRepository(bucket_id=_PROFILE_ID, objects=objects).save(
+        seed_test_profile_record(
             UserProfileRecord(
                 profile_id=_PROFILE_ID,
-                display_name=_PROFILE_LABEL,
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,
                 updated_at=_T0,
@@ -537,8 +536,9 @@ def test_amend_new_revision_is_filed_complementaria(repos: _Repos) -> None:
     _, cr_repo, _, _, _ = repos
     new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
     assert new_revision.state is CalculationRevisionState.PRESENTADO
-    assert new_revision.amendment_kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA
-    assert new_revision.amends_filing_record_id == outcome.baseline.filing_record_id
+    assert new_revision.amendment_identity is not None
+    assert new_revision.amendment_identity.kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA
+    assert new_revision.amendment_identity.amends_filing_record_id == outcome.baseline.filing_record_id
     assert new_revision.amendment_reason == "under-reported turnover discovered in audit"
 
 

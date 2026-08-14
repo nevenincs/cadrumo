@@ -8,7 +8,7 @@ from ...core import ActionEvidenceProvenance, Modelo
 from ...domain.deadlines import M303RegimeComposition, TaxpayerProfile
 from ...domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ...domain.modelos import WorkUnit
-from ...domain.user_profile import ProfileNotFoundError, UserProfileStatus
+from ...domain.user_profile import ProfileNotFoundError, ProfileSetupState
 from ..user_profile import ProfileRecordRepository, projection_for_taxpayer
 from ._action_errors import ModeloProfileReadinessError
 from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
@@ -38,11 +38,11 @@ def active_taxpayer_profile(work_unit: WorkUnit) -> TaxpayerProfile:
         raise ModeloProfileReadinessError(
             precondition_failure=m303_profile_readiness_failure("profile_absent", {"profile_present": False}),
         ) from exc
-    if record.status is not UserProfileStatus.ACTIVE:
+    if record.setup_state is not ProfileSetupState.COMPLETE:
         raise ModeloProfileReadinessError(
             precondition_failure=m303_profile_readiness_failure(
                 "profile_inactive",
-                {"profile_present": True, "profile_status": str(record.status)},
+                {"profile_present": True, "profile_setup_state": str(record.setup_state)},
             ),
         )
     return projection_for_taxpayer(record)

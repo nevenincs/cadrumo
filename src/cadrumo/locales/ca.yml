@@ -483,6 +483,8 @@ aggregation:
       ambiguous_source_disposition: 'Error intern: el tipus de font de vinculació
         {source_kind} és en més d''un estat de disposició de la malla de fonts, o
         en cap.'
+      annual_summary_handoff_duplicate: Més d'un resolutor ha proporcionat el traspàs
+        immutable del resum anual del model 303 (primer {first_resolver}; segon {second_resolver}).
       binding_source_mismatch: source_kind i binding_source fan referència a families
         d'origen de binding diferents.
       duplicate_binding_owner: 'Error intern: propietari de vinculació duplicat a

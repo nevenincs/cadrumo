@@ -486,6 +486,9 @@ aggregation:
     errors:
       ambiguous_source_disposition: 'Error interno: el tipo de fuente de vinculación
         {source_kind} está en más de un estado de la malla de fuentes, o en ninguno.'
+      annual_summary_handoff_duplicate: Más de un resolutor proporcionó el traspaso
+        inmutable del resumen anual del modelo 303 (primero {first_resolver}; segundo
+        {second_resolver}).
       binding_source_mismatch: source_kind y binding_source se refieren a familias
         de origen de binding distintas.
       duplicate_binding_owner: 'Error interno: propietario de vinculación duplicado

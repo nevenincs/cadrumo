@@ -48,18 +48,13 @@ def _require_rectificativa_baseline_link(
             "prior domiciliation cancellation/modification is supported only for Modelo 303",
             context={"modelo": str(work_unit.modelo)},
         )
-    if revision.amendment_kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA:
+    amendment_identity = revision.amendment_identity
+    if amendment_identity is None or amendment_identity.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA:
         raise ModeloPriorDomiciliationElectionRefusedError(
             "prior domiciliation cancellation/modification requires a Modelo 303 rectificativa",
-            context={"amendment_kind": revision.amendment_kind.value if revision.amendment_kind is not None else ""},
+            context={"amendment_kind": amendment_identity.kind.value if amendment_identity is not None else ""},
         )
-    baseline_id = revision.amends_filing_record_id
-    if baseline_id is None:
-        raise ModeloPriorDomiciliationElectionRefusedError(
-            "prior domiciliation cancellation/modification requires an explicit baseline filing link",
-            context={"calculation_revision_id": revision.calculation_revision_id},
-        )
-    return baseline_id
+    return amendment_identity.amends_filing_record_id
 
 
 def _require_evidenced_baseline_filing(

@@ -42,7 +42,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Annotated, NamedTuple
+from typing import Annotated, NamedTuple, NoReturn
 
 from pydantic import BaseModel, Field
 
@@ -55,6 +55,7 @@ from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogue
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
     ActionEvidenceProvenance,
+    AeatProductSoftwareIdentity,
     ExportLayoutFormat,
     FilingProducerKey,
     Modelo,
@@ -78,22 +79,31 @@ from ...domain.bienes_inversion import (
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import (
     DataBindingDefinition,
+    bundled_revision_inspection,
     derive_modelo_202_modality,
     derive_taxpayer_files_economic_activity,
 )
 from ...domain.deadlines import ModeloIVAProfile, TaxpayerProfile
 from ...domain.filing import ModeloDraft
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
-from ...domain.justificante import JustificanteRepositoryProtocol
+from ...domain.justificante import Justificante, JustificanteRepositoryProtocol
 from ...domain.modelos import (
     CalculationRevision,
+    CalculationRevisionAggregateContext,
+    CalculationRevisionAmendmentIdentity,
+    CalculationRevisionAmendmentKind,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
+    M303RectificativaMotive,
     ModeloError,
     ModeloExportError,
+    ModeloRecord,
+    ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
+    is_justificante_backed_external_evidence,
+    validate_calculation_revision_aggregate,
 )
 from ...domain.prorrata_register import ProrrataRegister
 from ..aggregation import (
@@ -291,6 +301,12 @@ class ModeloExportCommand(BaseModel):
             ``INGRESO`` retains the standard declaration type, while a supported
             Modelo 303 ``DOMICILIACION`` resolves to ``U``. Unsupported or
             sign-incompatible elections are refused by the shared resolver.
+        prior_domiciliation_election: Explicit Modelo 303 action for a prior
+            domiciliation. It is required for Modelo 303; non-303 exports
+            resolve the neutral ``KEEP`` value internally.
+        product_software_identity: Explicit, reviewed product/software
+            authority for the Modelo 303 DP30300 envelope. It is required for
+            Modelo 303 and is not inferred from a taxpayer or presenter.
     """
 
     model_config = _STRICT_FROZEN
@@ -303,7 +319,8 @@ class ModeloExportCommand(BaseModel):
     amendment_evidence: AmendmentEvidence | None = None
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
-    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
+    prior_domiciliation_election: PriorDomiciliationElection | None = None
+    product_software_identity: AeatProductSoftwareIdentity | None = None
 
 
 class ModeloExportResult(BaseModel):
@@ -493,11 +510,11 @@ def _load_revision_for_export(
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": calculation_revision_id},
         )
+    _require_exportable_revision_state(revision)
     return revision
 
 
 def _require_exportable_revision_state(revision: CalculationRevision) -> None:
-    """Refuse a persisted revision whose lifecycle state cannot be exported."""
     if revision.state not in {
         CalculationRevisionState.VERIFICADO_COMPLETO,
         CalculationRevisionState.PRESENTADO,
@@ -505,7 +522,10 @@ def _require_exportable_revision_state(revision: CalculationRevision) -> None:
     }:
         raise CalculationRevisionStateError(
             translated_message="application.modelo.errors.export_revision_state_refused",
-            context={"calculation_revision_id": revision.calculation_revision_id, "state": revision.state.value},
+            context={
+                "calculation_revision_id": revision.calculation_revision_id,
+                "state": revision.state.value,
+            },
         )
 
 
@@ -791,6 +811,199 @@ def _require_export_identity(
     return presenter, taxpayer_identity
 
 
+def _require_matching_amendment_evidence(
+    command: ModeloExportCommand,
+    revision: CalculationRevision,
+    *,
+    work_unit: WorkUnit,
+    workflow_profile: TaxpayerProfile,
+    work_unit_repository: WorkUnitCatalogueRepository,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    justificante_repository: JustificanteRepositoryProtocol | None,
+) -> AmendmentEvidence | None:
+    amendment_identity = revision.amendment_identity
+    if amendment_identity is None:
+        if command.amendment_evidence is not None:
+            _raise_amendment_export_error(
+                command,
+                cause="typed amendment evidence was supplied for a non-amendment revision",
+            )
+        return None
+
+    filing_records = filing_repository.load()
+    target = _require_amendment_export_target(
+        command,
+        identity=amendment_identity,
+        work_unit=work_unit,
+        filing_records=filing_records,
+    )
+    justificantes, receipt = _require_amendment_export_receipt(
+        command,
+        target=target,
+        work_unit=work_unit,
+        workflow_profile=workflow_profile,
+        justificante_repository=justificante_repository,
+    )
+    motive, receipt_number = _resolve_amendment_export_evidence(
+        command,
+        revision=revision,
+        identity=amendment_identity,
+        work_unit=work_unit,
+        workflow_profile=workflow_profile,
+        work_unit_repository=work_unit_repository,
+        filing_records=filing_records,
+        justificantes=justificantes,
+        receipt=receipt,
+    )
+
+    persisted = AmendmentEvidence(
+        kind=amendment_identity.kind,
+        m303_rectificativa_motive=motive,
+        original_aeat_receipt=receipt_number,
+    )
+    if command.amendment_evidence is not None and command.amendment_evidence != persisted:
+        _raise_amendment_export_error(
+            command,
+            cause="supplied amendment evidence diverges from persisted authority",
+        )
+    return persisted
+
+
+def _raise_amendment_export_error(command: ModeloExportCommand, *, cause: str) -> NoReturn:
+    raise ModeloExportError(
+        translated_message="application.modelo.errors.export_draft_write_failed",
+        context={"calculation_revision_id": command.calculation_revision_id, "cause": cause},
+    )
+
+
+def _require_amendment_export_target(
+    command: ModeloExportCommand,
+    *,
+    identity: CalculationRevisionAmendmentIdentity,
+    work_unit: WorkUnit,
+    filing_records: ModeloRecordCatalogue,
+) -> ModeloRecord:
+    target = filing_records.get(identity.amends_filing_record_id)
+    if target is None or not target.aeat_accepted:
+        _raise_amendment_export_error(
+            command,
+            cause="amended filing target lacks persisted AEAT evidence",
+        )
+    target_coordinate = (
+        target.work_unit_id,
+        target.bucket_id,
+        target.modelo,
+        target.filing_year,
+        target.period,
+    )
+    work_coordinate = (
+        work_unit.work_unit_id,
+        work_unit.bucket_id,
+        work_unit.modelo,
+        work_unit.filing_year,
+        work_unit.period,
+    )
+    external_evidence = target.external_evidence
+    if external_evidence is None:
+        _raise_amendment_export_error(
+            command,
+            cause="amended filing target lacks persisted AEAT evidence",
+        )
+    if target_coordinate != work_coordinate or not is_justificante_backed_external_evidence(external_evidence.kind):
+        _raise_amendment_export_error(
+            command,
+            cause="amended filing target crosses the export coordinate",
+        )
+    return target
+
+
+def _require_amendment_export_receipt(
+    command: ModeloExportCommand,
+    *,
+    target: ModeloRecord,
+    work_unit: WorkUnit,
+    workflow_profile: TaxpayerProfile,
+    justificante_repository: JustificanteRepositoryProtocol | None,
+) -> tuple[tuple[Justificante, ...], Justificante]:
+    if justificante_repository is None:
+        _raise_amendment_export_error(
+            command,
+            cause="amendment export requires injected justificante repository authority",
+        )
+    external_evidence = target.external_evidence
+    if external_evidence is None:
+        _raise_amendment_export_error(
+            command,
+            cause="amended filing target lacks persisted AEAT evidence",
+        )
+    justificantes = tuple(justificante_repository.iter_justificantes())
+    matching_receipts = tuple(item for item in justificantes if item.csv == external_evidence.reference_id)
+    if len(matching_receipts) != 1:
+        _raise_amendment_export_error(
+            command,
+            cause="amended filing target does not resolve to one persisted justificante",
+        )
+    receipt = matching_receipts[0]
+    if (
+        not receipt.matches_filing_target(
+            modelo=str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+            tax_id=workflow_profile.tax_id,
+        )
+        or receipt.presentation_id is None
+    ):
+        _raise_amendment_export_error(
+            command,
+            cause="persisted justificante disagrees with the export authority",
+        )
+    return justificantes, receipt
+
+
+def _resolve_amendment_export_evidence(
+    command: ModeloExportCommand,
+    *,
+    revision: CalculationRevision,
+    identity: CalculationRevisionAmendmentIdentity,
+    work_unit: WorkUnit,
+    workflow_profile: TaxpayerProfile,
+    work_unit_repository: WorkUnitCatalogueRepository,
+    filing_records: ModeloRecordCatalogue,
+    justificantes: tuple[Justificante, ...],
+    receipt: Justificante,
+) -> tuple[M303RectificativaMotive | None, str]:
+    receipt_number = receipt.presentation_id
+    if receipt_number is None:
+        _raise_amendment_export_error(
+            command,
+            cause="persisted justificante has no AEAT presentation receipt",
+        )
+    if identity.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA or work_unit.modelo != Modelo.M303.value:
+        return identity.m303_rectificativa_motive, receipt_number
+    validated = validate_calculation_revision_aggregate(
+        revision,
+        context=CalculationRevisionAggregateContext(
+            work_units=work_unit_repository.load(),
+            filing_records=filing_records,
+            justificantes=justificantes,
+            registry_inspections={
+                work_unit.work_unit_id: bundled_revision_inspection(
+                    Modelo.M303.value,
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period.registry_token,
+                )
+            },
+            expected_taxpayer_tax_id=workflow_profile.tax_id,
+        ),
+    )
+    if validated is None:
+        _raise_amendment_export_error(
+            command,
+            cause="M303 rectificativa aggregate did not resolve persisted evidence",
+        )
+    return validated.motive, validated.original_aeat_receipt
+
+
 def _resolve_export_model_profile(
     *,
     modelo: Modelo,
@@ -910,6 +1123,7 @@ def _persist_exported_draft(
         producer_snapshot=producer_snapshot,
         dictionary_values=dictionary_values,
         prior_domiciliation_election=prior_domiciliation_election.election,
+        product_software_identity=command.product_software_identity,
         schema_provider=schema_provider,
     )
     event = _emit_export_event(
@@ -1014,6 +1228,7 @@ def _write_export_tmp(
     producer_snapshot: FilingProducerSnapshot,
     dictionary_values: Mapping[str, object],
     prior_domiciliation_election: PriorDomiciliationElection,
+    product_software_identity: AeatProductSoftwareIdentity | None,
     schema_provider: RegistrySchemaAccessor,
 ) -> DeclaracionExportResult:
     # Atomic-rename: write the fichero-BOE artefact to a sibling .tmp
@@ -1029,6 +1244,7 @@ def _write_export_tmp(
             producer_snapshot=producer_snapshot,
             dictionary_values=dictionary_values,
             prior_domiciliation_election=prior_domiciliation_election,
+            product_software_identity=product_software_identity,
             schema_provider=schema_provider,
         )
     except filing_domain.FilingExportError as exc:
@@ -1168,35 +1384,26 @@ def _raise_if_deductible_iva_evidence_missing(revision: CalculationRevision) -> 
     )
 
 
-def _prepare_modelo_export(
+def _load_modelo_export_authorities(
     command: ModeloExportCommand,
     *,
     active_bucket_id: str,
-    workflow_profile: TaxpayerProfile,
     work_unit_repository: WorkUnitCatalogueRepository,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
-    verification_repository: VerificationReportCatalogueRepositoryProtocol,
-    calculation_observation_repository: CalculationObservationRepository,
-    justificante_repository: JustificanteRepositoryProtocol,
-    iva_compensation_decision_repository: IvaWalletDecisionRepository | None,
-    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
-) -> _PreparedModeloExport:
-    """Load and validate every persisted authority required before export bytes."""
-    revision = _load_revision_for_export(command.calculation_revision_id, repo=calculation_repository)
+) -> tuple[CalculationRevision, WorkUnit]:
+    revision = calculation_repository.load().get(command.calculation_revision_id)
+    if revision is None:
+        raise CalculationRevisionNotFoundError(
+            translated_message="application.modelo.errors.calculation_revision_not_found",
+            context={"calculation_revision_id": command.calculation_revision_id},
+        )
     work_unit = work_unit_repository.load().get(revision.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
             translated_message="application.modelo.errors.work_unit_not_found",
             context={"work_unit_id": revision.work_unit_id},
         )
-    validate_m303_regimen_simplificado_annual_summary_target_revision(
-        target_work_unit=work_unit,
-        target_revision=revision,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        filing_repository=filing_repository,
-    )
     try:
         require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=revision)
     except ModeloError as exc:
@@ -1212,19 +1419,18 @@ def _prepare_modelo_export(
             translated_message="application.modelo.errors.export_cross_bucket_refused",
             context={"work_unit_id": work_unit.work_unit_id},
         )
+    return revision, work_unit
 
-    amendment_evidence = resolve_persisted_amendment_export_evidence(
-        command,
-        revision,
-        work_unit=work_unit,
-        workflow_profile=workflow_profile,
-        work_unit_repository=work_unit_repository,
-        filing_repository=filing_repository,
-        justificante_repository=justificante_repository,
-    )
-    _require_exportable_revision_state(revision)
-    _raise_if_ledger_export_evidence_missing(revision)
-    _raise_if_deductible_iva_evidence_missing(revision)
+
+def _prepare_modelo_export_schema(
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    workflow_profile: TaxpayerProfile,
+    work_unit_repository: WorkUnitCatalogueRepository,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+) -> tuple[Period, RegistrySchemaAccessor]:
     period = _resolve_work_unit_period(work_unit)
     schema_provider = build_runtime_schema_provider(
         filing_year=period.filing_year,
@@ -1236,11 +1442,21 @@ def _prepare_modelo_export(
 
     require_profile_ready_for_work_unit(work_unit)
     _require_persisted_required_bindings_resolved(work_unit=work_unit, revision=revision, action="export")
-    iva_wallet_decision = require_persisted_iva_compensation_decision_matches_revision(
-        work_unit,
-        revision,
-        repository=iva_compensation_decision_repository,
-    )
+    return period, schema_provider
+
+
+def _require_modelo_export_clean_state(
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    workflow_profile: TaxpayerProfile,
+    iva_wallet_decision: IvaCompensationReconciliationDecision | None,
+    calculation_observation_repository: CalculationObservationRepository,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
+) -> None:
     require_cross_period_clean_state(
         work_unit,
         observation_repository=calculation_observation_repository,
@@ -1259,8 +1475,39 @@ def _prepare_modelo_export(
         workflow_profile=workflow_profile,
         target_revision=revision,
     )
+
+
+def _resolve_modelo_export_prior_domiciliation(
+    command: ModeloExportCommand,
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    schema_provider: RegistrySchemaAccessor,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    calculation_observation_repository: CalculationObservationRepository,
+) -> PriorDomiciliationElectionProjection:
+    is_m303 = str(work_unit.modelo) == Modelo.M303.value
+    if is_m303 and command.prior_domiciliation_election is None:
+        raise ModeloExportError(
+            "Modelo 303 export requires an explicit prior-domiciliation election",
+            context={"calculation_revision_id": command.calculation_revision_id},
+        )
+    if is_m303 and command.product_software_identity is None:
+        raise ModeloExportError(
+            "Modelo 303 export requires explicit product/software identity authority",
+            context={"calculation_revision_id": command.calculation_revision_id},
+        )
+    if not is_m303 and command.product_software_identity is not None:
+        raise ModeloExportError(
+            "product/software identity is only admitted for the Modelo 303 filing envelope",
+            context={"calculation_revision_id": command.calculation_revision_id},
+        )
     prior_domiciliation_election = resolve_prior_domiciliation_election(
-        election=command.prior_domiciliation_election,
+        election=(
+            command.prior_domiciliation_election
+            if is_m303
+            else command.prior_domiciliation_election or PriorDomiciliationElection.KEEP
+        ),
         work_unit=work_unit,
         revision=revision,
         filing_repository=filing_repository,
@@ -1270,6 +1517,82 @@ def _prepare_modelo_export(
         work_unit=work_unit,
         prior_domiciliation_election=prior_domiciliation_election,
         schema_provider=schema_provider,
+    )
+    return prior_domiciliation_election
+
+
+def _prepare_modelo_export(
+    command: ModeloExportCommand,
+    *,
+    active_bucket_id: str,
+    workflow_profile: TaxpayerProfile,
+    work_unit_repository: WorkUnitCatalogueRepository,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    calculation_observation_repository: CalculationObservationRepository,
+    justificante_repository: JustificanteRepositoryProtocol,
+    iva_compensation_decision_repository: IvaWalletDecisionRepository | None,
+    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
+) -> _PreparedModeloExport:
+    """Load and validate every persisted authority required before export bytes."""
+    revision, work_unit = _load_modelo_export_authorities(
+        command,
+        active_bucket_id=active_bucket_id,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        filing_repository=filing_repository,
+    )
+    amendment_evidence = resolve_persisted_amendment_export_evidence(
+        command,
+        revision,
+        work_unit=work_unit,
+        workflow_profile=workflow_profile,
+        work_unit_repository=work_unit_repository,
+        filing_repository=filing_repository,
+        justificante_repository=justificante_repository,
+    )
+    _require_exportable_revision_state(revision)
+    _raise_if_ledger_export_evidence_missing(revision)
+    _raise_if_deductible_iva_evidence_missing(revision)
+    validate_m303_regimen_simplificado_annual_summary_target_revision(
+        target_work_unit=work_unit,
+        target_revision=revision,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        filing_repository=filing_repository,
+    )
+    period, schema_provider = _prepare_modelo_export_schema(
+        work_unit=work_unit,
+        revision=revision,
+        workflow_profile=workflow_profile,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        filing_repository=filing_repository,
+    )
+    iva_wallet_decision = require_persisted_iva_compensation_decision_matches_revision(
+        work_unit,
+        revision,
+        repository=iva_compensation_decision_repository,
+    )
+    _require_modelo_export_clean_state(
+        work_unit=work_unit,
+        revision=revision,
+        workflow_profile=workflow_profile,
+        iva_wallet_decision=iva_wallet_decision,
+        calculation_observation_repository=calculation_observation_repository,
+        filing_repository=filing_repository,
+        calculation_repository=calculation_repository,
+        verification_repository=verification_repository,
+        cross_period_expected_member_sets=cross_period_expected_member_sets,
+    )
+    prior_domiciliation_election = _resolve_modelo_export_prior_domiciliation(
+        command,
+        work_unit=work_unit,
+        revision=revision,
+        schema_provider=schema_provider,
+        filing_repository=filing_repository,
+        calculation_observation_repository=calculation_observation_repository,
     )
     return _PreparedModeloExport(
         work_unit=work_unit,

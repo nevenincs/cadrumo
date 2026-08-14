@@ -25,7 +25,6 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import ProfileRecordRepository
 from .. import (
     AmendmentEvidenceMissingError,
     CalculationRevisionNotFoundError,
@@ -77,7 +76,6 @@ def _casilla_id(value: object):
         return validated_casilla_id(value, surface="test casilla id")
     except ValueError as exc:
         raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
 
 
 def test_import_refuses_discarded_work_unit(repos: _Repos) -> None:
@@ -268,10 +266,7 @@ def test_calculate_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: P
     calculation-revision addressing helpers in this same package.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_GUARD_BUCKET_B) as profile:
-        _seed_ready_profile(
-            ProfileRecordRepository(bucket_id=_GUARD_BUCKET_B, objects=profile.repository),
-            bucket_id=_GUARD_BUCKET_B,
-        )
+        _seed_ready_profile(bucket_id=_GUARD_BUCKET_B)
         wu_repo = WorkUnitCatalogueRepository(bucket_id=_GUARD_BUCKET_A, objects=profile.repository)
         cr_repo = CalculationRevisionCatalogueRepository(objects=profile.repository)
         bv_repo = BucketEventHistoryRepository(objects=profile.repository)

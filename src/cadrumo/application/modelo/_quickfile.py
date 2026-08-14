@@ -46,7 +46,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection
+from ...core import AeatProductSoftwareIdentity, PaymentElection, Period, PriorDomiciliationElection, RefundElection
 from ...core.errors import CadrumoError
 from ...core.identity import BucketId
 from ...core.logging import get_logger
@@ -187,7 +187,8 @@ class QuickfileCommand(BaseModel):
     actor: str
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
-    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
+    prior_domiciliation_election: PriorDomiciliationElection | None = None
+    product_software_identity: AeatProductSoftwareIdentity | None = None
     filing_instance_evidence: FilingInstanceEvidence | None = None
 
 
@@ -394,6 +395,7 @@ def run_modelo_quickfile(
                 refund_election=command.refund_election,
                 payment_election=command.payment_election,
                 prior_domiciliation_election=command.prior_domiciliation_election,
+                product_software_identity=command.product_software_identity,
             ),
             workflow_profile=workflow_profile,
         )

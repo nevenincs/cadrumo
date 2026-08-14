@@ -456,6 +456,9 @@ aggregation:
     errors:
       ambiguous_source_disposition: 'Belső hiba: a(z) {source_kind} binding forrástípus
         egynél több forrásháló-diszpozíció állapotban van, vagy egyikben sem.'
+      annual_summary_handoff_duplicate: 'Egynél több feloldó adta meg a 303-as modell
+        éves összesítőjének változatlan átadását (első: {first_resolver}; második:
+        {second_resolver}).'
       binding_source_mismatch: A source_kind és a binding_source eltérő binding-forrás
         családra hivatkozik.
       duplicate_binding_owner: 'Belső hiba: ismétlődő kötési tulajdonos a forráshálon.'

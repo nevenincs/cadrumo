@@ -303,6 +303,8 @@ def review_package_build(
     with tempfile.TemporaryDirectory(prefix="cadrumo-review-package-draft-", dir=output.parent) as staging_name:
         draft_path = Path(staging_name) / "draft.fichero-boe"
         try:
+            from ...adapters.persistence.profile.justificante import JustificanteRepository
+
             export_result = export_modelo_revision(
                 ModeloExportCommand(
                     calculation_revision_id=target_revision_id,
@@ -313,6 +315,7 @@ def review_package_build(
                     prior_domiciliation_election=prior_domiciliation_election,
                 ),
                 workflow_profile=workflow_profile,
+                justificante_repository=JustificanteRepository(),
             )
         except (
             CalculationRevisionNotFoundError,

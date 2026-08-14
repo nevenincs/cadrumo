@@ -43,8 +43,8 @@ from ...domain.deadlines import EntityType, IrpfIncomeCategory
 from ...domain.modelos import WorkUnit
 from ...domain.user_profile import (
     ProfileNotFoundError,
+    ProfileSetupState,
     UserProfileRecord,
-    UserProfileStatus,
 )
 from ..user_profile import (
     ProfilePreflightReport,
@@ -514,7 +514,7 @@ def require_profile_ready_for_modelo_work(
             translated_message="application.modelo.errors.profile_readiness_profile_missing",
             context={"bucket_id": bucket_id},
         ) from exc
-    if record.status is UserProfileStatus.SETUP_INCOMPLETE:
+    if record.setup_state is ProfileSetupState.INCOMPLETE:
         # A profile minted by the interactive setup flow is live (listed,
         # resumable, its tax id reserved) but not workable: its answer set
         # has not passed the flow's final cross-field validation, so no

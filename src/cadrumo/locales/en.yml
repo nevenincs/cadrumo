@@ -436,6 +436,8 @@ aggregation:
     errors:
       ambiguous_source_disposition: 'Internal error: binding source kind {source_kind}
         is in more than one source-mesh disposition state, or in none.'
+      annual_summary_handoff_duplicate: More than one resolver supplied the immutable
+        Modelo 303 annual-summary handoff (first {first_resolver}; second {second_resolver}).
       binding_source_mismatch: source_kind and binding_source refer to different binding-source
         families.
       duplicate_binding_owner: 'Internal error: duplicate binding owner in source

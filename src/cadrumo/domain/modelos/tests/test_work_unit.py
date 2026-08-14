@@ -33,8 +33,8 @@ from ....application.modelo import (
     list_work_units,
     rename_work_unit,
 )
-from ....application.user_profile import ProfileRecordRepository
 from ....core import Period
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry import RevisionId
 from ...user_profile import UserProfileFact, UserProfileRecord
@@ -86,15 +86,14 @@ def repo(tmp_path: Path) -> Iterator[WorkUnitCatalogueRepository]:
     """Yield a real work-unit repository through the active test runtime."""
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_ACTION_BUCKET_ID) as profile:
-        _seed_ready_profile(profile.bucket_id, objects=profile.repository)
+        _seed_ready_profile(profile.bucket_id)
         yield WorkUnitCatalogueRepository(bucket_id=profile.bucket_id, objects=profile.repository)
 
 
-def _seed_ready_profile(bucket_id: str, *, objects: Any) -> None:
-    ProfileRecordRepository(bucket_id=bucket_id, objects=objects).save(
+def _seed_ready_profile(bucket_id: str) -> None:
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Test Operator",
             facts=_READY_PROFILE_FACTS,
             created_at=_T0,
             updated_at=_T0,
@@ -641,7 +640,7 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
     from ...buckets import BucketEventType
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_WORK_UNIT_EVENT_BUCKET_ID) as profile:
-        _seed_ready_profile(profile.bucket_id, objects=profile.repository)
+        _seed_ready_profile(profile.bucket_id)
         wu_repo = WorkUnitCatalogueRepository(objects=profile.repository)
         bv_repo = BucketEventHistoryRepository(objects=profile.repository)
         unit = create_work_unit(

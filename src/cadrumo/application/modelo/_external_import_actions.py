@@ -197,6 +197,7 @@ def import_external_filing_evidence[CasillaKey](
         relation_overrides=relation_overrides,
         casilla_values=outputs,
         filing_instance_evidence=None,
+        m303_regimen_simplificado_annual_summary_handoff=None,
     )
     revisions = cr_repo.load()
     if revision_id in revisions:
@@ -221,6 +222,7 @@ def import_external_filing_evidence[CasillaKey](
         filed_by=actor.strip(),
         observations=observations,
         filing_instance_evidence=None,
+        m303_regimen_simplificado_annual_summary_handoff=None,
     )
     revisions = upsert_calculation_revision(revisions, revision)
 
