@@ -29,7 +29,8 @@ Lifecycle of a create-mode checkpoint:
 Completion (the ``incomplete`` → ``complete`` flip at the flow's final commit)
 is the domain-owned completion transition: the setup-state flip ends
 resume-eligibility, so there is nothing else to erase. It is driven by the
-command through :func:`~cadrumo.application.user_profile.complete_setup_with_lifecycle_span`,
+command through
+:meth:`~cadrumo.application.user_profile.ProfileRecordRepository.complete_setup`,
 not by this store.
 """
 

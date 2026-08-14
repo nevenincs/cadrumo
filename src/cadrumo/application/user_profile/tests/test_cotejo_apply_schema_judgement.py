@@ -43,8 +43,14 @@ from ....adapters.persistence.storage.custody import (
 )
 from ....core.config import override_settings
 from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
-from ....domain.user_profile import ProfileSchemaValidationError, ProfileSetupState, UserProfileFact
+from ....domain.user_profile import (
+    ProfileSchemaValidationError,
+    ProfileSetupState,
+    UserProfileFact,
+    load_user_profile_schema,
+)
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import complete_profile_facts
 from ...workflow import WorkflowState
 from .._capsule_record import ProfileRecordSession
 from .._cotejo_apply import CensoDivergence, apply_cotejo
@@ -57,25 +63,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _PASSPHRASE = "cotejo-apply-schema-judgement-passphrase"  # noqa: S105 - synthetic test credential
 _UNDECLARED_CENSO_PATH = "censo.filed_on"
 _TYPED_CENSO_PATH = "censo.activity_start_date"
-
-
-#: The fields the schema requires of a profile that has finished setup. Read
-#: off the schema's own ``required`` flags rather than restated from memory, so
-#: a profile built here is complete by the same rule the validator applies.
-_COMPLETE_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    # Declaring the GENERAL regime opens a conditionally-required block, so a
-    # profile carrying only the unconditional required fields is still not
-    # complete. Answering the block is part of being a finished general-regime
-    # profile, not scaffolding around the validator.
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value="false"),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value="false"),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value="false"),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value="false"),
-)
 
 
 @contextmanager
@@ -200,13 +187,16 @@ def test_apply_cotejo_records_divergences_on_a_profile_past_setup(tmp_path: Path
     the open-divergence notice, and it is the case a completeness rule applied
     to the wrong side of the setup boundary would break.
 
-    The subject is completed by SUPPLYING the required fields, not by flipping
-    the state flag over a record still missing them. ``complete_setup`` accepts
-    the promotion either way, so building the subject the second way would have
-    tested a record no finished setup can produce, and would have failed for
-    the promotion door's reasons rather than this one's.
+    The subject is completed by SUPPLYING the required fields, derived from
+    the schema itself, not by flipping the state flag over a record still
+    missing them. Building it the second way would test a record no finished
+    setup can produce, and would fail for the promotion door's reasons rather
+    than this one's.
     """
-    with _cotejo_subject(tmp_path, facts=_COMPLETE_PROFILE_FACTS) as (storage_root, profile_id):
+    with _cotejo_subject(tmp_path, facts=complete_profile_facts(load_user_profile_schema())) as (
+        storage_root,
+        profile_id,
+    ):
         repository = ProfileRecordRepository.for_current_session(profile_id, root=storage_root)
         seeded = repository.load(profile_id)
         completed = repository.complete_setup(
