@@ -111,13 +111,13 @@ class _OperationJournalRecord(BaseModel):
             revisions[0] not in {0, 1}, "operation journal history must begin at revision zero or one", ValueError
         )
         _raise_if(
-            any(current < previous or current > previous + 1 for previous, current in pairwise(revisions)),
-            "operation journal history revisions must be ordered unit advances",
+            any(current < previous for previous, current in pairwise(revisions)),
+            "operation journal history revisions must be ordered",
             ValueError,
         )
         _raise_if(
-            revisions[-1] != self.snapshot.revision,
-            "operation journal history must end at the snapshot revision",
+            any(revision > self.snapshot.revision for revision in revisions),
+            "operation journal history cannot exceed the snapshot revision",
             ValueError,
         )
 
@@ -130,11 +130,6 @@ class _OperationJournalRecord(BaseModel):
 
     def _validate_snapshot_tail(self) -> None:
         if not self.snapshot.events:
-            _raise_if(
-                bool(self.history),
-                "eventful operation journal history requires a latest snapshot event tail",
-                ValueError,
-            )
             return
         _raise_if(
             self.history[-len(self.snapshot.events) :] != self.snapshot.events,
@@ -173,37 +168,60 @@ class _SnapshotJournalRepository(JournalRepositoryBase[_OperationJournalRecord])
         )
         self._lease_storage = OperationLeaseStorage(storage_root=storage_root)
 
-    def claim_idempotency(self, claim: OperationIdempotencyClaim) -> str:
-        """Atomically create or resolve one durable retry claim under the journal lock."""
+    def resolve_idempotency(self, claim: OperationIdempotencyClaim) -> str | None:
+        """Resolve a durable retry key from a complete operation journal only."""
         self._ensure_root()
-        claim_path = self.root / f"claim-{claim.key_digest}.json"
         with exclusive_file_lock(self.lock_target):
-            if claim_path.exists():
-                try:
-                    current = OperationIdempotencyClaim.model_validate_json(claim_path.read_bytes())
-                except Exception as exc:
-                    raise RepositoryError("invalid operation idempotency claim") from exc
-                if (
-                    current.definition_id,
-                    current.subject_ref,
-                    current.key_digest,
-                    current.request_reference,
-                ) != (
-                    claim.definition_id,
-                    claim.subject_ref,
-                    claim.key_digest,
-                    claim.request_reference,
-                ):
-                    raise RepositoryError("operation idempotency key is bound to a different request")
-                return current.operation_id
-            self._write_claim(claim_path, claim)
-            return claim.operation_id
+            return self._resolve_idempotency_unlocked(claim)
 
-    def _write_claim(self, path: Path, claim: OperationIdempotencyClaim) -> None:
-        """Reuse the hardened writer without introducing a second persistence authority."""
-        from ....core.atomic_write import atomic_write_hardened_text
+    def _resolve_idempotency_unlocked(self, claim: OperationIdempotencyClaim) -> str | None:
+        """Find one exact claim while the canonical journal lock is already held."""
+        matched_operation_id: str | None = None
+        for path in self.root.glob("*.json"):
+            operation_id = path.stem
+            if len(operation_id) != 64 or any(character not in "0123456789abcdef" for character in operation_id):
+                continue
+            persisted_claim = super().load(operation_id).snapshot.idempotency_claim
+            if persisted_claim is None or persisted_claim.key_digest != claim.key_digest:
+                continue
+            if (
+                persisted_claim.definition_id,
+                persisted_claim.subject_ref,
+                persisted_claim.key_digest,
+                persisted_claim.request_reference,
+            ) != (
+                claim.definition_id,
+                claim.subject_ref,
+                claim.key_digest,
+                claim.request_reference,
+            ):
+                raise RepositoryError("operation idempotency key is bound to a different request")
+            if matched_operation_id is not None and matched_operation_id != persisted_claim.operation_id:
+                raise RepositoryError("operation idempotency key is bound to multiple operations")
+            matched_operation_id = persisted_claim.operation_id
+        return matched_operation_id
 
-        atomic_write_hardened_text(path, claim.model_dump_json(indent=2), mode=0o600)
+    def create(self, snapshot: OperationPersistedSnapshot, *, lease: OperationOwnerLease) -> str:
+        """Create the initial snapshot and its retry claim in one journal write."""
+        self._validate_lease(snapshot, lease)
+        self._ensure_root()
+        path = self.path_for(snapshot.operation_id)
+        with exclusive_file_lock(self.lock_target):
+            self._lease_storage.require_live_exact_unlocked(
+                scope_ref=lease.scope_ref,
+                operation_id=snapshot.operation_id,
+                lease=lease,
+                observed_at=snapshot.updated_at,
+            )
+            if snapshot.idempotency_claim is not None:
+                existing = self._resolve_idempotency_unlocked(snapshot.idempotency_claim)
+                if existing is not None:
+                    return existing
+            if os.path.lexists(path):
+                raise RepositoryError("initial operation journal create already exists")
+            self._validate_create(snapshot, expected_revision=0)
+            self._write(path, _OperationJournalRecord(snapshot=snapshot, history=snapshot.events))
+        return snapshot.operation_id
 
     def commit(
         self,
