@@ -81,18 +81,14 @@ def _register_bucket(tmp_path: Path) -> None:
 
 def _mint_keystore_dek(tmp_path: Path) -> bytes:
     """Mint the wrapped key through the bootstrap arm, as enrolment does."""
-    return load_or_mint_bucket_dek(
-        kek=_KEK, storage_root=tmp_path, bucket_id=_BUCKET_ID, allow_bootstrap_mint=True
-    )
+    return load_or_mint_bucket_dek(kek=_KEK, storage_root=tmp_path, bucket_id=_BUCKET_ID, allow_bootstrap_mint=True)
 
 
 def test_registered_bucket_with_its_key_unwraps_without_minting(tmp_path: Path) -> None:
     minted = _mint_keystore_dek(tmp_path)
     _register_bucket(tmp_path)
 
-    loaded = load_or_mint_bucket_dek(
-        kek=_KEK, storage_root=tmp_path, bucket_id=_BUCKET_ID, allow_bootstrap_mint=False
-    )
+    loaded = load_or_mint_bucket_dek(kek=_KEK, storage_root=tmp_path, bucket_id=_BUCKET_ID, allow_bootstrap_mint=False)
 
     assert loaded == minted
 
@@ -105,9 +101,7 @@ def test_registered_bucket_without_its_key_refuses_and_never_mints(tmp_path: Pat
     key_file.unlink()
 
     with pytest.raises(MasterKeyMaterialMissingError) as refusal:
-        load_or_mint_bucket_dek(
-            kek=_KEK, storage_root=tmp_path, bucket_id=_BUCKET_ID, allow_bootstrap_mint=True
-        )
+        load_or_mint_bucket_dek(kek=_KEK, storage_root=tmp_path, bucket_id=_BUCKET_ID, allow_bootstrap_mint=True)
 
     assert "wrapped DEK is missing" in str(refusal.value)
     assert not key_file.exists()

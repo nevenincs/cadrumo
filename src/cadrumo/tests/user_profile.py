@@ -93,18 +93,27 @@ _REQUIRED_PLACEHOLDERS: Mapping[str, str] = {
 
 
 def register_minimal_profile(
-    state: WorkflowState,
     *,
     profile_id: str,
     display_name: str | None = None,
     overrides: Mapping[str, str] | None = None,
-) -> WorkflowState:
-    """Seed and select a complete profile record through the real capsule.
+) -> UserProfileRecord:
+    """Publish a complete profile capsule, and select it, before any bucket read.
 
-    ``WorkflowState`` no longer owns profile records.  The state argument is
-    retained because callers use this function as a repository update
-    callback; selection is written through the production pointer transaction
-    and the record itself through the current session-bound capsule writer.
+    This is the single seeding door for tests that need a real profile.  Call it
+    before touching workflow state, a bucket database, or anything else scoped
+    to the profile: a capsule is published by an atomic no-replace rename onto
+    ``buckets/<profile-id>``, and opening a bucket database engine for a profile
+    whose capsule is not yet published is refused outright by the storage layer.
+    Seeding first is therefore a precondition of the bucket existing at all, not
+    a style preference.
+
+    The state argument this once took was vestigial -- it was handed straight
+    back so the function could be passed as a workflow-repository update
+    callback, and that callback shape was exactly what inverted the order and
+    made every caller read workflow state before the capsule existed.  Taking no
+    state removes the trap rather than documenting it, and the seeded record is
+    returned because that is what the function actually produces.
     """
     merged: dict[str, str] = dict(_REQUIRED_PLACEHOLDERS)
     merged["identity.tax_id"] = _distinct_valid_nif(profile_id)
@@ -116,12 +125,12 @@ def register_minimal_profile(
         facts=facts,
         setup_state=ProfileSetupState.COMPLETE,
     )
-    seed_test_profile_record(
+    seeded = seed_test_profile_record(
         record,
         label=display_name or f"profile-{profile_id}",
     )
     ProfileCapsuleLifecycle().select(profile_id)
-    return state
+    return seeded
 
 
 def complete_conditional_facts(

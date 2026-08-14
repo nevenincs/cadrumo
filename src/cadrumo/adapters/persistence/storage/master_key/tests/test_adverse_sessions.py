@@ -16,8 +16,8 @@ from ...bucket import (
     BucketLockedError,
     BucketManifest,
     ManifestKdfParams,
+    bucket_paths,
     manifest_path,
-    provision_bucket_directory,
     write_manifest,
 )
 from ...errors import (
@@ -35,6 +35,8 @@ from .._active_session import (
     has_active_bucket_session,
 )
 from .._bucket_session import BucketSession
+from .._master_key_bucket_dek import load_or_mint_bucket_dek
+from ._master_key_support import _ALPHA, _TORN, _publish_registration_capsule
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -86,7 +88,7 @@ def test_expired_bucket_session_seals_before_refusing_active_master_key_reads() 
 
 def test_wrong_passphrase_activation_fails_without_opening_bucket_session(tmp_path: Path) -> None:
     settings = _settings_with_store(tmp_path)
-    _write_registered_bucket(settings.cadrumo_local_storage_root, "alpha")
+    _write_registered_bucket(settings.cadrumo_local_storage_root, _ALPHA)
     FileFallbackMasterKeyProvider(
         store_dir=settings.cadrumo_secret_store_dir,
         passphrase_callback=lambda: "right-passphrase",
@@ -103,7 +105,7 @@ def test_wrong_passphrase_activation_fails_without_opening_bucket_session(tmp_pa
             cadrumo_secret_store_backend=SecretStoreBackend.FILE,
         ),
         pytest.raises(MasterKeyPassphraseMismatchError),
-        activate_master_key_provider(wrong_provider, fallback_bucket_id="alpha"),
+        activate_master_key_provider(wrong_provider, fallback_bucket_id=_ALPHA),
     ):
         pass
 
@@ -113,13 +115,23 @@ def test_wrong_passphrase_activation_fails_without_opening_bucket_session(tmp_pa
 
 def test_torn_bucket_manifest_activation_fails_without_opening_bucket_session(tmp_path: Path) -> None:
     settings = _settings_with_store(tmp_path)
-    paths = provision_bucket_directory(settings.cadrumo_local_storage_root, "torn")
-    manifest_path(paths).write_text('bucket_id = "torn', encoding=UTF_8_ENCODING)
     provider = FileFallbackMasterKeyProvider(
         store_dir=settings.cadrumo_secret_store_dir,
         passphrase_callback=lambda: "right-passphrase",
     )
     provider.provision_master_key()
+    # Mint the wrapped key while the bucket is still unregistered, then
+    # register it, so activation gets past key resolution and reaches the
+    # manifest-backed session policy this test tears.
+    load_or_mint_bucket_dek(
+        kek=provider.get_master_key(),
+        storage_root=settings.cadrumo_local_storage_root,
+        bucket_id=_TORN,
+        allow_bootstrap_mint=True,
+    )
+    _write_registered_bucket(settings.cadrumo_local_storage_root, _TORN)
+    paths = bucket_paths(settings.cadrumo_local_storage_root, _TORN)
+    manifest_path(paths).write_text('bucket_id = "torn', encoding=UTF_8_ENCODING)
 
     with (
         override_settings(
@@ -128,7 +140,7 @@ def test_torn_bucket_manifest_activation_fails_without_opening_bucket_session(tm
             cadrumo_secret_store_backend=SecretStoreBackend.FILE,
         ),
         pytest.raises(StorageValidationError),
-        activate_master_key_provider(provider, fallback_bucket_id="torn"),
+        activate_master_key_provider(provider, fallback_bucket_id=_TORN),
     ):
         pass
 
@@ -180,7 +192,10 @@ def _settings_with_store(tmp_path: Path) -> Settings:
 
 
 def _write_registered_bucket(root: Path, bucket_id: str) -> None:
-    paths = provision_bucket_directory(root, bucket_id)
+    # Publication owns the bucket directory: it arrives by the capsule's
+    # no-replace rename, never by provisioning it first.
+    _publish_registration_capsule(root, bucket_id)
+    paths = bucket_paths(root, bucket_id)
     write_manifest(
         paths,
         BucketManifest(
