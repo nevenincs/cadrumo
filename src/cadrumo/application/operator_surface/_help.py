@@ -256,10 +256,6 @@ def _root_help() -> HelpDocument:
                         description=tr("cli.operator_surface.help.root.recovery_login"),
                     ),
                     HelpEntry(
-                        command="aeat config recover",
-                        description=tr("cli.operator_surface.help.root.recovery_passphrase"),
-                    ),
-                    HelpEntry(
                         command="aeat config repair",
                         description=tr("cli.operator_surface.help.root.recovery_repair"),
                     ),
@@ -317,12 +313,10 @@ def _root_help() -> HelpDocument:
 def _config_storage_section() -> HelpSection:
     """Return the rows that answer where local data lives and what may be freed.
 
-    Extracted from :func:`_config_help` for the same reason
-    :func:`_config_custody_section` was: adding this family pushed the document
-    builder through its per-callable size band, and the band is a ceiling to
-    respect rather than a baseline to rewrite. The storage verbs are a cohesive
-    concern -- every one addresses the on-disk tree itself rather than anything
-    stored inside it.
+    Extracted from :func:`_config_help` because adding this family pushed the
+    document builder through its per-callable size band. The storage verbs are
+    a cohesive concern: every one addresses the on-disk tree itself rather than
+    anything stored inside it.
     """
     return HelpSection(
         title=tr("cli.operator_surface.help.config.section_storage"),
@@ -346,45 +340,6 @@ def _config_storage_section() -> HelpSection:
             HelpEntry(
                 command="aeat config storage reclaim AREA --yes",
                 description=tr("cli.operator_surface.help.config.storage_reclaim"),
-            ),
-        ),
-    )
-
-
-def _config_custody_section() -> HelpSection:
-    """Return the passphrase and recovery-code custody rows.
-
-    Extracted from :func:`_config_help` so neither the document builder nor
-    this family exceeds the per-callable size band. The custody verbs are a
-    cohesive concern: every one of them operates on the secret store rather
-    than on profile content.
-    """
-    return HelpSection(
-        title=tr("cli.operator_surface.help.config.section_custody"),
-        entries=(
-            HelpEntry(
-                command="aeat config passphrase change",
-                description=tr("cli.operator_surface.help.config.passphrase_change"),
-            ),
-            HelpEntry(
-                command="aeat config recovery status",
-                description=tr("cli.operator_surface.help.config.recovery_status"),
-            ),
-            HelpEntry(
-                command="aeat config recovery create",
-                description=tr("cli.operator_surface.help.config.recovery_create"),
-            ),
-            HelpEntry(
-                command="aeat config recovery rotate",
-                description=tr("cli.operator_surface.help.config.recovery_rotate"),
-            ),
-            HelpEntry(
-                command="aeat config recovery verify",
-                description=tr("cli.operator_surface.help.config.recovery_verify"),
-            ),
-            HelpEntry(
-                command="aeat config recover",
-                description=tr("cli.operator_surface.help.config.recover"),
             ),
         ),
     )
@@ -500,7 +455,6 @@ def _config_help() -> HelpDocument:
                     ),
                 ),
             ),
-            _config_custody_section(),
             HelpSection(
                 title=tr("cli.operator_surface.help.config.section_diagnostics"),
                 entries=(

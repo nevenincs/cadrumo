@@ -29,11 +29,14 @@ from ....adapters.persistence.storage.custody import (
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
     compare_and_replace_same_or_predecessor_profile_custody_local_record,
+    load_committed_profile_password_material,
 )
+from ....adapters.persistence.storage.master_key import resume_profile_session
 from ....application.profile_custody import profile_current_bucket_session, profile_session_path
-from ....core import BucketPointer, capture_pointer, read_pointer, write_pointer
+from ....core import BucketPointer, ProfileSessionRefusalReason, capture_pointer, read_pointer, write_pointer
 from ....core import config as config_module
 from ....core.config import Settings
+from ....core.time import now as _now
 from ....domain.buckets import BucketEventHistoryPersistenceError
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._login_session import (
@@ -799,6 +802,53 @@ def test_successful_b_handover_publishes_before_retiring_a(tmp_path: Path) -> No
             assert require_profile_record_session(profile_b).profile_id.hex == profile_b.replace("-", "")
             assert capture_pointer(storage_root) is not None
             assert profile_session_path(storage_root=storage_root, profile_id=UUID(profile_a)).exists() is False
+        finally:
+            _close_live_login()
+
+
+def test_handover_leaves_no_resumable_session_material_for_the_retired_profile(tmp_path: Path) -> None:
+    """A retired profile's acceleration receipt must not still yield its DEK.
+
+    The receipt wraps A's 32-byte bucket DEK under a key the OS keychain holds,
+    and a handover rotates neither A's custody generation nor its DEK epoch, so
+    a receipt that outlives the retirement stays resumable: it hands the DEK
+    back with no passphrase. That is the profile-A resurrection this phase
+    exists to refuse.
+
+    The assertion is on the recovered material rather than on the file, because
+    a variant that unlinks the receipt while leaving the key recoverable by any
+    other route would satisfy a file-absence check and still be the same defect.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        profile_a, profile_b = _register_two_profiles(storage_root)
+        try:
+            login_profile(name=profile_a, passphrase_callback=lambda: _PASSWORD_A)
+            material = load_committed_profile_password_material(UUID(profile_a), root=storage_root)
+            live_outcome, live_dek = resume_profile_session(
+                storage_root=storage_root,
+                profile_id=UUID(profile_a),
+                custody_generation=material.envelope.password_generation,
+                dek_epoch=material.envelope.dek_epoch,
+                now=_now(),
+            )
+            # Anti-tautology: prove the receipt IS resumable while A is live, so
+            # the refusal below cannot pass against a profile that never had one.
+            assert live_outcome.resumed is True
+            assert live_dek is not None
+            assert len(live_dek) == 32
+
+            login_profile(name=profile_b, passphrase_callback=lambda: _PASSWORD_B)
+
+            retired_outcome, retired_dek = resume_profile_session(
+                storage_root=storage_root,
+                profile_id=UUID(profile_a),
+                custody_generation=material.envelope.password_generation,
+                dek_epoch=material.envelope.dek_epoch,
+                now=_now(),
+            )
+            assert retired_dek is None, "the retired profile's DEK is still recoverable without its passphrase"
+            assert retired_outcome.resumed is False
+            assert retired_outcome.refusal is ProfileSessionRefusalReason.ABSENT
         finally:
             _close_live_login()
 
