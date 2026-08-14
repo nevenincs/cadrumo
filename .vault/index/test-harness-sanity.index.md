@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:31872c2c1942eb2ed7a0fa6f611985cc62d3aafd803f37a65168b6c88adfa80e'
+body_hash: 'sha256:3e0677e3efb8a04e2380ccbf06f7421516585d54d1d1756f288597db2387e16a'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -14,6 +14,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W06-P17-S50]]'
   - '[[2026-08-14-test-harness-sanity-W06-P17-S51]]'
   - '[[2026-08-14-test-harness-sanity-W06-P17-S52]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P18-S53]]'
   - '[[2026-08-14-test-harness-sanity-audit]]'
   - '[[2026-08-14-test-harness-sanity-plan]]'
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -42,6 +43,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W06-P17-S50` - Define the outer-serial harness recipe with explicit membership non-vacuity and exit-status preservation
 - `2026-08-14-test-harness-sanity-W06-P17-S51` - Enroll the harness verdict in CI independently from unit and integration verdicts
 - `2026-08-14-test-harness-sanity-W06-P17-S52` - Prove the harness recipe selects every declared member and fails when membership collapses
+- `2026-08-14-test-harness-sanity-W07-P18-S53` - Canonicalize duplicated LLM secure-runtime fixtures at their narrowest common owner
 
 ### plan
 

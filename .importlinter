@@ -218,10 +218,10 @@ forbidden_modules =
 # neither substitutes for the other.
 ignore_imports =
     # ── Test-module carve-out, matching every other contract in this file ──
-    # The subpackage's own tests reach the shared secure-SQL runtime profile
-    # and the core-side stores for real-adapter roundtrips. Pinned per chain
-    # origin rather than by a wildcard so a NEW production edge still fails.
-    cadrumo.llm.conftest -> cadrumo.tests.secure_sql
+    # The subpackage's fixture discovery reaches the canonical secure-runtime
+    # test support. Pinned per chain origin rather than by a wildcard so a NEW
+    # production edge still fails.
+    cadrumo.llm.conftest -> cadrumo.tests.llm_secure_runtime
     # The stamp-singularity gate scans the whole non-test package, so it needs
     # the shared file-walk helpers; that package reaches storage for its own
     # roundtrip fixtures. A test-file chain origin, pinned like its siblings.
@@ -440,11 +440,6 @@ ignore_imports =
     # exactly rather than widening the existing pin.
     cadrumo.application.modelo._m145_communication_records -> cadrumo.adapters.persistence.profile.snapshots
     cadrumo.application.modelo._reconciliation_records -> cadrumo.adapters.persistence.storage
-    # The sandbox notice reads a bucket manifest through the storage primitives
-    # behind function-local imports, deliberately keeping the heavier
-    # repository stack off the notice path.
-    cadrumo.application.operator_output._sandbox_notice -> cadrumo.adapters.persistence.storage
-    cadrumo.application.operator_output._sandbox_notice -> cadrumo.adapters.persistence.storage.bucket
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.crypto
     cadrumo.application.modelo._review_package_recipient_registry -> cadrumo.adapters.persistence.storage
@@ -483,8 +478,6 @@ ignore_imports =
     cadrumo.application.auth._sessions -> cadrumo.adapters.persistence.**
     cadrumo.application.bienes_inversion -> cadrumo.adapters.persistence.**
     cadrumo.application.bucket_maintenance._manifest_digest -> cadrumo.adapters.persistence.**
-    cadrumo.application.bucket_maintenance._sandbox -> cadrumo.adapters.persistence.**
-    cadrumo.application.bucket_maintenance._service -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._iva_compensation_annual_partition -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._iva_compensation_history -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._multi_year -> cadrumo.adapters.persistence.**
@@ -732,12 +725,6 @@ ignore_imports =
     cadrumo.application.user_profile._custody_carry -> cadrumo.adapters.outbound.aeat.sede
     cadrumo.application.user_profile._custody_carry -> cadrumo.adapters.persistence.**
     cadrumo.application.user_profile._language_resolver -> cadrumo.adapters.persistence.**
-    # ── 2026-04-30-aeat-restructure-adr: the login/logout session lifecycle
-    #    reaches only the master-key session primitives and the persistence
-    #    storage error taxonomy; pinned narrow instead of a wildcard exception ──
-    cadrumo.application.user_profile._login_session -> cadrumo.adapters.persistence.storage.errors
-    cadrumo.application.user_profile._login_session -> cadrumo.adapters.persistence.storage.master_key
-    cadrumo.application.user_profile._orchestration -> cadrumo.adapters.persistence.**
     cadrumo.application.user_profile._profile_repository -> cadrumo.adapters.persistence.**
     cadrumo.application.user_profile._repository -> cadrumo.adapters.persistence.**
     # Reaches NO persistence: the second pin in this sweep whose storage-shaped
@@ -749,7 +736,6 @@ ignore_imports =
     cadrumo.application.workflow._models -> cadrumo.adapters.outbound.aeat.browser
     cadrumo.application.workflow._models -> cadrumo.adapters.persistence.**
     cadrumo.application.workflow._persistence -> cadrumo.adapters.persistence.**
-    cadrumo.application.workflow._profile_bucket_scan -> cadrumo.adapters.persistence.**
     cadrumo.application.workflow._profile_health -> cadrumo.adapters.persistence.**
     # The shared secure-SQL test helper wraps the real persistence adapter for
     # roundtrip-discipline tests; ignoring its adapter edge breaks the layer
@@ -862,7 +848,6 @@ ignore_imports =
     # ── buckets event-history repository ports-inversion (W01.P03.S05):
     #    the concrete BucketEventHistoryRepository moved to the persistence
     #    adapter behind BucketEventHistoryRepositoryProtocol ──
-    cadrumo.application.bucket_maintenance._service -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.inventory._service -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.ledger._actions_common -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.ledger._actions_split_merge -> cadrumo.adapters.persistence.profile.buckets
@@ -883,7 +868,6 @@ ignore_imports =
     cadrumo.application.modelo._reconcile -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._verification_actions -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._work_lifecycle -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.user_profile._orchestration -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.workflow._events -> cadrumo.adapters.persistence.profile.buckets
     # ── transactions catalogue repository ports-inversion (W02.P07.S09):
     #    the concrete TransactionCatalogueRepository moved to the persistence
