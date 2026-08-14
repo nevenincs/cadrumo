@@ -315,10 +315,10 @@ if TYPE_CHECKING:
         assess_passphrase,
         register_profile_with_credentials,
     )
+    from ._profile_record_repository import ProfileRecordRepository, bound_profile_record_session, require_profile_record_session
     from ._repository import (
         USER_PROFILE_SNAPSHOT_NAMESPACE,
         USER_PROFILE_VALUE_NAMESPACE,
-        ProfileRecordRepository,
         UserProfileSnapshotRepository,
         user_profile_snapshot_object_key,
         user_profile_value_object_key,
@@ -607,11 +607,14 @@ _LAZY_EXPORTS: dict[str, str] = {
             ),
         ),
         (
+            "._profile_record_repository",
+            ("ProfileRecordRepository", "bound_profile_record_session", "require_profile_record_session"),
+        ),
+        (
             "._repository",
             (
                 "USER_PROFILE_SNAPSHOT_NAMESPACE",
                 "USER_PROFILE_VALUE_NAMESPACE",
-                "ProfileRecordRepository",
                 "UserProfileSnapshotRepository",
                 "user_profile_snapshot_object_key",
                 "user_profile_value_object_key",
