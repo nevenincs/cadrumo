@@ -319,6 +319,13 @@ _DOMAIN_RECORD_NAMES: frozenset[str] = frozenset(
 #: ``__getattr__`` name-resolution ladder is one row here; the domain records
 #: resolve through the domain package's public facade, every other row through
 #: an intra-package private submodule.
+#:
+#: A name listed under two modules does not collide here -- the comprehension
+#: keeps whichever pair comes last, so the wrong home resolves correctly until
+#: the pairs are reordered and then raises at the import site. Nothing at
+#: runtime can see the losing claim, so the source is read statically by
+#: ``tests/test_facade_export_claims.py``, which also holds this table, the
+#: ``TYPE_CHECKING`` block and ``__all__`` to the same truth.
 _LAZY_EXPORTS: dict[str, str] = {
     name: module
     for module, names in (
@@ -352,7 +359,6 @@ _LAZY_EXPORTS: dict[str, str] = {
                 "EffectiveFact",
                 "record_to_effective_facts",
                 "record_to_path_values",
-    "reject_invalid_profile_facts",
                 "record_to_values",
                 "snapshot_to_values",
             ),
@@ -362,7 +368,6 @@ _LAZY_EXPORTS: dict[str, str] = {
             (
                 "ProfilePreflightService",
                 "build_profile_preflight_requirement",
-                "format_profile_path_requirements",
                 "format_profile_path_requirements",
                 "format_profile_preflight_requirement",
                 "format_profile_selector_requirements",
