@@ -33,7 +33,7 @@ from ....application.modelo import (
     list_work_units,
     rename_work_unit,
 )
-from ....application.user_profile import UserProfileLifecycleRepository
+from ....application.user_profile import ProfileRecordRepository
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry import RevisionId
@@ -91,7 +91,7 @@ def repo(tmp_path: Path) -> Iterator[WorkUnitCatalogueRepository]:
 
 
 def _seed_ready_profile(bucket_id: str, *, objects: Any) -> None:
-    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(
+    ProfileRecordRepository(bucket_id=bucket_id, objects=objects).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Test Operator",

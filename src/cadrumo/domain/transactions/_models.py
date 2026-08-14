@@ -2,20 +2,16 @@
 
 from __future__ import annotations
 
-import json
 import re
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Literal, Self, TypeGuard, override
+from typing import Self, override
 
 from pydantic import (
     BaseModel,
-    ConfigDict,
     Field,
-    TypeAdapter,
-    ValidationError,
     field_serializer,
     field_validator,
     model_validator,
@@ -27,7 +23,6 @@ from ...core import (
     OBJECT_TUPLE_ADAPTER,
     Art104TresExclusion,
     ConceptoIngreso,
-    Hex64Str,
     IvaDeductionFactKind,
     TipoActividad,
     fold_diacritics,
@@ -35,7 +30,7 @@ from ...core import (
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
-from ...core.hashing import content_hash_hex, sha256_hex
+from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, TransactionId
 from ...core.money import round_to_cents
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, parse_iso8601_date
@@ -50,7 +45,7 @@ from ..iva import (
     IvaDeductionClassificationProvenance,
     IvaExemptionArticle,
 )
-from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
+from ._enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ._errors import TransactionValidationError
 from ._irpf_categories import (
     IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
@@ -61,14 +56,23 @@ from ._irpf_categories import (
     has_non_work_irpf_category,
     has_rent_irpf_category,
 )
+from ._lineage_models import (
+    ClassificationHistoryEntry,
+    DecisionProvenance,
+    SplitLineage,
+    TransactionEditLineageEntry,
+    TransactionEvidenceProvenanceEntry,
+    TransactionLifecycleLineageEntry,
+    _is_object_mapping,
+    _string_keyed_mapping,
+    derive_split_group_id,
+)
 from ._m210_income_classification import M210IncomeClassification
 from ._model_validation import (
     coerce_raw_transaction,
     normalize_identifier_tuple,
     parse_datetime,
-    parse_required_aware_datetime,
     require_aware_datetime,
-    trim_lineage_text,
     validate_business_pct_coupling,
     validate_classified_by_shape,
     validate_confidence_range,
@@ -77,23 +81,7 @@ from ._model_validation import (
 from ._raw_transaction import RawTransaction
 from ._retencion_parameters import maximum_supported_activity_retencion_rate
 
-_STRING_KEYED_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
-    dict[str, object],
-    config=ConfigDict(strict=True),
-)
-
-
-def _string_keyed_mapping(data: object) -> dict[str, object]:
-    """Materialize an untrusted mapping after enforcing JSON-object keys."""
-    try:
-        return _STRING_KEYED_MAPPING_ADAPTER.validate_python(data)
-    except ValidationError as exc:
-        raise TransactionValidationError("transaction payload keys must be strings") from exc
-
-
-def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
-    """Narrow an unparameterized runtime mapping to untrusted object entries."""
-    return isinstance(value, Mapping)
+__all__ = ["DecisionProvenance", "derive_split_group_id"]
 
 
 def derive_transaction_id(raw: RawTransaction) -> str:
@@ -212,401 +200,6 @@ def _derive_transaction_id_from_validated_data(data: dict[str, object]) -> str:
     if not isinstance(raw, RawTransaction):
         raise TransactionValidationError("raw is required before transaction_id can be derived")
     return derive_transaction_id(raw)
-
-
-class DecisionProvenance(BaseModel):
-    """Typed provenance for one classification decision.
-
-    Carries the classifier that decided (:attr:`decided_by`, in the same
-    ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>`` /
-    ``derived:<basis>`` shape as
-    :attr:`ClassificationHistoryEntry.classified_by`), when it decided
-    (:attr:`decided_at`), the free-text justification, an optional
-    confidence in ``[0, 1]``, and whether the decision was a manual
-    override of an automated classification. This is the typed
-    replacement for the formerly ``dict``-widened reserved
-    :attr:`ClassificationHistoryEntry.provenance` payload; a persisted
-    record must carry a typed provenance, never a bare
-    ``dict[str, object]``.
-
-    Attributes:
-        decided_by: Classifier source string in the approved
-            ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>`` /
-            ``derived:<basis>`` shape.
-        decided_at: Timezone-aware UTC timestamp of the decision.
-        reason: Free-text justification (may be empty).
-        confidence: Optional decision confidence in ``[0, 1]``.
-        manual_override: ``True`` when the decision manually overrode an
-            earlier automated classification.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    decided_by: str = Field(min_length=1, max_length=128)
-    decided_at: datetime
-    reason: str = ""
-    confidence: Decimal | None = None
-    manual_override: bool = False
-
-    @model_validator(mode="before")
-    @classmethod
-    def _coerce_inbound(cls, data: object) -> object:
-        """Parse JSON-mode confidence strings back into ``Decimal`` on load."""
-        if isinstance(data, cls):
-            return data
-        if not _is_object_mapping(data):
-            return data
-        payload = _string_keyed_mapping(data)
-        raw_confidence = payload.get("confidence")
-        if isinstance(raw_confidence, str):
-            payload["confidence"] = Decimal(raw_confidence)
-        return payload
-
-    @field_validator("decided_by")
-    @classmethod
-    def _validate_decided_by(cls, value: str) -> str:
-        """Restrict ``decided_by`` to the approved classifier shapes."""
-        return validate_classified_by_shape(value)
-
-    @field_validator("decided_at", mode="before")
-    @classmethod
-    def _parse_decided_at(cls, value: object) -> datetime:
-        """Reject naive or blank decision timestamps."""
-        return parse_required_aware_datetime(value, field_name="decided_at")
-
-    @field_validator("reason")
-    @classmethod
-    def _normalize_reason(cls, value: str) -> str:
-        """Trim the free-text reason while allowing the empty string."""
-        return value.strip()
-
-    @field_validator("confidence")
-    @classmethod
-    def _validate_confidence(cls, value: Decimal | None) -> Decimal | None:
-        """Restrict confidence to the inclusive 0..1 range when not None."""
-        return validate_confidence_range(value)
-
-
-class ClassificationHistoryEntry(BaseModel):
-    """One frozen record in a transaction's classification chain.
-
-    The :attr:`confidence` and :attr:`provenance` fields default to
-    ``None`` and are populated by writers without a schema bump because
-    the field list is stable; :attr:`provenance` is the typed
-    :class:`DecisionProvenance` record (never a bare ``dict``).
-
-    Attributes:
-        business_classification: The :class:`BusinessClassification`
-            decided at this point in the chain.
-        business_pct: Required when ``business_classification`` is
-            :attr:`BusinessClassification.MIXED`; must be ``None``
-            otherwise. Coupling enforced via
-            :func:`_validate_business_pct_coupling`.
-        classified_at: Timezone-aware UTC timestamp of the decision.
-        classified_by: Classifier source string in the
-            ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>`` /
-            ``derived:<basis>`` shape.
-        reason: Free-text justification (may be empty).
-        category_id: Optional :class:`domain.categories.SpendingCategory`
-            foreign key.
-        notes: Free-text notes (may be empty).
-        confidence: Optional decision confidence in ``[0, 1]``.
-        provenance: Optional reserved provenance payload; the pydantic
-            type intentionally widens to a dict so future writers can
-            replace it with a typed record without a breaking schema
-            change.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    business_classification: BusinessClassification
-    business_pct: Decimal | None = None
-    classified_at: datetime
-    classified_by: str = Field(min_length=1)
-    reason: str = ""
-    category_id: str | None = None
-    notes: str = ""
-    confidence: Decimal | None = None
-    provenance: DecisionProvenance | None = None
-
-    @model_validator(mode="before")
-    @classmethod
-    def _coerce_inbound(cls, data: object) -> object:
-        """Parse JSON-mode strings back into strict Python types on load."""
-        if isinstance(data, cls):
-            return data
-        if not _is_object_mapping(data):
-            return data
-        payload = _string_keyed_mapping(data)
-        raw_state = payload.get("business_classification")
-        if isinstance(raw_state, str):
-            payload["business_classification"] = BusinessClassification(raw_state)
-        raw_business_pct = payload.get("business_pct")
-        if isinstance(raw_business_pct, str):
-            payload["business_pct"] = Decimal(raw_business_pct)
-        raw_classified_at = payload.get("classified_at")
-        if isinstance(raw_classified_at, str):
-            payload["classified_at"] = parse_datetime(raw_classified_at)
-        raw_confidence = payload.get("confidence")
-        if isinstance(raw_confidence, str):
-            payload["confidence"] = Decimal(raw_confidence)
-        return payload
-
-    @field_validator("classified_at")
-    @classmethod
-    def _require_aware_timestamp(cls, value: datetime) -> datetime:
-        """Reject naive classification timestamps."""
-        return require_aware_datetime(value)
-
-    @field_validator("classified_by")
-    @classmethod
-    def _validate_classified_by(cls, value: str) -> str:
-        """Restrict ``classified_by`` to the approved shapes."""
-        return validate_classified_by_shape(value)
-
-    @field_validator("reason")
-    @classmethod
-    def _normalize_reason(cls, value: str) -> str:
-        """Trim free-text reasons while allowing the empty string."""
-        return value.strip()
-
-    @field_validator("category_id")
-    @classmethod
-    def _normalize_category_id(cls, value: str | None) -> str | None:
-        """Trim the optional foreign key while rejecting blank strings.
-
-        Named for what it does, deliberately. Two CLI-boundary helpers are
-        called ``_validate_category_id`` and check ``SpendingCategory``
-        membership; this one only trims. Sharing their name made the weaker
-        behaviour read as the stronger one, so a reader who grepped the
-        validating name and landed here would conclude the field is checked
-        against the taxonomy when it is not -- defeating the very search that
-        would have found the gap.
-        """
-        if value is None:
-            return None
-        trimmed = value.strip()
-        if not trimmed:
-            raise TransactionValidationError("foreign-key identifiers must not be blank")
-        return trimmed
-
-    @field_validator("notes")
-    @classmethod
-    def _normalize_notes(cls, value: str) -> str:
-        """Trim free-text notes while allowing the empty string."""
-        return value.strip()
-
-    @field_validator("confidence")
-    @classmethod
-    def _validate_confidence(cls, value: Decimal | None) -> Decimal | None:
-        """Restrict confidence to the inclusive 0..1 range when not None."""
-        return validate_confidence_range(value)
-
-    @model_validator(mode="after")
-    def _enforce_business_pct(self) -> Self:
-        """Enforce the classification/business percentage coupling for a history entry."""
-        validate_business_pct_coupling(self.business_classification, self.business_pct)
-        return self
-
-
-class TransactionEvidenceProvenanceEntry(BaseModel):
-    """Actor/source lineage for evidence linked to one transaction."""
-
-    model_config = _STRICT_FROZEN
-
-    evidence_id: str = Field(min_length=1, max_length=128)
-    evidence_kind: Literal["purchase_invoice_evidence", "attachment"]
-    actor: str = Field(min_length=1, max_length=64)
-    source_command: str = Field(min_length=1, max_length=128)
-    linked_at: datetime
-    bucket_event_id: Hex64Str | None = None
-
-    @field_validator("evidence_id", "actor", "source_command", "bucket_event_id")
-    @classmethod
-    def _trim_optional_text(cls, value: str | None) -> str | None:
-        return trim_lineage_text(value)
-
-    @field_validator("linked_at", mode="before")
-    @classmethod
-    def _parse_linked_at(cls, value: object) -> datetime:
-        return parse_required_aware_datetime(value, field_name="linked_at")
-
-
-class TransactionEditLineageEntry(BaseModel):
-    """One durable manual correction applied to a transaction row."""
-
-    model_config = _STRICT_FROZEN
-
-    previous_transaction_id: TransactionId
-    actor: str = Field(min_length=1, max_length=64)
-    source_command: str = Field(min_length=1, max_length=128)
-    edited_at: datetime
-    bucket_event_id: Hex64Str | None = None
-
-    @field_validator("previous_transaction_id", "actor", "source_command", "bucket_event_id")
-    @classmethod
-    def _trim_optional_text(cls, value: str | None) -> str | None:
-        return trim_lineage_text(value)
-
-    @field_validator("edited_at", mode="before")
-    @classmethod
-    def _parse_edited_at(cls, value: object) -> datetime:
-        return parse_required_aware_datetime(value, field_name="edited_at")
-
-
-class TransactionLifecycleLineageEntry(BaseModel):
-    """One durable lifecycle transition applied to a transaction row."""
-
-    model_config = _STRICT_FROZEN
-
-    previous_state: TransactionLifecycleState
-    state: TransactionLifecycleState
-    actor: str = Field(min_length=1, max_length=64)
-    source_command: str = Field(min_length=1, max_length=128)
-    changed_at: datetime
-    reason: str = ""
-    bucket_event_id: Hex64Str | None = None
-
-    @model_validator(mode="before")
-    @classmethod
-    def _coerce_lifecycle_states(cls, data: object) -> object:
-        if not _is_object_mapping(data):
-            return data
-        payload = _string_keyed_mapping(data)
-        for key in ("previous_state", "state"):
-            raw_state = payload.get(key)
-            if isinstance(raw_state, str):
-                payload[key] = TransactionLifecycleState(raw_state)
-        return payload
-
-    @field_validator("actor", "source_command", "bucket_event_id")
-    @classmethod
-    def _trim_optional_text(cls, value: str | None) -> str | None:
-        return trim_lineage_text(value)
-
-    @field_validator("reason")
-    @classmethod
-    def _trim_reason(cls, value: str) -> str:
-        return value.strip()
-
-    @field_validator("changed_at", mode="before")
-    @classmethod
-    def _parse_changed_at(cls, value: object) -> datetime:
-        return parse_required_aware_datetime(value, field_name="changed_at")
-
-    @model_validator(mode="after")
-    def _reject_noop_transition(self) -> Self:
-        if self.previous_state is self.state:
-            raise TransactionValidationError("lifecycle transition must change state")
-        return self
-
-
-class SplitLineage(BaseModel):
-    """Split-lineage anchor embedded on a parent/child/merged transaction.
-
-    Attributes:
-        split_group_id: Lowercase 64-char SHA-256 derived deterministically
-            by :func:`derive_split_group_id` from the parent's
-            ``transaction_id`` plus the sorted child amounts and narratives.
-            Identical inputs yield identical group ids so re-emission is
-            idempotent by construction.
-        role: Position in the lineage — PARENT, CHILD, or MERGED.
-        sibling_transaction_ids: For PARENT, every child id; for CHILD,
-            the parent id followed by every other child id; for MERGED,
-            the cohort of merged child ids (the original parent id is
-            not included — the parent has its own MERGED entry on the
-            archived parent record). Sorted lexicographically.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    split_group_id: Hex64Str
-    role: SplitRole
-    sibling_transaction_ids: tuple[str, ...] = ()
-
-    @model_validator(mode="before")
-    @classmethod
-    def _coerce_role(cls, data: object) -> object:
-        if not _is_object_mapping(data):
-            return data
-        payload = _string_keyed_mapping(data)
-        raw_role = payload.get("role")
-        if isinstance(raw_role, str):
-            payload["role"] = SplitRole(raw_role)
-        return payload
-
-    @field_validator("sibling_transaction_ids", mode="before")
-    @classmethod
-    def _coerce_siblings(cls, value: object) -> tuple[object, ...]:
-        if isinstance(value, tuple):
-            return OBJECT_TUPLE_ADAPTER.validate_python(value)
-        if isinstance(value, Sequence) and not isinstance(value, str | bytes):
-            return OBJECT_TUPLE_ADAPTER.validate_python(value)
-        raise TransactionValidationError("sibling_transaction_ids must be a sequence")
-
-    @field_validator("sibling_transaction_ids")
-    @classmethod
-    def _normalise_siblings(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        cleaned: list[str] = []
-        for sibling in value:
-            trimmed = sibling.strip()
-            if not trimmed:
-                raise TransactionValidationError("sibling_transaction_ids entries must not be blank")
-            if len(trimmed) != 64:
-                raise TransactionValidationError("sibling_transaction_ids entries must be 64-character SHA-256 digests")
-            try:
-                int(trimmed, 16)
-            except ValueError as exc:
-                raise TransactionValidationError(
-                    "sibling_transaction_ids entries must be lowercase hex digests",
-                ) from exc
-            if trimmed != trimmed.lower():
-                raise TransactionValidationError("sibling_transaction_ids entries must be lowercase")
-            cleaned.append(trimmed)
-        if len(set(cleaned)) != len(cleaned):
-            raise TransactionValidationError("sibling_transaction_ids must be unique")
-        return tuple(sorted(cleaned))
-
-    @model_validator(mode="after")
-    def _require_siblings_for_lineage(self) -> Self:
-        if not self.sibling_transaction_ids:
-            raise TransactionValidationError("split_lineage must reference at least one sibling transaction id")
-        return self
-
-
-def derive_split_group_id(
-    *,
-    parent_transaction_id: str,
-    child_amounts: tuple[Decimal, ...],
-    child_narratives: tuple[str, ...],
-) -> str:
-    """Deterministically derive the ``split_group_id`` for a split cohort.
-
-    Identical (parent_id, amounts, narratives) tuples yield an identical
-    group id; this is what makes split-event re-emission idempotent.
-    Caller is responsible for amount/narrative pairing — the function
-    sorts amounts and narratives independently before hashing because
-    the group id identifies the *cohort*, not the per-child ordering.
-
-    Args:
-        parent_transaction_id: The 64-char SHA-256 of the parent row.
-        child_amounts: Per-child amounts, in any order.
-        child_narratives: Per-child narrative strings, in any order.
-
-    Returns:
-        Lowercase 64-char SHA-256 hex digest.
-    """
-    payload = json.dumps(
-        {
-            "parent_transaction_id": parent_transaction_id,
-            "child_amounts": sorted(canonical_decimal_string(amount) for amount in child_amounts),
-            "child_narratives": sorted(child_narratives),
-        },
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
-    )
-    return sha256_hex(payload.encode("utf-8"))
 
 
 class Transaction(BaseModel):

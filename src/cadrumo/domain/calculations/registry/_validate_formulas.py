@@ -107,6 +107,66 @@ def validate_formula_dag(scope: str, revision: ModeloRevision) -> list[str]:
     return []
 
 
+def _formula_scalar_reference_failures(
+    scope: str,
+    formula_id: str,
+    expression: FormulaExpression,
+    *,
+    casillas: set[CasillaId],
+    bindings: set[BindingId],
+    parameters: set[str],
+    relations: set[RelationId],
+) -> list[str]:
+    failures: list[str] = []
+    if expression.casilla_id is not None and expression.casilla_id not in casillas:
+        failures.append(f"{scope}: formula {formula_id!r} references unknown casilla {expression.casilla_id!r}")
+    if expression.binding is not None and expression.binding not in bindings:
+        failures.append(f"{scope}: formula {formula_id!r} references unknown binding {expression.binding!r}")
+    if expression.parameter is not None and expression.parameter not in parameters:
+        failures.append(f"{scope}: formula {formula_id!r} references unknown parameter {expression.parameter!r}")
+    if expression.relation is not None and expression.relation not in relations:
+        failures.append(f"{scope}: formula {formula_id!r} references unknown relation {expression.relation!r}")
+    return failures
+
+
+def _formula_dispatch_reference_failures(
+    scope: str,
+    formula_id: str,
+    expression: FormulaExpression,
+    parameters: set[str],
+) -> list[str]:
+    if expression.dispatch_table is None:
+        return []
+    return [
+        f"{scope}: formula {formula_id!r} dispatch_table[{key!r}] references unknown parameter {dispatched!r}"
+        for key, dispatched in expression.dispatch_table.items()
+        if dispatched not in parameters
+    ]
+
+
+def _formula_direct_reference_failures(
+    scope: str,
+    formula_id: str,
+    expression: FormulaExpression,
+    *,
+    casillas: set[CasillaId],
+    bindings: set[BindingId],
+    parameters: set[str],
+    relations: set[RelationId],
+) -> list[str]:
+    failures = _formula_scalar_reference_failures(
+        scope,
+        formula_id,
+        expression,
+        casillas=casillas,
+        bindings=bindings,
+        parameters=parameters,
+        relations=relations,
+    )
+    failures.extend(_formula_dispatch_reference_failures(scope, formula_id, expression, parameters))
+    return failures
+
+
 def validate_formula_expression(
     scope: str,
     formula_id: str,
@@ -126,22 +186,15 @@ def validate_formula_expression(
     validator keeps every nested expression node inside the selected revision's
     declared id sets.
     """
-    failures: list[str] = []
-    if expression.casilla_id is not None and expression.casilla_id not in casillas:
-        failures.append(f"{scope}: formula {formula_id!r} references unknown casilla {expression.casilla_id!r}")
-    if expression.binding is not None and expression.binding not in bindings:
-        failures.append(f"{scope}: formula {formula_id!r} references unknown binding {expression.binding!r}")
-    if expression.parameter is not None and expression.parameter not in parameters:
-        failures.append(f"{scope}: formula {formula_id!r} references unknown parameter {expression.parameter!r}")
-    if expression.dispatch_table:
-        for key, dispatched in expression.dispatch_table.items():
-            if dispatched not in parameters:
-                failures.append(
-                    f"{scope}: formula {formula_id!r} dispatch_table[{key!r}] "
-                    f"references unknown parameter {dispatched!r}",
-                )
-    if expression.relation is not None and expression.relation not in relations:
-        failures.append(f"{scope}: formula {formula_id!r} references unknown relation {expression.relation!r}")
+    failures = _formula_direct_reference_failures(
+        scope,
+        formula_id,
+        expression,
+        casillas=casillas,
+        bindings=bindings,
+        parameters=parameters,
+        relations=relations,
+    )
     for arg in expression.args:
         failures.extend(
             validate_formula_expression(

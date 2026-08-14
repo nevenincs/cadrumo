@@ -46,33 +46,40 @@ def _normalise_dispatch_table_entries(value: object) -> object:
     if "dispatch_table" in mapping:
         raise RegistryValidationError("formula leaf must use dispatch_table or dispatch_table_entries, not both")
 
-    raw_entries = mapping["dispatch_table_entries"]
+    normalised = dict(mapping)
+    normalised.pop("dispatch_table_entries")
+    normalised["dispatch_table"] = _dispatch_table_from_entries(mapping["dispatch_table_entries"])
+    return normalised
+
+
+def _dispatch_table_from_entries(raw_entries: object) -> dict[str, object]:
     try:
-        raw_entries = _DISPATCH_TABLE_ENTRIES_ADAPTER.validate_python(raw_entries)
+        entries = _DISPATCH_TABLE_ENTRIES_ADAPTER.validate_python(raw_entries)
     except ValidationError as exc:
         raise RegistryValidationError("dispatch_table_entries must be an array") from exc
 
     dispatch_table: dict[str, object] = {}
-    for raw_entry in raw_entries:
-        try:
-            entry = _string_keyed_mapping(raw_entry, surface="dispatch_table_entries entry")
-        except RegistryValidationError:
-            if isinstance(raw_entry, Mapping):
-                raise
-            raise RegistryValidationError("dispatch_table_entries entries must be tables") from None
-        if set(entry) != {"key", "parameter"}:
-            raise RegistryValidationError("dispatch_table_entries entries must declare key and parameter")
-        key = entry["key"]
-        if not isinstance(key, str):
-            raise RegistryValidationError("dispatch_table_entries key must be a string")
+    for raw_entry in entries:
+        key, parameter = _dispatch_table_entry(raw_entry)
         if key in dispatch_table:
             raise RegistryValidationError(f"dispatch_table_entries duplicate key {key!r}")
-        dispatch_table[key] = entry["parameter"]
+        dispatch_table[key] = parameter
+    return dispatch_table
 
-    normalised = dict(mapping)
-    normalised.pop("dispatch_table_entries")
-    normalised["dispatch_table"] = dispatch_table
-    return normalised
+
+def _dispatch_table_entry(raw_entry: object) -> tuple[str, object]:
+    try:
+        entry = _string_keyed_mapping(raw_entry, surface="dispatch_table_entries entry")
+    except RegistryValidationError:
+        if isinstance(raw_entry, Mapping):
+            raise
+        raise RegistryValidationError("dispatch_table_entries entries must be tables") from None
+    if set(entry) != {"key", "parameter"}:
+        raise RegistryValidationError("dispatch_table_entries entries must declare key and parameter")
+    key = entry["key"]
+    if not isinstance(key, str):
+        raise RegistryValidationError("dispatch_table_entries key must be a string")
+    return key, entry["parameter"]
 
 
 def _string_keyed_mapping(value: object, *, surface: str) -> dict[str, object]:

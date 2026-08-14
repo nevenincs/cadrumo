@@ -129,8 +129,6 @@ def _cuota_for(
             "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
         },
         date_context={"filing_period": filing_period},
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
     return result.values[_M200_CUOTA_INTEGRA_CASILLA]
 
@@ -521,8 +519,6 @@ def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_suppli
             "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
         },
         date_context={"filing_period": date(2024, 12, 31)},
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
     cuota_ejercicio = result.values[_M200_CUOTA_EJERCICIO_CASILLA]
     assert cuota_ejercicio == Decimal("20000.00"), (
@@ -571,6 +567,4 @@ def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() ->
                 "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
             },
             date_context={"filing_period": date(2024, 12, 31)},
-            m303_regimen_simplificado_scope=None,
-            m303_annual_orden=None,
         )

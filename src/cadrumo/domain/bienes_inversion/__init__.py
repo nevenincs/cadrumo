@@ -891,6 +891,19 @@ def _validate_investment_observation(
     filing_year: int,
     seen_assets: set[str],
 ) -> None:
+    if not _is_investment_acquisition_observation(observation):
+        return
+    asset_id = observation.investment_asset_id
+    if asset_id is None or asset_id not in records_by_id:
+        raise BienInversionValidationError("investment observation has no reciprocal bienes-inversion record")
+    if asset_id in seen_assets:
+        raise BienInversionValidationError("multiple investment observations reference one bienes-inversion asset")
+    record = records_by_id[asset_id]
+    _validate_investment_record_reciprocity(observation, record, filing_year)
+    seen_assets.add(asset_id)
+
+
+def _is_investment_acquisition_observation(observation: _InvestmentAssetLink) -> bool:
     kind = observation.deduction_fact_kind
     asset_id = observation.investment_asset_id
     if kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION:
@@ -898,19 +911,21 @@ def _validate_investment_observation(
     if kind is None or not kind.is_investment_acquisition:
         if asset_id is not None:
             raise BienInversionValidationError("non-investment observation cannot carry investment_asset_id")
-        return
-    if asset_id is None or asset_id not in records_by_id:
-        raise BienInversionValidationError("investment observation has no reciprocal bienes-inversion record")
-    if asset_id in seen_assets:
-        raise BienInversionValidationError("multiple investment observations reference one bienes-inversion asset")
-    record = records_by_id[asset_id]
+        return False
+    return True
+
+
+def _validate_investment_record_reciprocity(
+    observation: _InvestmentAssetLink,
+    record: BienInversionIvaRecord,
+    filing_year: int,
+) -> None:
     if record.acquisition_ledger_id != observation.ledger_id:
         raise BienInversionValidationError("investment asset acquisition_ledger_id is not reciprocal")
     if record.acquisition_year != filing_year or observation.transaction_date.year != filing_year:
         raise BienInversionValidationError("investment asset and observation must share the filing year")
     if record.prorrata_sector_id != observation.prorrata_sector_id:
         raise BienInversionValidationError("investment asset and observation must share the prorrata sector")
-    seen_assets.add(asset_id)
 
 
 __all__ = [

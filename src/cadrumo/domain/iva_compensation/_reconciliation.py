@@ -167,20 +167,32 @@ class IvaCompensationReconciliationDecision(BaseModel):
 
     @model_validator(mode="after")
     def _validate_selected_amount(self) -> IvaCompensationReconciliationDecision:
-        if self.target_period.filing_year != self.target_year:
-            raise ValueError("target_period.filing_year must match target_year")
-        if self.selected_authority != "missing" and self.selected_amount is None:
-            raise ValueError("selected_amount is required unless selected_authority is 'missing'")
-        if self.selected_authority == "missing" and self.selected_amount is not None:
-            raise ValueError("selected_amount must be absent when selected_authority is 'missing'")
-        if self.blocked and self.selected_authority == "aeat_wallet":
-            raise ValueError("blocked wallet divergence cannot select aeat_wallet for calculation")
-        if self.reason_identity is IvaCompensationDecisionReason.TAXPAYER_OVERRIDE:
-            if self.operator_explanation is None:
-                raise ValueError("taxpayer_override decisions require operator_explanation")
-        elif self.operator_explanation is not None:
-            raise ValueError("operator_explanation is allowed only for taxpayer_override decisions")
+        _validate_reconciliation_target_and_amount(self)
+        _validate_reconciliation_blocked_authority(self)
+        _validate_reconciliation_operator_explanation(self)
         return self
+
+
+def _validate_reconciliation_target_and_amount(decision: IvaCompensationReconciliationDecision) -> None:
+    if decision.target_period.filing_year != decision.target_year:
+        raise ValueError("target_period.filing_year must match target_year")
+    if decision.selected_authority != "missing" and decision.selected_amount is None:
+        raise ValueError("selected_amount is required unless selected_authority is 'missing'")
+    if decision.selected_authority == "missing" and decision.selected_amount is not None:
+        raise ValueError("selected_amount must be absent when selected_authority is 'missing'")
+
+
+def _validate_reconciliation_blocked_authority(decision: IvaCompensationReconciliationDecision) -> None:
+    if decision.blocked and decision.selected_authority == "aeat_wallet":
+        raise ValueError("blocked wallet divergence cannot select aeat_wallet for calculation")
+
+
+def _validate_reconciliation_operator_explanation(decision: IvaCompensationReconciliationDecision) -> None:
+    if decision.reason_identity is IvaCompensationDecisionReason.TAXPAYER_OVERRIDE:
+        if decision.operator_explanation is None:
+            raise ValueError("taxpayer_override decisions require operator_explanation")
+    elif decision.operator_explanation is not None:
+        raise ValueError("operator_explanation is allowed only for taxpayer_override decisions")
 
 
 @runtime_checkable

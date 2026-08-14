@@ -54,6 +54,11 @@ class _IdentifiedRecord(Protocol):
     def id(self) -> str: ...
 
 
+class _GroundedRecord(Protocol):
+    legal_refs: tuple[str, ...]
+    source_refs: tuple[str, ...]
+
+
 def _records_by_id[RecordT: _IdentifiedRecord](records: Iterable[RecordT]) -> dict[str, RecordT]:
     """Index records by id while preserving their authored order."""
     return {record.id: record for record in records}
@@ -62,6 +67,72 @@ def _records_by_id[RecordT: _IdentifiedRecord](records: Iterable[RecordT]) -> di
 def _catalogue_slice[RecordT](catalogue: Mapping[str, RecordT], record_ids: set[str]) -> dict[str, RecordT]:
     """Project the selected catalogue records in deterministic id order."""
     return {record_id: catalogue[record_id] for record_id in sorted(record_ids)}
+
+
+def _collect_grounded_record_refs(
+    records: Iterable[_GroundedRecord],
+    *,
+    legal_ids: set[str],
+    source_ids: set[str],
+) -> None:
+    for record in records:
+        legal_ids.update(record.legal_refs)
+        source_ids.update(record.source_refs)
+        if not isinstance(record, CasillaDefinition):
+            continue
+        if record.constraints is not None:
+            legal_ids.update(record.constraints.legal_refs)
+            source_ids.update(record.constraints.source_refs)
+        for alias in record.aliases:
+            legal_ids.update(alias.legal_refs)
+            source_ids.update(alias.source_refs)
+
+
+def _collect_cross_reference_predicate_refs(
+    revision: ModeloRevision,
+    *,
+    legal_ids: set[str],
+    source_ids: set[str],
+) -> None:
+    for cross_reference in revision.live_cross_references:
+        for predicate in cross_reference.applicability_predicates:
+            legal_ids.update(predicate.legal_refs)
+            source_ids.update(predicate.source_refs)
+
+
+def _collect_export_layout_refs(
+    revision: ModeloRevision,
+    *,
+    legal_ids: set[str],
+    source_ids: set[str],
+) -> None:
+    for layout in revision.export_layouts:
+        legal_ids.update(layout.legal_refs)
+        source_ids.update(layout.source_refs)
+        for export_record in layout.records:
+            for field in export_record.fields:
+                legal_ids.update(field.legal_refs)
+                source_ids.update(field.source_refs)
+
+
+def _collect_deadline_schedule_refs(
+    revision: ModeloRevision,
+    *,
+    legal_ids: set[str],
+    source_ids: set[str],
+) -> None:
+    for window in revision.deadline_windows:
+        legal_ids.update(window.legal_refs)
+        source_ids.update(window.source_refs)
+        for condition in window.applicability_conditions:
+            legal_ids.update(condition.legal_refs)
+            source_ids.update(condition.source_refs)
+    for schedule in revision.filing_schedules:
+        legal_ids.update(schedule.legal_refs)
+        source_ids.update(schedule.source_refs)
+        for condition in schedule.profile_conditions:
+            legal_ids.update(condition.legal_refs)
+            source_ids.update(condition.source_refs)
 
 
 # Peer-domain modules that register a ``CrossDomainSnapshotCheck`` with the
@@ -523,44 +594,8 @@ def _collect_snapshot_ref_ids(
         revision.dependency_classifications,
     )
     for kind_records in flat_records:
-        for record in kind_records:
-            legal_ids.update(record.legal_refs)
-            source_ids.update(record.source_refs)
-            if isinstance(record, CasillaDefinition):
-                if record.constraints is not None:
-                    legal_ids.update(record.constraints.legal_refs)
-                    source_ids.update(record.constraints.source_refs)
-                for alias in record.aliases:
-                    legal_ids.update(alias.legal_refs)
-                    source_ids.update(alias.source_refs)
-    # Cross-reference applicability predicates carry their own legal/source
-    # evidence for the profile fact that gates the official/live surface.
-    for cross_reference in revision.live_cross_references:
-        for predicate in cross_reference.applicability_predicates:
-            legal_ids.update(predicate.legal_refs)
-            source_ids.update(predicate.source_refs)
-    # Export layouts carry refs on the layout itself plus on every
-    # field inside every record. Walk both axes explicitly so a future
-    # binding-aware field gate still sees every nested ref.
-    for layout in revision.export_layouts:
-        legal_ids.update(layout.legal_refs)
-        source_ids.update(layout.source_refs)
-        for export_record in layout.records:
-            for field in export_record.fields:
-                legal_ids.update(field.legal_refs)
-                source_ids.update(field.source_refs)
-    # Deadline windows + filing schedules each nest applicability /
-    # profile conditions that carry their own refs.
-    for window in revision.deadline_windows:
-        legal_ids.update(window.legal_refs)
-        source_ids.update(window.source_refs)
-        for condition in window.applicability_conditions:
-            legal_ids.update(condition.legal_refs)
-            source_ids.update(condition.source_refs)
-    for schedule in revision.filing_schedules:
-        legal_ids.update(schedule.legal_refs)
-        source_ids.update(schedule.source_refs)
-        for condition in schedule.profile_conditions:
-            legal_ids.update(condition.legal_refs)
-            source_ids.update(condition.source_refs)
+        _collect_grounded_record_refs(kind_records, legal_ids=legal_ids, source_ids=source_ids)
+    _collect_cross_reference_predicate_refs(revision, legal_ids=legal_ids, source_ids=source_ids)
+    _collect_export_layout_refs(revision, legal_ids=legal_ids, source_ids=source_ids)
+    _collect_deadline_schedule_refs(revision, legal_ids=legal_ids, source_ids=source_ids)
     return legal_ids, source_ids

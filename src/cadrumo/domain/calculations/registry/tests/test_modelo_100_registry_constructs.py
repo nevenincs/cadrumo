@@ -10,8 +10,13 @@ import pytest
 from pydantic import AnyUrl, ValidationError
 
 from .....core import CasillaId
-from ....contribuyente import PROFILE_KEYS, TaxResidenceProfile
-from ....contribuyente.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
+from ....contribuyente import (
+    PROFILE_KEYS,
+    RentaAscendantProfile,
+    RentaDescendantProfile,
+    RentaFamilyProfile,
+    TaxResidenceProfile,
+)
 from .. import (
     CasillaDefinition,
     DataBindingDefinition,

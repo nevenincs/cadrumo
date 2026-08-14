@@ -133,8 +133,6 @@ def _run_2024(snapshot: RegistrySnapshot, inputs: dict[CasillaId, Decimal]) -> d
         # birth date does not affect the capital-mobiliario / base-ahorro
         # computation chain under test.
         date_binding_values={"renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15)},
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
     return dict(result.values)
 
@@ -301,8 +299,6 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot: RegistrySn
         binding_values=_bindings_2025,
         relation_values=relation_values_2025,
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1975, 6, 15)},
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
     values = dict(result.values)
 

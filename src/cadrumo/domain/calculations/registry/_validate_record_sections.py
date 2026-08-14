@@ -25,9 +25,11 @@ from ._binding_selector_utils import selector_as_dict
 from ._bindings import (
     is_layout_binding_selector,
     validate_binding_selector_shape,
+    validate_m303_regimen_simplificado_annual_summary_revision,
 )
 from ._ids import BindingId
 from ._schema import (
+    CasillaDefinition,
     DataBindingDefinition,
     FormulaDefinition,
     LegalReference,
@@ -47,6 +49,102 @@ from ._validate_helpers import missing_refs
 from ._validate_revision_rules import validate_dated_values
 
 _CASILLA_METADATA_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
+
+
+def _validate_casilla_grounding(
+    failures: list[str],
+    *,
+    prefix: str,
+    casilla: CasillaDefinition,
+    legal_refs: Mapping[str, LegalReference],
+    source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
+) -> None:
+    owner = f"casilla {casilla.id}"
+    failures.extend(missing_refs(prefix, owner, casilla.legal_refs, legal_refs, "legal"))
+    failures.extend(missing_refs(prefix, owner, casilla.source_refs, source_refs, "source"))
+    failures.extend(
+        evidence.require_any_source_tier(prefix, owner, casilla.source_refs, _CASILLA_METADATA_SOURCE_TIERS)
+    )
+    if casilla.constraints is not None:
+        constraint_owner = f"casilla {casilla.id} constraints"
+        failures.extend(missing_refs(prefix, constraint_owner, casilla.constraints.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, constraint_owner, casilla.constraints.source_refs, source_refs, "source"))
+        failures.extend(
+            evidence.require_any_source_tier(
+                prefix,
+                constraint_owner,
+                casilla.constraints.source_refs,
+                _CASILLA_METADATA_SOURCE_TIERS,
+            ),
+        )
+    for alias in casilla.aliases:
+        alias_owner = f"casilla {casilla.id} alias {alias.localization_key!r}"
+        failures.extend(missing_refs(prefix, alias_owner, alias.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, alias_owner, alias.source_refs, source_refs, "source"))
+        failures.extend(
+            evidence.require_any_source_tier(prefix, alias_owner, alias.source_refs, _CASILLA_METADATA_SOURCE_TIERS),
+        )
+
+
+def _validate_casilla_links(
+    failures: list[str],
+    *,
+    prefix: str,
+    casilla: CasillaDefinition,
+    formulas: Mapping[str, FormulaDefinition],
+    bindings: set[BindingId],
+    export_field_ids: set[str],
+) -> None:
+    _validate_casilla_formula_link(failures, prefix=prefix, casilla=casilla, formulas=formulas)
+    _validate_casilla_binding_links(failures, prefix=prefix, casilla=casilla, bindings=bindings)
+    _validate_casilla_export_links(failures, prefix=prefix, casilla=casilla, export_field_ids=export_field_ids)
+
+
+def _validate_casilla_formula_link(
+    failures: list[str],
+    *,
+    prefix: str,
+    casilla: CasillaDefinition,
+    formulas: Mapping[str, FormulaDefinition],
+) -> None:
+    if casilla.formula is None:
+        return
+    formula = formulas.get(casilla.formula)
+    if formula is None:
+        failures.append(f"{prefix}: casilla {casilla.id!r} references unknown formula {casilla.formula!r}")
+        return
+    if formula.target_casilla_id != casilla.id:
+        failures.append(
+            f"{prefix}: casilla {casilla.id!r} references formula {casilla.formula!r} "
+            f"targeting {formula.target_casilla_id!r}",
+        )
+
+
+def _validate_casilla_binding_links(
+    failures: list[str],
+    *,
+    prefix: str,
+    casilla: CasillaDefinition,
+    bindings: set[BindingId],
+) -> None:
+    if casilla.binding is not None and casilla.binding not in bindings:
+        failures.append(f"{prefix}: casilla {casilla.id!r} references unknown binding {casilla.binding!r}")
+    for binding in casilla.alternate_bindings:
+        if binding not in bindings:
+            failures.append(f"{prefix}: casilla {casilla.id!r} references unknown alternate binding {binding!r}")
+
+
+def _validate_casilla_export_links(
+    failures: list[str],
+    *,
+    prefix: str,
+    casilla: CasillaDefinition,
+    export_field_ids: set[str],
+) -> None:
+    for export_ref in casilla.export_refs:
+        if export_ref not in export_field_ids:
+            failures.append(f"{prefix}: casilla {casilla.id!r} references unknown export field {export_ref!r}")
 
 
 def validate_casilla_section(
@@ -70,61 +168,22 @@ def validate_casilla_section(
     the shared revision-validation context.
     """
     for casilla in revision.casillas:
-        owner = f"casilla {casilla.id}"
-        failures.extend(missing_refs(prefix, owner, casilla.legal_refs, legal_refs, "legal"))
-        failures.extend(missing_refs(prefix, owner, casilla.source_refs, source_refs, "source"))
-        failures.extend(
-            evidence.require_any_source_tier(prefix, owner, casilla.source_refs, _CASILLA_METADATA_SOURCE_TIERS)
+        _validate_casilla_grounding(
+            failures,
+            prefix=prefix,
+            casilla=casilla,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            evidence=evidence,
         )
-        if casilla.constraints is not None:
-            constraint_owner = f"casilla {casilla.id} constraints"
-            failures.extend(
-                missing_refs(prefix, constraint_owner, casilla.constraints.legal_refs, legal_refs, "legal"),
-            )
-            failures.extend(
-                missing_refs(prefix, constraint_owner, casilla.constraints.source_refs, source_refs, "source"),
-            )
-            failures.extend(
-                evidence.require_any_source_tier(
-                    prefix,
-                    constraint_owner,
-                    casilla.constraints.source_refs,
-                    _CASILLA_METADATA_SOURCE_TIERS,
-                ),
-            )
-        for alias in casilla.aliases:
-            alias_owner = f"casilla {casilla.id} alias {alias.localization_key!r}"
-            failures.extend(missing_refs(prefix, alias_owner, alias.legal_refs, legal_refs, "legal"))
-            failures.extend(missing_refs(prefix, alias_owner, alias.source_refs, source_refs, "source"))
-            failures.extend(
-                evidence.require_any_source_tier(
-                    prefix,
-                    alias_owner,
-                    alias.source_refs,
-                    _CASILLA_METADATA_SOURCE_TIERS,
-                ),
-            )
-        if casilla.formula is not None and casilla.formula not in formulas:
-            failures.append(f"{prefix}: casilla {casilla.id!r} references unknown formula {casilla.formula!r}")
-        if (
-            casilla.formula is not None
-            and casilla.formula in formulas
-            and formulas[casilla.formula].target_casilla_id != casilla.id
-        ):
-            failures.append(
-                f"{prefix}: casilla {casilla.id!r} references formula {casilla.formula!r} "
-                f"targeting {formulas[casilla.formula].target_casilla_id!r}",
-            )
-        if casilla.binding is not None and casilla.binding not in bindings:
-            failures.append(f"{prefix}: casilla {casilla.id!r} references unknown binding {casilla.binding!r}")
-        for binding in casilla.alternate_bindings:
-            if binding not in bindings:
-                failures.append(
-                    f"{prefix}: casilla {casilla.id!r} references unknown alternate binding {binding!r}",
-                )
-        for export_ref in casilla.export_refs:
-            if export_ref not in export_field_ids:
-                failures.append(f"{prefix}: casilla {casilla.id!r} references unknown export field {export_ref!r}")
+        _validate_casilla_links(
+            failures,
+            prefix=prefix,
+            casilla=casilla,
+            formulas=formulas,
+            bindings=bindings,
+            export_field_ids=export_field_ids,
+        )
 
 
 def validate_parameter_section(
@@ -179,6 +238,9 @@ def validate_binding_section(
     """
     for binding in revision.bindings:
         failures.extend(f"{prefix}: {fail}" for fail in validate_binding_selector_shape(binding))
+    failures.extend(
+        f"{prefix}: {failure}" for failure in validate_m303_regimen_simplificado_annual_summary_revision(revision)
+    )
     for binding in revision.bindings:
         owner = f"binding {binding.id}"
         failures.extend(missing_refs(prefix, owner, binding.legal_refs, legal_refs, "legal"))

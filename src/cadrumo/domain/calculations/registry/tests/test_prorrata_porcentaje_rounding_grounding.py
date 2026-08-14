@@ -47,8 +47,6 @@ import pytest
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
 from ....iva import (
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
     ProrrataInputs,
     ProrrataKind,
     compute_prorrata_general,
@@ -139,9 +137,6 @@ def _registry_percentage(filing_year: int, con_derecho: Decimal, total: Decimal)
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(filing_year, 12, 31)},
-        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-        ),
     )
     return result.values[_PORCENTAJE_ID]
 

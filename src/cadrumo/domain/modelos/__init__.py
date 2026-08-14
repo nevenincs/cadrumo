@@ -77,6 +77,7 @@ from __future__ import annotations
 
 from ._calculation_repository import CalculationRevisionPersistenceError, upsert_calculation_revision
 from ._calculation_revision import (
+    M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
     CalculationRevision,
     CalculationRevisionAmendmentKind,
     CalculationRevisionCatalogue,
@@ -93,6 +94,7 @@ from ._calculation_revision import (
     M303InsolvencyFilingFact,
     M303InsolvencyFilingSubtype,
     M303RegimenSimplificadoActivityCalculationResult,
+    M303RegimenSimplificadoAnnualSummaryHandoff,
     M303RegimenSimplificadoCalculationResult,
     M303RegimenSimplificadoFilingEvidence,
     M303RegimenSimplificadoModuleCalculationResult,
@@ -193,6 +195,7 @@ from ._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_
 
 __all__ = (
     "M232_MAX_RELATED_PARTY_ROWS",
+    "M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS",
     "OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND",
     "CalculationRevision",
     "CalculationRevisionAmendmentKind",
@@ -220,6 +223,7 @@ __all__ = (
     "M303InsolvencyFilingFact",
     "M303InsolvencyFilingSubtype",
     "M303RegimenSimplificadoActivityCalculationResult",
+    "M303RegimenSimplificadoAnnualSummaryHandoff",
     "M303RegimenSimplificadoCalculationResult",
     "M303RegimenSimplificadoFilingEvidence",
     "M303RegimenSimplificadoModuleCalculationResult",

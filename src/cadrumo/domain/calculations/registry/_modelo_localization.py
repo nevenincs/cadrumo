@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import base64
 import re
-from typing import Final, Literal
+from collections.abc import Mapping
+from typing import Final, Literal, cast
 
+from ....core import OBJECT_TUPLE_ADAPTER
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import MissingTranslationError, lookup_translation
 from ._ids import RevisionId
+from ._toml_helpers import as_toml_table as _as_toml_table
 
 ModeloLocalizationField = Literal["label", "help", "title", "official_name"]
 
@@ -98,6 +101,116 @@ def casilla_alias_locale_key(
         f"{encode_modelo_locale_segment(casilla_id)}.alias."
         f"{encode_modelo_locale_segment(alias_id)}.{field}"
     )
+
+
+def _as_toml_array(value: object) -> tuple[object, ...] | None:
+    """Narrow a frozen TOML array to object entries for locale enrolment."""
+    if not isinstance(value, tuple):
+        return None
+    return OBJECT_TUPLE_ADAPTER.validate_python(value)
+
+
+def _passthrough_localization_row(raw: object) -> dict[str, object]:
+    """Carry malformed locale-owned rows through to the schema validator."""
+    if isinstance(raw, Mapping):
+        return dict(cast(Mapping[str, object], raw))
+    return {"value": raw}
+
+
+def _localised_casilla_aliases(
+    raw_aliases: object,
+    *,
+    modelo_id: str,
+    revision_id: RevisionId,
+    casilla_id: str,
+) -> tuple[dict[str, object], ...] | None:
+    """Return one casilla's aliases with derived locale keys, or ``None`` if absent."""
+    aliases_array = _as_toml_array(raw_aliases)
+    if aliases_array is None:
+        return None
+    aliases: list[dict[str, object]] = []
+    for alias_index, raw_alias in enumerate(aliases_array):
+        alias = _as_toml_table(raw_alias)
+        if alias is None:
+            aliases.append(_passthrough_localization_row(raw_alias))
+            continue
+        aliases.append(
+            {
+                **alias,
+                "localization_key": casilla_alias_locale_key(
+                    modelo_id,
+                    revision_id,
+                    casilla_id,
+                    str(alias_index),
+                ),
+            },
+        )
+    return tuple(aliases)
+
+
+def _localised_casilla(raw_casilla: object, *, modelo_id: str, revision_id: RevisionId) -> dict[str, object]:
+    """Return one casilla with its derived locale keys attached."""
+    casilla = _as_toml_table(raw_casilla)
+    if casilla is None:
+        return _passthrough_localization_row(raw_casilla)
+    casilla_id = casilla.get("id")
+    if not isinstance(casilla_id, str):
+        return dict(casilla)
+    keys = [casilla_occurrence_locale_key(modelo_id, revision_id, casilla_id, "label")]
+    continuidad_id = casilla.get("continuidad_id")
+    if isinstance(continuidad_id, str):
+        keys.append(casilla_continuity_locale_key(modelo_id, continuidad_id, "label"))
+    payload: dict[str, object] = {**casilla, "localization_keys": tuple(keys)}
+    aliases = _localised_casilla_aliases(
+        casilla.get("aliases"),
+        modelo_id=modelo_id,
+        revision_id=revision_id,
+        casilla_id=casilla_id,
+    )
+    if aliases is not None:
+        payload["aliases"] = aliases
+    return payload
+
+
+def _localised_construct(raw_construct: object, *, modelo_id: str, revision_id: RevisionId) -> dict[str, object]:
+    """Return one construct with its derived locale key attached."""
+    construct = _as_toml_table(raw_construct)
+    if construct is None:
+        return _passthrough_localization_row(raw_construct)
+    construct_id = construct.get("id")
+    if not isinstance(construct_id, str):
+        return dict(construct)
+    return {
+        **construct,
+        "localization_key": construct_locale_key(modelo_id, revision_id, construct_id),
+    }
+
+
+def enroll_revision_localization(
+    *,
+    modelo_id: str,
+    revision_id: RevisionId,
+    raw_revision: Mapping[str, object],
+) -> dict[str, object]:
+    """Attach derived locale identities without copying presentation values."""
+    payload: dict[str, object] = {
+        "id": revision_id,
+        **raw_revision,
+        "localization_key": revision_locale_key(modelo_id, revision_id),
+    }
+    raw_casillas = _as_toml_array(raw_revision.get("casillas"))
+    if raw_casillas is not None:
+        payload["casillas"] = tuple(
+            _localised_casilla(raw_casilla, modelo_id=modelo_id, revision_id=revision_id)
+            for raw_casilla in raw_casillas
+        )
+    raw_constructs = _as_toml_array(raw_revision.get("constructs"))
+    if raw_constructs is not None:
+        payload["constructs"] = tuple(
+            _localised_construct(raw_construct, modelo_id=modelo_id, revision_id=revision_id)
+            for raw_construct in raw_constructs
+        )
+    return payload
 
 
 def resolve_modelo_localization(

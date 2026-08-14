@@ -129,6 +129,49 @@ def _binding_is_cross_modelo(binding: DataBindingDefinition, modelo_id: str) -> 
     return source_modelo != modelo_id
 
 
+def _visit_formula_closure_tokens(
+    revision: ModeloRevision,
+    visit_token: Callable[[CasillaId], None],
+) -> None:
+    for formula in revision.formulas:
+        visit_token(formula.target_casilla_id)
+        for ref in expression_casilla_refs(formula.expression):
+            visit_token(ref)
+
+
+def _visit_expectation_closure_tokens(
+    revision: ModeloRevision,
+    visit_token: Callable[[CasillaId], None],
+) -> None:
+    for expectation in revision.verification_expectations:
+        for ref in expectation.computed_casilla_ids:
+            visit_token(ref)
+        for ref in expectation.reconciliation_total_casilla_ids.values():
+            visit_token(ref)
+
+
+def _visit_binding_closure_tokens(
+    revision: ModeloRevision,
+    modelo_id: str,
+    visit_token: Callable[[CasillaId], None],
+) -> None:
+    for binding in revision.bindings:
+        if _binding_is_cross_modelo(binding, modelo_id):
+            continue
+        for token in binding_source_casilla_ids(binding):
+            visit_token(token)
+
+
+def _visit_relation_closure_tokens(
+    revision: ModeloRevision,
+    modelo_id: str,
+    visit_token: Callable[[CasillaId], None],
+) -> None:
+    for relation in revision.relations:
+        if relation.source_modelo == modelo_id:
+            visit_token(relation.source_casilla_id)
+
+
 def _walk_calculation_closure(
     revision: ModeloRevision,
     modelo_id: str,
@@ -148,23 +191,10 @@ def _walk_calculation_closure(
     for casilla in revision.casillas:
         if casilla.formula is not None or casilla.binding is not None:
             visit_endpoint(casilla)
-    for formula in revision.formulas:
-        visit_token(formula.target_casilla_id)
-        for ref in expression_casilla_refs(formula.expression):
-            visit_token(ref)
-    for expectation in revision.verification_expectations:
-        for ref in expectation.computed_casilla_ids:
-            visit_token(ref)
-        for ref in expectation.reconciliation_total_casilla_ids.values():
-            visit_token(ref)
-    for binding in revision.bindings:
-        if _binding_is_cross_modelo(binding, modelo_id):
-            continue
-        for token in binding_source_casilla_ids(binding):
-            visit_token(token)
-    for relation in revision.relations:
-        if relation.source_modelo == modelo_id:
-            visit_token(relation.source_casilla_id)
+    _visit_formula_closure_tokens(revision, visit_token)
+    _visit_expectation_closure_tokens(revision, visit_token)
+    _visit_binding_closure_tokens(revision, modelo_id, visit_token)
+    _visit_relation_closure_tokens(revision, modelo_id, visit_token)
 
 
 def calculation_closure_casilla_ids(revision: ModeloRevision, modelo_id: str) -> frozenset[CasillaId]:

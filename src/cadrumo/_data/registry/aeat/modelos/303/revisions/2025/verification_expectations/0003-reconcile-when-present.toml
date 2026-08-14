@@ -47,8 +47,11 @@ min_coverage = "0"
 discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "ley-37-1992:art-104", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
-# Five of the reconciled leaves are additionally grounded against an independent
-# AEAT authority: the Manual practico IVA 2024, Cap. 9 "Liquidacion primer
+# The 2024 manual cited below is historical corroboration for these reconciled
+# leaves, not an applicable external oracle for this 2025 revision. Its filing
+# year is intentionally preserved in the bundled payload, so these leaves are
+# not declared externally grounded here. The Manual practico IVA 2024, Cap. 9
+# "Liquidacion primer
 # trimestre" solucion (pag. 293-294) prints each as its own euro figure - "Total
 # IVA devengado en Ventas interiores y servicios prestados (83.000 x 21%):
 # 17.430 euros" (09), "Adquisiciones intracomunitarias: [(18.000(2) +
@@ -76,7 +79,7 @@ source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-
 # percentage is a deduction-rate leaf that multiplies into every cuota deducible,
 # so a wrong rate silently rescales the whole deducible side while the totals it
 # feeds stay internally consistent — the same compensating-error gap the five
-# leaves above close for the devengado and deducible sums. Grounded on THIS
-# revision only: no bundled oracle covers a filing year that resolves to
-# 2009-y-siguientes, so declaring it there would be a claim without evidence.
-externally_grounded_casilla_ids = ["09", "11", "29", "33", "37", "iva.prorrata-porcentaje"]
+# leaves above close for the devengado and deducible sums. The 2025 prorrata
+# oracle is the only applicable bundled oracle for this revision, so it is the
+# sole external-grounding declaration here.
+externally_grounded_casilla_ids = ["iva.prorrata-porcentaje"]

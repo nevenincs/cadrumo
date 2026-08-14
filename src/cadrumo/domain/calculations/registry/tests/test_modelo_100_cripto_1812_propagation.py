@@ -122,8 +122,6 @@ def _run_2024(snapshot: RegistrySnapshot, valor_1804: Decimal):
         relation_values=_RELATION_VALUES_2024,
         enum_binding_values=_enum_binding_values_2024(),
         date_binding_values=_date_binding_values_2024(),
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
 
 
@@ -260,8 +258,6 @@ def _run_2025(snapshot: RegistrySnapshot, valor_1804: Decimal):
         relation_values=_relation_values_2025(),
         enum_binding_values=_enum_binding_values_2025(),
         date_binding_values=_date_binding_values_2025(),
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
 
 
@@ -317,8 +313,6 @@ def _run_prior_year(snapshot: RegistrySnapshot, filing_year: int, valor_1804: De
         enum_binding_values=enum_binding_values,
         relation_values=relation_values,
         date_binding_values=date_binding_values,
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
 
 

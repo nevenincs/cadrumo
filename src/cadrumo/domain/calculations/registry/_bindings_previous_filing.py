@@ -462,35 +462,73 @@ class PreviousModeloSelector(BaseModel):
 
     @model_validator(mode="after")
     def _validate_period_selector(self) -> PreviousModeloSelector:
-        if self.prior_quarter_expanding_span and (
-            self.period is not None or self.source_periods or self.source_period_offset_from_target is not None
+        failure = self._period_selector_failure()
+        if failure is not None:
+            raise RegistryValidationError(failure)
+        return self
+
+    def _period_selector_failure(self) -> str | None:
+        """Return the first contradiction among period-selection axes."""
+        for check in (
+            self._prior_quarter_expanding_span_failure,
+            self._source_period_offset_failure,
+            self._period_pair_failure,
+            self._missing_period_selector_failure,
         ):
-            raise RegistryValidationError(
+            if failure := check():
+                return failure
+        return None
+
+    def _prior_quarter_expanding_span_failure(self) -> str | None:
+        """Reject ordinary period selectors beside the expanding-span mode."""
+        if self.prior_quarter_expanding_span and self._has_explicit_period_selector():
+            return (
                 "previous-filing prior_quarter_expanding_span is mutually exclusive with "
-                "period, source_periods, and source_period_offset_from_target",
+                "period, source_periods, and source_period_offset_from_target"
             )
-        if self.source_period_offset_from_target is not None:
-            if self.period is not None or self.source_periods:
-                raise RegistryValidationError(
-                    "previous-filing selector cannot declare period/source_periods together with "
-                    "source_period_offset_from_target",
-                )
-            if self.source_period_offset_from_target == 0 and self.grouping != "per_grupo_member":
-                raise RegistryValidationError("previous-filing source_period_offset_from_target must be non-zero")
+        return None
+
+    def _source_period_offset_failure(self) -> str | None:
+        """Reject conflicting or zero source-period offsets."""
+        if self.source_period_offset_from_target is None:
+            return None
+        if self.period is not None or self.source_periods:
+            return (
+                "previous-filing selector cannot declare period/source_periods together with "
+                "source_period_offset_from_target"
+            )
+        if self.source_period_offset_from_target == 0 and self.grouping != "per_grupo_member":
+            return "previous-filing source_period_offset_from_target must be non-zero"
+        return None
+
+    def _period_pair_failure(self) -> str | None:
+        """Reject simultaneous singular and plural period selectors."""
         if self.period is not None and self.source_periods:
-            raise RegistryValidationError("previous-filing selector must use period or source_periods, not both")
-        if (
+            return "previous-filing selector must use period or source_periods, not both"
+        return None
+
+    def _missing_period_selector_failure(self) -> str | None:
+        """Reject source casillas without any period-selection mechanism."""
+        if self._has_source_casillas_without_selector():
+            return (
+                "previous-filing selector must declare period, source_periods, "
+                "source_period_offset_from_target, or prior_quarter_expanding_span"
+            )
+        return None
+
+    def _has_explicit_period_selector(self) -> bool:
+        """Whether any ordinary period-selection axis is declared."""
+        return self.period is not None or bool(self.source_periods) or self.source_period_offset_from_target is not None
+
+    def _has_source_casillas_without_selector(self) -> bool:
+        """Whether source casillas are present without a way to select a period."""
+        return (
             self.period is None
             and not self.source_periods
             and self.source_period_offset_from_target is None
             and not self.prior_quarter_expanding_span
-            and self.source_casilla_ids
-        ):
-            raise RegistryValidationError(
-                "previous-filing selector must declare period, source_periods, "
-                "source_period_offset_from_target, or prior_quarter_expanding_span",
-            )
-        return self
+            and bool(self.source_casilla_ids)
+        )
 
     @model_validator(mode="after")
     def _validate_source_spec(self) -> PreviousModeloSelector:

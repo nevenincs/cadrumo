@@ -9,7 +9,6 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
-from ....iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from .. import (
     RegistrySnapshot,
     RegistryValidationError,
@@ -59,10 +58,6 @@ def test_runtime_accepts_canonical_casilla_id_for_semantic_input(_m303_2025_1t_s
         inputs={casilla.id: Decimal("1")},
         binding_values={_M303_PREVIOUS_COMPENSATION_BINDING: Decimal("0")},
         date_context={"filing_period": date(2025, 3, 31)},
-        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-        ),
-        m303_annual_orden=None,
     )
 
     assert result.values[casilla.id] == Decimal("1")
@@ -79,10 +74,6 @@ def test_runtime_rejects_casilla_number_for_semantic_input(_m303_2025_1t_snapsho
             inputs={casilla.number: Decimal("1")},
             binding_values={_M303_PREVIOUS_COMPENSATION_BINDING: Decimal("0")},
             date_context={"filing_period": date(2025, 3, 31)},
-            m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-                scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-            ),
-            m303_annual_orden=None,
         )
 
     assert exc_info.value.context == {"casilla_ids": casilla.number}

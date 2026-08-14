@@ -22,13 +22,23 @@ from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from ._ccaa import CCAA
 from ._constants import ProfileName
 from ._deduccion_maternidad import compute_deduccion_maternidad_0611
+from ._descendant import DescendantInfo
 from ._descendant_facts import (
     descendant_facts_from_list,
     descendant_list_from_facts,
     parse_descendiente_flag,
     relacion_kwarg,
 )
+from ._descendant_record import DescendantRecordFields
 from ._errors import ForalRegimeError, ProfileNotConfiguredError, ProfileValidationError, TaxResidenceProfileError
+from ._family_profile import RentaFamilyProfile
+from ._family_types import (
+    GuarderiaMonthSpend,
+    MinimoDescendientesThresholds,
+    RentaAscendantProfile,
+    RentaDescendantProfile,
+    within_multi_year_applicability_window,
+)
 from ._guarderia_mensual import (
     GUARDERIA_MENSUAL_ACCEPTED_FORM,
     parse_guarderia_mensual,
@@ -67,15 +77,6 @@ from ._renta_codes import (
     SituacionFamiliarM145,
     modelo100_ccaa_codigo,
     modelo100_ecivil_export_code,
-)
-from .family import (
-    DescendantInfo,
-    GuarderiaMonthSpend,
-    MinimoDescendientesThresholds,
-    RentaAscendantProfile,
-    RentaDescendantProfile,
-    RentaFamilyProfile,
-    within_multi_year_applicability_window,
 )
 
 if TYPE_CHECKING:
@@ -204,6 +205,7 @@ __all__ = [
     "RENTA_MODELO100_CCAA_CODIGOS",
     "UE_EEA_COUNTRY_CODES",
     "DescendantInfo",
+    "DescendantRecordFields",
     "FiscalResidency",
     "ForalRegimeError",
     "GuarderiaMonthSpend",

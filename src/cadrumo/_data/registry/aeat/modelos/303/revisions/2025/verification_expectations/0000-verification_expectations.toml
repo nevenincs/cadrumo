@@ -21,4 +21,6 @@ source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-
 # contract that enrolls them. See
 # test_m303_2024_regimen_general_manual_worked_example.py and
 # corpus/manual_oracles/modelo-303-2024-regimen-general-recargo-intracomunitaria-importacion.json.
-externally_grounded_casilla_ids = ["27", "45", "71", "iva.resultado", "iva.resultado-regimen-general"]
+# The worked example cited above is a 2024 filing and is therefore not an
+# applicable external oracle for this 2025 revision. Keep the reconciliation
+# contract, but make no cross-year grounding claim here.

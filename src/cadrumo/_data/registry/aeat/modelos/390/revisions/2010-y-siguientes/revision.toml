@@ -10,6 +10,7 @@ orden_aplicabilidad = [
     "orden-eha-3111-2009:art-1",
 ]
 source_refs = [
+    "aeat-dr-390-2022",
     "aeat-dr-390-2023",
     "aeat-dr-390-2024",
     "aeat-dr-390-2025",

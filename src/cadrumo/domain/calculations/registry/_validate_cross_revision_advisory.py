@@ -37,6 +37,65 @@ class CrossRevisionCasillaDriftSummary:
     uncovered_count: int = 0
 
 
+def _group_non_overlapping_divergences(
+    modelos: Iterable[ModeloDefinition],
+) -> dict[tuple[str, str, str, str], list[CrossRevisionCasillaDivergence]]:
+    grouped: dict[tuple[str, str, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
+    for divergence in iter_cross_revision_casilla_divergences(modelos):
+        if divergence.revisions_overlap:
+            continue
+        key = (
+            divergence.modelo_id,
+            divergence.left_revision_id,
+            divergence.right_revision_id,
+            divergence.field,
+        )
+        grouped[key].append(divergence)
+    return grouped
+
+
+def _drift_continuity_ids(divergences: list[CrossRevisionCasillaDivergence]) -> tuple[str, ...]:
+    return tuple(
+        sorted(
+            {
+                continuity_id
+                for divergence in divergences
+                for continuity_id in (divergence.left_continuidad_id, divergence.right_continuidad_id)
+                if continuity_id is not None
+            },
+        ),
+    )
+
+
+def _drift_evolution_kinds(divergences: list[CrossRevisionCasillaDivergence]) -> tuple[str, ...]:
+    return tuple(
+        sorted({divergence.evolution_kind for divergence in divergences if divergence.evolution_kind is not None})
+    )
+
+
+def _summarize_drift_group(
+    key: tuple[str, str, str, str],
+    divergences: list[CrossRevisionCasillaDivergence],
+    *,
+    example_limit: int,
+) -> CrossRevisionCasillaDriftSummary:
+    modelo_id, left_revision_id, right_revision_id, field = key
+    casilla_ids = [divergence.casilla_id for divergence in divergences]
+    covered_by_evolution_count = sum(1 for divergence in divergences if divergence.evolution_covers_field)
+    return CrossRevisionCasillaDriftSummary(
+        modelo_id=modelo_id,
+        left_revision_id=left_revision_id,
+        right_revision_id=right_revision_id,
+        field=field,
+        drift_count=len(casilla_ids),
+        example_casilla_ids=tuple(dict.fromkeys(casilla_ids[:example_limit])),
+        continuidad_ids=_drift_continuity_ids(divergences),
+        evolution_kinds=_drift_evolution_kinds(divergences),
+        covered_by_evolution_count=covered_by_evolution_count,
+        uncovered_count=len(divergences) - covered_by_evolution_count,
+    )
+
+
 def summarize_non_overlapping_cross_revision_casilla_drift(
     modelos: Iterable[ModeloDefinition],
     *,
@@ -63,48 +122,8 @@ def summarize_non_overlapping_cross_revision_casilla_drift(
     if example_limit < 1:
         raise RegistryValidationError("example_limit must be at least 1")
 
-    grouped: dict[tuple[str, str, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
-    for divergence in iter_cross_revision_casilla_divergences(modelos):
-        if divergence.revisions_overlap:
-            continue
-        key = (
-            divergence.modelo_id,
-            divergence.left_revision_id,
-            divergence.right_revision_id,
-            divergence.field,
-        )
-        grouped[key].append(divergence)
-
-    summaries: list[CrossRevisionCasillaDriftSummary] = []
-    for (modelo_id, left_revision_id, right_revision_id, field), divergences in sorted(grouped.items()):
-        casilla_ids = [divergence.casilla_id for divergence in divergences]
-        examples = tuple(dict.fromkeys(casilla_ids[:example_limit]))
-        continuidad_ids = tuple(
-            sorted(
-                {
-                    continuidad_id
-                    for divergence in divergences
-                    for continuidad_id in (divergence.left_continuidad_id, divergence.right_continuidad_id)
-                    if continuidad_id is not None
-                },
-            ),
-        )
-        evolution_kinds = tuple(
-            sorted({divergence.evolution_kind for divergence in divergences if divergence.evolution_kind is not None}),
-        )
-        covered_by_evolution_count = sum(1 for divergence in divergences if divergence.evolution_covers_field)
-        summaries.append(
-            CrossRevisionCasillaDriftSummary(
-                modelo_id=modelo_id,
-                left_revision_id=left_revision_id,
-                right_revision_id=right_revision_id,
-                field=field,
-                drift_count=len(casilla_ids),
-                example_casilla_ids=examples,
-                continuidad_ids=continuidad_ids,
-                evolution_kinds=evolution_kinds,
-                covered_by_evolution_count=covered_by_evolution_count,
-                uncovered_count=len(divergences) - covered_by_evolution_count,
-            ),
-        )
-    return tuple(summaries)
+    grouped = _group_non_overlapping_divergences(modelos)
+    return tuple(
+        _summarize_drift_group(key, divergences, example_limit=example_limit)
+        for key, divergences in sorted(grouped.items())
+    )

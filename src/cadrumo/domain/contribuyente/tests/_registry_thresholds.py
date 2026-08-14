@@ -1,7 +1,7 @@
 """The Art. 58/61 eligibility ceilings, read from the registry rather than retyped.
 
 Two test modules in this package need a
-:class:`~cadrumo.domain.contribuyente.family.MinimoDescendientesThresholds` to
+:class:`~cadrumo.domain.contribuyente.MinimoDescendientesThresholds` to
 exercise the ordinary-eligibility predicate. Both previously built one from
 inline ``Decimal`` literals carrying the real regulatory figures, which
 ``aeat-registry-authority-flow`` forbids: a regulatory value inlined at a call
@@ -29,7 +29,7 @@ from functools import cache
 
 from ....core.resources import resources
 from ...calculations.registry import resolve_parameter
-from ..family import MinimoDescendientesThresholds
+from .. import MinimoDescendientesThresholds
 
 __all__ = [
     "registry_birth_order_amounts",

@@ -43,9 +43,19 @@ from collections.abc import Iterator, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal, Self, override
+from types import MappingProxyType
+from typing import Annotated, Final, Literal, Self, override
 
-from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, ValidationError, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    StringConstraints,
+    TypeAdapter,
+    ValidationError,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 
 from ...core import (
     M210_TIPO_RENTA_CODE_PROJECTION,
@@ -57,7 +67,7 @@ from ...core import (
 )
 from ...core.aggregation import BindingSourceKind
 from ...core.hashing import content_hash_hex
-from ...core.identity import CalculationRevisionId, ContentDigest, FilingRecordId, SnapshotId, WorkUnitId
+from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, SnapshotId, WorkUnitId
 from ...core.time import validate_utc_aware
 from .._identifiers import canonical_decimal_string as _canonical_decimal
 from ..calculations.registry import (
@@ -384,6 +394,219 @@ def _m303_regimen_simplificado_result_digest(result: M303RegimenSimplificadoCalc
     return content_hash_hex(result.model_dump(mode="json", exclude={"digest"}))
 
 
+# The 2022 Modelo 390 record design declares these ten annual simplified-regime
+# endpoints in this semantic order.  Keep the source-declared 51, 53, 52 order
+# on the sibling selector; this target order follows the official 74--83 page.
+M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS: Final[tuple[CasillaId, ...]] = (
+    "iva.anual.regimen-simplificado.cuota-resultante-no-agricola",
+    "iva.anual.regimen-simplificado.cuota-resultante-agricola",
+    "iva.anual.regimen-simplificado.aic-bienes-cuota-devengada",
+    "iva.anual.regimen-simplificado.inversion-sujeto-pasivo",
+    "iva.anual.regimen-simplificado.entrega-activos-fijos",
+    "iva.anual.reconciliacion.devengada-simplificado-303",
+    "iva.anual.regimen-simplificado.iva-soportado-activos-fijos",
+    "iva.anual.regimen-simplificado.regularizacion-bienes-inversion",
+    "iva.anual.regimen-simplificado.suma-deducciones",
+    "iva.anual.regimen-simplificado.resultado",
+)
+"""Canonical Modelo 390 casilla endpoints for the immutable 303 4T handoff."""
+
+
+class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
+    """One frozen, source-identified Modelo 303 4T -> Modelo 390 0A handoff.
+
+    The handoff is calculated before its enclosing target revision has an id.
+    Its digest and unsigned identity payload therefore deliberately exclude
+    :attr:`target_calculation_revision_id`; persistence derives the target
+    revision id from the unsigned payload and then stamps that id on this
+    immutable envelope.  No relation, observation replay, or manual binding
+    override can substitute for this exact source calculation contract.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_bucket_id: BucketId
+    source_modelo: Literal["303"] = "303"
+    source_work_unit_id: WorkUnitId
+    source_calculation_revision_id: CalculationRevisionId
+    source_registry_revision_id: RevisionId
+    source_filing_year: int = Field(ge=2000, le=2099)
+    source_period: Period
+    source_result_digest: ContentDigest
+    # An exact empty tuple is meaningful when the immutable, filed 303 evidence
+    # positively proves that the simplified-regime activity cohort is empty.
+    # It must remain distinguishable from a missing filing-instance envelope,
+    # which the application assembler refuses before it reaches this carrier.
+    source_evidence_references: tuple[FilingEvidenceReference, ...] = ()
+    target_bucket_id: BucketId
+    target_modelo: Literal["390"] = "390"
+    target_work_unit_id: WorkUnitId
+    target_registry_revision_id: RevisionId
+    target_filing_year: int = Field(ge=2000, le=2099)
+    target_period: Period
+    values: Mapping[CasillaId, Decimal]
+    target_calculation_revision_id: CalculationRevisionId | None = None
+    digest: ContentDigest
+
+    @classmethod
+    def assembled(
+        cls,
+        *,
+        source_bucket_id: BucketId,
+        source_work_unit_id: WorkUnitId,
+        source_calculation_revision_id: CalculationRevisionId,
+        source_registry_revision_id: RevisionId,
+        source_filing_year: int,
+        source_result_digest: ContentDigest,
+        source_evidence_references: tuple[FilingEvidenceReference, ...],
+        target_bucket_id: BucketId,
+        target_work_unit_id: WorkUnitId,
+        target_registry_revision_id: RevisionId,
+        target_filing_year: int,
+        values: Mapping[CasillaId, Decimal],
+    ) -> Self:
+        """Build an unsigned handoff with its content digest.
+
+        This is the only pre-persistence constructor.  It fixes the source to
+        the annual fourth quarter and the target to the annual Modelo 390
+        period, so application callers cannot accidentally form a quarterly or
+        cross-year carrier and then rely on a later projection to repair it.
+        """
+        source_period = Period.from_year_and_code(source_filing_year, "4T")
+        target_period = Period.from_year_and_code(target_filing_year, "0A")
+        unsigned = cls.model_construct(
+            source_bucket_id=source_bucket_id,
+            source_work_unit_id=source_work_unit_id,
+            source_calculation_revision_id=source_calculation_revision_id,
+            source_registry_revision_id=source_registry_revision_id,
+            source_filing_year=source_filing_year,
+            source_period=source_period,
+            source_result_digest=source_result_digest,
+            source_evidence_references=source_evidence_references,
+            target_bucket_id=target_bucket_id,
+            target_work_unit_id=target_work_unit_id,
+            target_registry_revision_id=target_registry_revision_id,
+            target_filing_year=target_filing_year,
+            target_period=target_period,
+            values=values,
+            target_calculation_revision_id=None,
+            digest="",
+        )
+        return cls(
+            source_bucket_id=source_bucket_id,
+            source_work_unit_id=source_work_unit_id,
+            source_calculation_revision_id=source_calculation_revision_id,
+            source_registry_revision_id=source_registry_revision_id,
+            source_filing_year=source_filing_year,
+            source_period=source_period,
+            source_result_digest=source_result_digest,
+            source_evidence_references=source_evidence_references,
+            target_bucket_id=target_bucket_id,
+            target_work_unit_id=target_work_unit_id,
+            target_registry_revision_id=target_registry_revision_id,
+            target_filing_year=target_filing_year,
+            target_period=target_period,
+            values=values,
+            digest=_m303_regimen_simplificado_annual_summary_handoff_digest(unsigned),
+        )
+
+    def stamped_for_target_calculation_revision(
+        self,
+        target_calculation_revision_id: CalculationRevisionId,
+    ) -> Self:
+        """Return this unsigned carrier stamped for its containing revision."""
+        return type(self).model_validate(
+            {
+                **self.model_dump(mode="python"),
+                "target_calculation_revision_id": target_calculation_revision_id,
+            },
+        )
+
+    def unsigned_identity_payload(self) -> dict[str, object]:
+        """Return the canonical, target-id-free payload used in revision identity."""
+        return _m303_regimen_simplificado_annual_summary_handoff_payload(self)
+
+    @field_validator("values")
+    @classmethod
+    def _freeze_exact_ten_values(cls, value: Mapping[CasillaId, Decimal]) -> Mapping[CasillaId, Decimal]:
+        values = dict(value)
+        expected = set(M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS)
+        actual = set(values)
+        if actual != expected:
+            raise ModeloValidationError(
+                "M303 simplified annual-summary handoff must carry exactly the ten Modelo 390 boxes "
+                f"74-83; missing={sorted(expected - actual)!r} extra={sorted(actual - expected)!r}",
+            )
+        return MappingProxyType(
+            {casilla_id: values[casilla_id] for casilla_id in M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS},
+        )
+
+    @field_serializer("values")
+    def _serialize_values(self, value: Mapping[CasillaId, Decimal]) -> dict[CasillaId, Decimal]:
+        """Emit the immutable mapping as an ordinary canonical JSON object."""
+        return dict(value)
+
+    @model_validator(mode="after")
+    def _validate_immutable_coordinate_and_digest(self) -> M303RegimenSimplificadoAnnualSummaryHandoff:
+        if self.source_bucket_id != self.target_bucket_id:
+            raise ModeloValidationError("M303 simplified annual-summary handoff source and target bucket must agree")
+        if self.source_filing_year != self.target_filing_year:
+            raise ModeloValidationError(
+                "M303 simplified annual-summary handoff source and target filing year must agree"
+            )
+        if self.source_period != Period.from_year_and_code(self.source_filing_year, "4T"):
+            raise ModeloValidationError("M303 simplified annual-summary handoff source period must be 4T")
+        if self.target_period != Period.from_year_and_code(self.target_filing_year, "0A"):
+            raise ModeloValidationError("M303 simplified annual-summary handoff target period must be 0A")
+        expected_digest = _m303_regimen_simplificado_annual_summary_handoff_digest(self)
+        if self.digest != expected_digest:
+            raise ModeloValidationError(
+                "M303 simplified annual-summary handoff digest does not match its immutable unsigned payload",
+            )
+        return self
+
+
+def _m303_regimen_simplificado_annual_summary_handoff_payload(
+    handoff: M303RegimenSimplificadoAnnualSummaryHandoff,
+) -> dict[str, object]:
+    """Canonical target-id-free payload for the annual Modelo 390 handoff."""
+    return {
+        "source": {
+            "bucket_id": handoff.source_bucket_id,
+            "modelo": handoff.source_modelo,
+            "work_unit_id": handoff.source_work_unit_id,
+            "calculation_revision_id": handoff.source_calculation_revision_id,
+            "registry_revision_id": handoff.source_registry_revision_id,
+            "filing_year": handoff.source_filing_year,
+            "period": handoff.source_period.registry_token,
+            "result_digest": handoff.source_result_digest,
+            "evidence_references": tuple(item.model_dump(mode="json") for item in handoff.source_evidence_references),
+        },
+        "target": {
+            "bucket_id": handoff.target_bucket_id,
+            "modelo": handoff.target_modelo,
+            "work_unit_id": handoff.target_work_unit_id,
+            "registry_revision_id": handoff.target_registry_revision_id,
+            "filing_year": handoff.target_filing_year,
+            "period": handoff.target_period.registry_token,
+        },
+        "values": tuple(
+            {
+                "casilla_id": casilla_id,
+                "value": _canonical_decimal(handoff.values[casilla_id]),
+            }
+            for casilla_id in M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
+        ),
+    }
+
+
+def _m303_regimen_simplificado_annual_summary_handoff_digest(
+    handoff: M303RegimenSimplificadoAnnualSummaryHandoff,
+) -> str:
+    """Return the digest of a handoff without its post-derivation target id."""
+    return content_hash_hex(_m303_regimen_simplificado_annual_summary_handoff_payload(handoff))
+
+
 class M303RegimenSimplificadoFilingEvidence(BaseModel):
     """Taxpayer rows bound to the exact S59 Orden and record-design snapshot."""
 
@@ -499,6 +722,7 @@ class M303FilingInstanceEvidence(BaseModel):
 
     period: Period
     joint_return_elected: bool
+    annual_volume_nonzero: bool
     insolvency: M303InsolvencyFilingFact | None
     exonerado_390: M303Exonerado390FilingEvidence
     regimen_simplificado: M303RegimenSimplificadoFilingEvidence
@@ -728,6 +952,15 @@ def _filing_instance_evidence_revision_id_payload(
     return {"filing_instance_evidence": evidence.model_dump(mode="json")}
 
 
+def _m303_regimen_simplificado_annual_summary_handoff_revision_id_payload(
+    handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None,
+) -> dict[str, object]:
+    """Build the target-id-free immutable annual-summary identity payload."""
+    if handoff is None:
+        return {}
+    return {"m303_regimen_simplificado_annual_summary_handoff": handoff.unsigned_identity_payload()}
+
+
 def derive_calculation_revision_id(
     *,
     work_unit_id: str,
@@ -744,6 +977,7 @@ def derive_calculation_revision_id(
     detail_rows: Sequence[ModeloDetailRow] = (),
     source_issues: Sequence[CalculationSourceIssue] = (),
     filing_instance_evidence: FilingInstanceEvidence | None,
+    m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
 ) -> str:
     """Return the deterministic SHA-256 id for a calculation attempt.
 
@@ -802,6 +1036,11 @@ def derive_calculation_revision_id(
         payload["detail_rows"] = canonical_rows
     payload.update(_source_issues_revision_id_payload(source_issues))
     payload.update(_filing_instance_evidence_revision_id_payload(filing_instance_evidence))
+    payload.update(
+        _m303_regimen_simplificado_annual_summary_handoff_revision_id_payload(
+            m303_regimen_simplificado_annual_summary_handoff,
+        ),
+    )
     return content_hash_hex(payload)
 
 
@@ -923,6 +1162,183 @@ class CalculationSourceIssue(BaseModel):
     source_ref: str | None = Field(default=None, min_length=1, max_length=256)
 
 
+def _validate_revision_identity(revision: CalculationRevision, derived: CalculationRevisionId) -> None:
+    if derived != revision.calculation_revision_id:
+        raise ModeloValidationError(
+            f"calculation_revision_id {revision.calculation_revision_id!r} does not match "
+            f"the derived id {derived!r} for work_unit_id={revision.work_unit_id!r}",
+        )
+
+
+def _validate_annual_summary_handoff_target(revision: CalculationRevision) -> None:
+    handoff = revision.m303_regimen_simplificado_annual_summary_handoff
+    if handoff is None:
+        return
+    if handoff.target_calculation_revision_id != revision.calculation_revision_id:
+        raise ModeloValidationError(
+            "M303 simplified annual-summary handoff target calculation revision id must equal its containing revision",
+        )
+    missing_outputs = tuple(
+        casilla_id
+        for casilla_id in M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
+        if casilla_id not in revision.casilla_values
+    )
+    if missing_outputs:
+        raise ModeloValidationError(
+            "M303 simplified annual-summary handoff target revision is missing its "
+            f"Modelo 390 outputs: {missing_outputs!r}",
+        )
+    mismatched_outputs = tuple(
+        casilla_id
+        for casilla_id in M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
+        if revision.casilla_values[casilla_id] != handoff.values[casilla_id]
+    )
+    if mismatched_outputs:
+        raise ModeloValidationError(
+            "M303 simplified annual-summary handoff values disagree with the target "
+            f"Modelo 390 outputs: {mismatched_outputs!r}",
+        )
+
+
+def _validate_replay_channel_overlap(
+    left_name: str,
+    left_values: Mapping[str, object],
+    right_name: str,
+    right_values: Mapping[str, object],
+) -> None:
+    overlapping_ids = sorted(set(left_values).intersection(right_values))
+    if overlapping_ids:
+        raise ModeloValidationError(
+            "calculation revision replay ids must be channel-unique; "
+            f"ids appear in both {left_name} and {right_name}: {overlapping_ids!r}",
+        )
+
+
+def _validate_replay_channels(revision: CalculationRevision) -> None:
+    _validate_replay_channel_overlap(
+        "binding_overrides",
+        revision.binding_overrides,
+        "relation_overrides",
+        revision.relation_overrides,
+    )
+    _validate_replay_channel_overlap(
+        "binding_overrides",
+        revision.binding_overrides,
+        "row_binding_values",
+        revision.row_binding_values,
+    )
+    _validate_replay_channel_overlap(
+        "row_binding_values",
+        revision.row_binding_values,
+        "relation_overrides",
+        revision.relation_overrides,
+    )
+
+
+def _validate_observation_projection(revision: CalculationRevision) -> None:
+    if revision.casilla_values and not revision.observations:
+        raise ModeloValidationError(
+            "calculation revision with casilla_values must carry typed observations; "
+            "pass CasillaObservation rows as the canonical source so legal_refs, "
+            "source_refs, and formula provenance survive the domain boundary.",
+        )
+    if revision.observations:
+        projected = _outputs_for_hash_from_observations(revision.observations)
+        persisted = _outputs_for_hash_from_mapping(revision.casilla_values)
+        if projected != persisted:
+            raise ModeloValidationError(
+                "casilla_values is inconsistent with the typed observations envelope: "
+                f"observations project to {projected!r} but casilla_values is {persisted!r}. "
+                "Both fields must encode the same per-casilla outputs; pass observations "
+                "as the canonical source and let casilla_values mirror its projection.",
+            )
+
+
+def _require_revision_fields(
+    revision: CalculationRevision,
+    names: tuple[str, ...],
+    *,
+    present: bool,
+) -> None:
+    for name in names:
+        value_is_present = getattr(revision, name) is not None
+        if value_is_present is present:
+            continue
+        requirement = "carry" if present else "not carry"
+        raise ModeloValidationError(
+            f"calculation revision in state {revision.state.value!r} must {requirement} {name!r}",
+        )
+
+
+def _validate_state_metadata(revision: CalculationRevision) -> None:
+    if revision.state is CalculationRevisionState.BORRADOR:
+        _require_revision_fields(
+            revision,
+            (
+                "verified_at",
+                "verified_by",
+                "filed_at",
+                "filed_by",
+                "superseded_at",
+                "discarded_at",
+                "discarded_by",
+                "discard_reason",
+            ),
+            present=False,
+        )
+    elif revision.state is CalculationRevisionState.VERIFICADO_COMPLETO:
+        _require_revision_fields(revision, ("verified_at", "verified_by"), present=True)
+        _require_revision_fields(
+            revision,
+            (
+                "filed_at",
+                "filed_by",
+                "superseded_at",
+                "discarded_at",
+                "discarded_by",
+                "discard_reason",
+            ),
+            present=False,
+        )
+    elif revision.state is CalculationRevisionState.PRESENTADO:
+        _require_revision_fields(revision, ("verified_at", "verified_by", "filed_at", "filed_by"), present=True)
+        _require_revision_fields(
+            revision,
+            ("superseded_at", "discarded_at", "discarded_by", "discard_reason"),
+            present=False,
+        )
+    elif revision.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO:
+        _require_revision_fields(
+            revision,
+            ("verified_at", "verified_by", "filed_at", "filed_by", "superseded_at"),
+            present=True,
+        )
+        _require_revision_fields(
+            revision,
+            ("discarded_at", "discarded_by", "discard_reason"),
+            present=False,
+        )
+    elif revision.state is CalculationRevisionState.DESCARTADO:
+        _require_revision_fields(revision, ("discarded_at", "discarded_by"), present=True)
+        _require_revision_fields(
+            revision,
+            ("verified_at", "verified_by", "filed_at", "filed_by", "superseded_at"),
+            present=False,
+        )
+
+
+def _validate_amendment_metadata(revision: CalculationRevision) -> None:
+    amendment_set = (
+        revision.amendment_kind is not None,
+        revision.amends_filing_record_id is not None,
+        revision.amendment_reason is not None,
+    )
+    if any(amendment_set) and not all(amendment_set):
+        raise ModeloValidationError(
+            "amendment_kind, amends_filing_record_id, and amendment_reason must all be set together or all be None",
+        )
+
+
 class CalculationRevision(BaseModel):
     """One calculation attempt attached to a work unit.
 
@@ -1033,6 +1449,11 @@ class CalculationRevision(BaseModel):
     # construction site, so "no filing facts" is a decision on the record rather
     # than a field nobody supplied.
     filing_instance_evidence: FilingInstanceEvidence | None
+    # The one immutable 303 4T -> 390 0A simplified-regime handoff.  It is a
+    # calculation input rather than an observation or filing projection, and
+    # participates in the revision id through its target-id-free payload.  The
+    # persisted carrier is stamped only after that id has been derived.
+    m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None
     # Resolver-level source-mesh provenance: the typed
     # resolver→source-object→fingerprint trace projected
     # from the mesh resolution's ``CalculationSourceProvenance`` rows at persist
@@ -1107,99 +1528,18 @@ class CalculationRevision(BaseModel):
             detail_rows=self.detail_rows,
             source_issues=self.source_issues,
             filing_instance_evidence=self.filing_instance_evidence,
+            m303_regimen_simplificado_annual_summary_handoff=(self.m303_regimen_simplificado_annual_summary_handoff),
         )
-        if derived != self.calculation_revision_id:
-            raise ModeloValidationError(
-                f"calculation_revision_id {self.calculation_revision_id!r} does not match "
-                f"the derived id {derived!r} for work_unit_id={self.work_unit_id!r}",
-            )
-        overlapping_replay_ids = sorted(set(self.binding_overrides).intersection(self.relation_overrides))
-        if overlapping_replay_ids:
-            raise ModeloValidationError(
-                "calculation revision replay ids must be channel-unique; "
-                f"ids appear in both binding_overrides and relation_overrides: {overlapping_replay_ids!r}",
-            )
-        overlapping_row_replay_ids = sorted(set(self.binding_overrides).intersection(self.row_binding_values))
-        if overlapping_row_replay_ids:
-            raise ModeloValidationError(
-                "calculation revision replay ids must be channel-unique; "
-                f"ids appear in both binding_overrides and row_binding_values: {overlapping_row_replay_ids!r}",
-            )
-        overlapping_row_relation_ids = sorted(set(self.row_binding_values).intersection(self.relation_overrides))
-        if overlapping_row_relation_ids:
-            raise ModeloValidationError(
-                "calculation revision replay ids must be channel-unique; "
-                f"ids appear in both row_binding_values and relation_overrides: {overlapping_row_relation_ids!r}",
-            )
-        # The typed `observations` envelope is the logical source of truth;
-        # the flat `casilla_values` field is a denormalised cache enforced
-        # equal to the projection of observations. A non-empty flat map
-        # without observations is an incomplete revision, not a shape
-        # to tolerate in this unreleased project.
-        if self.casilla_values and not self.observations:
-            raise ModeloValidationError(
-                "calculation revision with casilla_values must carry typed observations; "
-                "pass CasillaObservation rows as the canonical source so legal_refs, "
-                "source_refs, and formula provenance survive the domain boundary.",
-            )
-        if self.observations:
-            projected = _outputs_for_hash_from_observations(self.observations)
-            persisted = _outputs_for_hash_from_mapping(self.casilla_values)
-            if projected != persisted:
-                raise ModeloValidationError(
-                    "casilla_values is inconsistent with the typed observations envelope: "
-                    f"observations project to {projected!r} but casilla_values is {persisted!r}. "
-                    "Both fields must encode the same per-casilla outputs; pass observations "
-                    "as the canonical source and let casilla_values mirror its projection.",
-                )
+        _validate_revision_identity(self, derived)
+        _validate_annual_summary_handoff_target(self)
+        _validate_replay_channels(self)
+        _validate_observation_projection(self)
         if self.updated_at < self.created_at:
             raise ModeloValidationError(
                 f"updated_at {self.updated_at.isoformat()} precedes created_at {self.created_at.isoformat()}",
             )
-        # State-specific audit-metadata invariants.
-        if self.state is CalculationRevisionState.BORRADOR:
-            self._require_none(
-                "verified_at",
-                "verified_by",
-                "filed_at",
-                "filed_by",
-                "superseded_at",
-                "discarded_at",
-                "discarded_by",
-                "discard_reason",
-            )
-        elif self.state is CalculationRevisionState.VERIFICADO_COMPLETO:
-            self._require_set("verified_at", "verified_by")
-            self._require_none(
-                "filed_at",
-                "filed_by",
-                "superseded_at",
-                "discarded_at",
-                "discarded_by",
-                "discard_reason",
-            )
-        elif self.state is CalculationRevisionState.PRESENTADO:
-            self._require_set("verified_at", "verified_by", "filed_at", "filed_by")
-            self._require_none("superseded_at", "discarded_at", "discarded_by", "discard_reason")
-        elif self.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO:
-            self._require_set("verified_at", "verified_by", "filed_at", "filed_by", "superseded_at")
-            self._require_none("discarded_at", "discarded_by", "discard_reason")
-        elif self.state is CalculationRevisionState.DESCARTADO:
-            self._require_set("discarded_at", "discarded_by")
-            self._require_none("verified_at", "verified_by", "filed_at", "filed_by", "superseded_at")
-        # Amendment-metadata invariants. ``amendment_kind``,
-        # ``amends_filing_record_id``, and ``amendment_reason`` must
-        # be all-set-or-all-None: an amendment carries every field;
-        # a non-amendment carries none.
-        amendment_set = (
-            self.amendment_kind is not None,
-            self.amends_filing_record_id is not None,
-            self.amendment_reason is not None,
-        )
-        if any(amendment_set) and not all(amendment_set):
-            raise ModeloValidationError(
-                "amendment_kind, amends_filing_record_id, and amendment_reason must all be set together or all be None",
-            )
+        _validate_state_metadata(self)
+        _validate_amendment_metadata(self)
         return self
 
     @field_validator("source_transaction_ids", mode="before")
@@ -1247,18 +1587,6 @@ class CalculationRevision(BaseModel):
             raw_mapping,
             surface="row_binding_values",
         )
-
-    def _require_set(self, *names: str) -> None:
-        for name in names:
-            if getattr(self, name) is None:
-                raise ModeloValidationError(f"calculation revision in state {self.state.value!r} must carry {name!r}")
-
-    def _require_none(self, *names: str) -> None:
-        for name in names:
-            if getattr(self, name) is not None:
-                raise ModeloValidationError(
-                    f"calculation revision in state {self.state.value!r} must not carry {name!r}",
-                )
 
 
 class CalculationRevisionCatalogue(BaseModel):
@@ -1347,6 +1675,7 @@ def assert_revision_snapshot_evidence_coverage(revision: CalculationRevision) ->
 
 
 __all__ = [
+    "M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS",
     "CalculationRevision",
     "CalculationRevisionAmendmentKind",
     "CalculationRevisionCatalogue",
@@ -1360,6 +1689,7 @@ __all__ = [
     "M303FilingInstanceEvidence",
     "M303InsolvencyFilingFact",
     "M303InsolvencyFilingSubtype",
+    "M303RegimenSimplificadoAnnualSummaryHandoff",
     "M303RegimenSimplificadoFilingEvidence",
     "assert_revision_snapshot_evidence_coverage",
     "derive_calculation_revision_id",

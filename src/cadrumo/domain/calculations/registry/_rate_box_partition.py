@@ -305,13 +305,28 @@ def _unscreened_reason(
     box_casillas = _distinct(
         casilla_id for binding, _ in rated for casilla_id in casillas_by_binding.get(binding.id, ())
     )
+    return _unscreened_layout_reason(
+        total_casillas=total_casillas,
+        box_casillas=box_casillas,
+        exports=exports,
+        blind_axes=blind[0][1],
+    )
+
+
+def _unscreened_layout_reason(
+    *,
+    total_casillas: Sequence[CasillaId],
+    box_casillas: Sequence[CasillaId],
+    exports: Mapping[CasillaId, bool],
+    blind_axes: Mapping[str, object],
+) -> str | None:
     if len(total_casillas) != 1 or not box_casillas:
         return _NO_SINGLE_TOTAL_CASILLA
     if exports.get(total_casillas[0], False) or total_casillas[0] in box_casillas:
         return _TOTAL_CASILLA_EXPORTS
     if not any(exports.get(casilla_id, False) for casilla_id in box_casillas):
         return _NO_BOX_CASILLA_EXPORTS
-    if not _rate_kind_names(blind[0][1].get("rate_kinds")):
+    if not _rate_kind_names(blind_axes.get("rate_kinds")):
         return _NO_RATE_KINDS
     return None
 
@@ -356,28 +371,37 @@ def rate_box_unscreened_groups(revision: ModeloRevision) -> tuple[RateBoxUnscree
     exports = {casilla.id: bool(casilla.export_refs) for casilla in revision.casillas}
     grouped = _ledger_iva_bindings_by_partition_key(revision)
 
-    unscreened: list[RateBoxUnscreenedGroup] = []
-    for key, members in grouped.items():
-        rated = [member for member in members if member[1].get(_APPLIED_RATES_AXIS)]
-        if not rated:
-            continue
-        blind = [member for member in members if not member[1].get(_APPLIED_RATES_AXIS)]
-        reason = _unscreened_reason(
-            rated=rated,
-            blind=blind,
-            casillas_by_binding=populated_casillas,
-            exports=exports,
-        )
-        if reason is None:
-            continue
-        unscreened.append(
-            RateBoxUnscreenedGroup(
-                selector_identity=tuple(f"{axis}={value}" for axis, value in key),
-                rated_binding_ids=tuple(sorted(binding.id for binding, _ in rated)),
-                reason=reason,
-            ),
-        )
+    unscreened = [
+        group
+        for key, members in grouped.items()
+        if (group := _unscreened_group_for_members(key, members, populated_casillas, exports)) is not None
+    ]
     return tuple(sorted(unscreened, key=lambda group: (group.reason, group.rated_binding_ids)))
+
+
+def _unscreened_group_for_members(
+    key: tuple[tuple[str, str], ...],
+    members: Sequence[tuple[DataBindingDefinition, Mapping[str, object]]],
+    casillas_by_binding: Mapping[BindingId, Sequence[CasillaId]],
+    exports: Mapping[CasillaId, bool],
+) -> RateBoxUnscreenedGroup | None:
+    rated = [member for member in members if member[1].get(_APPLIED_RATES_AXIS)]
+    if not rated:
+        return None
+    blind = [member for member in members if not member[1].get(_APPLIED_RATES_AXIS)]
+    reason = _unscreened_reason(
+        rated=rated,
+        blind=blind,
+        casillas_by_binding=casillas_by_binding,
+        exports=exports,
+    )
+    if reason is None:
+        return None
+    return RateBoxUnscreenedGroup(
+        selector_identity=tuple(f"{axis}={value}" for axis, value in key),
+        rated_binding_ids=tuple(sorted(binding.id for binding, _ in rated)),
+        reason=reason,
+    )
 
 
 def rate_box_coverage_shortfalls(
