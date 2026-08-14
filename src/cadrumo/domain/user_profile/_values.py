@@ -361,8 +361,8 @@ class UserProfileSnapshot(BaseModel):
         Returns:
             An immutable :class:`UserProfileSnapshot` for the given profile.
         """
-        if profile.status is not UserProfileStatus.ACTIVE:
-            raise UserProfileValidationError("cannot snapshot a tombstoned profile")
+        if profile.setup_state is not ProfileSetupState.COMPLETE:
+            raise UserProfileValidationError("cannot snapshot an incomplete profile record")
         instant = created_at or utc_now()
         facts = tuple(
             sorted(
