@@ -48,6 +48,7 @@ if TYPE_CHECKING:
         ProfileCustodyEnvelopePort,
         ProfileCustodyPasswordMaterialPort,
         ProfileCustodySecureObjectRawRowPort,
+        ProfileCustodySecureObjectRecordPort,
         ProfileCustodySentinelPort,
         ProfilePersistedSessionPort,
         ProfileSessionResumeOutcomePort,
@@ -165,20 +166,6 @@ class ProfileLoginThrottleEvaluationPort(Protocol):
     @property
     def remaining_seconds(self) -> int:
         """Seconds left on the current backoff window."""
-        ...
-
-
-class ProfileCustodySecureObjectRecordPort(Protocol):
-    """Decrypted secure-object payload and its CAS revision token."""
-
-    @property
-    def revision_id(self) -> str:
-        """The record's current CAS revision token."""
-        ...
-
-    @property
-    def payload(self) -> bytes:
-        """The decrypted record bytes."""
         ...
 
 
@@ -968,7 +955,6 @@ __all__ = [
     "ProfileCustodyRecordSessionMaterial",
     "ProfileCustodyRegistrationMaterial",
     "ProfileCustodySecureObjectNamespace",
-    "ProfileCustodySecureObjectRecordPort",
     "ProfileCustodySecureObjectRepositoryPort",
     "ProfileCustodyUnlockPort",
     "ProfileLoginThrottleEvaluationPort",

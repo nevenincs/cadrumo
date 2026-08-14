@@ -185,6 +185,20 @@ class ProfileCustodySecureObjectRawRowPort(Protocol):
         ...
 
 
+class ProfileCustodySecureObjectRecordPort(Protocol):
+    """Decrypted secure-object payload and its CAS revision token."""
+
+    @property
+    def revision_id(self) -> str:
+        """The record's current CAS revision token."""
+        ...
+
+    @property
+    def payload(self) -> bytes:
+        """The decrypted record bytes."""
+        ...
+
+
 class ProfileCustodyEnvelopePort(Protocol):
     """Opaque password-envelope contract accepted by custody transactions."""
 
@@ -210,6 +224,7 @@ __all__ = [
     "ProfileCustodyPasswordMaterialPort",
     "ProfileCustodyRecoveryEnvelopePort",
     "ProfileCustodySecureObjectRawRowPort",
+    "ProfileCustodySecureObjectRecordPort",
     "ProfileCustodySentinelPort",
     "ProfilePersistedSessionPort",
     "ProfileSessionResumeOutcomePort",
