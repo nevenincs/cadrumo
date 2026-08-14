@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from ....application.calculations import CalculationObservationRepository, resolve_bindings_from_local_store
-from ....application.user_profile import UserProfileLifecycleRepository, profile_storage_session
+from ....application.user_profile import ProfileRecordRepository, profile_storage_session
 from ....core import Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
@@ -64,7 +64,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )
-    UserProfileLifecycleRepository(
+    ProfileRecordRepository(
         bucket_id=runtime_profile.bucket_id,
         objects=runtime_profile.repository,
     ).save(record)

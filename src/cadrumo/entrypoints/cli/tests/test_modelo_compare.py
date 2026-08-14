@@ -37,7 +37,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import UserProfileLifecycleRepository
+from ....application.user_profile import ProfileRecordRepository
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -151,7 +151,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )
-    lifecycle = UserProfileLifecycleRepository(
+    lifecycle = ProfileRecordRepository(
         bucket_id=_PROFILE_ID,
         objects=runtime_profile.repository,
     )
@@ -359,8 +359,6 @@ def test_compare_delta_rows_carry_provenance() -> None:
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
 
     # Simulate the obs_by_id lookup from modelo_compare.

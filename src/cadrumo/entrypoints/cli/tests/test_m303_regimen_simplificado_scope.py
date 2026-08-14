@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from ....application.calculations import IvaWalletDecisionRepository
-from ....application.user_profile import UserProfileLifecycleRepository
+from ....application.user_profile import ProfileRecordRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.deadlines import M303RegimeComposition
@@ -39,7 +39,7 @@ def _store_current_profile(
     *,
     composition: M303RegimeComposition,
 ) -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=runtime_profile.repository).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=runtime_profile.repository).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="M303 CLI scope profile",

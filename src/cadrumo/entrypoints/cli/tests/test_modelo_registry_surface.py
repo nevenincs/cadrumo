@@ -50,10 +50,10 @@ _UUID_TEXT_RE = re.compile(
 
 
 def _seed_modelo_130_ready_profile(bucket_id: str) -> None:
-    from ....application.user_profile import UserProfileLifecycleRepository
+    from ....application.user_profile import ProfileRecordRepository
     from ....domain.user_profile import UserProfileFact, UserProfileRecord
 
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+    ProfileRecordRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Modelo 130 guidance profile",
@@ -431,13 +431,13 @@ def test_work_calculate_missing_m200_m202_relation_prefill_is_advisory(tmp_path)
     """The live M200 relation-prefill path warns rather than refusing calculation."""
 
     from ....application.modelo import create_work_unit
-    from ....application.user_profile import UserProfileLifecycleRepository
+    from ....application.user_profile import ProfileRecordRepository
     from ....core import Period
     from ....domain.user_profile import UserProfileFact, UserProfileRecord
     from ....tests.secure_sql import isolated_runtime_profile
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="0c200000-0000-4000-8000-000000000002") as runtime:
-        UserProfileLifecycleRepository(bucket_id=runtime.bucket_id, objects=runtime.repository).save(
+        ProfileRecordRepository(bucket_id=runtime.bucket_id, objects=runtime.repository).save(
             UserProfileRecord(
                 profile_id=runtime.bucket_id,
                 display_name="M200 relation guidance profile",

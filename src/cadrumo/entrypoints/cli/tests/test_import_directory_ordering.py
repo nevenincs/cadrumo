@@ -8,7 +8,7 @@ pins that invariant so a future edit cannot silently regress it to raw scan
 order.
 
 The sibling output-ordering site — the profile inventory scan in
-``ProfileRepository.list`` — is deliberately NOT sorted at the scan: it feeds
+``CommittedProfileRepository.list`` — is deliberately NOT sorted at the scan: it feeds
 no ordered output. Its consumer is the order-independent duplicate-tax-id
 uniqueness guard, and the operator-facing profile listing is a separate
 bucket-directory scan (``list_profile_buckets``) that never reads it. Sorting

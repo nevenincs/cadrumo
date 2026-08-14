@@ -171,7 +171,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     """Profile setup, config reads, deadlines, and filing runtime use one profile bucket."""
 
     from ....application.filing import load_default_filing_profile
-    from ....application.user_profile import UserProfileLifecycleRepository, fact_value
+    from ....application.user_profile import ProfileRecordRepository, fact_value
     from ....application.workflow import workflow_state_repository
 
     create_result = _invoke(_profile_create_args("--iva-regime", "GENERAL", "--tax-residence-ccaa", "madrid"))
@@ -215,7 +215,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
             lambda current: set_active_field(current, UserProfileFact(path="preferences.output_language", value="en")),
         )
 
-        refreshed = UserProfileLifecycleRepository(bucket_id=operator_profile_id).load(operator_profile_id)
+        refreshed = ProfileRecordRepository(bucket_id=operator_profile_id).load(operator_profile_id)
         assert fact_value(refreshed, "preferences.output_language") == "en"
 
     # `config profile status` reads the profile-bound secure store, needing an
@@ -235,7 +235,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     with activate_master_key_provider(get_master_key_provider()):
         state = workflow_state_repository().load()
         assert state.active_profile_bucket_id() == operator_profile_id
-        stored = UserProfileLifecycleRepository(bucket_id=operator_profile_id).load(operator_profile_id)
+        stored = ProfileRecordRepository(bucket_id=operator_profile_id).load(operator_profile_id)
         assert fact_value(stored, "identity.tax_id") == "00000000T"
         assert fact_value(stored, "preferences.output_language") == "en"
 

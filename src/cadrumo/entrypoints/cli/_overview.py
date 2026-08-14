@@ -91,8 +91,9 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from ...application.overview import CalendarWarning
-    from ...application.user_profile import ProfileRepository
+    from ...application.user_profile import ProfileRecordRepository
     from ...application.workflow import ProfileBucketPointer as _ProfileBucketPointer
+    from ...application.workflow import WorkflowState
     from ...domain.deadlines import TaxpayerProfile
     from ._errors import CliRefusedBoundaryError
 
@@ -240,6 +241,85 @@ def _overview_status_period(period: str, *, year: int | None):
         raise _bad(tr("cli.common.errors.period_unrecognised", raw=period)) from exc
 
 
+def _emit_period_overview_status(
+    ctx: typer.Context,
+    *,
+    current: WorkflowState,
+    period: str,
+    year: int | None,
+    verbose: bool,
+) -> None:
+    """Emit the typed draft projection for one canonical filing period."""
+    drafts = _load_drafts()
+    canonical = _overview_status_period(period, year=year)
+    wanted = (canonical.filing_year, canonical.registry_token)
+
+    def _draft_matches(draft_period: object) -> bool:
+        # Drafts persist typed periods; compare their separate filing-year and
+        # registry-token fields to the operator's ``--year``/``--period`` pair.
+        filing_year = getattr(draft_period, "filing_year", None)
+        registry_token = getattr(draft_period, "registry_token", None)
+        return (
+            isinstance(filing_year, int)
+            and filing_year == wanted[0]
+            and isinstance(registry_token, str)
+            and registry_token == wanted[1]
+        )
+
+    per_modelo_drafts = [d for d in drafts if _draft_matches(d.period)]
+    from ._overview_payloads import OverviewDraftPayload
+
+    period_display = str(canonical)
+    typed_period = OverviewStatusResult(
+        period=period_display,
+        drafts=[
+            OverviewDraftPayload(draft_id=d.draft_id, modelo=d.modelo, status=d.status.value) for d in per_modelo_drafts
+        ],
+        verbose=verbose,
+    )
+    period_lines = [
+        f"{tr('cli.overview.period')}\t{period_display}",
+        f"{tr('cli.overview.drafts')}\t{len(per_modelo_drafts)}",
+        *(f"{d.modelo}\t{d.draft_id}\t{d.status.value}" for d in per_modelo_drafts),
+    ]
+    _emit_envelope(ctx, command="overview.status", result=typed_period, lines=period_lines)
+
+
+def _overview_status_coverage(
+    current: WorkflowState | None,
+    *,
+    raw_values: Mapping[str, object] | None,
+) -> tuple[list[str], list[Notice]]:
+    """Build the obligation-coverage lines and notices for status output."""
+    if current is None or current.active_profile_bucket_id() is None:
+        return [], []
+
+    status_today = today_madrid()
+    status_cal = build_overview_calendar(
+        _profile_to_taxpayer(current),
+        OverviewCalendarRange(
+            from_date=_date(status_today.year, 1, 1),
+            to_date=_date(status_today.year, 12, 31),
+        ),
+        today=status_today,
+        raw_values=raw_values,
+    )
+    coverage_lines: list[str] = []
+    status_notices: list[Notice] = []
+    for notice in overview_coverage_notices(status_cal.coverage):
+        status_notices.append(notice)
+        coverage_lines.append(f"coverage_advised\t{len(status_cal.coverage.advised)}\t{notice.message}")
+
+    from ...domain.calculations.registry import derive_tax_route
+
+    history_notice = overview_no_aeat_history_notice(
+        tax_route=derive_tax_route(_profile_to_taxpayer(current)),
+    )
+    if history_notice is not None:
+        status_notices.append(history_notice)
+    return coverage_lines, status_notices
+
+
 @app.command("status", help=tr("cli.overview.status_help"))
 def overview_status(
     ctx: typer.Context,
@@ -266,80 +346,24 @@ def overview_status(
     if period is not None:
         if current is None:
             raise _no_active_profile_refusal()
-
-        drafts = _load_drafts()
-        canonical = _overview_status_period(period, year=year)
-        wanted = (canonical.filing_year, canonical.registry_token)
-
-        def _draft_matches(draft_period: object) -> bool:
-            # Drafts persist typed periods; compare their separate filing-year
-            # and registry-token fields to the operator's ``--year``/``--period`` pair.
-            filing_year = getattr(draft_period, "filing_year", None)
-            registry_token = getattr(draft_period, "registry_token", None)
-            return (
-                isinstance(filing_year, int)
-                and filing_year == wanted[0]
-                and isinstance(registry_token, str)
-                and registry_token == wanted[1]
-            )
-
-        per_modelo_drafts = [d for d in drafts if _draft_matches(d.period)]
-        from ._overview_payloads import OverviewDraftPayload
-
-        period_display = str(canonical)
-        typed_period = OverviewStatusResult(
-            period=period_display,
-            drafts=[
-                OverviewDraftPayload(draft_id=d.draft_id, modelo=d.modelo, status=d.status.value)
-                for d in per_modelo_drafts
-            ],
-            verbose=verbose,
-        )
-        period_lines: list[str] = [
-            f"{tr('cli.overview.period')}\t{period_display}",
-            f"{tr('cli.overview.drafts')}\t{len(per_modelo_drafts)}",
-        ]
-        for d in per_modelo_drafts:
-            period_lines.append(f"{d.modelo}\t{d.draft_id}\t{d.status.value}")
-        _emit_envelope(ctx, command="overview.status", result=typed_period, lines=period_lines)
+        _emit_period_overview_status(ctx, current=current, period=period, year=year, verbose=verbose)
         return
     profile_record = current.active_profile_record() if current is not None else None
     raw_values = record_to_values(profile_record) if profile_record is not None else None
     report = _overview_application.build_overview_status_report(state=current, raw_values=raw_values)
     typed_status = strict_round_trip(OverviewStatusResult, report)
     status_lines, status_notices = overview_status_output(report)
-    coverage_lines: list[str] = []
     # ``status`` is a "what must I file" surface too: reconcile the active
     # profile's obligation coverage over the current year and surface the same
     # default advisory the calendar does, so status never reads as complete while
     # obligations go unscoped. The coverage report rides the Notice channel.
-    if current is not None and current.active_profile_bucket_id() is not None:
-        status_today = today_madrid()
-        status_cal = build_overview_calendar(
-            _profile_to_taxpayer(current),
-            OverviewCalendarRange(
-                from_date=_date(status_today.year, 1, 1),
-                to_date=_date(status_today.year, 12, 31),
-            ),
-            today=status_today,
-            raw_values=raw_values,
-        )
-        for notice in overview_coverage_notices(status_cal.coverage):
-            status_notices.append(notice)
-            coverage_lines.append(f"coverage_advised\t{len(status_cal.coverage.advised)}\t{notice.message}")
-        from ...domain.calculations.registry import derive_tax_route
-
-        history_notice = overview_no_aeat_history_notice(
-            tax_route=derive_tax_route(_profile_to_taxpayer(current)),
-        )
-        if history_notice is not None:
-            status_notices.append(history_notice)
+    coverage_lines, coverage_notices = _overview_status_coverage(current, raw_values=raw_values)
     _emit_envelope(
         ctx,
         command="overview.status",
         result=typed_status,
         lines=[*status_lines, *coverage_lines],
-        notices=status_notices,
+        notices=[*status_notices, *coverage_notices],
     )
 
 
@@ -548,7 +572,7 @@ class _ProfileCalendarInputs:
 
 
 def _profile_calendar_inputs(
-    repository: ProfileRepository,
+    repository: ProfileRecordRepository,
     bucket_id: str,
     *,
     rng: OverviewCalendarRange,
@@ -573,7 +597,7 @@ def _profile_calendar_inputs(
     try:
         with profile_storage_session(bucket_id):
             record = repository.load(bucket_id)
-            taxpayer = projection_for_taxpayer(record.record)
+            taxpayer = projection_for_taxpayer(record)
             live_events, _ = _local_live_calendar_events(
                 bucket_id,
                 rng,
@@ -590,11 +614,11 @@ def _profile_calendar_inputs(
             work_units, _ = _local_modelo_work_units(bucket_id)
             return _ProfileCalendarInputs(
                 taxpayer=taxpayer,
-                raw_values=record_to_values(record.record),
+                raw_values=record_to_values(record),
                 events=events,
                 filing_evidence=filing_evidence,
                 work_units=work_units,
-                live_censo_verified_profile_keys=_live_censo_verified_profile_keys(record.record),
+                live_censo_verified_profile_keys=_live_censo_verified_profile_keys(record),
             )
     except typer.BadParameter:
         raise
@@ -619,9 +643,7 @@ def _overview_calendar_all_profiles(
     payload still uses the single :class:`OverviewCalendarResult` schema
     registered for ``overview.calendar``.
     """
-    from ...application.user_profile import (
-        ProfileRepository,
-    )
+    from ...application.user_profile import ProfileRecordRepository
     from ...application.workflow import list_profile_buckets
     from ...domain.user_profile import UserProfileStatus
 
@@ -646,10 +668,9 @@ def _overview_calendar_all_profiles(
     all_lines.extend(incomplete_lines)
     all_calendars: list[dict[str, object]] = []
 
-    repository = ProfileRepository()
     for bucket_id, pointer in sorted(active_buckets.items(), key=lambda kv: kv[1].label):
         inputs = _profile_calendar_inputs(
-            repository,
+            ProfileRecordRepository(bucket_id=bucket_id),
             bucket_id,
             rng=rng,
             as_of=today,

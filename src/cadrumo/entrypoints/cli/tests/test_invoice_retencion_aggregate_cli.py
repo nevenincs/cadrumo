@@ -28,7 +28,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....application.aggregation import AggregationValidationError, RetencionObservationRepository
 from ....application.invoices import build_catalogue_invoice, create_catalogue_invoice
 from ....application.modelo import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics, create_work_unit
-from ....application.user_profile import UserProfileLifecycleRepository
+from ....application.user_profile import ProfileRecordRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage
@@ -84,7 +84,7 @@ def _professional_services_invoice(
 
 
 def _seed_ready_profile(objects: SecureObjectRepository) -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="M111 invoice retención routing",

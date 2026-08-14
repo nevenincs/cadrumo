@@ -281,26 +281,10 @@ def ledger_add(
     taxable_base: str | None = typer.Option(None, "--taxable-base", help=tr("cli.ledger.add.taxable_base_help")),
     iva_rate: str | None = typer.Option(None, "--iva-rate", help=tr("cli.ledger.add.iva_rate_help")),
     iva_amount: str | None = typer.Option(None, "--iva-amount", help=tr("cli.ledger.add.iva_amount_help")),
-    iva_category: IvaCategory | None = typer.Option(
-        None,
-        "--iva-category",
-        help=tr("cli.ledger.classify.iva_category_help"),
-    ),
-    deduction_fact_kind: IvaDeductionFactKind | None = typer.Option(
-        None,
-        "--deduction-kind",
-        help=tr("cli.ledger.classify.deduction_fact_kind_help"),
-    ),
-    counterparty_country: str | None = typer.Option(
-        None,
-        "--counterparty-country",
-        help=tr("cli.ledger.classify.counterparty_country_help"),
-    ),
-    counterparty_identification_state: EUMemberState | None = typer.Option(
-        None,
-        "--counterparty-identification-state",
-        help=tr("cli.ledger.classify.counterparty_identification_state_help"),
-    ),
+    iva_category: _IvaCategoryOpt = None,
+    deduction_fact_kind: _DeductionFactKindOpt = None,
+    counterparty_country: _CounterpartyCountryOpt = None,
+    counterparty_identification_state: _CounterpartyIdentificationStateOpt = None,
     recargo_amount: str | None = typer.Option(None, "--recargo-amount", help=tr("cli.ledger.add.recargo_amount_help")),
     irpf_category: str | None = typer.Option(None, "--irpf-category", help=tr("cli.ledger.add.irpf_category_help")),
     usage_ratio_id: str | None = typer.Option(None, "--usage-ratio-id", help=tr("cli.ledger.add.usage_ratio_help")),
@@ -556,6 +540,25 @@ def ledger_update(
     )
 
 
+_IvaCategoryOpt = Annotated[
+    IvaCategory | None,
+    typer.Option("--iva-category", help=tr("cli.ledger.classify.iva_category_help")),
+]
+_DeductionFactKindOpt = Annotated[
+    IvaDeductionFactKind | None,
+    typer.Option("--deduction-kind", help=tr("cli.ledger.classify.deduction_fact_kind_help")),
+]
+_CounterpartyCountryOpt = Annotated[
+    str | None,
+    typer.Option("--counterparty-country", help=tr("cli.ledger.classify.counterparty_country_help")),
+]
+_CounterpartyIdentificationStateOpt = Annotated[
+    EUMemberState | None,
+    typer.Option(
+        "--counterparty-identification-state",
+        help=tr("cli.ledger.classify.counterparty_identification_state_help"),
+    ),
+]
 _FileOpt = Annotated[
     str | None,
     typer.Option(
@@ -595,26 +598,10 @@ def ledger_classify(
     m210_payer_mode: M210PayerModeOpt = None,
     m210_payer_id: M210PayerIdOpt = None,
     m210_asset_or_right_id: M210AssetOrRightIdOpt = None,
-    iva_category: IvaCategory | None = typer.Option(
-        None,
-        "--iva-category",
-        help=tr("cli.ledger.classify.iva_category_help"),
-    ),
-    deduction_fact_kind: IvaDeductionFactKind | None = typer.Option(
-        None,
-        "--deduction-kind",
-        help=tr("cli.ledger.classify.deduction_fact_kind_help"),
-    ),
-    counterparty_country: str | None = typer.Option(
-        None,
-        "--counterparty-country",
-        help=tr("cli.ledger.classify.counterparty_country_help"),
-    ),
-    counterparty_identification_state: EUMemberState | None = typer.Option(
-        None,
-        "--counterparty-identification-state",
-        help=tr("cli.ledger.classify.counterparty_identification_state_help"),
-    ),
+    iva_category: _IvaCategoryOpt = None,
+    deduction_fact_kind: _DeductionFactKindOpt = None,
+    counterparty_country: _CounterpartyCountryOpt = None,
+    counterparty_identification_state: _CounterpartyIdentificationStateOpt = None,
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.classify.actor_help")),
     reaffirm: bool = typer.Option(False, "--reaffirm", help=tr("cli.ledger.classify.reaffirm_help")),
     llm: bool = typer.Option(False, "--llm", help=tr("cli.ledger.classify.llm_help")),

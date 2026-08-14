@@ -36,7 +36,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any, TypedDict, cast
 
 import typer
 from pydantic import BaseModel, ConfigDict, ValidationError
@@ -978,6 +978,123 @@ def _inspect_pushed_remote_mirror(
     return tuple(failures)
 
 
+def _google_sync_push_context() -> tuple[str, StorageProvider, str]:
+    from ....application.user_profile import resolve_active_capability
+    from ....core import ServiceCapability
+
+    if not resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.google.sync.calc.export.capability_disabled",
+        )
+    try:
+        active = resolve_active_profile()
+    except GoogleAuthError as exc:
+        raise _google_refusal(exc) from exc
+    settings = load_settings()
+    drive_settings = settings.model_copy(update={"cadrumo_storage_provider_kind": "google_drive"})
+    try:
+        provider = get_storage_provider(settings=drive_settings)
+    except (GoogleAuthError, OutboundStorageError) as exc:
+        raise _google_refusal(exc) from exc
+    return active, provider, cast(str, getattr(provider, "root_folder_id", ""))
+
+
+def _google_sync_push_result(
+    *,
+    active: str,
+    root_folder_id: str,
+    dry_run: bool,
+    namespace_filter: str | None,
+    limit: int | None,
+    mirror_result: _MirrorRowsResult,
+) -> GoogleSyncPushResult:
+    pushed_by_ns = mirror_result["pushed_by_namespace"]
+    skipped_by_ns = mirror_result["skipped_by_namespace"]
+    failed = mirror_result["failed_objects"]
+    manifest_pushed_by_ns = mirror_result["manifest_pushed_by_namespace"]
+    manifest_failed = mirror_result["failed_manifests"]
+    manifest_degraded = mirror_result["degraded_manifests"]
+    cleanup_failed = mirror_result["cleanup_failed_objects"]
+    return GoogleSyncPushResult(
+        profile=active,
+        root_folder_id=root_folder_id,
+        dry_run=dry_run,
+        namespace_filter=namespace_filter,
+        limit=limit,
+        pushed_total=sum(pushed_by_ns.values()),
+        skipped_total=sum(skipped_by_ns.values()),
+        failed_total=len(failed),
+        manifest_pushed_total=len(manifest_pushed_by_ns),
+        manifest_failed_total=len(manifest_failed),
+        manifest_degraded_total=len(manifest_degraded),
+        pushed_by_namespace=dict(pushed_by_ns),
+        skipped_by_namespace=dict(skipped_by_ns),
+        failed_objects=[GoogleSyncFailedObjectPayload(namespace=ns, hmac=h, error=err) for ns, h, err in failed],
+        manifest_pushed_by_namespace=dict(manifest_pushed_by_ns),
+        failed_manifests=[GoogleSyncFailedManifestPayload(namespace=ns, error=err) for ns, err in manifest_failed],
+        degraded_manifests=[
+            GoogleSyncDegradedManifestPayload(namespace=ns, detail=detail) for ns, detail in manifest_degraded
+        ],
+        cleanup_failed_objects=[
+            GoogleSyncFailedObjectPayload(namespace=ns, hmac=h, error=err) for ns, h, err in cleanup_failed
+        ],
+    )
+
+
+def _google_sync_push_lines(
+    *,
+    active: str,
+    root_folder_id: str,
+    dry_run: bool,
+    namespace_filter: str | None,
+    limit: int | None,
+    mirror_result: _MirrorRowsResult,
+) -> list[str]:
+    pushed_by_ns = mirror_result["pushed_by_namespace"]
+    skipped_by_ns = mirror_result["skipped_by_namespace"]
+    failed = mirror_result["failed_objects"]
+    manifest_pushed_by_ns = mirror_result["manifest_pushed_by_namespace"]
+    manifest_failed = mirror_result["failed_manifests"]
+    manifest_degraded = mirror_result["degraded_manifests"]
+    cleanup_failed = mirror_result["cleanup_failed_objects"]
+    lines = [
+        "operation\tconfig.google.sync.push",
+        f"profile\t{active}",
+        f"root_folder_id\t{root_folder_id}",
+        f"dry_run\t{dry_run}",
+        f"namespace_filter\t{namespace_filter or '<all>'}",
+        f"limit\t{limit or '<none>'}",
+        f"pushed_total\t{sum(pushed_by_ns.values())}",
+        f"skipped_total\t{sum(skipped_by_ns.values())}",
+        f"failed_total\t{len(failed)}",
+        f"manifest_pushed_total\t{len(manifest_pushed_by_ns)}",
+        f"manifest_failed_total\t{len(manifest_failed)}",
+        f"manifest_degraded_total\t{len(manifest_degraded)}",
+    ]
+    for ns in sorted(set(pushed_by_ns) | set(skipped_by_ns)):
+        lines.append(f"namespace\t{ns}\tpushed={pushed_by_ns.get(ns, 0)}\tskipped={skipped_by_ns.get(ns, 0)}")
+    lines.extend(f"failed\t{ns}\t{h[:16]}\t{err}" for ns, h, err in failed)
+    lines.extend(f"degraded_manifest\t{ns}\t{detail}" for ns, detail in manifest_degraded)
+    lines.extend(f"cleanup_failed\t{ns}\t{h[:16]}\t{err}" for ns, h, err in cleanup_failed)
+    return lines
+
+
+def _google_sync_push_notices(mirror_result: _MirrorRowsResult) -> tuple[list[Notice], list[str]]:
+    cleanup_failed = mirror_result["cleanup_failed_objects"]
+    if not cleanup_failed:
+        return [], []
+    notice = Notice(
+        severity=NoticeSeverity.WARNING,
+        code="config.google.sync.push.unmanifested_object",
+        message=tr(
+            "cli.config.google.sync.push_unmanifested_object_warning",
+            count=str(len(cleanup_failed)),
+        ),
+        context={"namespaces": ",".join(sorted({ns for ns, _h, _err in cleanup_failed}))},
+    )
+    return [notice], []
+
+
 @sync_app.command("push", help=tr("cli.config.google.sync.push_help"))
 def google_sync_push(
     ctx: typer.Context,
@@ -1006,31 +1123,7 @@ def google_sync_push(
     folder, named `<hmac_prefix_8>--<label>.bin`. The local master
     key never leaves the host — only ciphertext reaches Drive.
     """
-    from ....application.user_profile import resolve_active_capability
-    from ....core import ServiceCapability
-
-    # `push` mirrors secure-object ciphertext to Drive, so it is a Google export
-    # egress and is gated on the same capability as the calc-sheets export.
-    if not resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.google.sync.calc.export.capability_disabled",
-        )
-
-    try:
-        active = resolve_active_profile()
-    except GoogleAuthError as exc:
-        raise _google_refusal(exc) from exc
-
-    settings = load_settings()
-    drive_settings = settings.model_copy(update={"cadrumo_storage_provider_kind": "google_drive"})
-
-    try:
-        provider = get_storage_provider(settings=drive_settings)
-    except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
-
-    resolved_root_folder_id = getattr(provider, "root_folder_id", "")
-
+    active, provider, resolved_root_folder_id = _google_sync_push_context()
     repository = secure_object_repository_for_active_bucket()
     try:
         mirror_result = _push_secure_object_mirror_rows(
@@ -1042,75 +1135,23 @@ def google_sync_push(
         )
     except OutboundStorageError as exc:
         raise _google_refusal(exc) from exc
-    pushed_by_ns = mirror_result["pushed_by_namespace"]
-    skipped_by_ns = mirror_result["skipped_by_namespace"]
-    failed = mirror_result["failed_objects"]
-    manifest_pushed_by_ns = mirror_result["manifest_pushed_by_namespace"]
-    manifest_failed = mirror_result["failed_manifests"]
-    manifest_degraded = mirror_result["degraded_manifests"]
-    cleanup_failed = mirror_result["cleanup_failed_objects"]
-
-    push_result = GoogleSyncPushResult(
-        profile=active,
+    push_result = _google_sync_push_result(
+        active=active,
         root_folder_id=resolved_root_folder_id,
         dry_run=dry_run,
         namespace_filter=namespace_filter,
         limit=limit,
-        pushed_total=sum(pushed_by_ns.values()),
-        skipped_total=sum(skipped_by_ns.values()),
-        failed_total=len(failed),
-        manifest_pushed_total=len(manifest_pushed_by_ns),
-        manifest_failed_total=len(manifest_failed),
-        manifest_degraded_total=len(manifest_degraded),
-        pushed_by_namespace=dict(pushed_by_ns),
-        skipped_by_namespace=dict(skipped_by_ns),
-        failed_objects=[GoogleSyncFailedObjectPayload(namespace=ns, hmac=h, error=err) for ns, h, err in failed],
-        manifest_pushed_by_namespace=dict(manifest_pushed_by_ns),
-        failed_manifests=[GoogleSyncFailedManifestPayload(namespace=ns, error=err) for ns, err in manifest_failed],
-        degraded_manifests=[
-            GoogleSyncDegradedManifestPayload(namespace=ns, detail=detail) for ns, detail in manifest_degraded
-        ],
-        cleanup_failed_objects=[
-            GoogleSyncFailedObjectPayload(namespace=ns, hmac=h, error=err) for ns, h, err in cleanup_failed
-        ],
+        mirror_result=mirror_result,
     )
-    lines: list[str] = [
-        "operation\tconfig.google.sync.push",
-        f"profile\t{active}",
-        f"root_folder_id\t{resolved_root_folder_id}",
-        f"dry_run\t{dry_run}",
-        f"namespace_filter\t{namespace_filter or '<all>'}",
-        f"limit\t{limit or '<none>'}",
-        f"pushed_total\t{sum(pushed_by_ns.values())}",
-        f"skipped_total\t{sum(skipped_by_ns.values())}",
-        f"failed_total\t{len(failed)}",
-        f"manifest_pushed_total\t{len(manifest_pushed_by_ns)}",
-        f"manifest_failed_total\t{len(manifest_failed)}",
-        f"manifest_degraded_total\t{len(manifest_degraded)}",
-    ]
-    for ns in sorted(set(pushed_by_ns) | set(skipped_by_ns)):
-        pushed = pushed_by_ns.get(ns, 0)
-        skipped = skipped_by_ns.get(ns, 0)
-        lines.append(f"namespace\t{ns}\tpushed={pushed}\tskipped={skipped}")
-    for ns, h, err in failed:
-        lines.append(f"failed\t{ns}\t{h[:16]}\t{err}")
-    for ns, detail in manifest_degraded:
-        lines.append(f"degraded_manifest\t{ns}\t{detail}")
-    notices = []
-    if cleanup_failed:
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="config.google.sync.push.unmanifested_object",
-                message=tr(
-                    "cli.config.google.sync.push_unmanifested_object_warning",
-                    count=str(len(cleanup_failed)),
-                ),
-                context={"namespaces": ",".join(sorted({ns for ns, _h, _err in cleanup_failed}))},
-            ),
-        )
-    for ns, h, err in cleanup_failed:
-        lines.append(f"cleanup_failed\t{ns}\t{h[:16]}\t{err}")
+    lines = _google_sync_push_lines(
+        active=active,
+        root_folder_id=resolved_root_folder_id,
+        dry_run=dry_run,
+        namespace_filter=namespace_filter,
+        limit=limit,
+        mirror_result=mirror_result,
+    )
+    notices, _unused = _google_sync_push_notices(mirror_result)
     _emit_envelope(ctx, command="config.google.sync.push", result=push_result, lines=tuple(lines), notices=notices)
 
 

@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from .....application.user_profile import UserProfileLifecycleRepository
+from .....application.user_profile import ProfileRecordRepository
 from .....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from .....tests.cli_runner import invoke_cached_cli
 from .....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
@@ -62,7 +62,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )
-    UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).save(record)
+    ProfileRecordRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).save(record)
 
 
 def test_descendiente_root_opens_the_door_and_refuses_without_a_console(

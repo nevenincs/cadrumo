@@ -39,6 +39,7 @@ from ...application.overview import (
     OverviewStatusNextStep,
     OverviewStatusNextStepId,
     OverviewStatusReport,
+    SuppressedCalendarEntry,
     actionable_post_filing_events,
     build_overview_status_next_steps,
 )
@@ -327,6 +328,124 @@ def _calendar_evidence_notice_with_action(notice: Notice) -> Notice:
     )
 
 
+def _calendar_entry_text_line(entry: OverviewCalendarEntry) -> str:
+    return (
+        f"{entry.modelo}\t{entry.period}\t{entry.user_state.value}"
+        f"\topens={entry.opens_on.isoformat()}"
+        f"\tcloses={entry.closes_on.isoformat()}"
+        f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
+        f"\tshift={_calendar_shift_reason_text(entry.shift_reason)}"
+        f"\tcenso_enrolment={entry.censo_enrolment_state.value}"
+        f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}"
+        f"\t{_calendar_entry_work_unit_text_fields(entry)}"
+    )
+
+
+def _calendar_suppressed_text_line(suppressed: SuppressedCalendarEntry) -> str:
+    return (
+        f"suppressed\t{suppressed.modelo}\t{suppressed.period}"
+        f"\tverdict={suppressed.verdict.value}"
+        f"\treason={suppressed.reason[:80]}"
+    )
+
+
+def _calendar_primary_lines_and_notices(cal: OverviewCalendar) -> tuple[list[str], list[Notice]]:
+    lines = [_calendar_entry_text_line(entry) for entry in cal.entries]
+    warning_notices = overview_calendar_warning_notices(cal.warnings)
+    lines.extend(
+        f"warning\t{warning.code}\t{warning_notice.message}"
+        for warning, warning_notice in zip(cal.warnings, warning_notices, strict=True)
+    )
+    lines.extend(_calendar_event_text_line(event) for event in cal.events)
+    if cal.completeness.computable_modelos:
+        lines.append(
+            f"computable\t{len(cal.completeness.computable_modelos)}"
+            f"\tdefaulted\t{len(cal.completeness.defaulted_modelos)}",
+        )
+    lines.extend(_calendar_suppressed_text_line(suppressed) for suppressed in cal.suppressed_entries)
+    return lines, list(warning_notices)
+
+
+def _calendar_secondary_lines_and_notices(cal: OverviewCalendar) -> tuple[list[str], list[Notice]]:
+    lines: list[str] = []
+    notices: list[Notice] = []
+    for notice in overview_coverage_notices(cal.coverage):
+        lines.append(f"coverage_advised\t{len(cal.coverage.advised)}\t{notice.message}")
+        notices.append(notice)
+    for notice in overview_post_filing_event_notices(cal.events):
+        lines.append(f"post_filing_pending\t{len(notice.context or {})}\t{notice.message}")
+        notices.append(notice)
+    for notice in overview_deemed_served_notification_notices(cal.events):
+        context = notice.context or {}
+        lines.append(f"notificacion_rechazo_tacito\t{context.get('count', '')}\t{notice.message}")
+        notices.append(notice)
+    return lines, notices
+
+
+def _calendar_lines_and_notices(cal: OverviewCalendar) -> tuple[list[str], list[Notice]]:
+    primary_lines, primary_notices = _calendar_primary_lines_and_notices(cal)
+    secondary_lines, secondary_notices = _calendar_secondary_lines_and_notices(cal)
+    return [*primary_lines, *secondary_lines], [*primary_notices, *secondary_notices]
+
+
+def _profile_primary_lines_and_notices(
+    cal: OverviewCalendar,
+    *,
+    label: str,
+) -> tuple[list[str], list[Notice]]:
+    lines = [_calendar_entry_text_line(entry) for entry in cal.entries]
+    if not cal.taxpayer_model_declared:
+        lines.append(
+            f"warning\tINCOMPLETE_TAXPAYER_MODEL\t"
+            f"{cal.incomplete_reason or tr('cli.overview.taxpayer_model_undeclared')}",
+        )
+    profile_warning_notices = overview_calendar_warning_notices(cal.warnings)
+    lines.extend(
+        f"warning\t{warning.code}\t{warning_notice.message}"
+        for warning, warning_notice in zip(cal.warnings, profile_warning_notices, strict=True)
+    )
+    lines.extend(_calendar_event_text_line(event) for event in cal.events)
+    lines.extend(_calendar_suppressed_text_line(suppressed) for suppressed in cal.suppressed_entries)
+    notices = [
+        notice.model_copy(update={"context": {**(notice.context or {}), "profile": label}})
+        for notice in profile_warning_notices
+    ]
+    return lines, notices
+
+
+def _profile_secondary_lines_and_notices(
+    cal: OverviewCalendar,
+    *,
+    label: str,
+) -> tuple[list[str], list[Notice]]:
+    lines: list[str] = []
+    notices: list[Notice] = []
+    for notice in overview_coverage_notices(cal.coverage):
+        tagged = notice.model_copy(update={"context": {**(notice.context or {}), "profile": label}})
+        notices.append(tagged)
+        lines.append(f"coverage_advised\t{label}\t{len(cal.coverage.advised)}\t{notice.message}")
+    for notice in overview_post_filing_event_notices(cal.events):
+        tagged = notice.model_copy(update={"context": {**(notice.context or {}), "profile": label}})
+        notices.append(tagged)
+        lines.append(f"post_filing_pending\t{label}\t{len(notice.context or {})}\t{notice.message}")
+    for notice in overview_deemed_served_notification_notices(cal.events):
+        context = notice.context or {}
+        tagged = notice.model_copy(update={"context": {**context, "profile": label}})
+        notices.append(tagged)
+        lines.append(f"notificacion_rechazo_tacito\t{label}\t{context.get('count', '')}\t{notice.message}")
+    return lines, notices
+
+
+def _profile_calendar_lines_and_notices(
+    cal: OverviewCalendar,
+    *,
+    label: str,
+) -> tuple[list[str], list[Notice]]:
+    primary_lines, primary_notices = _profile_primary_lines_and_notices(cal, label=label)
+    secondary_lines, secondary_notices = _profile_secondary_lines_and_notices(cal, label=label)
+    return [*primary_lines, *secondary_lines], [*primary_notices, *secondary_notices]
+
+
 def overview_calendar_output(
     cal: OverviewCalendar,
     rng: OverviewCalendarRange,
@@ -341,44 +460,8 @@ def overview_calendar_output(
         f"entries\t{len(cal.entries)}",
         f"events\t{len(cal.events)}",
     ]
-    for entry in cal.entries:
-        lines.append(
-            f"{entry.modelo}\t{entry.period}\t{entry.user_state.value}"
-            f"\topens={entry.opens_on.isoformat()}"
-            f"\tcloses={entry.closes_on.isoformat()}"
-            f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
-            f"\tshift={_calendar_shift_reason_text(entry.shift_reason)}"
-            f"\tcenso_enrolment={entry.censo_enrolment_state.value}"
-            f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}"
-            f"\t{_calendar_entry_work_unit_text_fields(entry)}",
-        )
-    warning_notices = overview_calendar_warning_notices(cal.warnings)
-    for warning, warning_notice in zip(cal.warnings, warning_notices, strict=True):
-        lines.append(f"warning\t{warning.code}\t{warning_notice.message}")
-    for event in cal.events:
-        lines.append(_calendar_event_text_line(event))
-    if cal.completeness.computable_modelos:
-        lines.append(
-            f"computable\t{len(cal.completeness.computable_modelos)}"
-            f"\tdefaulted\t{len(cal.completeness.defaulted_modelos)}",
-        )
-    for suppressed in cal.suppressed_entries:
-        lines.append(
-            f"suppressed\t{suppressed.modelo}\t{suppressed.period}"
-            f"\tverdict={suppressed.verdict.value}"
-            f"\treason={suppressed.reason[:80]}",
-        )
-    coverage_notices = overview_coverage_notices(cal.coverage)
-    for notice in coverage_notices:
-        lines.append(f"coverage_advised\t{len(cal.coverage.advised)}\t{notice.message}")
-    post_filing_notices = overview_post_filing_event_notices(cal.events)
-    for notice in post_filing_notices:
-        lines.append(f"post_filing_pending\t{len(notice.context or {})}\t{notice.message}")
-    deemed_served_notices = overview_deemed_served_notification_notices(cal.events)
-    for notice in deemed_served_notices:
-        context = notice.context or {}
-        lines.append(f"notificacion_rechazo_tacito\t{context.get('count', '')}\t{notice.message}")
-    calendar_notices = [*warning_notices, *coverage_notices, *post_filing_notices, *deemed_served_notices]
+    calendar_lines, calendar_notices = _calendar_lines_and_notices(cal)
+    lines.extend(calendar_lines)
     for evidence_notice in evidence_notices:
         notice = _calendar_evidence_notice_with_action(evidence_notice)
         lines.append(f"{notice.code}\t{notice.message}")
@@ -398,50 +481,8 @@ def overview_calendar_profile_output(
         f"entries\t{len(cal.entries)}",
         f"events\t{len(cal.events)}",
     ]
-    for entry in cal.entries:
-        lines.append(
-            f"{entry.modelo}\t{entry.period}\t{entry.user_state.value}"
-            f"\topens={entry.opens_on.isoformat()}"
-            f"\tcloses={entry.closes_on.isoformat()}"
-            f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
-            f"\tshift={_calendar_shift_reason_text(entry.shift_reason)}"
-            f"\tcenso_enrolment={entry.censo_enrolment_state.value}"
-            f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}"
-            f"\t{_calendar_entry_work_unit_text_fields(entry)}",
-        )
-    if not cal.taxpayer_model_declared:
-        lines.append(
-            f"warning\tINCOMPLETE_TAXPAYER_MODEL\t"
-            f"{cal.incomplete_reason or tr('cli.overview.taxpayer_model_undeclared')}",
-        )
-    profile_warning_notices = overview_calendar_warning_notices(cal.warnings)
-    for warning, warning_notice in zip(cal.warnings, profile_warning_notices, strict=True):
-        lines.append(f"warning\t{warning.code}\t{warning_notice.message}")
-    for event in cal.events:
-        lines.append(_calendar_event_text_line(event))
-    for suppressed in cal.suppressed_entries:
-        lines.append(
-            f"suppressed\t{suppressed.modelo}\t{suppressed.period}"
-            f"\tverdict={suppressed.verdict.value}"
-            f"\treason={suppressed.reason[:80]}",
-        )
-    notices: list[Notice] = [
-        notice.model_copy(update={"context": {**(notice.context or {}), "profile": label}})
-        for notice in profile_warning_notices
-    ]
-    for notice in overview_coverage_notices(cal.coverage):
-        tagged = notice.model_copy(update={"context": {**(notice.context or {}), "profile": label}})
-        notices.append(tagged)
-        lines.append(f"coverage_advised\t{label}\t{len(cal.coverage.advised)}\t{notice.message}")
-    for notice in overview_post_filing_event_notices(cal.events):
-        tagged = notice.model_copy(update={"context": {**(notice.context or {}), "profile": label}})
-        notices.append(tagged)
-        lines.append(f"post_filing_pending\t{label}\t{len(notice.context or {})}\t{notice.message}")
-    for notice in overview_deemed_served_notification_notices(cal.events):
-        context = notice.context or {}
-        tagged = notice.model_copy(update={"context": {**context, "profile": label}})
-        notices.append(tagged)
-        lines.append(f"notificacion_rechazo_tacito\t{label}\t{context.get('count', '')}\t{notice.message}")
+    profile_lines, notices = _profile_calendar_lines_and_notices(cal, label=label)
+    lines.extend(profile_lines)
     payload: dict[str, object] = {
         "profile_id": bucket_id,
         "label": label,

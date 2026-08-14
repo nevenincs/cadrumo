@@ -33,15 +33,14 @@ not make its consumer re-implement a parser to read a month.
 
 from __future__ import annotations
 
-from datetime import date
-from decimal import Decimal
-from typing import Annotated, Literal
+from typing import Annotated
 
 from pydantic import Field, StringConstraints, field_validator, model_validator
 
 from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.json_contract import OutputSchema, register_schema
 from ...core.time import today_madrid
+from ...domain.contribuyente import DescendantRecordFields
 
 DescendantNif = Annotated[
     str,
@@ -65,7 +64,7 @@ class GuarderiaMonthSpendPayload(OutputSchema):
     amount_euros: int = Field(ge=0)
 
 
-class ProfileDescendientePayload(OutputSchema):
+class ProfileDescendientePayload(DescendantRecordFields, OutputSchema):
     """One declared descendant row in the ``config profile descendiente`` surface.
 
     Lossless projection of :class:`~cadrumo.domain.contribuyente.DescendantInfo`;
@@ -74,22 +73,8 @@ class ProfileDescendientePayload(OutputSchema):
     """
 
     index: int = Field(ge=0)
-    birth_date: date
-    relacion: DescendantRelacion = DescendantRelacion.DESCENDIENTE
-    inscripcion_registro_civil_date: date | None = None
-    acogimiento_resolucion_date: date | None = None
-    death_date: date | None = None
-    discapacidad_grado: Literal[0, 33, 65] | None = None
     convive_con_contribuyente: bool
-    dependencia_economica: bool | None = None
     custodia_compartida: bool
-    rentas_anuales_euros: Decimal | None = Field(default=None, ge=Decimal("0"))
-    presenta_declaracion_propia: bool = False
-    prorrata_minimo: bool | None = None
-    meses_madre_trabajo: tuple[int, ...] = ()
-    alta_posterior_nacimiento_mes: int | None = Field(default=None, ge=1, le=12)
-    segundo_ciclo_infantil_inicio_mes: int | None = Field(default=None, ge=1, le=12)
-    gastos_guarderia_euros: int = Field(default=0, ge=0)
     gastos_guarderia_mensuales: tuple[GuarderiaMonthSpendPayload, ...] = ()
     nif: DescendantNif | None = None
 

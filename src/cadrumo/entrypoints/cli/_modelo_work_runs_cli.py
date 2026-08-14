@@ -25,16 +25,18 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Annotated
+from typing import Annotated, NamedTuple
 
 import typer
 
 from ...application.workflow import (
+    SiteHealthAlert,
     WorkflowError,
     WorkflowResult,
     WorkflowResumeContext,
     WorkflowResumeRefusedError,
     WorkflowResumeTargetResolution,
+    WorkflowStage,
     WorkflowStepDetails,
     list_runs,
     resolve_modelo_workflow_resume_target,
@@ -43,6 +45,7 @@ from ...application.workflow import (
 from ...core import Period
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
+from ...core.json_contract import ResolvedPreconditionAction
 from ._action_rendering import resolved_precondition_action_json_cell
 from ._common import _emit_envelope, resolve_cli_precondition_action
 from ._modelo_cli_support import (
@@ -71,29 +74,54 @@ def _render_workflow_step_summary(
     return tr(summary_locale_key, **interpolation)
 
 
+class _WorkflowRunProjection(NamedTuple):
+    """Localized step facts projected once for a workflow-run payload."""
+
+    modelo: str | None
+    period: str | None
+    summary_stage: WorkflowStage | None
+    summary_locale_key: str
+    summary_details: WorkflowStepDetails | None
+    site_health_alert: SiteHealthAlert | None
+    action: ResolvedPreconditionAction | None
+
+
+def _workflow_run_projection(run: WorkflowResult) -> _WorkflowRunProjection:
+    """Resolve optional terminal-step and obligation facts for one run."""
+    final_step = run.steps[-1] if run.steps else None
+    obligation = run.obligation
+    terminal_verdict = final_step.precondition_verdict if final_step is not None else None
+    return _WorkflowRunProjection(
+        modelo=obligation.modelo if obligation is not None else None,
+        period=str(obligation.period) if obligation is not None else None,
+        summary_stage=final_step.stage if final_step is not None else None,
+        summary_locale_key=final_step.summary_locale_key if final_step is not None else run.summary_locale_key,
+        summary_details=final_step.details if final_step is not None else run.summary_details,
+        site_health_alert=final_step.site_health_alert if final_step is not None else None,
+        action=resolve_cli_precondition_action(terminal_verdict) if terminal_verdict is not None else None,
+    )
+
+
 def _workflow_run_payload(run: WorkflowResult) -> WorkflowRunPayload:
     """Project one persisted workflow run into localized CLI-only presentation fields."""
-    final_step = run.steps[-1] if run.steps else None
-    summary_locale_key = final_step.summary_locale_key if final_step is not None else run.summary_locale_key
-    summary_details = final_step.details if final_step is not None else run.summary_details
-    terminal_verdict = final_step.precondition_verdict if final_step is not None else None
+    projection = _workflow_run_projection(run)
     return WorkflowRunPayload(
         run_id=run.run_id,
-        modelo=run.obligation.modelo if run.obligation is not None else None,
-        period=str(run.obligation.period) if run.obligation is not None else None,
+        modelo=projection.modelo,
+        period=projection.period,
         final_stage=run.final_stage.value,
         aborted_reason=run.aborted_reason.value if run.aborted_reason is not None else None,
         started_at=run.started_at.isoformat(),
         obligation=run.obligation,
-        summary_stage=final_step.stage if final_step is not None else None,
-        summary_locale_key=summary_locale_key,
-        summary_details=summary_details,
-        site_health_alert=final_step.site_health_alert if final_step is not None else None,
+        summary_stage=projection.summary_stage,
+        summary_locale_key=projection.summary_locale_key,
+        summary_details=projection.summary_details,
+        site_health_alert=projection.site_health_alert,
         summary=_render_workflow_step_summary(
-            summary_locale_key,
-            summary_details,
+            projection.summary_locale_key,
+            projection.summary_details,
         ),
-        action=(resolve_cli_precondition_action(terminal_verdict) if terminal_verdict is not None else None),
+        action=projection.action,
     )
 
 

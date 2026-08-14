@@ -37,7 +37,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import UserProfileLifecycleRepository
+from ....application.user_profile import ProfileRecordRepository
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
@@ -122,7 +122,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="renta_filing.declaration_type", value="1"),
         ),
     )
-    UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).save(record)
+    ProfileRecordRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).save(record)
 
 
 def _declare(*descendiente_specs: str) -> None:

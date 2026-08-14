@@ -29,7 +29,7 @@ from typing import Any
 
 import pytest
 
-from ....application.user_profile import UserProfileLifecycleRepository
+from ....application.user_profile import ProfileRecordRepository
 from ....domain.buckets import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
@@ -101,7 +101,7 @@ def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile, *, label: st
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         ),
     )
-    UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).save(record)
+    ProfileRecordRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).save(record)
 
 
 def _calculate_args(work_unit_id: str) -> list[str]:

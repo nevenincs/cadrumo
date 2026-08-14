@@ -42,7 +42,7 @@ import pytest
 from textual.widgets import DataTable
 
 from .....adapters.inbound.tui import FormApp, FormField, FormPage, FormScreen, presenting_forms_through
-from .....application.user_profile import ProfileRepository, profile_create_storage_span
+from .....application.user_profile import ProfileRecordRepository, profile_create_storage_span
 from .....application.workflow import workflow_state_repository
 from .....core import AuthProviderKind, ClaveMovilRoute, require_active_bucket_id
 from .....core.config import override_settings
@@ -462,7 +462,8 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
 
 def _stored_tax_id() -> str:
     """Return the fiscal identity as the encrypted record holds it."""
-    record = ProfileRepository().load(require_active_bucket_id()).record
+    profile_id = require_active_bucket_id()
+    record = ProfileRecordRepository(bucket_id=profile_id).load(profile_id)
     for fact in record.facts:
         if fact.path == _IDENTITY_TAX_ID_PATH:
             return str(fact.value)
@@ -476,7 +477,8 @@ def _auth_facts() -> Mapping[str, object]:
     so a fact cleared to ``None`` stays distinguishable from one storing
     an empty string.
     """
-    record = ProfileRepository().load(require_active_bucket_id()).record
+    profile_id = require_active_bucket_id()
+    record = ProfileRecordRepository(bucket_id=profile_id).load(profile_id)
     return {fact.path: fact.value for fact in record.facts if fact.path.startswith("auth.")}
 
 
@@ -641,7 +643,7 @@ def test_a_value_the_record_rejects_leaves_no_partial_write() -> None:
     ``set_active_fields`` now routes through ``apply_active_profile_facts``
     and the lifecycle's ``edit_fields``, which batches every field into one
     decrypt/validate/re-encrypt round trip and judges the resulting fact set
-    as a whole (see ``ProfileLifecycleService.edit_fields``'s docstring: "the
+    as a whole (see ``ProfileCapsuleLifecycle.edit_fields``'s docstring: "the
     batch is judged as a whole, so a patch is never left half-applied by a
     later field's refusal"). A field the schema rejects therefore leaves
     NONE of the batch's facts durably written, not just the rejected one.

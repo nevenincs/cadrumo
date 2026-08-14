@@ -49,7 +49,7 @@ def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
     profile-value row is exactly the ``missing_profile_record`` torn
     state these CLI verbs must detect; this helper materialises that
     state directly through the bucket-layout primitives, since
-    ``ProfileRepository`` always writes the record alongside.
+    ``CommittedProfileRepository`` always writes the record alongside.
 
     Unlike the unsecured-backend version, this implementation uses
     ``profile_create_storage_span`` to provision real key material for

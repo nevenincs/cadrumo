@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from .....adapters.inbound.tui import FormPage, presenting_forms_through
-from .....application.user_profile import ProfileRepository, profile_create_storage_span
+from .....application.user_profile import ProfileRecordRepository, profile_create_storage_span
 from .....application.workflow import workflow_state_repository
 from .....core import require_active_bucket_id
 from .....domain.user_profile import load_user_profile_schema
@@ -60,7 +60,8 @@ def _run(answer: Mapping[str, str] | None):
 
 
 def _facts(prefix: str) -> dict[str, object]:
-    record = ProfileRepository().load(require_active_bucket_id()).record
+    profile_id = require_active_bucket_id()
+    record = ProfileRecordRepository(bucket_id=profile_id).load(profile_id)
     return {fact.path: fact.value for fact in record.facts if fact.path.startswith(prefix)}
 
 

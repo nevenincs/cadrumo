@@ -991,7 +991,7 @@ def _commit_auth_choice(collected: Mapping[str, str]) -> tuple[str, AuthConfigur
     decrypt, one schema validation over the whole fact set, one re-encrypt.
     A fact the page passed but the record rejects therefore leaves NONE of
     the batch durably written, not merely the rejected one — the batch is
-    judged as a whole (see ``ProfileLifecycleService.edit_fields``). This
+    judged as a whole (see ``ProfileCapsuleLifecycle.edit_fields``). This
     action's defence against a rejection reaching the record at all is
     still upstream - the page validates each value against the same schema
     before any write - but the write itself no longer half-applies.
@@ -1079,10 +1079,11 @@ def _auth_facts_on_record() -> dict[str, str]:
     identity could not open the credential row on it either — which is
     exactly what made an operator retype an answer they had given.
     """
-    from ....application.user_profile import ProfileRepository
+    from ....application.user_profile import ProfileRecordRepository
     from ....core import require_active_bucket_id
 
-    record = ProfileRepository().load(require_active_bucket_id()).record
+    profile_id = require_active_bucket_id()
+    record = ProfileRecordRepository(bucket_id=profile_id).load(profile_id)
     return {
         fact.path: str(fact.value)
         for fact in record.facts
