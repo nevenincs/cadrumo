@@ -718,7 +718,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     ),
     _location(
         StorageCategory.KEYSTORE_PROFILE_SESSION,
-        "session.v1.json",
+        "session.v2.json",
         consumer_module="adapters/persistence/storage/_storage_path_definitions.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.KEYSTORE_RELATIVE,

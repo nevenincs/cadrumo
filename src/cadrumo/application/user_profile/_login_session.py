@@ -34,7 +34,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, NoReturn
+from typing import TYPE_CHECKING, Literal, NoReturn, cast
 from uuid import UUID
 
 from pydantic import BaseModel, ValidationError, model_validator
@@ -59,6 +59,7 @@ from ..profile_custody import (
     ProfileCustodyLocalRecordStore,
     ProfileCustodyPasswordMaterialPort,
     ProfilePersistedSessionPort,
+    ProfileSessionResumeOutcomePort,
     canonical_json_bytes,
     default_profile_bucket_event_history_repository,
     default_profile_custody_local_record_store,
@@ -73,14 +74,12 @@ from ..profile_custody import (
     profile_is_keyring_unavailable,
     profile_is_password_authentication_failure,
     profile_is_persisted_session,
-    profile_load_session_key,
     profile_mint_session,
     profile_record_login_failure,
     profile_reset_login_throttle,
     profile_resume_session,
     profile_session_path,
     profile_session_serves_bucket,
-    profile_write_session,
     profile_zeroise,
     refuse_profile_login_without_password_channel,
     unlock_profile_custody_password,
@@ -124,6 +123,14 @@ _HANDOVER_PREDECESSOR: dict[_HandoverPhase, _HandoverPhase] = {
     _HandoverPhase.ACCELERATED: _HandoverPhase.B_BOUND,
     _HandoverPhase.ACTIVATED: _HandoverPhase.ACCELERATED,
     _HandoverPhase.A_RETIRED: _HandoverPhase.ACTIVATED,
+}
+_HANDOVER_PHASE_INDEX: dict[_HandoverPhase, int] = {
+    _HandoverPhase.PREPARED: 0,
+    _HandoverPhase.POINTER_PUBLISHED: 1,
+    _HandoverPhase.B_BOUND: 2,
+    _HandoverPhase.ACCELERATED: 3,
+    _HandoverPhase.ACTIVATED: 4,
+    _HandoverPhase.A_RETIRED: 5,
 }
 
 
@@ -169,6 +176,12 @@ class _ProfileLoginHandoverJournal(BaseModel):
     def at_phase(self, phase: _HandoverPhase) -> _ProfileLoginHandoverJournal:
         """Return this exact handover witnessed at its next durable phase."""
         return self.model_copy(update={"phase": phase})
+
+    def at_least_phase(self, phase: _HandoverPhase) -> _ProfileLoginHandoverJournal:
+        """Advance a recovery receipt without ever regressing its durable phase."""
+        if _HANDOVER_PHASE_INDEX[self.phase] >= _HANDOVER_PHASE_INDEX[phase]:
+            return self
+        return self.at_phase(phase)
 
     def pointer_before(self) -> bytes | None:
         """Return the exact pre-handover pointer bytes after strict decoding."""
@@ -354,7 +367,7 @@ def _parse_handover_journal(payload: bytes) -> _ProfileLoginHandoverJournal:
         if not isinstance(document, dict):
             raise ValueError("handover journal must be a JSON object")
         canonical = canonical_json_bytes(
-            document,
+            cast(dict[str, object], document),
             maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
             limit_error="profile login handover journal exceeds its byte limit",
         )
@@ -412,21 +425,30 @@ def _save_handover_journal(*, storage_root: Path, journal: _ProfileLoginHandover
     store = _handover_journal_store()
     _ensure_handover_journal_directory(storage_root=storage_root, store=store)
     try:
-        existing_payload = store.read_optional(
-            _handover_journal_path(storage_root),
+        if journal.phase is _HandoverPhase.PREPARED:
+            predecessor = None
+        else:
+            predecessor = journal.at_phase(_HANDOVER_PREDECESSOR[journal.phase]).canonical_json_bytes()
+        path = _handover_journal_path(storage_root)
+        current = journal.canonical_json_bytes()
+        store.compare_and_replace_same_or_predecessor(
+            path,
+            current=current,
+            predecessor=predecessor,
             maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
         )
-        if journal.phase is _HandoverPhase.PREPARED:
-            if existing_payload is not None:
-                _refuse_handover_journal("prepared journal already has a durable predecessor")
-        else:
-            existing = _parse_handover_journal(existing_payload) if existing_payload is not None else None
-            expected = journal.at_phase(_HANDOVER_PREDECESSOR[journal.phase])
-            if existing != expected:
-                _refuse_handover_journal("journal predecessor differs from the exact handover transition")
-        store.write(_handover_journal_path(storage_root), journal.canonical_json_bytes(), publish_once=False)
+        # The first receipt atomically publishes its target and retains only
+        # its exact predecessor as a recoverable cleanup sidecar. Repeating
+        # the same canonical receipt has no target write; it removes that
+        # verified sidecar or fails closed so a future retry can converge.
+        store.compare_and_replace_same_or_predecessor(
+            path,
+            current=current,
+            predecessor=predecessor,
+            maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
+        )
     except Exception:
-        _refuse_handover_journal("journal cannot be atomically written")
+        _refuse_handover_journal("journal compare-and-replace differs from the exact transition")
 
 
 def _load_handover_journal(*, storage_root: Path) -> _ProfileLoginHandoverJournal | None:
@@ -442,18 +464,35 @@ def _load_handover_journal(*, storage_root: Path) -> _ProfileLoginHandoverJourna
     return _parse_handover_journal(payload)
 
 
-def _clear_handover_journal(*, storage_root: Path) -> None:
+def _clear_handover_journal(*, storage_root: Path, journal: _ProfileLoginHandoverJournal) -> None:
     """Remove the completed or fully rolled-back witness under root lock."""
     store = _handover_journal_store()
     _ensure_handover_journal_directory(storage_root=storage_root, store=store)
     try:
-        payload = store.read_optional(_handover_journal_path(storage_root), maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES)
-        if payload is None:
-            return
-        _ = _parse_handover_journal(payload)
-        store.clear(_handover_journal_path(storage_root))
+        current = journal.canonical_json_bytes()
+        predecessor = (
+            None
+            if journal.phase is _HandoverPhase.PREPARED
+            else journal.at_phase(_HANDOVER_PREDECESSOR[journal.phase]).canonical_json_bytes()
+        )
+        path = _handover_journal_path(storage_root)
+        # A crash can leave the publication target plus only its exact
+        # predecessor sidecar. Re-submit the same receipt first: this is a
+        # target no-op that clears that verified sidecar before the terminal
+        # compare-and-clear removes the journal itself.
+        store.compare_and_replace_same_or_predecessor(
+            path,
+            current=current,
+            predecessor=predecessor,
+            maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
+        )
+        store.compare_and_clear(
+            path,
+            expected=current,
+            maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
+        )
     except Exception:
-        _refuse_handover_journal("journal cannot be anchored and cleared")
+        _refuse_handover_journal("journal compare-and-clear differs from the exact transition")
 
 
 def _recover_interrupted_handover(
@@ -476,12 +515,12 @@ def _recover_interrupted_handover(
     before = journal.pointer_before()
     after = journal.pointer_after()
     if current == before:
-        _clear_handover_journal(storage_root=storage_root)
+        _clear_handover_journal(storage_root=storage_root, journal=journal)
         return None
     if current != after:
         _refuse_handover_journal("pointer no longer matches either witnessed handover state")
     if journal.phase in {_HandoverPhase.ACTIVATED, _HandoverPhase.A_RETIRED}:
-        _clear_handover_journal(storage_root=storage_root)
+        _clear_handover_journal(storage_root=storage_root, journal=journal)
         return None
     return journal
 
@@ -502,8 +541,33 @@ def close_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> No
         bucket_id: Identifier of the profile whose session to tear down.
     """
     close_active_profile_record_session()
-    profile_delete_session(storage_root=storage_root, bucket_id=bucket_id)
+    profile_delete_session(storage_root=storage_root, profile_id=UUID(bucket_id))
     profile_reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
+
+
+def logout_active_profile() -> str | None:
+    """Strong-close the selected profile without any provider fallback.
+
+    Logout is the explicit session-revocation owner: it clears the live DEK
+    binding, its current record binding, the UUID-paired acceleration receipt,
+    and the durable active pointer while the canonical root lock is held.
+    It returns the authenticated profile UUID when there was a session or
+    selection to revoke, otherwise ``None`` for an idempotent logged-out call.
+    """
+    storage_root = effective_storage_root()
+    live = profile_current_bucket_session()
+    live_bucket_id = live.bucket_id if live is not None else None
+    with active_profile_pointer_transaction(storage_root) as pointer_transaction:
+        selected = pointer_transaction.read()
+        selected_bucket_id = selected.bucket_id if selected is not None else None
+        target_ids = tuple(dict.fromkeys(value for value in (live_bucket_id, selected_bucket_id) if value is not None))
+        if not target_ids:
+            return None
+        profile_close_bucket_session()
+        for bucket_id in target_ids:
+            close_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
+        pointer_transaction.clear()
+    return live_bucket_id or selected_bucket_id
 
 
 def revoke_live_profile_secret_for_custody_delete(*, bucket_id: str) -> ProfileCustodySessionOwnerEffect:
@@ -532,7 +596,7 @@ def remove_profile_session_acceleration_for_custody_delete(
     bucket_id: str,
 ) -> ProfileCustodySessionOwnerEffect:
     """Remove the actual persisted session acceleration and verify its absence."""
-    path = profile_session_path(storage_root=storage_root, bucket_id=bucket_id)
+    path = profile_session_path(storage_root=storage_root, profile_id=UUID(bucket_id))
     was_present = os.path.lexists(path)
     close_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
     if os.path.lexists(path):
@@ -571,7 +635,11 @@ def resume_active_profile_session(
     """
     instant = _now() if now is None else now
     storage_root = effective_storage_root()
-    outcome, dek = profile_resume_session(storage_root=storage_root, bucket_id=bucket_id, now=instant)
+    outcome, dek = _resume_persisted_session(
+        storage_root=storage_root,
+        bucket_id=bucket_id,
+        now=instant,
+    )
     if not outcome.resumed or outcome.record is None or dek is None:
         return outcome.refusal if outcome.refusal is not None else ProfileSessionRefusalReason.ABSENT
 
@@ -583,7 +651,7 @@ def resume_active_profile_session(
             bucket_id=bucket_id,
             dek=bytes(dek_buffer),
             idle_minutes=idle_minutes,
-            opened_at=record.authenticated_at,
+            opened_at=record.issued_at,
             idle_deadline=record.idle_deadline,
             absolute_deadline=record.absolute_deadline,
             storage_root=storage_root,
@@ -596,7 +664,7 @@ def resume_active_profile_session(
     _activate_record_authority(bucket_id=bucket_id, dek=session.dek, storage_root=storage_root)
     _persist_advanced_idle_deadline(
         storage_root=storage_root,
-        bucket_id=bucket_id,
+        profile_id=record.profile_id,
         record=record,
         new_idle_deadline=session.idle_deadline,
     )
@@ -615,10 +683,29 @@ def _activate_record_authority(*, bucket_id: str, dek: bytes, storage_root: Path
     activate_profile_record_session(ProfileRecordSession.from_envelope(envelope=material.envelope, dek=dek))
 
 
-def _persist_advanced_idle_deadline(
+def _resume_persisted_session(
     *,
     storage_root: Path,
     bucket_id: str,
+    now: datetime,
+) -> tuple[ProfileSessionResumeOutcomePort, bytes | None]:
+    """Resume only against the envelope that is current for this capsule."""
+    profile_id = UUID(bucket_id)
+    material = load_profile_custody_password_material(profile_id, root=storage_root)
+    envelope = material.envelope
+    return profile_resume_session(
+        storage_root=storage_root,
+        profile_id=profile_id,
+        custody_generation=envelope.password_generation,
+        dek_epoch=envelope.dek_epoch,
+        now=now,
+    )
+
+
+def _persist_advanced_idle_deadline(
+    *,
+    storage_root: Path,
+    profile_id: UUID,
     record: object,
     new_idle_deadline: datetime,
 ) -> None:
@@ -633,26 +720,22 @@ def _persist_advanced_idle_deadline(
         return
     if new_idle_deadline <= record.idle_deadline:
         return
-    session_key = profile_load_session_key(bucket_id=bucket_id)
-    if session_key is None:
-        return
-    key_buffer = bytearray(session_key)
-    del session_key
     try:
         advanced = profile_advance_session_idle_deadline(
+            storage_root=storage_root,
+            profile_id=profile_id,
             record=record,
-            session_key=bytes(key_buffer),
             new_idle_deadline=new_idle_deadline,
         )
-        profile_write_session(storage_root=storage_root, bucket_id=bucket_id, record=advanced)
-    except (OSError, ValueError) as exc:
+        del advanced
+    except BaseException as exc:
+        if not (isinstance(exc, (OSError, ValueError)) or profile_is_keyring_unavailable(exc)):
+            raise
         _log.debug(
-            "profile-session idle-deadline re-persist skipped bucket_id=%s error_type=%s",
-            bucket_id,
+            "profile-session idle-deadline re-persist skipped profile_id=%s error_type=%s",
+            profile_id,
             type(exc).__name__,
         )
-    finally:
-        profile_zeroise(key_buffer)
 
 
 def resolve_login_target(name: str) -> ProfileBucketPointer:
@@ -773,7 +856,7 @@ def _idempotent_login_outcome(
     return ProfileLoginOutcome(
         bucket_id=target.bucket_id,
         label=target.label,
-        authenticated_at=resumed.authenticated_at,
+        authenticated_at=resumed.issued_at,
         idle_deadline=resumed.idle_deadline,
         absolute_deadline=resumed.absolute_deadline,
         session_persisted=True,
@@ -841,11 +924,19 @@ def _resume_for_idempotent_login(
     """
     live = profile_current_bucket_session()
     if profile_session_serves_bucket(live, bucket_id) and live is not None and not live.is_expired(now):
-        peeked, _ = profile_resume_session(storage_root=effective_storage_root(), bucket_id=bucket_id, now=now)
+        peeked, _ = _resume_persisted_session(
+            storage_root=effective_storage_root(),
+            bucket_id=bucket_id,
+            now=now,
+        )
         return peeked.record if peeked.resumed else None
     if resume_active_profile_session(bucket_id=bucket_id, now=now) is not None:
         return None
-    peeked, _ = profile_resume_session(storage_root=effective_storage_root(), bucket_id=bucket_id, now=now)
+    peeked, _ = _resume_persisted_session(
+        storage_root=effective_storage_root(),
+        bucket_id=bucket_id,
+        now=now,
+    )
     return peeked.record if peeked.resumed else None
 
 
@@ -1091,26 +1182,37 @@ def _bind_candidate_promotion(
     previous_record: ProfileRecordSession | None = None
     handover = publication.journal
     try:
+        # Receipt retries are deliberately explicit: the canonical custody
+        # primitive treats matching bytes as a no-op, while also retiring only
+        # its verified predecessor sidecar if a process died after publication
+        # but before durable cleanup.  Do this before B gains any live binding.
+        _save_handover_journal(storage_root=storage_root, journal=handover)
         # Both context bindings are in-process and do not perform I/O.  A has
         # not been closed, so an unexpected later failure can rebind it before
         # the durable pointer is restored.
         profile_bind_bucket_session(candidate.session)
         previous_record = bind_active_profile_record_session(candidate.record_session)
-        handover = handover.at_phase(_HandoverPhase.B_BOUND)
-        _save_handover_journal(storage_root=storage_root, journal=handover)
+        bound = handover.at_least_phase(_HandoverPhase.B_BOUND)
+        if bound != handover:
+            _save_handover_journal(storage_root=storage_root, journal=bound)
+        handover = bound
         persisted = _mint_or_warn(
             storage_root=storage_root,
-            bucket_id=candidate.bucket_id,
+            material=candidate.material,
             session=candidate.session,
         )
-        handover = handover.at_phase(_HandoverPhase.ACCELERATED)
-        _save_handover_journal(storage_root=storage_root, journal=handover)
+        accelerated = handover.at_least_phase(_HandoverPhase.ACCELERATED)
+        if accelerated != handover:
+            _save_handover_journal(storage_root=storage_root, journal=accelerated)
+        handover = accelerated
         # Activation is required B state, not best-effort telemetry.  Keep it
         # inside the rollback window, with one stable event instant so a crash
         # before the phase receipt can replay the same content-addressed event.
         _record_activation(profile_id=candidate.bucket_id, occurred_at=handover.activation_at)
-        handover = handover.at_phase(_HandoverPhase.ACTIVATED)
-        _save_handover_journal(storage_root=storage_root, journal=handover)
+        activated = handover.at_least_phase(_HandoverPhase.ACTIVATED)
+        if activated != handover:
+            _save_handover_journal(storage_root=storage_root, journal=activated)
+        handover = activated
     except BaseException:
         _rollback_candidate_promotion(
             candidate=candidate,
@@ -1157,7 +1259,7 @@ def _rollback_candidate_promotion(
 ) -> None:
     """Restore A and erase every B candidate artefact after swap failure."""
     try:
-        profile_delete_session(storage_root=storage_root, bucket_id=candidate.bucket_id)
+        profile_delete_session(storage_root=storage_root, profile_id=candidate.material.envelope.profile_id)
     finally:
         if previous_live is not None:
             profile_bind_bucket_session(previous_live)
@@ -1219,7 +1321,7 @@ def _record_activation(*, profile_id: str, occurred_at: datetime) -> None:
 def _mint_or_warn(
     *,
     storage_root: Path,
-    bucket_id: str,
+    material: ProfileCustodyPasswordMaterialPort,
     session: ProfileBucketSessionPort,
 ) -> bool:
     """Mint the persisted session, or report a process-scoped login.
@@ -1233,7 +1335,9 @@ def _mint_or_warn(
         idle_minutes, absolute_minutes = _session_windows()
         profile_mint_session(
             storage_root=storage_root,
-            bucket_id=bucket_id,
+            profile_id=material.envelope.profile_id,
+            custody_generation=material.envelope.password_generation,
+            dek_epoch=material.envelope.dek_epoch,
             dek=session.dek,
             now=session.opened_at,
             idle_minutes=idle_minutes,
@@ -1243,8 +1347,8 @@ def _mint_or_warn(
         if not profile_is_keyring_unavailable(exc):
             raise
         _log.info(
-            "profile session not persisted (no usable OS keychain); login is process-scoped bucket_id=%s",
-            bucket_id,
+            "profile session not persisted (no usable OS keychain); login is process-scoped profile_id=%s",
+            material.envelope.profile_id,
         )
         return False
     return True
@@ -1256,6 +1360,7 @@ __all__ = [
     "ProfileLoginThrottledError",
     "close_profile_session_artefacts",
     "login_profile",
+    "logout_active_profile",
     "remove_profile_session_acceleration_for_custody_delete",
     "resume_active_profile_session",
     "revoke_live_profile_secret_for_custody_delete",

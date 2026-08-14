@@ -209,7 +209,7 @@ _EXPECTED_RENDERED_GRAMMARS: Final[dict[str, str]] = {
     "bucket_output_language_hint": "<root>/buckets/<bucket_id>/output-language.hint",
     "keystore_bucket": "<root>/keystore/<bucket_id>/",
     "bucket_dek": "<root>/keystore/<bucket_id>/bucket.dek.json",
-    "profile_session": "<root>/keystore/<bucket_id>/session.v1.json",
+    "profile_session": "<root>/keystore/<bucket_id>/session.v2.json",
     "login_throttle": "<root>/keystore/<bucket_id>/login-throttle.json",
     "secret_index": "<root>/secrets/index.json",
     "config_reset_journal": "<root>/reset-operations/<operation_id>.json",

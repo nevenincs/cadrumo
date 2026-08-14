@@ -51,7 +51,7 @@ PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
         "tokens",
         "db",
         "manifest.toml",
-        "session.v1.json",
+        "session.v2.json",
         "bucket.dek.json",
         "login-throttle.json",
         "blobs",
@@ -71,7 +71,7 @@ under test. ``"live-state"`` pins the renamed runtime state root, and
 This module is the taxonomy's own accessor test: ``storage_path``,
 ``bucket_scoped_storage_path``, and ``storage_tree_targets`` are the functions
 under test, so an assertion comparing their output against a hand-typed leaf
-name (``root / "buckets"``, ``keystore_tree / "session.v1.json"``, ...) *is*
+name (``root / "buckets"``, ``keystore_tree / "session.v2.json"``, ...) *is*
 the oracle for what those accessors must resolve to. Re-deriving the expected
 side from ``storage_location(...).subpath`` would make the assertion compare
 the accessor against itself and pass for any subpath at all.
@@ -340,7 +340,7 @@ def test_the_scoped_accessor_resolves_bucket_and_keystore_members(tmp_path: Path
         assert bucket_scoped_storage_path(StorageCategory.BUCKET_KEYSTORE, "primary") == keystore_tree
         assert (
             bucket_scoped_storage_path(StorageCategory.KEYSTORE_PROFILE_SESSION, "primary")
-            == keystore_tree / "session.v1.json"
+            == keystore_tree / "session.v2.json"
         )
         assert (
             bucket_scoped_storage_path(StorageCategory.KEYSTORE_BUCKET_DEK, "primary")

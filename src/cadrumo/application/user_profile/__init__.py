@@ -239,6 +239,7 @@ if TYPE_CHECKING:
         ProfileLoginThrottledError,
         close_profile_session_artefacts,
         login_profile,
+        logout_active_profile,
         resolve_login_target,
         resume_active_profile_session,
     )
@@ -343,6 +344,10 @@ _LAZY_EXPORTS: dict[str, str] = {
         ("...domain.user_profile", tuple(_DOMAIN_RECORD_NAMES)),
         ("._lifecycle", ("ProfileCapsuleLifecycle",)),
         ("._censo_errors", ("CensoSyncError",)),
+        (
+            "._login_session",
+            ("logout_active_profile",),
+        ),
         (
             "._censo_sync",
             (
@@ -717,6 +722,7 @@ __all__ = [
     "iva_regime_required",
     "list_profile_key_records",
     "login_profile",
+    "logout_active_profile",
     "mask_profile_field",
     "missing_filing_baseline_flags",
     "missing_required_field_paths",

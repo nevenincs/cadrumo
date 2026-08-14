@@ -13,9 +13,9 @@ persisted artefact and logs in for that process only. Both branches are real
 product behaviour, so the load-bearing assertion here is the COUPLING —
 the envelope's ``session_persisted`` claim must match what is actually on
 disk, and the follow-on process must behave the way that claim implies
-(silent resume when persisted, an instructive refusal naming ``aeat
-config login`` when not). That coupling fails loudly if either half
-drifts, on a healthy host and a degraded one alike.
+(silent resume when persisted, a typed keychain-unavailable refusal when
+the current receipt cannot be accelerated). That coupling fails loudly if
+either half drifts, on a healthy host and a degraded one alike.
 
 The ``"buckets"`` literal in ``_create_profile`` is deliberate: the
 ``_CLI_HARNESS`` subprocess sets no bucket-root override, so
@@ -35,6 +35,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from textwrap import dedent
 from typing import Any, Final
+from uuid import UUID
 
 import pytest
 
@@ -169,41 +170,22 @@ def _envelope(result: subprocess.CompletedProcess[str]) -> dict[str, Any]:
 
 
 def _create_profile(storage_root: Path) -> str:
-    """Provision one real profile bucket and return its bucket id."""
-    created = _run(
-        storage_root,
-        (
-            "config",
-            "profile",
-            "create",
-            "session-operator",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Session Operator",
-            "--entity-type",
-            "natural_person",
-            "--surnames",
-            "Operator",
-            "--activity",
-            "design",
-            "--iva-regime",
-            "GENERAL",
-        ),
-        with_passphrase=True,
-    )
-    assert created.returncode == 0, _output(created)
-    bucket_dirs = [path for path in (storage_root / "buckets").iterdir() if path.is_dir()]
-    assert len(bucket_dirs) == 1, f"expected exactly one bucket, got {bucket_dirs}"
-    return bucket_dirs[0].name
+    """Register one capsule through the current credential-only creation door."""
+    from ....adapters.persistence.storage.master_key import close_active_bucket_session
+    from ....application.user_profile import register_profile_with_credentials
+    from ....core.config import override_settings
+
+    with override_settings(cadrumo_local_storage_root=storage_root):
+        outcome = register_profile_with_credentials(label="session-operator", passphrase=_PASSPHRASE)
+        close_active_bucket_session()
+    return outcome.bucket_id
 
 
 def _session_record(storage_root: Path, bucket_id: str) -> Path:
     """Return the on-disk persisted-session path for ``bucket_id``."""
     from ....adapters.persistence.storage.master_key import profile_session_path
 
-    return profile_session_path(storage_root=storage_root, bucket_id=bucket_id)
+    return profile_session_path(storage_root=storage_root, profile_id=UUID(bucket_id))
 
 
 class TestSessionLifecycle:
@@ -257,10 +239,11 @@ class TestSessionLifecycle:
             assert follow_on.returncode == 0, _output(follow_on)
             assert "aeat config login" not in _output(follow_on), _output(follow_on)
         else:
-            # Degraded host: the login was process-scoped, so the next
-            # process is correctly back at the gate.
+            # A pointer may still name the current profile, so a degraded
+            # host projects the explicit acceleration outcome rather than
+            # pretending the profile selection is absent.
             assert follow_on.returncode != 0, _output(follow_on)
-            assert "aeat config login" in _output(follow_on), _output(follow_on)
+            assert "OS keychain is unavailable for profile-session acceleration" in _output(follow_on)
 
         # 4. Logout is a strong close, and a second logout is a clean
         #    idempotent no-op rather than a refusal.

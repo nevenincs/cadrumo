@@ -34,12 +34,11 @@ from ....adapters.persistence.storage.master_key import (
     BucketSession,
     bind_active_bucket_session,
     current_active_bucket_session,
+    mint_profile_session,
     profile_session_path,
-    wrap_profile_session_dek,
-    write_profile_session,
 )
 from ....core import BucketPointer, Period, capture_pointer, restore_pointer
-from ....core.config import SecretStoreBackend, Settings
+from ....core.config import Settings
 from ....domain.modelos import ModeloCode, ModeloRecord, derive_filing_record_id
 from ... import user_profile as user_profiles
 from ...evidence._profile_legal_hold import LegalHoldCaseAuthority
@@ -157,17 +156,17 @@ def _filed_record(*, filed_at: datetime) -> ModeloRecord:
 
 def _persist_real_current_session_acceleration(root: Path) -> Path:
     """Create the current encrypted session record through its production writer."""
-    record = wrap_profile_session_dek(
-        session_key=b"s" * 32,
+    mint_profile_session(
+        storage_root=root,
+        profile_id=_PROFILE_ID,
+        custody_generation=1,
+        dek_epoch=b64encode(b"e" * 16).decode("ascii"),
         dek=bytes(range(32)),
-        bucket_id=str(_PROFILE_ID),
-        backend_kind=SecretStoreBackend.FILE,
-        authenticated_at=_INSTANT,
-        idle_deadline=_INSTANT + timedelta(minutes=15),
-        absolute_deadline=_INSTANT + timedelta(hours=4),
+        now=_INSTANT,
+        idle_minutes=15,
+        absolute_minutes=240,
     )
-    write_profile_session(storage_root=root, bucket_id=str(_PROFILE_ID), record=record)
-    return profile_session_path(storage_root=root, bucket_id=str(_PROFILE_ID))
+    return profile_session_path(storage_root=root, profile_id=_PROFILE_ID)
 
 
 def _publish_once_in_sibling(path_text: str, payload: bytes, result_queue: Any) -> None:
@@ -566,6 +565,7 @@ def test_journal_writer_refuses_an_existing_leaf_and_never_overwrites_it(tmp_pat
     assert target.read_bytes() == b"preexisting"
 
 
+@pytest.mark.os_keychain
 def test_delete_owner_receipts_are_durable_and_idempotent(tmp_path: Path) -> None:
     _committed_capsule(tmp_path)
     service = ProfileCustodyTransactionService(root=tmp_path)
@@ -596,6 +596,7 @@ def test_delete_owner_receipts_are_durable_and_idempotent(tmp_path: Path) -> Non
     assert current_active_bucket_session() is None
 
 
+@pytest.mark.os_keychain
 def test_create_orchestration_journals_stages_verifies_and_publishes_pointer_last(tmp_path: Path) -> None:
     service = ProfileCustodyTransactionService(root=tmp_path)
     transaction_id = uuid4()
@@ -863,6 +864,7 @@ def test_transaction_lock_refuses_a_real_reparse_capsule_root(tmp_path: Path) ->
     assert not (outside / f".profile-custody-{_PROFILE_ID}.lock").exists()
 
 
+@pytest.mark.os_keychain
 def test_owner_receipts_resume_after_owner_effect_precedes_journal_state(tmp_path: Path) -> None:
     """A real owner effect survives a crash before its enclosing state update."""
     _committed_capsule(tmp_path)
