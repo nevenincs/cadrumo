@@ -11,16 +11,11 @@ human re-reading the allowlist.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import pytest
 
 from .....core.resources import resources
 from .. import _validate_previous_filing_year_coverage as _module
 from .._validate_previous_filing_year_coverage import validate_previous_filing_source_year_coverage
-
-if TYPE_CHECKING:
-    from .._schema import ModeloDefinition, ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -46,42 +41,36 @@ def test_the_bundled_corpus_carries_no_uncovered_or_stale_gap() -> None:
     assert failures == []
 
 
-def test_a_widened_gap_is_not_silently_absorbed_by_the_narrower_allowance(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_a_widened_gap_is_not_silently_absorbed_by_the_narrower_allowance() -> None:
     """The same START year with a LARGER end must not match the documented allowance.
 
-    Positive control for the gate actually biting: monkeypatched from outside
-    the module under test via pytest's own fixture (auto-reverted, never a
-    tracked-file edit), dropping Modelo 100's 2020 revision from the
-    candidate set so the Modelo 130 carry's missing range grows from
-    2018-2019 to 2018-2020. The allowance names 2018 THROUGH 2019
-    specifically, so the wider gap must surface as a new failure, and the
-    narrower allowance must itself go stale — proving the match is exact
-    rather than start-year-only, which would have silently absorbed a real
-    regression.
+    Positive control for the gate actually biting: a real, immutable Modelo
+    100 registry input without its real 2020 revision makes the Modelo 130
+    carry's missing range grow from 2018-2019 to 2018-2020. The allowance
+    names 2018 THROUGH 2019 specifically, so the wider gap must surface as a
+    new failure, and the narrower allowance must itself go stale — proving
+    the match is exact rather than start-year-only, which would have silently
+    absorbed a real regression.
     """
     modelos, modelos_by_id = _loaded_modelos()
-    original = _module._period_matching_revisions
-
-    def _drop_modelo_100_2020(
-        source_modelo: ModeloDefinition,
-        *,
-        required_periods: tuple[str, ...],
-    ) -> tuple[ModeloRevision, ...]:
-        revisions = original(source_modelo, required_periods=required_periods)
-        if str(source_modelo.id) == "100":
-            revisions = tuple(revision for revision in revisions if revision.id != "2020")
-        return revisions
-
-    monkeypatch.setattr(_module, "_period_matching_revisions", _drop_modelo_100_2020)
-    failures = validate_previous_filing_source_year_coverage(modelos, modelos_by_id)
+    modelo_100 = modelos_by_id["100"]
+    modelo_100_without_2020 = modelo_100.model_copy(
+        update={
+            "revisions": {
+                revision_id: revision for revision_id, revision in modelo_100.revisions.items() if revision_id != "2020"
+            },
+        },
+    )
+    failures = validate_previous_filing_source_year_coverage(
+        modelos,
+        {**modelos_by_id, modelo_100.id: modelo_100_without_2020},
+    )
 
     assert any("2018-2020" in failure and "100" in failure for failure in failures), failures
     assert any("stale previous-filing year-coverage allowance" in failure for failure in failures), failures
 
 
-def test_a_new_mid_range_gap_with_no_prior_allowance_is_caught(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_a_new_mid_range_gap_with_no_prior_allowance_is_caught() -> None:
     """A hole opening in the MIDDLE of a previously-clean range must surface too.
 
     Distinct from the widening test above (which extends an EXISTING gap's
@@ -90,20 +79,18 @@ def test_a_new_mid_range_gap_with_no_prior_allowance_is_caught(monkeypatch: pyte
     ``_ALLOWANCES`` was ever written for.
     """
     modelos, modelos_by_id = _loaded_modelos()
-    original = _module._period_matching_revisions
-
-    def _drop_modelo_100_2022(
-        source_modelo: ModeloDefinition,
-        *,
-        required_periods: tuple[str, ...],
-    ) -> tuple[ModeloRevision, ...]:
-        revisions = original(source_modelo, required_periods=required_periods)
-        if str(source_modelo.id) == "100":
-            revisions = tuple(revision for revision in revisions if revision.id != "2022")
-        return revisions
-
-    monkeypatch.setattr(_module, "_period_matching_revisions", _drop_modelo_100_2022)
-    failures = validate_previous_filing_source_year_coverage(modelos, modelos_by_id)
+    modelo_100 = modelos_by_id["100"]
+    modelo_100_without_2022 = modelo_100.model_copy(
+        update={
+            "revisions": {
+                revision_id: revision for revision_id, revision in modelo_100.revisions.items() if revision_id != "2022"
+            },
+        },
+    )
+    failures = validate_previous_filing_source_year_coverage(
+        modelos,
+        {**modelos_by_id, modelo_100.id: modelo_100_without_2022},
+    )
 
     assert any("2022" in failure and "lacks" in failure and "'100'" in failure for failure in failures), failures
     # The pre-existing 2018-2019 allowance is untouched by this mutation and

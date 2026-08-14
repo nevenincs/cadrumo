@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:f56d76cda4927e35cc958c0a45a9536c42cd03595345cf05b9bb377a514f7fe0'
+body_hash: 'sha256:ca91d9e9dab0d75ba948d8d05a5c7e5d82da3fd47042ccecb8fd14023db07638'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -15,6 +15,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W06-P17-S51]]'
   - '[[2026-08-14-test-harness-sanity-W06-P17-S52]]'
   - '[[2026-08-14-test-harness-sanity-W07-P18-S53]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P18-S55]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S71]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S72]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S73]]'
@@ -22,6 +23,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P23-S75]]'
   - '[[2026-08-14-test-harness-sanity-W07-P23-S76]]'
   - '[[2026-08-14-test-harness-sanity-W07-P23-S77]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P23-S78]]'
   - '[[2026-08-14-test-harness-sanity-audit]]'
   - '[[2026-08-14-test-harness-sanity-plan]]'
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -51,6 +53,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W06-P17-S51` - Enroll the harness verdict in CI independently from unit and integration verdicts
 - `2026-08-14-test-harness-sanity-W06-P17-S52` - Prove the harness recipe selects every declared member and fails when membership collapses
 - `2026-08-14-test-harness-sanity-W07-P18-S53` - Canonicalize duplicated LLM secure-runtime fixtures at their narrowest common owner
+- `2026-08-14-test-harness-sanity-W07-P18-S55` - Canonicalize the exact secure-object-repository cluster without merging its divergent shape
 - `2026-08-14-test-harness-sanity-W07-P22-S71` - Promote banned-live-import enforcement into the shared root policy helper
 - `2026-08-14-test-harness-sanity-W07-P22-S72` - Make the repository root the sole collection-policy hook owner
 - `2026-08-14-test-harness-sanity-W07-P22-S73` - Remove duplicate marker traversal and live-policy ownership from the child conftest
@@ -58,6 +61,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P23-S75` - Replace the OFX optional-extra monkeypatch with real behavior
 - `2026-08-14-test-harness-sanity-W07-P23-S76` - Replace previous-filing exception mutation with reachable real behavior
 - `2026-08-14-test-harness-sanity-W07-P23-S77` - Replace relation-allowance mutation with an explicit production input
+- `2026-08-14-test-harness-sanity-W07-P23-S78` - Replace previous-filing revision-selector mutation with real registry input
 
 ### plan
 
