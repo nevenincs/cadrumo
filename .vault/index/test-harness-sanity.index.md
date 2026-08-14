@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:bdcce12b93ebafa438d842a1f276d213f87a9886934c5a697f63506271d6beef'
+body_hash: 'sha256:d4a54a70899961c317f3eb4811b455c2bbf6054aa330c78131730a7396ec1e1c'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -17,6 +17,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P18-S53]]'
   - '[[2026-08-14-test-harness-sanity-W07-P18-S55]]'
   - '[[2026-08-14-test-harness-sanity-W07-P18-S56]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P19-S57]]'
   - '[[2026-08-14-test-harness-sanity-W07-P19-S60]]'
   - '[[2026-08-14-test-harness-sanity-W07-P20-S61]]'
   - '[[2026-08-14-test-harness-sanity-W07-P20-S62]]'
@@ -37,6 +38,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P24-S81]]'
   - '[[2026-08-14-test-harness-sanity-W07-P24-S82]]'
   - '[[2026-08-14-test-harness-sanity-W07-P25-S84]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P25-S86]]'
   - '[[2026-08-14-test-harness-sanity-audit]]'
   - '[[2026-08-14-test-harness-sanity-plan]]'
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -68,6 +70,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P18-S53` - Canonicalize duplicated LLM secure-runtime fixtures at their narrowest common owner
 - `2026-08-14-test-harness-sanity-W07-P18-S55` - Canonicalize the exact secure-object-repository cluster without merging its divergent shape
 - `2026-08-14-test-harness-sanity-W07-P18-S56` - Canonicalize fixed-master-key fixtures across persistence storage tests
+- `2026-08-14-test-harness-sanity-W07-P19-S57` - Canonicalize isolated profile-storage fixtures used by wizard and CLI profile tests
 - `2026-08-14-test-harness-sanity-W07-P19-S60` - Canonicalize schema-loader fixtures while preserving proven scope
 - `2026-08-14-test-harness-sanity-W07-P20-S61` - Remove local redeclarations of the canonical modelo repositories fixture
 - `2026-08-14-test-harness-sanity-W07-P20-S62` - Canonicalize the M130 committed registry snapshot family
@@ -88,6 +91,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P24-S81` - Move full-corpus collectability out of unit while retaining bounded controls
 - `2026-08-14-test-harness-sanity-W07-P24-S82` - Align worker tests with repository-owned six-worker authority and explicit overrides
 - `2026-08-14-test-harness-sanity-W07-P25-S84` - Move and rename the core i18n default-language test to its owner
+- `2026-08-14-test-harness-sanity-W07-P25-S86` - Replace stale naked-test rationale with current distributed visibility requirements
 
 ### plan
 

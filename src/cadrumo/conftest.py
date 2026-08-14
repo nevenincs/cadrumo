@@ -2,10 +2,11 @@
 
 Hosts the ``source_tree_ast`` session-scoped fixture that ratchet
 inventories consume to amortise the AST parse cost across the suite.
-The fixture has to live here (not in ``src/cadrumo/tests/conftest.py``)
-because pytest's conftest discovery walks UP from each test file; a
-conftest inside the ``tests/`` subdirectory is invisible to ratchets
-hosted at ``src/cadrumo/test_*.py`` and elsewhere under ``src/cadrumo/``.
+The fixture lives at the package root because pytest's conftest discovery
+walks up from each test file. Tests are distributed across domain-local
+``tests/`` subtrees throughout ``src/cadrumo/``; a conftest inside
+``src/cadrumo/tests/`` is invisible to sibling owner subtrees, while this
+package-root conftest is their narrowest common visible owner.
 
 Marker-contract and live-import gating are owned by the repo-root
 ``conftest.py`` so every collected test subtree reaches the same policy.
