@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:2c7a01987e681b0b1d528451e3b9160d5bfb3cc2fd5d80cfb79970141f6f1911'
+body_hash: 'sha256:26964dc762889f398d0c981ee581bc48c5bbb5c8b503871946fdc22756b68661'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -31,6 +31,9 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P21-S103]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S104]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S105]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P21-S106]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P21-S109]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P21-S110]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S66]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S67]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S68]]'
@@ -56,8 +59,18 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P25-S85]]'
   - '[[2026-08-14-test-harness-sanity-W07-P25-S86]]'
   - '[[2026-08-14-test-harness-sanity-W07-P25-S87]]'
+  - '[[2026-08-14-test-harness-sanity-W08-P26-S89]]'
+  - '[[2026-08-14-test-harness-sanity-W08-P26-S90]]'
+  - '[[2026-08-14-test-harness-sanity-W08-P26-S91]]'
+  - '[[2026-08-14-test-harness-sanity-W08-P27-S92]]'
+  - '[[2026-08-14-test-harness-sanity-W08-P27-S93]]'
+  - '[[2026-08-14-test-harness-sanity-W08-P27-S94]]'
+  - '[[2026-08-14-test-harness-sanity-W08-P28-S95]]'
+  - '[[2026-08-14-test-harness-sanity-W08-P28-S96]]'
+  - '[[2026-08-14-test-harness-sanity-W08-P28-S97]]'
   - '[[2026-08-14-test-harness-sanity-audit]]'
   - '[[2026-08-14-test-harness-sanity-plan]]'
+  - '[[2026-08-14-test-harness-sanity-semantic-test-corpus-drift-audit]]'
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
   - '[[2026-08-14-test-harness-sanity-two-lane-campaign-research]]'
   - '[[2026-08-14-test-harness-sanity-w08-canonical-home-regressions-audit]]'
@@ -76,6 +89,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 ### audit
 
 - `2026-08-14-test-harness-sanity-audit` - `test-harness-sanity` audit: `test harness topology, fixtures, and performance`
+- `2026-08-14-test-harness-sanity-semantic-test-corpus-drift-audit` - `test-harness-sanity` audit: semantic sweep of test-corpus drift
 - `2026-08-14-test-harness-sanity-w08-canonical-home-regressions-audit` - `test-harness-sanity` audit: W08 close review, canonical-home regressions
 
 ### exec
@@ -103,6 +117,9 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P21-S103` - Give the re-export-bridge gate a declared reach over the test tree instead of silent exclusion
 - `2026-08-14-test-harness-sanity-W07-P21-S104` - Collapse every identical-constraint fixture cluster to one definition preserving scope and autouse reach
 - `2026-08-14-test-harness-sanity-W07-P21-S105` - Key the ownership manifest disposition on full constraint shape rather than repeated name
+- `2026-08-14-test-harness-sanity-W07-P21-S106` - Detect one fixture behaviour living under many names by keying the census on body rather than name
+- `2026-08-14-test-harness-sanity-W07-P21-S109` - Classify factory-bound fixtures as manifest rows with per-binding identity and argument evidence
+- `2026-08-14-test-harness-sanity-W07-P21-S110` - Sweep test helper functions assertion helpers and builders for drift the fixture census cannot see
 - `2026-08-14-test-harness-sanity-W07-P21-S66` - Adjudicate and canonicalize every remaining source-tree fixture cluster in the census
 - `2026-08-14-test-harness-sanity-W07-P21-S67` - Adjudicate and canonicalize every remaining development fixture cluster in the census
 - `2026-08-14-test-harness-sanity-W07-P21-S68` - Adjudicate and canonicalize every remaining packaging fixture cluster in the census
@@ -128,6 +145,15 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P25-S85` - Move profile output-language integration tests to their application owner
 - `2026-08-14-test-harness-sanity-W07-P25-S86` - Replace stale naked-test rationale with current distributed visibility requirements
 - `2026-08-14-test-harness-sanity-W07-P25-S87` - Add a central-harness ownership gate without a file allowlist
+- `2026-08-14-test-harness-sanity-W08-P26-S89` - Run marker banned-import topology ownership and no-monkeypatch gates
+- `2026-08-14-test-harness-sanity-W08-P26-S90` - Run the dedicated harness lane and verify non-vacuity and independent verdict
+- `2026-08-14-test-harness-sanity-W08-P26-S91` - Run unit and integration recipes and compare measured runtime to baseline
+- `2026-08-14-test-harness-sanity-W08-P27-S92` - Audit every fixture disposition against current consumers and lifecycle
+- `2026-08-14-test-harness-sanity-W08-P27-S93` - Audit every original high-through-low finding against current code and evidence
+- `2026-08-14-test-harness-sanity-W08-P27-S94` - Run the close honesty review and action every surviving item
+- `2026-08-14-test-harness-sanity-W08-P28-S95` - Run full first-party collection and retain complete status and errors
+- `2026-08-14-test-harness-sanity-W08-P28-S96` - Run feature-scoped and repository-wide VaultSpec checks without rewriting unrelated debt
+- `2026-08-14-test-harness-sanity-W08-P28-S97` - Create and validate one execution record per completed Step
 
 ### plan
 
