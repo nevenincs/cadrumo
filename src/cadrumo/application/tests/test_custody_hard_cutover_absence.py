@@ -31,22 +31,44 @@ the composition boundary the assertion is actually about: it is where a caller
 adapters reach the retired surface too and are outside this root; they are
 covered by the same replacement work and are not silently exonerated here.
 
-Dynamic reach
--------------
-A dotted module path handed to :func:`importlib.import_module` is a string, so
-an AST walk over ``ImportFrom``/``Attribute``/``Name`` cannot see it, and a
-delegate layer of mirror protocols and one-line forwarding functions is built
-entirely out of that shape.  The detector therefore also reads string literals
-passed to ``import_module`` and ``getattr``, and flags a module PATH -- not only
-a symbol name -- when a dynamic or static target reaches a private submodule of
-the persistence-storage substrate.
+Two nets, and why the module one is primary
+-------------------------------------------
+The MODULE net is the load-bearing one: any import resolving into
+``adapters/persistence/storage/master_key`` is reported, whatever symbol it
+names.  A name list can only ever assert "not these particular names", which is
+a far weaker claim than "no route into the shared-master package remains", and
+it silently loses its teeth the moment the surface is renamed or re-wrapped.
+The forwarding layer in ``profile_custody`` is the worked example: it forwards
+``current_active_bucket_session``, ``BucketSession.open``,
+``load_or_mint_bucket_dek``, ``mint_profile_session``, ``resume_profile_session``
+and ``zeroise``, none of which a provider-family name list contains, so a
+name-only gate passes it at any scan width.
 
-No module path under that substrate is *wholly* retired today: the
-``master_key`` package hosts both the retired provider family and the live
-per-bucket-session substrate (``BucketSession``, the active-session seam, the
-DEK wrap, the persisted profile session).  Flagging the package path outright
-would condemn the surviving half, so the retired surface stays a symbol set and
-the path axis catches the ownership escape instead.
+The NAME net is kept as a second, narrower catch, because a reach can arrive
+without ever naming the package: ``auth/_sessions.py``, ``diagnostics.py`` and
+``repair_integrity.py`` import the provider from the ``storage`` package facade,
+so the module net cannot see where those names resolve to and only the symbol
+identifies them.
+
+A dotted module path handed to :func:`importlib.import_module` is a string, so
+an AST walk over ``ImportFrom``/``Attribute``/``Name`` cannot see it, and the
+forwarding layer is built entirely out of that shape.  Both nets therefore read
+string literals passed to ``import_module`` and ``getattr`` as well as static
+``Import``/``ImportFrom`` targets.
+
+A third net reports a reach into a *private* submodule anywhere under the
+persistence-storage substrate, which the architecture rule binds a string-built
+dynamic target to exactly as it binds a static one.
+
+Nothing passes here by omission
+-------------------------------
+``user_profile/_bundle_encryption.py`` imports ``KdfParams`` and
+``derive_kek_with_params`` -- raw Argon2id parameters and KEK derivation, not
+the provider seam, and arguably the least objectionable reach in the layer.  It
+is declared below rather than quietly excused: the per-profile capsule derives
+its own KEK, so the primitive is expected to move out of the shared-master
+package with the rest of the surviving substrate.  Judging it defensible is a
+decision to write down, not a reason to leave it invisible.
 """
 
 from __future__ import annotations
@@ -82,8 +104,10 @@ _RETIRED_CUSTODY_NAMES = frozenset(
 )
 
 # The contiguous package segments identifying the persistence-storage substrate,
-# matched against both absolute and relative dotted paths.
+# matched against both absolute and relative dotted paths, and the shared-master
+# package inside it whose every reach is reported regardless of symbol.
 _SUBSTRATE_SEGMENTS = ("adapters", "persistence", "storage")
+_MASTER_KEY_SEGMENTS = (*_SUBSTRATE_SEGMENTS, "master_key")
 
 _DYNAMIC_IMPORT_CALLS = frozenset({"import_module"})
 
@@ -92,35 +116,75 @@ _DYNAMIC_IMPORT_CALLS = frozenset({"import_module"})
 class _OpenViolation:
     """A reach that is known, owned, and deliberately still standing.
 
-    ``names`` is the exact finding set the module currently produces.  The
-    declaration is compared against live output, so it expires on its own: drop
-    one name and the entry is stale, drop them all and the entry must go.
+    ``reaches`` is the anchor: every one of these must still be live, so the
+    declaration expires on its own -- fix the reach and the entry reds until
+    somebody deletes it.  ``retiring`` names symbol reaches that are mid-removal
+    and are accepted present or absent, which keeps the gate stable across an
+    in-flight edit without going blind: only provider-family names may be listed
+    there, an entry must still carry a non-empty ``reaches`` anchor, and any
+    finding in neither set fails the gate.
     """
 
     reason: str
-    names: frozenset[str]
+    reaches: frozenset[str]
+    retiring: frozenset[str] = frozenset()
+
+    @property
+    def accepted(self) -> frozenset[str]:
+        return self.reaches | self.retiring
 
 
 # Known-open reaches, each waiting on the replacement that moves it to the
 # per-profile capsule.  These are NOT exemptions: every entry is re-derived from
 # the tree on each run and fails the moment it stops describing reality, so an
 # entry cannot outlive the violation it declares.
+_MASTER_KEY_PACKAGE = "master-key-module:adapters.persistence.storage.master_key"
+_MASTER_KEY_PACKAGE_ABSOLUTE = "master-key-module:cadrumo.adapters.persistence.storage.master_key"
+
 _DECLARED_OPEN_VIOLATIONS: dict[str, _OpenViolation] = {
+    "auth/_operator_scope.py": _OpenViolation(
+        reason=(
+            "Operator scoping reads the live bucket session from the shared-master "
+            "package; the surviving session substrate is being renamed out of that "
+            "package, and this import follows it."
+        ),
+        reaches=frozenset({_MASTER_KEY_PACKAGE}),
+    ),
     "auth/_sessions.py": _OpenViolation(
         reason=(
             "Bucket activation still resolves the process-wide provider and binds "
             "its key to the session; it must open the session from the profile "
             "capsule's password envelope instead."
         ),
-        names=frozenset({"activate_master_key_provider", "get_master_key_provider"}),
+        reaches=frozenset({"activate_master_key_provider", "get_master_key_provider"}),
     ),
     "diagnostics.py": _OpenViolation(
         reason=(
             "The storage-health probe reports custody readiness by resolving the "
             "process-wide provider; it must read the per-profile capsule's "
-            "enrolment state instead."
+            "enrolment state instead.  Its session-error import follows the "
+            "surviving substrate out of the shared-master package."
         ),
-        names=frozenset({"get_master_key_provider"}),
+        reaches=frozenset({"get_master_key_provider", _MASTER_KEY_PACKAGE}),
+    ),
+    "profile_custody/__init__.py": _OpenViolation(
+        reason=(
+            "A forwarding port of mirror protocols and delegate wrappers reaches the "
+            "shared-master package dynamically; it collapses into one canonical, "
+            "exclusive route to the session and custody surface."
+        ),
+        reaches=frozenset({_MASTER_KEY_PACKAGE_ABSOLUTE}),
+        # The provider-family forwards are mid-removal: present at HEAD, gone in
+        # the in-flight edit.  Accepting them either way keeps the gate stable
+        # across that landing without loosening the module anchor above.
+        retiring=frozenset(
+            {
+                "get_master_key_provider",
+                "KeyringMasterKeyProvider",
+                "FileFallbackMasterKeyProvider",
+                "UnsecuredMasterKeyProvider",
+            }
+        ),
     ),
     "repair_integrity.py": _OpenViolation(
         reason=(
@@ -128,7 +192,24 @@ _DECLARED_OPEN_VIOLATIONS: dict[str, _OpenViolation] = {
             "context; it must run inside an authenticated per-profile bucket "
             "session instead."
         ),
-        names=frozenset({"get_master_key_provider"}),
+        reaches=frozenset({"get_master_key_provider"}),
+    ),
+    "user_profile/_bundle_encryption.py": _OpenViolation(
+        reason=(
+            "Bundle export derives its KEK with the raw Argon2id parameters from the "
+            "shared-master package.  This is the primitive, not the provider seam, "
+            "but the per-profile capsule derives its own KEK and the primitive moves "
+            "with the surviving substrate; declared so the decision is visible."
+        ),
+        reaches=frozenset({_MASTER_KEY_PACKAGE}),
+    ),
+    "user_profile/_language_resolver.py": _OpenViolation(
+        reason=(
+            "Language resolution asks the shared-master package whether a bucket "
+            "session is live; the predicate follows the surviving session substrate "
+            "out of that package."
+        ),
+        reaches=frozenset({_MASTER_KEY_PACKAGE}),
     ),
 }
 
@@ -143,15 +224,28 @@ def _production_modules(root: Path) -> list[Path]:
     )
 
 
-def _reaches_substrate_private(dotted: str) -> bool:
-    """Report whether a dotted path reaches a private submodule of the substrate."""
+def _tail_after(dotted: str, prefix: tuple[str, ...]) -> list[str] | None:
+    """Return the segments following ``prefix``, or ``None`` if it is absent.
+
+    Matched anywhere in the path so a relative import (``...adapters.persistence
+    .storage.master_key``) and an absolute one (``cadrumo.adapters...``) resolve
+    identically; the leading dots of a relative import carry no segment.
+    """
     segments = [segment for segment in dotted.split(".") if segment]
-    for index in range(len(segments) - len(_SUBSTRATE_SEGMENTS) + 1):
-        if tuple(segments[index : index + len(_SUBSTRATE_SEGMENTS)]) != _SUBSTRATE_SEGMENTS:
-            continue
-        tail = segments[index + len(_SUBSTRATE_SEGMENTS) :]
-        return any(segment.startswith("_") for segment in tail)
-    return False
+    for index in range(len(segments) - len(prefix) + 1):
+        if tuple(segments[index : index + len(prefix)]) == prefix:
+            return segments[index + len(prefix) :]
+    return None
+
+
+def _module_finding(dotted: str) -> str | None:
+    """Report the strongest module-path finding a dotted import target carries."""
+    if _tail_after(dotted, _MASTER_KEY_SEGMENTS) is not None:
+        return f"master-key-module:{dotted}"
+    tail = _tail_after(dotted, _SUBSTRATE_SEGMENTS)
+    if tail is not None and any(segment.startswith("_") for segment in tail):
+        return f"private-path:{dotted}"
+    return None
 
 
 def _string_argument(node: ast.Call) -> str | None:
@@ -173,27 +267,28 @@ def _called_name(node: ast.Call) -> str:
 def _retired_references(source: str) -> set[str]:
     """Report every retired custody reach the source imports, reads, or calls.
 
-    Symbol reaches are reported by bare name; a module-path reach into a private
-    submodule of the persistence-storage substrate is reported as
-    ``private-path:<dotted>`` so the two axes stay distinguishable in a failure
-    message.
+    Module-path reaches are reported as ``master-key-module:<dotted>`` (any route
+    into the shared-master package, whatever symbol it names) or
+    ``private-path:<dotted>`` (a private submodule elsewhere under the substrate);
+    symbol reaches are reported by bare name.  The prefixes keep the nets
+    distinguishable in a failure message and in a declaration.
     """
     tree = ast.parse(source)
     found: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
             found |= {alias.name for alias in node.names} & _RETIRED_CUSTODY_NAMES
-            if _reaches_substrate_private(node.module or ""):
-                found.add(f"private-path:{node.module}")
+            if (finding := _module_finding(node.module or "")) is not None:
+                found.add(finding)
         elif isinstance(node, ast.Import):
-            found |= {f"private-path:{alias.name}" for alias in node.names if _reaches_substrate_private(alias.name)}
+            found |= {finding for alias in node.names if (finding := _module_finding(alias.name)) is not None}
         elif isinstance(node, ast.Call):
             called = _called_name(node)
             argument = _string_argument(node)
             if argument is None:
                 continue
-            if called in _DYNAMIC_IMPORT_CALLS and _reaches_substrate_private(argument):
-                found.add(f"private-path:{argument}")
+            if called in _DYNAMIC_IMPORT_CALLS and (finding := _module_finding(argument)) is not None:
+                found.add(finding)
             elif called == "getattr" and argument in _RETIRED_CUSTODY_NAMES:
                 found.add(argument)
         elif isinstance(node, ast.Attribute) and node.attr in _RETIRED_CUSTODY_NAMES:
@@ -232,7 +327,11 @@ def test_detector_sees_a_retired_name_reached_through_a_dynamic_import() -> None
         '    master_key = import_module("cadrumo.adapters.persistence.storage.master_key")\n'
         "    return master_key.get_master_key_provider().get_master_key()\n"
     )
-    assert _retired_references(delegating) == {"get_master_key_provider", "get_master_key"}
+    assert _retired_references(delegating) == {
+        "get_master_key_provider",
+        "get_master_key",
+        _MASTER_KEY_PACKAGE_ABSOLUTE,
+    }
 
     laundered = (
         "from importlib import import_module\n"
@@ -240,24 +339,54 @@ def test_detector_sees_a_retired_name_reached_through_a_dynamic_import() -> None
         '    module = import_module("cadrumo.adapters.persistence.storage.master_key")\n'
         '    return getattr(module, "get_master_key_provider")()\n'
     )
-    assert _retired_references(laundered) == {"get_master_key_provider"}
+    assert _retired_references(laundered) == {"get_master_key_provider", _MASTER_KEY_PACKAGE_ABSOLUTE}
+
+
+def test_detector_flags_a_master_key_reach_that_names_no_retired_symbol() -> None:
+    """The net the name list cannot supply, on every import form.
+
+    Each source below names only surviving session substrate, so a
+    provider-family name list reports every one of them clean.  This is the
+    shape the forwarding layer is made of, and the reason the module net is
+    primary rather than supplementary.
+    """
+    session_only = "from ...adapters.persistence.storage.master_key import current_active_bucket_session\n"
+    assert _retired_references(session_only) == {_MASTER_KEY_PACKAGE}
+
+    dek_only = (
+        "from importlib import import_module\n"
+        "def dek() -> bytes:\n"
+        '    module = import_module("cadrumo.adapters.persistence.storage.master_key")\n'
+        "    return module.load_or_mint_bucket_dek()\n"
+    )
+    assert _retired_references(dek_only) == {_MASTER_KEY_PACKAGE_ABSOLUTE}
+
+    plain = "import cadrumo.adapters.persistence.storage.master_key as _mk\n"
+    assert _retired_references(plain) == {_MASTER_KEY_PACKAGE_ABSOLUTE}
+
+    submodule = "from ...adapters.persistence.storage.master_key._bucket_session import BucketSession\n"
+    assert _retired_references(submodule) == {
+        "master-key-module:adapters.persistence.storage.master_key._bucket_session"
+    }
+
+    sibling = "from ...adapters.persistence.storage.custody import load_capsule\n"
+    assert _retired_references(sibling) == set()
 
 
 def test_detector_flags_a_private_substrate_module_path() -> None:
     """The path axis: a string-built target is bound by the same ownership rule."""
-    dynamic = (
-        "from importlib import import_module\n"
-        '_M = import_module("cadrumo.adapters.persistence.storage.master_key._master_key")\n'
-    )
-    assert _retired_references(dynamic) == {"private-path:cadrumo.adapters.persistence.storage.master_key._master_key"}
+    dynamic = 'import_module("cadrumo.adapters.persistence.storage.custody._capsule_discovery")\n'
+    assert _retired_references(dynamic) == {
+        "private-path:cadrumo.adapters.persistence.storage.custody._capsule_discovery"
+    }
 
-    relative = "from ...adapters.persistence.storage.master_key._recovery import wrap_master_key\n"
-    assert _retired_references(relative) == {"private-path:adapters.persistence.storage.master_key._recovery"}
+    relative = "from ...adapters.persistence.storage._rotation import rotate_dek\n"
+    assert _retired_references(relative) == {"private-path:adapters.persistence.storage._rotation"}
 
-    plain = "import cadrumo.adapters.persistence.storage.master_key._master_key as _mk\n"
-    assert _retired_references(plain) == {"private-path:cadrumo.adapters.persistence.storage.master_key._master_key"}
+    plain = "import cadrumo.adapters.persistence.storage.crypto._encrypted_columns as _cols\n"
+    assert _retired_references(plain) == {"private-path:cadrumo.adapters.persistence.storage.crypto._encrypted_columns"}
 
-    assert _retired_references('import_module("cadrumo.adapters.persistence.storage.master_key")\n') == set()
+    assert _retired_references("from ...adapters.persistence.storage.crypto import encrypt_record\n") == set()
     assert _retired_references("from ._revision_persistence import build_event\n") == set()
 
 
@@ -296,24 +425,32 @@ def test_scan_root_covers_every_sibling_package_of_the_layer() -> None:
 def test_scan_root_reaches_reality_outside_this_package() -> None:
     """The scope proof on real material: every declared reach is found here.
 
-    Each declared path lies outside ``user_profile/`` -- the root this gate used
+    Most declared paths lie outside ``user_profile/`` -- the root this gate used
     to carry -- so the declaration set is itself the evidence that the widened
-    root sees material the narrow one structurally could not.
+    root sees material the narrow one structurally could not.  Declarations
+    inside ``user_profile/`` prove nothing about scope, so they are excluded from
+    that half of the assertion rather than allowed to stand in for it.
     """
     offenders = _offenders()
-    for path in _DECLARED_OPEN_VIOLATIONS:
-        assert not path.startswith("user_profile/"), (
-            f"{path} would have been visible to the retired package-scoped root; "
-            "it proves nothing about scope and must not stand in for the proof"
-        )
-        assert path in offenders, (
-            f"declared reach {path} was not found by the scan; either the reach is "
-            "gone (delete the declaration) or the scan root no longer reaches it"
-        )
+    outside = [path for path in _DECLARED_OPEN_VIOLATIONS if not path.startswith("user_profile/")]
+    assert outside, (
+        "no declared reach lies outside user_profile/, so nothing here proves the "
+        "scan root is wider than the package-scoped one it replaced"
+    )
+    missing = sorted(path for path in _DECLARED_OPEN_VIOLATIONS if path not in offenders)
+    assert missing == [], (
+        f"declared reaches were not found by the scan: {missing}; either the reach "
+        "is gone (delete the declaration) or the scan root no longer reaches it"
+    )
 
 
 def test_production_application_never_reaches_shared_master_custody() -> None:
-    undeclared = {path: sorted(names) for path, names in _offenders().items() if path not in _DECLARED_OPEN_VIOLATIONS}
+    undeclared: dict[str, list[str]] = {}
+    for path, findings in _offenders().items():
+        declared = _DECLARED_OPEN_VIOLATIONS.get(path)
+        surplus = findings if declared is None else findings - declared.accepted
+        if surplus:
+            undeclared[path] = sorted(surplus)
     assert undeclared == {}, (
         "application composition must resolve secrets through the per-profile "
         f"capsule, not the retired shared-master surface: {undeclared}"
@@ -331,11 +468,11 @@ def test_declared_open_violations_still_describe_the_tree() -> None:
     offenders = _offenders()
     drift: dict[str, str] = {}
     for path, declared in _DECLARED_OPEN_VIOLATIONS.items():
-        live = offenders.get(path)
-        if live is None:
+        live = offenders.get(path, set())
+        if not live:
             drift[path] = "no longer reaches the retired surface -- delete this declaration"
-        elif live != declared.names:
-            drift[path] = f"declared {sorted(declared.names)}, found {sorted(live)}"
+        elif stale := declared.reaches - live:
+            drift[path] = f"declared reach(es) {sorted(stale)} are gone -- update or delete this declaration"
     assert drift == {}, f"declared open violations no longer describe the tree: {drift}"
 
 
@@ -354,9 +491,26 @@ def test_declared_open_violations_state_their_reason() -> None:
         or not any(destination in declared.reason for destination in ("capsule", "session"))
     }
     assert unreasoned == set(), f"declared open violations must state their replacement: {sorted(unreasoned)}"
-    assert all(declared.names for declared in _DECLARED_OPEN_VIOLATIONS.values()), (
-        "a declaration with no names asserts nothing and can never go stale"
-    )
+
+
+def test_declared_open_violations_cannot_park_a_reach_in_the_retiring_set() -> None:
+    """``retiring`` is a landing window, not a second exemption channel.
+
+    It exists only so an in-flight removal of provider-family names does not make
+    the gate red at HEAD and green a commit later, or the reverse.  A module-path
+    reach parked there would tolerate the whole route into the shared-master
+    package with nothing left to expire, so only symbol names may go in and every
+    entry must still carry an anchor that can die.
+    """
+    anchorless = sorted(path for path, declared in _DECLARED_OPEN_VIOLATIONS.items() if not declared.reaches)
+    assert anchorless == [], f"declarations with no anchor can never go stale: {anchorless}"
+
+    parked = {
+        path: sorted(declared.retiring - _RETIRED_CUSTODY_NAMES)
+        for path, declared in _DECLARED_OPEN_VIOLATIONS.items()
+        if declared.retiring - _RETIRED_CUSTODY_NAMES
+    }
+    assert parked == {}, f"only provider-family names may be declared retiring: {parked}"
 
 
 def test_retired_names_that_still_exist_belong_to_the_retired_package() -> None:
