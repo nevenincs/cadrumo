@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:c2f765d5b3ea2557e9d64592cdea094551806358d13d1d37ca559c44d5ca2a83'
+body_hash: 'sha256:593ff978c7ad27dc290081f3adc983497e2b924daaae0846e975e98693811dfb'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -19,6 +19,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P22-S72]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S73]]'
   - '[[2026-08-14-test-harness-sanity-W07-P23-S75]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P23-S76]]'
   - '[[2026-08-14-test-harness-sanity-audit]]'
   - '[[2026-08-14-test-harness-sanity-plan]]'
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -52,6 +53,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P22-S72` - Make the repository root the sole collection-policy hook owner
 - `2026-08-14-test-harness-sanity-W07-P22-S73` - Remove duplicate marker traversal and live-policy ownership from the child conftest
 - `2026-08-14-test-harness-sanity-W07-P23-S75` - Replace the OFX optional-extra monkeypatch with real behavior
+- `2026-08-14-test-harness-sanity-W07-P23-S76` - Replace previous-filing exception mutation with reachable real behavior
 
 ### plan
 
