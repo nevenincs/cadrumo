@@ -90,7 +90,7 @@ from ....core.aggregation import BindingSourceKind
 from ._bindings import binding_source_casilla_ids, binding_source_modelo
 from ._export import derive_export_layouts_from_bindings, fixed_width_record_casilla_ids
 from ._runtime_graph import expression_casilla_refs
-from ._schema import ModeloRevision
+from ._schema import CasillaDefinition, DataBindingDefinition, FormulaDefinition, ModeloRevision
 
 
 def _reaches_addressed_casilla(
@@ -124,6 +124,35 @@ def _reaches_addressed_casilla(
     return False
 
 
+def _formula_consumption_sources(
+    casilla: CasillaDefinition,
+    *,
+    formulas: dict[str, FormulaDefinition],
+) -> tuple[CasillaId, ...]:
+    if casilla.formula is None:
+        return ()
+    formula = formulas.get(casilla.formula)
+    return () if formula is None else tuple(expression_casilla_refs(formula.expression))
+
+
+def _binding_consumption_sources(
+    casilla: CasillaDefinition,
+    *,
+    bindings: dict[str, DataBindingDefinition],
+    modelo_id: str,
+) -> tuple[CasillaId, ...]:
+    sources: list[CasillaId] = []
+    for binding_id in (casilla.binding, *casilla.alternate_bindings):
+        binding = bindings.get(binding_id) if binding_id is not None else None
+        if binding is None or binding.source is BindingSourceKind.PREVIOUS_FILING:
+            continue
+        source_modelo = binding_source_modelo(binding)
+        if source_modelo is not None and source_modelo != modelo_id:
+            continue
+        sources.extend(binding_source_casilla_ids(binding))
+    return tuple(sources)
+
+
 def _consumption_edges(revision: ModeloRevision, modelo_id: str) -> dict[CasillaId, set[CasillaId]]:
     """Return, per casilla, the casillas that read it WITHIN this filing.
 
@@ -145,19 +174,69 @@ def _consumption_edges(revision: ModeloRevision, modelo_id: str) -> dict[Casilla
     binding_by_id = {binding.id: binding for binding in revision.bindings}
     edges: dict[CasillaId, set[CasillaId]] = {}
     for casilla in revision.casillas:
-        if casilla.formula is not None and (formula := formula_by_id.get(casilla.formula)) is not None:
-            for ref in expression_casilla_refs(formula.expression):
-                edges.setdefault(ref, set()).add(casilla.id)
-        for binding_id in (casilla.binding, *casilla.alternate_bindings):
-            binding = binding_by_id.get(binding_id) if binding_id is not None else None
-            if binding is None or binding.source is BindingSourceKind.PREVIOUS_FILING:
-                continue
-            source_modelo = binding_source_modelo(binding)
-            if source_modelo is not None and source_modelo != modelo_id:
-                continue
-            for ref in binding_source_casilla_ids(binding):
-                edges.setdefault(ref, set()).add(casilla.id)
+        sources = _formula_consumption_sources(casilla, formulas=formula_by_id)
+        sources += _binding_consumption_sources(casilla, bindings=binding_by_id, modelo_id=modelo_id)
+        for source in sources:
+            edges.setdefault(source, set()).add(casilla.id)
     return edges
+
+
+def _fixed_width_addressed_casillas(revision: ModeloRevision) -> set[CasillaId] | None:
+    layouts = tuple(
+        layout
+        for layout in derive_export_layouts_from_bindings(revision)
+        if layout.format is ExportLayoutFormat.FIXED_WIDTH
+    )
+    if not layouts:
+        return None
+    addressed: set[CasillaId] = set()
+    for layout in layouts:
+        addressed |= fixed_width_record_casilla_ids(layout.records)
+    return addressed
+
+
+def _manifest_casilla_exemption_failure(
+    *,
+    casilla: CasillaDefinition | None,
+    addressed: set[CasillaId],
+    consumers: dict[CasillaId, set[CasillaId]],
+    prefix: str,
+) -> str | None:
+    if casilla is None or casilla.id in addressed or casilla.internal_only:
+        return None
+    if casilla.formula is None and not casilla.required:
+        return None
+    if casilla.export_exemption_reason is ExportExemptionReason.FEEDS_ADDRESSED_CASILLA:
+        if _reaches_addressed_casilla(casilla.id, consumers=consumers, addressed=addressed):
+            return None
+        return (
+            f"{prefix}: casilla {casilla.id!r} declares export_exemption_reason "
+            f"{ExportExemptionReason.FEEDS_ADDRESSED_CASILLA.value!r}, which asserts its figure "
+            f"reaches the record through a downstream box, but no formula or binding chain leads "
+            f"from it to any casilla a fixed-width export record addresses. Either wire the chain, "
+            f"or declare the reason this casilla genuinely files no slot. Note this walk sees the "
+            f"REGISTRY graph only: a value delivered by application code through "
+            f"bound_inputs_by_casilla_id is invisible here, so confirm no resolver already carries "
+            f"it before rewiring"
+        )
+    if casilla.export_exemption_reason is not None:
+        return None
+    return (
+        f"{prefix}: casilla {casilla.id!r} is in the completeness manifest and would be "
+        f"required by the fichero-BOE completeness gate ("
+        f"{'declares a formula' if casilla.formula is not None else 'is required'}), but no "
+        f"fixed-width export record addresses it BY CASILLA ID and it declares neither "
+        f"internal_only nor export_exemption_reason. Exemption from that gate must be declared, "
+        f"not left to absence: annotate the casilla with the reason it files no slot, or give it "
+        f"the export field it is missing. Before concluding it is not representable, check the "
+        f"record design, the bindings AND the resolver mesh: this scan is casilla-keyed and sees "
+        f"neither a BINDING-kind export field (so a value the export really does write at a "
+        f"declared offset looks identical here to one AEAT never prints -- "
+        f"{ExportExemptionReason.FILED_VIA_BINDING_FIELD.value!r} is the reason for that case) nor "
+        f"a value injected by application code through bound_inputs_by_casilla_id, which never "
+        f"consults casilla.binding. 'No casilla names the binding' does not imply 'the value does "
+        f"not arrive'"
+    )
 
 
 def validate_export_exemption_declarations(
@@ -185,65 +264,21 @@ def validate_export_exemption_declarations(
     manifest = revision.completeness_manifest
     if manifest is None:
         return
-    layouts = tuple(
-        layout
-        for layout in derive_export_layouts_from_bindings(revision)
-        if layout.format is ExportLayoutFormat.FIXED_WIDTH
-    )
-    if not layouts:
+    addressed = _fixed_width_addressed_casillas(revision)
+    if addressed is None:
         return
-    addressed: set[CasillaId] = set()
-    for layout in layouts:
-        addressed |= fixed_width_record_casilla_ids(layout.records)
-
     consumers = _consumption_edges(revision, modelo_id)
 
     casilla_by_id = {casilla.id: casilla for casilla in revision.casillas}
     for manifest_casilla in manifest.casillas:
-        casilla = casilla_by_id.get(manifest_casilla.casilla_id)
-        if casilla is None:
-            # A manifest casilla the revision does not declare is a different
-            # defect, already enumerated by the completeness-manifest validator.
-            continue
-        if casilla.id in addressed or casilla.internal_only:
-            continue
-        if casilla.formula is None and not casilla.required:
-            continue
-        if casilla.export_exemption_reason is ExportExemptionReason.FEEDS_ADDRESSED_CASILLA:
-            # The one reason that asserts the figure IS filed, so the claim is
-            # checked rather than taken: a casilla reaching no addressed casilla
-            # would be exempt on a false premise, which is the exact failure this
-            # whole gate exists to stop.
-            if not _reaches_addressed_casilla(casilla.id, consumers=consumers, addressed=addressed):
-                failures.append(
-                    f"{prefix}: casilla {casilla.id!r} declares export_exemption_reason "
-                    f"{ExportExemptionReason.FEEDS_ADDRESSED_CASILLA.value!r}, which asserts its figure "
-                    f"reaches the record through a downstream box, but no formula or binding chain leads "
-                    f"from it to any casilla a fixed-width export record addresses. Either wire the chain, "
-                    f"or declare the reason this casilla genuinely files no slot. Note this walk sees the "
-                    f"REGISTRY graph only: a value delivered by application code through "
-                    f"bound_inputs_by_casilla_id is invisible here, so confirm no resolver already carries "
-                    f"it before rewiring",
-                )
-            continue
-        if casilla.export_exemption_reason is not None:
-            continue
-        failures.append(
-            f"{prefix}: casilla {casilla.id!r} is in the completeness manifest and would be "
-            f"required by the fichero-BOE completeness gate ("
-            f"{'declares a formula' if casilla.formula is not None else 'is required'}), but no "
-            f"fixed-width export record addresses it BY CASILLA ID and it declares neither "
-            f"internal_only nor export_exemption_reason. Exemption from that gate must be declared, "
-            f"not left to absence: annotate the casilla with the reason it files no slot, or give it "
-            f"the export field it is missing. Before concluding it is not representable, check the "
-            f"record design, the bindings AND the resolver mesh: this scan is casilla-keyed and sees "
-            f"neither a BINDING-kind export field (so a value the export really does write at a "
-            f"declared offset looks identical here to one AEAT never prints -- "
-            f"{ExportExemptionReason.FILED_VIA_BINDING_FIELD.value!r} is the reason for that case) nor "
-            f"a value injected by application code through bound_inputs_by_casilla_id, which never "
-            f"consults casilla.binding. 'No casilla names the binding' does not imply 'the value does "
-            f"not arrive'",
+        failure = _manifest_casilla_exemption_failure(
+            casilla=casilla_by_id.get(manifest_casilla.casilla_id),
+            addressed=addressed,
+            consumers=consumers,
+            prefix=prefix,
         )
+        if failure is not None:
+            failures.append(failure)
 
 
 __all__ = ["validate_export_exemption_declarations"]

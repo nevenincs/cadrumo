@@ -212,6 +212,64 @@ def render_fixed_width_export_field(field: _ExportField, value: object) -> str:
     return rendered
 
 
+def _render_record_field_bytes(
+    record: _ExportRecord,
+    field: _ExportField,
+    *,
+    field_values: Mapping[CasillaId, str | None],
+) -> bytes:
+    kind = str(getattr(field.kind, "value", field.kind))
+    if kind not in {"literal", "filler", "casilla"}:
+        raise FixedWidthRecordRenderError(
+            field_id=field.id,
+            reason="field_kind",
+            export_record_id=record.id,
+            export_field_kind=kind,
+        )
+    try:
+        raw_value = field_values.get(field.casilla_id) if field.casilla_id is not None else None
+        return render_fixed_width_export_field(field, raw_value).encode(record.encoding)
+    except (LookupError, UnicodeError, RegistryValidationError) as exc:
+        raise FixedWidthRecordRenderError(
+            field_id=field.id,
+            reason="fixed_width_value",
+            export_record_id=record.id,
+            producer_error_type=type(exc).__name__,
+        ) from exc
+
+
+def _place_record_field_bytes(
+    buffer: bytearray,
+    occupied: bytearray,
+    field: _ExportField,
+    *,
+    offset: int,
+    length: int,
+    rendered: bytes,
+    record_id: str,
+) -> None:
+    if len(rendered) != length:
+        raise FixedWidthRecordRenderError(
+            field_id=field.id,
+            reason="encoded_width",
+            export_record_id=record_id,
+            encoded_byte_count=len(rendered),
+            declared_byte_count=length,
+        )
+    start = offset - 1
+    end = start + length
+    if any(occupied[start:end]):
+        raise FixedWidthRecordRenderError(
+            field_id=field.id,
+            reason="overlap",
+            export_record_id=record_id,
+            declared_offset=offset,
+            declared_byte_count=length,
+        )
+    buffer[start:end] = rendered
+    occupied[start:end] = b"\x01" * length
+
+
 def render_fixed_width_export_record_body(
     record: _ExportRecord,
     *,
@@ -236,44 +294,16 @@ def render_fixed_width_export_record_body(
     buffer = bytearray(b" " * total_length)
     occupied = bytearray(total_length)
     for field, (offset, length) in zip(fields, coordinates, strict=True):
-        kind = str(getattr(field.kind, "value", field.kind))
-        if kind not in {"literal", "filler", "casilla"}:
-            raise FixedWidthRecordRenderError(
-                field_id=field.id,
-                reason="field_kind",
-                export_record_id=record.id,
-                export_field_kind=kind,
-            )
-        try:
-            raw_value = field_values.get(field.casilla_id) if field.casilla_id is not None else None
-            rendered = render_fixed_width_export_field(field, raw_value).encode(record.encoding)
-        except (LookupError, UnicodeError, RegistryValidationError) as exc:
-            raise FixedWidthRecordRenderError(
-                field_id=field.id,
-                reason="fixed_width_value",
-                export_record_id=record.id,
-                producer_error_type=type(exc).__name__,
-            ) from exc
-        if len(rendered) != length:
-            raise FixedWidthRecordRenderError(
-                field_id=field.id,
-                reason="encoded_width",
-                export_record_id=record.id,
-                encoded_byte_count=len(rendered),
-                declared_byte_count=length,
-            )
-        start = offset - 1
-        end = start + length
-        if any(occupied[start:end]):
-            raise FixedWidthRecordRenderError(
-                field_id=field.id,
-                reason="overlap",
-                export_record_id=record.id,
-                declared_offset=offset,
-                declared_byte_count=length,
-            )
-        buffer[start:end] = rendered
-        occupied[start:end] = b"\x01" * length
+        rendered = _render_record_field_bytes(record, field, field_values=field_values)
+        _place_record_field_bytes(
+            buffer,
+            occupied,
+            field,
+            offset=offset,
+            length=length,
+            rendered=rendered,
+            record_id=record.id,
+        )
     return bytes(buffer)
 
 

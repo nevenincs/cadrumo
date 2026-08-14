@@ -22,8 +22,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....core.resources import resources
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from .. import BucketEvent, BucketEventType
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
@@ -39,6 +38,7 @@ _BUCKET_ID = "8c40b7e1-59da-4f6c-b3a7-1e05d9c2f483"
 _PROFILE_LIFECYCLE_PAYLOAD_VERSION = 1
 _WORKFLOW_PAYLOAD_VERSION = 1
 _INVENTORY_PAYLOAD_VERSION = 1
+_PROFILE_PASSPHRASE = "payload-version-profile-secret"  # noqa: S105 - synthetic test fixture
 
 # The portable-bundle families are pinned where their own real drivers live: the
 # import event in application/user_profile/tests/test_bundle_import_event.py, and
@@ -74,24 +74,13 @@ def test_the_shared_primitive_requires_an_explicit_payload_version() -> None:
 def test_profile_lifecycle_events_persist_version_one(tmp_path: Path) -> None:
     """Registering a profile writes the profile-lifecycle payload contract."""
     from ....application.user_profile import (
-        ProfileLifecycleService,
-        ProfileValidationService,
-        RegisterProfileCommand,
-        UserProfileLifecycleRepository,
+        register_profile_with_credentials,
     )
-    from ....domain.user_profile import UserProfileStatus
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        ProfileLifecycleService(
-            repository=UserProfileLifecycleRepository(bucket_id=_BUCKET_ID),
-            validator=ProfileValidationService(schema=resources().user_profile_schema.singleton),
-        ).register(
-            RegisterProfileCommand(
-                profile_id=_BUCKET_ID,
-                display_name="Payload version probe",
-                status=UserProfileStatus.SETUP_INCOMPLETE,
-                facts=(),
-            ),
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(
+            label="Payload version probe",
+            passphrase=_PROFILE_PASSPHRASE,
         )
 
         event = _event_of(BucketEventType.PROFILE_BUCKET_CREATED)

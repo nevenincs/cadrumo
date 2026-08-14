@@ -136,6 +136,16 @@ def relation_source_requirements(
         :class:`~cadrumo.domain.calculations.registry.RegistryFoldRequirement`
         rows keyed by source modelo/year/period and source casilla.
     """
+    grouped = _group_relation_requirements(revision, filing_year=filing_year, period=period)
+    return tuple(_registry_fold_requirement(key, values) for key, values in sorted(grouped.items()))
+
+
+def _group_relation_requirements(
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+    period: str,
+) -> dict[tuple[str, int, tuple[str, ...], CasillaId, str, str, str], _RelationRequirementBucket]:
     classifications_by_source = {
         classification.source_modelo: classification for classification in revision.dependency_classifications
     }
@@ -151,16 +161,13 @@ def relation_source_requirements(
             raise RegistryValidationError(
                 f"relation {relation.id!r} source modelo {relation.source_modelo!r} has no dependency classification",
             )
-        if relation.source_period_offset_from_target is not None:
-            derived = _derive_offset_source_anchor(relation, target_period=period)
-            if derived is None:
-                continue
-            period_year_delta, source_period = derived
-            source_year = _relation_source_year(relation, filing_year=filing_year) + period_year_delta
-            source_periods = (source_period,)
-        else:
-            source_year = _relation_source_year(relation, filing_year=filing_year)
-            source_periods = relation.source_periods or (period,)
+        source_year, source_periods = _relation_requirement_source_scope(
+            relation,
+            filing_year=filing_year,
+            period=period,
+        )
+        if source_year is None:
+            continue
         key = (
             relation.source_modelo,
             source_year,
@@ -183,34 +190,54 @@ def relation_source_requirements(
         bucket.target_bindings.add(relation.target_binding)
         bucket.legal_refs.update(relation.legal_refs)
         bucket.source_refs.update(relation.source_refs)
-    return tuple(
-        RegistryFoldRequirement(
-            source_modelo=source_modelo,
-            filing_year=source_year,
-            filing_periods=tuple(
-                filing_period
-                for source_period in source_periods
-                if (filing_period := filing_period_from_scope(source_year, source_period)) is not None
-            ),
-            periods=source_periods,
-            source_casilla_ids=(source_casilla_id,),
-            relation_ids=tuple(sorted(values.relation_ids)),
-            target_bindings=tuple(sorted(values.target_bindings)),
-            dependency_role=dependency_role,
-            dependency_treatment=dependency_treatment,
-            aggregation_op=aggregation_op,
-            legal_refs=tuple(sorted(values.legal_refs)),
-            source_refs=tuple(sorted(values.source_refs)),
-        )
-        for (
-            source_modelo,
-            source_year,
-            source_periods,
-            source_casilla_id,
-            dependency_role,
-            dependency_treatment,
-            aggregation_op,
-        ), values in sorted(grouped.items())
+    return grouped
+
+
+def _relation_requirement_source_scope(
+    relation: RelationDefinition,
+    *,
+    filing_year: int,
+    period: str,
+) -> tuple[int | None, tuple[str, ...]]:
+    if relation.source_period_offset_from_target is not None:
+        derived = _derive_offset_source_anchor(relation, target_period=period)
+        if derived is None:
+            return None, ()
+        period_year_delta, source_period = derived
+        return _relation_source_year(relation, filing_year=filing_year) + period_year_delta, (source_period,)
+    return _relation_source_year(relation, filing_year=filing_year), relation.source_periods or (period,)
+
+
+def _registry_fold_requirement(
+    key: tuple[str, int, tuple[str, ...], CasillaId, str, str, str],
+    values: _RelationRequirementBucket,
+) -> RegistryFoldRequirement:
+    (
+        source_modelo,
+        source_year,
+        source_periods,
+        source_casilla_id,
+        dependency_role,
+        dependency_treatment,
+        aggregation_op,
+    ) = key
+    return RegistryFoldRequirement(
+        source_modelo=source_modelo,
+        filing_year=source_year,
+        filing_periods=tuple(
+            filing_period
+            for source_period in source_periods
+            if (filing_period := filing_period_from_scope(source_year, source_period)) is not None
+        ),
+        periods=source_periods,
+        source_casilla_ids=(source_casilla_id,),
+        relation_ids=tuple(sorted(values.relation_ids)),
+        target_bindings=tuple(sorted(values.target_bindings)),
+        dependency_role=dependency_role,
+        dependency_treatment=dependency_treatment,
+        aggregation_op=aggregation_op,
+        legal_refs=tuple(sorted(values.legal_refs)),
+        source_refs=tuple(sorted(values.source_refs)),
     )
 
 

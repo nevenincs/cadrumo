@@ -55,29 +55,59 @@ _MESA_FACTS = frozenset(
         M303RegimenSimplificadoFact.MESAS_NUMERO,
     },
 )
+_MESA_SUB_INDICES = frozenset({1, 2, 3, 4})
+_REPEATING_FACT_SUB_INDICES = frozenset({1, 2, 3, 4})
+_EARLY_DP30302_EPOCHS = frozenset({"2023", "2024-hasta-08-y-2t", "2024-desde-09-y-3t"})
+_LATE_DP30302_EPOCHS = frozenset({"2025", "2026-y-siguientes"})
 _HORNO_DIAS = M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE
 _HORNO_SUPERFICIE = M303RegimenSimplificadoFact.SUPERFICIE_HORNO_CUARTO_TRIMESTRE
+
+
+def _validate_m303_regimen_simplificado_revision_epoch(revision_id: str) -> bool:
+    if revision_id not in _EARLY_DP30302_EPOCHS | _LATE_DP30302_EPOCHS:
+        raise RegistryValidationError(f"unknown DP30302 simplified-regime revision {revision_id!r}")
+    return revision_id in _EARLY_DP30302_EPOCHS
+
+
+def _validate_mesa_fact_epoch(ref: M303RegimenSimplificadoFactProjectionRef) -> None:
+    if ref.fact in _MESA_FACTS and ref.sub_index not in _MESA_SUB_INDICES:
+        raise RegistryValidationError("Mesa DP30302 facts require sub_index 1..4")
+
+
+def _validate_horno_days_fact_epoch(
+    ref: M303RegimenSimplificadoFactProjectionRef,
+    *,
+    revision_id: str,
+    early_epoch: bool,
+) -> None:
+    if ref.fact is not _HORNO_DIAS:
+        return
+    expected = {None} if early_epoch else _REPEATING_FACT_SUB_INDICES
+    if ref.sub_index not in expected:
+        raise RegistryValidationError(f"horno-days fact is not admitted by revision {revision_id!r}")
+
+
+def _validate_horno_surface_fact_epoch(
+    ref: M303RegimenSimplificadoFactProjectionRef,
+    *,
+    revision_id: str,
+    early_epoch: bool,
+) -> None:
+    if ref.fact is _HORNO_SUPERFICIE and (early_epoch or ref.sub_index not in _REPEATING_FACT_SUB_INDICES):
+        raise RegistryValidationError(f"horno-surface fact is not admitted by revision {revision_id!r}")
 
 
 def validate_m303_regimen_simplificado_endpoint_epoch(
     refs: tuple[_RegimenSimplificadoProjectionRef, ...], *, revision_id: str
 ) -> None:
     """Refuse simplified fact multiplicity that the selected record-design epoch never admits."""
-    late_epochs = {"2025", "2026-y-siguientes"}
-    early_epochs = {"2023", "2024-hasta-08-y-2t", "2024-desde-09-y-3t"}
-    if revision_id not in early_epochs | late_epochs:
-        raise RegistryValidationError(f"unknown DP30302 simplified-regime revision {revision_id!r}")
+    early_epoch = _validate_m303_regimen_simplificado_revision_epoch(revision_id)
     for ref in refs:
         if not isinstance(ref, M303RegimenSimplificadoFactProjectionRef):
             continue
-        if ref.fact in _MESA_FACTS and ref.sub_index not in {1, 2, 3, 4}:
-            raise RegistryValidationError("Mesa DP30302 facts require sub_index 1..4")
-        if ref.fact is _HORNO_DIAS:
-            expected = {None} if revision_id in early_epochs else {1, 2, 3, 4}
-            if ref.sub_index not in expected:
-                raise RegistryValidationError(f"horno-days fact is not admitted by revision {revision_id!r}")
-        if ref.fact is _HORNO_SUPERFICIE and (revision_id in early_epochs or ref.sub_index not in {1, 2, 3, 4}):
-            raise RegistryValidationError(f"horno-surface fact is not admitted by revision {revision_id!r}")
+        _validate_mesa_fact_epoch(ref)
+        _validate_horno_days_fact_epoch(ref, revision_id=revision_id, early_epoch=early_epoch)
+        _validate_horno_surface_fact_epoch(ref, revision_id=revision_id, early_epoch=early_epoch)
 
 
 class M303RegimenSimplificadoFieldProjection(BaseModel):

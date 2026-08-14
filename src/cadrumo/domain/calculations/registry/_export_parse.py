@@ -171,13 +171,12 @@ def _parse_xml_dictionary_payload(
     return ParsedExportPayload(layout_id=layout.id, fields=tuple(parsed), casillas=casillas)
 
 
-def xml_dictionary_entries(
+def _xml_dictionary_source(
     layout: ExportLayoutDefinition,
     *,
     source_root: Path | None,
     sources: Mapping[str, SourceReference] | None,
-) -> tuple[XmlDictionaryEntry, ...]:
-    """Resolve official AEAT XML dictionary :class:`XmlDictionaryEntry` rows for ``layout``."""
+) -> tuple[SourceReference, Path]:
     if layout.dictionary_source_ref is None:
         raise RegistryValidationError(f"XML export layout {layout.id!r} has no dictionary source")
     if source_root is None or sources is None:
@@ -187,7 +186,44 @@ def xml_dictionary_entries(
         raise RegistryValidationError(
             f"XML export layout {layout.id!r} has unresolved dictionary source {layout.dictionary_source_ref!r}",
         )
-    dictionary_path = source_root / Path(source.corpus_path)
+    return source, source_root / Path(source.corpus_path)
+
+
+def _parse_xml_dictionary_line(
+    line: str,
+    *,
+    source: SourceReference,
+    overrides: Mapping[str, str],
+) -> XmlDictionaryEntry | None:
+    stripped = line.strip()
+    if not stripped or stripped.startswith("#"):
+        return None
+    match = _DICTIONARY_LINE_RE.match(stripped)
+    if match is None:
+        return None
+    casilla_id = _parse_dictionary_casilla_id(
+        match["casilla"],
+        allow_letter_id=(
+            source.applies_from is not None and source.applies_from.year >= _M100_LETTER_CASILLA_ID_FIRST_YEAR
+        ),
+    )
+    field_id = match["field"].strip()
+    return XmlDictionaryEntry(
+        field_id=field_id,
+        path=overrides.get(field_id, match["path"].strip()),
+        data_type=match["type"].strip(),
+        casilla_id=casilla_id,
+    )
+
+
+def xml_dictionary_entries(
+    layout: ExportLayoutDefinition,
+    *,
+    source_root: Path | None,
+    sources: Mapping[str, SourceReference] | None,
+) -> tuple[XmlDictionaryEntry, ...]:
+    """Resolve official AEAT XML dictionary :class:`XmlDictionaryEntry` rows for ``layout``."""
+    source, dictionary_path = _xml_dictionary_source(layout, source_root=source_root, sources=sources)
     # Applied here rather than at either consumer: the renderer and
     # :func:`parse_export_payload` both resolve their rows from this call, so a
     # correction reaching only one of them would make an exported artefact
@@ -195,27 +231,9 @@ def xml_dictionary_entries(
     overrides = {override.field_id: override.path for override in layout.dictionary_path_overrides}
     entries: list[XmlDictionaryEntry] = []
     for line in _read_dictionary_text(dictionary_path).splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        match = _DICTIONARY_LINE_RE.match(stripped)
-        if match is None:
-            continue
-        casilla_id = _parse_dictionary_casilla_id(
-            match["casilla"],
-            allow_letter_id=(
-                source.applies_from is not None and source.applies_from.year >= _M100_LETTER_CASILLA_ID_FIRST_YEAR
-            ),
-        )
-        field_id = match["field"].strip()
-        entries.append(
-            XmlDictionaryEntry(
-                field_id=field_id,
-                path=overrides.get(field_id, match["path"].strip()),
-                data_type=match["type"].strip(),
-                casilla_id=casilla_id,
-            ),
-        )
+        entry = _parse_xml_dictionary_line(line, source=source, overrides=overrides)
+        if entry is not None:
+            entries.append(entry)
     if not entries:
         raise RegistryValidationError(f"XML export layout {layout.id!r} dictionary has no parseable entries")
     _assert_every_override_was_applied(layout, entries)

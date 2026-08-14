@@ -7,13 +7,31 @@ used by the per-section reference walkers.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Protocol
 
 from ....core import CasillaId
 from ._ids import LegalRefId, SourceRefId
+from ._schema import ModeloRevision
 
 if TYPE_CHECKING:
     from ._snapshot import RegistrySnapshot
+
+
+class _IdentifiedRecord(Protocol):
+    id: str
+
+
+def _record_ids[RecordT: _IdentifiedRecord](records: Iterable[RecordT]) -> set[str]:
+    return {record.id for record in records}
+
+
+def _casilla_data_types(revision: ModeloRevision) -> dict[CasillaId, str]:
+    return {casilla.id: casilla.data_type for casilla in revision.casillas}
+
+
+def _export_field_ids(revision: ModeloRevision) -> set[str]:
+    return {field.id for layout in revision.export_layouts for record in layout.records for field in record.fields}
 
 
 class IdReferenceChecker:
@@ -56,28 +74,26 @@ class IdReferenceChecker:
         revision = snapshot.revision
         self.prefix = f"snapshot modelo {snapshot.modelo.id} revision {revision.id}"
         self.failures: list[str] = []
-        self.casilla_ids: set[CasillaId] = {c.id for c in revision.casillas}
-        self.casilla_data_types: dict[CasillaId, str] = {c.id: c.data_type for c in revision.casillas}
-        self.formula_ids = {f.id for f in revision.formulas}
-        self.parameter_ids = {p.id for p in revision.parameters}
-        self.binding_ids = {b.id for b in revision.bindings}
-        self.algorithm_provider_ids = {p.id for p in revision.algorithm_providers}
-        self.algorithm_binding_ids = {b.id for b in revision.algorithm_bindings}
-        self.relation_ids = {r.id for r in revision.relations}
-        self.export_layout_ids = {lay.id for lay in revision.export_layouts}
-        self.export_field_ids = {
-            field.id for lay in revision.export_layouts for rec in lay.records for field in rec.fields
-        }
-        self.extraction_profile_ids = {p.id for p in revision.extraction_profiles}
-        self.cross_reference_ids = {cr.id for cr in revision.live_cross_references}
-        self.workbook_parity_ids = {w.id for w in revision.workbook_parity_refs}
-        self.verification_expectation_ids = {e.id for e in revision.verification_expectations}
-        self.application_link_ids = {lk.id for lk in revision.application_links}
-        self.deadline_window_ids = {dw.id for dw in revision.deadline_windows}
-        self.filing_schedule_ids = {schedule.id for schedule in revision.filing_schedules}
-        self.support_removal_decision_ids = {d.id for d in revision.support_removal_decisions}
-        self.construct_ids = {c.id for c in revision.constructs}
-        self.dependency_classification_ids = {dc.id for dc in revision.dependency_classifications}
+        self.casilla_ids = _record_ids(revision.casillas)
+        self.casilla_data_types = _casilla_data_types(revision)
+        self.formula_ids = _record_ids(revision.formulas)
+        self.parameter_ids = _record_ids(revision.parameters)
+        self.binding_ids = _record_ids(revision.bindings)
+        self.algorithm_provider_ids = _record_ids(revision.algorithm_providers)
+        self.algorithm_binding_ids = _record_ids(revision.algorithm_bindings)
+        self.relation_ids = _record_ids(revision.relations)
+        self.export_layout_ids = _record_ids(revision.export_layouts)
+        self.export_field_ids = _export_field_ids(revision)
+        self.extraction_profile_ids = _record_ids(revision.extraction_profiles)
+        self.cross_reference_ids = _record_ids(revision.live_cross_references)
+        self.workbook_parity_ids = _record_ids(revision.workbook_parity_refs)
+        self.verification_expectation_ids = _record_ids(revision.verification_expectations)
+        self.application_link_ids = _record_ids(revision.application_links)
+        self.deadline_window_ids = _record_ids(revision.deadline_windows)
+        self.filing_schedule_ids = _record_ids(revision.filing_schedules)
+        self.support_removal_decision_ids = _record_ids(revision.support_removal_decisions)
+        self.construct_ids = _record_ids(revision.constructs)
+        self.dependency_classification_ids = _record_ids(revision.dependency_classifications)
         self.legal_ids = set(snapshot.legal)
         self.legal_evidence_tiers = {ref_id: ref.evidence_tier for ref_id, ref in snapshot.legal.items()}
         self.source_ids = set(snapshot.sources)

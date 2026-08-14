@@ -217,6 +217,7 @@ __all__ = [
     "IrnrIncomeObservationProtocol",
     "IvaCompensationAnnualPartitionRequirement",
     "IvaLedgerObservation",
+    "M303RegimenSimplificadoAnnualSummaryRequirement",
     "Modelo349OperadorClaveTotal",
     "Modelo349OperadorTotalsParity",
     "Modelo720RowObservation",
@@ -248,6 +249,7 @@ __all__ = [
     "default_binding_aggregation_op",
     "invoice_binding_requirements",
     "iva_compensation_annual_partition_requirement",
+    "m303_regimen_simplificado_annual_summary_requirement",
     "previous_filing_observation_requirements",
     "previous_filing_source_reference",
     "renta_first_slice_binding_target_casillas",
@@ -293,6 +295,7 @@ __all__ = [
     "validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition",
     "validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition",
     "validate_ledger_renta_income_aggregation_binding_definition",
+    "validate_m303_regimen_simplificado_annual_summary_revision",
     "validate_retenciones_aggregation_binding",
     "withholding_binding_requirements",
 ]
@@ -755,52 +758,17 @@ def iva_compensation_annual_partition_requirement(
     stays empty only when that classification is absent; consumers must not
     reconstruct or default it.
     """
-    bindings = tuple(
-        binding
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
-    )
+    bindings = _iva_compensation_annual_partition_bindings(revision)
     if not bindings:
         return None
 
     first_selector = _iva_compensation_annual_partition_selector(bindings[0])
-    last_period_amount_binding_id: BindingId | None = None
-    generated_not_in_last_amount_binding_id: BindingId | None = None
-    legal_refs: set[LegalRefId] = set()
-    source_refs: set[SourceRefId] = set()
-    for binding in bindings:
-        selector = _iva_compensation_annual_partition_selector(binding)
-        if (
-            selector.source_modelo != first_selector.source_modelo
-            or selector.source_casilla_ids != first_selector.source_casilla_ids
-            or selector.source_periods != first_selector.source_periods
-        ):
-            raise RegistryValidationError(
-                "iva_compensation_annual_partition bindings must share one source selector",
-            )
-        if selector.partition_output == "last_period_amount":
-            if last_period_amount_binding_id is not None:
-                raise RegistryValidationError(
-                    "iva_compensation_annual_partition declares multiple last_period_amount bindings",
-                )
-            last_period_amount_binding_id = binding.id
-        elif selector.partition_output == "generated_not_in_last_amount":
-            if generated_not_in_last_amount_binding_id is not None:
-                raise RegistryValidationError(
-                    "iva_compensation_annual_partition declares multiple generated_not_in_last_amount bindings",
-                )
-            generated_not_in_last_amount_binding_id = binding.id
-        legal_refs.update(binding.legal_refs)
-        source_refs.update(binding.source_refs)
-
-    classification = next(
-        (
-            candidate
-            for candidate in revision.dependency_classifications
-            if candidate.source_modelo == first_selector.source_modelo
-        ),
-        None,
-    )
+    (
+        last_period_amount_binding_id,
+        generated_not_in_last_amount_binding_id,
+        legal_refs,
+        source_refs,
+    ) = _collect_iva_compensation_partition_bindings(bindings, first_selector)
     return IvaCompensationAnnualPartitionRequirement(
         source_modelo=first_selector.source_modelo,
         source_periods=first_selector.source_periods,
@@ -808,10 +776,319 @@ def iva_compensation_annual_partition_requirement(
         binding_ids=tuple(sorted(binding.id for binding in bindings)),
         last_period_amount_binding_id=last_period_amount_binding_id,
         generated_not_in_last_amount_binding_id=generated_not_in_last_amount_binding_id,
-        dependency_treatment="" if classification is None else str(classification.treatment),
+        dependency_treatment=_iva_compensation_dependency_treatment(revision, first_selector.source_modelo),
         legal_refs=tuple(sorted(legal_refs)),
         source_refs=tuple(sorted(source_refs)),
     )
+
+
+def _iva_compensation_annual_partition_bindings(
+    revision: ModeloRevision,
+) -> tuple[DataBindingDefinition, ...]:
+    """Collect the annual compensation-partition bindings in revision order."""
+    return tuple(
+        binding
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
+    )
+
+
+def _collect_iva_compensation_partition_bindings(
+    bindings: tuple[DataBindingDefinition, ...],
+    first_selector: _IvaCompensationAnnualPartitionSelector,
+) -> tuple[
+    BindingId | None,
+    BindingId | None,
+    set[LegalRefId],
+    set[SourceRefId],
+]:
+    """Validate shared selectors and collect target ids plus provenance refs."""
+    last_period_amount_binding_id: BindingId | None = None
+    generated_not_in_last_amount_binding_id: BindingId | None = None
+    legal_refs: set[LegalRefId] = set()
+    source_refs: set[SourceRefId] = set()
+    for binding in bindings:
+        selector = _iva_compensation_annual_partition_selector(binding)
+        _require_shared_iva_compensation_selector(selector, first_selector)
+        if selector.partition_output == "last_period_amount":
+            last_period_amount_binding_id = _unique_partition_binding_id(
+                last_period_amount_binding_id,
+                binding.id,
+                "last_period_amount",
+            )
+        else:
+            generated_not_in_last_amount_binding_id = _unique_partition_binding_id(
+                generated_not_in_last_amount_binding_id,
+                binding.id,
+                "generated_not_in_last_amount",
+            )
+        legal_refs.update(binding.legal_refs)
+        source_refs.update(binding.source_refs)
+    return last_period_amount_binding_id, generated_not_in_last_amount_binding_id, legal_refs, source_refs
+
+
+def _require_shared_iva_compensation_selector(
+    selector: _IvaCompensationAnnualPartitionSelector,
+    first_selector: _IvaCompensationAnnualPartitionSelector,
+) -> None:
+    """Require every annual partition binding to use one source selector."""
+    if (
+        selector.source_modelo != first_selector.source_modelo
+        or selector.source_casilla_ids != first_selector.source_casilla_ids
+        or selector.source_periods != first_selector.source_periods
+    ):
+        raise RegistryValidationError(
+            "iva_compensation_annual_partition bindings must share one source selector",
+        )
+
+
+def _unique_partition_binding_id(
+    existing: BindingId | None,
+    binding_id: BindingId,
+    output: Literal["last_period_amount", "generated_not_in_last_amount"],
+) -> BindingId:
+    """Return one partition target id, refusing duplicate target declarations."""
+    if existing is not None:
+        raise RegistryValidationError(
+            f"iva_compensation_annual_partition declares multiple {output} bindings",
+        )
+    return binding_id
+
+
+def _iva_compensation_dependency_treatment(revision: ModeloRevision, source_modelo: ModeloId) -> str:
+    """Read the revision-owned dependency treatment for the partition source."""
+    classification = next(
+        (candidate for candidate in revision.dependency_classifications if candidate.source_modelo == source_modelo),
+        None,
+    )
+    return "" if classification is None else str(classification.treatment)
+
+
+_M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_SOURCE_IDS: tuple[CasillaId, ...] = (
+    "51",
+    "53",
+    "52",
+    "54",
+    "55",
+    "56",
+    "57",
+    "58",
+)
+
+
+class _M303RegimenSimplificadoAnnualSummarySelector(BaseModel):
+    """Strict selector for one immutable Modelo 303 4T annual-summary endpoint."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_modelo: Literal["303"]
+    source_period: Literal["4T"]
+    source_casilla_ids: tuple[CasillaId, ...]
+    summary_casilla_id: CasillaId
+
+    @field_validator("source_casilla_ids")
+    @classmethod
+    def _source_casilla_ids_are_exact_annual_summary_inputs(
+        cls,
+        value: tuple[CasillaId, ...],
+    ) -> tuple[CasillaId, ...]:
+        if value != _M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_SOURCE_IDS:
+            raise RegistryValidationError(
+                "m303_regimen_simplificado_annual_summary selector must declare Modelo 303 "
+                "casillas 51, 53, 52, 54, 55, 56, 57, 58 in official semantic order",
+            )
+        return value
+
+
+class M303RegimenSimplificadoAnnualSummaryRequirement(BaseModel):
+    """Revision-owned target map for the one persisted 303 4T handoff.
+
+    This model is the registry's only interpretation of the ten endpoint
+    selectors.  The application assembler validates the result against the
+    canonical handoff carrier; it does not read raw binding selector mappings.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_modelo: ModeloId
+    source_period: str
+    source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
+    binding_ids_by_summary_casilla_id: Mapping[CasillaId, BindingId] = Field(min_length=1)
+    dependency_treatment: str = ""
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+
+    @field_validator("binding_ids_by_summary_casilla_id")
+    @classmethod
+    def _freeze_endpoint_bindings(
+        cls,
+        value: Mapping[CasillaId, BindingId],
+    ) -> Mapping[CasillaId, BindingId]:
+        return dict(sorted(value.items()))
+
+
+def _m303_regimen_simplificado_annual_summary_selector(
+    binding: DataBindingDefinition,
+) -> _M303RegimenSimplificadoAnnualSummarySelector:
+    try:
+        return _M303RegimenSimplificadoAnnualSummarySelector.model_validate(selector_as_dict(binding))
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed m303_regimen_simplificado_annual_summary selector: {exc}",
+        ) from exc
+
+
+def _m303_regimen_simplificado_annual_summary_bindings(
+    revision: ModeloRevision,
+) -> tuple[DataBindingDefinition, ...]:
+    return tuple(
+        binding
+        for binding in revision.bindings
+        if binding.source is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY
+    )
+
+
+def _collect_m303_regimen_simplificado_annual_summary_bindings(
+    bindings: tuple[DataBindingDefinition, ...],
+    first_selector: _M303RegimenSimplificadoAnnualSummarySelector,
+) -> tuple[dict[CasillaId, BindingId], set[LegalRefId], set[SourceRefId]]:
+    binding_ids_by_summary_casilla_id: dict[CasillaId, BindingId] = {}
+    legal_refs: set[LegalRefId] = set()
+    source_refs: set[SourceRefId] = set()
+    for binding in bindings:
+        selector = _m303_regimen_simplificado_annual_summary_selector(binding)
+        if (
+            selector.source_modelo != first_selector.source_modelo
+            or selector.source_period != first_selector.source_period
+            or selector.source_casilla_ids != first_selector.source_casilla_ids
+        ):
+            raise RegistryValidationError(
+                "m303_regimen_simplificado_annual_summary bindings must share one exact source selector",
+            )
+        existing = binding_ids_by_summary_casilla_id.get(selector.summary_casilla_id)
+        if existing is not None:
+            raise RegistryValidationError(
+                "m303_regimen_simplificado_annual_summary declares multiple bindings for "
+                f"summary casilla {selector.summary_casilla_id!r}: {existing!r}, {binding.id!r}",
+            )
+        binding_ids_by_summary_casilla_id[selector.summary_casilla_id] = binding.id
+        legal_refs.update(binding.legal_refs)
+        source_refs.update(binding.source_refs)
+    return binding_ids_by_summary_casilla_id, legal_refs, source_refs
+
+
+def _m303_regimen_simplificado_annual_summary_dependency_treatment(
+    revision: ModeloRevision,
+    source_modelo: ModeloId,
+) -> str:
+    classification = next(
+        (candidate for candidate in revision.dependency_classifications if candidate.source_modelo == source_modelo),
+        None,
+    )
+    return "" if classification is None else str(classification.treatment)
+
+
+def m303_regimen_simplificado_annual_summary_requirement(
+    revision: ModeloRevision,
+) -> M303RegimenSimplificadoAnnualSummaryRequirement | None:
+    """Project the revision's typed Modelo 303 4T annual-summary bindings once."""
+    bindings = _m303_regimen_simplificado_annual_summary_bindings(revision)
+    if not bindings:
+        return None
+    first_selector = _m303_regimen_simplificado_annual_summary_selector(bindings[0])
+    binding_ids_by_summary_casilla_id, legal_refs, source_refs = (
+        _collect_m303_regimen_simplificado_annual_summary_bindings(bindings, first_selector)
+    )
+    return M303RegimenSimplificadoAnnualSummaryRequirement(
+        source_modelo=first_selector.source_modelo,
+        source_period=first_selector.source_period,
+        source_casilla_ids=first_selector.source_casilla_ids,
+        binding_ids_by_summary_casilla_id=binding_ids_by_summary_casilla_id,
+        dependency_treatment=_m303_regimen_simplificado_annual_summary_dependency_treatment(
+            revision,
+            first_selector.source_modelo,
+        ),
+        legal_refs=tuple(sorted(legal_refs)),
+        source_refs=tuple(sorted(source_refs)),
+    )
+
+
+def validate_m303_regimen_simplificado_annual_summary_revision(
+    revision: ModeloRevision,
+) -> list[str]:
+    """Return build-time failures for the complete 303/4T -> 390/0A target map.
+
+    Selector shape is already validated per binding.  This revision-level gate
+    owns the complementary invariant: a declared handoff family has precisely
+    the canonical ten endpoints, and every endpoint is one bound casilla fed
+    only by its corresponding handoff binding.  The lazy import avoids making
+    the calculation-revision carrier a registry import-time dependency.
+    """
+    try:
+        requirement = m303_regimen_simplificado_annual_summary_requirement(revision)
+    except RegistryValidationError as exc:
+        return [str(exc)]
+    if requirement is None:
+        return []
+
+    from ...modelos import M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
+
+    expected_casilla_ids = M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
+    expected_set = set(expected_casilla_ids)
+    declared_set = set(requirement.binding_ids_by_summary_casilla_id)
+    failures = _m303_regimen_simplificado_annual_summary_target_failures(expected_set, declared_set)
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+    failures.extend(
+        _m303_regimen_simplificado_annual_summary_endpoint_failures(
+            expected_casilla_ids,
+            requirement.binding_ids_by_summary_casilla_id,
+            casillas_by_id,
+        )
+    )
+    return failures
+
+
+def _m303_regimen_simplificado_annual_summary_target_failures(
+    expected_set: set[CasillaId],
+    declared_set: set[CasillaId],
+) -> list[str]:
+    if declared_set == expected_set:
+        return []
+    return [
+        "m303_regimen_simplificado_annual_summary bindings must target exactly "
+        f"the canonical Modelo 390 74-83 endpoints; missing={sorted(expected_set - declared_set)!r}, "
+        f"unexpected={sorted(declared_set - expected_set)!r}",
+    ]
+
+
+def _m303_regimen_simplificado_annual_summary_endpoint_failures(
+    expected_casilla_ids: tuple[CasillaId, ...],
+    binding_ids_by_summary_casilla_id: Mapping[CasillaId, BindingId],
+    casillas_by_id: Mapping[CasillaId, CasillaDefinition],
+) -> list[str]:
+    failures: list[str] = []
+    for ordinal, casilla_id in enumerate(expected_casilla_ids, start=74):
+        casilla = casillas_by_id.get(casilla_id)
+        binding_id = binding_ids_by_summary_casilla_id.get(casilla_id)
+        if casilla is None:
+            failures.append(
+                "m303_regimen_simplificado_annual_summary endpoint "
+                f"{casilla_id!r} is not declared as Modelo 390 casilla {ordinal}",
+            )
+            continue
+        if casilla.number != str(ordinal):
+            failures.append(
+                "m303_regimen_simplificado_annual_summary endpoint "
+                f"{casilla_id!r} must retain official Modelo 390 casilla number {ordinal}",
+            )
+        if binding_id is not None and (
+            casilla.input_kind is not InputKind.BOUND or bound_casilla_binding_ids(casilla) != (binding_id,)
+        ):
+            failures.append(
+                "m303_regimen_simplificado_annual_summary endpoint "
+                f"{casilla_id!r} must be bound only by {binding_id!r}",
+            )
+    return failures
 
 
 class _ProrrataRegularizacionSelector(BaseModel):
@@ -852,6 +1129,8 @@ def binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaI
         return _relation_prefill_source_ids(_relation_prefill_selector(binding))
     if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION:
         return _iva_compensation_annual_partition_selector(binding).source_casilla_ids
+    if binding.source == BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY:
+        return _m303_regimen_simplificado_annual_summary_selector(binding).source_casilla_ids
     if binding.source == BindingSourceKind.PRORRATA_REGULARIZACION:
         return _ProrrataRegularizacionSelector.model_validate(selector_as_dict(binding)).source_casilla_ids
     if binding.source == BindingSourceKind.BIENES_INVERSION_REGULARIZACION:
@@ -868,6 +1147,8 @@ def binding_source_modelo(binding: DataBindingDefinition) -> ModeloId | None:
         return _relation_prefill_selector(binding).source_modelo
     if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION:
         return _iva_compensation_annual_partition_selector(binding).source_modelo
+    if binding.source == BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY:
+        return _m303_regimen_simplificado_annual_summary_selector(binding).source_modelo
     if binding.source == BindingSourceKind.PRORRATA_REGULARIZACION:
         return _ProrrataRegularizacionSelector.model_validate(selector_as_dict(binding)).source_modelo
     if binding.source == BindingSourceKind.BIENES_INVERSION_REGULARIZACION:
@@ -1049,6 +1330,7 @@ _BINDING_SELECTOR_REGISTRY: dict[BindingSourceKind, type[BaseModel]] = {
     BindingSourceKind.PREVIOUS_FILING: PreviousModeloSelector,
     BindingSourceKind.RELATION_PREFILL: _RelationPrefillSelector,
     BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: _IvaCompensationAnnualPartitionSelector,
+    BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY: _M303RegimenSimplificadoAnnualSummarySelector,
     BindingSourceKind.PRORRATA_REGULARIZACION: _ProrrataRegularizacionSelector,
     BindingSourceKind.BIENES_INVERSION_REGULARIZACION: _BienesInversionRegularizacionSelector,
     # Counterpart-aggregation family: every source whose selector shape
@@ -1141,6 +1423,9 @@ _BINDING_VALIDATOR_REGISTRY: dict[BindingSourceKind, _BindingFamilyValidator] = 
     BindingSourceKind.RELATION_PREFILL: _validate_selector_only(_RelationPrefillSelector),
     BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: _validate_selector_only(
         _IvaCompensationAnnualPartitionSelector,
+    ),
+    BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY: _validate_selector_only(
+        _M303RegimenSimplificadoAnnualSummarySelector,
     ),
     BindingSourceKind.PRORRATA_REGULARIZACION: _validate_selector_only(_ProrrataRegularizacionSelector),
     BindingSourceKind.BIENES_INVERSION_REGULARIZACION: _validate_selector_only(

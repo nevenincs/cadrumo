@@ -55,7 +55,7 @@ from ....core import BindingSourceKind
 from ._bindings_previous_filing import previous_filing_source_reference
 from ._errors import RegistryValidationError
 from ._ids import BindingId, ModeloId
-from ._schema import ModeloDefinition, ModeloRevision
+from ._schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
 
 #: The registry's own representable floor. Matches the ``ge=2000`` bound
 #: already declared on every ``modelo_year`` field in this package (see
@@ -263,6 +263,102 @@ def _contiguous_runs(years: tuple[int, ...]) -> tuple[tuple[int, int], ...]:
     return tuple((run[0], run[-1]) for run in runs)
 
 
+def _previous_filing_bindings(
+    modelos: Iterable[ModeloDefinition],
+) -> Iterable[tuple[ModeloDefinition, ModeloRevision, DataBindingDefinition]]:
+    """Yield every previous-filing binding with its owning modelo and revision."""
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            for binding in revision.bindings:
+                if binding.source == BindingSourceKind.PREVIOUS_FILING:
+                    yield modelo, revision, binding
+
+
+def _source_year_gap(
+    *,
+    revision: ModeloRevision,
+    binding: DataBindingDefinition,
+    modelos_by_id: Mapping[str, ModeloDefinition],
+) -> tuple[ModeloId, tuple[tuple[int, int], ...]] | None:
+    """Return the genuine missing source-year runs for one previous-filing binding."""
+    try:
+        source_reference = previous_filing_source_reference(binding)
+    except RegistryValidationError:
+        return None
+    if source_reference.has_variable_year_offset:
+        return None
+
+    source_modelo = modelos_by_id.get(source_reference.source_modelo)
+    if source_modelo is None:
+        return None
+    period_matching_revisions = _period_matching_revisions(
+        source_modelo,
+        required_periods=source_reference.required_periods,
+    )
+    if not period_matching_revisions:
+        return None
+
+    consumer_start, consumer_end = _revision_year_interval(revision)
+    clipped = _clipped_required_interval(
+        required_start=consumer_start + source_reference.filing_year_delta,
+        required_end=(None if consumer_end is None else consumer_end + source_reference.filing_year_delta),
+        source_upper_bound=_upper_year_bound(period_matching_revisions),
+    )
+    if clipped is None:
+        return None
+    clipped_start, clipped_end = clipped
+    missing = _missing_years(
+        start=clipped_start,
+        end=clipped_end,
+        period_matching_revisions=period_matching_revisions,
+    )
+    return source_reference.source_modelo, _contiguous_runs(missing)
+
+
+def _append_previous_filing_gap_failures(
+    failures: list[str],
+    *,
+    prefix: str,
+    binding: DataBindingDefinition,
+    source_modelo: ModeloId,
+    missing_runs: tuple[tuple[int, int], ...],
+    allowances_by_key: Mapping[tuple[BindingId, ModeloId, int, int], _PreviousFilingYearCoverageAllowance],
+    consumed_allowances: set[tuple[BindingId, ModeloId, int, int]],
+) -> None:
+    """Record missing years or consume the exact documented allowance."""
+    for run_start, run_end in missing_runs:
+        key = (binding.id, source_modelo, run_start, run_end)
+        allowance = allowances_by_key.get(key)
+        if allowance is not None:
+            consumed_allowances.add(key)
+            continue
+        year_label = str(run_start) if run_start == run_end else f"{run_start}-{run_end}"
+        failures.append(
+            f"{prefix}: binding {binding.id!r} lacks {source_modelo!r} "
+            f"source revision coverage for filing year(s) {year_label}",
+        )
+
+
+def _stale_allowance_failures(
+    allowances_by_key: Mapping[tuple[BindingId, ModeloId, int, int], _PreviousFilingYearCoverageAllowance],
+    *,
+    consumed_allowances: set[tuple[BindingId, ModeloId, int, int]],
+    encountered_binding_ids: set[BindingId],
+) -> list[str]:
+    """Report allowances that no longer describe an encountered real gap."""
+    failures: list[str] = []
+    for key, allowance in allowances_by_key.items():
+        if key in consumed_allowances or allowance.binding_id not in encountered_binding_ids:
+            continue
+        failures.append(
+            f"stale previous-filing year-coverage allowance: binding {allowance.binding_id!r} "
+            f"source {allowance.source_modelo!r} from {allowance.missing_from_year} through "
+            f"{allowance.missing_through_year} no longer matches a real gap; remove the entry "
+            "from _ALLOWANCES",
+        )
+    return failures
+
+
 def validate_previous_filing_source_year_coverage(
     modelos: Iterable[ModeloDefinition],
     modelos_by_id: Mapping[str, ModeloDefinition],
@@ -294,93 +390,31 @@ def validate_previous_filing_source_year_coverage(
     }
     allowance_binding_ids = {allowance.binding_id for allowance in _ALLOWANCES}
 
-    for modelo in modelos:
-        for revision in modelo.revisions.values():
-            prefix = f"modelo {modelo.id} revision {revision.id}"
-            for binding in revision.bindings:
-                if binding.source != BindingSourceKind.PREVIOUS_FILING:
-                    continue
-                if binding.id in allowance_binding_ids:
-                    encountered_binding_ids.add(binding.id)
-                try:
-                    source_reference = previous_filing_source_reference(binding)
-                except RegistryValidationError:
-                    # Malformed selector: reported by the sibling closure
-                    # validator, which owns selector-shape diagnostics.
-                    continue
-                if source_reference.has_variable_year_offset:
-                    # Per-anchor year deltas (prior_quarter_expanding_span,
-                    # source_period_offset_from_target) cannot be represented
-                    # by one uniform interval; see the module docstring on
-                    # `PreviousFilingSourceReference.has_variable_year_offset`.
-                    continue
-                source_modelo = modelos_by_id.get(source_reference.source_modelo)
-                if source_modelo is None:
-                    # Unknown source modelo: reported by the sibling closure
-                    # validator.
-                    continue
-
-                period_matching_revisions = _period_matching_revisions(
-                    source_modelo,
-                    required_periods=source_reference.required_periods,
-                )
-                if not period_matching_revisions:
-                    # No period-shape-compatible source revision exists at
-                    # all: the sibling closure validator
-                    # (`validate_previous_filing_binding_closure`) already
-                    # reports this. There is nothing for a YEAR-coverage
-                    # check to bound against, and reporting here too would
-                    # duplicate that finding under a different message.
-                    continue
-
-                consumer_start, consumer_end = _revision_year_interval(revision)
-                required_start = consumer_start + source_reference.filing_year_delta
-                required_end = None if consumer_end is None else consumer_end + source_reference.filing_year_delta
-                # Derived from the SAME period-matching set the missing-year
-                # walk below uses, rather than from every revision the source
-                # modelo owns: a source revision under a different period
-                # shape cannot cover this requirement regardless of the year
-                # it models, so it must not extend the ceiling either.
-                source_upper_bound = _upper_year_bound(period_matching_revisions)
-                clipped = _clipped_required_interval(
-                    required_start=required_start,
-                    required_end=required_end,
-                    source_upper_bound=source_upper_bound,
-                )
-                if clipped is None:
-                    continue
-                clipped_start, clipped_end = clipped
-                missing = _missing_years(
-                    start=clipped_start,
-                    end=clipped_end,
-                    period_matching_revisions=period_matching_revisions,
-                )
-                for run_start, run_end in _contiguous_runs(missing):
-                    key = (binding.id, source_reference.source_modelo, run_start, run_end)
-                    allowance = allowances_by_key.get(key)
-                    if allowance is not None:
-                        consumed_allowances.add(key)
-                        continue
-                    year_label = str(run_start) if run_start == run_end else f"{run_start}-{run_end}"
-                    failures.append(
-                        f"{prefix}: binding {binding.id!r} lacks {source_reference.source_modelo!r} "
-                        f"source revision coverage for filing year(s) {year_label}",
-                    )
-
-    for key, allowance in allowances_by_key.items():
-        if key in consumed_allowances:
+    for modelo, revision, binding in _previous_filing_bindings(modelos):
+        prefix = f"modelo {modelo.id} revision {revision.id}"
+        if binding.id in allowance_binding_ids:
+            encountered_binding_ids.add(binding.id)
+        gap = _source_year_gap(revision=revision, binding=binding, modelos_by_id=modelos_by_id)
+        if gap is None:
             continue
-        if allowance.binding_id not in encountered_binding_ids:
-            # This call's modelo set never reached the allowance's binding at
-            # all (a synthetic single-modelo test fixture is the common
-            # case), so this call cannot judge whether the gap still holds.
-            continue
-        failures.append(
-            f"stale previous-filing year-coverage allowance: binding {allowance.binding_id!r} "
-            f"source {allowance.source_modelo!r} from {allowance.missing_from_year} through "
-            f"{allowance.missing_through_year} no longer matches a real gap; remove the entry "
-            "from _ALLOWANCES",
+        source_modelo, missing_runs = gap
+        _append_previous_filing_gap_failures(
+            failures,
+            prefix=prefix,
+            binding=binding,
+            source_modelo=source_modelo,
+            missing_runs=missing_runs,
+            allowances_by_key=allowances_by_key,
+            consumed_allowances=consumed_allowances,
         )
+
+    failures.extend(
+        _stale_allowance_failures(
+            allowances_by_key,
+            consumed_allowances=consumed_allowances,
+            encountered_binding_ids=encountered_binding_ids,
+        ),
+    )
     return failures
 
 

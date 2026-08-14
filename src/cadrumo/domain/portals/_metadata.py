@@ -105,38 +105,43 @@ class PortalMetadata(BaseModel):
     @model_validator(mode="after")
     def _validate_invariants(self) -> PortalMetadata:
         """Enforce cross-field invariants on a single entry."""
-        # ANONYMOUS exclusivity.
-        if AuthMethod.ANONYMOUS in self.auth_methods and len(self.auth_methods) != 1:
-            raise PortalValidationError("AuthMethod.ANONYMOUS must be the sole method when present")
-
-        # PortalHost must match URL host.
-        host = self.url.host
-        expected_host = portal_host_name(self.subdomain)
-        if host != expected_host:
-            raise PortalValidationError(f"url host {host!r} does not match subdomain {expected_host!r}")
-
-        # G-code path check for active FILING / CENSO entries.
-        if self.active and self.category in {PortalCategory.FILING, PortalCategory.CENSO}:
-            path = self.url.path or ""
-            if not _filing_censo_path_re().match(path):
-                raise PortalValidationError(
-                    f"active {self.category.value} portal url path must match "
-                    f"{_filing_censo_path_description()}, got {path!r}",
-                )
-
-        # Retired-without-replacement fallback.
-        if not self.active and self.replaced_by is None and not self.notes:
-            raise PortalValidationError("retired portal without replaced_by must carry a non-empty notes rationale")
-
-        # Self-replacement check.
-        if self.replaced_by is not None and self.replaced_by == self.portal:
-            raise PortalValidationError(f"portal {self.portal!r} cannot be replaced by itself")
-
-        # Replaced-by may only be set when active is False.
-        if self.active and self.replaced_by is not None:
-            raise PortalValidationError("replaced_by must be None when active is True")
-
+        _validate_auth_method_exclusivity(self)
+        _validate_portal_host(self)
+        _validate_active_portal_path(self)
+        _validate_portal_lifecycle(self)
         return self
+
+
+def _validate_auth_method_exclusivity(metadata: PortalMetadata) -> None:
+    if AuthMethod.ANONYMOUS in metadata.auth_methods and len(metadata.auth_methods) != 1:
+        raise PortalValidationError("AuthMethod.ANONYMOUS must be the sole method when present")
+
+
+def _validate_portal_host(metadata: PortalMetadata) -> None:
+    host = metadata.url.host
+    expected_host = portal_host_name(metadata.subdomain)
+    if host != expected_host:
+        raise PortalValidationError(f"url host {host!r} does not match subdomain {expected_host!r}")
+
+
+def _validate_active_portal_path(metadata: PortalMetadata) -> None:
+    if not metadata.active or metadata.category not in {PortalCategory.FILING, PortalCategory.CENSO}:
+        return
+    path = metadata.url.path or ""
+    if not _filing_censo_path_re().match(path):
+        raise PortalValidationError(
+            f"active {metadata.category.value} portal url path must match "
+            f"{_filing_censo_path_description()}, got {path!r}",
+        )
+
+
+def _validate_portal_lifecycle(metadata: PortalMetadata) -> None:
+    if not metadata.active and metadata.replaced_by is None and not metadata.notes:
+        raise PortalValidationError("retired portal without replaced_by must carry a non-empty notes rationale")
+    if metadata.replaced_by is not None and metadata.replaced_by == metadata.portal:
+        raise PortalValidationError(f"portal {metadata.portal!r} cannot be replaced by itself")
+    if metadata.active and metadata.replaced_by is not None:
+        raise PortalValidationError("replaced_by must be None when active is True")
 
 
 __all__ = ["PortalMetadata"]

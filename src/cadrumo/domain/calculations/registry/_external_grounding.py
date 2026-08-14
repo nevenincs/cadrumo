@@ -71,12 +71,19 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, ValidationError, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, CasillaId, ElidedProse, ExternalOracleCorpus
+from ....core import (
+    STRICT_FROZEN_CONFIG,
+    CasillaId,
+    ElidedProse,
+    ExternalOracleCorpus,
+    RegistrySelectorPeriodCode,
+)
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import bundled_path
 from ._errors import RegistryValidationError
 from ._ids import ModeloId, RevisionId
 from ._loader import load_registry_tree
+from ._period_selector_match import selector_token_for_request
 from ._schema import ModeloDefinition, ModeloRevision
 from ._schema_input_kind import InputKind
 
@@ -209,6 +216,8 @@ class BundledOraclePayload(ExternalGroundingModel):
         max_length=BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
     )
     expected_by_casilla_id: Mapping[CasillaId, str]
+    period: RegistrySelectorPeriodCode | None = None
+    """Optional period coordinate when a filing year has multiple revisions."""
 
 
 class DeclaredScenarioInputs(ExternalGroundingModel):
@@ -351,6 +360,7 @@ class ExternalOracleEvidence(ExternalGroundingModel):
     payload_name: str = Field(min_length=1, max_length=255)
     modelo: ModeloId
     filing_year: int = Field(ge=1979, le=2999)
+    period: RegistrySelectorPeriodCode | None = None
     casilla_ids: tuple[CasillaId, ...]
 
 
@@ -384,7 +394,12 @@ class ExternalOracleInventory(ExternalGroundingModel):
     evidence: tuple[ExternalOracleEvidence, ...]
     unattributed_payloads: tuple[UnattributedOraclePayload, ...]
 
-    def casilla_ids_for(self, modelo: str, filing_year: int) -> frozenset[CasillaId]:
+    def casilla_ids_for(
+        self,
+        modelo: str,
+        filing_year: int,
+        period: str | None = None,
+    ) -> frozenset[CasillaId]:
         """Return every oracle-grounded casilla id bundled for ``modelo`` and ``filing_year``.
 
         Unions across corpora: a manual worked-example figure is an equally
@@ -393,22 +408,27 @@ class ExternalOracleInventory(ExternalGroundingModel):
         return frozenset(
             casilla_id
             for item in self.evidence
-            if item.modelo == modelo and item.filing_year == filing_year
+            if item.modelo == modelo and item.filing_year == filing_year and item.period == period
             for casilla_id in item.casilla_ids
         )
 
     @property
-    def corpora_for(self) -> Mapping[tuple[str, int], tuple[ExternalOracleCorpus, ...]]:
-        """Map each attributed ``(modelo, filing_year)`` to the corpora backing it."""
-        grouped: dict[tuple[str, int], set[ExternalOracleCorpus]] = {}
+    def corpora_for(self) -> Mapping[tuple[str, int, str | None], tuple[ExternalOracleCorpus, ...]]:
+        """Map each attributed ``(modelo, filing_year, period)`` to its corpora."""
+        grouped: dict[tuple[str, int, str | None], set[ExternalOracleCorpus]] = {}
         for item in self.evidence:
-            grouped.setdefault((item.modelo, item.filing_year), set()).add(item.corpus)
+            grouped.setdefault((item.modelo, item.filing_year, item.period), set()).add(item.corpus)
         return {key: tuple(sorted(value)) for key, value in grouped.items()}
 
     @property
+    def attributed_coordinates(self) -> tuple[tuple[str, int, str | None], ...]:
+        """Every ``(modelo, filing_year, period)`` carrying bundled evidence."""
+        return tuple(sorted({(item.modelo, item.filing_year, item.period) for item in self.evidence}))
+
+    @property
     def attributed_filing_years(self) -> tuple[tuple[str, int], ...]:
-        """Every ``(modelo, filing_year)`` key carrying bundled oracle evidence."""
-        return tuple(sorted({(item.modelo, item.filing_year) for item in self.evidence}))
+        """Every ``(modelo, filing_year)`` carrying bundled oracle evidence."""
+        return tuple(sorted({(modelo, year) for modelo, year, _period in self.attributed_coordinates}))
 
 
 class ExternalGroundingFinding(ExternalGroundingModel):
@@ -563,31 +583,31 @@ def build_external_grounding_audit(
     """
     modelo_tuple = tuple(sorted(modelos, key=lambda item: item.id))
     rows: list[RevisionExternalGroundingRow] = []
-    matched_evidence_keys: set[tuple[str, int]] = set()
+    matched_evidence_keys: set[tuple[str, int, str | None]] = set()
     corpora_for = inventory.corpora_for
-    attributed_filing_years = inventory.attributed_filing_years
+    attributed_coordinates = inventory.attributed_coordinates
 
     for modelo in modelo_tuple:
         revisions = tuple(sorted(modelo.revisions.values(), key=lambda item: item.id))
-        # Resolved once per modelo rather than once per (revision, filing year):
-        # the resolution answers "which revision owns this year", so it does not
-        # depend on the revision being built.
-        resolved_years: dict[str, list[int]] = {}
-        for candidate_modelo, filing_year in attributed_filing_years:
+        # Resolved once per modelo rather than once per (revision, filing
+        # coordinate): the resolution answers "which revision owns this
+        # evidence", so it does not depend on the revision being built.
+        resolved_years: dict[str, list[tuple[int, str | None]]] = {}
+        for candidate_modelo, filing_year, period in attributed_coordinates:
             if candidate_modelo != modelo.id:
                 continue
-            owner = _select_revision_for_filing_year(revisions, filing_year)
+            owner = _select_revision_for_filing_year(revisions, filing_year, period=period)
             if owner is not None:
-                resolved_years.setdefault(owner.id, []).append(filing_year)
+                resolved_years.setdefault(owner.id, []).append((filing_year, period))
         for revision in revisions:
-            filing_years = tuple(resolved_years.get(revision.id, ()))
-            matched_evidence_keys.update((modelo.id, filing_year) for filing_year in filing_years)
+            filing_coordinates = tuple(resolved_years.get(revision.id, ()))
+            matched_evidence_keys.update((modelo.id, filing_year, period) for filing_year, period in filing_coordinates)
             rows.append(
                 _build_row(
                     modelo_id=modelo.id,
                     revision=revision,
                     inventory=inventory,
-                    filing_years=filing_years,
+                    filing_coordinates=filing_coordinates,
                     corpora_for=corpora_for,
                 ),
             )
@@ -603,7 +623,7 @@ def build_external_grounding_audit(
             ),
         )
         for item in inventory.evidence
-        if (item.modelo, item.filing_year) not in matched_evidence_keys
+        if (item.modelo, item.filing_year, item.period) not in matched_evidence_keys
     )
 
     return RegistryExternalGroundingAudit(
@@ -633,8 +653,10 @@ def audit_bundled_external_grounding() -> RegistryExternalGroundingAudit:
 def _select_revision_for_filing_year(
     revisions: Sequence[ModeloRevision],
     filing_year: int,
+    *,
+    period: str | None = None,
 ) -> ModeloRevision | None:
-    """Attribute bundled oracle evidence of ``filing_year`` to one revision.
+    """Attribute bundled oracle evidence of a filing coordinate to one revision.
 
     Tries a direct revision-id match first (the Modelo 100 convention, where
     the revision id IS the filing-year string), then falls back to declared
@@ -644,12 +666,15 @@ def _select_revision_for_filing_year(
         revisions: The candidate :class:`ModeloRevision` records of one modelo.
         filing_year: AEAT filing year the bundled oracle evidence was captured
             for.
+        period: Optional filing-period code used to disambiguate split-year
+            revisions.
 
-    Deliberately period-agnostic and total, unlike the law-determined
+    This is deliberately separate from the law-determined
     :func:`select_revision`, which resolves a ``(filing_year, period)`` pair
-    and raises when none or several match. Oracle evidence is captured per
-    filing year with no period axis, and a governance fold must report an
-    unresolvable year rather than abort the whole registry read on it.
+    and raises when none or several match. A payload without a period remains
+    year-only and is left unattributed when split revisions claim that year;
+    a payload with an explicit period can be attributed to the one revision
+    whose selector covers that period.
 
     **Module-private, and it must stay that way.** This resolver answers an
     evidence-attribution question ("which revision does this captured oracle
@@ -669,11 +694,17 @@ def _select_revision_for_filing_year(
         or more than one ambiguously claims the year — a registry authoring
         defect this function reports by abstaining rather than adjudicates.
     """
-    year_str = str(filing_year)
-    by_id = {revision.id: revision for revision in revisions}
-    if year_str in by_id:
-        return by_id[year_str]
-    matches = [revision for revision in revisions if revision.period_selector.includes_year(filing_year)]
+    if period is None:
+        year_str = str(filing_year)
+        by_id = {revision.id: revision for revision in revisions}
+        if year_str in by_id:
+            return by_id[year_str]
+    matches = [
+        revision
+        for revision in revisions
+        if revision.period_selector.includes_year(filing_year)
+        and (period is None or selector_token_for_request(revision.period_selector.periods, period) is not None)
+    ]
     if len(matches) == 1:
         return matches[0]
     return None
@@ -684,8 +715,8 @@ def _build_row(
     modelo_id: str,
     revision: ModeloRevision,
     inventory: ExternalOracleInventory,
-    filing_years: tuple[int, ...],
-    corpora_for: Mapping[tuple[str, int], tuple[ExternalOracleCorpus, ...]],
+    filing_coordinates: tuple[tuple[int, str | None], ...],
+    corpora_for: Mapping[tuple[str, int, str | None], tuple[ExternalOracleCorpus, ...]],
 ) -> RevisionExternalGroundingRow:
     """Build one revision's grounding row and both directions of its findings."""
     computed = {casilla.id for casilla in revision.casillas if casilla.input_kind is InputKind.COMPUTED}
@@ -698,9 +729,9 @@ def _build_row(
 
     evidence: set[CasillaId] = set()
     corpora: set[ExternalOracleCorpus] = set()
-    for filing_year in filing_years:
-        evidence |= inventory.casilla_ids_for(modelo_id, filing_year)
-        corpora.update(corpora_for.get((modelo_id, filing_year), ()))
+    for filing_year, period in filing_coordinates:
+        evidence |= inventory.casilla_ids_for(modelo_id, filing_year, period)
+        corpora.update(corpora_for.get((modelo_id, filing_year, period), ()))
 
     findings: list[ExternalGroundingFinding] = []
     for casilla_id in sorted(evidence):
@@ -865,5 +896,6 @@ def _read_oracle_payload(
         payload_name=payload_path.name,
         modelo=modelo_id,
         filing_year=filing_year,
+        period=payload.period,
         casilla_ids=tuple(sorted(payload.expected_by_casilla_id)),
     )

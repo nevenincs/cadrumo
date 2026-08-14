@@ -10,10 +10,9 @@ from __future__ import annotations
 
 import os
 from collections.abc import Mapping
-from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal, cast, get_args, get_origin
+from typing import cast, get_args, get_origin
 
 from pydantic import BaseModel, ValidationError
 
@@ -25,17 +24,18 @@ from ._ids import RevisionId
 from ._loader_cache import (
     BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
     MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS,
+    ModeloSource,
+    discover_modelo_sources,
     is_bundled_registry_root,
     registry_disk_cache_enabled,
     toml_file_fingerprint,
 )
+from ._loader_cache import (
+    ModeloRevisionSource as _ModeloRevisionSource,
+)
 from ._modelo_localization import (
-    casilla_alias_locale_key,
-    casilla_continuity_locale_key,
-    casilla_occurrence_locale_key,
-    construct_locale_key,
+    enroll_revision_localization,
     modelo_locale_key,
-    revision_locale_key,
 )
 from ._schema import (
     REVISION_GOVERNANCE_FIELDS,
@@ -49,6 +49,8 @@ from ._schema import (
 )
 from ._toml_helpers import as_toml_table as _as_toml_table
 from ._validate_revision_identity import revision_reference_identity_failures
+
+ModeloRevisionSource = _ModeloRevisionSource
 
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
 _REVISION_CONSTRUCTS = "constructs"
@@ -110,32 +112,9 @@ _CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
         "dependency_classifications",
     },
 )
-ModeloSourceLayout = Literal["single_file", "directory"]
-ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
 type _RegistryPathFingerprint = tuple[str, int, int, str]
 """``(path, size, mtime_ns, content_digest)``; the digest is empty for directories and bundled-tree files."""
 type _RegistryPathFingerprints = tuple[_RegistryPathFingerprint, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class ModeloRevisionSource:
-    """On-disk source for one modelo revision before schema validation."""
-
-    revision_id: RevisionId
-    layout: ModeloRevisionSourceLayout
-    path: Path
-    fragment_paths: tuple[Path, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class ModeloSource:
-    """On-disk source for one modelo before schema validation."""
-
-    modelo_id: str
-    layout: ModeloSourceLayout
-    path: Path
-    manifest_path: Path
-    revision_sources: tuple[ModeloRevisionSource, ...] = ()
 
 
 def _toml_table_id(value: object) -> str | None:
@@ -204,7 +183,7 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
         raw_revision_table = _as_toml_table(raw_revision)
         if raw_revision_table is None:
             raise RegistryLoadError(f"{source_path}: revision {revision_id!r} must be a table")
-        payload = _enroll_revision_localization(
+        payload = enroll_revision_localization(
             modelo_id=str(modelo_id_for_context),
             revision_id=revision_id,
             raw_revision=raw_revision_table,
@@ -325,6 +304,30 @@ def _compile_projection_endpoint_declaration(source_path: Path, raw_declaration:
     return payload
 
 
+def _compile_revision_projection_record(source_path: Path, raw_record: object) -> dict[str, object]:
+    record = _as_toml_table(raw_record)
+    if record is None:
+        return _passthrough_toml_row(raw_record)
+    compiled = dict(record)
+    fields = _as_toml_array(record.get("fields"))
+    if fields is not None:
+        compiled["fields"] = tuple(_compile_export_semantic_field(source_path, raw_field) for raw_field in fields)
+    return compiled
+
+
+def _compile_revision_projection_layout(source_path: Path, raw_layout: object) -> dict[str, object]:
+    layout = _as_toml_table(raw_layout)
+    if layout is None:
+        return _passthrough_toml_row(raw_layout)
+    compiled = dict(layout)
+    records = _as_toml_array(layout.get("records"))
+    if records is not None:
+        compiled["records"] = tuple(
+            _compile_revision_projection_record(source_path, raw_record) for raw_record in records
+        )
+    return compiled
+
+
 def _compile_revision_projection_semantics(source_path: Path, payload: Mapping[str, object]) -> dict[str, object]:
     """Compile revision-owned projection refs and export fields before schema construction."""
     compiled = dict(payload)
@@ -334,144 +337,11 @@ def _compile_revision_projection_semantics(source_path: Path, payload: Mapping[s
             _compile_projection_endpoint_declaration(source_path, raw_declaration) for raw_declaration in declarations
         )
     layouts = _as_toml_array(payload.get("export_layouts"))
-    if layouts is None:
-        return compiled
-    compiled_layouts: list[dict[str, object]] = []
-    for raw_layout in layouts:
-        layout = _as_toml_table(raw_layout)
-        if layout is None:
-            compiled_layouts.append(_passthrough_toml_row(raw_layout))
-            continue
-        compiled_layout = dict(layout)
-        records = _as_toml_array(layout.get("records"))
-        if records is None:
-            compiled_layouts.append(compiled_layout)
-            continue
-        compiled_records: list[dict[str, object]] = []
-        for raw_record in records:
-            record = _as_toml_table(raw_record)
-            if record is None:
-                compiled_records.append(_passthrough_toml_row(raw_record))
-                continue
-            compiled_record = dict(record)
-            fields = _as_toml_array(record.get("fields"))
-            if fields is not None:
-                compiled_record["fields"] = tuple(
-                    _compile_export_semantic_field(source_path, raw_field) for raw_field in fields
-                )
-            compiled_records.append(compiled_record)
-        compiled_layout["records"] = tuple(compiled_records)
-        compiled_layouts.append(compiled_layout)
-    compiled["export_layouts"] = tuple(compiled_layouts)
+    if layouts is not None:
+        compiled["export_layouts"] = tuple(
+            _compile_revision_projection_layout(source_path, raw_layout) for raw_layout in layouts
+        )
     return compiled
-
-
-def _localised_casilla_aliases(
-    raw_aliases: object,
-    *,
-    modelo_id: str,
-    revision_id: RevisionId,
-    casilla_id: str,
-) -> tuple[dict[str, object], ...] | None:
-    """Return one casilla's aliases with derived locale keys, or ``None`` if absent.
-
-    Aliases are keyed by POSITION rather than by any field of their own: an alias
-    carries the printed variant text, which is exactly the presentation value
-    this enrolment must not copy into an identity.
-    """
-    aliases_array = _as_toml_array(raw_aliases)
-    if aliases_array is None:
-        return None
-    aliases: list[dict[str, object]] = []
-    for alias_index, raw_alias in enumerate(aliases_array):
-        alias = _as_toml_table(raw_alias)
-        if alias is None:
-            aliases.append(_passthrough_toml_row(raw_alias))
-            continue
-        aliases.append(
-            {
-                **alias,
-                "localization_key": casilla_alias_locale_key(
-                    modelo_id,
-                    revision_id,
-                    casilla_id,
-                    str(alias_index),
-                ),
-            },
-        )
-    return tuple(aliases)
-
-
-def _localised_casilla(raw_casilla: object, *, modelo_id: str, revision_id: RevisionId) -> dict[str, object]:
-    """Return one casilla with its derived locale keys attached.
-
-    Two keys, not one, when the casilla declares a continuidad: the occurrence
-    key names this casilla in this revision, and the continuity key names the
-    concept across revisions. They are different identities and a casilla that
-    has both needs both, since a renumbering changes the first and not the
-    second.
-    """
-    casilla = _as_toml_table(raw_casilla)
-    if casilla is None:
-        return _passthrough_toml_row(raw_casilla)
-    casilla_id = casilla.get("id")
-    if not isinstance(casilla_id, str):
-        return dict(casilla)
-    keys = [casilla_occurrence_locale_key(modelo_id, revision_id, casilla_id, "label")]
-    continuidad_id = casilla.get("continuidad_id")
-    if isinstance(continuidad_id, str):
-        keys.append(casilla_continuity_locale_key(modelo_id, continuidad_id, "label"))
-    payload: dict[str, object] = {**casilla, "localization_keys": tuple(keys)}
-    aliases = _localised_casilla_aliases(
-        casilla.get("aliases"),
-        modelo_id=modelo_id,
-        revision_id=revision_id,
-        casilla_id=casilla_id,
-    )
-    if aliases is not None:
-        payload["aliases"] = aliases
-    return payload
-
-
-def _localised_construct(raw_construct: object, *, modelo_id: str, revision_id: RevisionId) -> dict[str, object]:
-    """Return one construct with its derived locale key attached."""
-    construct = _as_toml_table(raw_construct)
-    if construct is None:
-        return _passthrough_toml_row(raw_construct)
-    construct_id = construct.get("id")
-    if not isinstance(construct_id, str):
-        return dict(construct)
-    return {
-        **construct,
-        "localization_key": construct_locale_key(modelo_id, revision_id, construct_id),
-    }
-
-
-def _enroll_revision_localization(
-    *,
-    modelo_id: str,
-    revision_id: RevisionId,
-    raw_revision: Mapping[str, object],
-) -> dict[str, object]:
-    """Attach derived locale identities without copying presentation values."""
-    payload: dict[str, object] = {
-        "id": revision_id,
-        **raw_revision,
-        "localization_key": revision_locale_key(modelo_id, revision_id),
-    }
-    raw_casillas = _as_toml_array(raw_revision.get("casillas"))
-    if raw_casillas is not None:
-        payload["casillas"] = tuple(
-            _localised_casilla(raw_casilla, modelo_id=modelo_id, revision_id=revision_id)
-            for raw_casilla in raw_casillas
-        )
-    raw_constructs = _as_toml_array(raw_revision.get("constructs"))
-    if raw_constructs is not None:
-        payload["constructs"] = tuple(
-            _localised_construct(raw_construct, modelo_id=modelo_id, revision_id=revision_id)
-            for raw_construct in raw_constructs
-        )
-    return payload
 
 
 def load_modelo_directory(directory: Path) -> ModeloDefinition:
@@ -1129,114 +999,6 @@ def load_registry_tree(root: Path) -> tuple[tuple[ModeloDefinition, ...], Regist
         if refreshed == fingerprints:
             raise
         return _load_registry_tree_cached(str(resolved), refreshed)
-
-
-def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
-    """Discover :class:`ModeloSource` layouts under a ``modelos/`` directory.
-
-    This is the generic source-layout contract for the registry: callers
-    can reason about single-file modelos, directory-mode modelos,
-    per-revision files, and fragmented revision directories without
-    special-casing a modelo id.
-    """
-    resolved = modelos_dir.resolve()
-    sources: list[ModeloSource] = []
-    seen_modelo_ids: dict[str, ModeloSource] = {}
-    for path in sorted(resolved.glob("*.toml")):
-        try:
-            raw_data = read_toml(path, error_factory=RegistryLoadError)
-            modelo_table = _as_toml_table(raw_data.get("modelo"))
-            if modelo_table is None or "id" not in modelo_table:
-                raise RegistryLoadError(f"{path}: missing [modelo].id")
-            modelo_id = str(modelo_table["id"])
-        except Exception as exc:
-            raise RegistryLoadError(f"{path}: invalid modelo file: {exc}") from exc
-        source = ModeloSource(
-            modelo_id=modelo_id,
-            layout="single_file",
-            path=path.resolve(),
-            manifest_path=path.resolve(),
-        )
-        _append_modelo_source(source, sources, seen_modelo_ids)
-    if resolved.is_dir():
-        for entry in sorted(resolved.iterdir()):
-            if not (entry.is_dir() and (entry / "manifest.toml").is_file()):
-                continue
-            manifest_path = entry / "manifest.toml"
-            try:
-                manifest_data = read_toml(manifest_path, error_factory=RegistryLoadError)
-                modelo_table = _as_toml_table(manifest_data.get("modelo"))
-                if modelo_table is None or "id" not in modelo_table:
-                    raise RegistryLoadError(f"{manifest_path}: missing [modelo].id")
-                modelo_id = str(modelo_table["id"])
-            except Exception as exc:
-                raise RegistryLoadError(f"{manifest_path}: invalid manifest: {exc}") from exc
-            source = ModeloSource(
-                modelo_id=modelo_id,
-                layout="directory",
-                path=entry.resolve(),
-                manifest_path=manifest_path.resolve(),
-                revision_sources=_discover_revision_sources(entry / "revisions"),
-            )
-            _append_modelo_source(source, sources, seen_modelo_ids)
-    return tuple(sources)
-
-
-def _append_modelo_source(
-    source: ModeloSource,
-    sources: list[ModeloSource],
-    seen_modelo_ids: dict[str, ModeloSource],
-) -> None:
-    previous = seen_modelo_ids.get(source.modelo_id)
-    if previous is not None:
-        raise RegistryLoadError(
-            f"{source.path}: modelo {source.modelo_id!r} also declared at {previous.path}; "
-            "remove one of the two layouts",
-        )
-    seen_modelo_ids[source.modelo_id] = source
-    sources.append(source)
-
-
-def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSource, ...]:
-    if not revisions_dir.is_dir():
-        return ()
-    sources: list[ModeloRevisionSource] = []
-    for path in sorted(revisions_dir.glob("*.toml")):
-        rev_data = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
-        file_revisions = _as_toml_table(rev_data.get("revisions"))
-        if not file_revisions:
-            raise RegistryLoadError(f"{path}: revision file must declare [revisions.<id>]")
-        for revision_id in sorted(file_revisions):
-            sources.append(
-                ModeloRevisionSource(
-                    revision_id=revision_id,
-                    layout="revision_file",
-                    path=path,
-                    fragment_paths=(path,),
-                ),
-            )
-    for path in sorted(revisions_dir.iterdir()):
-        if not path.is_dir():
-            continue
-        revision_manifest = path / "revision.toml"
-        fragment_paths = (revision_manifest,) if revision_manifest.is_file() else ()
-        fragment_paths = (
-            *fragment_paths,
-            *tuple(
-                p
-                for p in sorted(path.rglob("*.toml"))
-                if p != revision_manifest and not any(part == "locales" for part in p.parts)
-            ),
-        )
-        sources.append(
-            ModeloRevisionSource(
-                revision_id=path.name,
-                layout="fragment_directory",
-                path=path,
-                fragment_paths=fragment_paths,
-            ),
-        )
-    return tuple(sources)
 
 
 _registry_fingerprint_cache: dict[Path, tuple[float, _RegistryPathFingerprints, _RegistryPathFingerprints]] = {}

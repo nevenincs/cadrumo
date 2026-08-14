@@ -105,31 +105,52 @@ class RecordDesignAuxiliaryEnvelopeHeader(RegistryModel):
 
     @model_validator(mode="after")
     def _require_exact_m390_source_shape(self) -> Self:
-        roles = tuple(item.role for item in self.fields)
-        if roles != _M390_AUXILIARY_HEADER_ROLES:
-            raise ValueError("auxiliary envelope header does not retain its exact thirteen source roles")
         raw_fields = tuple(item.field for item in self.fields)
-        if tuple(field.length for field in raw_fields) != _M390_AUXILIARY_HEADER_LENGTHS:
-            raise ValueError("auxiliary envelope header has an unsupported source length sequence")
-        if tuple(field.content for field in raw_fields) != _M390_AUXILIARY_HEADER_CONTENT:
-            raise ValueError("auxiliary envelope header does not match exact Modelo 390 source content")
-        if tuple(field.row for field in raw_fields) != _M390_AUXILIARY_HEADER_ROWS:
-            raise ValueError("auxiliary envelope header does not match exact Modelo 390 source rows")
-        if tuple(field.ordinal for field in raw_fields) != _M390_AUXILIARY_HEADER_ORDINALS:
-            raise ValueError("auxiliary envelope header does not match exact Modelo 390 source ordinals")
-        expected_offset = 1
-        for field in raw_fields:
-            if field.offset != expected_offset:
-                raise ValueError("auxiliary envelope header source geometry is not contiguous")
-            expected_offset += field.length
-        if expected_offset - 1 != self.emitted_extent:
-            raise ValueError("auxiliary envelope header extent must derive from all thirteen source fields")
+        _validate_auxiliary_header_roles(self.fields)
+        _validate_auxiliary_header_lengths(raw_fields)
+        _validate_auxiliary_header_content(raw_fields)
+        _validate_auxiliary_header_positions(raw_fields)
+        _validate_auxiliary_header_extent(raw_fields, self.emitted_extent)
         return self
 
     @property
     def source_fields(self) -> tuple[RecordDesignField, ...]:
         """Return the thirteen parser fields in their official source order."""
         return tuple(item.field for item in self.fields)
+
+
+def _validate_auxiliary_header_roles(
+    fields: tuple[RecordDesignAuxiliaryEnvelopeHeaderField, ...],
+) -> None:
+    if tuple(item.role for item in fields) != _M390_AUXILIARY_HEADER_ROLES:
+        raise ValueError("auxiliary envelope header does not retain its exact thirteen source roles")
+
+
+def _validate_auxiliary_header_lengths(fields: tuple[RecordDesignField, ...]) -> None:
+    if tuple(field.length for field in fields) != _M390_AUXILIARY_HEADER_LENGTHS:
+        raise ValueError("auxiliary envelope header has an unsupported source length sequence")
+
+
+def _validate_auxiliary_header_content(fields: tuple[RecordDesignField, ...]) -> None:
+    if tuple(field.content for field in fields) != _M390_AUXILIARY_HEADER_CONTENT:
+        raise ValueError("auxiliary envelope header does not match exact Modelo 390 source content")
+
+
+def _validate_auxiliary_header_positions(fields: tuple[RecordDesignField, ...]) -> None:
+    if tuple(field.row for field in fields) != _M390_AUXILIARY_HEADER_ROWS:
+        raise ValueError("auxiliary envelope header does not match exact Modelo 390 source rows")
+    if tuple(field.ordinal for field in fields) != _M390_AUXILIARY_HEADER_ORDINALS:
+        raise ValueError("auxiliary envelope header does not match exact Modelo 390 source ordinals")
+
+
+def _validate_auxiliary_header_extent(fields: tuple[RecordDesignField, ...], emitted_extent: int) -> None:
+    expected_offset = 1
+    for field in fields:
+        if field.offset != expected_offset:
+            raise ValueError("auxiliary envelope header source geometry is not contiguous")
+        expected_offset += field.length
+    if expected_offset - 1 != emitted_extent:
+        raise ValueError("auxiliary envelope header extent must derive from all thirteen source fields")
 
 
 class RecordDesignVariableBodyMarker(RegistryModel):

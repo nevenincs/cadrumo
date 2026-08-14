@@ -128,43 +128,84 @@ def _validate_generated_projection_layout_bijection(
     """
     if not revision.export_layouts:
         return
-    generated = tuple(
+    failures.extend(f"{prefix}: {failure}" for failure in _generated_projection_layout_failures(revision))
+
+
+def _generated_projection_layout_failures(revision: ModeloRevision) -> tuple[str, ...]:
+    """Return all projection-layout bijection failures without a revision prefix."""
+    generated = _generated_projection_refs(revision)
+    if any(reference is None for reference in generated):
+        return ("generated projection field lacks a typed projection_ref",)
+    generated_refs = tuple(reference for reference in generated if reference is not None)
+    declared_refs = tuple(declaration.projection_ref for declaration in revision.projection_endpoints)
+    return _projection_layout_failures(generated_refs, declared_refs)
+
+
+def _projection_layout_failures(
+    generated_refs: tuple[FilingProjectionRef, ...],
+    declared_refs: tuple[FilingProjectionRef, ...],
+) -> tuple[str, ...]:
+    """Combine duplicate and set-difference failures for projection identities."""
+    return (
+        *_duplicate_projection_failure("generated export layouts duplicate projection refs", generated_refs),
+        *_duplicate_projection_failure("projection declarations are not unique", declared_refs),
+        *_projection_bijection_failure(generated_refs, declared_refs),
+    )
+
+
+def _duplicate_projection_failure(
+    message: str,
+    references: tuple[FilingProjectionRef, ...],
+) -> tuple[str, ...]:
+    """Render one duplicate-reference failure, if any."""
+    duplicates = _duplicate_projection_refs(references)
+    return () if not duplicates else (f"{message}: {duplicates!r}",)
+
+
+def _projection_bijection_failure(
+    generated_refs: tuple[FilingProjectionRef, ...],
+    declared_refs: tuple[FilingProjectionRef, ...],
+) -> tuple[str, ...]:
+    """Render the generated-versus-declared projection set mismatch, if any."""
+    missing = tuple(sorted(repr(reference) for reference in set(declared_refs) - set(generated_refs)))
+    undeclared = tuple(sorted(repr(reference) for reference in set(generated_refs) - set(declared_refs)))
+    if not missing and not undeclared:
+        return ()
+    return (
+        "generated export layouts must exactly biject projection declarations; "
+        + _projection_bijection_details(missing, undeclared),
+    )
+
+
+def _generated_projection_refs(revision: ModeloRevision) -> tuple[FilingProjectionRef | None, ...]:
+    """Collect the typed projection identities materialised by generated layouts."""
+    return tuple(
         field.projection_ref
         for layout in revision.export_layouts
         for record in layout.records
         for field in record.fields
         if field.kind is CasillaFieldKind.PROJECTION
     )
-    if any(reference is None for reference in generated):
-        failures.append(f"{prefix}: generated projection field lacks a typed projection_ref")
-        return
-    generated_refs = tuple(reference for reference in generated if reference is not None)
-    declared_refs = tuple(declaration.projection_ref for declaration in revision.projection_endpoints)
-    duplicate_generated = tuple(
-        sorted(repr(reference) for reference, count in Counter(generated_refs).items() if count > 1),
+
+
+def _duplicate_projection_refs(references: tuple[FilingProjectionRef, ...]) -> tuple[str, ...]:
+    """Return duplicate projection identities in deterministic display order."""
+    return tuple(
+        sorted(repr(reference) for reference, count in Counter(references).items() if count > 1),
     )
-    if duplicate_generated:
-        failures.append(
-            f"{prefix}: generated export layouts duplicate projection refs: {duplicate_generated!r}",
-        )
-    duplicate_declared = tuple(
-        sorted(repr(reference) for reference, count in Counter(declared_refs).items() if count > 1),
-    )
-    if duplicate_declared:
-        failures.append(
-            f"{prefix}: projection declarations are not unique: {duplicate_declared!r}",
-        )
-    missing = tuple(sorted(repr(reference) for reference in set(declared_refs) - set(generated_refs)))
-    undeclared = tuple(sorted(repr(reference) for reference in set(generated_refs) - set(declared_refs)))
-    if missing or undeclared:
-        details: list[str] = []
-        if missing:
-            details.append(f"missing declared refs {missing!r}")
-        if undeclared:
-            details.append(f"undeclared generated refs {undeclared!r}")
-        failures.append(
-            f"{prefix}: generated export layouts must exactly biject projection declarations; " + "; ".join(details),
-        )
+
+
+def _projection_bijection_details(
+    missing: tuple[str, ...],
+    undeclared: tuple[str, ...],
+) -> str:
+    """Format the two possible sides of a projection-bijection mismatch."""
+    details: list[str] = []
+    if missing:
+        details.append(f"missing declared refs {missing!r}")
+    if undeclared:
+        details.append(f"undeclared generated refs {undeclared!r}")
+    return "; ".join(details)
 
 
 def _validate_projection_endpoint_declarations(
@@ -187,38 +228,98 @@ def _validate_projection_endpoint_declarations(
     references_by_casilla: dict[CasillaId, list[FilingProjectionRef]] = {}
     declarations_by_ref = revision.projection_endpoint_index()
     for reference, declarations in declarations_by_ref.items():
-        if len(declarations) != 1:
-            failures.append(
-                f"{prefix}: projection_ref {reference!r} is admitted by {len(declarations)} projection declarations; "
-                "expected exactly one",
-            )
-        for declaration in declarations:
-            _validate_projection_endpoint_declaration_evidence(
-                failures,
-                prefix=prefix,
-                revision=revision,
-                declaration=declaration,
-                legal_refs=legal_refs,
-                source_refs=source_refs,
-                evidence=evidence,
-            )
-        casilla_id = filing_projection_ref_casilla_id(reference)
-        if casilla_id is None:
-            continue
-        references_by_casilla.setdefault(casilla_id, []).append(reference)
-        if casilla_id not in casillas:
-            failures.append(f"{prefix}: projection_ref {reference!r} references unknown casilla {casilla_id!r}")
-            continue
-        casilla = casilla_by_id[casilla_id]
-        if casilla.input_kind is not InputKind.PROJECTION_ONLY:
-            failures.append(
-                f"{prefix}: projection_ref {reference!r} references casilla {casilla_id!r} that is not projection_only",
-            )
+        _validate_projection_endpoint_reference(
+            failures,
+            prefix=prefix,
+            revision=revision,
+            reference=reference,
+            declarations=declarations,
+            casillas=casillas,
+            casilla_by_id=casilla_by_id,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            evidence=evidence,
+            references_by_casilla=references_by_casilla,
+        )
+    _validate_projection_endpoint_casilla_multiplicity(
+        failures,
+        prefix=prefix,
+        references_by_casilla=references_by_casilla,
+    )
+    _validate_undeclared_projection_endpoint_casillas(
+        failures,
+        prefix=prefix,
+        revision=revision,
+        references_by_casilla=references_by_casilla,
+    )
+
+
+def _validate_projection_endpoint_reference(
+    failures: list[str],
+    *,
+    prefix: str,
+    revision: ModeloRevision,
+    reference: FilingProjectionRef,
+    declarations: tuple[ProjectionEndpointDeclaration, ...],
+    casillas: set[CasillaId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+    legal_refs: Mapping[str, LegalReference],
+    source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
+    references_by_casilla: dict[CasillaId, list[FilingProjectionRef]],
+) -> None:
+    """Validate one endpoint identity and index its numbered casilla."""
+    if len(declarations) != 1:
+        failures.append(
+            f"{prefix}: projection_ref {reference!r} is admitted by {len(declarations)} projection declarations; "
+            "expected exactly one",
+        )
+    for declaration in declarations:
+        _validate_projection_endpoint_declaration_evidence(
+            failures,
+            prefix=prefix,
+            revision=revision,
+            declaration=declaration,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            evidence=evidence,
+        )
+    casilla_id = filing_projection_ref_casilla_id(reference)
+    if casilla_id is None:
+        return
+    references_by_casilla.setdefault(casilla_id, []).append(reference)
+    if casilla_id not in casillas:
+        failures.append(f"{prefix}: projection_ref {reference!r} references unknown casilla {casilla_id!r}")
+        return
+    casilla = casilla_by_id[casilla_id]
+    if casilla.input_kind is not InputKind.PROJECTION_ONLY:
+        failures.append(
+            f"{prefix}: projection_ref {reference!r} references casilla {casilla_id!r} that is not projection_only",
+        )
+
+
+def _validate_projection_endpoint_casilla_multiplicity(
+    failures: list[str],
+    *,
+    prefix: str,
+    references_by_casilla: Mapping[CasillaId, list[FilingProjectionRef]],
+) -> None:
+    """Require each numbered endpoint casilla to have one projection identity."""
     for casilla_id, references in references_by_casilla.items():
         if len(references) != 1:
             failures.append(
                 f"{prefix}: projection endpoint casilla {casilla_id!r} is addressed by multiple projection_refs",
             )
+
+
+def _validate_undeclared_projection_endpoint_casillas(
+    failures: list[str],
+    *,
+    prefix: str,
+    revision: ModeloRevision,
+    references_by_casilla: Mapping[CasillaId, list[FilingProjectionRef]],
+) -> None:
+    """Require every projection-only casilla to have a revision declaration."""
     undeclared = tuple(
         casilla.id
         for casilla in revision.casillas
@@ -363,6 +464,36 @@ def _validate_export_field(
     :class:`~cadrumo.domain.calculations.registry.BindingId`, and respect literal
     byte-length constraints for its parent export record encoding.
     """
+    _validate_export_field_references(
+        failures,
+        prefix=prefix,
+        record=record,
+        field=field,
+        casillas=casillas,
+        casilla_by_id=casilla_by_id,
+        legal_refs=legal_refs,
+        source_refs=source_refs,
+        evidence=evidence,
+    )
+    if field.binding is not None and field.binding not in bindings:
+        failures.append(f"{prefix}: export field {field.id!r} references unknown binding {field.binding!r}")
+    _validate_export_field_literal_length(failures, prefix=prefix, record=record, field=field)
+    validate_draft_field_slot_width(failures, prefix=prefix, field=field)
+
+
+def _validate_export_field_references(
+    failures: list[str],
+    *,
+    prefix: str,
+    record: ExportRecordDefinition,
+    field: ExportFieldDefinition,
+    casillas: set[CasillaId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+    legal_refs: Mapping[str, LegalReference],
+    source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
+) -> None:
+    """Validate an export field's evidence and casilla ownership references."""
     owner = f"export field {field.id}"
     failures.extend(_missing_refs(prefix, owner, field.legal_refs, legal_refs, "legal"))
     failures.extend(_missing_refs(prefix, owner, field.source_refs, source_refs, "source"))
@@ -377,8 +508,16 @@ def _validate_export_field(
         and not _is_binding_record_template_field(record, field)
     ):
         failures.append(f"{prefix}: export field {field.id!r} is not declared by casilla {endpoint_casilla_id!r}")
-    if field.binding is not None and field.binding not in bindings:
-        failures.append(f"{prefix}: export field {field.id!r} references unknown binding {field.binding!r}")
+
+
+def _validate_export_field_literal_length(
+    failures: list[str],
+    *,
+    prefix: str,
+    record: ExportRecordDefinition,
+    field: ExportFieldDefinition,
+) -> None:
+    """Require literal text to fit its declared encoded field width."""
     if field.kind == CasillaFieldKind.LITERAL and field.literal is not None and field.length is not None:
         literal_length = len(field.literal.encode(record.encoding))
         if literal_length > field.length:
@@ -386,7 +525,6 @@ def _validate_export_field(
                 f"{prefix}: export field {field.id!r} literal length {literal_length} exceeds "
                 f"declared length {field.length}",
             )
-    validate_draft_field_slot_width(failures, prefix=prefix, field=field)
 
 
 def _is_binding_record_template_field(record: ExportRecordDefinition, field: ExportFieldDefinition) -> bool:

@@ -88,35 +88,59 @@ def select_revision(
         revision_id: Optional explicit revision id; restricts candidates to
             the matching revision when supplied.
     """
-    candidates: list[ModeloRevision] = []
-    for revision in modelo.revisions.values():
-        if revision_id is not None and revision.id != revision_id:
-            continue
-        if not revision.period_selector.includes_year(filing_year):
-            continue
-        # Case-insensitive comparison is intentional: _resolve_period() in the
-        # declaracion parser calls .upper() on every period string before it
-        # reaches the registry, producing "ALTA"/"MODIFICACION"/"BAJA" for M036
-        # whose canonical registry periods are lowercase.  All other period
-        # literal formats are case-invariant, and the shared matcher also lets
-        # symbolic EVENT-N selectors cover concrete EVENT-1/EVENT-2 operator
-        # scopes.
-        #
-        # This function still returns the caller's token unchanged; the
-        # canonical form is resolved once at the snapshot boundary
-        # (_build_validated_snapshot routes through registry_period_for_request).
-        # That normalisation is what keeps a case-insensitive match here from
-        # becoming a downstream regression: consumers such as
-        # relation_source_requirements compare the snapshot's period with exact
-        # membership against each relation's target_periods, so a raw "0a" would
-        # select this revision while activating none of its relations. Do not
-        # drop the snapshot-side normalisation on the strength of this
-        # comparison being case-insensitive.
-        if selector_token_for_request(revision.period_selector.periods, period) is None:
-            continue
-        if on is not None and (revision.valid_from > on or (revision.valid_to is not None and revision.valid_to < on)):
-            continue
-        candidates.append(revision)
+    candidates = [
+        revision
+        for revision in modelo.revisions.values()
+        if _revision_matches_request(
+            revision,
+            filing_year=filing_year,
+            period=period,
+            on=on,
+            revision_id=revision_id,
+        )
+    ]
+    return _select_single_revision(
+        modelo,
+        candidates,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+    )
+
+
+def _revision_matches_request(
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+    period: str,
+    on: date | None,
+    revision_id: RevisionId | None,
+) -> bool:
+    if revision_id is not None and revision.id != revision_id:
+        return False
+    if not revision.period_selector.includes_year(filing_year):
+        return False
+    # Case-insensitive comparison is intentional: _resolve_period() in the
+    # declaracion parser calls .upper() on every period string before it reaches
+    # the registry, producing "ALTA"/"MODIFICACION"/"BAJA" for M036 whose
+    # canonical registry periods are lowercase. The shared matcher also lets
+    # symbolic EVENT-N selectors cover concrete EVENT-1/EVENT-2 scopes.
+    #
+    # The caller's token remains unchanged; canonical normalisation happens at
+    # the snapshot boundary, where relation consumers compare exact tokens.
+    if selector_token_for_request(revision.period_selector.periods, period) is None:
+        return False
+    return on is None or (revision.valid_from <= on and (revision.valid_to is None or on <= revision.valid_to))
+
+
+def _select_single_revision(
+    modelo: ModeloDefinition,
+    candidates: list[ModeloRevision],
+    *,
+    filing_year: int,
+    period: str,
+    revision_id: RevisionId | None,
+) -> ModeloRevision:
     if not candidates:
         raise NoRevisionForPeriodError(
             modelo_id=modelo.id,

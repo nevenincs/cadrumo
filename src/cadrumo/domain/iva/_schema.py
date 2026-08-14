@@ -35,6 +35,18 @@ from ...core.parsing import parse_iso8601_date
 from ._errors import IvaValidationError
 
 
+def validate_orden_module_identities(modulos: tuple["ModuloOrdenAnual", ...]) -> None:
+    if not 1 <= len(modulos) <= 7:
+        raise IvaValidationError("an Orden activity must declare one through seven modules")
+    if tuple(module.order for module in modulos) != tuple(range(1, len(modulos) + 1)):
+        raise IvaValidationError("an Orden activity module identities must be complete and ordered")
+    if any(module.coefficient <= 0 for module in modulos):
+        raise IvaValidationError("an Orden activity module must have a positive coefficient")
+    identities = tuple(module.identity for module in modulos)
+    if len(set(identities)) != len(identities):
+        raise IvaValidationError("an Orden activity contains duplicate module identities")
+
+
 class IvaCategory(StrEnum):
     """Closed catalogue of Spanish IVA situations.
 

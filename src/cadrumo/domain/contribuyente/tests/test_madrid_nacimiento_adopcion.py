@@ -20,7 +20,7 @@ from decimal import Decimal
 import pytest
 
 from ....core import DescendantRelacion
-from ..family import (
+from .. import (
     DescendantInfo,
     RentaFamilyProfile,
     within_multi_year_applicability_window,

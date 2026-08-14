@@ -1,4 +1,4 @@
-"""Real-behavior tests for the consolidated _coerce_iso_date_field helper.
+"""Real-behavior tests for the consolidated coerce_iso_date_field helper.
 
 Verifies that each of the three pydantic models that use _parse_date
 (@field_validator) share identical input/output contracts:
@@ -15,33 +15,34 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import DescendantRelacion
-from ..family import DescendantInfo, RentaAscendantProfile, RentaDescendantProfile, _coerce_iso_date_field
+from .. import DescendantInfo, RentaAscendantProfile, RentaDescendantProfile
+from .._family_types import coerce_iso_date_field
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-# ── _coerce_iso_date_field unit contract ──────────────────────────────────────
+# ── coerce_iso_date_field unit contract ──────────────────────────────────────
 
 
 def test_coerce_iso_date_field_none_passthrough() -> None:
-    result = _coerce_iso_date_field(None)
+    result = coerce_iso_date_field(None)
     assert result is None
 
 
 def test_coerce_iso_date_field_parses_iso_string() -> None:
-    result = _coerce_iso_date_field("2024-03-15")
+    result = coerce_iso_date_field("2024-03-15")
     assert result == date(2024, 3, 15)
 
 
 def test_coerce_iso_date_field_passes_through_date_object() -> None:
     d = date(2023, 1, 1)
-    result = _coerce_iso_date_field(d)
+    result = coerce_iso_date_field(d)
     assert result is d
 
 
 def test_coerce_iso_date_field_raises_on_bad_format() -> None:
     with pytest.raises(ValueError, match="not a valid ISO-8601 date"):
-        _coerce_iso_date_field("15/03/2024")
+        coerce_iso_date_field("15/03/2024")
 
 
 # ── DescendantInfo: birth_date and entry-event date fields ────────────────────

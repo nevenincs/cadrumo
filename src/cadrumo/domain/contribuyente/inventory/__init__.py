@@ -445,47 +445,78 @@ def _compute_fifo(ledger: InventoryLedger) -> InventoryValuationResult:
 
 
 def _compute_weighted_average(ledger: InventoryLedger) -> InventoryValuationResult:
+    pools = _weighted_average_opening_pools(ledger)
+    cogs_value = _ZERO
+    purchase_value = _ZERO
+    for movement in _sorted_movements(ledger):
+        purchase_delta, cogs_delta = _apply_weighted_average_movement(ledger, movement, pools)
+        purchase_value += purchase_delta
+        cogs_value += cogs_delta
+    layers = _weighted_average_layers(ledger, pools)
+    return InventoryValuationResult(
+        closing_layers=layers,
+        closing_value=_quantize(sum((quantity_value[1] for quantity_value in pools.values()), _ZERO)),
+        cogs_value=_quantize(cogs_value),
+        purchase_value=_quantize(purchase_value),
+    )
+
+
+def _weighted_average_opening_pools(ledger: InventoryLedger) -> dict[str, tuple[Decimal, Decimal]]:
     pools: dict[str, tuple[Decimal, Decimal]] = {}
     for layer in _opening_layers(ledger):
         quantity, value = pools.get(layer.sku, (_ZERO, _ZERO))
         pools[layer.sku] = (quantity + layer.quantity, value + layer.quantity * layer.unit_cost)
-    cogs_value = _ZERO
-    purchase_value = _ZERO
-    for movement in _sorted_movements(ledger):
-        quantity, value = pools.get(movement.sku, (_ZERO, _ZERO))
-        if movement.kind in {MovementKind.OPENING, MovementKind.PURCHASE}:
-            unit_cost = movement.resolved_unit_cost
-            movement_value = movement.quantity * unit_cost
-            quantity += movement.quantity
-            value += movement_value
-            pools[movement.sku] = (quantity, value)
-            if movement.kind is MovementKind.PURCHASE:
-                purchase_value += movement_value
-            continue
-        if movement.kind is MovementKind.COGS:
-            if movement.quantity > quantity:
-                raise InventoryLedgerError(
-                    "inventory movement would consume more stock than available",
-                    context={
-                        "actividad_id": ledger.actividad_id,
-                        "movement_id": movement.movement_id,
-                        "available_quantity": str(quantity),
-                        "requested_quantity": str(movement.quantity),
-                    },
-                )
-            average = _ZERO if quantity == _ZERO else value / quantity
-            consumed = movement.quantity * average
-            quantity -= movement.quantity
-            value -= consumed
-            pools[movement.sku] = (quantity, value)
-            cogs_value += consumed
-            continue
-        if movement.kind is MovementKind.COUNT:
-            average = _ZERO if quantity == _ZERO else value / quantity
-            quantity = movement.quantity
-            value = quantity * average
-            pools[movement.sku] = (quantity, value)
-    layers = tuple(
+    return pools
+
+
+def _apply_weighted_average_movement(
+    ledger: InventoryLedger,
+    movement: MovementRecord,
+    pools: dict[str, tuple[Decimal, Decimal]],
+) -> tuple[Decimal, Decimal]:
+    quantity, value = pools.get(movement.sku, (_ZERO, _ZERO))
+    if movement.kind in {MovementKind.OPENING, MovementKind.PURCHASE}:
+        unit_cost = movement.resolved_unit_cost
+        movement_value = movement.quantity * unit_cost
+        pools[movement.sku] = (quantity + movement.quantity, value + movement_value)
+        purchase_delta = movement_value if movement.kind is MovementKind.PURCHASE else _ZERO
+        return purchase_delta, _ZERO
+    if movement.kind is MovementKind.COGS:
+        return _apply_weighted_average_cogs(ledger, movement, quantity, value, pools)
+    if movement.kind is MovementKind.COUNT:
+        average = _ZERO if quantity == _ZERO else value / quantity
+        pools[movement.sku] = (movement.quantity, movement.quantity * average)
+    return _ZERO, _ZERO
+
+
+def _apply_weighted_average_cogs(
+    ledger: InventoryLedger,
+    movement: MovementRecord,
+    quantity: Decimal,
+    value: Decimal,
+    pools: dict[str, tuple[Decimal, Decimal]],
+) -> tuple[Decimal, Decimal]:
+    if movement.quantity > quantity:
+        raise InventoryLedgerError(
+            "inventory movement would consume more stock than available",
+            context={
+                "actividad_id": ledger.actividad_id,
+                "movement_id": movement.movement_id,
+                "available_quantity": str(quantity),
+                "requested_quantity": str(movement.quantity),
+            },
+        )
+    average = _ZERO if quantity == _ZERO else value / quantity
+    consumed = movement.quantity * average
+    pools[movement.sku] = (quantity - movement.quantity, value - consumed)
+    return _ZERO, consumed
+
+
+def _weighted_average_layers(
+    ledger: InventoryLedger,
+    pools: dict[str, tuple[Decimal, Decimal]],
+) -> tuple[StockLayer, ...]:
+    return tuple(
         StockLayer(
             sku=sku,
             quantity=quantity,
@@ -494,12 +525,6 @@ def _compute_weighted_average(ledger: InventoryLedger) -> InventoryValuationResu
         )
         for sku, (quantity, value) in sorted(pools.items())
         if quantity > _ZERO
-    )
-    return InventoryValuationResult(
-        closing_layers=layers,
-        closing_value=_quantize(sum((quantity_value[1] for quantity_value in pools.values()), _ZERO)),
-        cogs_value=_quantize(cogs_value),
-        purchase_value=_quantize(purchase_value),
     )
 
 

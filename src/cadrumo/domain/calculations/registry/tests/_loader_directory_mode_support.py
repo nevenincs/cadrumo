@@ -169,6 +169,12 @@ def write_fragmented_revision(revision_dir: Path, revision_text: str) -> None:
     """
     lines = revision_text.splitlines(keepends=True)
     header_indexes = [index for index, line in enumerate(lines) if _REVISION_HEADER_RE.match(line)]
+    starts = _revision_block_starts(lines, header_indexes)
+    scalar_blocks, section_blocks = _partition_revision_blocks(lines, header_indexes, starts)
+    _write_fragmented_revision_blocks(revision_dir, scalar_blocks, section_blocks)
+
+
+def _revision_block_starts(lines: list[str], header_indexes: list[int]) -> list[int]:
     starts: list[int] = []
     for position, header_index in enumerate(header_indexes):
         start = header_index
@@ -176,6 +182,14 @@ def write_fragmented_revision(revision_dir: Path, revision_text: str) -> None:
         while start - 1 >= lower and lines[start - 1].lstrip().startswith("#"):
             start -= 1
         starts.append(start)
+    return starts
+
+
+def _partition_revision_blocks(
+    lines: list[str],
+    header_indexes: list[int],
+    starts: list[int],
+) -> tuple[list[str], dict[str, list[str]]]:
     scalar_blocks: list[str] = []
     section_blocks: dict[str, list[str]] = {}
     for position, header_index in enumerate(header_indexes):
@@ -188,6 +202,14 @@ def write_fragmented_revision(revision_dir: Path, revision_text: str) -> None:
             section_blocks.setdefault(field, []).append(block)
         else:
             scalar_blocks.append(block)
+    return scalar_blocks, section_blocks
+
+
+def _write_fragmented_revision_blocks(
+    revision_dir: Path,
+    scalar_blocks: list[str],
+    section_blocks: dict[str, list[str]],
+) -> None:
     revision_dir.mkdir(parents=True, exist_ok=True)
     (revision_dir / "revision.toml").write_text(
         "".join(scalar_blocks).rstrip("\n") + "\n", encoding="utf-8", newline="\n"

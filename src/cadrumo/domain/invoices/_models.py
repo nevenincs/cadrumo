@@ -16,7 +16,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final, Self, override
+from typing import TYPE_CHECKING, Final, Self, cast, override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
@@ -180,16 +180,30 @@ def _coerce_datetime(value: object) -> datetime:
     raise InvoiceValidationError("expected a datetime or ISO-8601 string")
 
 
+def _coerce_optional[T](value: object, converter: Callable[[object], T]) -> T | None:
+    if value is None:
+        return None
+    return converter(value)
+
+
+def _coerce_optional_date(value: object) -> date | None:
+    return _coerce_optional(value, _coerce_date)
+
+
+def _coerce_optional_datetime(value: object) -> datetime | None:
+    return _coerce_optional(value, _coerce_datetime)
+
+
 def _normalise_invoice_dates(payload: dict[str, object]) -> dict[str, object]:
-    if "issued_at" in payload:
-        payload["issued_at"] = _coerce_date(payload["issued_at"])
-    if payload.get("fx_rate_date") is not None:
-        payload["fx_rate_date"] = _coerce_date(payload["fx_rate_date"])
-    if payload.get("operation_date") is not None:
-        payload["operation_date"] = _coerce_date(payload["operation_date"])
-    for stamp in ("created_at", "updated_at"):
-        if payload.get(stamp) is not None:
-            payload[stamp] = _coerce_datetime(payload[stamp])
+    for key, converter in (
+        ("issued_at", _coerce_date),
+        ("fx_rate_date", _coerce_optional_date),
+        ("operation_date", _coerce_optional_date),
+        ("created_at", _coerce_optional_datetime),
+        ("updated_at", _coerce_optional_datetime),
+    ):
+        if key in payload:
+            payload[key] = converter(payload[key])
     return payload
 
 
@@ -237,27 +251,26 @@ def _judging[T](field: str, judge: Callable[[], T]) -> T:
 
 
 def _normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, object]:
-    if "counterparty_country" in payload and isinstance(payload["counterparty_country"], str):
-        country_raw = payload["counterparty_country"]
+    country_raw = payload.get("counterparty_country")
+    if isinstance(country_raw, str):
         payload["counterparty_country"] = _judging(
             "counterparty_country",
             lambda: validate_country_code(country_raw),
         )
-    if "counterparty_tax_id" in payload and isinstance(payload["counterparty_tax_id"], str):
-        tax_id_raw = tax_id_identity_token(payload["counterparty_tax_id"])
+    tax_id = payload.get("counterparty_tax_id")
+    if isinstance(tax_id, str):
+        tax_id_raw = tax_id_identity_token(tax_id)
         country = payload.get("counterparty_country")
-        if isinstance(country, str) and country == "ES":
-            payload["counterparty_tax_id"] = _judging(
-                "counterparty_tax_id",
-                lambda: validate_spanish_tax_id(tax_id_raw),
-            )
-        elif isinstance(country, str):
-            payload["counterparty_tax_id"] = _judging(
-                "counterparty_tax_id",
-                lambda: validate_iva_number(tax_id_raw, country),
-            )
-        else:
-            payload["counterparty_tax_id"] = tax_id_raw
+        country_key = country if isinstance(country, str) else None
+        validators: Mapping[str | None, Callable[[str], str]] = {
+            None: lambda value: value,
+            "ES": validate_spanish_tax_id,
+        }
+        validator = validators.get(
+            country_key,
+            lambda value: validate_iva_number(value, cast(str, country_key)),
+        )
+        payload["counterparty_tax_id"] = _judging("counterparty_tax_id", lambda: validator(tax_id_raw))
     # Every structured creation path -- bulk import, the wizard, the CLI, the
     # ingestion mapper -- reaches this one normaliser, so reading the
     # identification off the identifier HERE is what makes the fact present on
@@ -308,30 +321,44 @@ def _bounded_rejected_value(value: object) -> str:
     return f"{text[:_REJECTED_VALUE_ECHO_LIMIT]}... ({len(text)} chars)"
 
 
+def _raise_first_invoice_violation(violations: Iterable[tuple[bool, str]]) -> None:
+    for violated, message in violations:
+        if violated:
+            raise InvoiceValidationError(message)
+
+
+def _require_optional_non_negative(value: Decimal | None, message: str) -> None:
+    if value is not None and value < Decimal("0"):
+        raise InvoiceValidationError(message)
+
+
+def _require_equal(actual: Decimal, expected: Decimal, message: str) -> None:
+    if actual != expected:
+        raise InvoiceValidationError(message)
+
+
 def _normalise_invoice_monetary_fields(payload: dict[str, object]) -> dict[str, object]:
-    for key in ("grand_total", "base_total", "iva_total"):
-        if key in payload:
-            payload[key] = coerce_decimal(payload[key])
-    for key in ("retention_rate", "retention_amount", "recargo_amount", "suplido_amount", "fx_rate"):
-        if key in payload and payload[key] is not None:
-            # These three are `Decimal | None`, and that optionality is what makes
-            # a silent failure possible here where the loop above is safe. The
-            # `is not None` test rules out ABSENT, not UNPARSEABLE, and
-            # `coerce_decimal` returns None for both -- so writing its result back
-            # unchecked turns an unreadable retención rate into "the taxpayer did
-            # not have one", which pydantic then accepts because None is a legal
-            # value for the field. The totals above coerce to None the same way and
-            # are refused only because they are required. Refusing here matches
-            # `_normalise_invoice_currency` directly above, which raises on a
-            # malformed currency rather than dropping it.
-            coerced = coerce_decimal(payload[key])
-            if coerced is None:
-                raise InvoiceValidationError(
-                    f"{key} could not be parsed as a decimal: {_bounded_rejected_value(payload[key])}. "
-                    "Leave it out to declare it absent; a value that cannot be read "
-                    "is not the same as no value.",
-                )
-            payload[key] = coerced
+    optional_fields = frozenset({"retention_rate", "retention_amount", "recargo_amount", "suplido_amount", "fx_rate"})
+    for key in (
+        "grand_total",
+        "base_total",
+        "iva_total",
+        "retention_rate",
+        "retention_amount",
+        "recargo_amount",
+        "suplido_amount",
+        "fx_rate",
+    ):
+        if key not in payload:
+            continue
+        coerced = coerce_decimal(payload[key])
+        if (coerced is None, key in optional_fields) == (True, True):
+            raise InvoiceValidationError(
+                f"{key} could not be parsed as a decimal: {_bounded_rejected_value(payload[key])}. "
+                "Leave it out to declare it absent; a value that cannot be read "
+                "is not the same as no value.",
+            )
+        payload[key] = coerced
     return payload
 
 
@@ -347,6 +374,34 @@ _INVOICE_ID_REQUIRED_FIELDS = frozenset(
 )
 
 
+_INVOICE_IDENTITY_TYPE_RULES: Final[tuple[tuple[str, type[object], str], ...]] = (
+    ("kind", InvoiceKind, "kind must be an InvoiceKind"),
+    ("invoice_number", str, "invoice_number must be a string"),
+    ("issued_at", date, "issued_at must be a date"),
+    ("currency", str, "currency must be a string"),
+    ("grand_total", Decimal, "grand_total must be a Decimal"),
+)
+
+
+def _validated_invoice_identity_values(
+    payload: dict[str, object],
+) -> tuple[InvoiceKind, str, date, str | None, str, Decimal]:
+    for field, expected, message in _INVOICE_IDENTITY_TYPE_RULES:
+        if not isinstance(payload[field], expected):
+            raise InvoiceValidationError(message)
+    counterparty_tax_id = payload["counterparty_tax_id"]
+    if counterparty_tax_id is not None and not isinstance(counterparty_tax_id, str):
+        raise InvoiceValidationError("counterparty_tax_id must be a string or None")
+    return (
+        cast(InvoiceKind, payload["kind"]),
+        cast(str, payload["invoice_number"]),
+        cast(date, payload["issued_at"]),
+        counterparty_tax_id,
+        cast(str, payload["currency"]),
+        cast(Decimal, payload["grand_total"]),
+    )
+
+
 def _derive_invoice_id_when_complete(payload: dict[str, object]) -> dict[str, object]:
     # counterparty_tax_id is the one identity-bearing field with a declared
     # default (None, for a factura simplificada outside the RD 1619/2012
@@ -356,24 +411,9 @@ def _derive_invoice_id_when_complete(payload: dict[str, object]) -> dict[str, ob
     payload.setdefault("counterparty_tax_id", None)
     if not _INVOICE_ID_REQUIRED_FIELDS.issubset(payload):
         return payload
-    kind = payload["kind"]
-    invoice_number = payload["invoice_number"]
-    issued_at = payload["issued_at"]
-    counterparty_tax_id = payload["counterparty_tax_id"]
-    currency = payload["currency"]
-    grand_total = payload["grand_total"]
-    if not isinstance(kind, InvoiceKind):
-        raise InvoiceValidationError("kind must be an InvoiceKind")
-    if not isinstance(invoice_number, str):
-        raise InvoiceValidationError("invoice_number must be a string")
-    if not isinstance(issued_at, date):
-        raise InvoiceValidationError("issued_at must be a date")
-    if counterparty_tax_id is not None and not isinstance(counterparty_tax_id, str):
-        raise InvoiceValidationError("counterparty_tax_id must be a string or None")
-    if not isinstance(currency, str):
-        raise InvoiceValidationError("currency must be a string")
-    if not isinstance(grand_total, Decimal):
-        raise InvoiceValidationError("grand_total must be a Decimal")
+    kind, invoice_number, issued_at, counterparty_tax_id, currency, grand_total = _validated_invoice_identity_values(
+        payload
+    )
     derived = derive_invoice_id(
         kind=kind,
         invoice_number=invoice_number,
@@ -444,7 +484,7 @@ class InvoiceLine(BaseModel):
             return data
         payload = STR_KEYED_MAPPING_ADAPTER.validate_python(data)
         for key in ("quantity", "unit_price", "subtotal", "iva_amount"):
-            if key in payload and not isinstance(payload[key], Decimal):
+            if key in payload:
                 payload[key] = coerce_decimal(payload[key])
         if "iva_rate" in payload and isinstance(payload["iva_rate"], str):
             payload["iva_rate"] = IvaRate(payload["iva_rate"])
@@ -681,15 +721,18 @@ class Invoice(BaseModel):
         if not isinstance(data, Mapping):
             return data
         payload = STR_KEYED_MAPPING_ADAPTER.validate_python(data)
-        payload = normalise_invoice_enum_fields(payload)
-        payload = normalise_invoice_string_fields(payload)
-        payload = _normalise_invoice_dates(payload)
-        payload = _normalise_invoice_counterparty(payload)
-        payload = _normalise_invoice_currency(payload)
-        payload = _normalise_invoice_monetary_fields(payload)
-        payload = _derive_invoice_id_when_complete(payload)
-        payload = _normalise_invoice_collections(payload)
-        payload = _normalise_invoice_payment_id(payload)
+        for normalise in (
+            normalise_invoice_enum_fields,
+            normalise_invoice_string_fields,
+            _normalise_invoice_dates,
+            _normalise_invoice_counterparty,
+            _normalise_invoice_currency,
+            _normalise_invoice_monetary_fields,
+            _derive_invoice_id_when_complete,
+            _normalise_invoice_collections,
+            _normalise_invoice_payment_id,
+        ):
+            payload = normalise(payload)
         return payload
 
     @field_validator("base_total", "iva_total", "grand_total")
@@ -716,15 +759,29 @@ class Invoice(BaseModel):
         source without a rate converts nothing. A euro invoice carries none of
         them -- a stamp there would imply a conversion that never happened.
         """
-        stamp_present = self.fx_rate is not None or self.fx_rate_date is not None or self.fx_rate_source is not None
-        if self.currency == DEFAULT_CURRENCY and stamp_present:
-            raise InvoiceValidationError("a EUR invoice must not carry an fx conversion stamp")
-        if (self.fx_rate is None) != (self.fx_rate_date is None) or (self.fx_rate is None) != (
-            self.fx_rate_source is None
-        ):
-            raise InvoiceValidationError("fx_rate, fx_rate_date and fx_rate_source must be set together")
-        if self.fx_rate is not None and self.fx_rate <= Decimal("0"):
-            raise InvoiceValidationError("fx_rate must be strictly positive")
+        stamp_flags = (
+            self.fx_rate is not None,
+            self.fx_rate_date is not None,
+            self.fx_rate_source is not None,
+        )
+        stamp_present = any(stamp_flags)
+        fx_rate = self.fx_rate if self.fx_rate is not None else Decimal("0")
+        _raise_first_invoice_violation(
+            (
+                (
+                    (self.currency == DEFAULT_CURRENCY, stamp_present) == (True, True),
+                    "a EUR invoice must not carry an fx conversion stamp",
+                ),
+                (
+                    stamp_flags not in ((False, False, False), (True, True, True)),
+                    "fx_rate, fx_rate_date and fx_rate_source must be set together",
+                ),
+                (
+                    (stamp_flags[0], fx_rate <= Decimal("0")) == (True, True),
+                    "fx_rate must be strictly positive",
+                ),
+            ),
+        )
         return self
 
     @model_validator(mode="after")
@@ -757,20 +814,17 @@ class Invoice(BaseModel):
     def _validate_totals_and_exempt_invariants(self) -> Self:
         line_subtotal_sum = sum((line.subtotal for line in self.lines), start=Decimal("0"))
         line_iva_sum = sum((line.iva_amount for line in self.lines), start=Decimal("0"))
-        if self.base_total != line_subtotal_sum:
-            raise InvoiceValidationError("base_total must equal the exact sum of line subtotals")
-        if self.iva_total != line_iva_sum:
-            raise InvoiceValidationError("iva_total must equal the exact sum of line iva amounts")
+        _require_equal(self.base_total, line_subtotal_sum, "base_total must equal the exact sum of line subtotals")
+        _require_equal(self.iva_total, line_iva_sum, "iva_total must equal the exact sum of line iva amounts")
         recargo = self.recargo_amount or Decimal("0")
         suplido = self.suplido_amount or Decimal("0")
-        if self.grand_total != self.base_total + self.iva_total + recargo + suplido:
-            raise InvoiceValidationError(
-                "grand_total must equal base_total + iva_total + recargo_amount + suplido_amount exactly",
-            )
+        _require_equal(
+            self.grand_total,
+            self.base_total + self.iva_total + recargo + suplido,
+            "grand_total must equal base_total + iva_total + recargo_amount + suplido_amount exactly",
+        )
         all_non_numeric = all(iva_rate_slot_percentage(line.iva_rate) is None for line in self.lines)
         if all_non_numeric:
-            if self.iva_total != Decimal("0"):
-                raise InvoiceValidationError("iva_total must be zero when every line is EXEMPT or NOT_SUBJECT")
             # Checked before the grand-total equality below so the operator is
             # told which component is impossible, rather than being handed a
             # totals mismatch they would have to decompose themselves. The
@@ -779,14 +833,22 @@ class Invoice(BaseModel):
             # suplido is unrelated to whether the underlying supply is taxable
             # -- it is a disbursement made in the client's name (LIVA
             # art. 78.Tres.3.º) -- so it stays permitted here.
-            if recargo != Decimal("0"):
-                raise InvoiceValidationError(
-                    "recargo_amount must be zero when every line is EXEMPT or NOT_SUBJECT",
-                )
-            if self.grand_total != self.base_total + suplido:
-                raise InvoiceValidationError(
-                    "grand_total must equal base_total + suplido_amount when every line is EXEMPT or NOT_SUBJECT",
-                )
+            _raise_first_invoice_violation(
+                (
+                    (
+                        self.iva_total != Decimal("0"),
+                        "iva_total must be zero when every line is EXEMPT or NOT_SUBJECT",
+                    ),
+                    (
+                        recargo != Decimal("0"),
+                        "recargo_amount must be zero when every line is EXEMPT or NOT_SUBJECT",
+                    ),
+                    (
+                        self.grand_total != self.base_total + suplido,
+                        "grand_total must equal base_total + suplido_amount when every line is EXEMPT or NOT_SUBJECT",
+                    ),
+                ),
+            )
         return self
 
     @model_validator(mode="after")
@@ -824,8 +886,7 @@ class Invoice(BaseModel):
         proportion of nothing, and inferring the amount from it would
         manufacture a figure the document never stated.
         """
-        if self.retention_amount is not None and self.retention_amount < Decimal("0"):
-            raise InvoiceValidationError("retention_amount must be non-negative")
+        _require_optional_non_negative(self.retention_amount, "retention_amount must be non-negative")
         if self.retention_rate is not None:
             if self.retention_rate < Decimal("0") or self.retention_rate > Decimal("1"):
                 raise InvoiceValidationError(
@@ -882,8 +943,7 @@ class Invoice(BaseModel):
         """
         if self.recargo_amount is None:
             return self
-        if self.recargo_amount < Decimal("0"):
-            raise InvoiceValidationError("recargo_amount must be non-negative")
+        _require_optional_non_negative(self.recargo_amount, "recargo_amount must be non-negative")
         if self.recargo_amount > self.iva_total:
             raise InvoiceValidationError(
                 "recargo_amount must not exceed iva_total; every recargo tier is a smaller "
@@ -915,8 +975,7 @@ class Invoice(BaseModel):
         """
         if self.suplido_amount is None:
             return self
-        if self.suplido_amount < Decimal("0"):
-            raise InvoiceValidationError("suplido_amount must be non-negative")
+        _require_optional_non_negative(self.suplido_amount, "suplido_amount must be non-negative")
         return self
 
     @model_validator(mode="after")
@@ -964,34 +1023,43 @@ class Invoice(BaseModel):
         record nor any field on it can express; that axis is a declared,
         documented gap, not modelled here or anywhere on this class.
         """
-        if self.invoice_class is InvoiceClass.RECTIFICATIVA:
-            if not self.series:
-                raise InvoiceValidationError(
+        category = self.iva_category
+        missing_tax_id = self.counterparty_tax_id is None
+        category_value = getattr(category, "value", "")
+        relief_case = (self.invoice_class, self.kind) == (InvoiceClass.SIMPLIFICADA, InvoiceKind.ISSUED)
+        _raise_first_invoice_violation(
+            (
+                (
+                    (self.invoice_class is InvoiceClass.RECTIFICATIVA, not self.series) == (True, True),
                     "a factura rectificativa must be issued in a specific series (RD 1619/2012 art. 6.1.a.2.º)",
-                )
-            if not self.rectifies_invoice_number:
-                raise InvoiceValidationError(
+                ),
+                (
+                    (self.invoice_class is InvoiceClass.RECTIFICATIVA, not self.rectifies_invoice_number)
+                    == (True, True),
                     "a factura rectificativa must name the invoice it rectifies (LIVA art. 89)",
-                )
-        elif self.rectifies_invoice_number is not None:
-            raise InvoiceValidationError("rectifies_invoice_number only applies to a factura rectificativa")
-        if self.invoice_class is InvoiceClass.SIMPLIFICADA and self.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
-            raise InvoiceValidationError(
-                "a factura simplificada must not be issued for an entrega intracomunitaria exenta "
-                "(RD 1619/2012 art. 4.4.a); issue an ordinaria or rectificativa instead",
-            )
-        if self.counterparty_tax_id is None:
-            if self.invoice_class is not InvoiceClass.SIMPLIFICADA or self.kind is not InvoiceKind.ISSUED:
-                raise InvoiceValidationError(
+                ),
+                (
+                    (self.invoice_class is not InvoiceClass.RECTIFICATIVA, self.rectifies_invoice_number is not None)
+                    == (True, True),
+                    "rectifies_invoice_number only applies to a factura rectificativa",
+                ),
+                (
+                    (self.invoice_class, category) == (InvoiceClass.SIMPLIFICADA, IvaCategory.INTRA_COMMUNITY_SUPPLY),
+                    "a factura simplificada must not be issued for an entrega intracomunitaria exenta "
+                    "(RD 1619/2012 art. 4.4.a); issue an ordinaria or rectificativa instead",
+                ),
+                (
+                    (missing_tax_id, not relief_case) == (True, True),
                     "counterparty_tax_id is required unless invoice_class is SIMPLIFICADA and kind is ISSUED; "
                     "on a RECEIVED invoice it names the issuer's own identity, which stays mandatory",
-                )
-            category = self.iva_category
-            if category is not None and category in _SIMPLIFICADA_MANDATORY_TAX_ID_CATEGORIES:
-                raise InvoiceValidationError(
+                ),
+                (
+                    (missing_tax_id, category in _SIMPLIFICADA_MANDATORY_TAX_ID_CATEGORIES) == (True, True),
                     "counterparty_tax_id is required on a factura simplificada whose iva_category is "
-                    f"{category.value!r} (RD 1619/2012 art. 6.1.d)",
-                )
+                    f"{category_value!r} (RD 1619/2012 art. 6.1.d)",
+                ),
+            ),
+        )
         return self
 
     @model_validator(mode="after")
@@ -1071,16 +1139,23 @@ class Invoice(BaseModel):
     def _validate_oss_ioss_axes(self) -> Self:
         """Validate the optional OSS/IOSS projection axes used by Modelo 369."""
         has_oss_line_rate = any(line.oss_rate_kind is not None for line in self.lines)
-        if self.oss_ioss_regime is None and self.oss_transaction_kind is None:
-            if has_oss_line_rate:
-                raise InvoiceValidationError("oss_rate_kind requires invoice-level OSS/IOSS axes")
+        axis_flags = (self.oss_ioss_regime is None, self.oss_transaction_kind is None)
+        if axis_flags != (False, False):
+            _raise_first_invoice_violation(
+                (
+                    (
+                        (axis_flags, has_oss_line_rate) == ((True, True), True),
+                        "oss_rate_kind requires invoice-level OSS/IOSS axes",
+                    ),
+                    (
+                        axis_flags not in ((True, True), (False, False)),
+                        "oss_ioss_regime and oss_transaction_kind must be supplied together",
+                    ),
+                ),
+            )
             return self
-        if self.oss_ioss_regime is None or self.oss_transaction_kind is None:
-            raise InvoiceValidationError("oss_ioss_regime and oss_transaction_kind must be supplied together")
-        if self.kind is not InvoiceKind.ISSUED:
-            raise InvoiceValidationError("OSS/IOSS invoice projection only applies to issued invoices")
-        if self.counterparty_eu_member_state is None:
-            raise InvoiceValidationError("OSS/IOSS invoice projection requires an EU destination member state")
+        regime = cast(OssIossRegime, self.oss_ioss_regime)
+        transaction_kind = cast(TransactionKind, self.oss_transaction_kind)
 
         allowed_kinds_by_regime: Mapping[OssIossRegime, frozenset[TransactionKind]] = {
             OssIossRegime.EXTERNAL_SCHEME: frozenset({TransactionKind.EXTERNAL_SCHEME_SERVICES}),
@@ -1093,8 +1168,22 @@ class Invoice(BaseModel):
             ),
             OssIossRegime.IMPORT_SCHEME: frozenset({TransactionKind.IOSS_DISTANCE_SALE_LOW_VALUE}),
         }
-        if self.oss_transaction_kind not in allowed_kinds_by_regime[self.oss_ioss_regime]:
-            raise InvoiceValidationError("oss_transaction_kind is not valid for the supplied oss_ioss_regime")
+        _raise_first_invoice_violation(
+            (
+                (
+                    self.kind is not InvoiceKind.ISSUED,
+                    "OSS/IOSS invoice projection only applies to issued invoices",
+                ),
+                (
+                    self.counterparty_eu_member_state is None,
+                    "OSS/IOSS invoice projection requires an EU destination member state",
+                ),
+                (
+                    transaction_kind not in allowed_kinds_by_regime[regime],
+                    "oss_transaction_kind is not valid for the supplied oss_ioss_regime",
+                ),
+            ),
+        )
         return self
 
     @property
@@ -1129,19 +1218,30 @@ class Invoice(BaseModel):
 
 def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
     """Deduplicate-preserve-order and validate the shape of linked transaction IDs."""
-    if isinstance(value, str | bytes):
-        raise InvoiceValidationError("linked_transaction_ids must be a sequence of IDs, not a single string")
-    if not isinstance(value, Iterable):
-        raise InvoiceValidationError("linked_transaction_ids must be iterable")
+    _raise_first_invoice_violation(
+        (
+            (
+                isinstance(value, str | bytes),
+                "linked_transaction_ids must be a sequence of IDs, not a single string",
+            ),
+            (not isinstance(value, Iterable), "linked_transaction_ids must be iterable"),
+        ),
+    )
     seen: dict[str, None] = {}
     for item in OBJECT_TUPLE_ADAPTER.validate_python(value):
-        if not isinstance(item, str):
-            raise InvoiceValidationError("each linked_transaction_id must be a string")
-        normalized = item.strip().lower()
-        if not _is_hex_digest(normalized, length=64):
-            raise InvoiceValidationError("each linked_transaction_id must be a 64-character lowercase hex digest")
-        if normalized not in seen:
-            seen[normalized] = None
+        _raise_first_invoice_violation(
+            ((not isinstance(item, str), "each linked_transaction_id must be a string"),),
+        )
+        normalized = cast(str, item).strip().lower()
+        _raise_first_invoice_violation(
+            (
+                (
+                    not _is_hex_digest(normalized, length=64),
+                    "each linked_transaction_id must be a 64-character lowercase hex digest",
+                ),
+            ),
+        )
+        seen.setdefault(normalized, None)
     return tuple(seen.keys())
 
 

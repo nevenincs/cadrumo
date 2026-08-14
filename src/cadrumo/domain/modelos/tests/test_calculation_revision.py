@@ -80,6 +80,7 @@ def _general_m303_filing_evidence(period: Period) -> M303FilingInstanceEvidence:
     return M303FilingInstanceEvidence(
         period=period,
         joint_return_elected=True,
+        annual_volume_nonzero=False,
         insolvency=None,
         exonerado_390=M303Exonerado390FilingEvidence(
             applicable=False,

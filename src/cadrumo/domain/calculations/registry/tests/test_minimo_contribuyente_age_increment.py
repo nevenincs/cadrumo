@@ -116,8 +116,6 @@ def _calc_2024(birth_date: date) -> Mapping[CasillaId, Decimal]:
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_2024,
         date_binding_values={"renta-2024-profile-taxpayer-birth-date": birth_date},
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
     return result.values
 
@@ -154,8 +152,6 @@ def _calc_2025(birth_date: date) -> Mapping[CasillaId, Decimal]:
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_2025,
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": birth_date},
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
     return result.values
 

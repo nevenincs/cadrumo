@@ -23,13 +23,79 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ....core import CasillaId
-from ._schema import AlgorithmProviderDefinition, LegalReference, ModeloRevision, SourceReference
+from ._schema import (
+    AlgorithmBindingDefinition,
+    AlgorithmProviderDefinition,
+    LegalReference,
+    ModeloRevision,
+    SourceReference,
+)
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
 
 
 def _format_schema_keys(values: set[str]) -> str:
     return ", ".join(repr(value) for value in sorted(values))
+
+
+def _validate_algorithm_binding_provider(
+    failures: list[str],
+    *,
+    prefix: str,
+    owner: str,
+    binding: AlgorithmBindingDefinition,
+    provider_by_id: Mapping[str, AlgorithmProviderDefinition],
+) -> None:
+    provider = provider_by_id.get(binding.provider)
+    if provider is None:
+        failures.append(f"{prefix}: {owner} references unknown provider {binding.provider!r}")
+        return
+    declared_inputs = set(provider.allowed_input_schema)
+    bound_inputs = set(binding.inputs)
+    missing_inputs = declared_inputs - bound_inputs
+    unknown_inputs = bound_inputs - declared_inputs
+    if missing_inputs:
+        failures.append(f"{prefix}: {owner} omits provider input(s) {_format_schema_keys(missing_inputs)}")
+    if unknown_inputs:
+        failures.append(
+            f"{prefix}: {owner} maps input(s) {_format_schema_keys(unknown_inputs)} "
+            f"not declared by provider {binding.provider!r}",
+        )
+
+    declared_outputs = set(provider.output_schema)
+    bound_outputs = set(binding.output_casilla_ids)
+    missing_outputs = declared_outputs - bound_outputs
+    unknown_outputs = bound_outputs - declared_outputs
+    if missing_outputs:
+        failures.append(f"{prefix}: {owner} omits provider output(s) {_format_schema_keys(missing_outputs)}")
+    if unknown_outputs:
+        failures.append(
+            f"{prefix}: {owner} maps output(s) {_format_schema_keys(unknown_outputs)} "
+            f"not declared by provider {binding.provider!r}",
+        )
+
+
+def _validate_algorithm_binding_values(
+    failures: list[str],
+    *,
+    prefix: str,
+    owner: str,
+    binding: AlgorithmBindingDefinition,
+    casillas: set[CasillaId],
+    resolvable_values: set[str],
+    parameters: set[str],
+) -> None:
+    if binding.target_casilla_id not in casillas:
+        failures.append(f"{prefix}: {owner} targets unknown casilla {binding.target_casilla_id!r}")
+    for input_name, input_value in binding.inputs.items():
+        if input_value not in resolvable_values:
+            failures.append(f"{prefix}: {owner} input {input_name!r} references unknown value {input_value!r}")
+    for output_name, output_value in binding.output_casilla_ids.items():
+        if output_value not in casillas:
+            failures.append(f"{prefix}: {owner} output {output_name!r} references unknown casilla {output_value!r}")
+    for constant in binding.constants:
+        if constant not in parameters:
+            failures.append(f"{prefix}: {owner} references unknown constant {constant!r}")
 
 
 def validate_algorithm_provider_section(
@@ -85,45 +151,19 @@ def validate_algorithm_binding_section(
         failures.extend(
             evidence.require_source_tier(prefix, owner, alg_binding.source_refs, "official_source_guidance")
         )
-        provider = provider_by_id.get(alg_binding.provider)
-        if provider is None:
-            failures.append(f"{prefix}: {owner} references unknown provider {alg_binding.provider!r}")
-        else:
-            declared_inputs = set(provider.allowed_input_schema)
-            bound_inputs = set(alg_binding.inputs)
-            missing_inputs = declared_inputs - bound_inputs
-            unknown_inputs = bound_inputs - declared_inputs
-            if missing_inputs:
-                failures.append(
-                    f"{prefix}: {owner} omits provider input(s) {_format_schema_keys(missing_inputs)}",
-                )
-            if unknown_inputs:
-                failures.append(
-                    f"{prefix}: {owner} maps input(s) {_format_schema_keys(unknown_inputs)} "
-                    f"not declared by provider {alg_binding.provider!r}",
-                )
-
-            declared_outputs = set(provider.output_schema)
-            bound_outputs = set(alg_binding.output_casilla_ids)
-            missing_outputs = declared_outputs - bound_outputs
-            unknown_outputs = bound_outputs - declared_outputs
-            if missing_outputs:
-                failures.append(
-                    f"{prefix}: {owner} omits provider output(s) {_format_schema_keys(missing_outputs)}",
-                )
-            if unknown_outputs:
-                failures.append(
-                    f"{prefix}: {owner} maps output(s) {_format_schema_keys(unknown_outputs)} "
-                    f"not declared by provider {alg_binding.provider!r}",
-                )
-        if alg_binding.target_casilla_id not in casillas:
-            failures.append(f"{prefix}: {owner} targets unknown casilla {alg_binding.target_casilla_id!r}")
-        for input_name, input_value in alg_binding.inputs.items():
-            if input_value not in resolvable_values:
-                failures.append(f"{prefix}: {owner} input {input_name!r} references unknown value {input_value!r}")
-        for output_name, output_value in alg_binding.output_casilla_ids.items():
-            if output_value not in casillas:
-                failures.append(f"{prefix}: {owner} output {output_name!r} references unknown casilla {output_value!r}")
-        for constant in alg_binding.constants:
-            if constant not in parameters:
-                failures.append(f"{prefix}: {owner} references unknown constant {constant!r}")
+        _validate_algorithm_binding_provider(
+            failures,
+            prefix=prefix,
+            owner=owner,
+            binding=alg_binding,
+            provider_by_id=provider_by_id,
+        )
+        _validate_algorithm_binding_values(
+            failures,
+            prefix=prefix,
+            owner=owner,
+            binding=alg_binding,
+            casillas=casillas,
+            resolvable_values=resolvable_values,
+            parameters=parameters,
+        )

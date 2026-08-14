@@ -450,6 +450,15 @@ def supply_nature_implied_by_category(category: IvaCategory | None) -> SupplyNat
     if category is None:
         return _NOTHING_DERIVED
 
+    citations = _category_supply_nature_citations(category)
+    if not citations:
+        return _NOTHING_DERIVED
+
+    return _category_supply_nature_derivation(category, citations)
+
+
+def _category_supply_nature_citations(category: IvaCategory) -> tuple[StatutoryCitation, ...]:
+    """Join a category's declared legal refs to the closed citation vocabulary."""
     # Imported at call time: the component table reaches the schema and the
     # classification modules, so a module-scope import would make this lean
     # module pay for them. The sanctioned cycle-break shape, and it changes only
@@ -470,10 +479,13 @@ def supply_nature_implied_by_category(category: IvaCategory | None) -> SupplyNat
         for reference in grounding
         if _ARTICLE_REFERENCE_SEPARATOR in reference
     }
-    citations = tuple(citation for citation in STATUTORY_CITATIONS if citation.article in articles)
-    if not citations:
-        return _NOTHING_DERIVED
+    return tuple(citation for citation in STATUTORY_CITATIONS if citation.article in articles)
 
+
+def _category_supply_nature_derivation(
+    category: IvaCategory,
+    citations: tuple[StatutoryCitation, ...],
+) -> SupplyNatureDerivation:
     natures = {citation.establishes for citation in citations if citation.establishes is not None}
     if not natures:
         return SupplyNatureDerivation(

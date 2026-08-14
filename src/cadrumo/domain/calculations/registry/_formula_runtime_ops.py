@@ -35,7 +35,7 @@ from ._casilla_membership import undeclared_casilla_ids
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._formula_operator_contracts import require_formula_operator_arity
 from ._ids import RevisionId
-from ._schema import DatedValue, ModeloRevision, ParameterDefinition
+from ._schema import BracketEntry, DatedValue, ModeloRevision, ParameterDefinition
 from ._schema_rounding import RegistryRoundingCode
 
 if TYPE_CHECKING:
@@ -183,16 +183,10 @@ def _compare(op: str, left: Decimal, right: Decimal) -> bool:
     raise RegistryValidationError(f"formula expression uses unsupported comparison op {op!r}")
 
 
-def resolve_bracket(
+def _bracket_candidates(
     parameter: ParameterDefinition,
-    base: Decimal,
     date_context: Mapping[str, date],
-) -> Decimal:
-    """Resolve a bracket-table :class:`ParameterDefinition` for a base amount.
-
-    The parameter's bracket date axis must be present in ``date_context`` so
-    registry-authored validity windows select exactly one bracket row.
-    """
+) -> list[BracketEntry]:
     if parameter.data_type != "bracket_table":
         raise RegistryValidationError(
             f"parameter {parameter.id!r} must declare data_type='bracket_table' to use lookup_bracket",
@@ -203,7 +197,9 @@ def resolve_bracket(
         raise RegistryValidationError(f"parameter {parameter.id!r} requires date axis {parameter.bracket_axis!r}")
     selected = date_context[parameter.bracket_axis]
     candidates = [
-        b for b in parameter.brackets if b.valid_from <= selected and (b.valid_to is None or selected <= b.valid_to)
+        bracket
+        for bracket in parameter.brackets
+        if bracket.valid_from <= selected and (bracket.valid_to is None or selected <= bracket.valid_to)
     ]
     if not candidates:
         raise RegistryValidationError(
@@ -211,25 +207,43 @@ def resolve_bracket(
             translated_message="errors.calc.bracket_no_window",
             context={"parameter_id": parameter.id, "as_of": selected.isoformat()},
         )
-    base = Decimal(base)
+    return candidates
+
+
+def _resolve_bracket_entry(
+    parameter: ParameterDefinition,
+    candidates: list[BracketEntry],
+    base: Decimal,
+) -> BracketEntry:
     if base < Decimal("0"):
         raise RegistryValidationError(
             f"parameter {parameter.id!r} lookup_bracket received negative base {base}",
             translated_message="errors.calc.bracket_negative_base",
             context={"parameter_id": parameter.id, "base": str(base)},
         )
-    sorted_brackets = sorted(candidates, key=lambda b: b.lower_bound)
-    selected_entry = None
-    for entry in sorted_brackets:
+    for entry in sorted(candidates, key=lambda bracket: bracket.lower_bound):
         if entry.lower_bound <= base and (entry.upper_bound is None or base <= entry.upper_bound):
-            selected_entry = entry
-            break
-    if selected_entry is None:
-        raise RegistryValidationError(
-            f"parameter {parameter.id!r} has no bracket covering base {base}",
-            translated_message="errors.calc.bracket_no_coverage",
-            context={"parameter_id": parameter.id, "base": str(base)},
-        )
+            return entry
+    raise RegistryValidationError(
+        f"parameter {parameter.id!r} has no bracket covering base {base}",
+        translated_message="errors.calc.bracket_no_coverage",
+        context={"parameter_id": parameter.id, "base": str(base)},
+    )
+
+
+def resolve_bracket(
+    parameter: ParameterDefinition,
+    base: Decimal,
+    date_context: Mapping[str, date],
+) -> Decimal:
+    """Resolve a bracket-table :class:`ParameterDefinition` for a base amount.
+
+    The parameter's bracket date axis must be present in ``date_context`` so
+    registry-authored validity windows select exactly one bracket row.
+    """
+    candidates = _bracket_candidates(parameter, date_context)
+    base = Decimal(base)
+    selected_entry = _resolve_bracket_entry(parameter, candidates, base)
     return selected_entry.fixed_addition + selected_entry.marginal_rate * (base - selected_entry.lower_bound)
 
 

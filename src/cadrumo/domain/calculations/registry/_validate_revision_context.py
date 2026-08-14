@@ -7,8 +7,9 @@ across every per-section validator.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from typing import Protocol
 
 from ....core import CasillaId
 from ._casilla_membership import casillas_by_id, declared_casilla_ids
@@ -35,6 +36,28 @@ from ._schema import (
 )
 from ._schema_verification import VerificationExpectationDefinition
 from ._validate_revision_identity import collect_record_id_lists
+
+
+class _IdentifiedRecord(Protocol):
+    id: str
+
+
+def _records_by_id[RecordT: _IdentifiedRecord](records: Iterable[RecordT]) -> dict[str, RecordT]:
+    return {record.id: record for record in records}
+
+
+def _export_field_ids(revision: ModeloRevision) -> set[str]:
+    return {field.id for layout in revision.export_layouts for record in layout.records for field in record.fields}
+
+
+def _exported_casilla_ids(revision: ModeloRevision) -> set[CasillaId]:
+    return {
+        field.endpoint_casilla_id
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if field.endpoint_casilla_id is not None
+    }
 
 
 @dataclass(frozen=True)
@@ -125,11 +148,11 @@ class RevisionValidationContext:
 
 def build_revision_validation_context(revision: ModeloRevision) -> RevisionValidationContext:
     ids_by_kind = collect_record_id_lists(revision)
-    formula_by_id = {formula.id: formula for formula in revision.formulas}
-    binding_by_id = {binding.id: binding for binding in revision.bindings}
-    relation_by_id = {relation.id: relation for relation in revision.relations}
-    parameter_by_id = {parameter.id: parameter for parameter in revision.parameters}
-    provider_by_id = {provider.id: provider for provider in revision.algorithm_providers}
+    formula_by_id = _records_by_id(revision.formulas)
+    binding_by_id = _records_by_id(revision.bindings)
+    relation_by_id = _records_by_id(revision.relations)
+    parameter_by_id = _records_by_id(revision.parameters)
+    provider_by_id = _records_by_id(revision.algorithm_providers)
     casillas = set(declared_casilla_ids(revision))
     bindings = set(binding_by_id)
     relations = set(relation_by_id)
@@ -151,24 +174,18 @@ def build_revision_validation_context(revision: ModeloRevision) -> RevisionValid
         relation_by_id=relation_by_id,
         parameter_by_id=parameter_by_id,
         provider_by_id=provider_by_id,
-        algorithm_binding_by_id={binding.id: binding for binding in revision.algorithm_bindings},
-        export_layout_by_id={layout.id: layout for layout in revision.export_layouts},
-        extraction_profile_by_id={profile.id: profile for profile in revision.extraction_profiles},
-        cross_reference_by_id={
-            cross_reference.id: cross_reference for cross_reference in revision.live_cross_references
-        },
-        workbook_parity_by_id={workbook.id: workbook for workbook in revision.workbook_parity_refs},
-        verification_expectation_by_id={
-            expectation.id: expectation for expectation in revision.verification_expectations
-        },
-        application_link_by_id={link.id: link for link in revision.application_links},
-        deadline_window_by_id={window.id: window for window in revision.deadline_windows},
-        filing_schedule_by_id={schedule.id: schedule for schedule in revision.filing_schedules},
-        support_removal_decision_by_id={decision.id: decision for decision in revision.support_removal_decisions},
-        construct_by_id={construct.id: construct for construct in revision.constructs},
-        dependency_classification_by_id={
-            classification.id: classification for classification in revision.dependency_classifications
-        },
+        algorithm_binding_by_id=_records_by_id(revision.algorithm_bindings),
+        export_layout_by_id=_records_by_id(revision.export_layouts),
+        extraction_profile_by_id=_records_by_id(revision.extraction_profiles),
+        cross_reference_by_id=_records_by_id(revision.live_cross_references),
+        workbook_parity_by_id=_records_by_id(revision.workbook_parity_refs),
+        verification_expectation_by_id=_records_by_id(revision.verification_expectations),
+        application_link_by_id=_records_by_id(revision.application_links),
+        deadline_window_by_id=_records_by_id(revision.deadline_windows),
+        filing_schedule_by_id=_records_by_id(revision.filing_schedules),
+        support_removal_decision_by_id=_records_by_id(revision.support_removal_decisions),
+        construct_by_id=_records_by_id(revision.constructs),
+        dependency_classification_by_id=_records_by_id(revision.dependency_classifications),
         casillas=casillas,
         formulas=formula_by_id,
         bindings=bindings,
@@ -176,14 +193,6 @@ def build_revision_validation_context(revision: ModeloRevision) -> RevisionValid
         parameters=parameters,
         providers=set(provider_by_id),
         resolvable_values=casillas | bindings | relations | parameters,
-        export_field_ids={
-            field.id for layout in revision.export_layouts for record in layout.records for field in record.fields
-        },
-        exported_casillas={
-            field.endpoint_casilla_id
-            for layout in revision.export_layouts
-            for record in layout.records
-            for field in record.fields
-            if field.endpoint_casilla_id is not None
-        },
+        export_field_ids=_export_field_ids(revision),
+        exported_casillas=_exported_casilla_ids(revision),
     )

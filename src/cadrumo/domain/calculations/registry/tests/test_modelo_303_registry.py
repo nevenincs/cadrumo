@@ -20,8 +20,6 @@ from .....tests.registry_observations import registry_grounded_modelo_observatio
 from ....iva import (
     IvaDeductionClassificationProvenance,
     IvaLedgerObservationRole,
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
 )
 from .. import (
     InputKind,
@@ -853,9 +851,6 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         inputs=bound_inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(2025, 6, 30)},
-        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-        ),
     )
 
     # Structural wiring: all compensation casillas must be present in the result.
@@ -1064,9 +1059,6 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         inputs=bound_inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(2025, 3, 31)},
-        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-        ),
     )
 
     # Art. 90 LISIVA tipo general 21%: 1,400,000 x 0.21 = 294,000.00
@@ -1148,9 +1140,6 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
             inputs=bound,
             binding_values=bv,
             date_context={"filing_period": date(2025, 3, 31)},
-            m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-                scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-            ),
         )
         return r.values[_M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA]
 

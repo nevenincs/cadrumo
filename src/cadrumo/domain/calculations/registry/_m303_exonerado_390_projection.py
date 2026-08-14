@@ -16,7 +16,7 @@ from ....core import (
 from ._errors import RegistryValidationError
 
 if TYPE_CHECKING:
-    from ...modelos import M303Exonerado390FilingEvidence
+    from ...modelos import M303Exonerado390ActivityRowEvidence, M303Exonerado390FilingEvidence
 
 type _ExoneradoProjectionRef = M303Exonerado390ActivityProjectionRef | M303Exonerado390OperacionesTercerosProjectionRef
 
@@ -47,28 +47,52 @@ def project_m303_exonerado_390_activity_rows(
     refs = _validate_projection_refs(projection_refs)
     if not evidence.applicable:
         return None
+    _require_operaciones_terceros_decision(evidence)
+    rows_by_slot = {row.slot: row for row in evidence.activity_rows}
+    projected = tuple(_project_exonerado_field(ref, evidence, rows_by_slot) for ref in projection_refs)
+    _require_projected_reference_population(refs, projected)
+    return M303Exonerado390RecordProjection(fields=projected)
+
+
+def _require_operaciones_terceros_decision(evidence: M303Exonerado390FilingEvidence) -> None:
+    """Require an applicable filing to carry the evidenced Modelo 347 decision."""
     if evidence.operaciones_terceros_declarables is None or evidence.operaciones_terceros_reference is None:
         raise RegistryValidationError("applicable exonerado-390 projection requires an evidenced Modelo 347 decision")
-    rows_by_slot = {row.slot: row for row in evidence.activity_rows}
-    projected: list[M303Exonerado390FieldProjection] = []
-    for ref in projection_refs:
-        if isinstance(ref, M303Exonerado390OperacionesTercerosProjectionRef):
-            value = "X" if evidence.operaciones_terceros_declarables else None
-        else:
-            row = rows_by_slot.get(ref.slot)
-            if row is None:
-                value = None
-            elif ref.field is M303Exonerado390ActivityField.ACTIVITY_CODE:
-                value = row.codigo_actividad
-            elif ref.field is M303Exonerado390ActivityField.IAE_EPIGRAFE:
-                value = row.epigrafe_iae
-            else:
-                raise RegistryValidationError(f"unsupported exonerado-390 activity field {ref.field!r}")
-        projected.append(M303Exonerado390FieldProjection(projection_ref=ref, value=value))
+
+
+def _project_exonerado_field(
+    ref: _ExoneradoProjectionRef,
+    evidence: M303Exonerado390FilingEvidence,
+    rows_by_slot: dict[int, M303Exonerado390ActivityRowEvidence],
+) -> M303Exonerado390FieldProjection:
+    """Project one authored exonerado-390 reference through typed evidence."""
+    if isinstance(ref, M303Exonerado390OperacionesTercerosProjectionRef):
+        value = "X" if evidence.operaciones_terceros_declarables else None
+    else:
+        row = rows_by_slot.get(ref.slot)
+        value = None if row is None else _project_activity_field(ref, row)
+    return M303Exonerado390FieldProjection(projection_ref=ref, value=value)
+
+
+def _project_activity_field(
+    ref: M303Exonerado390ActivityProjectionRef, row: M303Exonerado390ActivityRowEvidence
+) -> str:
+    """Project one activity pair field from its matching evidence row."""
+    if ref.field is M303Exonerado390ActivityField.ACTIVITY_CODE:
+        return row.codigo_actividad
+    if ref.field is M303Exonerado390ActivityField.IAE_EPIGRAFE:
+        return row.epigrafe_iae
+    raise RegistryValidationError(f"unsupported exonerado-390 activity field {ref.field!r}")
+
+
+def _require_projected_reference_population(
+    refs: tuple[FilingProjectionRef, ...],
+    projected: tuple[M303Exonerado390FieldProjection, ...],
+) -> None:
+    """Ensure projection preserves the authored reference population exactly."""
     projected_refs = tuple(field.projection_ref for field in projected)
     if len(projected_refs) != len(refs) or any(ref not in refs for ref in projected_refs):
         raise RegistryValidationError("DP30304 projection reference population changed during projection")
-    return M303Exonerado390RecordProjection(fields=tuple(projected))
 
 
 def _validate_projection_refs(refs: tuple[_ExoneradoProjectionRef, ...]) -> tuple[FilingProjectionRef, ...]:

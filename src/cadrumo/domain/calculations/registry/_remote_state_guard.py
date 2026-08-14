@@ -426,16 +426,34 @@ def evaluate_remote_operation(policy: RemoteStateGuardPolicy, operation: RemoteO
     return _evaluate_browser_action(policy, operation)
 
 
-def _evaluate_http(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -> RemoteStateGuardResult:
-    method = (operation.method or "").upper()
-    assert operation.url is not None
-    path = operation.url.path
-    read_post_allowed = (
+def _http_method_is_allowed(policy: RemoteStateGuardPolicy, method: str, path: str | None) -> bool:
+    return method in _READ_ONLY_HTTP_METHODS or (
         method == "POST"
         and policy.classification == "authenticated_read_surface"
         and path in policy.allowed_read_post_paths
     )
-    if method not in _READ_ONLY_HTTP_METHODS and not read_post_allowed:
+
+
+def _http_policy_block_reason(policy: RemoteStateGuardPolicy, url: AnyUrl, action: str | None, host: str) -> str | None:
+    if not _host_within_policy(policy, host):
+        return f"AEAT host {host!r} is not in allowed read-only hosts"
+    if policy.allowed_read_paths and url.path not in policy.allowed_read_paths:
+        return f"AEAT path {url.path!r} is not in allowed read-only paths"
+    text = f"{url} {action or ''}".lower()
+    forbidden_action = _first_declared_forbidden_action(policy, text)
+    if forbidden_action is not None:
+        return f"AEAT forbidden action {forbidden_action!r} is blocked"
+    token = _first_forbidden_token(text)
+    if token is not None:
+        return f"AEAT remote state token {token!r} is forbidden"
+    return None
+
+
+def _evaluate_http(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -> RemoteStateGuardResult:
+    method = (operation.method or "").upper()
+    assert operation.url is not None
+    path = operation.url.path
+    if not _http_method_is_allowed(policy, method, path):
         return _blocked(policy, f"AEAT remote write method {method!r} is forbidden")
     # Scheme, user-info and port are decided by the one canonical authority
     # helper, not by ``operation.url.host`` — that attribute reports a host
@@ -467,17 +485,8 @@ def _evaluate_http(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -
             f"AEAT remote authority {raw_url!r} is not a bare {REMOTE_READ_SCHEME} host "
             "(scheme, user-info or port refused)",
         )
-    if not _host_within_policy(policy, host):
-        return _blocked(policy, f"AEAT host {host!r} is not in allowed read-only hosts")
-    if policy.allowed_read_paths and path not in policy.allowed_read_paths:
-        return _blocked(policy, f"AEAT path {path!r} is not in allowed read-only paths")
-    text = f"{operation.url} {operation.action or ''}".lower()
-    action = _first_declared_forbidden_action(policy, text)
-    if action is not None:
-        return _blocked(policy, f"AEAT forbidden action {action!r} is blocked")
-    token = _first_forbidden_token(text)
-    if token is not None:
-        return _blocked(policy, f"AEAT remote state token {token!r} is forbidden")
+    if reason := _http_policy_block_reason(policy, operation.url, operation.action, host):
+        return _blocked(policy, reason)
     return RemoteStateGuardResult(decision="allowed", reason="read-only AEAT operation allowed", policy_id=policy.id)
 
 

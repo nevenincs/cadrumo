@@ -29,6 +29,48 @@ _SOURCE_BY_KIND: dict[str, CitationSource] = {
 }
 
 
+def _validate_manual_legal_reference(reference: LegalReference, source_root: Path) -> None:
+    path_text = reference.corpus_ref.split("#", 1)[0]
+    path = (source_root / path_text).resolve()
+    if not path.is_file():
+        return
+    try:
+        from ...manuals import Section
+
+        Section.model_validate_json(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise RegistryValidationError(
+            f"legal reference {reference.id!r} manual section JSON validation failed: {exc}",
+        ) from exc
+
+
+def _validate_legal_corpus_clauses(reference: LegalReference, source_root: Path) -> None:
+    corpus_text = _legal_corpus_text(source_root, reference)
+    for required in reference.required_text:
+        if normalise_corpus_text(required) not in corpus_text:
+            raise RegistryValidationError(
+                f"legal reference {reference.id!r} corpus text missing required text {required!r}",
+            )
+    for forbidden in reference.forbidden_text:
+        if normalise_corpus_text(forbidden) in corpus_text:
+            raise RegistryValidationError(
+                f"legal reference {reference.id!r} corpus text contains forbidden text {forbidden!r}",
+            )
+
+
+def _validate_known_bad_citation(reference: LegalReference) -> None:
+    if reference.article is None:
+        return
+    source = _SOURCE_BY_KIND.get(reference.kind)
+    if source is None:
+        return
+    role_text = " ".join(part for part in (reference.section, reference.notes) if part)
+    if role_text and (known_bad := find_known_bad(source, reference.article, role_text)):
+        raise RegistryValidationError(
+            f"legal reference {reference.id!r} matches known-bad citation: {known_bad.reason}",
+        )
+
+
 def verify_legal_reference(
     reference: LegalReference,
     *,
@@ -57,42 +99,11 @@ def verify_legal_reference(
     present forbidden phrase — so their failures are raised with distinct
     messages naming which clause fired.
     """
-    if reference.kind == "manual":
-        path_text = reference.corpus_ref.split("#", 1)[0]
-        if source_root is not None:
-            path = (source_root / path_text).resolve()
-            if path.is_file():
-                try:
-                    from ...manuals import Section
-
-                    Section.model_validate_json(path.read_text(encoding="utf-8"))
-                except Exception as exc:
-                    raise RegistryValidationError(
-                        f"legal reference {reference.id!r} manual section JSON validation failed: {exc}",
-                    ) from exc
-
+    if reference.kind == "manual" and source_root is not None:
+        _validate_manual_legal_reference(reference, source_root)
     if source_root is not None and (reference.required_text or reference.forbidden_text):
-        corpus_text = _legal_corpus_text(source_root, reference)
-        for required in reference.required_text:
-            if normalise_corpus_text(required) not in corpus_text:
-                raise RegistryValidationError(
-                    f"legal reference {reference.id!r} corpus text missing required text {required!r}",
-                )
-        for forbidden in reference.forbidden_text:
-            if normalise_corpus_text(forbidden) in corpus_text:
-                raise RegistryValidationError(
-                    f"legal reference {reference.id!r} corpus text contains forbidden text {forbidden!r}",
-                )
-    if reference.article is None:
-        return
-    source = _SOURCE_BY_KIND.get(reference.kind)
-    if source is None:
-        return
-    role_text = " ".join(part for part in (reference.section, reference.notes) if part)
-    if role_text and (known_bad := find_known_bad(source, reference.article, role_text)):
-        raise RegistryValidationError(
-            f"legal reference {reference.id!r} matches known-bad citation: {known_bad.reason}",
-        )
+        _validate_legal_corpus_clauses(reference, source_root)
+    _validate_known_bad_citation(reference)
 
 
 def legal_reference_quotes_corpus(

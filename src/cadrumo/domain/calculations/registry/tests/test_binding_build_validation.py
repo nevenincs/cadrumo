@@ -222,6 +222,24 @@ _FAMILY_CASES: tuple[
         },
         BindingAggregationOp.COPY,
     ),
+    (
+        "m303_regimen_simplificado_annual_summary",
+        "m303_regimen_simplificado_annual_summary",
+        {
+            "source_modelo": "303",
+            "source_period": "4T",
+            "source_casilla_ids": ("51", "53", "52", "54", "55", "56", "57", "58"),
+            "summary_casilla_id": "iva.anual.regimen-simplificado.cuota-resultante-no-agricola",
+        },
+        BindingAggregationOp.COPY,
+        {
+            "source_modelo": "303",
+            "source_period": "3T",
+            "source_casilla_ids": ("51", "53", "52", "54", "55", "56", "57", "58"),
+            "summary_casilla_id": "iva.anual.regimen-simplificado.cuota-resultante-no-agricola",
+        },
+        BindingAggregationOp.COPY,
+    ),
 )
 
 _FAMILY_IDS = tuple(case[0] for case in _FAMILY_CASES)

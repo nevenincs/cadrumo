@@ -146,6 +146,35 @@ def _bracket_windows_for_parameter(parameter: ParameterDefinition) -> list[tuple
     return sorted(window_to.items())
 
 
+def _clamp_bracket_window(
+    window: tuple[date, date],
+    *,
+    revision_from: date,
+    effective_revision_to: date,
+) -> tuple[date, date] | None:
+    window_from, window_to = window
+    clamp_from = max(window_from, revision_from)
+    clamp_to = min(window_to, effective_revision_to)
+    if clamp_from > effective_revision_to or clamp_to < revision_from:
+        return None
+    return clamp_from, clamp_to
+
+
+def _advance_bracket_coverage(
+    gaps: list[tuple[date, date]],
+    frontier: date,
+    clamped: tuple[date, date],
+) -> tuple[date, bool]:
+    clamp_from, clamp_to = clamped
+    if frontier < clamp_from:
+        gaps.append((frontier, clamp_from - timedelta(days=1)))
+    if clamp_to < frontier:
+        return frontier, False
+    if clamp_to == _FAR_FUTURE:
+        return frontier, True
+    return clamp_to + timedelta(days=1), False
+
+
 def _bracket_coverage_gaps(
     parameter: ParameterDefinition,
     revision_from: date,
@@ -176,20 +205,17 @@ def _bracket_coverage_gaps(
     # Walk from revision_from through the sorted windows, tracking coverage frontier.
     frontier = revision_from
 
-    for wf, wt in windows:
-        # Clamp window to revision range.
-        clamp_wf = max(wf, revision_from)
-        clamp_wt = min(wt, effective_revision_to)
-        if clamp_wf > effective_revision_to or clamp_wt < revision_from:
+    for window in windows:
+        clamped = _clamp_bracket_window(
+            window,
+            revision_from=revision_from,
+            effective_revision_to=effective_revision_to,
+        )
+        if clamped is None:
             continue  # window entirely outside revision range
-        if frontier < clamp_wf:
-            # Gap between frontier and this window's start.
-            gaps.append((frontier, clamp_wf - timedelta(days=1)))
-        if clamp_wt >= frontier:
-            if clamp_wt == _FAR_FUTURE:
-                # Open-ended window covers everything forward; no further gaps.
-                return gaps
-            frontier = clamp_wt + timedelta(days=1)
+        frontier, covered_to_end = _advance_bracket_coverage(gaps, frontier, clamped)
+        if covered_to_end:
+            return gaps
 
     # Tail gap: after all windows but before revision_to (only when bounded).
     if revision_to is not None and frontier <= effective_revision_to:

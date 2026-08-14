@@ -293,6 +293,41 @@ class ModeloApplicabilityRule(BaseModel):
     cuota_bearing: bool = False
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
 
+    def _entity_type_result(self, profile: TaxpayerProfile) -> ModeloApplicability | None:
+        if profile.entity_type in self.applicable_entity_types:
+            return None
+        if self.cuota_bearing and profile.entity_type is EntityType.ATTRIBUTION_ENTITY:
+            return ModeloApplicability(
+                modelo=self.modelo,
+                verdict=ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
+                reason=_ATTRIBUTION_PASS_THROUGH_REASON,
+                legal_refs=_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
+            )
+        return self._not_applicable()
+
+    def _natural_person_axes_result(self, profile: TaxpayerProfile) -> ModeloApplicability | None:
+        if profile.entity_type is not EntityType.NATURAL_PERSON:
+            return None
+        if self.required_income_categories:
+            if not profile.irpf_income_categories:
+                return _incomplete_applicability(self.modelo)
+            if profile.irpf_income_categories.isdisjoint(self.required_income_categories):
+                return self._not_applicable()
+        if self.required_estimation_regimes:
+            regime = profile.irpf_estimation_regime or IrpfEstimationRegime.DIRECTA_NORMAL
+            if regime not in self.required_estimation_regimes:
+                return self._not_applicable()
+        return None
+
+    def _payer_fact_result(self, profile: TaxpayerProfile) -> ModeloApplicability | None:
+        if self.required_payer_fact is None or payer_fact_holds(profile, self.required_payer_fact):
+            return None
+        return _undetermined_applicability(
+            self.modelo,
+            payer_fact=self.required_payer_fact,
+            legal_refs=self.legal_refs,
+        )
+
     def evaluate(self, profile: TaxpayerProfile) -> ModeloApplicability:
         """Derive the :class:`ModeloApplicability` for ``profile``.
 
@@ -309,21 +344,8 @@ class ModeloApplicabilityRule(BaseModel):
         """
         if profile.entity_type is None:
             return _incomplete_applicability(self.modelo)
-        if profile.entity_type not in self.applicable_entity_types:
-            # An attribution entity asked about a cuota self-assessment
-            # gets the honest pass-through answer, not a plain
-            # exclusion: it runs no IS and no IRPF cuota — the income
-            # is attributed to and taxed in the members' returns. An
-            # informational modelo is not cuota-bearing and falls
-            # through to NOT_APPLICABLE.
-            if self.cuota_bearing and profile.entity_type is EntityType.ATTRIBUTION_ENTITY:
-                return ModeloApplicability(
-                    modelo=self.modelo,
-                    verdict=ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
-                    reason=_ATTRIBUTION_PASS_THROUGH_REASON,
-                    legal_refs=_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
-                )
-            return self._not_applicable()
+        if (result := self._entity_type_result(profile)) is not None:
+            return result
         if (
             self.applicable_fiscal_residencies
             and profile.fiscal_residency is not None
@@ -338,37 +360,14 @@ class ModeloApplicabilityRule(BaseModel):
         # persona física). A legal or attribution entity that matched
         # the entity-type and IVA-regime gates of a modelo applicable to
         # it (e.g. Modelo 303 / 390) is not re-gated on those axes.
-        if profile.entity_type is EntityType.NATURAL_PERSON:
-            # A natural-person modelo that gates on income category needs
-            # at least one declared category to match.
-            if self.required_income_categories:
-                if not profile.irpf_income_categories:
-                    return _incomplete_applicability(self.modelo)
-                if profile.irpf_income_categories.isdisjoint(self.required_income_categories):
-                    return self._not_applicable()
-            # The estimation-regime axis splits Modelo 130 (estimación
-            # directa) from Modelo 131 (estimación objetiva). A regime
-            # outside the rule's set is a positive exclusion.
-            #
-            # When ``irpf_estimation_regime`` is undeclared, resolve the
-            # split to the direct-estimation default. Estimación objetiva
-            # is an explicit módulos election; without that enum value the
-            # current profile stays on Modelo 130 rather than a retained
-            # boolean side channel.
-            if self.required_estimation_regimes:
-                regime = profile.irpf_estimation_regime or IrpfEstimationRegime.DIRECTA_NORMAL
-                if regime not in self.required_estimation_regimes:
-                    return self._not_applicable()
+        if (result := self._natural_person_axes_result(profile)) is not None:
+            return result
         # The payer-fact axis (Modelo 111 / 115 / 349 / 347) can only be
         # asserted in the positive direction — the underlying boolean has
         # no tri-state, so an absent fact yields INCOMPLETE rather than a
         # NOT_APPLICABLE the engine cannot positively justify.
-        if self.required_payer_fact is not None and not payer_fact_holds(profile, self.required_payer_fact):
-            return _undetermined_applicability(
-                self.modelo,
-                payer_fact=self.required_payer_fact,
-                legal_refs=self.legal_refs,
-            )
+        if (result := self._payer_fact_result(profile)) is not None:
+            return result
         return ModeloApplicability(
             modelo=self.modelo,
             verdict=ApplicabilityVerdict.APPLICABLE,

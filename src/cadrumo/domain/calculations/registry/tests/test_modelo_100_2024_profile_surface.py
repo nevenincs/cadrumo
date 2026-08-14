@@ -145,7 +145,7 @@ def test_modelo_100_2024_descendientes_minimos_aggregate_binding_is_wired() -> N
 
     ``renta-2024-profile-descendientes-minimos-aggregate`` used to select
     ``family.descendientes_minimos_aggregate_2024``, a profile-model attribute
-    that :class:`~cadrumo.domain.contribuyente.family.RentaFamilyProfile` never
+    that :class:`~cadrumo.domain.contribuyente.RentaFamilyProfile` never
     declared (no formula or bound casilla consumed it either) -- a dangling
     selector per ``aeat-calculation-aggregation``. The Option B interim removed
     the binding outright. Option A's computed engine retires the gap for real:

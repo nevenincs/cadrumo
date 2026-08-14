@@ -10,7 +10,6 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal
 from typing import Annotated, Literal
 
 from pydantic import (
@@ -36,7 +35,6 @@ from ....core import (
 from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
 from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
-from ._aeat_hosts import first_aeat_host
 from ._errors import RegistryValidationError
 from ._ids import (
     ApplicationLinkId,
@@ -50,15 +48,12 @@ from ._ids import (
     FormulaId,
     LegalRefId,
     ModeloId,
-    OracleId,
     ParameterId,
     RelationId,
     RevisionId,
     SourceRefId,
     SupportRemovalDecisionId,
     VerificationExpectationId,
-    WorkbookFixtureId,
-    WorkbookOutputId,
     WorkbookParityRefId,
 )
 from ._m303_orden_projection_models import M303AnnualOrdenAuthority
@@ -141,9 +136,12 @@ from ._schema_scalars import (
     validate_period_code as _validate_period_code_impl,
 )
 from ._schema_verification import (
+    LiveCrossReferenceDecision,
+    ProfilePredicateDefinition,
     RegistryVerificationPolicy,
     VerificationExpectationDefinition,
     VerificationPredicateDefinition,
+    WorkbookParityReference,
     fold_reconciliation_total_casilla_ids,
 )
 from ._toml_helpers import as_toml_table as _as_toml_table
@@ -317,228 +315,6 @@ _validate_country_code = _validate_country_code_impl
 _validate_iban_string = _validate_iban_string_impl
 _validate_nif_string = _validate_nif_string_impl
 _validate_period_code = _validate_period_code_impl
-
-
-ProfileFactValue = bool | int | str
-
-
-class ProfilePredicateDefinition(RegistryModel):
-    field: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z_][A-Za-z0-9_.-]*$")
-    op: Literal["equals", "not_equals"]
-    value: ProfileFactValue
-    explanation: str = Field(min_length=1)
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-
-class LiveCrossReferenceDecision(RegistryModel):
-    id: CrossReferenceId
-    evidence_tier: EvidenceTier
-    surface: Literal[
-        "open_simulator",
-        "integration_test_service",
-        "public_read_surface",
-        "authenticated_read_surface",
-        "authenticated_simulator",
-        "static_official_documentation",
-    ]
-    guard_policy_id: str
-    allowed_hosts: tuple[str, ...] = ()
-    allowed_methods: tuple[str, ...] = ()
-    forbidden_actions: tuple[str, ...] = Field(min_length=1)
-    synthetic_data_allowed: bool
-    requires_authentication: bool
-    requires_aeat_authorization: bool
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-    # Optional: id of an oracle adapter registered in LiveParityCatalogue.
-    # When set, the calculation engine looks up the bound adapter to drive
-    # synthetic-payload verification under the cross-reference's policy.
-    # Resolution against the catalogue happens at calculation time, not at
-    # registry-load time, so the registry remains loadable when adapters
-    # are imported lazily.
-    oracle_id: OracleId | None = None
-    # Optional applicability gate: when non-empty the cross-reference is
-    # only applicable to a taxpayer profile whose values satisfy these
-    # predicates under the chosen mode. An empty tuple (the default) means
-    # the cross-reference is unconditionally applicable. Used to gate
-    # optional surfaces (GROI / IXVI for ROI-enrolled subjects, OSS
-    # bindings for OSS-enrolled subjects, etc.).
-    applicability_condition_mode: Literal["all", "any"] = "all"
-    applicability_predicates: tuple[ProfilePredicateDefinition, ...] = ()
-
-    @field_validator("oracle_id")
-    @classmethod
-    def _oracle_id_shape(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        # kebab-case ASCII identifier: lowercase alpha start, alphanumerics
-        # plus hyphens, no trailing hyphen.
-        if not value[0].isalpha() or not value[0].islower():
-            raise RegistryValidationError("oracle_id must start with a lowercase ASCII letter")
-        if value.endswith("-"):
-            raise RegistryValidationError("oracle_id must not end with a hyphen")
-        for char in value:
-            if not (char.islower() and char.isascii()) and not char.isdigit() and char != "-":
-                raise RegistryValidationError(
-                    f"oracle_id contains unsupported character {char!r}; "
-                    f"only lowercase ASCII letters, digits, and hyphens are permitted",
-                )
-        return value
-
-    @model_validator(mode="after")
-    def _validate_cross_reference(self) -> LiveCrossReferenceDecision:
-        self._validate_evidence_tier_alignment()
-        self._validate_allowed_hosts_declared()
-        self._validate_authentication_constraints()
-        self._validate_synthetic_data_constraints()
-        for method in self.allowed_methods:
-            self._validate_allowed_method(method)
-        if self.applicability_condition_mode == "any" and not self.applicability_predicates:
-            raise RegistryValidationError(f"cross-reference {self.id!r} any-mode requires applicability predicates")
-        return self
-
-    def _validate_evidence_tier_alignment(self) -> None:
-        """The evidence_tier must match the surface's regulatory class.
-
-        Live surfaces (simulators, integration test services) carry
-        executable parity evidence; read surfaces and static
-        documentation carry observation evidence only.
-        """
-        if (
-            self.surface in {"open_simulator", "integration_test_service", "authenticated_simulator"}
-            and self.evidence_tier != "executable_parity_evidence"
-        ):
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} live surface requires executable parity evidence",
-            )
-        if (
-            self.surface in {"public_read_surface", "authenticated_read_surface"}
-            and self.evidence_tier == "executable_parity_evidence"
-        ):
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} read surface is observation evidence, not parity",
-            )
-        if self.surface == "static_official_documentation" and self.evidence_tier == "executable_parity_evidence":
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} static documentation is not executable parity evidence",
-            )
-
-    def _validate_allowed_hosts_declared(self) -> None:
-        """Every non-static surface must declare its allowed_hosts."""
-        if (
-            self.surface
-            in {
-                "open_simulator",
-                "integration_test_service",
-                "public_read_surface",
-                "authenticated_read_surface",
-                "authenticated_simulator",
-            }
-            and not self.allowed_hosts
-        ):
-            raise RegistryValidationError(f"cross-reference {self.id!r} must declare allowed_hosts")
-
-    def _validate_authentication_constraints(self) -> None:
-        """Per-surface auth + AEAT-authorization requirements.
-
-        Open simulators and public reads must not require auth;
-        authenticated reads must require both auth and AEAT
-        authorization; authenticated simulators must require auth.
-        """
-        if self.surface == "open_simulator" and self.requires_authentication:
-            raise RegistryValidationError(f"cross-reference {self.id!r} open simulator must not require authentication")
-        if self.surface == "public_read_surface" and self.requires_authentication:
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} public read surface must not require authentication",
-            )
-        if self.surface == "authenticated_read_surface" and not self.requires_authentication:
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} authenticated read surface must require authentication",
-            )
-        if self.surface == "authenticated_read_surface" and not self.requires_aeat_authorization:
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} authenticated read surface must require authorization",
-            )
-        if self.surface == "authenticated_simulator" and not self.requires_authentication:
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} authenticated simulator must require authentication",
-            )
-
-    def _validate_synthetic_data_constraints(self) -> None:
-        """Read surfaces and static docs must not accept synthetic data.
-
-        Additionally, no cross-reference whose ``allowed_hosts`` include an
-        AEAT-owned host (suffix match against ``agenciatributaria.gob.es``
-        or ``aeat.es``) may declare ``synthetic_data_allowed = true``.
-        Synthetic taxpayer, counterparty, declaration, profile, or form
-        data is prohibited on AEAT-hosted live surfaces; the surface
-        shape (``open_simulator`` / ``authenticated_simulator``) does not
-        license synthetic input against AEAT infrastructure.
-        """
-        if self.surface in {"public_read_surface", "authenticated_read_surface"} and self.synthetic_data_allowed:
-            raise RegistryValidationError(f"cross-reference {self.id!r} read surface must not accept synthetic data")
-        if self.surface == "static_official_documentation" and self.synthetic_data_allowed:
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} static documentation cannot accept synthetic data",
-            )
-        if self.synthetic_data_allowed:
-            aeat_host = first_aeat_host(self.allowed_hosts)
-            if aeat_host is not None:
-                raise RegistryValidationError(
-                    f"cross-reference {self.id!r} declares synthetic_data_allowed = true "
-                    f"on AEAT-hosted allowed host {aeat_host!r}; synthetic data is prohibited "
-                    f"on AEAT-hosted live surfaces",
-                )
-
-    def _validate_allowed_method(self, method: str) -> None:
-        """Per-surface HTTP method allowlist + uppercase shape requirement."""
-        if method.upper() != method:
-            raise RegistryValidationError(f"cross-reference {self.id!r} allowed_methods must be uppercase")
-        if self.surface in {"public_read_surface", "authenticated_read_surface"} and method not in {
-            "GET",
-            "HEAD",
-            "OPTIONS",
-        }:
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} read surface method {method!r} is not read-only",
-            )
-        # authenticated_simulator declares the AEAT-prescribed query
-        # method (POST is the GROI / IXVI form-submit mechanism). The
-        # remote-state guard's HTTP-method check stays strict for
-        # ``kind="http"`` operations; only the cross-reference's
-        # allowed_methods declaration is widened.
-        if self.surface == "authenticated_simulator" and method not in {"GET", "HEAD", "OPTIONS", "POST"}:
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} authenticated simulator method "
-                f"{method!r} not in (GET, HEAD, OPTIONS, POST)",
-            )
-
-
-class WorkbookParityReference(RegistryModel):
-    id: WorkbookParityRefId
-    workbook_source: SourceRefId
-    fixture_id: WorkbookFixtureId
-    formula_coverage: Literal["formula_form", "static_layout", "record_design_layout", "unsupported_binary_xls"]
-    runner_required: bool
-    output_cells: Mapping[WorkbookOutputId, WorkbookCellRefStr] = Field(default_factory=dict)
-    tolerance: DecimalValue = Decimal("0.00")
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-    @model_validator(mode="after")
-    def _validate_workbook_reference(self) -> WorkbookParityReference:
-        if self.formula_coverage == "formula_form" and not self.runner_required:
-            raise RegistryValidationError(f"workbook parity reference {self.id!r} formula coverage requires a runner")
-        if self.formula_coverage != "formula_form" and self.runner_required:
-            raise RegistryValidationError(f"workbook parity reference {self.id!r} runner requires formula coverage")
-        if self.runner_required and not self.output_cells:
-            raise RegistryValidationError(f"workbook parity reference {self.id!r} requires output_cells")
-        if self.workbook_source not in self.source_refs:
-            raise RegistryValidationError(
-                f"workbook parity reference {self.id!r} source_refs must include workbook_source",
-            )
-        return self
 
 
 class ApplicationLinkDefinition(RegistryModel):

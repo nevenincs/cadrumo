@@ -45,6 +45,29 @@ RegistryExternalLink = Annotated[str, AfterValidator(_validate_registry_external
 """Canonical fragment-preserving HTTPS link used by registry evidence records."""
 
 
+def _validate_legal_text_entries(
+    entries: tuple[str, ...],
+    *,
+    field_name: str,
+) -> None:
+    if any(not item.strip() for item in entries):
+        raise RegistryValidationError(f"legal reference {field_name} entries must be non-empty")
+    if len(set(entries)) != len(entries):
+        raise RegistryValidationError(f"legal reference {field_name} entries must be unique")
+
+
+def _validate_legal_corpus_ref(reference_id: LegalRefId, corpus_ref: str) -> None:
+    if "#" not in corpus_ref:
+        raise RegistryValidationError(
+            f"legal reference {reference_id!r} corpus_ref must be of the form 'path#anchor' (got {corpus_ref!r})",
+        )
+    path_part, _, anchor_part = corpus_ref.partition("#")
+    if not path_part or not anchor_part:
+        raise RegistryValidationError(
+            f"legal reference {reference_id!r} corpus_ref must have non-empty path and anchor"
+        )
+
+
 class RegistrySnapshotRef(RegistryModel):
     """Typed coordinates that identify a registry snapshot."""
 
@@ -150,25 +173,13 @@ class LegalReference(RegistryModel):
     def _validate_legal_reference(self) -> LegalReference:
         if self.effective_to is not None and self.effective_to < self.effective_from:
             raise RegistryValidationError("legal reference effective_to must be on or after effective_from")
-        if any(not item.strip() for item in self.required_text):
-            raise RegistryValidationError("legal reference required_text entries must be non-empty")
-        if len(set(self.required_text)) != len(self.required_text):
-            raise RegistryValidationError("legal reference required_text entries must be unique")
-        if any(not item.strip() for item in self.forbidden_text):
-            raise RegistryValidationError("legal reference forbidden_text entries must be non-empty")
-        if len(set(self.forbidden_text)) != len(self.forbidden_text):
-            raise RegistryValidationError("legal reference forbidden_text entries must be unique")
+        _validate_legal_text_entries(self.required_text, field_name="required_text")
+        _validate_legal_text_entries(self.forbidden_text, field_name="forbidden_text")
         if overlap := set(self.required_text) & set(self.forbidden_text):
             raise RegistryValidationError(
                 f"legal reference {self.id!r} required_text and forbidden_text must not overlap: {sorted(overlap)!r}",
             )
-        if "#" not in self.corpus_ref:
-            raise RegistryValidationError(
-                f"legal reference {self.id!r} corpus_ref must be of the form 'path#anchor' (got {self.corpus_ref!r})",
-            )
-        path_part, _, anchor_part = self.corpus_ref.partition("#")
-        if not path_part or not anchor_part:
-            raise RegistryValidationError(f"legal reference {self.id!r} corpus_ref must have non-empty path and anchor")
+        _validate_legal_corpus_ref(self.id, self.corpus_ref)
         return self
 
 

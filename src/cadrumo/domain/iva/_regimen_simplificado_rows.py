@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 from ...core import STRICT_FROZEN_CONFIG, M303RegimenSimplificadoFact
 from ..filing_evidence import FilingEvidenceReference
 from ._errors import IvaValidationError
+from ._schema import validate_orden_module_identities
 
 _Token = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=160)]
 _OfficialActivityName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
@@ -75,7 +76,7 @@ class ActividadOrdenAnual(BaseModel):
             raise IvaValidationError("a non-agricultural Orden activity requires an IAE epigraph")
         if self.kind == "agricola" and self.iae_epigrafe is not None:
             raise IvaValidationError("an agricultural Orden activity must use its official activity code")
-        _validate_orden_module_identities(self.modulos)
+        validate_orden_module_identities(self.modulos)
         _require_unique_identities(
             self.applicable_fact_identities,
             "an Orden activity contains duplicate applicable fact identities",
@@ -347,22 +348,10 @@ class RegimenSimplificadoFilingRows(BaseModel):
         )
 
 
-def _validate_orden_module_identities(modulos: tuple[ModuloOrdenAnual, ...]) -> None:
-    if not 1 <= len(modulos) <= 7:
-        raise IvaValidationError("an Orden activity must declare one through seven modules")
-    if tuple(module.order for module in modulos) != tuple(range(1, len(modulos) + 1)):
-        raise IvaValidationError("an Orden activity module identities must be complete and ordered")
-    if any(module.coefficient <= 0 for module in modulos):
-        raise IvaValidationError("an Orden activity module must have a positive coefficient")
-    _require_unique_identities(
-        tuple(module.identity for module in modulos),
-        "an Orden activity contains duplicate module identities",
-    )
-
-
 def _activities_by_kind(
     activities: tuple[RegimenSimplificadoActivity, ...],
 ) -> tuple[tuple[ActividadAgricolaSimplificado, ...], tuple[ActividadNoAgricolaSimplificado, ...]]:
+    """Partition rows by official cohort while preserving each cohort's order."""
     return (
         tuple(activity for activity in activities if activity.kind == "agricola"),
         tuple(activity for activity in activities if activity.kind == "no_agricola"),
@@ -384,7 +373,7 @@ def validate_regimen_simplificado_rows(
         return
     if not rows.activities:
         raise IvaValidationError("applicable regimen simplificado requires activity rows")
-    by_id = _orden_by_id(orden)
+    by_id = {item.orden_id: item for item in orden}
     if len(by_id) != len(orden) or any(item.ejercicio != rows.ejercicio for item in orden):
         raise IvaValidationError("annual Orden taxonomy is duplicate, conflicting, or for the wrong year")
     for row in rows.activities:
@@ -394,12 +383,6 @@ def validate_regimen_simplificado_rows(
                 f"{agricultural_authority.refusal_reason}",
             )
         _validate_regimen_simplificado_activity(row, by_id, orden, censo_iae_epigraphs)
-
-
-def _orden_by_id(
-    orden: tuple[ActividadOrdenAnual, ...],
-) -> dict[ActividadOrdenAnualId, ActividadOrdenAnual]:
-    return {item.orden_id: item for item in orden}
 
 
 def _validate_regimen_simplificado_activity(

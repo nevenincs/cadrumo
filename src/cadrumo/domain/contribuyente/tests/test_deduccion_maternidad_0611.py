@@ -35,13 +35,13 @@ from decimal import Decimal
 import pytest
 
 from ....core import ART_58_2_ENTITLING_RELACIONES, ART_81_1_MATERNIDAD_RELACIONES, DescendantRelacion
+from .. import DescendantInfo, RentaFamilyProfile
 from .._descendant_facts import (
     descendant_facts_from_list,
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
 from .._meses_trabajo import parse_meses_trabajo
-from ..family import DescendantInfo, RentaFamilyProfile
 from ._registry_thresholds import registry_thresholds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

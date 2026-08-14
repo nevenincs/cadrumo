@@ -59,6 +59,49 @@ def relation_fixed_source_year(selector: RelationRevisionSelector) -> int | None
     return selector.year
 
 
+def _source_revisions_matching_periods(
+    source_revisions: Iterable[ModeloRevision],
+    source_period_set: set[str],
+) -> tuple[ModeloRevision, ...]:
+    return tuple(
+        source_revision
+        for source_revision in source_revisions
+        if not source_period_set or source_period_set.issubset(set(source_revision.period_selector.periods))
+    )
+
+
+def _required_source_year_intervals(
+    target_selector: PeriodSelector,
+    *,
+    filing_year_delta: int,
+    fixed_source_year: int | None,
+) -> tuple[tuple[int, int | None], ...]:
+    if fixed_source_year is not None:
+        return ((fixed_source_year, fixed_source_year),)
+    return tuple(
+        (start + filing_year_delta, None if end is None else end + filing_year_delta)
+        for start, end in _selector_year_intervals(target_selector)
+    )
+
+
+def _source_year_coverage_failures(
+    scope: str,
+    required_intervals: tuple[tuple[int, int | None], ...],
+    covered_intervals: tuple[tuple[int, int | None], ...],
+) -> list[str]:
+    failures: list[str] = []
+    for start, end in required_intervals:
+        if _interval_is_covered(start, end, covered_intervals):
+            continue
+        if end is None:
+            failures.append(f"{scope} lacks source revision year coverage from {start}")
+        elif start == end:
+            failures.append(f"{scope} lacks source revision year coverage for {start}")
+        else:
+            failures.append(f"{scope} lacks source revision year coverage for {start}-{end}")
+    return failures
+
+
 def validate_source_year_coverage(
     scope: str,
     *,
@@ -75,11 +118,7 @@ def validate_source_year_coverage(
     shape before their year intervals are compared with the target selector.
     """
     source_period_set = set(source_periods)
-    period_matching_revisions = tuple(
-        source_revision
-        for source_revision in source_revisions
-        if not source_period_set or source_period_set.issubset(set(source_revision.period_selector.periods))
-    )
+    period_matching_revisions = _source_revisions_matching_periods(source_revisions, source_period_set)
     if source_is_observation_history:
         if source_period_set and not period_matching_revisions:
             return [
@@ -87,28 +126,17 @@ def validate_source_year_coverage(
                 f"that no source revision covers",
             ]
         return []
-    if fixed_source_year is None:
-        required_intervals = tuple(
-            (start + filing_year_delta, None if end is None else end + filing_year_delta)
-            for start, end in _selector_year_intervals(target_selector)
-        )
-    else:
-        required_intervals = ((fixed_source_year, fixed_source_year),)
+    required_intervals = _required_source_year_intervals(
+        target_selector,
+        filing_year_delta=filing_year_delta,
+        fixed_source_year=fixed_source_year,
+    )
     covered_intervals = tuple(
         interval
         for source_revision in period_matching_revisions
         for interval in _selector_year_intervals(source_revision.period_selector)
     )
-    failures: list[str] = []
-    for start, end in required_intervals:
-        if not _interval_is_covered(start, end, covered_intervals):
-            if end is None:
-                failures.append(f"{scope} lacks source revision year coverage from {start}")
-            elif start == end:
-                failures.append(f"{scope} lacks source revision year coverage for {start}")
-            else:
-                failures.append(f"{scope} lacks source revision year coverage for {start}-{end}")
-    return failures
+    return _source_year_coverage_failures(scope, required_intervals, covered_intervals)
 
 
 def validate_relation_source_coordinate_coverage(

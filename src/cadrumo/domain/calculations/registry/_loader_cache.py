@@ -27,13 +27,17 @@ from __future__ import annotations
 
 import hashlib
 import tempfile
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
-from ....core import StorageCategory, storage_location
+from ....core import StorageCategory, freeze_toml, read_toml, storage_location
 from ....core.config import load_settings
 from ....core.resources import bundled_path
 from ._errors import RegistryLoadError
+from ._ids import RevisionId
+from ._toml_helpers import as_toml_table as _as_toml_table
 
 REGISTRY_DISK_CACHE_DIR_ENV_VAR = "CADRUMO_REGISTRY_DISK_CACHE_DIR"
 """Environment variable backing :attr:`~core.config.Settings.cadrumo_registry_disk_cache_dir`."""
@@ -61,6 +65,148 @@ _REGISTRY_DISK_CACHE_RELATIVE_PATH = storage_location(StorageCategory.REGISTRY_D
 # ever rewrites it, so the periodic re-walk merely repeats the same answer.
 BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS = 10.0
 MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS = 1.0
+
+ModeloSourceLayout = Literal["single_file", "directory"]
+ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloRevisionSource:
+    """On-disk source for one modelo revision before schema validation."""
+
+    revision_id: RevisionId
+    layout: ModeloRevisionSourceLayout
+    path: Path
+    fragment_paths: tuple[Path, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloSource:
+    """On-disk source for one modelo before schema validation."""
+
+    modelo_id: str
+    layout: ModeloSourceLayout
+    path: Path
+    manifest_path: Path
+    revision_sources: tuple[ModeloRevisionSource, ...] = ()
+
+
+def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
+    """Discover single-file and directory-mode modelo sources."""
+    resolved = modelos_dir.resolve()
+    sources: list[ModeloSource] = []
+    seen_modelo_ids: dict[str, ModeloSource] = {}
+    for source in _single_file_modelo_sources(resolved):
+        _append_modelo_source(source, sources, seen_modelo_ids)
+    for source in _directory_modelo_sources(resolved):
+        _append_modelo_source(source, sources, seen_modelo_ids)
+    return tuple(sources)
+
+
+def _read_modelo_id(path: Path, *, description: str) -> str:
+    try:
+        raw_data = read_toml(path, error_factory=RegistryLoadError)
+        modelo_table = _as_toml_table(raw_data.get("modelo"))
+        if modelo_table is None or "id" not in modelo_table:
+            raise RegistryLoadError(f"{path}: missing [modelo].id")
+        return str(modelo_table["id"])
+    except Exception as exc:
+        raise RegistryLoadError(f"{path}: invalid {description}: {exc}") from exc
+
+
+def _single_file_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
+    return tuple(
+        ModeloSource(
+            modelo_id=_read_modelo_id(path, description="modelo file"),
+            layout="single_file",
+            path=path.resolve(),
+            manifest_path=path.resolve(),
+        )
+        for path in sorted(modelos_dir.glob("*.toml"))
+    )
+
+
+def _directory_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
+    if not modelos_dir.is_dir():
+        return ()
+    return tuple(
+        _directory_modelo_source(entry)
+        for entry in sorted(modelos_dir.iterdir())
+        if entry.is_dir() and (entry / "manifest.toml").is_file()
+    )
+
+
+def _directory_modelo_source(entry: Path) -> ModeloSource:
+    manifest_path = entry / "manifest.toml"
+    return ModeloSource(
+        modelo_id=_read_modelo_id(manifest_path, description="manifest"),
+        layout="directory",
+        path=entry.resolve(),
+        manifest_path=manifest_path.resolve(),
+        revision_sources=_discover_revision_sources(entry / "revisions"),
+    )
+
+
+def _append_modelo_source(
+    source: ModeloSource,
+    sources: list[ModeloSource],
+    seen_modelo_ids: dict[str, ModeloSource],
+) -> None:
+    previous = seen_modelo_ids.get(source.modelo_id)
+    if previous is not None:
+        raise RegistryLoadError(
+            f"{source.path}: modelo {source.modelo_id!r} also declared at {previous.path}; "
+            "remove one of the two layouts",
+        )
+    seen_modelo_ids[source.modelo_id] = source
+    sources.append(source)
+
+
+def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSource, ...]:
+    if not revisions_dir.is_dir():
+        return ()
+    file_sources = tuple(
+        source for path in sorted(revisions_dir.glob("*.toml")) for source in _revision_file_sources(path)
+    )
+    directory_sources = tuple(
+        _revision_directory_source(path) for path in sorted(revisions_dir.iterdir()) if path.is_dir()
+    )
+    return (*file_sources, *directory_sources)
+
+
+def _revision_file_sources(path: Path) -> tuple[ModeloRevisionSource, ...]:
+    rev_data = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
+    file_revisions = _as_toml_table(rev_data.get("revisions"))
+    if not file_revisions:
+        raise RegistryLoadError(f"{path}: revision file must declare [revisions.<id>]")
+    return tuple(
+        ModeloRevisionSource(
+            revision_id=revision_id,
+            layout="revision_file",
+            path=path,
+            fragment_paths=(path,),
+        )
+        for revision_id in sorted(file_revisions)
+    )
+
+
+def _revision_directory_source(path: Path) -> ModeloRevisionSource:
+    revision_manifest = path / "revision.toml"
+    fragment_paths = (revision_manifest,) if revision_manifest.is_file() else ()
+    fragment_paths = (
+        *fragment_paths,
+        *tuple(
+            p
+            for p in sorted(path.rglob("*.toml"))
+            if p != revision_manifest and not any(part == "locales" for part in p.parts)
+        ),
+    )
+    return ModeloRevisionSource(
+        revision_id=path.name,
+        layout="fragment_directory",
+        path=path,
+        fragment_paths=fragment_paths,
+    )
 
 
 @lru_cache(maxsize=1)
