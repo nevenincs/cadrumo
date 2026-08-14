@@ -27,6 +27,7 @@ from ...domain.calculations.registry import (
     project_m303_differentiated_deduction_rows,
     project_m303_prorrata_activity_rows,
     project_m303_regimen_simplificado_rows,
+    validate_m303_regimen_simplificado_endpoint_epoch,
 )
 from ...domain.filing import FilingExportValidationError
 from ...domain.iva import ActividadNoAgricolaSimplificado
@@ -281,8 +282,10 @@ def _project_regimen_record(
     if record.repeat != "projection_rows":
         raise FilingExportValidationError("regimen-simplificado projection record must repeat projection_rows")
     evidence = facts.regimen_simplificado
+    regimen_refs = tuple(ref for ref in refs if isinstance(ref, _REGIMEN_REF_TYPES))
+    validate_m303_regimen_simplificado_endpoint_epoch(regimen_refs, revision_id=str(registry_snapshot.revision.id))
     projected = project_m303_regimen_simplificado_rows(
-        projection_refs=tuple(ref for ref in refs if isinstance(ref, _REGIMEN_REF_TYPES)),
+        projection_refs=regimen_refs,
         rows=evidence.rows,
         orden=evidence.regimen_snapshot.orden.activities,
         agricultural_authority=evidence.regimen_snapshot.orden.agricultural_authority,

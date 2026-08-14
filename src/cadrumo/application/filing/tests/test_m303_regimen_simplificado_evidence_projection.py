@@ -13,6 +13,7 @@ from ....core import (
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,
     M303RegimenSimplificadoCohort,
+    M303RegimenSimplificadoFact,
     M303RegimenSimplificadoFactProjectionRef,
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
@@ -80,7 +81,7 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -
                 ),
                 facts=tuple(
                     HechoActividadSimplificado(
-                        identity=identity,
+                        fact=M303RegimenSimplificadoFact.CUOTA_DEVENGADA_OPERACIONES_CORRIENTES,
                         value=Decimal("1"),
                         evidence_reference=reference,
                     )
@@ -140,7 +141,7 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -
                 projection_kind="m303_regimen_simplificado_fact",
                 cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
                 slot=1,
-                fact_identity=annual_activity.applicable_fact_identities[0],
+                fact=M303RegimenSimplificadoFact.CUOTA_DEVENGADA_OPERACIONES_CORRIENTES,
             ),
         ),
         rows=evidence.rows,
@@ -161,7 +162,7 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -
         Decimal("1"),
         None,
         evidence.calculation_result.activities[0].module_results[0].cuota_devengada,
-        Decimal("1"),
+        evidence.calculation_result.activities[0].cuota_devengada_operaciones_corrientes,
     )
     with pytest.raises(RegistryValidationError, match="requires the immutable calculation result"):
         project_m303_regimen_simplificado_rows(
@@ -229,7 +230,7 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
                 ),
                 facts=tuple(
                     HechoActividadSimplificado(
-                        identity=identity,
+                        fact=M303RegimenSimplificadoFact.CUOTA_DEVENGADA_OPERACIONES_CORRIENTES,
                         value=Decimal("1"),
                         evidence_reference=reference,
                     )

@@ -13,7 +13,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, M303RegimenSimplificadoFact
 from ..filing_evidence import FilingEvidenceReference
 from ._errors import IvaValidationError
 
@@ -218,13 +218,31 @@ class M303RegimenSimplificadoScopeDecision(BaseModel):
 
 
 class HechoActividadSimplificado(BaseModel):
-    """One declared or attested activity fact, keyed by Orden identity."""
+    """One declared or attested activity fact at its closed semantic coordinate."""
 
     model_config = STRICT_FROZEN_CONFIG
 
-    identity: _Token
+    fact: M303RegimenSimplificadoFact
+    sub_index: int | None = Field(default=None, ge=1, le=4)
     value: str | Decimal
     evidence_reference: FilingEvidenceReference
+
+    @model_validator(mode="after")
+    def _require_closed_fact_multiplicity(self) -> HechoActividadSimplificado:
+        mesa_facts = {
+            M303RegimenSimplificadoFact.MESAS_CAPACIDAD,
+            M303RegimenSimplificadoFact.MESAS_DIAS_CUARTO_TRIMESTRE,
+            M303RegimenSimplificadoFact.MESAS_NUMERO,
+        }
+        repeating_facts = mesa_facts | {
+            M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE,
+            M303RegimenSimplificadoFact.SUPERFICIE_HORNO_CUARTO_TRIMESTRE,
+        }
+        if self.fact in mesa_facts and self.sub_index is None:
+            raise IvaValidationError("a Mesa simplified-regime fact requires sub_index")
+        if self.fact not in repeating_facts and self.sub_index is not None:
+            raise IvaValidationError("a singleton simplified-regime fact must not carry sub_index")
+        return self
 
     @field_validator("value")
     @classmethod
@@ -399,10 +417,6 @@ def _validate_regimen_simplificado_activity(
         raise IvaValidationError(f"activity {row.activity_id!r} code conflicts with its annual Orden identity")
     if row.kind == "no_agricola":
         _validate_non_agricultural_activity(row, annual, orden, censo_iae_epigraphs)
-    if frozenset(fact.identity for fact in row.facts) != frozenset(annual.applicable_fact_identities):
-        raise IvaValidationError(
-            f"activity {row.activity_id!r} applicable facts do not match the annual Orden",
-        )
 
 
 def _validate_non_agricultural_activity(
@@ -445,7 +459,7 @@ def _resolve_non_agricultural_orden_activity(
 
 
 def _require_unique_fact_identities(facts: tuple[HechoActividadSimplificado, ...]) -> None:
-    identities = tuple(fact.identity for fact in facts)
+    identities = tuple((fact.fact, fact.sub_index) for fact in facts)
     if len(set(identities)) != len(identities):
         raise IvaValidationError("an activity contains duplicate or conflicting fact identities")
 

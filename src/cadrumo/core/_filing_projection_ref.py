@@ -76,6 +76,63 @@ class M303RegimenSimplificadoModuleValue(StrEnum):
     CUOTA_DEVENGADA = "cuota_devengada"
 
 
+class M303RegimenSimplificadoFact(StrEnum):
+    """Closed semantic facts printed by the DP30302 simplified-regime record."""
+
+    VOLUMEN_INGRESOS = "volumen_ingresos"
+    INDICE_CUOTA = "indice_cuota"
+    CUOTA_DEVENGADA = "cuota_devengada"
+    PORCENTAJE_INGRESO_CUENTA = "porcentaje_ingreso_cuenta"
+    INGRESO_CUENTA = "ingreso_cuenta"
+    CUOTA_SOPORTADA_OPERACIONES_CORRIENTES = "cuota_soportada_operaciones_corrientes"
+    CUOTAS_SOPORTADAS_OPERACIONES_CORRIENTES = "cuotas_soportadas_operaciones_corrientes"
+    CUOTA_ANUAL_DERIVADA_REGIMEN_SIMPLIFICADO = "cuota_anual_derivada_regimen_simplificado"
+    CUOTAS_SOPORTADAS_CUARTO_TRIMESTRE = "cuotas_soportadas_cuarto_trimestre"
+    COMPENSACIONES_REAGP_CUARTO_TRIMESTRE = "compensaciones_reagp_cuarto_trimestre"
+    DANA_ELEGIBLE = "dana_elegible"
+    REDUCCION_DANA = "reduccion_dana"
+    CUOTA_DEVENGADA_OPERACIONES_CORRIENTES = "cuota_devengada_operaciones_corrientes"
+    REDUCCIONES = "reducciones"
+    INDICE_CORRECTOR_ACTIVIDAD_TEMPORADA = "indice_corrector_actividad_temporada"
+    INDICE_CORRECTOR_ACTIVIDADES_TEMPORADA = "indice_corrector_actividades_temporada"
+    RESULTADO_CUARTO_TRIMESTRE = "resultado_cuarto_trimestre"
+    PORCENTAJE_CUOTA_MINIMA = "porcentaje_cuota_minima"
+    DEVOLUCION_CUOTAS_SOPORTADAS_OTROS_PAISES = "devolucion_cuotas_soportadas_otros_paises"
+    CUOTA_MINIMA = "cuota_minima"
+    ACTIVIDAD_TEMPORADA_DIAS_EJERCICIO_ANIO_ANTERIOR = "actividad_temporada_dias_ejercicio_anio_anterior"
+    DIAS_EJERCICIO_TRIMESTRE = "dias_ejercicio_trimestre"
+    EMPLEADOS_INICIO_EJERCICIO = "empleados_inicio_ejercicio"
+    EMPLEADOS_INICIO_EJERCICIO_ACTUAL = "empleados_inicio_ejercicio_actual"
+    ACTIVIDAD_TEMPORADA_DIAS_EJERCICIO_CUARTO_TRIMESTRE = "actividad_temporada_dias_ejercicio_cuarto_trimestre"
+    MAX_ASALARIADOS_SIMULTANEOS = "max_asalariados_simultaneos"
+    LORCA_ELEGIBLE = "lorca_elegible"
+    REDUCCION_LORCA = "reduccion_lorca"
+    PERSONAL_ASALARIADO_HORAS_MAYORES_19 = "personal_asalariado_horas_mayores_19"
+    PERSONAL_ASALARIADO_HORAS_MENORES_19_O_FORMACION = "personal_asalariado_horas_menores_19_o_formacion"
+    PERSONAL_ASALARIADO_HORAS_DISCAPACIDAD_33 = "personal_asalariado_horas_discapacidad_33"
+    PERSONAL_ASALARIADO_HORAS_CONVENIO_COLECTIVO = "personal_asalariado_horas_convenio_colectivo"
+    PERSONAL_NO_ASALARIADO_HORAS_TITULAR = "personal_no_asalariado_horas_titular"
+    PERSONAL_NO_ASALARIADO_TITULAR_DISCAPACIDAD_33 = "personal_no_asalariado_titular_discapacidad_33"
+    PERSONAL_NO_ASALARIADO_HORAS_CONYUGE = "personal_no_asalariado_horas_conyuge"
+    PERSONAL_NO_ASALARIADO_HORAS_HIJOS_MENORES_18 = "personal_no_asalariado_horas_hijos_menores_18"
+    MESAS_CAPACIDAD = "mesas_capacidad"
+    MESAS_NUMERO = "mesas_numero"
+    MESAS_DIAS_CUARTO_TRIMESTRE = "mesas_dias_cuarto_trimestre"
+    SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE = "superficie_horno_dias_cuarto_trimestre"
+    SUPERFICIE_HORNO_CUARTO_TRIMESTRE = "superficie_horno_cuarto_trimestre"
+
+
+_M303_REGIMEN_SIMPLIFICADO_REPEATING_FACTS = frozenset(
+    {
+        M303RegimenSimplificadoFact.MESAS_CAPACIDAD,
+        M303RegimenSimplificadoFact.MESAS_DIAS_CUARTO_TRIMESTRE,
+        M303RegimenSimplificadoFact.MESAS_NUMERO,
+        M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE,
+        M303RegimenSimplificadoFact.SUPERFICIE_HORNO_CUARTO_TRIMESTRE,
+    },
+)
+
+
 class M303Exonerado390ActivityField(StrEnum):
     """Closed fields projected from one evidenced exonerado-390 activity row."""
 
@@ -134,14 +191,31 @@ class M303RegimenSimplificadoActivityProjectionRef(BaseModel):
 
 
 class M303RegimenSimplificadoFactProjectionRef(BaseModel):
-    """One annual-Orden fact on a simplified-regime activity row."""
+    """One closed semantic fact at a simplified-regime cohort and slot."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m303_regimen_simplificado_fact"]
     cohort: M303RegimenSimplificadoCohort
     slot: int = Field(ge=1, le=2)
-    fact_identity: _Identity
+    fact: M303RegimenSimplificadoFact
+    sub_index: int | None = Field(default=None, ge=1, le=4)
+
+    @model_validator(mode="after")
+    def _require_the_closed_multiplicity_axis(self) -> M303RegimenSimplificadoFactProjectionRef:
+        if self.fact not in _M303_REGIMEN_SIMPLIFICADO_REPEATING_FACTS and self.sub_index is not None:
+            raise ValueError("a singleton simplified-regime fact must not carry sub_index")
+        if (
+            self.fact
+            in {
+                M303RegimenSimplificadoFact.MESAS_CAPACIDAD,
+                M303RegimenSimplificadoFact.MESAS_DIAS_CUARTO_TRIMESTRE,
+                M303RegimenSimplificadoFact.MESAS_NUMERO,
+            }
+            and self.sub_index is None
+        ):
+            raise ValueError("a Mesa simplified-regime fact requires sub_index")
+        return self
 
 
 class M303RegimenSimplificadoModuleProjectionRef(BaseModel):
@@ -191,7 +265,7 @@ _STRING_WIRE_FIELDS = frozenset(
     {
         "casilla_id",
         "cohort",
-        "fact_identity",
+        "fact",
         "field",
         "projection_kind",
         "value",
@@ -215,7 +289,7 @@ def compile_filing_projection_ref(value: object) -> FilingProjectionRef:
         string_value = cast(str, payload[field_name])
         if string_value != string_value.strip():
             raise ValueError(f"filing projection reference {field_name!r} must not contain surrounding whitespace")
-    for integer_field in ("slot", "module_order"):
+    for integer_field in ("slot", "module_order", "sub_index"):
         if integer_field in payload and type(payload[integer_field]) is not int:
             raise ValueError(f"filing projection reference {integer_field!r} must be an exact integer")
     return _FILING_PROJECTION_REF_ADAPTER.validate_python(payload, strict=False)
@@ -240,6 +314,7 @@ __all__ = [
     "M303RegimenSimplificadoActivityField",
     "M303RegimenSimplificadoActivityProjectionRef",
     "M303RegimenSimplificadoCohort",
+    "M303RegimenSimplificadoFact",
     "M303RegimenSimplificadoFactProjectionRef",
     "M303RegimenSimplificadoModuleProjectionRef",
     "M303RegimenSimplificadoModuleValue",
