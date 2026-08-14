@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from ....core.classification import SensitivityClass
 from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from .._portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport
-from .._values import UserProfileFact, UserProfileRecord, UserProfileStatus
+from .._values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -26,7 +26,6 @@ _BINARY_PAYLOAD_B64 = base64.b64encode(_BINARY_PAYLOAD).decode("ascii")
 def _profile() -> UserProfileRecord:
     return UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Portable schema",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
         created_at=_INSTANT,
         updated_at=_INSTANT,
@@ -39,17 +38,17 @@ def _campaign_record() -> UserProfileRecord:
     The setup flow added three persisted surfaces: the
     ``censo.divergencia.{n}.*`` cotejo divergence rows, the
     ``renta_family.descendiente.{n}.*`` descendant extensions, and the
-    ``SETUP_INCOMPLETE`` lifecycle status. All three are carried by the
+    ``INCOMPLETE`` setup state. All three are carried by the
     :class:`UserProfileRecord` -- as ordinary ``UserProfileFact`` rows and
-    the ``status`` enum -- never by a change to the export model's own shape.
+    the ``setup_state`` field -- never by a change to the export model's own
+    shape.
     Defaultable fact fields are populated non-default (a censo-artefact
     ``source`` and a real effective-dated window) so a save-drops-field
     regression would break the strict equality the roundtrip asserts.
     """
     return UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Campaign additions",
-        status=UserProfileStatus.SETUP_INCOMPLETE,
+        setup_state=ProfileSetupState.INCOMPLETE,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(
@@ -84,11 +83,11 @@ def test_portable_export_carries_campaign_schema_additions_at_v3() -> None:
     Because ``UserProfilePortableExport`` composes the
     whole :class:`UserProfileRecord` through the ``profile`` field and pydantic
     serialises it generically, the new divergence facts, descendant facts, and
-    the ``SETUP_INCOMPLETE`` status flow through structurally. Under the
+    the ``INCOMPLETE`` setup state flow through structurally. Under the
     PRE_RELEASE compatibility regime this means no ``bundle_schema_version``
     bump is warranted -- the same v3 bundle round-trips the new surfaces with
-    strict equality, and the new status survives (a dropped status would
-    re-default to ``ACTIVE`` and fail the identity check).
+    strict equality, and the setup state survives (a dropped state would
+    re-default to ``COMPLETE`` and fail the identity check).
     """
     record = _campaign_record()
     bundle = UserProfilePortableExport(profile=record, exported_at=_INSTANT)
@@ -98,7 +97,7 @@ def test_portable_export_carries_campaign_schema_additions_at_v3() -> None:
 
     assert reloaded.bundle_schema_version == 3
     assert reloaded.profile == record
-    assert reloaded.profile.status is UserProfileStatus.SETUP_INCOMPLETE
+    assert reloaded.profile.setup_state is ProfileSetupState.INCOMPLETE
     reloaded_paths = {fact.path for fact in reloaded.profile.facts}
     assert "censo.divergencia.0.artefact_value" in reloaded_paths
     assert "renta_family.descendiente.0.discapacidad" in reloaded_paths
@@ -119,9 +118,8 @@ def test_portable_export_campaign_roundtrip_is_not_tautological() -> None:
     mangled = payload.replace("Consultoria informatica", "Corrupted on the wire")
     assert "Corrupted on the wire" in mangled, "payload mutation did not apply"
 
-    reloaded = UserProfilePortableExport.model_validate_json(mangled)
-    assert reloaded.profile != record
-    assert any(fact.value == "Corrupted on the wire" for fact in reloaded.profile.facts)
+    with pytest.raises(ValidationError, match="content digest does not match"):
+        UserProfilePortableExport.model_validate_json(mangled)
 
 
 def test_portable_export_v3_defaults_keep_empty_custody_fields_json_valid() -> None:

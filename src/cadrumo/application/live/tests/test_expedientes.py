@@ -25,7 +25,6 @@ risk -- so the literal stays.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
@@ -58,12 +57,6 @@ _BUCKET_B_ID = "57575757-5757-4757-8757-575757575757"
 
 def test_capture_uses_expedientes_auth_operation_label() -> None:
     assert LIVE_EXPEDIENTES_READ_OPERATION == "live-expedientes-read"
-
-
-@pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        yield profile
 
 
 def _service(profile: TestRuntimeProfile) -> ExpedientesService:

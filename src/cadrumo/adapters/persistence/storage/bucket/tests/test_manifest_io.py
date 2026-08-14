@@ -11,7 +11,6 @@ from pydantic import ValidationError
 
 from ......core.errors import build_error_envelope
 from ......core.external_constants import UTF_8_ENCODING
-from ......domain.user_profile import UserProfileStatus
 from ...errors import StorageValidationError
 from .._layout import BucketPaths, bucket_paths, provision_bucket_directory
 from .._manifest import (
@@ -45,10 +44,8 @@ def _fixture_manifest(*, last_unlocked: bool = True) -> BucketManifest:
         created_at=datetime(2026, 5, 14, 12, 0, 0, tzinfo=UTC),
         last_unlocked_at=datetime(2026, 5, 14, 13, 30, 0, tzinfo=UTC) if last_unlocked else None,
         kdf_params=kdf,
-        recovery_enrolled=True,
         key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
         schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-        status=UserProfileStatus.ACTIVE,
     )
 
 
@@ -107,20 +104,6 @@ def test_read_rejects_unknown_key(tmp_path: Path) -> None:
     target.write_text(text + 'stowaway = "x"\n', encoding=UTF_8_ENCODING)
 
     with pytest.raises(ValidationError):
-        read_manifest(paths)
-
-
-def test_read_rejects_missing_status_key(tmp_path: Path) -> None:
-    paths, _manifest = _write_fixture_manifest(tmp_path)
-
-    target = manifest_path(paths)
-    text = target.read_text(encoding=UTF_8_ENCODING)
-    target.write_text(
-        "\n".join(line for line in text.splitlines() if not line.startswith("status = ")) + "\n",
-        encoding=UTF_8_ENCODING,
-    )
-
-    with pytest.raises(StorageValidationError, match="lifecycle status"):
         read_manifest(paths)
 
 

@@ -22,7 +22,6 @@ from textual.widgets import Input, Static
 from .....adapters.persistence.storage.errors import MasterKeyPassphraseMismatchError
 from .....adapters.persistence.storage.master_key import get_master_key_provider
 from .....application.user_profile import assess_passphrase
-from .....domain.user_profile import UserProfileStatus
 from .....entrypoints.cli._config._manager_frontend import attempt_registration
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import RegistrationApp
@@ -79,7 +78,7 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
 
         assert app.outcome is not None
         assert app.outcome.label == "Screen Subject"
-        assert app.outcome.status is UserProfileStatus.SETUP_INCOMPLETE
+        assert app.outcome.setup_state.value == "incomplete"
 
         assert len(get_master_key_provider(passphrase_callback=lambda: _TYPED_PASSWORD).get_master_key()) == 32
         with pytest.raises(MasterKeyPassphraseMismatchError):

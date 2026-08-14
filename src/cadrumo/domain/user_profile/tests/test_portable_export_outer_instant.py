@@ -33,7 +33,6 @@ _OFFSET_INSTANT = datetime(2026, 1, 1, 10, 0, 0, tzinfo=timezone(timedelta(hours
 def _profile() -> UserProfileRecord:
     return UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="portable-instant-operator",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
 

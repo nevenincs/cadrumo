@@ -1,17 +1,11 @@
-"""Lifecycle-status transition contract for :class:`UserProfileRecord`.
-
-Pins the ``SETUP_INCOMPLETE`` arm of :class:`UserProfileStatus`: a
-mid-setup profile is a live record (no ``removed_at``), transitions to
-``ACTIVE`` only through :meth:`UserProfileRecord.complete_setup`, and can
-still be tombstoned when the operator discards the unfinished setup.
-"""
+"""Current profile-record setup-state contracts."""
 
 from __future__ import annotations
 
 import pytest
 from pydantic import ValidationError
 
-from .. import UserProfileRecord, UserProfileStatus, UserProfileValidationError, utc_now
+from .. import ProfileSetupState, UserProfileRecord, UserProfileSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -21,48 +15,30 @@ _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 def _incomplete_record() -> UserProfileRecord:
     return UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Operator",
-        status=UserProfileStatus.SETUP_INCOMPLETE,
+        setup_state=ProfileSetupState.INCOMPLETE,
     )
 
 
-def test_setup_incomplete_record_is_live_without_removed_at() -> None:
+def test_incomplete_record_is_explicitly_not_ready() -> None:
     record = _incomplete_record()
-    assert record.status is UserProfileStatus.SETUP_INCOMPLETE
-    assert record.removed_at is None
+    assert record.setup_state is ProfileSetupState.INCOMPLETE
 
 
-def test_setup_incomplete_record_refuses_removed_at() -> None:
-    with pytest.raises(ValidationError, match="must not carry removed_at"):
-        UserProfileRecord(
-            profile_id=_PROFILE_ID,
-            display_name="Operator",
-            status=UserProfileStatus.SETUP_INCOMPLETE,
-            removed_at=utc_now(),
+def test_new_record_defaults_to_complete() -> None:
+    record = UserProfileRecord(profile_id=_PROFILE_ID)
+    assert record.setup_state is ProfileSetupState.COMPLETE
+
+
+def test_legacy_lifecycle_fields_are_rejected() -> None:
+    with pytest.raises(ValidationError, match="extra_forbidden"):
+        UserProfileRecord.model_validate(
+            {
+                "profile_id": _PROFILE_ID,
+                "status": "active",
+            },
         )
 
 
-def test_complete_setup_transitions_to_active() -> None:
-    record = _incomplete_record()
-    completed = record.complete_setup()
-    assert completed.status is UserProfileStatus.ACTIVE
-    assert completed.removed_at is None
-    assert completed.updated_at >= record.updated_at
-
-
-def test_complete_setup_refuses_an_active_profile() -> None:
-    active = UserProfileRecord(profile_id=_PROFILE_ID, display_name="Operator")
-    with pytest.raises(UserProfileValidationError):
-        active.complete_setup()
-
-
-def test_complete_setup_refuses_a_tombstoned_profile() -> None:
-    tombstoned = UserProfileRecord(profile_id=_PROFILE_ID, display_name="Operator").tombstone()
-    with pytest.raises(UserProfileValidationError):
-        tombstoned.complete_setup()
-
-
-def test_setup_incomplete_profile_can_be_tombstoned_on_discard() -> None:
-    discarded = _incomplete_record().tombstone()
-    assert discarded.status is UserProfileStatus.TOMBSTONED
-    assert discarded.removed_at is not None
+def test_incomplete_record_cannot_be_snapshotted() -> None:
+    with pytest.raises(ValueError, match="cannot snapshot an incomplete profile record"):
+        UserProfileSnapshot.from_profile(_incomplete_record())

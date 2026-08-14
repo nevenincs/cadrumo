@@ -8,12 +8,41 @@ repository's presentation mapping, never a manifest or a key-selection hint.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...core.identity import ProfileId, ProfileLabel
 from ...core.time import validate_utc_aware
+from ...domain.user_profile import ProfileSetupState
+
+
+class LockedProfileFactSummary(BaseModel):
+    """The only fact/status projection available without an unlocked session."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", hide_input_in_errors=True)
+
+    availability: Literal["UNAVAILABLE_LOCKED"] = "UNAVAILABLE_LOCKED"
+    setup_state: Literal["UNAVAILABLE_LOCKED"] = "UNAVAILABLE_LOCKED"
+    fact_count: Literal[0] = 0
+
+
+class UnlockedProfileFactSummary(BaseModel):
+    """Session-authenticated current-record summary and provenance."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", hide_input_in_errors=True)
+
+    availability: Literal["AVAILABLE_UNLOCKED"] = "AVAILABLE_UNLOCKED"
+    setup_state: ProfileSetupState
+    fact_count: int = Field(ge=0)
+    record_revision: int = Field(ge=1)
+    content_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+ProfileFactSummary = Annotated[
+    LockedProfileFactSummary | UnlockedProfileFactSummary,
+    Field(discriminator="availability"),
+]
 
 
 class CommittedProfileView(BaseModel):
@@ -27,6 +56,11 @@ class CommittedProfileView(BaseModel):
     publication_kind: Literal["enroll", "restore"]
     password_generation: int = Field(ge=1)
     custody_present: Literal[True] = True
+    label_revision: int = Field(ge=1)
+    label_content_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    label_self_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    label_source_witness: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    fact_summary: ProfileFactSummary = Field(default_factory=LockedProfileFactSummary)
 
     @field_validator("committed_at")
     @classmethod
@@ -34,4 +68,9 @@ class CommittedProfileView(BaseModel):
         return validate_utc_aware(value)
 
 
-__all__ = ["CommittedProfileView"]
+__all__ = [
+    "CommittedProfileView",
+    "LockedProfileFactSummary",
+    "ProfileFactSummary",
+    "UnlockedProfileFactSummary",
+]

@@ -15,7 +15,7 @@ package facade, following the same
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import typer
 
@@ -26,8 +26,8 @@ from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.logging import get_logger as _get_logger
 from ....domain.calculations.registry import RevisionId
-from .._common import _emit_envelope, _no_active_profile_refusal
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from .._common import emit_envelope, no_active_profile_refusal
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 from ._profile_readiness import (
@@ -64,15 +64,14 @@ def _resolve_show_pointer(
 ) -> _ProfileBucketPointer:
     """Resolve the profile ``show`` inspects, by name or the active pointer.
 
-    ``show`` is the inspect surface: a tombstoned profile stays resolvable by
-    name so the operator can confirm a delete and read the retained record.
-    The verb renders the tombstoned status; it never reports the profile as a
-    live ``ready`` one.
+    ``show`` is the inspect surface for a current committed capsule. The
+    pointer supplies identity and label; setup state is read from the
+    authenticated record below.
     """
     if name is None:
         pointer = resolve_active_profile_pointer()
         if pointer is None:
-            raise _no_active_profile_refusal()
+            raise no_active_profile_refusal()
         return pointer
 
     from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
@@ -83,7 +82,7 @@ def _resolve_show_pointer(
         context={"name": name},
     )
     try:
-        pointer = _resolve_profile_bucket(name, include_tombstoned=True)
+        pointer = _resolve_profile_bucket(name)
     except _ProfileLabelAmbiguousError as exc:
         # ``ProfileLabelAmbiguousError`` is a ``WorkflowError``, NOT a
         # ``ValueError``; refuse clearly with the dedicated ambiguity
@@ -103,7 +102,7 @@ def _read_record_for_show(ctx: typer.Context, pointer: _ProfileBucketPointer) ->
     from ....domain.user_profile import ProfileNotFoundError, UserProfileRecord
 
     try:
-        record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+        record = cast(object, _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id))
         if not isinstance(record, UserProfileRecord):
             raise _ConfigBoundaryError(TypeError("profile record reader returned an invalid record"))
         return record
@@ -142,7 +141,6 @@ def _register_show_command(
     *,
     resolve_active_profile_pointer: Callable[[], _ProfileBucketPointer | None],
 ) -> None:
-    @profile_app.command("show", help=tr("cli.config.profile.show_help"))
     def config_profile_show(
         ctx: typer.Context,
         name: str | None = typer.Argument(None, help=tr("cli.config.profile.show_name_help")),
@@ -169,18 +167,16 @@ def _register_show_command(
 
         pointer = _resolve_show_pointer(name, resolve_active_profile_pointer=resolve_active_profile_pointer)
         record = _read_record_for_show(ctx, pointer)
-        from ....domain.user_profile import UserProfileStatus
         from .._config_payloads import ConfigProfileShowResult, ProfileFactPayload, ProfileIssuePayload
 
         report = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
         blocking = [issue for issue in report.issues if issue.severity.value == "error"]
-        is_tombstoned = record.status is UserProfileStatus.TOMBSTONED
         values = record_to_path_values(record)
         result = ConfigProfileShowResult(
             profile_id=record.profile_id,
-            display_name=record.display_name,
-            status=record.status,
-            valid=not blocking and not is_tombstoned,
+            display_name=pointer.label,
+            setup_state=record.setup_state,
+            valid=not blocking,
             schema_version=report.schema_version,
             issues=[
                 ProfileIssuePayload(
@@ -197,16 +193,17 @@ def _register_show_command(
             record=record,
             report=report,
             blocking_count=len(blocking),
-            is_tombstoned=is_tombstoned,
             values=values,
         )
         from ....application.user_profile import censo_divergence_notice
 
         divergence_notice = censo_divergence_notice(record)
         notices = [divergence_notice] if divergence_notice is not None else []
-        _emit_envelope(ctx, command="config.profile.show", result=result, lines=lines, notices=notices)
+        emit_envelope(ctx, command="config.profile.show", result=result, lines=lines, notices=notices)
         if blocking:
             raise typer.Exit(code=2)
+
+    profile_app.command("show", help=tr("cli.config.profile.show_help"))(config_profile_show)
 
 
 def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id: RevisionId | None) -> str:
@@ -281,7 +278,6 @@ def _register_preflight_command(
     *,
     resolve_active_profile_pointer: Callable[[], _ProfileBucketPointer | None],
 ) -> None:
-    @profile_app.command("preflight", help=tr("cli.config.profile.preflight_help"))
     def config_profile_preflight(
         ctx: typer.Context,
         modelo: str = typer.Option(..., "--modelo", help=tr("cli.config.profile.preflight_modelo_help")),
@@ -318,7 +314,7 @@ def _register_preflight_command(
 
         pointer = resolve_active_profile_pointer()
         if pointer is None:
-            raise _no_active_profile_refusal()
+            raise no_active_profile_refusal()
         try:
             record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
         except ProfileNotFoundError as exc:
@@ -396,7 +392,7 @@ def _register_preflight_command(
                 f"missing\t{requirement.section_key}\t{requirement.field_key}\t{requirement.selector}\t"
                 f"{requirement.label}\t{legal_refs}\t{modelos}",
             )
-        notices = []
+        notices: list[Notice] = []
         if not report.per_operation_requirements_assessed:
             notices.append(
                 Notice(
@@ -409,9 +405,11 @@ def _register_preflight_command(
                     context={"modelo": report.modelo, "ready": str(report.ready)},
                 ),
             )
-        _emit_envelope(ctx, command="config.profile.preflight", result=result, lines=lines, notices=tuple(notices))
+        emit_envelope(ctx, command="config.profile.preflight", result=result, lines=lines, notices=tuple(notices))
         if not report.ready:
             raise typer.Exit(code=2)
+
+    profile_app.command("preflight", help=tr("cli.config.profile.preflight_help"))(config_profile_preflight)
 
 
 def _resolve_validate_target_pointer(
@@ -431,10 +429,10 @@ def _resolve_validate_target_pointer(
     if name is None:
         pointer = resolve_active_profile_pointer()
         if pointer is None:
-            raise _no_active_profile_refusal()
+            raise no_active_profile_refusal()
         return pointer
     try:
-        pointer = _read_profile_bucket(name, include_tombstoned=True)
+        pointer = _read_profile_bucket(name)
     except _ProfileLabelAmbiguousError as exc:
         # ``ProfileLabelAmbiguousError`` is a ``WorkflowError``, NOT a
         # ``ValueError``; refuse clearly with the dedicated ambiguity
@@ -460,7 +458,6 @@ def _register_validate_command(
     *,
     resolve_active_profile_pointer: Callable[[], _ProfileBucketPointer | None],
 ) -> None:
-    @profile_app.command("validate", help=tr("cli.config.profile.validate_help"))
     def config_profile_validate(
         ctx: typer.Context,
         name: str | None = typer.Argument(None, help=tr("cli.config.profile.validate_name_help")),
@@ -508,8 +505,8 @@ def _register_validate_command(
         blocking = [issue for issue in issues if issue.severity.value == "error"]
         result = ConfigProfileValidateResult(
             profile_id=record.profile_id,
-            display_name=record.display_name,
-            status=record.status,
+            display_name=pointer.label,
+            setup_state=record.setup_state,
             valid=not blocking,
             schema_version=report.schema_version,
             issues=[
@@ -525,19 +522,21 @@ def _register_validate_command(
         lines = [
             f"readiness\t{'blocked' if blocking else 'ready'}\tissues={len(issues)}",
             f"profile_id\t{record.profile_id}",
-            f"display_name\t{record.display_name}",
-            f"status\t{record.status.value}",
+            f"display_name\t{pointer.label}",
+            f"setup_state\t{record.setup_state.value}",
             f"schema_version\t{report.schema_version}",
             f"valid\t{not blocking}",
         ]
         for issue in issues:
             lines.append(f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}")
-        _emit_envelope(ctx, command="config.profile.validate", result=result, lines=lines)
+        emit_envelope(ctx, command="config.profile.validate", result=result, lines=lines)
         if blocking:
             raise typer.Exit(code=2)
 
+    profile_app.command("validate", help=tr("cli.config.profile.validate_help"))(config_profile_validate)
 
-def _record_validity_verdict(*, is_tombstoned: bool, blocking_count: int, issue_count: int) -> tuple[str, str]:
+
+def _record_validity_verdict(*, blocking_count: int, issue_count: int) -> tuple[str, str]:
     """Return the localised verdict prose and its machine ``record_validity`` row.
 
     ``show`` reports *record validity* (does the persisted profile record
@@ -550,9 +549,6 @@ def _record_validity_verdict(*, is_tombstoned: bool, blocking_count: int, issue_
     emits ``record_validity`` with ``valid``/``invalid`` instead, so the two
     measures no longer collide.
     """
-    if is_tombstoned:
-        prose = tr("cli.config.profile.show.summary_tombstoned")
-        return prose, "record_validity\ttombstoned"
     if blocking_count:
         prose = tr(
             "cli.config.profile.show.summary_invalid",
@@ -568,7 +564,6 @@ def _record_validity_lines(
     record: _UserProfileRecord,
     report: _ProfileValidationReport,
     blocking_count: int,
-    is_tombstoned: bool,
     values: Mapping[str, object],
 ) -> list[str]:
     """Render the ``show`` text report for one profile record.
@@ -579,7 +574,6 @@ def _record_validity_lines(
     ``--language`` / ``--output-language`` flag visibly affects.
     """
     prose, validity_row = _record_validity_verdict(
-        is_tombstoned=is_tombstoned,
         blocking_count=blocking_count,
         issue_count=len(report.issues),
     )
@@ -587,8 +581,7 @@ def _record_validity_lines(
         prose,
         validity_row,
         f"profile_id\t{record.profile_id}",
-        f"display_name\t{record.display_name}",
-        f"status\t{record.status.value}",
+        f"setup_state\t{record.setup_state.value}",
     ]
     lines.extend(
         f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}" for issue in report.issues

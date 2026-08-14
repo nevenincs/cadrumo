@@ -344,6 +344,7 @@ def _supervisor(
     return OperationSupervisor(
         registry=registry,
         journal=journal,
+        event_stream=journal,
         leases=leases,
         operands=operands,
         owner_id=owner_id,

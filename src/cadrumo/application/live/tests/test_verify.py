@@ -10,7 +10,6 @@ risk -- so the literal stays.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Final
@@ -36,12 +35,6 @@ PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"live"})
 """Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 _BUCKET_A_ID = "60606060-6060-4060-8060-606060606060"
 _BUCKET_B_ID = "61616161-6161-4161-8161-616161616161"
-
-
-@pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        yield profile
 
 
 def _service(profile: TestRuntimeProfile) -> VerifyService:

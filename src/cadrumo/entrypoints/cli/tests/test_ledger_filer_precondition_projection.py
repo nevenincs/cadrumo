@@ -34,7 +34,6 @@ def test_filer_setup_refusal_reaches_the_shared_cli_projection_intact() -> None:
     """The shared boundary sees the original condition, facts, and outcome."""
     profile = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Territory projection",
         facts=(UserProfileFact(path=FILER_TAX_ID_FACT_PATH, value="X1234567L"),),
     )
 

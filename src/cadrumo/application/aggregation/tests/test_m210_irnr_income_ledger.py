@@ -12,7 +12,6 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import M210GrossIncomeSourceMode, M210PayerMode, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import load_modelo_directory
@@ -21,6 +20,7 @@ from ....domain.modelos import Modelo210AgrupacionRentaRow
 from ....domain.transactions import BusinessClassification, M210IncomeClassification, TransactionDirection
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_injected_secure_object_repository, isolated_runtime_profile
 from ...ledger import (
     ManualLedgerTransactionCommand,
@@ -34,7 +34,6 @@ from ...modelo import (
     create_work_unit,
     verify_modelo_revision,
 )
-from ...user_profile import ProfileRecordRepository
 from .. import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
@@ -119,11 +118,10 @@ def _annual_evidence_row() -> Modelo210AgrupacionRentaRow:
     )
 
 
-def _seed_m210_profile(*, objects: SecureObjectRepository) -> None:
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+def _seed_m210_profile() -> None:
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="M210 IRNR ledger test profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="activities.description", value="Spanish-source income"),
@@ -167,7 +165,7 @@ def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambien
                 objects=runtime.repository,
             )
             assert ambient_transaction_repository.exists() is False
-            _seed_m210_profile(objects=runtime.repository)
+            _seed_m210_profile()
             work_repository = WorkUnitCatalogueRepository(objects=runtime.repository)
             calculation_repository = CalculationRevisionCatalogueRepository(objects=runtime.repository)
             ambient_event_repository = BucketEventHistoryRepository(objects=runtime.repository)
@@ -294,7 +292,7 @@ def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_
 def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusive(tmp_path: Path) -> None:
     """Manual mode accepts [5]; ledger mode derives ES-only [5] and rejects a manual value."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        _seed_m210_profile(objects=runtime.repository)
+        _seed_m210_profile()
         transaction_repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=runtime.repository)
         event_repository = BucketEventHistoryRepository(objects=runtime.repository)
         es_id = _create_income(
@@ -562,7 +560,7 @@ def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(tmp_pat
     NOT also appear as an operator-supplied manual fact.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        _seed_m210_profile(objects=runtime.repository)
+        _seed_m210_profile()
         transaction_repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=runtime.repository)
         event_repository = BucketEventHistoryRepository(objects=runtime.repository)
         _create_income(

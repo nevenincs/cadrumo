@@ -37,7 +37,6 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -53,9 +52,9 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import CalculationObservationRepository
-from ...user_profile import ProfileRecordRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
@@ -163,7 +162,6 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
     """
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="identity.name", value="Test"),
@@ -196,7 +194,7 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
         created_at=_T0,
         updated_at=_T0,
     )
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(record)
+    seed_test_profile_record(record)
 
 
 def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:

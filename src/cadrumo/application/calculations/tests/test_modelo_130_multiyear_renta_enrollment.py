@@ -49,7 +49,6 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -57,10 +56,10 @@ from ....domain.calculations.registry import (
 )
 from ....domain.modelos import CalculationRevision
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import calculate_modelo_revision, create_work_unit
-from ...user_profile import ProfileRecordRepository
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -140,11 +139,10 @@ _Q1_INPUTS: dict[CasillaId, Decimal] = {
 }
 
 
-def _seed_ready_profile(objects: SecureObjectRepository) -> None:
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+def _seed_ready_profile() -> None:
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_PROFILE_ID,
-            display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="Test"),
@@ -174,7 +172,7 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over an isolated profile — no mocks."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile(objects)
+        _seed_ready_profile()
         yield (
             WorkUnitCatalogueRepository(objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),

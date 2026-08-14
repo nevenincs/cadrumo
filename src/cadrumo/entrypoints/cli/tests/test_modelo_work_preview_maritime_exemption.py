@@ -58,7 +58,6 @@ def _register_maritime_profile(*, overrides: dict[str, str]) -> None:
             state,
             profile_id=_BUCKET_ID,
             overrides=overrides,
-            enforce_unique_tax_id=False,
         ),
     )
 

@@ -12,7 +12,7 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
 from .....core import Period, StorageCategory, storage_path
-from .....domain.justificante import Justificante
+from .....domain.justificante import Justificante, JustificanteRepositoryProtocol
 from .....tests.aeat_literal_fixtures import JUSTIFICANTE_VERIFY_PATH_FIXTURE, aeat_url
 from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...storage import (
@@ -82,6 +82,9 @@ def _database_bytes(runtime_profile: TestRuntimeProfile) -> bytes:
 
 
 class TestEmptyState:
+    def test_repository_implements_domain_port(self, repo: JustificanteRepository) -> None:
+        assert isinstance(repo, JustificanteRepositoryProtocol)
+
     def test_load_returns_none_when_absent(self, repo: JustificanteRepository) -> None:
         assert repo.load("DOESNOTEXIST") is None
 

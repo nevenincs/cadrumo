@@ -1,39 +1,15 @@
-"""Profile login orchestration over the persisted-session substrate.
+"""Transactional profile login over current password custody.
 
-``aeat config login`` is the single door through which a taxpayer
-authenticates a profile. This module composes the already-canonical
-primitives — it owns no crypto and no second write path:
+``aeat config login`` resolves a committed capsule, evaluates its throttle,
+and authenticates that exact envelope-and-sentinel pair into an unbound
+candidate DEK session. It never consults a provider, a shared master key, or
+recovery material. Until candidate authentication, pointer compare-and-swap,
+and local binding have all succeeded, the active profile remains untouched.
 
-- the UUID-or-exact-label profile resolver
-  (:func:`~cadrumo.application.workflow.read_profile_bucket_by_id` /
-  :func:`~cadrumo.application.workflow.read_profile_bucket`),
-- the pointer transaction
-  (:func:`active_profile_pointer_transaction`, entered FIRST so the
-  project-wide pointer-then-bucket lock order is preserved),
-- the failed-login throttle
-  (:func:`~cadrumo.adapters.persistence.storage.master_key.evaluate_login_throttle`,
-  evaluated BEFORE any Argon2id derivation so the key-derivation function
-  can never become a passphrase-testing oracle),
-- the master-key provider (:class:`MasterKeyProvider`), whose
-  ``get_master_key`` unwrap IS the authentication: the outcome derives
-  solely from AEAD success, so a wrong passphrase surfaces as an unwrap
-  failure rather than any comparison of secret strings. This module then
-  opens the
-  :class:`~cadrumo.adapters.persistence.storage.master_key.BucketSession`
-  itself rather than through the provider's ``with`` block, because a
-  login session must outlive this call, and
-- the session-wrapped-DEK record
-  (:func:`~cadrumo.adapters.persistence.storage.master_key.mint_profile_session`
-  / :func:`~cadrumo.adapters.persistence.storage.master_key.resume_profile_session`)
-  that carries the "logged in" state across CLI processes.
-
-Login is idempotent-guarded: a login for a profile whose PERSISTED
-session is still valid resumes that session as a no-op — no re-prompt, no
-second record, no re-stamped ``authenticated_at``. The guard is anchored
-to that record and not to process memory, so on a host with no usable
-keychain — where no record is ever written — every login is a genuine
-authentication rather than a no-op. A login naming a DIFFERENT profile
-first tears the previous profile's session down.
+The optional keyring-backed session artefact is acceleration only. Its absence
+or failure leaves a valid process-local session; it never changes the outcome
+of password authentication. A prior profile is retired only after B is
+durably selected and locally bound.
 
 :func:`resume_active_profile_session` is the read-side counterpart and the
 SINGLE resume authority: both the login no-op path and the CLI root
@@ -49,50 +25,169 @@ See Also:
 
 from __future__ import annotations
 
+import json
 import os
-from datetime import datetime
+from base64 import b64decode, b64encode
+from binascii import Error as BinasciiError
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, NoReturn
+from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError, model_validator
 
-from ...adapters.persistence.storage.master_key import (
-    BucketSession,
-    FileFallbackMasterKeyProvider,
-    KeyringMasterKeyProvider,
-    advance_profile_session_idle_deadline,
-    bind_active_bucket_session,
-    close_active_bucket_session,
-    current_active_bucket_session,
-    delete_profile_session,
-    evaluate_login_throttle,
-    idle_minutes_for_bucket,
-    load_profile_session_key,
-    mint_profile_session,
-    profile_session_path,
-    record_login_failure,
-    reset_login_throttle,
-    resume_profile_session,
-    session_absolute_minutes_for_bucket,
-    session_serves_bucket,
-    write_profile_session,
-)
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BucketPointer, ProfileSessionRefusalReason, resolve_active_bucket_id
-from ...core.config import SecretStoreBackend, load_settings
+from ...core import (
+    BucketPointer,
+    ProfileSessionRefusalReason,
+    StorageCategory,
+    resolve_active_bucket_id,
+    storage_location,
+)
+from ...core.config import load_settings
 from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...core.paths import effective_storage_root
 from ...core.time import now as _now
+from ...core.time import validate_utc_aware
 from ...domain.user_profile import ProfileNotFoundError, UserProfileError
-from ._profile_pointer_transaction import ActiveProfilePointerTransaction, active_profile_pointer_transaction
+from ..profile_custody import (
+    ProfileBucketSessionPort,
+    ProfileCustodyLocalRecordStore,
+    ProfileCustodyPasswordMaterialPort,
+    ProfilePersistedSessionPort,
+    canonical_json_bytes,
+    default_profile_bucket_event_history_repository,
+    default_profile_custody_local_record_store,
+    load_profile_custody_password_material,
+    profile_advance_session_idle_deadline,
+    profile_bind_bucket_session,
+    profile_bucket_session_open_resumed,
+    profile_close_bucket_session,
+    profile_current_bucket_session,
+    profile_delete_session,
+    profile_evaluate_login_throttle,
+    profile_is_keyring_unavailable,
+    profile_is_password_authentication_failure,
+    profile_is_persisted_session,
+    profile_load_session_key,
+    profile_mint_session,
+    profile_record_login_failure,
+    profile_reset_login_throttle,
+    profile_resume_session,
+    profile_session_path,
+    profile_session_serves_bucket,
+    profile_write_session,
+    profile_zeroise,
+    refuse_profile_login_without_password_channel,
+    unlock_profile_custody_password,
+)
+from ._capsule_record import ProfileRecordSession
+from ._profile_pointer_transaction import (
+    ActiveProfilePointerTransaction,
+    ActiveProfilePointerTransactionError,
+    active_profile_pointer_transaction,
+)
+from ._profile_record_repository import (
+    activate_profile_record_session,
+    bind_active_profile_record_session,
+    clear_active_profile_record_session_binding,
+    close_active_profile_record_session,
+)
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage.master_key import MasterKeyProvider, PassphraseCallback
     from ..workflow import ProfileBucketPointer
 
 _log = get_logger(__name__)
+
+_HANDOVER_JOURNAL_FILENAME = "profile-login-handover.v1.json"
+_HANDOVER_JOURNAL_MAX_BYTES = 4 * 1024
+
+
+class _HandoverPhase(StrEnum):
+    """Durable boundaries of one password-authenticated profile handover."""
+
+    PREPARED = "prepared"
+    POINTER_PUBLISHED = "pointer_published"
+    B_BOUND = "b_bound"
+    ACCELERATED = "accelerated"
+    ACTIVATED = "activated"
+    A_RETIRED = "a_retired"
+
+
+_HANDOVER_PREDECESSOR: dict[_HandoverPhase, _HandoverPhase] = {
+    _HandoverPhase.POINTER_PUBLISHED: _HandoverPhase.PREPARED,
+    _HandoverPhase.B_BOUND: _HandoverPhase.POINTER_PUBLISHED,
+    _HandoverPhase.ACCELERATED: _HandoverPhase.B_BOUND,
+    _HandoverPhase.ACTIVATED: _HandoverPhase.ACCELERATED,
+    _HandoverPhase.A_RETIRED: _HandoverPhase.ACTIVATED,
+}
+
+
+class _ProfileLoginHandoverJournal(BaseModel):
+    """Non-secret recovery witness for the short A-to-B handover window."""
+
+    model_config = _STRICT_FROZEN
+
+    schema_version: Literal[1] = 1
+    phase: _HandoverPhase
+    profile_a: BucketId | None
+    profile_b: BucketId
+    pointer_before_b64: str
+    pointer_after_b64: str
+    activation_at: datetime
+
+    @model_validator(mode="after")
+    def _validate_journal(self) -> _ProfileLoginHandoverJournal:
+        """Keep recovery time deterministic and safe to replay as an event key."""
+        validate_utc_aware(self.activation_at)
+        return self
+
+    @classmethod
+    def prepare(
+        cls,
+        *,
+        profile_a: str | None,
+        profile_b: str,
+        pointer_before: bytes | None,
+        pointer_after: bytes,
+        activation_at: datetime,
+    ) -> _ProfileLoginHandoverJournal:
+        """Capture the one non-secret transition before pointer publication."""
+        return cls(
+            phase=_HandoverPhase.PREPARED,
+            profile_a=profile_a,
+            profile_b=profile_b,
+            pointer_before_b64=_encode_pointer_bytes(pointer_before),
+            pointer_after_b64=_encode_pointer_bytes(pointer_after),
+            activation_at=activation_at,
+        )
+
+    def at_phase(self, phase: _HandoverPhase) -> _ProfileLoginHandoverJournal:
+        """Return this exact handover witnessed at its next durable phase."""
+        return self.model_copy(update={"phase": phase})
+
+    def pointer_before(self) -> bytes | None:
+        """Return the exact pre-handover pointer bytes after strict decoding."""
+        return _decode_pointer_bytes(self.pointer_before_b64)
+
+    def pointer_after(self) -> bytes:
+        """Return the exact B pointer bytes after strict decoding."""
+        pointer = _decode_pointer_bytes(self.pointer_after_b64)
+        if pointer is None:
+            _refuse_handover_journal("journal cannot encode an absent B pointer")
+        return pointer
+
+    def canonical_json_bytes(self) -> bytes:
+        """Return the journal's one bounded, byte-exact persistence form."""
+        return canonical_json_bytes(
+            self.model_dump(mode="json"),
+            maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
+            limit_error="profile login handover journal exceeds its byte limit",
+        )
 
 
 class ProfileLoginThrottledError(UserProfileError):
@@ -132,7 +227,6 @@ class ProfileLoginOutcome(BaseModel):
     Attributes:
         bucket_id: Immutable UUID identity of the authenticated profile.
         label: Operator-facing display label of that profile.
-        backend_kind: Custody backend that performed the authentication.
         authenticated_at: UTC instant the session was established. On an
             idempotent no-op this is the ORIGINAL login instant, never
             re-stamped.
@@ -150,7 +244,6 @@ class ProfileLoginOutcome(BaseModel):
 
     bucket_id: BucketId
     label: str
-    backend_kind: SecretStoreBackend
     authenticated_at: datetime
     idle_deadline: datetime
     absolute_deadline: datetime
@@ -159,34 +252,238 @@ class ProfileLoginOutcome(BaseModel):
     closed_previous_bucket_id: BucketId | None = None
 
 
-def _backend_kind(provider: MasterKeyProvider) -> SecretStoreBackend:
-    """Map a live provider instance to its closed backend-kind member."""
-    if isinstance(provider, KeyringMasterKeyProvider):
-        return SecretStoreBackend.KEYRING
-    if isinstance(provider, FileFallbackMasterKeyProvider):
-        return SecretStoreBackend.FILE
-    return SecretStoreBackend.UNSECURED
+@dataclass(slots=True)
+class _CandidateProfileLogin:
+    """Unbound B material owned by one login transaction until promotion."""
+
+    bucket_id: str
+    session: ProfileBucketSessionPort
+    record_session: ProfileRecordSession
+    material: ProfileCustodyPasswordMaterialPort
+    closed: bool = False
+
+    def close(self) -> None:
+        """Destroy an unpromoted candidate without touching active A."""
+        if self.closed:
+            return
+        self.closed = True
+        self.record_session.close()
+        self.session.close()
 
 
-def _session_windows(*, storage_root: Path, bucket_id: str) -> tuple[int, int]:
-    """Return ``(idle_minutes, absolute_minutes)`` for one bucket.
+@dataclass(slots=True)
+class _LoginAttempt:
+    """Resolved, lock-scoped inputs shared by one login attempt."""
 
-    Reads through the same manifest-then-settings resolvers the provider
-    enter path uses, so the persisted record's deadlines are identical to
-    the live session's rather than independently re-derived.
+    target: ProfileBucketPointer
+    selected: BucketPointer | None
+    prior_pointer: bytes | None
+    pointer_transaction: ActiveProfilePointerTransaction
+    storage_root: Path
+    interrupted_handover: _ProfileLoginHandoverJournal | None
+
+
+@dataclass(slots=True)
+class _HandoverPublication:
+    """Durable pointer publication returned before candidate binding."""
+
+    journal: _ProfileLoginHandoverJournal
+    published_pointer: bytes
+
+
+@dataclass(slots=True)
+class _CandidatePromotionResult:
+    """Candidate state that is safe to retire A against."""
+
+    journal: _ProfileLoginHandoverJournal
+    previous_record: ProfileRecordSession | None
+    persisted: bool
+
+
+def _session_windows() -> tuple[int, int]:
+    """Return the bounded session windows for current capsules.
+
+    Current capsules deliberately have no plaintext manifest.  Session
+    lifetimes are therefore resolved only from the configured current defaults,
+    not through the removed manifest/provider route.
     """
     settings = load_settings()
-    idle_minutes = idle_minutes_for_bucket(
-        storage_root=storage_root,
-        bucket_id=bucket_id,
-        default_minutes=settings.cadrumo_bucket_default_idle_lock_minutes,
+    return (
+        settings.cadrumo_bucket_default_idle_lock_minutes,
+        settings.cadrumo_bucket_default_session_absolute_minutes,
     )
-    absolute_minutes = session_absolute_minutes_for_bucket(
-        storage_root=storage_root,
-        bucket_id=bucket_id,
-        default_minutes=settings.cadrumo_bucket_default_session_absolute_minutes,
+
+
+def _handover_journal_path(storage_root: Path) -> Path:
+    """Return the one root-local journal for an in-flight profile switch."""
+    return (
+        storage_root / storage_location(StorageCategory.OPERATION_JOURNAL).relative_path() / _HANDOVER_JOURNAL_FILENAME
     )
-    return idle_minutes, absolute_minutes
+
+
+def _handover_journal_directory(storage_root: Path) -> Path:
+    """Return the one anchored local-record parent for the handover witness."""
+    return storage_root / storage_location(StorageCategory.OPERATION_JOURNAL).relative_path()
+
+
+def _reject_duplicate_handover_member(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    """Reject duplicate JSON keys before Pydantic can normalise them away."""
+    document: dict[str, object] = {}
+    for key, value in pairs:
+        if key in document:
+            raise ValueError(f"duplicate handover journal member {key!r}")
+        document[key] = value
+    return document
+
+
+def _reject_handover_json_constant(value: str) -> NoReturn:
+    """Reject non-finite JSON constants from the one durable recovery record."""
+    raise ValueError(f"non-finite handover journal constant {value!r}")
+
+
+def _parse_handover_journal(payload: bytes) -> _ProfileLoginHandoverJournal:
+    """Decode only the journal's exact bounded canonical JSON form."""
+    if len(payload) > _HANDOVER_JOURNAL_MAX_BYTES:
+        _refuse_handover_journal("journal exceeds its byte limit")
+    try:
+        document = json.loads(
+            payload.decode("utf-8", errors="strict"),
+            object_pairs_hook=_reject_duplicate_handover_member,
+            parse_constant=_reject_handover_json_constant,
+        )
+        if not isinstance(document, dict):
+            raise ValueError("handover journal must be a JSON object")
+        canonical = canonical_json_bytes(
+            document,
+            maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
+            limit_error="profile login handover journal exceeds its byte limit",
+        )
+        journal = _ProfileLoginHandoverJournal.model_validate_json(canonical)
+        if journal.canonical_json_bytes() != payload:
+            raise ValueError("handover journal bytes are not canonical")
+        _ = journal.pointer_before()
+        _ = journal.pointer_after()
+        return journal
+    except (UnicodeDecodeError, json.JSONDecodeError, ValidationError, ValueError, TypeError):
+        _refuse_handover_journal("journal is malformed or noncanonical")
+
+
+def _handover_journal_store() -> ProfileCustodyLocalRecordStore:
+    """Resolve the one application port for root-local custody records."""
+    return default_profile_custody_local_record_store()
+
+
+def _ensure_handover_journal_directory(*, storage_root: Path, store: ProfileCustodyLocalRecordStore) -> Path:
+    """Anchor the journal parent before any local record operation."""
+    directory = _handover_journal_directory(storage_root)
+    try:
+        store.ensure_directory(directory)
+    except Exception:
+        _refuse_handover_journal("journal directory cannot be anchored")
+    return directory
+
+
+def _encode_pointer_bytes(pointer: bytes | None) -> str:
+    """Encode exact pointer bytes without treating them as text authority."""
+    return b64encode(pointer or b"").decode("ascii")
+
+
+def _decode_pointer_bytes(encoded: str) -> bytes | None:
+    """Decode a canonical base64 pointer witness or refuse the journal."""
+    try:
+        decoded = b64decode(encoded.encode("ascii"), validate=True)
+    except (BinasciiError, ValueError):
+        _refuse_handover_journal("journal pointer witness is not strict base64")
+    if b64encode(decoded).decode("ascii") != encoded:
+        _refuse_handover_journal("journal pointer witness is not canonical base64")
+    return decoded or None
+
+
+def _refuse_handover_journal(reason: str) -> NoReturn:
+    """Fail closed when a durable handover witness cannot be trusted."""
+    raise ActiveProfilePointerTransactionError(
+        translated_message="errors.integrity.integrity_storage_profile_custody_record",
+        context={"owner": "profile-login-handover", "reason": reason},
+    )
+
+
+def _save_handover_journal(*, storage_root: Path, journal: _ProfileLoginHandoverJournal) -> None:
+    """Durably publish one complete non-secret handover phase under root lock."""
+    store = _handover_journal_store()
+    _ensure_handover_journal_directory(storage_root=storage_root, store=store)
+    try:
+        existing_payload = store.read_optional(
+            _handover_journal_path(storage_root),
+            maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
+        )
+        if journal.phase is _HandoverPhase.PREPARED:
+            if existing_payload is not None:
+                _refuse_handover_journal("prepared journal already has a durable predecessor")
+        else:
+            existing = _parse_handover_journal(existing_payload) if existing_payload is not None else None
+            expected = journal.at_phase(_HANDOVER_PREDECESSOR[journal.phase])
+            if existing != expected:
+                _refuse_handover_journal("journal predecessor differs from the exact handover transition")
+        store.write(_handover_journal_path(storage_root), journal.canonical_json_bytes(), publish_once=False)
+    except Exception:
+        _refuse_handover_journal("journal cannot be atomically written")
+
+
+def _load_handover_journal(*, storage_root: Path) -> _ProfileLoginHandoverJournal | None:
+    """Load the sole bounded in-flight witness, refusing malformed replacement."""
+    store = _handover_journal_store()
+    _ensure_handover_journal_directory(storage_root=storage_root, store=store)
+    try:
+        payload = store.read_optional(_handover_journal_path(storage_root), maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES)
+    except Exception:
+        _refuse_handover_journal("journal cannot be anchored and read")
+    if payload is None:
+        return None
+    return _parse_handover_journal(payload)
+
+
+def _clear_handover_journal(*, storage_root: Path) -> None:
+    """Remove the completed or fully rolled-back witness under root lock."""
+    store = _handover_journal_store()
+    _ensure_handover_journal_directory(storage_root=storage_root, store=store)
+    try:
+        payload = store.read_optional(_handover_journal_path(storage_root), maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES)
+        if payload is None:
+            return
+        _ = _parse_handover_journal(payload)
+        store.clear(_handover_journal_path(storage_root))
+    except Exception:
+        _refuse_handover_journal("journal cannot be anchored and cleared")
+
+
+def _recover_interrupted_handover(
+    *,
+    storage_root: Path,
+    pointer_transaction: ActiveProfilePointerTransaction,
+) -> _ProfileLoginHandoverJournal | None:
+    """Classify an interrupted handover without unlocking or overwriting it.
+
+    A process crash has already destroyed A's in-process handles.  The durable
+    pointer therefore decides the next process's profile.  Before B's
+    activation event is durable, the caller must re-authenticate B and replay
+    the stable journal event; once activation is witnessed, no replay is
+    needed and the journal can be removed.
+    """
+    journal = _load_handover_journal(storage_root=storage_root)
+    if journal is None:
+        return None
+    current = pointer_transaction.capture()
+    before = journal.pointer_before()
+    after = journal.pointer_after()
+    if current == before:
+        _clear_handover_journal(storage_root=storage_root)
+        return None
+    if current != after:
+        _refuse_handover_journal("pointer no longer matches either witnessed handover state")
+    if journal.phase in {_HandoverPhase.ACTIVATED, _HandoverPhase.A_RETIRED}:
+        _clear_handover_journal(storage_root=storage_root)
+        return None
+    return journal
 
 
 def close_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> None:
@@ -204,8 +501,9 @@ def close_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> No
         storage_root: The Cadrumo storage root owning the bucket keystore.
         bucket_id: Identifier of the profile whose session to tear down.
     """
-    delete_profile_session(storage_root=storage_root, bucket_id=bucket_id)
-    reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
+    close_active_profile_record_session()
+    profile_delete_session(storage_root=storage_root, bucket_id=bucket_id)
+    profile_reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
 
 
 def revoke_live_profile_secret_for_custody_delete(*, bucket_id: str) -> ProfileCustodySessionOwnerEffect:
@@ -216,11 +514,11 @@ def revoke_live_profile_secret_for_custody_delete(*, bucket_id: str) -> ProfileC
     owner performs both the identity query and the zeroisation; callers only
     receive a durable, non-secret outcome they can receipt.
     """
-    session = current_active_bucket_session()
-    if not session_serves_bucket(session, bucket_id):
+    session = profile_current_bucket_session()
+    if not profile_session_serves_bucket(session, bucket_id):
         return ProfileCustodySessionOwnerEffect.VERIFIED_ABSENT
-    close_active_bucket_session()
-    if session_serves_bucket(current_active_bucket_session(), bucket_id):
+    profile_close_bucket_session()
+    if profile_session_serves_bucket(profile_current_bucket_session(), bucket_id):
         raise UserProfileError(
             translated_message="errors.integrity.integrity_storage_profile_custody_record",
             context={"bucket_id": bucket_id, "owner": "process-secret-revocation"},
@@ -273,15 +571,15 @@ def resume_active_profile_session(
     """
     instant = _now() if now is None else now
     storage_root = effective_storage_root()
-    outcome, dek = resume_profile_session(storage_root=storage_root, bucket_id=bucket_id, now=instant)
+    outcome, dek = profile_resume_session(storage_root=storage_root, bucket_id=bucket_id, now=instant)
     if not outcome.resumed or outcome.record is None or dek is None:
         return outcome.refusal if outcome.refusal is not None else ProfileSessionRefusalReason.ABSENT
 
     record = outcome.record
     dek_buffer = bytearray(dek)
     try:
-        idle_minutes, _ = _session_windows(storage_root=storage_root, bucket_id=bucket_id)
-        session = BucketSession.open_resumed(
+        idle_minutes, _ = _session_windows()
+        session = profile_bucket_session_open_resumed(
             bucket_id=bucket_id,
             dek=bytes(dek_buffer),
             idle_minutes=idle_minutes,
@@ -291,12 +589,11 @@ def resume_active_profile_session(
             storage_root=storage_root,
         )
     finally:
-        from ...adapters.persistence.storage.master_key import zeroise
-
-        zeroise(dek_buffer)
+        profile_zeroise(dek_buffer)
 
     session.touch(instant)
-    bind_active_bucket_session(session)
+    profile_bind_bucket_session(session)
+    _activate_record_authority(bucket_id=bucket_id, dek=session.dek, storage_root=storage_root)
     _persist_advanced_idle_deadline(
         storage_root=storage_root,
         bucket_id=bucket_id,
@@ -304,6 +601,18 @@ def resume_active_profile_session(
         new_idle_deadline=session.idle_deadline,
     )
     return None
+
+
+def _activate_record_authority(*, bucket_id: str, dek: bytes, storage_root: Path) -> None:
+    """Bind the record codec to the same live custody session as the bucket.
+
+    A profile record is authenticated with envelope-bound AAD, not merely with
+    a bucket UUID.  Loading the committed envelope after the custody session
+    has opened therefore makes every fact consumer prove both the session and
+    the exact capsule it reads.
+    """
+    material = load_profile_custody_password_material(UUID(bucket_id), root=storage_root)
+    activate_profile_record_session(ProfileRecordSession.from_envelope(envelope=material.envelope, dek=dek))
 
 
 def _persist_advanced_idle_deadline(
@@ -320,24 +629,22 @@ def _persist_advanced_idle_deadline(
     it only costs an earlier idle expiry, which is the fail-closed
     direction.
     """
-    from ...adapters.persistence.storage.master_key import PersistedProfileSession
-
-    if not isinstance(record, PersistedProfileSession):  # pragma: no cover - typed at the call site
+    if not profile_is_persisted_session(record):  # pragma: no cover - typed at the call site
         return
     if new_idle_deadline <= record.idle_deadline:
         return
-    session_key = load_profile_session_key(bucket_id=bucket_id)
+    session_key = profile_load_session_key(bucket_id=bucket_id)
     if session_key is None:
         return
     key_buffer = bytearray(session_key)
     del session_key
     try:
-        advanced = advance_profile_session_idle_deadline(
+        advanced = profile_advance_session_idle_deadline(
             record=record,
             session_key=bytes(key_buffer),
             new_idle_deadline=new_idle_deadline,
         )
-        write_profile_session(storage_root=storage_root, bucket_id=bucket_id, record=advanced)
+        profile_write_session(storage_root=storage_root, bucket_id=bucket_id, record=advanced)
     except (OSError, ValueError) as exc:
         _log.debug(
             "profile-session idle-deadline re-persist skipped bucket_id=%s error_type=%s",
@@ -345,9 +652,7 @@ def _persist_advanced_idle_deadline(
             type(exc).__name__,
         )
     finally:
-        from ...adapters.persistence.storage.master_key import zeroise
-
-        zeroise(key_buffer)
+        profile_zeroise(key_buffer)
 
 
 def resolve_login_target(name: str) -> ProfileBucketPointer:
@@ -407,126 +712,116 @@ def _resolve_selected_target(pointer: BucketPointer | None) -> ProfileBucketPoin
     return resolved
 
 
+def _prepare_login_attempt(
+    *,
+    name: str | None,
+    storage_root: Path,
+    pointer_transaction: ActiveProfilePointerTransaction,
+) -> _LoginAttempt:
+    """Resolve the target and capture the exact pointer for one handover."""
+    selected = pointer_transaction.read()
+    interrupted_handover = _recover_interrupted_handover(
+        storage_root=storage_root,
+        pointer_transaction=pointer_transaction,
+    )
+    target = resolve_login_target(name) if name is not None else _resolve_selected_target(selected)
+    prior_pointer = pointer_transaction.capture()
+    if interrupted_handover is not None and target.bucket_id != interrupted_handover.profile_b:
+        _refuse_handover_journal("incomplete handover requires authenticating its B profile")
+    return _LoginAttempt(
+        target=target,
+        selected=selected,
+        prior_pointer=prior_pointer,
+        pointer_transaction=pointer_transaction,
+        storage_root=storage_root,
+        interrupted_handover=interrupted_handover,
+    )
+
+
+def _can_resume_idempotent_login(
+    *,
+    attempt: _LoginAttempt,
+    live_session: ProfileBucketSessionPort | None,
+) -> bool:
+    """Return whether the committed target is eligible for a no-op resume."""
+    if attempt.interrupted_handover is not None:
+        return False
+    selected = attempt.selected
+    if selected is None or selected.bucket_id != attempt.target.bucket_id:
+        return False
+    return live_session is None or profile_session_serves_bucket(live_session, attempt.target.bucket_id)
+
+
+def _resume_idempotent_login_if_allowed(
+    *,
+    attempt: _LoginAttempt,
+    now: datetime,
+) -> ProfilePersistedSessionPort | None:
+    """Resume only when the durable pointer and local binding already agree."""
+    live_before = profile_current_bucket_session()
+    if not _can_resume_idempotent_login(attempt=attempt, live_session=live_before):
+        return None
+    return _resume_for_idempotent_login(bucket_id=attempt.target.bucket_id, now=now)
+
+
+def _idempotent_login_outcome(
+    *,
+    target: ProfileBucketPointer,
+    resumed: ProfilePersistedSessionPort,
+) -> ProfileLoginOutcome:
+    """Project one resumed persisted session into the public login result."""
+    return ProfileLoginOutcome(
+        bucket_id=target.bucket_id,
+        label=target.label,
+        authenticated_at=resumed.authenticated_at,
+        idle_deadline=resumed.idle_deadline,
+        absolute_deadline=resumed.absolute_deadline,
+        session_persisted=True,
+        already_authenticated=True,
+        closed_previous_bucket_id=None,
+    )
+
+
 def login_profile(
     *,
     name: str | None = None,
     now: datetime | None = None,
-    passphrase_callback: PassphraseCallback | None = None,
+    passphrase_callback: Callable[[], str] | None = None,
 ) -> ProfileLoginOutcome:
-    """Select, authenticate, and mint the persisted session for one profile.
+    """Authenticate B before replacing an active A session.
 
-    The whole operation runs inside the active-profile pointer
-    transaction, entered before any bucket or session work so the
-    project-wide pointer-then-bucket lock order holds.
-
-    Ordering is load-bearing:
-
-    1. resolve the target (``NAME`` by UUID-or-exact-label, else the
-       already-selected profile; no selection refuses naming ``login NAME``);
-    2. close the previous profile's session when the target differs;
-    3. return the existing session as a no-op when the target's persisted
-       session is still valid (idempotent guard — no re-prompt, no second
-       record, no re-stamped ``authenticated_at``);
-    4. evaluate the failed-login backoff BEFORE any Argon2id derivation;
-    5. write the pointer, then authenticate by unwrapping (the provider's
-       enter path), restoring the prior pointer bytes and recording the
-       failure if the unwrap refuses;
-    6. clear the backoff and mint the session-wrapped-DEK record.
-
-    Args:
-        name: Optional profile UUID or exact display label to select. When
-            omitted the already-selected profile is authenticated.
-        now: UTC evaluation instant; the canonical clock when omitted.
-        passphrase_callback: Optional passphrase resolver for the file
-            backend (the CLI injects its ``--secrets-stdin`` channel).
-
-    Returns:
-        The typed :class:`ProfileLoginOutcome`.
-
-    Raises:
-        ProfileNotFoundError: When no target resolves.
-        ProfileLoginThrottledError: While the failed-attempt backoff holds.
-        MasterKeyPassphraseMismatchError: When the passphrase does not
-            unwrap the master key (uniform across buckets by construction).
+    Target resolution and throttle preflight happen before Argon2.  Password
+    authentication creates only transaction-owned candidate memory.  The
+    exact pointer capture is compared immediately before publication; then B
+    becomes the process binding and optional acceleration is attempted.  A is
+    not closed until those operations have succeeded.
     """
-    from ...adapters.persistence.storage.master_key import get_master_key_provider
-
     instant = _now() if now is None else now
     storage_root = effective_storage_root()
 
     with active_profile_pointer_transaction() as pointer_transaction:
-        selected = pointer_transaction.read()
-        target = resolve_login_target(name) if name is not None else _resolve_selected_target(selected)
-
-        closed_previous: str | None = None
-        if selected is not None and selected.bucket_id != target.bucket_id:
-            close_active_bucket_session()
-            close_profile_session_artefacts(storage_root=storage_root, bucket_id=selected.bucket_id)
-            closed_previous = selected.bucket_id
-
-        prior_pointer = pointer_transaction.capture()
-        if selected is None or selected.bucket_id != target.bucket_id:
-            pointer_transaction.write(BucketPointer(bucket_id=target.bucket_id, schema_version=1))
-
-        resumed = _resume_for_idempotent_login(bucket_id=target.bucket_id, now=instant)
-        if resumed is not None:
-            return ProfileLoginOutcome(
-                bucket_id=target.bucket_id,
-                label=target.label,
-                backend_kind=resumed.backend_kind,
-                authenticated_at=resumed.authenticated_at,
-                idle_deadline=resumed.idle_deadline,
-                absolute_deadline=resumed.absolute_deadline,
-                session_persisted=True,
-                already_authenticated=True,
-                closed_previous_bucket_id=closed_previous,
-            )
-
-        evaluation = evaluate_login_throttle(
+        attempt = _prepare_login_attempt(
+            name=name,
             storage_root=storage_root,
-            bucket_id=target.bucket_id,
-            now=instant,
-        )
-        if evaluation.throttled:
-            pointer_transaction.restore(prior_pointer)
-            raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)
-
-        provider = get_master_key_provider(passphrase_callback=passphrase_callback)
-        session = _authenticate_or_record_failure(
-            provider=provider,
-            bucket_id=target.bucket_id,
-            storage_root=storage_root,
-            now=instant,
             pointer_transaction=pointer_transaction,
-            prior_pointer=prior_pointer,
         )
-        reset_login_throttle(storage_root=storage_root, bucket_id=target.bucket_id)
-        _record_activation(profile_id=target.bucket_id)
+        resumed = _resume_idempotent_login_if_allowed(attempt=attempt, now=instant)
+        if resumed is not None:
+            return _idempotent_login_outcome(target=attempt.target, resumed=resumed)
 
-        backend_kind = _backend_kind(provider)
-        idle_minutes, absolute_minutes = _session_windows(storage_root=storage_root, bucket_id=target.bucket_id)
-        persisted = _mint_or_warn(
-            storage_root=storage_root,
-            bucket_id=target.bucket_id,
-            backend_kind=backend_kind,
-            session=session,
-            idle_minutes=idle_minutes,
-            absolute_minutes=absolute_minutes,
+        candidate = _authenticate_login_candidate(
+            attempt=attempt,
+            now=instant,
+            passphrase_callback=passphrase_callback,
         )
-        return ProfileLoginOutcome(
-            bucket_id=target.bucket_id,
-            label=target.label,
-            backend_kind=backend_kind,
-            authenticated_at=session.opened_at,
-            idle_deadline=session.idle_deadline,
-            absolute_deadline=session.absolute_deadline,
-            session_persisted=persisted,
-            already_authenticated=False,
-            closed_previous_bucket_id=closed_previous,
-        )
+        return _finish_candidate_login(attempt=attempt, candidate=candidate)
 
 
-def _resume_for_idempotent_login(*, bucket_id: str, now: datetime):
+def _resume_for_idempotent_login(
+    *,
+    bucket_id: str,
+    now: datetime,
+) -> ProfilePersistedSessionPort | None:
     """Return the resumed record when the idempotent-login guard applies.
 
     The guard requires a still-valid PERSISTED record in every case
@@ -544,119 +839,339 @@ def _resume_for_idempotent_login(*, bucket_id: str, now: datetime):
     anchored to the AAD-bound, deadline-authenticated record, never to
     process memory alone.
     """
-    from ...adapters.persistence.storage.master_key import resume_profile_session as _peek
-
-    live = current_active_bucket_session()
-    if session_serves_bucket(live, bucket_id) and not live.is_expired(now):
-        peeked, _ = _peek(storage_root=effective_storage_root(), bucket_id=bucket_id, now=now)
+    live = profile_current_bucket_session()
+    if profile_session_serves_bucket(live, bucket_id) and live is not None and not live.is_expired(now):
+        peeked, _ = profile_resume_session(storage_root=effective_storage_root(), bucket_id=bucket_id, now=now)
         return peeked.record if peeked.resumed else None
     if resume_active_profile_session(bucket_id=bucket_id, now=now) is not None:
         return None
-    peeked, _ = _peek(storage_root=effective_storage_root(), bucket_id=bucket_id, now=now)
+    peeked, _ = profile_resume_session(storage_root=effective_storage_root(), bucket_id=bucket_id, now=now)
     return peeked.record if peeked.resumed else None
 
 
-def _authenticate_or_record_failure(
+def _resolve_login_password(callback: Callable[[], str] | None) -> str:
+    """Return the one explicitly supplied password channel for current custody."""
+    if callback is not None:
+        return callback()
+    configured = load_settings().cadrumo_secret_passphrase
+    if configured is None:
+        refuse_profile_login_without_password_channel()
+    return configured.get_secret_value()
+
+
+def _authenticate_login_candidate(
     *,
-    provider: MasterKeyProvider,
+    attempt: _LoginAttempt,
+    now: datetime,
+    passphrase_callback: Callable[[], str] | None,
+) -> _CandidateProfileLogin:
+    """Apply the throttle gate before authenticating the candidate profile."""
+    evaluation = profile_evaluate_login_throttle(
+        storage_root=attempt.storage_root,
+        bucket_id=attempt.target.bucket_id,
+        now=now,
+    )
+    if evaluation.throttled:
+        raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)
+    return _authenticate_candidate_or_record_failure(
+        bucket_id=attempt.target.bucket_id,
+        storage_root=attempt.storage_root,
+        now=now,
+        passphrase_callback=passphrase_callback,
+    )
+
+
+def _finish_candidate_login(
+    *,
+    attempt: _LoginAttempt,
+    candidate: _CandidateProfileLogin,
+) -> ProfileLoginOutcome:
+    """Reset the online-control cache and close an unpromoted candidate on error."""
+    try:
+        # Resetting an online-control cache must never turn an already
+        # authenticated candidate into an A teardown. It is performed
+        # while B is still only transaction-local.
+        profile_reset_login_throttle(storage_root=attempt.storage_root, bucket_id=attempt.target.bucket_id)
+        return _promote_candidate_login(
+            candidate=candidate,
+            target_label=attempt.target.label,
+            prior_pointer=attempt.prior_pointer,
+            pointer_transaction=attempt.pointer_transaction,
+            storage_root=attempt.storage_root,
+            interrupted_handover=attempt.interrupted_handover,
+        )
+    except BaseException:
+        candidate.close()
+        raise
+
+
+def _authenticate_candidate_or_record_failure(
+    *,
     bucket_id: str,
     storage_root: Path,
     now: datetime,
-    pointer_transaction: ActiveProfilePointerTransaction,
-    prior_pointer: bytes | None,
-) -> BucketSession:
-    """Unwrap the key material and bind the session for the whole process.
-
-    ``provider.get_master_key()`` IS the authentication: the outcome
-    derives solely from AEAD unwrap success, so verification is
-    constant-time by construction and no secret strings are compared. A
-    refusal increments the backoff and restores the pointer bytes captured
-    before the write, so a failed login never leaves a profile selected
-    that could not be unlocked.
-
-    The session is opened and bound here rather than through the provider
-    context manager because a login session is deliberately UNSCOPED: it
-    must outlive this call and every later process, and is evicted only by
-    ``logout``, by expiry, or at interpreter exit. The scoped
-    provider-activation path stays the authority for ``with``-bound
-    callers; both compose the identical primitives (the same DEK unwrap,
-    window resolvers, and unsecured-backend NIF canary), so neither owns a
-    divergent open.
-    """
-    from ...adapters.persistence.storage.errors import (
-        KeyringUnavailableError,
-        MasterKeyKeychainLockedError,
-        MasterKeyMaterialMissingError,
-        MasterKeyPassphraseMismatchError,
-    )
-    from ...adapters.persistence.storage.master_key import (
-        UnsecuredMasterKeyProvider,
-        load_or_mint_bucket_dek,
-        refuse_unsecured_bucket_with_real_profile,
-        zeroise,
-    )
-
+    passphrase_callback: Callable[[], str] | None,
+) -> _CandidateProfileLogin:
+    """Authenticate B into unbound candidate memory and nothing else."""
+    material = load_profile_custody_password_material(UUID(bucket_id), root=storage_root)
+    password = _resolve_login_password(passphrase_callback)
     try:
-        key_bytes = provider.get_master_key()
-    except (
-        MasterKeyPassphraseMismatchError,
-        MasterKeyKeychainLockedError,
-        KeyringUnavailableError,
-        MasterKeyMaterialMissingError,
-    ):
-        record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now)
-        pointer_transaction.restore(prior_pointer)
-        raise
-    except BaseException:
-        pointer_transaction.restore(prior_pointer)
+        unlocked = unlock_profile_custody_password(material, password=password)
+    except BaseException as exc:
+        if profile_is_password_authentication_failure(exc):
+            profile_record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now)
         raise
 
-    kek_buffer = bytearray(key_bytes)
-    del key_bytes
+    dek_buffer = bytearray(unlocked.dek)
     try:
-        unsecured = isinstance(provider, UnsecuredMasterKeyProvider)
-        dek_buffer = bytearray(
-            bytes(kek_buffer)
-            if unsecured
-            else load_or_mint_bucket_dek(
-                kek=bytes(kek_buffer),
-                storage_root=storage_root,
-                bucket_id=bucket_id,
-                allow_bootstrap_mint=False,
-            ),
+        idle_minutes, absolute_minutes = _session_windows()
+        absolute_deadline = now + timedelta(minutes=absolute_minutes)
+        session = profile_bucket_session_open_resumed(
+            bucket_id=bucket_id,
+            dek=bytes(dek_buffer),
+            idle_minutes=idle_minutes,
+            opened_at=now,
+            idle_deadline=min(now + timedelta(minutes=idle_minutes), absolute_deadline),
+            absolute_deadline=absolute_deadline,
+            storage_root=storage_root,
         )
         try:
-            idle_minutes, absolute_minutes = _session_windows(storage_root=storage_root, bucket_id=bucket_id)
-            session = BucketSession.open(
-                bucket_id=bucket_id,
-                kek=bytes(kek_buffer),
-                dek=bytes(dek_buffer),
-                idle_minutes=idle_minutes,
-                absolute_minutes=absolute_minutes,
-                opened_at=now,
-                unsecured_backend=unsecured,
-                storage_root=storage_root,
-            )
-        finally:
-            zeroise(dek_buffer)
-    except BaseException:
-        pointer_transaction.restore(prior_pointer)
-        raise
+            record_session = ProfileRecordSession.from_envelope(envelope=material.envelope, dek=bytes(dek_buffer))
+        except BaseException:
+            session.close()
+            raise
     finally:
-        zeroise(kek_buffer)
+        profile_zeroise(dek_buffer)
+    return _CandidateProfileLogin(
+        bucket_id=bucket_id,
+        session=session,
+        record_session=record_session,
+        material=material,
+    )
 
-    bind_active_bucket_session(session)
+
+def _promote_candidate_login(
+    *,
+    candidate: _CandidateProfileLogin,
+    target_label: str,
+    prior_pointer: bytes | None,
+    pointer_transaction: ActiveProfilePointerTransaction,
+    storage_root: Path,
+    interrupted_handover: _ProfileLoginHandoverJournal | None,
+) -> ProfileLoginOutcome:
+    """CAS-publish, activate, then retire A through durable phases."""
+    previous_live = profile_current_bucket_session()
+    previous_bucket_id = _live_bucket_id(previous_live)
+    publication = _publish_candidate_handover(
+        candidate=candidate,
+        previous_bucket_id=previous_bucket_id,
+        prior_pointer=prior_pointer,
+        pointer_transaction=pointer_transaction,
+        storage_root=storage_root,
+        interrupted_handover=interrupted_handover,
+    )
+    promotion = _bind_candidate_promotion(
+        candidate=candidate,
+        previous_live=previous_live,
+        publication=publication,
+        prior_pointer=prior_pointer,
+        pointer_transaction=pointer_transaction,
+        storage_root=storage_root,
+    )
+
+    # Only now can A be retired.  B is durable (or deliberately process-local)
+    # and both current-context authorities serve its exact UUID.
+    _retire_previous_authorities(
+        candidate=candidate,
+        previous_live=previous_live,
+        previous_record=promotion.previous_record,
+    )
+    closed_previous = _closed_previous_bucket_id(
+        previous_bucket_id=previous_bucket_id,
+        candidate_bucket_id=candidate.bucket_id,
+    )
+    handover = promotion.journal.at_phase(_HandoverPhase.A_RETIRED)
+    _save_handover_journal(storage_root=storage_root, journal=handover)
+    # Keep the terminal receipt until the next login observes it.  A process
+    # may die immediately after A's zeroisation; retaining this one bounded,
+    # non-secret file makes that boundary explicit and lets recovery classify
+    # it without inferring completion from a vanished sidecar.
+    return ProfileLoginOutcome(
+        bucket_id=candidate.bucket_id,
+        label=target_label,
+        authenticated_at=candidate.session.opened_at,
+        idle_deadline=candidate.session.idle_deadline,
+        absolute_deadline=candidate.session.absolute_deadline,
+        session_persisted=promotion.persisted,
+        already_authenticated=False,
+        closed_previous_bucket_id=closed_previous,
+    )
+
+
+def _live_bucket_id(session: ProfileBucketSessionPort | None) -> str | None:
+    """Return the identity of a prior live session, if one exists."""
+    if session is None:
+        return None
+    return session.bucket_id
+
+
+def _publish_candidate_handover(
+    *,
+    candidate: _CandidateProfileLogin,
+    previous_bucket_id: str | None,
+    prior_pointer: bytes | None,
+    pointer_transaction: ActiveProfilePointerTransaction,
+    storage_root: Path,
+    interrupted_handover: _ProfileLoginHandoverJournal | None,
+) -> _HandoverPublication:
+    """Publish a fresh pointer or validate the pointer from interrupted work."""
+    if interrupted_handover is None:
+        return _publish_fresh_candidate_handover(
+            candidate=candidate,
+            previous_bucket_id=previous_bucket_id,
+            prior_pointer=prior_pointer,
+            pointer_transaction=pointer_transaction,
+            storage_root=storage_root,
+        )
+    return _resume_candidate_handover(
+        interrupted_handover=interrupted_handover,
+        pointer_transaction=pointer_transaction,
+    )
+
+
+def _publish_fresh_candidate_handover(
+    *,
+    candidate: _CandidateProfileLogin,
+    previous_bucket_id: str | None,
+    prior_pointer: bytes | None,
+    pointer_transaction: ActiveProfilePointerTransaction,
+    storage_root: Path,
+) -> _HandoverPublication:
+    """Prepare and compare-and-swap the pointer for a new candidate."""
+    replacement = BucketPointer(bucket_id=candidate.bucket_id, schema_version=1)
+    planned_pointer = replacement.to_toml().encode("utf-8")
+    handover = _ProfileLoginHandoverJournal.prepare(
+        profile_a=previous_bucket_id,
+        profile_b=candidate.bucket_id,
+        pointer_before=prior_pointer,
+        pointer_after=planned_pointer,
+        activation_at=_now(),
+    )
+    _save_handover_journal(storage_root=storage_root, journal=handover)
+    published = pointer_transaction.compare_and_write(expected=prior_pointer, pointer=replacement)
+    if published != handover.pointer_after():
+        _refuse_handover_journal("published pointer differs from prepared B witness")
+    handover = handover.at_phase(_HandoverPhase.POINTER_PUBLISHED)
+    _save_handover_journal(storage_root=storage_root, journal=handover)
+    return _HandoverPublication(journal=handover, published_pointer=published)
+
+
+def _resume_candidate_handover(
+    *,
+    interrupted_handover: _ProfileLoginHandoverJournal,
+    pointer_transaction: ActiveProfilePointerTransaction,
+) -> _HandoverPublication:
+    """Validate the durable pointer before replaying an interrupted handover."""
+    published = interrupted_handover.pointer_after()
+    if pointer_transaction.capture() != published:
+        _refuse_handover_journal("incomplete handover B pointer changed before recovery")
+    return _HandoverPublication(journal=interrupted_handover, published_pointer=published)
+
+
+def _bind_candidate_promotion(
+    *,
+    candidate: _CandidateProfileLogin,
+    previous_live: ProfileBucketSessionPort | None,
+    publication: _HandoverPublication,
+    prior_pointer: bytes | None,
+    pointer_transaction: ActiveProfilePointerTransaction,
+    storage_root: Path,
+) -> _CandidatePromotionResult:
+    """Bind B and complete required durable phases inside the rollback window."""
+    previous_record: ProfileRecordSession | None = None
+    handover = publication.journal
     try:
-        if session.unsecured_backend:
-            refuse_unsecured_bucket_with_real_profile(session)
+        # Both context bindings are in-process and do not perform I/O.  A has
+        # not been closed, so an unexpected later failure can rebind it before
+        # the durable pointer is restored.
+        profile_bind_bucket_session(candidate.session)
+        previous_record = bind_active_profile_record_session(candidate.record_session)
+        handover = handover.at_phase(_HandoverPhase.B_BOUND)
+        _save_handover_journal(storage_root=storage_root, journal=handover)
+        persisted = _mint_or_warn(
+            storage_root=storage_root,
+            bucket_id=candidate.bucket_id,
+            session=candidate.session,
+        )
+        handover = handover.at_phase(_HandoverPhase.ACCELERATED)
+        _save_handover_journal(storage_root=storage_root, journal=handover)
+        # Activation is required B state, not best-effort telemetry.  Keep it
+        # inside the rollback window, with one stable event instant so a crash
+        # before the phase receipt can replay the same content-addressed event.
+        _record_activation(profile_id=candidate.bucket_id, occurred_at=handover.activation_at)
+        handover = handover.at_phase(_HandoverPhase.ACTIVATED)
+        _save_handover_journal(storage_root=storage_root, journal=handover)
     except BaseException:
-        close_active_bucket_session()
-        pointer_transaction.restore(prior_pointer)
+        _rollback_candidate_promotion(
+            candidate=candidate,
+            previous_live=previous_live,
+            previous_record=previous_record,
+            prior_pointer=prior_pointer,
+            published_pointer=publication.published_pointer,
+            pointer_transaction=pointer_transaction,
+            storage_root=storage_root,
+        )
         raise
-    return session
+    return _CandidatePromotionResult(journal=handover, previous_record=previous_record, persisted=persisted)
 
 
-def _record_activation(*, profile_id: str) -> None:
+def _retire_previous_authorities(
+    *,
+    candidate: _CandidateProfileLogin,
+    previous_live: ProfileBucketSessionPort | None,
+    previous_record: ProfileRecordSession | None,
+) -> None:
+    """Close A's process authorities only after B is fully durable."""
+    if previous_live is not None and previous_live is not candidate.session:
+        previous_live.close()
+    if previous_record is not None and previous_record is not candidate.record_session:
+        previous_record.close()
+
+
+def _closed_previous_bucket_id(*, previous_bucket_id: str | None, candidate_bucket_id: str) -> str | None:
+    """Report A only when the handover actually changed the active bucket."""
+    if previous_bucket_id == candidate_bucket_id:
+        return None
+    return previous_bucket_id
+
+
+def _rollback_candidate_promotion(
+    *,
+    candidate: _CandidateProfileLogin,
+    previous_live: ProfileBucketSessionPort | None,
+    previous_record: ProfileRecordSession | None,
+    prior_pointer: bytes | None,
+    published_pointer: bytes,
+    pointer_transaction: ActiveProfilePointerTransaction,
+    storage_root: Path,
+) -> None:
+    """Restore A and erase every B candidate artefact after swap failure."""
+    try:
+        profile_delete_session(storage_root=storage_root, bucket_id=candidate.bucket_id)
+    finally:
+        if previous_live is not None:
+            profile_bind_bucket_session(previous_live)
+        else:
+            profile_close_bucket_session()
+        if previous_record is not None:
+            bind_active_profile_record_session(previous_record)
+        else:
+            clear_active_profile_record_session_binding(candidate.record_session)
+        candidate.close()
+        pointer_transaction.compare_and_restore(expected=published_pointer, captured=prior_pointer)
+
+
+def _record_activation(*, profile_id: str, occurred_at: datetime) -> None:
     """Record that ``profile_id`` became the active profile.
 
     Authentication and activation are one operation from the operator's
@@ -678,8 +1193,7 @@ def _record_activation(*, profile_id: str) -> None:
     returns before this point, so a retry re-stamps no activation.
     """
     from ...core.config import override_settings
-    from ..workflow import workflow_state_repository
-    from ._orchestration import append_profile_activated_event, select_profile
+    from ...domain.buckets import BucketEventObjectType, BucketEventType, append_bucket_event, build_bucket_event
 
     # A CLI invocation may have resolved and pinned the previously active
     # profile before an interactive login selects this one.  The pointer and
@@ -688,18 +1202,25 @@ def _record_activation(*, profile_id: str) -> None:
     # the inherited settings override can route the database to the previous
     # bucket and manufacture a route/session mismatch after valid credentials.
     with override_settings(cadrumo_active_profile=profile_id):
-        workflow_state_repository().update(lambda current: select_profile(current, profile_id=profile_id))
-        append_profile_activated_event(profile_id=profile_id, active_profile=resolve_active_bucket_id())
+        event = build_bucket_event(
+            bucket_id=profile_id,
+            event_type=BucketEventType.PROFILE_ACTIVATED,
+            occurred_at=occurred_at,
+            actor="profile-login",
+            object_type=BucketEventObjectType.PROFILE,
+            object_id=profile_id,
+            payload={"active_profile": resolve_active_bucket_id() or profile_id},
+            payload_version=1,
+        )
+        repository = default_profile_bucket_event_history_repository()
+        repository.save(append_bucket_event(repository.load(), event))
 
 
 def _mint_or_warn(
     *,
     storage_root: Path,
     bucket_id: str,
-    backend_kind: SecretStoreBackend,
-    session: BucketSession,
-    idle_minutes: int,
-    absolute_minutes: int,
+    session: ProfileBucketSessionPort,
 ) -> bool:
     """Mint the persisted session, or report a process-scoped login.
 
@@ -708,19 +1229,19 @@ def _mint_or_warn(
     closed beats writing key material to disk. The login still succeeds
     for this process; the caller surfaces the warning.
     """
-    from ...adapters.persistence.storage.errors import KeyringUnavailableError
-
     try:
-        mint_profile_session(
+        idle_minutes, absolute_minutes = _session_windows()
+        profile_mint_session(
             storage_root=storage_root,
             bucket_id=bucket_id,
-            backend_kind=backend_kind,
             dek=session.dek,
             now=session.opened_at,
             idle_minutes=idle_minutes,
             absolute_minutes=absolute_minutes,
         )
-    except KeyringUnavailableError:
+    except BaseException as exc:
+        if not profile_is_keyring_unavailable(exc):
+            raise
         _log.info(
             "profile session not persisted (no usable OS keychain); login is process-scoped bucket_id=%s",
             bucket_id,

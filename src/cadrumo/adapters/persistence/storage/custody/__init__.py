@@ -10,9 +10,9 @@ from ._capsule import (
     inventory_staged_profile_custody_capsule,
     list_current_profile_custody_capsule_ids,
     load_committed_profile_custody_data_file,
-    load_committed_profile_custody_label,
+    load_committed_profile_custody_label_record,
     load_committed_profile_password_material,
-    load_staged_profile_custody_label,
+    load_staged_profile_custody_label_record,
     profile_custody_deletion_path,
     profile_custody_staging_path,
     publish_profile_custody_capsule,
@@ -20,9 +20,15 @@ from ._capsule import (
     recognize_current_profile_capsule,
     remove_profile_custody_deletion_tombstone,
     rename_profile_custody_capsule_for_deletion,
+    replace_committed_profile_custody_data_file,
     verify_profile_custody_deletion_marker,
     verify_profile_custody_deletion_tombstone,
     write_profile_custody_deletion_marker,
+)
+from ._capsule_discovery import (
+    PROFILE_CUSTODY_RETIRED_BUCKET_MEMBER_PATHS,
+    detect_retired_profile_custody_member_paths,
+    refuse_retired_profile_custody_paths,
 )
 from ._capsule_records import (
     PROFILE_CUSTODY_COMMIT_MAX_BYTES,
@@ -31,9 +37,11 @@ from ._capsule_records import (
     PROFILE_CUSTODY_LABEL_FILENAME,
     PROFILE_CUSTODY_LABEL_MAX_BYTES,
     PROFILE_CUSTODY_LAYOUT_VERSION,
+    ProfileCustodyCapsuleLabel,
     ProfileCustodyCommit,
     ProfileCustodyDeletionMarker,
     ProfileCustodyPasswordMaterial,
+    parse_profile_custody_capsule_label,
     parse_profile_custody_commit,
 )
 from ._envelope import create_profile_custody_password_envelope
@@ -41,6 +49,7 @@ from ._errors import (
     ProfileCustodyError,
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
+    ProfileCustodyRecoveryGuidance,
     ProfileCustodyRefusal,
     ProfileCustodyRefusedError,
 )
@@ -50,6 +59,7 @@ from ._filesystem import (
     ensure_profile_custody_local_directory,
     profile_custody_local_lock,
     profile_custody_root_lock,
+    read_optional_profile_custody_local_record,
     read_profile_custody_local_record,
     write_profile_custody_local_record,
 )
@@ -77,6 +87,7 @@ from ._kdf_supervision import (
     unlock_profile_custody_material,
     wrap_profile_custody_material,
 )
+from ._label_head import LABEL_HEAD_MAX_BYTES, ProfileLabelHead, ProfileLabelHeadRepository
 from ._paths import profile_custody_path
 from ._records import (
     PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
@@ -135,6 +146,7 @@ from ._sentinel_contract import (
 )
 
 __all__ = [
+    "LABEL_HEAD_MAX_BYTES",
     "PROFILE_CUSTODY_COMMIT_FILENAME",
     "PROFILE_CUSTODY_COMMIT_MAX_BYTES",
     "PROFILE_CUSTODY_COMMIT_SCHEMA_VERSION",
@@ -166,8 +178,10 @@ __all__ = [
     "PROFILE_CUSTODY_RECOVERY_FILENAME",
     "PROFILE_CUSTODY_RECOVERY_MAX_BYTES",
     "PROFILE_CUSTODY_RECOVERY_SCHEMA_VERSION",
+    "PROFILE_CUSTODY_RETIRED_BUCKET_MEMBER_PATHS",
     "PROFILE_CUSTODY_SENTINEL_FILENAME",
     "PROFILE_CUSTODY_SENTINEL_MAX_BYTES",
+    "ProfileCustodyCapsuleLabel",
     "ProfileCustodyCommit",
     "ProfileCustodyDeletionMarker",
     "ProfileCustodyEnvelope",
@@ -186,18 +200,22 @@ __all__ = [
     "ProfileCustodyRecoveryArtifactExportReceipt",
     "ProfileCustodyRecoveryArtifactWarning",
     "ProfileCustodyRecoveryEnvelope",
+    "ProfileCustodyRecoveryGuidance",
     "ProfileCustodyRecoveryUnlock",
     "ProfileCustodyRefusal",
     "ProfileCustodyRefusedError",
     "ProfileCustodySentinelRecord",
     "ProfileCustodyUnlock",
     "ProfileCustodyWrappedDek",
+    "ProfileLabelHead",
+    "ProfileLabelHeadRepository",
     "calibrate_profile_kdf",
     "clear_profile_custody_local_record",
     "create_profile_custody_password_envelope",
     "create_profile_custody_recovery_envelope",
     "create_profile_custody_sentinel",
     "decode_profile_password",
+    "detect_retired_profile_custody_member_paths",
     "ensure_profile_custody_local_directory",
     "export_profile_custody_recovery_artifact",
     "fixed_profile_kdf_fallback",
@@ -206,9 +224,10 @@ __all__ = [
     "inventory_staged_profile_custody_capsule",
     "list_current_profile_custody_capsule_ids",
     "load_committed_profile_custody_data_file",
-    "load_committed_profile_custody_label",
+    "load_committed_profile_custody_label_record",
     "load_committed_profile_password_material",
-    "load_staged_profile_custody_label",
+    "load_staged_profile_custody_label_record",
+    "parse_profile_custody_capsule_label",
     "parse_profile_custody_commit",
     "parse_profile_custody_envelope",
     "parse_profile_custody_recovery_artifact",
@@ -231,11 +250,14 @@ __all__ = [
     "propose_profile_kdf_ratchet",
     "publish_profile_custody_capsule",
     "publish_staged_profile_custody_capsule",
+    "read_optional_profile_custody_local_record",
     "read_profile_custody_local_record",
     "read_profile_custody_sentinel",
     "recognize_current_profile_capsule",
+    "refuse_retired_profile_custody_paths",
     "remove_profile_custody_deletion_tombstone",
     "rename_profile_custody_capsule_for_deletion",
+    "replace_committed_profile_custody_data_file",
     "unlock_imported_profile_custody_recovery_artifact",
     "unlock_profile_custody",
     "unlock_profile_custody_material",

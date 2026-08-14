@@ -269,7 +269,6 @@ def _register_login_command(app: typer.Typer) -> None:
         result = ConfigLoginResult(
             profile_id=outcome.bucket_id,
             active_profile=outcome.label,
-            backend_kind=outcome.backend_kind,
             authenticated_at=outcome.authenticated_at,
             idle_deadline=outcome.idle_deadline,
             absolute_deadline=outcome.absolute_deadline,

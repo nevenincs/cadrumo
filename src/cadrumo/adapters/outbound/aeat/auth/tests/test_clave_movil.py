@@ -17,7 +17,6 @@ from ......core.i18n import tr
 from ......domain.calculations.registry import RegistryValidationError, RemoteOperation, assert_remote_operation_allowed
 from ......tests.secure_sql import isolated_runtime_profile
 from ......tests.user_profile import register_minimal_profile
-from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .. import operator_progress_sink
 from .._clave_movil import (
     ClaveMovilAuthProvider,
@@ -123,8 +122,6 @@ def test_attempt_context_uses_profile_storage_and_redacts_identity_values() -> N
                 profile_id=bucket_id,
                 display_name="Clave Movil Test",
                 overrides={"identity.tax_id": "X1234567L"},
-                secure_objects=secure_object_repository_for_active_bucket(),
-                enforce_unique_tax_id=False,
             ),
         )
         settings = Settings(

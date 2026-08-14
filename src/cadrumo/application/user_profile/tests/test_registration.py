@@ -21,17 +21,20 @@ It is the regression for exactly that defect.
 from __future__ import annotations
 
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.errors import MasterKeyPassphraseMismatchError
-from ....adapters.persistence.storage.master_key import get_master_key_provider
+from ....adapters.persistence.storage.custody import (
+    ProfileCustodyPasswordError,
+    load_committed_profile_password_material,
+    unlock_profile_custody,
+)
 from ....core import PassphraseStrength
-from ....domain.user_profile import UserProfileStatus
+from ....domain.user_profile import ProfileSetupState
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import (
     PASSPHRASE_MINIMUM_LENGTH,
-    ProfileAlreadyRegisteredError,
     ProfileRegistrationError,
     assess_passphrase,
     register_profile_with_credentials,
@@ -59,25 +62,24 @@ def test_operator_passphrase_keys_the_bucket_not_the_ambient_setting(tmp_path: P
     the ambient one does not, is what distinguishes a threaded callback from
     a discarded one.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
             label="Registration Subject",
             passphrase=_OPERATOR_PASSPHRASE,
         )
-        assert outcome.status is UserProfileStatus.SETUP_INCOMPLETE
+        assert outcome.setup_state is ProfileSetupState.INCOMPLETE
         assert outcome.bucket_id == outcome.profile_id
 
-        # Real Argon2id derivation + real AEAD unwrap under the operator's
-        # secret; a mismatch would raise rather than return key bytes.
-        operator_key = get_master_key_provider(
-            passphrase_callback=lambda: _OPERATOR_PASSPHRASE,
-        ).get_master_key()
+        material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
+        operator_key = unlock_profile_custody(
+            material.envelope,
+            _OPERATOR_PASSPHRASE,
+            sentinel=material.sentinel,
+        ).dek
         assert len(operator_key) == 32
 
-        with pytest.raises(MasterKeyPassphraseMismatchError):
-            get_master_key_provider(
-                passphrase_callback=lambda: _WRONG_PASSPHRASE,
-            ).get_master_key()
+        with pytest.raises(ProfileCustodyPasswordError):
+            unlock_profile_custody(material.envelope, _WRONG_PASSPHRASE, sentinel=material.sentinel)
 
 
 def test_registration_creates_an_addressable_profile_with_no_tax_facts(tmp_path: Path) -> None:
@@ -92,19 +94,24 @@ def test_registration_creates_an_addressable_profile_with_no_tax_facts(tmp_path:
     refuses outright without an active bucket session, so a successful load
     here means the session the manager needs is already open.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
             label="Minimal Subject",
             passphrase=_OPERATOR_PASSPHRASE,
         )
 
-        from .. import ProfileRecordAggregateRepository
+        material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
+        unlocked = unlock_profile_custody(material.envelope, _OPERATOR_PASSPHRASE, sentinel=material.sentinel)
+        from .._capsule_record import ProfileRecordSession
+        from .._profile_record_repository import ProfileRecordRepository, bound_profile_record_session
 
-        aggregate = ProfileRecordAggregateRepository().load(outcome.profile_id)
-        assert aggregate is not None
-        assert aggregate.status is UserProfileStatus.SETUP_INCOMPLETE
-        assert aggregate.label == "Minimal Subject"
-        tax_id_facts = [fact for fact in aggregate.record.facts if fact.path == "identity.tax_id"]
+        session = ProfileRecordSession.from_envelope(envelope=material.envelope, dek=unlocked.dek)
+        with bound_profile_record_session(session):
+            record = ProfileRecordRepository.for_current_session(outcome.profile_id, root=storage_root).load(
+                outcome.profile_id
+            )
+        assert record.setup_state is ProfileSetupState.INCOMPLETE
+        tax_id_facts = [fact for fact in record.facts if fact.path == "identity.tax_id"]
         assert tax_id_facts == []
 
 
@@ -135,7 +142,7 @@ def test_short_passphrase_is_refused_before_any_bucket_is_created(tmp_path: Path
 def test_duplicate_label_is_refused(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label="Same Label", passphrase=_OPERATOR_PASSPHRASE)
-        with pytest.raises(ProfileAlreadyRegisteredError):
+        with pytest.raises(ProfileRegistrationError):
             register_profile_with_credentials(label="Same Label", passphrase=_OPERATOR_PASSPHRASE)
 
 

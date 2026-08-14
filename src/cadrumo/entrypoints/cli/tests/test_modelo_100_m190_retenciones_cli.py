@@ -11,11 +11,11 @@ import pytest
 
 from ....application.calculations import CalculationObservationRepository
 from ....application.modelo import APP_FILING_SOURCE_KIND
-from ....application.user_profile import ProfileRecordRepository
 from ....domain.calculations.registry import RegistryModeloObservation
-from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -41,8 +41,7 @@ def _seed_m100_2025_profile(runtime_profile: TestRuntimeProfile) -> None:
         schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
-        display_name="M100 M190 retenciones CLI profile",
-        status=UserProfileStatus.ACTIVE,
+        setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="identity.name", value="Ana"),
@@ -72,7 +71,7 @@ def _seed_m100_2025_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )
-    ProfileRecordRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).save(record)
+    seed_test_profile_record(record, root=runtime_profile.storage_root, label="M100 M190 retenciones CLI profile")
 
 
 def _seed_prior_year_zero_carry(runtime_profile: TestRuntimeProfile) -> None:

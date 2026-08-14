@@ -28,8 +28,6 @@ Real encrypted stores over real blob stores and a real master key.
 from __future__ import annotations
 
 import json
-import secrets
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -40,9 +38,6 @@ from ......core import STR_KEYED_MAPPING_ADAPTER
 from ......core.classification import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ......core.hashing import sha256_hex
-from ......tests.master_key import EphemeralMasterKeyProvider
-from ...blob_store import EncryptedBlobStore
-from ...crypto import KEY_SIZE
 from ...errors import StorageValidationError
 from .._secret_store import SecretRecord, SecretStore
 
@@ -57,17 +52,6 @@ _EXPIRES_AT = datetime(2099, 5, 28, 11, 55, 0, tzinfo=UTC)
 #: canonical field type accepts it, so only the agreement check can refuse it.
 _WRONG_BUT_WELL_FORMED = sha256_hex(b"a different natural key entirely")
 _SECRET_ENTRIES = TypeAdapter(dict[str, dict[str, object]])
-
-
-@pytest.fixture
-def store(tmp_path: Path) -> Iterator[SecretStore]:
-    provider = EphemeralMasterKeyProvider(key=secrets.token_bytes(KEY_SIZE))
-    blob_store = EncryptedBlobStore(root_dir=tmp_path / "store-root", master_key_provider=provider)
-    yield SecretStore(
-        store_dir=tmp_path / "fallback-store",
-        blob_store=blob_store,
-        master_key_provider=provider,
-    )
 
 
 def _record() -> SecretRecord:

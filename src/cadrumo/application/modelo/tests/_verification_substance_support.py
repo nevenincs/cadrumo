@@ -12,7 +12,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import CasillaId, validated_casilla_id
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ...user_profile import ProfileRecordRepository
+from ....tests.profile_capsule import seed_test_profile_record
 
 _Repos = tuple[
     WorkUnitCatalogueRepository,
@@ -79,7 +79,6 @@ def _casilla_values(*entries: tuple[CasillaId, str]) -> dict[CasillaId, Decimal]
 
 
 def _seed_ready_profile(
-    repository: ProfileRecordRepository,
     *,
     bucket_id: str,
     irpf_estimation_regime: str = "directa_normal",
@@ -88,10 +87,9 @@ def _seed_ready_profile(
         UserProfileFact(path=fact.path, value=irpf_estimation_regime) if fact.path == "irpf.estimation_regime" else fact
         for fact in _READY_PROFILE_FACTS
     )
-    repository.save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Test Operator",
             facts=facts,
             created_at=_T0,
             updated_at=_T0,

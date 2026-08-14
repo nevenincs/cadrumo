@@ -61,7 +61,6 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -76,9 +75,9 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import CalculationObservationRepository
-from ...user_profile import ProfileRecordRepository
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -181,7 +180,6 @@ def _seed_m200_sociedad_profile(*, activity_start_date: date | None = None) -> N
     """
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
             UserProfileFact(path="identity.legal_name", value="Test Runtime Profile SL"),
@@ -207,7 +205,7 @@ def _seed_m200_sociedad_profile(*, activity_start_date: date | None = None) -> N
         created_at=_T0,
         updated_at=_T0,
     )
-    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(record)
+    seed_test_profile_record(record)
 
 
 def _seed_prior_m200_closing_stock(*, obs_repo: CalculationObservationRepository) -> None:

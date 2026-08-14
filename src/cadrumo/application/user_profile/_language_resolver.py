@@ -29,12 +29,12 @@ def resolve_active_profile_output_language() -> str | None:
         return resolve_active_profile_output_language_hint()
 
     from ..workflow import workflow_state_repository
-    from ._orchestration import fact_value
+    from ._projections import record_to_path_values
 
     record = workflow_state_repository().load().active_profile_record()
     if record is None:
         return None
-    return fact_value(record, "preferences.output_language")
+    return record_to_path_values(record).get("preferences.output_language")
 
 
 def resolve_active_profile_output_language_hint() -> str | None:

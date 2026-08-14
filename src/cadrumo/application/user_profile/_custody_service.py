@@ -6,6 +6,7 @@ import os
 import secrets
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
+from hashlib import sha256
 from importlib import import_module
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -28,7 +29,6 @@ from ._custody_repository import (
     profile_custody_transaction_lock,
 )
 from ._custody_transactions import (
-    ProfileCapsuleLabel,
     ProfileCustodyDeleteConfirmation,
     ProfileCustodyInventoryWitness,
     ProfileCustodyOwnerReceipt,
@@ -51,8 +51,14 @@ def _default_custody_adapters() -> Any:
     return import_module("cadrumo.adapters.persistence.storage.custody")
 
 
-class ProfileCustodyTransactionService:
-    """Prepare and recover current-format creation plus confirmed local deletion."""
+class _ProfileCustodyTransactionCapability:
+    """Internal physical-custody capability owned by ``ProfileCapsuleLifecycle``.
+
+    No application caller may use this capability directly.  The lifecycle is
+    the only collaboration boundary entitled to prepare, publish, recover, or
+    remove a current capsule; keeping the transaction mechanics here prevents
+    a second public writer from materialising beside that boundary.
+    """
 
     def __init__(self, *, root: Path | None = None, adapters: Any | None = None) -> None:
         self._root = effective_storage_root(root)
@@ -107,6 +113,7 @@ class ProfileCustodyTransactionService:
         recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None = None,
         label: str,
         publication_kind: Literal["enroll", "restore"] = "enroll",
+        stage_initializer: Callable[[Path], None] | None = None,
         transaction_id: UUID | None = None,
         now: datetime | None = None,
     ) -> ProfileCustodyTransactionReceipt:
@@ -119,7 +126,11 @@ class ProfileCustodyTransactionService:
         if password_envelope.profile_id != profile_id or sentinel.profile_id != profile_id:
             raise ProfileCustodyTransactionRefusalError("create custody material does not bind its target profile")
         try:
-            canonical_label = ProfileCapsuleLabel(label=label).label
+            label_record = self._adapters.ProfileCustodyCapsuleLabel.create(
+                profile_id=profile_id,
+                label=label,
+            )
+            canonical_label = label_record.label
         except (ValidationError, ValueError, TypeError) as exc:
             raise ProfileCustodyTransactionRefusalError("profile capsule label is invalid") from exc
         transaction = transaction_id or uuid4()
@@ -141,6 +152,9 @@ class ProfileCustodyTransactionService:
                 pointer_before=ProfileCustodyPointerSnapshot.capture(self._root),
                 proposed_generation=password_envelope.password_generation,
                 label=canonical_label,
+                label_revision=label_record.label_revision,
+                label_content_digest=label_record.content_digest,
+                label_self_digest=label_record.self_digest,
                 staged_relative_path=staged_relative_path,
             )
             self._repository.create_journal(journal)
@@ -150,11 +164,15 @@ class ProfileCustodyTransactionService:
                 publication_kind=publication_kind,
                 password_envelope=cast(Any, password_envelope),
                 sentinel=cast(Any, sentinel),
-                data_files={**data_files, "profile-label.v1.txt": canonical_label.encode("utf-8")},
+                data_files={
+                    **data_files,
+                    self._adapters.PROFILE_CUSTODY_LABEL_FILENAME: label_record.canonical_json_bytes(),
+                },
                 recovery_envelope=cast(Any, recovery_envelope),
                 root=self._root,
                 published_at=instant,
                 stage_only=True,
+                stage_initializer=stage_initializer,
             )
             inventory = ProfileCustodyInventoryWitness.from_inventory(
                 self._adapters.inventory_staged_profile_custody_capsule(
@@ -170,12 +188,74 @@ class ProfileCustodyTransactionService:
             pointed = self._publish_verified_create(verified, instant)
             return self._finish_create_recovery(pointed, instant)
 
+    def rename_label(
+        self,
+        *,
+        profile_id: UUID,
+        label: str,
+        expected_label_revision: int,
+        expected_content_digest: str,
+    ) -> None:
+        """CAS-publish one UUID-bound label provenance record.
+
+        Label presentation is outside the immutable capsule marker, but its
+        canonical record and durable lineage head are still custody state. The
+        transaction owner therefore keeps the root lock, collision check, and
+        physical replacement together with the head journal.
+        """
+        with profile_custody_transaction_lock(self._root, profile_id):
+            current = self._adapters.load_committed_profile_custody_label_record(
+                profile_id,
+                root=self._root,
+            )
+            heads = self._adapters.ProfileLabelHeadRepository(root=self._root)
+            try:
+                current_head = heads.recover_advance(profile_id=profile_id, current_label=current)
+            except self._adapters.ProfileCustodyRecordError as exc:
+                raise ProfileCustodyTransactionConflictError(str(exc)) from exc
+            if current.label_revision != expected_label_revision or current.content_digest != expected_content_digest:
+                raise ProfileCustodyTransactionConflictError("profile label revision compare-and-swap failed")
+            try:
+                replacement = self._adapters.ProfileCustodyCapsuleLabel.create(
+                    profile_id=profile_id,
+                    label=label,
+                    label_revision=current.label_revision + 1,
+                    previous_label_digest=current.content_digest,
+                )
+            except (ValidationError, ValueError, TypeError) as exc:
+                raise ProfileCustodyTransactionRefusalError("profile capsule label is invalid") from exc
+            self._refuse_duplicate_label_under_root_lock(
+                profile_id=profile_id,
+                label=replacement.label,
+                allow_existing_profile=True,
+            )
+            try:
+                heads.begin_advance(
+                    current_head=current_head,
+                    current_label=current,
+                    replacement_label=replacement,
+                )
+            except self._adapters.ProfileCustodyRecordError as exc:
+                raise ProfileCustodyTransactionConflictError(str(exc)) from exc
+            self._adapters.replace_committed_profile_custody_data_file(
+                profile_id,
+                self._adapters.PROFILE_CUSTODY_LABEL_FILENAME,
+                replacement.canonical_json_bytes(),
+                expected_sha256=f"sha256:{sha256(current.canonical_json_bytes()).hexdigest()}",
+                root=self._root,
+            )
+            try:
+                heads.recover_advance(profile_id=profile_id, current_label=replacement)
+            except self._adapters.ProfileCustodyRecordError as exc:
+                raise ProfileCustodyTransactionConflictError(str(exc)) from exc
+
     def _refuse_duplicate_label_under_root_lock(
         self,
         *,
         profile_id: UUID,
         label: str,
         transaction_id: UUID | None = None,
+        allow_existing_profile: bool = False,
     ) -> None:
         """Reject a label collision while the custody-root lock is held.
 
@@ -185,6 +265,8 @@ class ProfileCustodyTransactionService:
         """
         for existing_profile_id in self._adapters.list_current_profile_custody_capsule_ids(root=self._root):
             if existing_profile_id == profile_id:
+                if allow_existing_profile:
+                    continue
                 if transaction_id is None:
                     raise ProfileCustodyTransactionConflictError(
                         "profile UUID already names a committed custody capsule"
@@ -196,14 +278,14 @@ class ProfileCustodyTransactionService:
                     )
                 continue
             try:
-                existing_label = self._adapters.load_committed_profile_custody_label(
+                existing_label = self._adapters.load_committed_profile_custody_label_record(
                     existing_profile_id, root=self._root
                 )
             except Exception as exc:
                 raise ProfileCustodyTransactionCorruptError(
                     "committed profile capsule has no valid label projection"
                 ) from exc
-            if existing_label.casefold() == label.casefold():
+            if existing_label.label.casefold() == label.casefold():
                 raise ProfileCustodyTransactionConflictError("profile label is already bound to a committed capsule")
 
     def _refuse_duplicate_label_publication_under_root_lock(
@@ -220,12 +302,12 @@ class ProfileCustodyTransactionService:
     def _verify_staged_create_label(self, journal: ProfileCustodyTransactionJournal) -> None:
         """Bind journal intent to the exact label covered by the stage inventory."""
         assert journal.label is not None
-        staged_label = self._adapters.load_staged_profile_custody_label(
+        staged_label = self._adapters.load_staged_profile_custody_label_record(
             journal.profile_id,
             journal.transaction_id,
             root=self._root,
         )
-        if staged_label != journal.label:
+        if staged_label.label != journal.label:
             raise ProfileCustodyTransactionConflictError("verified create stage label differs from its journal")
 
     def recover_create(
@@ -696,7 +778,10 @@ class ProfileCustodyTransactionService:
                 "final capsule password generation differs from create journal"
             )
         assert journal.label is not None
-        if self._adapters.load_committed_profile_custody_label(journal.profile_id, root=self._root) != journal.label:
+        if (
+            self._adapters.load_committed_profile_custody_label_record(journal.profile_id, root=self._root).label
+            != journal.label
+        ):
             raise ProfileCustodyTransactionConflictError("published create label differs from its journal")
 
     def _create_stage_path(self, journal: ProfileCustodyTransactionJournal) -> Path:
@@ -804,4 +889,4 @@ class ProfileCustodyTransactionService:
             raise ProfileCustodyTransactionRefusalError("delete confirmation is not bound to the prepared local target")
 
 
-__all__ = ["ProfileCustodyTransactionService"]
+__all__ = ["_ProfileCustodyTransactionCapability"]

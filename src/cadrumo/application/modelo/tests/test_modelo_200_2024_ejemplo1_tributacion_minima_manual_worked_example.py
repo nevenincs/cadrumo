@@ -140,9 +140,9 @@ from ....domain.calculations.registry import (
     ValidatedRegistryAuthority,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import CalculationObservationRepository
-from ...user_profile import ProfileRecordRepository
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -241,7 +241,6 @@ def _seed_sociedad_profile() -> None:
     """
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="A12345674"),
             UserProfileFact(path="identity.legal_name", value="Sociedad A Ejemplo1 SL"),
@@ -262,7 +261,7 @@ def _seed_sociedad_profile() -> None:
         created_at=_T0,
         updated_at=_T0,
     )
-    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(record)
+    seed_test_profile_record(record)
 
 
 def _seed_zero_m202_pagos() -> None:

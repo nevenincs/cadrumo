@@ -18,6 +18,7 @@ from .. import (
     ProfileCustodyKdfParameters,
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
+    ProfileCustodyRecoveryGuidance,
     ProfileCustodyRefusal,
     ProfileCustodyRefusedError,
     ProfileCustodyWrappedDek,
@@ -151,6 +152,10 @@ def test_refusal_taxonomy_carries_the_hard_cutover_and_supervision_outcomes() ->
         ProfileCustodyRefusal.KDF_RESOURCE_LIMIT,
         ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE,
     }
+    assert tuple(ProfileCustodyRecoveryGuidance) == (
+        ProfileCustodyRecoveryGuidance.DESTRUCTIVE_RESET,
+        ProfileCustodyRecoveryGuidance.REENROLL_PROFILE,
+    )
     error = ProfileCustodyRefusedError(
         ProfileCustodyRefusal.LEGACY_CUSTODY_DETECTED,
         context={"refusal": "forged-refusal", "profile_id": str(_PROFILE_ID)},

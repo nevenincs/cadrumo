@@ -5,7 +5,9 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping
 from contextlib import ExitStack, suppress
+from hashlib import sha256
 from pathlib import Path, PurePosixPath
+from uuid import uuid4
 
 from ._errors import ProfileCustodyRecordError
 from ._filesystem import (
@@ -14,6 +16,7 @@ from ._filesystem import (
     ProfileCustodyPasswordReadOperation,
     anchor_directory,
     fsync_directory,
+    posix_directory_fd,
     posix_open_child_directory,
     read_regular_file,
     read_regular_file_fd,
@@ -148,11 +151,114 @@ def write_posix_data_files(data_fd: int, data_files: Mapping[str, bytes]) -> Non
             os.close(current_fd)
 
 
+def replace_data_file(
+    data_root: Path,
+    relative_name: str,
+    payload: bytes,
+    *,
+    expected_sha256: str,
+) -> None:
+    """Atomically replace one already-present regular capsule data member.
+
+    Callers must hold their capsule lifecycle lock.  The expected digest is a
+    compare-and-swap witness: the exact authenticated bytes read for a command
+    must still be current at publication, otherwise no mutation is made.
+    """
+    relative_path = validated_data_path(relative_name)
+    if relative_path.as_posix() == PROFILE_CUSTODY_SENTINEL_FILENAME:
+        raise ProfileCustodyRecordError("profile record command cannot replace the DEK sentinel")
+    if len(payload) > PROFILE_CUSTODY_DATA_FILE_MAX_BYTES:
+        raise ProfileCustodyRecordError("profile record command exceeds the data-file byte limit")
+    target = data_root.joinpath(*relative_path.parts)
+    with ExitStack() as anchors:
+        current = data_root
+        for component in relative_path.parts[:-1]:
+            current = current / component
+            anchor_directory(anchors, current)
+        existing = read_regular_file(
+            target,
+            maximum_bytes=PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
+            trace=[],
+        )
+        if f"sha256:{sha256(existing).hexdigest()}" != expected_sha256:
+            raise ProfileCustodyRecordError("profile record compare-and-swap witness is stale")
+        replacement = current / f".{relative_path.name}.replace-{uuid4().hex}"
+        write_exclusive_fsynced(replacement, payload)
+        try:
+            os.replace(replacement, target)
+        except OSError as exc:
+            raise ProfileCustodyRecordError("profile record replacement could not be published") from exc
+        fsync_directory(current)
+
+
+def validate_committed_data_member(relative_name: str, *, maximum_bytes: int) -> tuple[str, ...]:
+    """Validate one slash-delimited committed capsule data member."""
+    if maximum_bytes < 1:
+        raise ValueError("profile custody data read maximum must be positive")
+    parts = tuple(relative_name.split("/"))
+    if not parts or any(part in {"", ".", ".."} for part in parts):
+        raise ProfileCustodyRecordError("profile custody data member path is invalid")
+    return parts
+
+
+def read_committed_data_file_posix(
+    capsule_path: Path,
+    parts: tuple[str, ...],
+    *,
+    member_path: Path,
+    maximum_bytes: int,
+) -> bytes:
+    """Read one committed data member through anchored POSIX descriptors."""
+    with posix_directory_fd(capsule_path) as capsule_fd:
+        data_fd = posix_open_child_directory(capsule_fd, "data")
+        directory_fd = data_fd
+        try:
+            for segment in parts[:-1]:
+                child_fd = posix_open_child_directory(directory_fd, segment)
+                if directory_fd != data_fd:
+                    os.close(directory_fd)
+                directory_fd = child_fd
+            return read_regular_file_fd(
+                directory_fd,
+                parts[-1],
+                display_path=member_path,
+                maximum_bytes=maximum_bytes,
+                trace=[],
+            )
+        finally:
+            if directory_fd != data_fd:
+                os.close(directory_fd)
+            os.close(data_fd)
+
+
+def read_committed_data_file_windows(
+    capsule_path: Path,
+    parts: tuple[str, ...],
+    *,
+    member_path: Path,
+    maximum_bytes: int,
+) -> bytes:
+    """Read one committed data member through anchored Windows paths."""
+    data_path = capsule_path / "data"
+    with ExitStack() as anchors:
+        anchor_directory(anchors, capsule_path)
+        anchor_directory(anchors, data_path)
+        parent = data_path
+        for segment in parts[:-1]:
+            parent = parent / segment
+            anchor_directory(anchors, parent)
+        return read_regular_file(member_path, maximum_bytes=maximum_bytes, trace=[])
+
+
 __all__ = [
+    "read_committed_data_file_posix",
+    "read_committed_data_file_windows",
     "read_password_envelope",
     "read_password_envelope_fd",
     "read_sentinel",
     "read_sentinel_fd",
+    "replace_data_file",
+    "validate_committed_data_member",
     "validate_data_file_inventory",
     "validated_data_path",
     "write_data_files",

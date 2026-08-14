@@ -141,7 +141,6 @@ def _write_second_live_bucket_sharing_label(label: str) -> None:
     )
     from ....adapters.persistence.storage.master_key import KdfParams
     from ....core.config import load_settings
-    from ....domain.user_profile import UserProfileStatus
 
     root = load_settings().cadrumo_local_storage_root
     duplicate_uuid = "62d2ab08-39f2-4811-bd2a-fe48fd105e4a"
@@ -154,10 +153,8 @@ def _write_second_live_bucket_sharing_label(label: str) -> None:
             created_at=_DUPLICATE_MANIFEST_CREATED_AT,
             last_unlocked_at=None,
             kdf_params=KdfParams.default().to_manifest_params(),
-            recovery_enrolled=False,
             key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
             schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-            status=UserProfileStatus.ACTIVE,
         ),
     )
 

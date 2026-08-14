@@ -14,7 +14,6 @@ from pydantic import AnyHttpUrl, TypeAdapter
 from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....application.user_profile import (
     CENSO_SOURCE_TAG,
-    ProfileRecordRepository,
     profile_create_storage_span,
     profile_storage_session,
 )
@@ -31,6 +30,7 @@ from ....domain.modelos import (
 )
 from ....domain.user_profile import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
+from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
@@ -193,8 +193,7 @@ def _justificante_metadata(*, csv: str, tax_id: str = "X1234567L") -> Justifican
 
 def _stamp_calendar_enrolment_from_censo() -> None:
     with profile_storage_session(PRIMARY_PROFILE_ID):
-        repository = ProfileRecordRepository(bucket_id=PRIMARY_PROFILE_ID)
-        record = repository.load(PRIMARY_PROFILE_ID)
+        record = load_test_profile_record(PRIMARY_PROFILE_ID)
         censo_paths = {
             "iva.regime": CENSO_SOURCE_TAG,
             "taxpayer_type.entity_type": CENSO_SOURCE_TAG,
@@ -212,4 +211,4 @@ def _stamp_calendar_enrolment_from_censo() -> None:
                     source=CENSO_SOURCE_TAG,
                 ),
             )
-        repository.save(record.model_copy(update={"facts": tuple(facts)}))
+        replace_test_profile_record(record.model_copy(update={"facts": tuple(facts)}))

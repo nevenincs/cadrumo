@@ -51,6 +51,7 @@ from ....domain.calculations.registry import (
     resolve_available_bound_inputs_by_casilla_id,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
     AggregationValidationError,
@@ -62,7 +63,6 @@ from ...aggregation import (
     merge_source_resolutions,
 )
 from ...calculations import CalculationObservationRepository, RelationPrefillSourceResolver
-from ...user_profile import ProfileRecordRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
@@ -130,10 +130,9 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 def _seed_ready_profile(objects: SecureObjectRepository) -> None:
     """Persist a filing-ready profile for the annual M180 work-unit gate."""
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name=_PROFILE_LABEL,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="Test"),

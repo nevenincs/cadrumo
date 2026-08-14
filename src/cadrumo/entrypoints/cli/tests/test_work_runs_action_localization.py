@@ -19,7 +19,7 @@ from ....application.operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,
 )
-from ....application.user_profile import ProfileRecordRepository, profile_create_storage_span
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import (
     SiteHealthAlert,
     WorkflowAbortReason,
@@ -45,6 +45,7 @@ from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ....domain.deadlines import ObligationStatus
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .._action_rendering import resolved_precondition_action_json_cell
@@ -90,14 +91,14 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
                 display_name=_PROFILE_LABEL,
             ),
         )
-        ProfileRecordRepository(bucket_id=_PROFILE_ID).save(
+        seed_test_profile_record(
             UserProfileRecord(
                 profile_id=_PROFILE_ID,
-                display_name=_PROFILE_LABEL,
                 facts=_PROFILE_FACTS,
                 created_at=_T,
                 updated_at=_T,
             ),
+            label=_PROFILE_LABEL,
         )
         yield
 

@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....domain.user_profile import UserProfileStatus
+from ....domain.user_profile import ProfileSetupState
 from .._config_payloads import (
     ConfigProfileDeleteResult,
     ConfigProfileDuplicateResult,
@@ -27,7 +27,7 @@ def _delete_kwargs(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "profile_id": "profile-1",
         "display_name": "Operator",
-        "status": UserProfileStatus.TOMBSTONED,
+        "setup_state": ProfileSetupState.COMPLETE,
         "active_profile_cleared": True,
     }
     base.update(overrides)
@@ -37,7 +37,7 @@ def _delete_kwargs(**overrides: object) -> dict[str, object]:
 def test_config_profile_delete_result_round_trips_valid_row() -> None:
     result = ConfigProfileDeleteResult.model_validate(_delete_kwargs())
 
-    assert result.status is UserProfileStatus.TOMBSTONED
+    assert result.setup_state is ProfileSetupState.COMPLETE
 
 
 @pytest.mark.parametrize(
@@ -45,7 +45,7 @@ def test_config_profile_delete_result_round_trips_valid_row() -> None:
     (
         ("profile_id", ""),
         ("display_name", ""),
-        ("status", "bogus"),
+        ("setup_state", "bogus"),
     ),
 )
 def test_config_profile_delete_result_refuses_malformed_field(field: str, bad_value: object) -> None:

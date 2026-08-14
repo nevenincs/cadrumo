@@ -75,6 +75,7 @@ from ._labels import (
     profile_section_title_key,
 )
 from ._loader import load_user_profile_schema
+from ._protocols import ProfileCustodyLabelAuthorityProtocol
 from ._registry_contract import (
     UserProfileRegistryContractIssue,
     UserProfileRegistryContractReport,
@@ -149,6 +150,7 @@ __all__ = [
     "CoverageManifest",
     "ProfileAlreadyExistsError",
     "ProfileBucketMismatchError",
+    "ProfileCustodyLabelAuthorityProtocol",
     "ProfileDerivedSelectorDefinition",
     "ProfileExportError",
     "ProfileFieldDefinition",

@@ -17,6 +17,13 @@ class ProfileCustodyRefusal(StrEnum):
     KDF_SUPERVISION_UNAVAILABLE = "KDF_SUPERVISION_UNAVAILABLE"
 
 
+class ProfileCustodyRecoveryGuidance(StrEnum):
+    """Closed operator actions accompanying a custody refusal."""
+
+    DESTRUCTIVE_RESET = "DESTRUCTIVE_RESET"
+    REENROLL_PROFILE = "REENROLL_PROFILE"
+
+
 class ProfileCustodyError(SecretStoreError):
     """Base failure for profile-scoped password custody."""
 
@@ -37,18 +44,25 @@ class ProfileCustodyRefusedError(ProfileCustodyError):
         refusal: ProfileCustodyRefusal,
         *,
         context: Mapping[str, object] | None = None,
+        recovery_guidance: tuple[ProfileCustodyRecoveryGuidance, ...] = (),
     ) -> None:
         payload: dict[str, object] = {"refusal": refusal.value}
+        if recovery_guidance:
+            payload["recovery_guidance"] = tuple(item.value for item in recovery_guidance)
         if context is not None:
-            payload.update((key, value) for key, value in context.items() if key != "refusal")
+            payload.update(
+                (key, value) for key, value in context.items() if key not in {"refusal", "recovery_guidance"}
+            )
         super().__init__(refusal.value, context=payload)
         self.refusal = refusal
+        self.recovery_guidance = recovery_guidance
 
 
 __all__ = [
     "ProfileCustodyError",
     "ProfileCustodyPasswordError",
     "ProfileCustodyRecordError",
+    "ProfileCustodyRecoveryGuidance",
     "ProfileCustodyRefusal",
     "ProfileCustodyRefusedError",
 ]

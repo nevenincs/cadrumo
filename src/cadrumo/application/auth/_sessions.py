@@ -41,7 +41,7 @@ from ...core.identity import (
 )
 from ...core.logging import get_logger
 from ...core.time import now, validate_utc_aware
-from ...domain.user_profile import UserProfileStatus
+from ...domain.user_profile import ProfileSetupState
 from ..auth_credentials import ActiveCertificateCredentials
 from . import select_provider
 from ._acquisition_lock import (
@@ -841,7 +841,7 @@ def _assert_profile_identity_available_for_deferred_check(facts: ClaveAuthFacts)
     """
     if facts.tax_id:
         return
-    if facts.profile_status in (None, UserProfileStatus.SETUP_INCOMPLETE):
+    if facts.profile_setup_state in (None, ProfileSetupState.INCOMPLETE):
         return
     raise AuthProfileIdentityMismatchError(
         translated_message="application.auth.sessions.errors.profile_identity_cleared",
@@ -988,13 +988,13 @@ class ClaveAuthFacts(BaseModel):
     numero_soporte: str = ""
     fecha_validez: str = ""
     clave_movil_route: ClaveMovilRoute | None = None
-    profile_status: UserProfileStatus | None = None
+    profile_setup_state: ProfileSetupState | None = None
 
 
 def clave_auth_facts_from_profile_values(
     values: Mapping[str, str],
     *,
-    profile_status: UserProfileStatus | None = None,
+    profile_setup_state: ProfileSetupState | None = None,
 ) -> ClaveAuthFacts:
     """Read the auth facts out of a profile's schema-path value mapping.
 
@@ -1017,7 +1017,7 @@ def clave_auth_facts_from_profile_values(
         clave_movil_route=(
             ClaveMovilRoute(route) if (route := _normalise_credential(values.get("auth.clave_movil_route"))) else None
         ),
-        profile_status=profile_status,
+        profile_setup_state=profile_setup_state,
     )
 
 
@@ -1072,7 +1072,7 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
         # canonical path so the shared reader sees one shape.
         selector_values = record_to_values(record)
         path_values["identity.tax_id"] = str(selector_values.get("tax.id") or "")
-    return clave_auth_facts_from_profile_values(path_values, profile_status=record.status)
+    return clave_auth_facts_from_profile_values(path_values, profile_setup_state=record.setup_state)
 
 
 def _assert_session_identity_matches_expected(session: object, expected_identity: str | None) -> None:

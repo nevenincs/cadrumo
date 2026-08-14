@@ -32,7 +32,6 @@ _PROFILE_ID = "3f2a9c14-8b7d-4e21-9f60-5c1a7d3e8b42"
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
     return UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Declared tax id contract",
         facts=facts,
     )
 

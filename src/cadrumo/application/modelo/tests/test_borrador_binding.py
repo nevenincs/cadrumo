@@ -28,10 +28,10 @@ from ....domain.calculations.registry import (
 from ....domain.modelos import derive_calculation_revision_id
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from ...live import Borrador100Snapshot, Borrador100SnapshotRepository, SnapshotLifecycleState
-from ...user_profile import ProfileRecordRepository
 from .. import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
@@ -290,7 +290,6 @@ def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
         # Must agree with the bucket manifest label set by isolated_runtime_profile.
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="identity.name", value="Test"),
@@ -320,7 +319,7 @@ def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
         created_at=datetime(2026, 4, 1, tzinfo=UTC),
         updated_at=datetime(2026, 4, 1, tzinfo=UTC),
     )
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(record)
+    seed_test_profile_record(record)
 
 
 def test_borrador_binding_command_rejects_unknown_fields() -> None:

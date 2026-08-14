@@ -345,12 +345,24 @@ def test_ready_then_deadline_terminates_and_reaps_the_real_worker() -> None:
 def test_unavailable_canonical_root_has_no_weaker_supervision_fallback(tmp_path: Path) -> None:
     envelope, sentinel = _unlock_inputs()
 
+    first_enrollment_root = tmp_path / "first-enrollment-root"
+    unlock_profile_custody(
+        envelope,
+        _PASSPHRASE,
+        sentinel=sentinel,
+        settings=_settings(first_enrollment_root),
+    )
+    assert first_enrollment_root.is_dir()
+
+    blocked_parent = tmp_path / "non-directory-parent"
+    blocked_parent.write_text("not a directory", encoding="utf-8")
+
     with pytest.raises(ProfileCustodyRefusedError) as captured:
         unlock_profile_custody(
             envelope,
             _PASSPHRASE,
             sentinel=sentinel,
-            settings=_settings(tmp_path / "not-created"),
+            settings=_settings(blocked_parent / "custody-root"),
         )
 
     assert captured.value.refusal is ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE

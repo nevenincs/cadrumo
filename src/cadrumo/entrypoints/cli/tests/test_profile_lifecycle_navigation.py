@@ -27,9 +27,11 @@ from click.testing import Result
 
 from ....core.config import load_settings
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
 from .._common import cli_policy_refusal_projection
 from .._errors import CliRefusedBoundaryError, error_boundary_under_test
+from ._isolated_profile_storage_fixtures import _isolated_backend
+
+__all__ = ["_isolated_backend"]
 from ._profile_lifecycle_support import create_profile_via_cli, seed
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -40,14 +42,6 @@ PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets"})
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    # profile_create_storage_span (called inside seed) resolves the
-    # file-backed master-key provider provisioned by this fixture.
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
 
 
 @pytest.fixture
@@ -114,9 +108,10 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
     no re-key happens; ``profile show`` and the lifecycle service both
     still find the record, now carrying the new display label.
     """
-    from ....application.user_profile import ProfileRecordRepository, profile_storage_session
+    from ....application.user_profile import profile_storage_session
     from ....application.workflow import read_profile_bucket
     from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
+    from ....tests.profile_capsule import load_test_profile_record
 
     create_profile_via_cli("alice")
     alice_pointer = read_profile_bucket("alice")
@@ -129,10 +124,9 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
     # Reading the profile record directly via the lifecycle service requires an
     # active session scoped to the bucket UUID.
     with profile_storage_session(uuid_before):
-        record = ProfileRecordRepository(bucket_id=uuid_before).load(uuid_before)
-    # The identity is unchanged; only the label moved.
+        record = load_test_profile_record(uuid_before)
+    # The identity is unchanged; only the bucket manifest label moved.
     assert record.profile_id == uuid_before
-    assert record.display_name == "bob"
 
     show_result = _invoke(("config", "profile", "show", "bob"))
     assert show_result.exit_code == 0, f"show failed: {show_result.output}"

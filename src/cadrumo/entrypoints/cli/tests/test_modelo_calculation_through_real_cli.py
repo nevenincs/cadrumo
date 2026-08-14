@@ -29,11 +29,11 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import ProfileRecordRepository
 from ....core.resources import resources
-from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -80,8 +80,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
         schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
-        display_name="Oracle calculation test profile",
-        status=UserProfileStatus.ACTIVE,
+        setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.name", value="Oracle Test Operator"),
             UserProfileFact(path="identity.surnames", value="Calculation"),
@@ -105,11 +104,11 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )
-    lifecycle = ProfileRecordRepository(
-        bucket_id=_PROFILE_ID,
-        objects=runtime_profile.repository,
+    seed_test_profile_record(
+        record,
+        root=runtime_profile.storage_root,
+        label="Oracle Test Operator",
     )
-    lifecycle.save(record)
 
 
 def _seed_legal_entity_profile(
@@ -151,15 +150,14 @@ def _seed_legal_entity_profile(
         schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
-        display_name="Oracle calculation test profile",
-        status=UserProfileStatus.ACTIVE,
+        setup_state=ProfileSetupState.COMPLETE,
         facts=tuple(facts),
     )
-    lifecycle = ProfileRecordRepository(
-        bucket_id=_PROFILE_ID,
-        objects=runtime_profile.repository,
+    seed_test_profile_record(
+        record,
+        root=runtime_profile.storage_root,
+        label="Oracle IS Operator",
     )
-    lifecycle.save(record)
 
 
 # ---------------------------------------------------------------------------

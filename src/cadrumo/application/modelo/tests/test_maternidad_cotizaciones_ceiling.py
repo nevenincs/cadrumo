@@ -55,7 +55,6 @@ def _record_declaring_months(filing_year: int) -> UserProfileRecord:
     child = DescendantInfo(birth_date=date(filing_year - 1, 6, 1), meses_madre_trabajo=tuple(range(1, 13)))
     return UserProfileRecord(
         profile_id=_BUCKET,
-        display_name="cotizaciones ceiling probe",
         facts=tuple(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list((child,))),
         created_at=_T0,
         updated_at=_T0,

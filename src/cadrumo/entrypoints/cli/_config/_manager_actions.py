@@ -986,12 +986,11 @@ def _clave_refusal(collected: Mapping[str, str]) -> str | None:
 def _commit_auth_choice(collected: Mapping[str, str]) -> tuple[str, AuthConfigureResult]:
     """Persist the auth section, select the certificate, activate the provider.
 
-    The four profile fields go through the plural ``set_active_fields``
-    door in one call, which is now one storage transaction: one aggregate
-    decrypt, one schema validation over the whole fact set, one re-encrypt.
+    The four profile fields go through one explicit fact replacement command:
+    one authenticated record read, one schema validation over the complete
+    next fact set, and one revision-bound encrypted publish.
     A fact the page passed but the record rejects therefore leaves NONE of
-    the batch durably written, not merely the rejected one — the batch is
-    judged as a whole (see ``ProfileCapsuleLifecycle.edit_fields``). This
+    the batch durably written, not merely the rejected one. This
     action's defence against a rejection reaching the record at all is
     still upstream - the page validates each value against the same schema
     before any write - but the write itself no longer half-applies.
@@ -1043,8 +1042,8 @@ def _commit_auth_choice(collected: Mapping[str, str]) -> tuple[str, AuthConfigur
         CLI surfaces.
     """
     from ....application.auth import configure_operator_auth, select_operator_certificate_source
-    from ....application.user_profile import set_active_fields
-    from ....application.workflow import workflow_state_repository
+    from ....application.wizard._persistence import apply_wizard_fact_changes
+    from ....core import require_active_bucket_id
     from ....domain.user_profile import UserProfileFact
 
     facts = [UserProfileFact(path=path, value=collected.get(path, "").strip() or None) for path in _AUTH_PROFILE_PATHS]
@@ -1052,7 +1051,11 @@ def _commit_auth_choice(collected: Mapping[str, str]) -> tuple[str, AuthConfigur
     if declared_tax_id:
         facts.append(UserProfileFact(path=_IDENTITY_TAX_ID_PATH, value=declared_tax_id))
     committed = tuple(facts)
-    workflow_state_repository().update(lambda state: set_active_fields(state, committed))
+    apply_wizard_fact_changes(
+        profile_id=require_active_bucket_id(),
+        changes=committed,
+        event_type="profile.auth.facts.applied",
+    )
 
     chosen_certificate = collected.get(_CERTIFICATE_KEY, "").strip()
     if chosen_certificate:
@@ -1189,9 +1192,9 @@ def _run_add_row() -> ManagerActionOutcome:
     from ....application.user_profile import (
         next_section_row_index,
         section_row_facts,
-        set_active_fields,
     )
-    from ....application.workflow import workflow_state_repository
+    from ....application.wizard._persistence import apply_wizard_fact_changes
+    from ....core import require_active_bucket_id
     from ....domain.user_profile import ProfileSchemaValidationError, load_user_profile_schema
     from ._manager_frontend import build_active_profile_overview, present_form
 
@@ -1225,7 +1228,11 @@ def _run_add_row() -> ManagerActionOutcome:
         )
 
     try:
-        workflow_state_repository().update(lambda state: set_active_fields(state, facts))
+        apply_wizard_fact_changes(
+            profile_id=require_active_bucket_id(),
+            changes=facts,
+            event_type="profile.manager.row.added",
+        )
     except ProfileSchemaValidationError:
         return ManagerActionOutcome(
             message=tr("flows.manager.action.add_row_incomplete"),
@@ -1505,7 +1512,7 @@ def _export_active_profile_to_google_sheets(*, modelo: str, period: str, year: i
     from ....adapters.outbound.storage import OutboundStorageError
     from ....application.storage.calc_sheets import OperatorInputs, RelationValues, build_export_plan
     from ._google_errors import _google_refusal
-    from ._google_sync_calc import _filing_period_or_refusal, _load_snapshot, _resolve_credentials_and_root
+    from ._google_sync_calc import filing_period_or_refusal, load_snapshot, resolve_credentials_and_root
 
     try:
         active = resolve_active_profile()
@@ -1513,12 +1520,12 @@ def _export_active_profile_to_google_sheets(*, modelo: str, period: str, year: i
         raise _google_refusal(exc) from exc
 
     try:
-        credentials, root_folder_id = _resolve_credentials_and_root(active)
+        credentials, root_folder_id = resolve_credentials_and_root(active)
     except (GoogleAuthError, OutboundStorageError) as exc:
         raise _google_refusal(exc) from exc
 
-    filing_period = _filing_period_or_refusal(modelo=modelo, period=period, year=year)
-    snapshot = _load_snapshot(modelo, filing_period)
+    filing_period = filing_period_or_refusal(modelo=modelo, period=period, year=year)
+    snapshot = load_snapshot(modelo, filing_period)
     plan = build_export_plan(snapshot, operator_inputs=OperatorInputs(), relation_values=RelationValues())
 
     try:
@@ -1526,10 +1533,7 @@ def _export_active_profile_to_google_sheets(*, modelo: str, period: str, year: i
     except (GoogleAuthError, OutboundStorageError) as exc:
         raise _google_refusal(exc) from exc
 
-    modelo_id = snapshot.modelo.id
-    if not isinstance(modelo_id, str):
-        raise TypeError("Google export snapshot has a non-text modelo id")
-    return modelo_id, result.spreadsheet_url
+    return snapshot.modelo.id, result.spreadsheet_url
 
 
 def logout_action() -> ManagerAction:

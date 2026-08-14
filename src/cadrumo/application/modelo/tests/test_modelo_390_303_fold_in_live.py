@@ -51,7 +51,6 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -67,9 +66,9 @@ from ....domain.calculations.registry import (
 )
 from ....domain.iva_compensation import M303_COMPENSATION_RESULTADO_CASILLA
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import CalculationObservationRepository, ResultDispositionProjection
-from ...user_profile import ProfileRecordRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
@@ -206,10 +205,9 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
 
 
 def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="M390 fold test",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),
                 UserProfileFact(path="identity.name", value="Test"),

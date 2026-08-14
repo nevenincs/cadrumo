@@ -40,6 +40,7 @@ from ....domain.modelos import (
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.filing_evidence import general_m303_filing_evidence
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import (
@@ -50,7 +51,6 @@ from ...calculations import (
     cross_period_dependency_requirements,
     is_official_aeat_observation_source,
 )
-from ...user_profile import ProfileRecordRepository
 from .. import (
     APP_FILING_SOURCE_KIND,
     ModeloCrossPeriodCleanStateError,
@@ -166,18 +166,16 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
         )
     record = UserProfileRecord(
         profile_id=bucket_id,
-        display_name="Test runtime profile",
         facts=tuple(facts),
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    ProfileRecordRepository(bucket_id=bucket_id, objects=objects).save(record)
+    seed_test_profile_record(record)
 
 
 def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | None) -> None:
     record = UserProfileRecord(
         profile_id=bucket_id,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="X1234567L"),
             UserProfileFact(path="identity.name", value="Test"),
@@ -204,7 +202,7 @@ def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | N
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    ProfileRecordRepository(bucket_id=bucket_id, objects=objects).save(record)
+    seed_test_profile_record(record)
 
 
 def _seed_verified_revision(

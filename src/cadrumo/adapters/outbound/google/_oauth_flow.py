@@ -127,7 +127,7 @@ def resolve_active_tax_id(profile_id: str) -> str:
             When the profile bucket manifest or canonical profile record cannot
             be resolved.
     """
-    from ....application.user_profile import build_lifecycle_service, fact_value
+    from ....application.user_profile import ProfileRecordRepository, record_to_path_values
     from ....application.workflow import read_profile_bucket_by_id
 
     pointer = read_profile_bucket_by_id(profile_id)
@@ -137,16 +137,15 @@ def resolve_active_tax_id(profile_id: str) -> str:
             context={"profile": profile_id, "reason": "profile_bucket_manifest_missing"},
             translated_message="adapters.google.oauth_flow.errors.profile_state_unresolved",
         )
-    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
-        record = service.read(profile_id)
+        record = ProfileRecordRepository.for_current_session(pointer.bucket_id).load(profile_id)
     except ProfileNotFoundError as exc:
         raise GoogleAuthProfileUnboundError(
             "google OAuth refused: active profile record could not be resolved",
             context={"profile": profile_id, "bucket_id": pointer.bucket_id, "reason": "profile_record_missing"},
             translated_message="adapters.google.oauth_flow.errors.profile_state_unresolved",
         ) from exc
-    return fact_value(record, "identity.tax_id") or ""
+    return record_to_path_values(record).get("identity.tax_id") or ""
 
 
 def credentials_to_records(

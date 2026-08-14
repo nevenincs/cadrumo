@@ -190,7 +190,6 @@ def test_preflight_ready_with_no_modelo_selectors_matched_is_not_assessed(schema
     svc = ProfilePreflightService(schema=schema)
     record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Operator",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
     report = svc.report(
@@ -218,7 +217,6 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(schema: Profile
 
     empty_record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Operator",
         facts=(),
     )
     missing_report = svc.report(
@@ -232,7 +230,6 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(schema: Profile
 
     complete_record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Operator",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
     ready_report = svc.report(
@@ -250,7 +247,6 @@ def test_preflight_accepts_legal_entity_legal_name_for_export_headers(schema: Pr
     snapshot = resources().modelos.authority.snapshot("202", filing_year=2026, period=period.registry_token)
     record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Rocio Ferrer Administracion Sociedad Limitada",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
             UserProfileFact(path="identity.legal_name", value="Rocio Ferrer Administracion Sociedad Limitada"),
@@ -283,7 +279,6 @@ def test_preflight_rejects_legal_entity_export_identity_fragments(
     ):
         record = UserProfileRecord(
             profile_id="11111111-1111-4111-8111-111111111111",
-            display_name="Incomplete legal entity",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="B12345674"),
                 identity_fact,
@@ -310,7 +305,7 @@ def test_preflight_rejects_legal_entity_export_identity_fragments(
 def test_preflight_carries_request_fields_through(schema: ProfileSchemaDefinition) -> None:
     svc = ProfileValidationService(schema=schema)  # warm domain
     pre = ProfilePreflightService(schema=schema)
-    record = UserProfileRecord(profile_id="11111111-1111-4111-8111-111111111111", display_name="Operator", facts=())
+    record = UserProfileRecord(profile_id="11111111-1111-4111-8111-111111111111", facts=())
     report = pre.report(
         record=record,
         modelo="303",
@@ -394,7 +389,6 @@ def test_preflight_requirement_builder_matches_service_report_output_for_tax_id(
     period = Period.from_year_and_code(2024, "0A")
     record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Operator",
         facts=(),
     )
 

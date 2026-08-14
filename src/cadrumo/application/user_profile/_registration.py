@@ -14,15 +14,10 @@ record, not preconditions for the record existing. The profile is therefore
 born ``SETUP_INCOMPLETE``: real, addressable, and writable, while modelo
 work stays refused until the facts that filing depends on are present.
 
-No parallel write path is introduced. Registration composes the same
-primitives every other create route uses —
-:func:`~cadrumo.application.user_profile.profile_create_storage_span` around
-:func:`~cadrumo.application.user_profile.register_active_profile`, which
-delegates the cross-store unit of work to
-:meth:`~cadrumo.application.user_profile.CommittedProfileRepository.create`. The one
-thing this module adds is *binding the operator's new passphrase to that
-span*, so the bucket's key-encryption key is derived from the credential
-the operator just chose rather than from an ambient environment value.
+Registration is the sole creation path. It stages the first encrypted record
+and then commits the capsule, label projection, and pointer transaction. The
+bucket's key-encryption key is derived from the credential the operator chose
+rather than from an ambient environment value.
 
 See Also:
     :func:`~cadrumo.application.user_profile.login_profile`
@@ -32,22 +27,21 @@ See Also:
 
 from __future__ import annotations
 
+from base64 import b64encode
+from secrets import token_bytes
 from typing import TYPE_CHECKING, Final
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core import NIST_PASSPHRASE_MIN_LENGTH, PassphraseStrength, assess_passphrase_strength
 from ...core.errors import CadrumoError
-from ...core.i18n import clear_output_language_cache
 from ...core.identity import BucketId, ProfileId
-from ...domain.user_profile import UserProfileStatus, new_profile_id
-from ..workflow import workflow_state_repository
-from ._login_session import login_profile
-from ._orchestration import (
-    profile_create_storage_span,
-    refuse_duplicate_label,
-    register_active_profile,
-)
+from ...domain.user_profile import ProfileSetupState, UserProfileRecord, new_profile_id
+from ..profile_custody import create_profile_custody_registration_material
+from ._capsule_record import ProfileRecordSession
+from ._custody_transactions import ProfileCustodyTransactionConflictError
+from ._lifecycle import ProfileCapsuleLifecycle
 
 if TYPE_CHECKING:
     from ...domain.user_profile import UserProfileFact
@@ -104,7 +98,7 @@ class ProfileRegistrationOutcome(BaseModel):
     profile_id: ProfileId
     bucket_id: BucketId
     label: str
-    status: UserProfileStatus
+    setup_state: ProfileSetupState
 
 
 def assess_passphrase(candidate: str) -> PassphraseAssessment:
@@ -129,7 +123,7 @@ def register_profile_with_credentials(
 ) -> ProfileRegistrationOutcome:
     """Create a profile from a label and a passphrase, and unlock it.
 
-    The profile is born :attr:`UserProfileStatus.SETUP_INCOMPLETE`: it is a
+    The profile is born :attr:`ProfileSetupState.INCOMPLETE`: it is a
     real, writable record from this moment, and the operator completes it
     afterwards against a live profile rather than through a gated wizard.
 
@@ -148,7 +142,7 @@ def register_profile_with_credentials(
     Raises:
         ProfileRegistrationError: When the label is blank or the passphrase
             is shorter than :data:`PASSPHRASE_MINIMUM_LENGTH`.
-        ProfileAlreadyRegisteredError: When the label is already taken.
+        ProfileRegistrationError: When the label is already bound.
     """
     resolved_label = label.strip()
     if not resolved_label:
@@ -166,49 +160,46 @@ def register_profile_with_credentials(
             context={"minimum_length": str(assessment.minimum_length)},
         )
 
-    refuse_duplicate_label(resolved_label)
-
-    profile_id = new_profile_id()
-    # Bind the operator's passphrase to the span's own master-key
-    # resolution. The span resolves the provider itself (and mints the key
-    # material on first use), so the callback must be threaded INTO it —
-    # building a provider out here would be discarded and the bucket would
-    # silently key off the ambient configured secret instead.
-    with profile_create_storage_span(
-        profile_id,
-        passphrase_callback=lambda: passphrase,
-    ) as routing_profile_id:
-        workflow_state_repository().update(
-            lambda state: register_active_profile(
-                state,
-                profile_id=profile_id,
-                display_name=resolved_label,
-                facts=facts,
-                routing_profile_id=routing_profile_id,
-                status=UserProfileStatus.SETUP_INCOMPLETE,
-            ),
-        )
-
-    # The create span closes its session on exit, so a bare registration
-    # would leave the operator holding a profile they are not logged in to —
-    # and the surface that called this opens onto that profile immediately.
-    # Delegating to the canonical login door (rather than opening a session
-    # here) keeps one authentication path, and with it the throttle, the
-    # pointer transaction, and the persisted-session semantics.
-    login_profile(name=resolved_label, passphrase_callback=lambda: passphrase)
-    # Registration can have persisted ``preferences.output_language`` while
-    # the credential screen was rendering in the settings default.  The
-    # resolver cache is deliberately insensitive to session opening, so clear
-    # it only after the canonical login has made the new profile readable.
-    # The manager that follows therefore resolves its very first chrome and
-    # content render through the operator's just-selected language.
-    clear_output_language_cache()
+    identity = UUID(new_profile_id())
+    dek = token_bytes(32)
+    custody_material = create_profile_custody_registration_material(
+        profile_id=identity,
+        password=passphrase,
+        dek=dek,
+        dek_epoch=b64encode(token_bytes(16)).decode("ascii"),
+        salt=token_bytes(16),
+    )
+    envelope = custody_material.envelope
+    sentinel = custody_material.sentinel
+    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+    try:
+        try:
+            ProfileCapsuleLifecycle().create(
+                label=resolved_label,
+                profile_id=identity,
+                password_envelope=envelope,
+                sentinel=sentinel,
+                data_files={},
+                initial_record=UserProfileRecord(
+                    profile_id=str(identity),
+                    facts=facts,
+                    setup_state=ProfileSetupState.INCOMPLETE,
+                ),
+                record_session=session,
+            )
+        except ProfileCustodyTransactionConflictError as exc:
+            raise ProfileRegistrationError(
+                translated_message="application.user_profile.errors.profile_already_exists",
+                context={"profile": resolved_label},
+            ) from exc
+    finally:
+        session.close()
 
     return ProfileRegistrationOutcome(
-        profile_id=profile_id,
-        bucket_id=profile_id,
+        profile_id=str(identity),
+        bucket_id=str(identity),
         label=resolved_label,
-        status=UserProfileStatus.SETUP_INCOMPLETE,
+        setup_state=ProfileSetupState.INCOMPLETE,
     )
 
 

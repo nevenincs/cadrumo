@@ -32,11 +32,11 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import ProfileRecordRepository
 from ....domain.calculations.registry import RegistrySnapshot, resolve_parameter
-from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from .envelope_helpers import unwrap_envelope_notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -102,8 +102,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
         schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
-        display_name="Descendiente entry surface test profile",
-        status=UserProfileStatus.ACTIVE,
+        setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.name", value="Ana"),
             UserProfileFact(path="identity.surnames", value="Perez"),
@@ -125,7 +124,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="renta_filing.declaration_type", value="1"),
         ),
     )
-    ProfileRecordRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).save(record)
+    seed_test_profile_record(record, root=runtime_profile.storage_root, label="Descendiente entry surface test profile")
 
 
 def _registry_first_tranche(year: int) -> Decimal:

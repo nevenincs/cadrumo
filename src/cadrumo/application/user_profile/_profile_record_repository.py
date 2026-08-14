@@ -9,16 +9,22 @@ session.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar, Token
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
-from ...adapters.persistence.storage.custody import load_committed_profile_custody_data_file
 from ...core.paths import effective_storage_root
-from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord
-from ._capsule_record import PROFILE_RECORD_DATA_FILENAME, ProfileRecordSession
+from ...domain.user_profile import ProfileNotFoundError, ProfileSetupState, UserProfileFact, UserProfileRecord
+from ..profile_custody import profile_custody_record_session_material
+from ._capsule_record import (
+    ProfileRecordCommandEvent,
+    ProfileRecordConflictError,
+    ProfileRecordSession,
+    ProfileRecordStore,
+)
 
 _ACTIVE_RECORD_SESSION: ContextVar[ProfileRecordSession | None] = ContextVar(
     "active_profile_record_session", default=None
@@ -26,13 +32,60 @@ _ACTIVE_RECORD_SESSION: ContextVar[ProfileRecordSession | None] = ContextVar(
 
 
 @contextmanager
-def bound_profile_record_session(session: ProfileRecordSession) -> Iterator[None]:
+def bound_profile_record_session(session: ProfileRecordSession) -> Generator[None]:
     """Bind one authenticated record session for the duration of a command."""
     token: Token[ProfileRecordSession | None] = _ACTIVE_RECORD_SESSION.set(session)
     try:
         yield
     finally:
         _ACTIVE_RECORD_SESSION.reset(token)
+
+
+def activate_profile_record_session(session: ProfileRecordSession) -> None:
+    """Install the authenticated record authority for the active process session.
+
+    The caller has already authenticated and bound the matching custody DEK.  A
+    later login must retire the old record authority before publishing the new
+    one, so a profile switch cannot leave facts decryptable through a prior
+    session.
+    """
+    previous = _ACTIVE_RECORD_SESSION.get()
+    if previous is not None and previous is not session:
+        previous.close()
+    _ACTIVE_RECORD_SESSION.set(session)
+
+
+def bind_active_profile_record_session(session: ProfileRecordSession) -> ProfileRecordSession | None:
+    """Bind a candidate record authority without retiring the prior session.
+
+    Handover owns the two-phase lifetime: it first makes B observable, then
+    retires A only after every required B publication succeeds.  Returning A
+    lets that owner restore the exact prior authority if a later publication
+    fails, without a transient plaintext re-authentication or a duplicate
+    record-session constructor.
+    """
+    previous = _ACTIVE_RECORD_SESSION.get()
+    _ACTIVE_RECORD_SESSION.set(session)
+    return previous
+
+
+def clear_active_profile_record_session_binding(expected: ProfileRecordSession) -> None:
+    """Clear only an expected active binding without closing its owner.
+
+    Candidate cleanup first removes the context reference, then zeroises the
+    candidate.  The identity check prevents a late cleanup from unbinding a
+    replacement session installed by a nested operation.
+    """
+    if _ACTIVE_RECORD_SESSION.get() is expected:
+        _ACTIVE_RECORD_SESSION.set(None)
+
+
+def close_active_profile_record_session() -> None:
+    """Zeroise and clear the process-local record authority."""
+    session = _ACTIVE_RECORD_SESSION.get()
+    if session is not None:
+        session.close()
+    _ACTIVE_RECORD_SESSION.set(None)
 
 
 def require_profile_record_session(profile_id: str | UUID) -> ProfileRecordSession:
@@ -42,9 +95,21 @@ def require_profile_record_session(profile_id: str | UUID) -> ProfileRecordSessi
     except ValueError as exc:
         raise ProfileNotFoundError("profile identity is not a canonical UUID") from exc
     session = _ACTIVE_RECORD_SESSION.get()
+    if session is None:
+        session = _record_session_from_live_custody_session(identity)
+        if session is not None:
+            activate_profile_record_session(session)
     if session is None or session.profile_id != identity:
         raise ProfileNotFoundError("profile facts require an authenticated session for this committed capsule")
     return session
+
+
+def _record_session_from_live_custody_session(profile_id: UUID) -> ProfileRecordSession | None:
+    """Derive record authority only from the exact already-open custody session."""
+    material = profile_custody_record_session_material(profile_id)
+    if material is None:
+        return None
+    return ProfileRecordSession.from_envelope(envelope=material.envelope, dek=material.dek)
 
 
 class ProfileRecordRepository:
@@ -66,13 +131,119 @@ class ProfileRecordRepository:
         identity = UUID(str(profile_id))
         if identity != self._session.profile_id:
             raise ProfileNotFoundError("profile record session does not serve the requested UUID")
-        payload = load_committed_profile_custody_data_file(
-            identity,
-            PROFILE_RECORD_DATA_FILENAME,
-            root=self._root,
+        return ProfileRecordStore(session=self._session, root=self._root).load().record
+
+    def complete_setup(
+        self,
+        profile_id: str | UUID,
+        *,
+        expected_revision: int,
+        expected_content_digest: str,
+        now: datetime | None = None,
+    ) -> UserProfileRecord:
+        """CAS-complete setup; the lifecycle owns the physical replacement."""
+        identity = UUID(str(profile_id))
+        if identity != self._session.profile_id:
+            raise ProfileNotFoundError("profile record session does not serve the requested UUID")
+        current = self.load(identity)
+        if current.record_revision != expected_revision or current.content_digest != expected_content_digest:
+            raise ProfileRecordConflictError("profile record revision compare-and-swap failed")
+        if current.setup_state is ProfileSetupState.COMPLETE:
+            return current
+        occurred_at = (now or datetime.now(UTC)).astimezone(UTC)
+        replacement = UserProfileRecord(
+            schema_id=current.schema_id,
+            schema_version=current.schema_version,
+            profile_id=current.profile_id,
+            facts=current.facts,
+            setup_state=ProfileSetupState.COMPLETE,
+            record_revision=current.record_revision + 1,
+            previous_record_digest=current.content_digest,
+            content_digest="",
+            created_at=current.created_at,
+            updated_at=occurred_at,
         )
-        record, _ = self._session.decode_current(payload)
-        return record
+        from ._lifecycle import ProfileCapsuleLifecycle
+
+        # The lifecycle names this deliberate repository-only collaboration private;
+        # this explicit command owner is its sole cross-class caller.
+        ProfileCapsuleLifecycle(root=self._root)._replace_record_for_profile_command(  # pyright: ignore[reportPrivateUsage]
+            profile_id=identity,
+            record_session=self._session,
+            replacement=replacement,
+            event=ProfileRecordCommandEvent(
+                event_type="profile.setup.completed",
+                occurred_at=occurred_at.isoformat(),
+            ),
+            expected_revision=expected_revision,
+            expected_content_digest=expected_content_digest,
+        )
+        return replacement
+
+    def apply_fact_changes(
+        self,
+        profile_id: str | UUID,
+        *,
+        facts: tuple[UserProfileFact, ...],
+        expected_revision: int,
+        expected_content_digest: str,
+        event_type: str,
+        event_payload: Mapping[str, str],
+        now: datetime | None = None,
+    ) -> UserProfileRecord:
+        """CAS-publish an explicit fact replacement and its command event.
+
+        ``facts`` is the complete next exact fact sequence, rather than an
+        implicit upsert patch.  Callers must load and compose that sequence
+        first, which keeps every mutation revision-bound and makes a cleared
+        fact as explicit as an added one.  The lifecycle publishes the
+        encrypted replacement and its authenticated event in the same capsule
+        data-file replacement.
+        """
+        identity = UUID(str(profile_id))
+        if identity != self._session.profile_id:
+            raise ProfileNotFoundError("profile record session does not serve the requested UUID")
+        current = self.load(identity)
+        if current.record_revision != expected_revision or current.content_digest != expected_content_digest:
+            raise ProfileRecordConflictError("profile record revision compare-and-swap failed")
+        occurred_at = (now or datetime.now(UTC)).astimezone(UTC)
+        replacement = UserProfileRecord(
+            schema_id=current.schema_id,
+            schema_version=current.schema_version,
+            profile_id=current.profile_id,
+            facts=facts,
+            setup_state=current.setup_state,
+            record_revision=current.record_revision + 1,
+            previous_record_digest=current.content_digest,
+            content_digest="",
+            created_at=current.created_at,
+            updated_at=occurred_at,
+        )
+        from ._lifecycle import ProfileCapsuleLifecycle
+
+        # The lifecycle names this deliberate repository-only collaboration private;
+        # this explicit command owner is its sole cross-class caller.
+        ProfileCapsuleLifecycle(root=self._root)._replace_record_for_profile_command(  # pyright: ignore[reportPrivateUsage]
+            profile_id=identity,
+            record_session=self._session,
+            replacement=replacement,
+            event=ProfileRecordCommandEvent(
+                event_type=event_type,
+                occurred_at=occurred_at.isoformat(),
+                payload=event_payload,
+            ),
+            expected_revision=expected_revision,
+            expected_content_digest=expected_content_digest,
+        )
+        return replacement
 
 
-__all__ = ["ProfileRecordRepository", "bound_profile_record_session", "require_profile_record_session"]
+__all__ = [
+    "ProfileRecordRepository",
+    "activate_profile_record_session",
+    "bind_active_profile_record_session",
+    "bound_profile_record_session",
+    "clear_active_profile_record_session_binding",
+    "close_active_profile_record_session",
+    "require_profile_record_session",
+]

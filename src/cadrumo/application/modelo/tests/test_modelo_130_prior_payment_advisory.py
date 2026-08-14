@@ -61,11 +61,11 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceDiagnostic
 from ...calculations import CalculationObservationRepository
-from ...user_profile import ProfileRecordRepository
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -154,10 +154,9 @@ def objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 def _seed_ready_profile(objects: SecureObjectRepository) -> None:
     """Persist the M130 natural-person profile required by the work-unit gate."""
-    ProfileRecordRepository(bucket_id=_BUCKET, objects=objects).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET,
-            display_name=_PROFILE_LABEL,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="Test"),

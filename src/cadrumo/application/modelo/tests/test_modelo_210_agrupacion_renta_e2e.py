@@ -18,8 +18,8 @@ from ....core import M210PayerMode, Period
 from ....core.resources import resources
 from ....domain.modelos import Modelo210AgrupacionRentaRow, ModeloError
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import ProfileRecordRepository
 from .._calculation_actions import calculate_modelo_revision
 from .._work_lifecycle import create_work_unit
 
@@ -44,10 +44,9 @@ def _secure_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _seed_minimal_profile(objects: SecureObjectRepository) -> None:
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="M210 grouped-renta test profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="activities.description", value="Spanish rental income"),

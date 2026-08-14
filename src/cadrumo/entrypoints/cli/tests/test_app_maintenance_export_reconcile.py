@@ -108,7 +108,7 @@ def test_the_verb_clears_an_abandoned_crash_orphan_and_its_cleartext_staged_file
         staged = Path(prepared.staged_path)
         # The staged temp really is the readable bundle, not an empty placeholder.
         staged_bundle = UserProfilePortableExport.model_validate_json(staged.read_text(encoding="utf-8"))
-        assert staged_bundle.profile.display_name == "subject"
+        assert any(fact.path == "identity.name" and fact.value == "Subject" for fact in staged_bundle.profile.facts)
         assert len(ProfileBundleExportJournalRepository().prepared()) == 1
 
         payload = _reconcile_json()

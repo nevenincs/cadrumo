@@ -64,6 +64,11 @@ _DECLARED_WRITERS: dict[str, str] = {
         "Writes operator-supplied wizard answers, which are unconditional on what the "
         "projection holds. Its projection read is a descendant-list scan that only reads."
     ),
+    "application/wizard/_commands.py": (
+        "The command reads the projection only to preserve the filing baseline before "
+        "its CAS command. Every resulting fact comes from an explicit wizard answer or "
+        "flag, never from an absent projected value, so a cleared path is not adopted."
+    ),
 }
 
 

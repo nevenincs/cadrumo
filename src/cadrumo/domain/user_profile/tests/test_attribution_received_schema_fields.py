@@ -14,16 +14,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import resources
 from .._schema import ProfileFieldType, ProfileSchemaDefinition
-from ._schema_loader_fixtures import module_scoped_schema  # noqa: F401
+from ._schema_loader_fixtures import legal_ids_fixture, module_scoped_schema  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-@pytest.fixture(scope="module")
-def legal_ids() -> frozenset[str]:
-    return frozenset(resources().modelos.authority.catalogues.legal)
 
 
 def test_attribution_received_section_uses_repeatable_profile_pattern(

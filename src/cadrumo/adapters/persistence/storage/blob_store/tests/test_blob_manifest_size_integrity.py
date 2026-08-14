@@ -20,16 +20,12 @@ Real stores on real files throughout, with a real master key and real AEAD.
 from __future__ import annotations
 
 import json
-import secrets
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from ......core.classification import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
-from ......tests.master_key import EphemeralMasterKeyProvider
-from ...crypto import KEY_SIZE
 from ...errors import BlobIntegrityError
 from .._blob_store import EncryptedBlobStore
 
@@ -40,12 +36,6 @@ _LAYOUTS = (
     pytest.param(SensitivityClass.CORPUS, id="plaintext-corpus"),
     pytest.param(SensitivityClass.FINANCIAL, id="ciphertext-financial"),
 )
-
-
-@pytest.fixture
-def store(tmp_path: Path) -> Iterator[EncryptedBlobStore]:
-    provider = EphemeralMasterKeyProvider(key=secrets.token_bytes(KEY_SIZE))
-    yield EncryptedBlobStore(root_dir=tmp_path / "blob-store", master_key_provider=provider)
 
 
 def _manifest_path(store: EncryptedBlobStore, digest: str) -> Path:

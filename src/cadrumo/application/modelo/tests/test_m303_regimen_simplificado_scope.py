@@ -12,8 +12,8 @@ from ....domain.deadlines import IVARegime, M303RegimeComposition, TaxpayerProfi
 from ....domain.iva import M303RegimenSimplificadoScope
 from ....domain.modelos import WorkUnit, derive_work_unit_id
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import ProfileRecordRepository
 from .._action_errors import ModeloProfileReadinessError
 from .._m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_scope_for_composition,
@@ -60,10 +60,9 @@ def _store_profile(*, composition: M303RegimeComposition | None) -> None:
             UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
             UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         )
-    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="M303 scope profile",
             facts=facts,
             created_at=_CLOCK,
             updated_at=_CLOCK,

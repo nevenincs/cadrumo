@@ -56,13 +56,13 @@ from ....domain.deadlines import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import (
     CalculationObservationRepository,
     reconcile_modelo_303_iva_compensation,
     resolve_relations_from_local_store,
 )
-from ...user_profile import ProfileRecordRepository
 from .. import (
     ModeloRefundElectionNotEligibleError,
     calculate_modelo_revision,
@@ -125,10 +125,9 @@ def _secure_backend(tmp_path: Path) -> Iterator[None]:
 
 def _store_operator_profile(*, created_at: datetime, period_token: str) -> None:
     activity_start_date = _activity_start_date_for_period(period_token)
-    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),
                 UserProfileFact(path="identity.name", value="Test"),

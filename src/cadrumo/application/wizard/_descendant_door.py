@@ -31,13 +31,8 @@ Lifecycle of one door invocation:
   :func:`~cadrumo.application.wizard._persistence.descendant_facts_from_answers`
   and clears the orphaned rows a shrunk count leaves behind through
   :func:`~cadrumo.application.wizard._checkpoint_store.descendant_clearing_facts`,
-  in ONE atomic :func:`~cadrumo.application.user_profile.set_active_fields`
-  write — the same composition
-  :meth:`~cadrumo.application.wizard._checkpoint_store.ProfileFactsCheckpointStore.persist`
-  applies for the create-mode checkpoint. It is restated here rather than reused
-  because that store is bound to a :class:`~cadrumo.application.wizard._models.WizardFlow`
-  and mints the profile if absent; the door commits to an already-registered
-  profile, so only the two-call replace composition is borrowed.
+  in one revision-bound record command. The door only commits to an
+  already-registered, authenticated profile.
 
 The door declares checkpointing UNAVAILABLE in both modes: the commit is owned
 here, not by a frontend save-and-exit, so no checkpoint store is wired.
@@ -59,7 +54,6 @@ from ..flows import (
     FlowState,
     resume_flow,
 )
-from ..user_profile import set_active_fields
 from ._checkpoint_store import descendant_clearing_facts
 from ._descendant_group import (
     DESCENDANT_ENTRY_EVENT_VALIDATOR_ID,
@@ -175,22 +169,26 @@ def persist_descendant_door_answers(answers: Mapping[str, str]) -> WorkflowState
     and clears every on-record descendant path the fresh projection no longer
     covers (a shrunk count, a removed optional field) through
     :func:`~cadrumo.application.wizard._checkpoint_store.descendant_clearing_facts`,
-    in ONE atomic :func:`~cadrumo.application.user_profile.set_active_fields`
-    write. The clearing reads the authoritative record from the live workflow
-    state inside the update, mirroring
-    :meth:`~cadrumo.application.wizard._checkpoint_store.ProfileFactsCheckpointStore.persist`,
-    so a count-shrink never strands a descendant index above the answered count.
+    in one authenticated compare-and-swap command. The clearing reads the
+    authoritative current record before constructing the replacement, so a
+    count-shrink never strands a descendant index above the answered count.
     """
+    from ...core import require_active_bucket_id
     from ...domain.user_profile import UserProfileFact
+    from ..user_profile import ProfileRecordRepository
     from ..workflow import workflow_state_repository
+    from ._persistence import apply_wizard_fact_changes
 
+    profile_id = require_active_bucket_id()
+    record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
     facts = tuple(UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_answers(answers))
-
-    def _apply(state: WorkflowState) -> WorkflowState:
-        clearing = descendant_clearing_facts(state.active_profile_record(), answers)
-        return set_active_fields(state, (*facts, *clearing))
-
-    return workflow_state_repository().update(_apply)
+    clearing = descendant_clearing_facts(record, answers)
+    apply_wizard_fact_changes(
+        profile_id=profile_id,
+        changes=(*facts, *clearing),
+        event_type="profile.wizard.descendants.applied",
+    )
+    return workflow_state_repository().load()
 
 
 __all__ = [

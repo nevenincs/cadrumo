@@ -70,9 +70,9 @@ from ....domain.transactions import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
-from ...user_profile import ProfileRecordRepository
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -170,10 +170,9 @@ def _workflow_profile() -> TaxpayerProfile:
 
 
 def _store_profile(objects: SecureObjectRepository) -> None:
-    ProfileRecordRepository(bucket_id=_BUCKET, objects=objects).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET,
-            display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="Test"),

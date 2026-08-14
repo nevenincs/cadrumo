@@ -80,9 +80,8 @@ _STATUS_CATALOGUE: dict[str, object] = {
                 "none": "NO-PROFILES",
                 "column": {"label": "COL-LABEL", "status": "COL-STATUS", "active": "COL-ACTIVE"},
                 "status": {
-                    "active": "ST-ACTIVE",
-                    "setup_incomplete": "ST-INCOMPLETE",
-                    "tombstoned": "ST-TOMBSTONED",
+                    "complete": "ST-COMPLETE",
+                    "incomplete": "ST-INCOMPLETE",
                     "unknown": "ST-UNKNOWN",
                 },
             },
@@ -127,9 +126,9 @@ def _populated_data() -> StatusPageData:
             StatusFactRow(label="Régimen IVA", value="general", masked=False),
         ),
         profiles=(
-            StatusProfileRow(label="ada", status="active", active=True),
-            StatusProfileRow(label="grace", status="setup_incomplete", active=False),
-            StatusProfileRow(label="hedy", status="tombstoned", active=False),
+            StatusProfileRow(label="ada", setup_state="complete", active=True),
+            StatusProfileRow(label="grace", setup_state="incomplete", active=False),
+            StatusProfileRow(label="hedy", setup_state="complete", active=False),
         ),
         auth=StatusAuthView(
             provider="certificate",
@@ -204,21 +203,21 @@ async def test_profiles_table_rows_and_active_marker() -> None:
         assert rows[0][0] == "ada"
         assert rows[0][2] == "●"
         assert rows[1] == ("grace", "ST-INCOMPLETE", "")
-        assert rows[2][1] == "ST-TOMBSTONED"
+        assert rows[2][1] == "ST-COMPLETE"
 
 
 @pytest.mark.asyncio
 async def test_unmapped_profile_status_renders_an_operator_label_not_the_token() -> None:
     # A future lifecycle token must remain visibly unknown without exposing
     # the storage vocabulary or being misrepresented as active.
-    data = StatusPageData(profiles=(StatusProfileRow(label="mystery", status="future_state", active=False),))
+    data = StatusPageData(profiles=(StatusProfileRow(label="mystery", setup_state="future_state", active=False),))
     app = StatusApp(data)
     async with app.run_test(size=_TERMINAL_SIZE):
         table = app.query_one("#profiles-table", DataTable)
         row = tuple(str(cell) for cell in table.get_row_at(0))
         assert row[1] == "ST-UNKNOWN"
         assert "future_state" not in row
-        assert row[1] != "ST-ACTIVE"
+        assert row[1] != "ST-COMPLETE"
 
 
 @pytest.mark.asyncio

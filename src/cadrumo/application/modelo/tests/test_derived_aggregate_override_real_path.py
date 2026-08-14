@@ -50,10 +50,10 @@ from ....core.resources import resources
 from ....domain.calculations.registry import BindingId
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile import ProfileSchemaValidationError, UserProfileFact
+from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...user_profile import (
-    ProfileRecordRepository,
     profile_create_storage_span,
     record_to_path_values,
     set_active_field,
@@ -231,7 +231,7 @@ def test_operator_write_door_refuses_a_value_at_the_derived_aggregate_path() -> 
         "rejected, not merely any refusal that echoes the path"
     )
 
-    record = ProfileRecordRepository(bucket_id=_BUCKET).load(_BUCKET)
+    record = load_test_profile_record(_BUCKET)
     assert _DERIVED_PATH not in record_to_path_values(record)
 
 

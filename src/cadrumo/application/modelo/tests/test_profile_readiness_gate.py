@@ -22,11 +22,12 @@ from ....domain.modelos import (
     upsert_calculation_revision,
     upsert_work_unit,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence
+from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record, seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
-from ...user_profile import ProfileRecordRepository, record_to_path_values
+from ...user_profile import record_to_path_values
 from .. import (
     ModeloProfileReadinessError,
     WorkUnitMutationRefusedError,
@@ -53,10 +54,9 @@ _NONRESIDENT_PROFILE_ID = "20000000-0000-4000-8000-000000000002"
 
 
 def _store_incomplete_profile(bucket_id: str) -> None:
-    ProfileRecordRepository(bucket_id=bucket_id).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Incomplete profile",
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             created_at=_NOW,
             updated_at=_NOW,
@@ -65,10 +65,9 @@ def _store_incomplete_profile(bucket_id: str) -> None:
 
 
 def _store_profile_with_no_facts_whatsoever(bucket_id: str) -> None:
-    ProfileRecordRepository(bucket_id=bucket_id).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Zero-fact profile",
             facts=(),
             created_at=_NOW,
             updated_at=_NOW,
@@ -77,10 +76,9 @@ def _store_profile_with_no_facts_whatsoever(bucket_id: str) -> None:
 
 
 def _store_profile_without_activity(bucket_id: str) -> None:
-    ProfileRecordRepository(bucket_id=bucket_id).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="No activity profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="Ready"),
@@ -104,10 +102,9 @@ def _store_profile_without_activity(bucket_id: str) -> None:
 
 
 def _store_ready_profile(bucket_id: str, *, activity_start_date: date) -> None:
-    ProfileRecordRepository(bucket_id=bucket_id).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Ready profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="Ready"),
@@ -133,10 +130,9 @@ def _store_ready_profile(bucket_id: str, *, activity_start_date: date) -> None:
 
 
 def _store_nonresident_legal_entity_profile(bucket_id: str) -> None:
-    ProfileRecordRepository(bucket_id=bucket_id).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="NordHaus GmbH",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="B66012345"),
                 UserProfileFact(path="identity.legal_name", value="NordHaus GmbH"),
@@ -167,10 +163,9 @@ def _store_nonresident_natural_person_profile(bucket_id: str) -> None:
     must file Modelo 210 (IRNR) rather than Modelo 100 (the resident IRPF
     Renta).
     """
-    ProfileRecordRepository(bucket_id=bucket_id).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Olivia Whitfield",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="X1234567L"),
                 UserProfileFact(path="identity.name", value="Olivia"),
@@ -593,7 +588,6 @@ def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural
     """
     nonresident = UserProfileRecord(
         profile_id=_NONRESIDENT_PROFILE_ID,
-        display_name="Olivia Whitfield",
         facts=(
             UserProfileFact(path="identity.tax_id", value="X1234567L"),
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
@@ -606,7 +600,6 @@ def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural
     )
     resident = UserProfileRecord(
         profile_id=_OPERATOR_PROFILE_ID,
-        display_name="Resident operator",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
@@ -844,9 +837,8 @@ def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: P
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
         _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2025, 1, 1))
-        repository = ProfileRecordRepository(bucket_id=_OPERATOR_PROFILE_ID)
-        record = repository.load(_OPERATOR_PROFILE_ID)
-        repository.save(record.model_copy(update={"status": UserProfileStatus.SETUP_INCOMPLETE}))
+        record = load_test_profile_record(_OPERATOR_PROFILE_ID)
+        replace_test_profile_record(record.model_copy(update={"setup_state": ProfileSetupState.INCOMPLETE}))
 
         with pytest.raises(ModeloProfileReadinessError) as excinfo:
             create_work_unit(
@@ -880,10 +872,9 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
     ``require_profile_ready_for_modelo_work`` directly.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
-        ProfileRecordRepository(bucket_id=_OPERATOR_PROFILE_ID).save(
+        seed_test_profile_record(
             UserProfileRecord(
                 profile_id=_OPERATOR_PROFILE_ID,
-                display_name="Baseline-only profile",
                 facts=(
                     UserProfileFact(path="identity.tax_id", value="12345678Z"),
                     UserProfileFact(path="activities.description", value="design"),
@@ -901,9 +892,8 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
             period_code="1T",
             revision_id=_M303_2025_REVISION,
         )
-        profile_repository = ProfileRecordRepository(bucket_id=_OPERATOR_PROFILE_ID)
-        record = profile_repository.load(_OPERATOR_PROFILE_ID)
-        profile_repository.save(record.model_copy(update={"status": UserProfileStatus.SETUP_INCOMPLETE}))
+        record = load_test_profile_record(_OPERATOR_PROFILE_ID)
+        replace_test_profile_record(record.model_copy(update={"setup_state": ProfileSetupState.INCOMPLETE}))
 
         with pytest.raises(ModeloProfileReadinessError) as excinfo:
             calculate_modelo_revision(
@@ -934,7 +924,6 @@ def _reversed_declaration_order_record() -> UserProfileRecord:
     """
     return UserProfileRecord(
         profile_id=_OPERATOR_PROFILE_ID,
-        display_name="Reversed declaration order",
         facts=(
             UserProfileFact(
                 path="censo.activity_start_date",

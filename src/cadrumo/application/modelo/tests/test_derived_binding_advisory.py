@@ -53,7 +53,6 @@ def _snapshot(year: int) -> RegistrySnapshot:
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
     return UserProfileRecord(
         profile_id=_BUCKET,
-        display_name="derived advisory probe",
         facts=facts,
         created_at=_T0,
         updated_at=_T0,

@@ -20,7 +20,6 @@ from pathlib import Path
 import pytest
 
 from ......core.external_constants import UTF_8_ENCODING
-from ......domain.user_profile import UserProfileStatus
 from .._layout import BucketPaths, bucket_paths
 from .._manifest import BUCKET_MANIFEST_SCHEMA_VERSION, BucketKeySchedule, BucketManifest, ManifestKdfParams
 from .._manifest_io import manifest_path, read_manifest, write_manifest
@@ -60,10 +59,8 @@ def _populated_manifest(bucket_id: str) -> BucketManifest:
             salt=bytes(range(16)),
             output_length=32,
         ),
-        recovery_enrolled=True,
         key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
         schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-        status=UserProfileStatus.TOMBSTONED,
     )
 
 
@@ -77,8 +74,7 @@ def test_bucket_manifest_round_trips_strictly_via_toml(tmp_path: Path) -> None:
     """write_manifest -> disk -> read_manifest yields the original manifest unchanged.
 
     Every field of the manifest, including the nested ManifestKdfParams salt
-    bytes, the UTC-tagged datetimes, and the boolean
-    ``recovery_enrolled`` flag, must come back identical. The
+    bytes and the UTC-tagged datetimes, must come back identical. The
     assertion uses strict pydantic equality so a single dropped
     field is a one-line failure that names the offender.
     """
@@ -96,11 +92,7 @@ def test_bucket_manifest_round_trips_strictly_via_toml(tmp_path: Path) -> None:
     assert loaded.kdf_params.algorithm == "argon2id"
     assert loaded.kdf_params.memory_cost == 65536
     assert loaded.last_unlocked_at == original.last_unlocked_at
-    assert loaded.recovery_enrolled is True
-    # The lifecycle marker is the plaintext mirror the manifest scan
-    # filters on; a save-drops / load-re-defaults regression would
-    # silently flip a tombstoned profile back onto the live surface.
-    assert loaded.status is UserProfileStatus.TOMBSTONED
+    assert loaded.label == "Test Operator Bucket"
 
 
 def test_bucket_manifest_round_trips_with_last_unlocked_at_unset(
@@ -134,31 +126,23 @@ def test_bucket_manifest_round_trips_with_last_unlocked_at_unset(
     assert loaded.last_unlocked_at is None
 
 
-def test_manifest_status_mutation_surfaces_as_strict_inequality(
+def test_manifest_label_mutation_surfaces_as_strict_inequality(
     tmp_path: Path,
 ) -> None:
-    """Anti-tautology: rewriting the on-disk ``status`` is caught by reload.
+    """Anti-tautology: rewriting the on-disk label is caught by reload."""
 
-    The fixture manifest is tombstoned. Mutating the persisted TOML to
-    flip ``status`` back to ``active`` and reloading must yield a
-    manifest that is strictly unequal to the original. If this test
-    ever passes with the field flattened, the lifecycle-marker
-    roundtrip is tautological and the tombstone leak could recur.
-    """
-
-    paths = _prepared_paths(tmp_path, "test-bucket-status-antitautology")
+    paths = _prepared_paths(tmp_path, "test-bucket-label-antitautology")
     original = _populated_manifest(paths.bucket_id)
-    assert original.status is UserProfileStatus.TOMBSTONED
     write_manifest(paths, original)
 
     target = manifest_path(paths)
     on_disk = target.read_text(encoding=UTF_8_ENCODING)
-    assert 'status = "tombstoned"' in on_disk
+    assert 'label = "Test Operator Bucket"' in on_disk
     target.write_text(
-        on_disk.replace('status = "tombstoned"', 'status = "active"'),
+        on_disk.replace('label = "Test Operator Bucket"', 'label = "Changed Operator"'),
         encoding=UTF_8_ENCODING,
     )
 
     reloaded = read_manifest(paths)
     assert reloaded != original
-    assert reloaded.status is UserProfileStatus.ACTIVE
+    assert reloaded.label == "Changed Operator"

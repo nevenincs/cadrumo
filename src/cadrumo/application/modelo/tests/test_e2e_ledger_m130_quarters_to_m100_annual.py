@@ -83,9 +83,9 @@ from ....domain.transactions import (
 from ....domain.usage_ratios import UsageRatioProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import CalculationObservationRepository
-from ...user_profile import ProfileRecordRepository
 from .. import (
     ModeloAggregationBindingError,
     ModeloExportCommand,
@@ -467,7 +467,6 @@ def _seed_taxpayer_profile() -> None:
     # rejects a label/display_name mismatch as a torn-rename inconsistency.
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value=_TAX_ID),
             UserProfileFact(path="identity.name", value="Annual"),
@@ -500,7 +499,7 @@ def _seed_taxpayer_profile() -> None:
         created_at=_T0,
         updated_at=_T0,
     )
-    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(record)
+    seed_test_profile_record(record)
 
 
 def _autonoma_workflow_profile() -> TaxpayerProfile:

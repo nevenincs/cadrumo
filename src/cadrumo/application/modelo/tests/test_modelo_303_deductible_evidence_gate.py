@@ -53,6 +53,7 @@ from ....domain.transactions import (
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
 from ....tests.env_scope import ready_clave_settings
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
     compute_ledger_filing_evidence,
@@ -65,7 +66,6 @@ from ...ledger import (
     attach_manual_transaction_evidence,
     link_manual_transaction_invoice,
 )
-from ...user_profile import ProfileRecordRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation,
     create_work_unit,
@@ -108,10 +108,9 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 
 def _store_profile(objects: SecureObjectRepository) -> None:
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="M303 evidence gate profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),
                 UserProfileFact(path="identity.name", value="Irene"),

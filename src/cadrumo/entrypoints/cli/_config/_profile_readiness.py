@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typer
 
-from .._common import _emit_envelope, resolve_cli_precondition_action
+from .._common import emit_envelope, resolve_cli_precondition_action
 from ._status_rendering import precondition_action_lines
 
 
@@ -28,7 +28,7 @@ def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_
         configured=False,
         precondition_action=action,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.profile.show",
         result=result,
@@ -72,7 +72,7 @@ def _emit_profile_record_unreadable(
         error=type(error).__name__,
         precondition_action=action,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.profile.show",
         result=result,
@@ -91,14 +91,13 @@ def _emit_profile_record_unreadable(
 def _read_profile_record(*, profile_id: str, bucket_id: str):
     """Read a profile record under a bucket session scoped to that profile."""
     from ....adapters.persistence.storage.master_key import active_bucket_session_serves
-    from ....application.user_profile import ProfileRecordRepository, profile_storage_session
+    from ....application.user_profile import ProfileNotFoundError, ProfileRecordRepository
 
     # Ask the bound session which bucket it serves; matching the pointer and
     # then checking only that SOME session exists leaves it unverified.
     if active_bucket_session_serves(bucket_id):
         return ProfileRecordRepository.for_current_session(bucket_id).load(profile_id)
-    with profile_storage_session(bucket_id):
-        return ProfileRecordRepository.for_current_session(bucket_id).load(profile_id)
+    raise ProfileNotFoundError("profile record requires its active authenticated custody session")
 
 
 __all__ = [

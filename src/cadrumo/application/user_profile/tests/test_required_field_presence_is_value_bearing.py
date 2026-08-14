@@ -17,9 +17,9 @@ from datetime import UTC, datetime
 import pytest
 
 from ....domain.user_profile import (
+    ProfileSetupState,
     UserProfileFact,
     UserProfileRecord,
-    UserProfileStatus,
     load_user_profile_schema,
 )
 from .. import ProfileValidationService, build_profile_overview
@@ -116,8 +116,7 @@ def test_the_enforcing_check_agrees_with_the_overview_the_operator_is_shown(valu
         schema_id=_SCHEMA.id,
         schema_version=_SCHEMA.version,
         profile_id=_PROFILE_ID,
-        display_name="probe",
-        status=UserProfileStatus.ACTIVE,
+        setup_state=ProfileSetupState.COMPLETE,
         facts=facts,
         created_at=_STAMP,
         updated_at=_STAMP,

@@ -41,23 +41,23 @@ _INSTANT = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 def _seed_bucket_event(bucket_id: str) -> str:
     event_id = derive_bucket_event_id(
         bucket_id=bucket_id,
-        event_type=BucketEventType.PROFILE_RENAMED,
+        event_type=BucketEventType.BUCKET_EXPORTED,
         occurred_at=_INSTANT,
         actor="operator",
-        object_type=BucketEventObjectType.PROFILE,
+        object_type=BucketEventObjectType.BUCKET,
         object_id=bucket_id,
-        payload={"display_name": "Audited"},
+        payload={"transfer_id": "custody-roundtrip"},
     )
     event = BucketEvent(
         event_id=event_id,
         bucket_id=bucket_id,
-        event_type=BucketEventType.PROFILE_RENAMED,
+        event_type=BucketEventType.BUCKET_EXPORTED,
         occurred_at=_INSTANT,
         actor="operator",
-        object_type=BucketEventObjectType.PROFILE,
+        object_type=BucketEventObjectType.BUCKET,
         object_id=bucket_id,
         payload_version=1,
-        payload={"display_name": "Audited"},
+        payload={"transfer_id": "custody-roundtrip"},
     )
     repo = BucketEventHistoryRepository()
     repo.save(BucketEventHistoryCatalogue(events={event_id: event}))
@@ -173,7 +173,7 @@ def test_full_custody_carry_restores_evidence_bytes_and_audit_trail(tmp_path: Pa
             # The audit trail survives with its content-addressed event id intact.
             restored = BucketEventHistoryRepository().load()
             assert event_id in restored.events
-            assert restored.events[event_id].payload["display_name"] == "Audited"
+            assert restored.events[event_id].payload["transfer_id"] == "custody-roundtrip"
 
             # The bound-resolver store survives and re-keys under the recipient DEK.
             from ....adapters.persistence.profile.justificante import JustificanteRepository

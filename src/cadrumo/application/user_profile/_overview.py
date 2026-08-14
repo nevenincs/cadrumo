@@ -49,12 +49,12 @@ from ...core.identity import ProfileId
 from ...core.json_contract import Notice
 from ...core.redaction import ALWAYS_REDACT_KEY_TERMS
 
-# ``UserProfileStatus`` is a pydantic FIELD type below, so it must resolve at
+# ``ProfileSetupState`` is a pydantic FIELD type below, so it must resolve at
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
 # construction raises. The rest of the domain surface is annotation-only.
 from ...domain.user_profile import (
     ProfileFieldType,
-    UserProfileStatus,
+    ProfileSetupState,
     derived_selector_for_path,
     load_user_profile_schema,
     profile_field_label,
@@ -308,7 +308,7 @@ class ProfileOverview(BaseModel):
 
     profile_id: ProfileId
     label: str
-    status: UserProfileStatus
+    setup_state: ProfileSetupState
     sections: tuple[ProfileSectionView, ...]
     missing_required: tuple[str, ...] = Field(default=())
     notices: tuple[Notice, ...] = Field(default=())
@@ -655,7 +655,7 @@ def _section_field_views(
 def build_profile_overview(
     record: UserProfileRecord,
     *,
-    label: str | None = None,
+    label: str = "",
     schema: ProfileSchemaDefinition | None = None,
 ) -> ProfileOverview:
     """Project ``record`` into the manager's landing-page view.
@@ -677,7 +677,7 @@ def build_profile_overview(
 
     Args:
         record: The :class:`UserProfileRecord` whose values populate the view.
-        label: Operator-facing display name; falls back to the record's own.
+        label: Operator-facing display name from the committed capsule projection.
         schema: Optional schema override; the canonical schema when omitted.
 
     Returns:
@@ -727,8 +727,8 @@ def build_profile_overview(
     divergence_notice = censo_divergence_notice(record)
     return ProfileOverview(
         profile_id=record.profile_id,
-        label=label if label is not None else record.display_name,
-        status=record.status,
+        label=label,
+        setup_state=record.setup_state,
         sections=tuple(sections),
         missing_required=tuple(missing_required),
         notices=() if divergence_notice is None else (divergence_notice,),

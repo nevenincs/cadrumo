@@ -106,7 +106,7 @@ def censo_file(
     if apply:
         # The file door is the adopt-all shape of the cotejo apply: every
         # mapped censo fact is adopted, none deferred. Route it through the
-        # single apply authority (never a parallel ``set_active_fields``
+        # single current-record apply authority (never a parallel fact writer)
         # write) so a censal artefact-apply always emits exactly one
         # ``CENSO_APPLIED`` event, at the non-official evidence tier.
         # Declaring zero deferred means the namespace-replace clears every

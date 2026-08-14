@@ -236,8 +236,8 @@ class WorkflowState(BaseModel):
     The historical ``profiles`` field has retired. Consumers that
     need to enumerate registered profiles call
     :func:`cadrumo.application.workflow._profile_bucket_scan.list_profile_buckets`
-    or :func:`read_profile_bucket` directly; both scan
-    ``<cadrumo_local_storage_root>/buckets/*/manifest.toml`` and never
+    or :func:`read_profile_bucket` directly; both enumerate only committed
+    current-format capsules through their anchored descriptors and never
     open an encrypted database. The active profile resolves via the
     precedence chain (Settings override > plaintext pointer file).
     """
@@ -261,8 +261,8 @@ class WorkflowState(BaseModel):
 
         The active selector resolves via the precedence chain in
         :func:`cadrumo.core.resolve_active_bucket_id` (env var > pointer file
-        fallback), then the manifest resolver canonicalizes a display label to
-        its immutable bucket UUID before secure storage is addressed.
+        fallback), then the committed-capsule projection resolves a display
+        label to its immutable bucket UUID before secure storage is addressed.
 
         ``secure_objects`` (a :class:`SecureObjectRepository` override) and
         ``schema`` are optional overrides forwarded to
@@ -289,9 +289,9 @@ class WorkflowState(BaseModel):
     def active_profile_bucket_id(self) -> str | None:
         """Return the selected profile's canonical secure bucket UUID.
 
-        Core owns active-selector precedence. The workflow manifest resolver
+        Core owns active-selector precedence. The committed-capsule projection
         then maps an operator-facing label to the existing immutable bucket
-        UUID. A selector without a live manifest has no secure bucket and
+        UUID. A selector without a current capsule has no secure bucket and
         returns ``None``; health diagnostics retain the raw selector separately.
         """
         return self._active_profile_selection()[1]

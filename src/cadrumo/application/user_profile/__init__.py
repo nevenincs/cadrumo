@@ -69,8 +69,8 @@ See Also:
         Domain schema, value records, registry-selector contract, and lazy
         portable-export payload consumed by this facade.
     :class:`ProfileCapsuleLifecycle`
-        Application service for register, read, edit, rename, remove,
-        reactivate, and setup-completion operations over
+        Physical capsule service for registration and authenticated current-
+        record publication over
         :class:`domain.user_profile.UserProfileRecord`.
     :class:`CensoSyncService`
         Read-only censo-derived home-office afectación ratio for the ledger
@@ -103,7 +103,6 @@ if TYPE_CHECKING:
         UserProfileFact,
         UserProfileFactValue,
         UserProfileRecord,
-        UserProfileStatus,
     )
     from ._bundle import (
         SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
@@ -171,10 +170,7 @@ if TYPE_CHECKING:
         ProfileStaleCheckReport,
         ProfileValidationIssue,
         ProfileValidationReport,
-        ReactivateProfileCommand,
         RegisterProfileCommand,
-        RemoveProfileCommand,
-        RenameProfileCommand,
     )
     from ._completeness import (
         conditional_profile_missing_required,
@@ -220,7 +216,6 @@ if TYPE_CHECKING:
         compare_and_swap_profile_pointer,
         profile_custody_transaction_lock,
     )
-    from ._custody_service import ProfileCustodyTransactionService
     from ._custody_transactions import (
         ProfileCustodyDeleteConfirmation,
         ProfileCustodyHoldAssessment,
@@ -236,7 +231,6 @@ if TYPE_CHECKING:
         ProfileCustodyTransactionState,
     )
     from ._filing_baseline import missing_filing_baseline_flags
-    from ._integrity import ProfileIntegrityError
     from ._keys_validation import list_profile_key_records, validate_profile_values
     from ._language_resolver import resolve_profile_output_language_hint
     from ._lifecycle import ProfileCapsuleLifecycle
@@ -247,33 +241,6 @@ if TYPE_CHECKING:
         login_profile,
         resolve_login_target,
         resume_active_profile_session,
-    )
-    from ._orchestration import (
-        ProfileAlreadyRegisteredError,
-        ProfileFactsApplied,
-        ProfileLogoutOverrideError,
-        append_profile_activated_event,
-        apply_active_profile_facts,
-        build_lifecycle_service,
-        complete_setup_with_lifecycle_span,
-        delete_profile_with_lifecycle_span,
-        fact_value,
-        logout_active_profile,
-        profile_create_storage_span,
-        profile_export_runtime,
-        profile_storage_session,
-        reactivate_profile_with_lifecycle_span,
-        refuse_duplicate_label,
-        register_active_profile,
-        remove_active_profile,
-        remove_profile_bucket_directory,
-        rename_profile,
-        require_active,
-        require_registered_label,
-        select_profile,
-        select_profile_with_lifecycle_span,
-        set_active_field,
-        set_active_fields,
     )
     from ._overview import (
         MASKED_PLACEHOLDER,
@@ -294,9 +261,17 @@ if TYPE_CHECKING:
         format_profile_selector_requirements,
     )
     from ._profile_pointer_transaction import active_profile_pointer_transaction
+    from ._profile_record_repository import (
+        ProfileRecordRepository,
+        activate_profile_record_session,
+        bound_profile_record_session,
+        close_active_profile_record_session,
+        require_profile_record_session,
+    )
     from ._profile_repository import CommittedProfileRepository, ProfileNotFoundError, ProfileSummary
     from ._projections import (
         EffectiveFact,
+        fact_value,
         facts_to_values,
         projection_for_taxpayer,
         record_to_effective_facts,
@@ -304,9 +279,6 @@ if TYPE_CHECKING:
         record_to_values,
         snapshot_to_values,
     )
-    from ._record_aggregate import ProfileAggregate
-    from ._record_aggregate_repository import TAX_ID_FACT_PATH, ProfileRecordAggregateRepository, ProfileRecordSummary
-    from ._record_lifecycle import ProfileRecordLifecycle
     from ._registration import (
         PASSPHRASE_MINIMUM_LENGTH,
         PassphraseAssessment,
@@ -315,13 +287,10 @@ if TYPE_CHECKING:
         assess_passphrase,
         register_profile_with_credentials,
     )
-    from ._profile_record_repository import ProfileRecordRepository, bound_profile_record_session, require_profile_record_session
     from ._repository import (
         USER_PROFILE_SNAPSHOT_NAMESPACE,
-        USER_PROFILE_VALUE_NAMESPACE,
         UserProfileSnapshotRepository,
         user_profile_snapshot_object_key,
-        user_profile_value_object_key,
     )
     from ._section_rows import next_section_row_index, section_row_facts
     from ._validation import ProfileValidationService
@@ -349,10 +318,7 @@ _COMMAND_NAMES: frozenset[str] = frozenset(
         "ProfileValidationIssue",
         "ProfileValidationReport",
         "CompleteSetupCommand",
-        "ReactivateProfileCommand",
         "RegisterProfileCommand",
-        "RemoveProfileCommand",
-        "RenameProfileCommand",
     },
 )
 
@@ -361,7 +327,6 @@ _DOMAIN_RECORD_NAMES: frozenset[str] = frozenset(
         "UserProfileFact",
         "UserProfileFactValue",
         "UserProfileRecord",
-        "UserProfileStatus",
     },
 )
 
@@ -377,12 +342,6 @@ _LAZY_EXPORTS: dict[str, str] = {
         ("._commands", tuple(_COMMAND_NAMES)),
         ("...domain.user_profile", tuple(_DOMAIN_RECORD_NAMES)),
         ("._lifecycle", ("ProfileCapsuleLifecycle",)),
-        ("._record_aggregate", ("ProfileAggregate",)),
-        (
-            "._record_aggregate_repository",
-            ("ProfileRecordAggregateRepository", "ProfileRecordSummary", "TAX_ID_FACT_PATH"),
-        ),
-        ("._record_lifecycle", ("ProfileRecordLifecycle",)),
         ("._censo_errors", ("CensoSyncError",)),
         (
             "._censo_sync",
@@ -401,6 +360,7 @@ _LAZY_EXPORTS: dict[str, str] = {
             "._projections",
             (
                 "facts_to_values",
+                "fact_value",
                 "projection_for_taxpayer",
                 "EffectiveFact",
                 "record_to_effective_facts",
@@ -539,7 +499,6 @@ _LAZY_EXPORTS: dict[str, str] = {
                 "profile_custody_transaction_lock",
             ),
         ),
-        ("._custody_service", ("ProfileCustodyTransactionService",)),
         (
             "._login_session",
             (
@@ -577,47 +536,21 @@ _LAZY_EXPORTS: dict[str, str] = {
             ),
         ),
         (
-            "._orchestration",
-            (
-                "ProfileAlreadyRegisteredError",
-                "ProfileLogoutOverrideError",
-                "append_profile_activated_event",
-                "build_lifecycle_service",
-                "complete_setup_with_lifecycle_span",
-                "delete_profile_with_lifecycle_span",
-                "fact_value",
-                "logout_active_profile",
-                "profile_create_storage_span",
-                "profile_export_runtime",
-                "profile_storage_session",
-                "reactivate_profile_with_lifecycle_span",
-                "refuse_duplicate_label",
-                "ProfileFactsApplied",
-                "apply_active_profile_facts",
-                "register_active_profile",
-                "remove_active_profile",
-                "remove_profile_bucket_directory",
-                "rename_profile",
-                "require_registered_label",
-                "require_active",
-                "select_profile",
-                "select_profile_with_lifecycle_span",
-                "set_active_field",
-                "set_active_fields",
-            ),
-        ),
-        (
             "._profile_record_repository",
-            ("ProfileRecordRepository", "bound_profile_record_session", "require_profile_record_session"),
+            (
+                "ProfileRecordRepository",
+                "activate_profile_record_session",
+                "bound_profile_record_session",
+                "close_active_profile_record_session",
+                "require_profile_record_session",
+            ),
         ),
         (
             "._repository",
             (
                 "USER_PROFILE_SNAPSHOT_NAMESPACE",
-                "USER_PROFILE_VALUE_NAMESPACE",
                 "UserProfileSnapshotRepository",
                 "user_profile_snapshot_object_key",
-                "user_profile_value_object_key",
             ),
         ),
         ("._profile_repository", ("CommittedProfileRepository", "ProfileNotFoundError", "ProfileSummary")),
@@ -631,7 +564,6 @@ _LAZY_EXPORTS: dict[str, str] = {
                 "resolve_capability",
             ),
         ),
-        ("._integrity", ("ProfileIntegrityError",)),
         (
             "._custody_carry",
             (
@@ -675,10 +607,8 @@ __all__ = [
     "MASKED_PLACEHOLDER",
     "PASSPHRASE_MINIMUM_LENGTH",
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
-    "TAX_ID_FACT_PATH",
     "TYPED_CATEGORY_NAMESPACES",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
-    "USER_PROFILE_VALUE_NAMESPACE",
     "CapabilityDecision",
     "CapabilitySource",
     "CensalIdentityMismatchError",
@@ -700,8 +630,6 @@ __all__ = [
     "EncryptedProfileBundleExport",
     "PassphraseAssessment",
     "PreparedProfileExport",
-    "ProfileAggregate",
-    "ProfileAlreadyRegisteredError",
     "ProfileBundleExportJournalRepository",
     "ProfileBundleExportPurpose",
     "ProfileBundleExportReconcileFailure",
@@ -724,27 +652,20 @@ __all__ = [
     "ProfileCustodyTransactionReceipt",
     "ProfileCustodyTransactionRefusalError",
     "ProfileCustodyTransactionRepository",
-    "ProfileCustodyTransactionService",
     "ProfileCustodyTransactionState",
-    "ProfileFactsApplied",
     "ProfileFieldChoice",
     "ProfileFieldView",
     "ProfileId",
     "ProfileImportResult",
-    "ProfileIntegrityError",
     "ProfileLifecycleResult",
     "ProfileLoginOutcome",
     "ProfileLoginThrottledError",
-    "ProfileLogoutOverrideError",
     "ProfileNotFoundError",
     "ProfileOverview",
     "ProfilePreflightReport",
     "ProfilePreflightRequirement",
     "ProfilePreflightService",
-    "ProfileRecordAggregateRepository",
-    "ProfileRecordLifecycle",
     "ProfileRecordRepository",
-    "ProfileRecordSummary",
     "ProfileRegistrationError",
     "ProfileRegistrationOutcome",
     "ProfileSectionView",
@@ -755,23 +676,18 @@ __all__ = [
     "ProfileValidationIssue",
     "ProfileValidationReport",
     "ProfileValidationService",
-    "ReactivateProfileCommand",
     "RegisterProfileCommand",
-    "RemoveProfileCommand",
-    "RenameProfileCommand",
     "UnsupportedBundleSchemaVersionError",
     "UserProfileFact",
     "UserProfileFactValue",
     "UserProfileRecord",
     "UserProfileSnapshotRepository",
-    "UserProfileStatus",
+    "activate_profile_record_session",
     "active_profile_pointer_transaction",
-    "append_profile_activated_event",
-    "apply_active_profile_facts",
     "apply_censal_read",
     "apply_cotejo",
     "assess_passphrase",
-    "build_lifecycle_service",
+    "bound_profile_record_session",
     "build_profile_overview",
     "build_profile_preflight_requirement",
     "bundle_data_categories",
@@ -781,14 +697,13 @@ __all__ = [
     "censo_divergence_notice",
     "censo_unadopted_evidence",
     "change_passphrase",
+    "close_active_profile_record_session",
     "close_profile_session_artefacts",
     "cloud_evidence_upload_eligible_for_active_profile",
     "compare_and_swap_profile_pointer",
-    "complete_setup_with_lifecycle_span",
     "conditional_profile_missing_required",
     "create_recovery_code",
     "decrypt_profile_bundle_with_passphrase",
-    "delete_profile_with_lifecycle_span",
     "deserialize_profile_bundle",
     "divergence_facts",
     "encrypt_profile_bundle_for_passphrase",
@@ -802,22 +717,17 @@ __all__ = [
     "iva_regime_required",
     "list_profile_key_records",
     "login_profile",
-    "logout_active_profile",
     "mask_profile_field",
     "missing_filing_baseline_flags",
     "missing_required_field_paths",
     "next_section_row_index",
     "open_censo_divergences",
     "prepare_profile_export",
-    "profile_create_storage_span",
     "profile_custody_transaction_lock",
-    "profile_export_runtime",
     "profile_field_choices",
     "profile_section_rows",
-    "profile_storage_session",
     "projection_for_taxpayer",
     "publish_prepared_export",
-    "reactivate_profile_with_lifecycle_span",
     "reconcile_censal_read",
     "reconcile_prepared_exports",
     "record_to_effective_facts",
@@ -825,15 +735,9 @@ __all__ = [
     "record_to_values",
     "recover_secret_store",
     "recovery_wrap_path",
-    "refuse_duplicate_label",
-    "register_active_profile",
     "register_imported_profile_bundle",
     "register_profile_with_credentials",
-    "remove_active_profile",
-    "remove_profile_bucket_directory",
-    "rename_profile",
-    "require_active",
-    "require_registered_label",
+    "require_profile_record_session",
     "resolve_active_capability",
     "resolve_capability",
     "resolve_login_target",
@@ -843,15 +747,10 @@ __all__ = [
     "resume_active_profile_session",
     "rotate_recovery_code",
     "section_row_facts",
-    "select_profile",
-    "select_profile_with_lifecycle_span",
     "serialize_carried_objects",
     "serialize_profile_bundle",
-    "set_active_field",
-    "set_active_fields",
     "snapshot_to_values",
     "user_profile_snapshot_object_key",
-    "user_profile_value_object_key",
     "validate_bundle_payload",
     "validate_profile_values",
     "verify_recovery_code",

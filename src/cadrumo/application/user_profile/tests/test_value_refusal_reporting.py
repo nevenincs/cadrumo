@@ -25,7 +25,6 @@ from ....domain.user_profile import (
     UserProfileFact,
     load_user_profile_schema,
 )
-from .._record_lifecycle import _schema_validation_message
 from .._validation import (
     _ISSUE_CODE_BY_REFUSAL_KIND,
     BOOLEAN_VALUE_ISSUE_CODE,
@@ -116,33 +115,6 @@ def test_an_acceptable_value_reports_no_value_fault(path: str, value: str) -> No
     }
     faults = [issue for issue in _issues_for(path, value) if issue.code in value_codes]
     assert not faults, f"{value!r} at {path} was refused: {[issue.message for issue in faults]}"
-
-
-def test_the_raised_message_names_what_was_refused() -> None:
-    """The reason must survive into the exception every surface renders.
-
-    ``str(exc)`` is what the profile manager's notice line shows, and it
-    used to read "profile facts failed schema validation" for every fault
-    alike: the instructive per-issue sentences were formed, then discarded
-    at the raise. An operator was told their profile did not match the
-    schema, with no field named and nothing to act on.
-    """
-    issues = _issues_for("capabilities.llm_vision", "on")
-    assert issues, "fixture must produce a refusal to carry"
-    message = _schema_validation_message(issues)
-    assert issues[0].message in message, "the raised message must carry the issue's own words"
-
-
-def test_the_raised_message_summarises_rather_than_enumerating_everything() -> None:
-    """A batch refusing many fields must stay readable as one line.
-
-    The notice channel is a single line, so a message naming every fault of
-    a large batch would overflow it and say less than a short one that
-    counts the rest. The full set stays on the error's ``context``.
-    """
-    issues = _issues_for("capabilities.llm_vision", "on") * 6
-    message = _schema_validation_message(issues)
-    assert "and 3 more" in message, f"a six-issue batch must summarise the tail: {message}"
 
 
 def test_the_write_door_refusal_carries_the_issue_set_as_context() -> None:

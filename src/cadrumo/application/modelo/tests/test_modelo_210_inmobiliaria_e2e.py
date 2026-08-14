@@ -72,9 +72,9 @@ from ....core.resources import resources
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import CalculationRevision, ModeloVerificationFindingKind, VerificationReport
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
-from ...user_profile import ProfileRecordRepository
 from .._calculation_actions import calculate_modelo_revision
 from .._verification_actions import verify_modelo_revision
 from .._work_lifecycle import create_work_unit
@@ -137,7 +137,6 @@ def _seed_minimal_m210_profile(objects: SecureObjectRepository) -> None:
     """
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="activities.description", value="Spanish-source rent"),
@@ -152,7 +151,7 @@ def _seed_minimal_m210_profile(objects: SecureObjectRepository) -> None:
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(record)
+    seed_test_profile_record(record)
 
 
 def _irnr_gb_workflow_profile() -> TaxpayerProfile:

@@ -60,10 +60,10 @@ from ....domain.modelos import (
     VerificationReport,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, modelo_720_prior_baseline_observation
-from ...user_profile import ProfileRecordRepository
 from .._calculation_actions import _resolve_bucket_source_mesh, calculate_modelo_revision
 from .._verification_actions import verify_modelo_revision
 from .._work_lifecycle import create_work_unit
@@ -116,11 +116,10 @@ def _source_casilla_id(binding: DataBindingDefinition) -> CasillaId:
 
 @contextmanager
 def _secure_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=runtime.repository).save(
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        seed_test_profile_record(
             UserProfileRecord(
                 profile_id=_BUCKET_ID,
-                display_name="Test runtime profile",
                 facts=(
                     UserProfileFact(path="identity.tax_id", value="12345678Z"),
                     UserProfileFact(path="activities.description", value="Foreign asset holder"),

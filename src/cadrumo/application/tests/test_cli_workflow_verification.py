@@ -7,12 +7,12 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage.sql import dispose_engine
+from ...tests.profile_capsule import open_test_profile_session
 from ...tests.secure_sql import isolated_profile_storage_root
 from ...tests.user_profile import register_minimal_profile
 from .. import wizard as _wizard  # noqa: F401 - registers compiled profile keys
 from ..auth import configure_operator_auth, logout_operator_auth, reset_operator_auth
 from ..operator_surface import require_accepted_root
-from ..user_profile import profile_create_storage_span
 from ..workflow import workflow_state_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -25,7 +25,7 @@ _PROFILE_LABEL = "operator"
 def isolated_workflow_backend(tmp_path: Path):
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(_BUCKET_ID),
+        open_test_profile_session(_BUCKET_ID),
     ):
         try:
             yield

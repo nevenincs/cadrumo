@@ -1,7 +1,6 @@
 """Real-behavior tests for the shared sandbox-notice / JSON-emit funnel.
 
-No mocks: every case writes a real plaintext bucket manifest (mirroring
-exactly what ``profile create`` / ``sandbox create`` materialise) under an
+No mocks: every case creates a real committed custody capsule under an
 isolated storage root and drives the real
 :func:`~cadrumo.core.resolve_active_bucket_id` precedence chain through
 :func:`~cadrumo.core.config.override_settings`.
@@ -17,60 +16,73 @@ alike) must call to get it.
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from base64 import b64encode
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
+from ....adapters.persistence.storage.custody import (
+    ProfileCustodyEnvelope,
+    ProfileCustodyKdfParameters,
+    ProfileCustodyWrappedDek,
+    create_profile_custody_sentinel,
+)
 from ....core.config import override_settings
 from ....core.json_contract import NoticeSeverity, OutputSchemaError
+from ....domain.user_profile import ProfileSetupState, UserProfileRecord
 from ....tests.secure_sql import isolated_profile_storage_root
+from ...user_profile import ProfileCapsuleLifecycle
+from ...user_profile._capsule_record import ProfileRecordSession
 from ...wizard import ConfigProfileCreateResult, ProfileWizardStatus
 from .. import emit_operator_json_success, sandbox_banner_line, sandbox_notice_for_active_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_MANIFEST_CREATED_AT = datetime(2026, 7, 25, 9, 0, 0, tzinfo=UTC)
 _SANDBOX_CODE = "config.profile.sandbox.active_indicator"
+_DEK = bytes(range(32))
 
 
-def _write_bucket_manifest(root: Path, *, bucket_id: str, label: str) -> None:
-    """Write a real plaintext ``manifest.toml``, exactly as ``profile create`` does.
-
-    ``schema_version`` is taken from :data:`BUCKET_MANIFEST_SCHEMA_VERSION`
-    rather than restated as a literal. The manifest read path refuses anything
-    below :data:`BUCKET_MANIFEST_DURABILITY_FLOOR`, and the sandbox indicator
-    treats that refusal as "not a sandbox" — so a fixture pinned to a stale
-    literal does not fail loudly, it silently stops producing the notice these
-    tests assert. Binding to the constant keeps the fixture on whatever the
-    writer currently emits.
-    """
-    from ....adapters.persistence.storage.bucket import (
-        BUCKET_MANIFEST_SCHEMA_VERSION,
-        BucketKeySchedule,
-        BucketManifest,
-        bucket_paths,
-        provision_bucket_directory,
-        write_manifest,
-    )
-    from ....adapters.persistence.storage.master_key import KdfParams
-    from ....domain.user_profile import UserProfileStatus
-
-    provision_bucket_directory(root, bucket_id)
-    write_manifest(
-        bucket_paths(root, bucket_id),
-        BucketManifest(
-            bucket_id=bucket_id,
-            label=label,
-            created_at=_MANIFEST_CREATED_AT,
-            last_unlocked_at=None,
-            kdf_params=KdfParams.default().to_manifest_params(),
-            recovery_enrolled=False,
-            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-            status=UserProfileStatus.ACTIVE,
+def _create_committed_profile(root: Path, *, bucket_id: str, label: str) -> None:
+    """Create and select the real committed capsule that owns the label projection."""
+    profile_id = UUID(bucket_id)
+    envelope = ProfileCustodyEnvelope.create(
+        profile_id=profile_id,
+        password_generation=1,
+        dek_epoch=b64encode(b"e" * 16).decode("ascii"),
+        kdf=ProfileCustodyKdfParameters(
+            algorithm="argon2id",
+            version=19,
+            memory_mib=19,
+            iterations=2,
+            parallelism=1,
+            salt_b64=b64encode(b"k" * 16).decode("ascii"),
+            output_bytes=32,
+        ),
+        wrapped_dek=ProfileCustodyWrappedDek(
+            nonce_b64=b64encode(b"n" * 12).decode("ascii"),
+            ciphertext_b64=b64encode(b"c" * 32).decode("ascii"),
+            tag_b64=b64encode(b"t" * 16).decode("ascii"),
         ),
     )
+    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=_DEK)
+    lifecycle = ProfileCapsuleLifecycle(root=root)
+    try:
+        lifecycle.create(
+            label=label,
+            profile_id=profile_id,
+            password_envelope=envelope,
+            sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+            data_files={},
+            initial_record=UserProfileRecord(
+                profile_id=bucket_id,
+                setup_state=ProfileSetupState.INCOMPLETE,
+            ),
+            record_session=session,
+        )
+        lifecycle.select(label)
+    finally:
+        session.close()
 
 
 def test_sandbox_notice_absent_when_no_active_bucket(tmp_path: Path) -> None:
@@ -83,7 +95,7 @@ def test_sandbox_notice_absent_for_a_real_non_sandbox_profile(tmp_path: Path) ->
     """A real profile bucket (ordinary label) never gets annotated."""
     bucket_id = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        _write_bucket_manifest(storage_root, bucket_id=bucket_id, label="operator")
+        _create_committed_profile(storage_root, bucket_id=bucket_id, label="operator")
         with override_settings(cadrumo_active_profile=bucket_id):
             assert sandbox_notice_for_active_bucket() is None
 
@@ -92,7 +104,7 @@ def test_sandbox_notice_present_for_an_active_sandbox_bucket(tmp_path: Path) -> 
     """A sandbox-labelled active bucket surfaces the persistent info notice."""
     bucket_id = "62d2ab08-39f2-4811-bd2a-fe48fd105e4a"
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        _write_bucket_manifest(storage_root, bucket_id=bucket_id, label="sandbox:bakeoff")
+        _create_committed_profile(storage_root, bucket_id=bucket_id, label="sandbox:bakeoff")
         with override_settings(cadrumo_active_profile=bucket_id):
             notice = sandbox_notice_for_active_bucket()
 
@@ -107,7 +119,7 @@ def test_sandbox_banner_line_is_a_tab_delimited_sandbox_prefixed_line(tmp_path: 
     """The text-mode banner shares the exact notice message, tab-prefixed with SANDBOX."""
     bucket_id = "8f2c1a9e-4b3d-4c5e-9f6a-7b8c9d0e1f2a"
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        _write_bucket_manifest(storage_root, bucket_id=bucket_id, label="sandbox:banner-probe")
+        _create_committed_profile(storage_root, bucket_id=bucket_id, label="sandbox:banner-probe")
         with override_settings(cadrumo_active_profile=bucket_id):
             notice = sandbox_notice_for_active_bucket()
 
@@ -131,12 +143,12 @@ def test_emit_operator_json_success_prepends_sandbox_notice_when_active(
     """
     from ....core.json_contract import Notice
 
-    bucket_id = "9a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9"
+    bucket_id = "9a1b2c3d-4e5f-4071-8293-a4b5c6d7e8f9"
     caller_notice = Notice(severity=NoticeSeverity.INFO, code="probe.caller_notice", message="caller-supplied")
     result = ConfigProfileCreateResult(profile_name="probe", status=ProfileWizardStatus.CREATED, active_profile="probe")
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        _write_bucket_manifest(storage_root, bucket_id=bucket_id, label="sandbox:emit-probe")
+        _create_committed_profile(storage_root, bucket_id=bucket_id, label="sandbox:emit-probe")
         with override_settings(cadrumo_active_profile=bucket_id):
             emit_operator_json_success(
                 "config.profile.create",
@@ -158,12 +170,12 @@ def test_emit_operator_json_success_omits_sandbox_notice_when_not_sandbox(
     """A real (non-sandbox) profile emits only the caller-supplied notices."""
     from ....core.json_contract import Notice
 
-    bucket_id = "1c2d3e4f-5061-7283-94a5-b6c7d8e9f0a1"
+    bucket_id = "1c2d3e4f-5061-4283-94a5-b6c7d8e9f0a1"
     caller_notice = Notice(severity=NoticeSeverity.INFO, code="probe.caller_notice", message="caller-supplied")
     result = ConfigProfileCreateResult(profile_name="probe", status=ProfileWizardStatus.CREATED, active_profile="probe")
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        _write_bucket_manifest(storage_root, bucket_id=bucket_id, label="operator")
+        _create_committed_profile(storage_root, bucket_id=bucket_id, label="operator")
         with override_settings(cadrumo_active_profile=bucket_id):
             emit_operator_json_success(
                 "config.profile.create",

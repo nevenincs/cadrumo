@@ -77,6 +77,7 @@ from ....domain.calculations.registry import (
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
+from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record, seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
@@ -86,7 +87,6 @@ from ...aggregation import (
     RetencionScheme,
 )
 from ...calculations import CalculationObservationRepository
-from ...user_profile import ProfileRecordRepository
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -134,16 +134,15 @@ _M123_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("09", surface="_M123_
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     """Yield the active profile's real encrypted-SQLite object repository."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
-        _seed_ready_profile(profile.repository)
+        _seed_ready_profile()
         yield profile.repository
 
 
-def _seed_ready_profile(objects: SecureObjectRepository) -> None:
+def _seed_ready_profile() -> None:
     """Persist a filing-ready withholding-operator profile for annual summaries."""
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name=_PROFILE_LABEL,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="Test"),
@@ -483,9 +482,8 @@ def _attest_m111_no_retenciones_periods(
     *,
     periods: tuple[str, ...],
 ) -> None:
-    profile_repo = ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    record = profile_repo.load(_BUCKET_ID)
-    profile_repo.save(
+    record = load_test_profile_record(_BUCKET_ID)
+    replace_test_profile_record(
         record.model_copy(
             update={
                 "facts": (

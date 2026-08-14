@@ -44,8 +44,8 @@ if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede import CensalDatosResult, CensalDomicilio
     from ...domain.user_profile import UserProfileRecord
     from ..workflow import WorkflowState
+    from ._profile_record_repository import ProfileRecordRepository
     from ._projections import EffectiveFact
-    from ._repository import ProfileRecordRepository
 
 CENSO_SOURCE_TAG: Final = "aeat_censo_read"
 """``UserProfileFact.source`` value marking an AEAT-verified censo fact."""
@@ -444,8 +444,8 @@ class CensoSyncService:
         is absent / non-decimal / zero.
         """
         from ...domain.user_profile import ProfileNotFoundError
-        from ._projections import record_to_path_values
         from ._profile_record_repository import ProfileRecordRepository
+        from ._projections import record_to_path_values
 
         repository = self._profiles or ProfileRecordRepository.for_current_session(self._bucket_id)
         try:

@@ -14,12 +14,28 @@ graceful-degradation contract ``test_sdk_adaptation`` follows, never a skip.
 from __future__ import annotations
 
 import importlib.util
+from collections.abc import Iterator
+from contextlib import contextmanager
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any, cast
+from uuid import UUID
 
 import anyio
 import pytest
 
+from ....adapters.persistence.storage.custody import (
+    load_committed_profile_password_material,
+    unlock_profile_custody,
+)
 from ....agent import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
+from ....application.profile_custody import (
+    profile_bind_bucket_session,
+    profile_bucket_session_open_resumed,
+    profile_close_bucket_session,
+)
+from ....application.user_profile import register_profile_with_credentials
+from ....domain.user_profile import UserProfileFact
 from ....tests import connected_server_and_client_session as connect
 from .._harness_tools import (
     HARNESS_LOAD_TOOL,
@@ -45,6 +61,45 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _UTF_8 = "utf-8"
 _SDK_PRESENT = importlib.util.find_spec("mcp") is not None
+_PROFILE_PASSPHRASE = "harness-current-profile-credential"  # noqa: S105 - synthetic integration credential
+_READY_FACTS: tuple[UserProfileFact, ...] = (
+    UserProfileFact(path="identity.tax_id", value="00000000T"),
+    UserProfileFact(path="identity.name", value="Harness Operator"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+    UserProfileFact(path="iva.redeme_enrolled", value=False),
+    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+    UserProfileFact(path="provenance.source", value="manual_cli"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+)
+
+
+@contextmanager
+def _authenticated_current_profile(*, profile_id: str, passphrase: str, storage_root: Path) -> Iterator[None]:
+    """Bind one real current custody session after authenticating its envelope."""
+    material = load_committed_profile_password_material(UUID(profile_id), root=storage_root)
+    unlocked = unlock_profile_custody(material.envelope, passphrase, sentinel=material.sentinel)
+    instant = datetime.now(UTC)
+    session = profile_bucket_session_open_resumed(
+        bucket_id=profile_id,
+        dek=unlocked.dek,
+        idle_minutes=15,
+        opened_at=instant,
+        idle_deadline=instant + timedelta(minutes=15),
+        absolute_deadline=instant + timedelta(hours=4),
+        storage_root=storage_root,
+    )
+    profile_bind_bucket_session(session)
+    try:
+        yield
+    finally:
+        profile_close_bucket_session()
 
 
 def _shipped_skill_names() -> set[str]:
@@ -237,16 +292,20 @@ def test_floor_tool_call_returns_the_active_persona_payload() -> None:
 
 
 def test_whoami_identity_resolves_the_active_profile_label(tmp_path: Any) -> None:
-    # The identity-critical output is the human LABEL (the plaintext manifest
-    # display name), never the redacted bucket/profile UUID — the same label
-    # semantics the envelope spine carries. Driven against a real active bucket.
-    from ....tests.secure_sql import isolated_runtime_profile
+    """The identity probe reads an explicitly authenticated current capsule."""
+    from ....tests.secure_sql import isolated_profile_storage_root
 
-    with isolated_runtime_profile(tmp_path=tmp_path, label="Erika") as profile:
-        identity = build_whoami_identity()
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        outcome = register_profile_with_credentials(label="Erika", passphrase=_PROFILE_PASSPHRASE, facts=_READY_FACTS)
+        with _authenticated_current_profile(
+            profile_id=outcome.profile_id,
+            passphrase=_PROFILE_PASSPHRASE,
+            storage_root=storage_root,
+        ):
+            identity = build_whoami_identity()
 
     assert identity.active_profile == "Erika"
-    assert identity.active_profile != profile.bucket_id
+    assert identity.active_profile != outcome.profile_id
     assert identity.readiness  # a non-empty health status
     assert isinstance(identity.tax_id_present, bool)
 
@@ -308,7 +367,7 @@ def test_whoami_is_always_advertised_and_never_persona_scoped_away() -> None:
 
 
 def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> None:
-    from ....tests.secure_sql import isolated_runtime_profile
+    from ....tests.secure_sql import isolated_profile_storage_root
     from .._server import build_server
 
     descriptors = build_tool_descriptors()
@@ -317,27 +376,33 @@ def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> Non
             build_server(descriptors)
         return
 
-    with isolated_runtime_profile(tmp_path=tmp_path, label="Erika") as profile:
-        server = cast("Any", build_server(descriptors, persona=None))
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        outcome = register_profile_with_credentials(label="Erika", passphrase=_PROFILE_PASSPHRASE, facts=_READY_FACTS)
+        with _authenticated_current_profile(
+            profile_id=outcome.profile_id,
+            passphrase=_PROFILE_PASSPHRASE,
+            storage_root=storage_root,
+        ):
+            server = cast("Any", build_server(descriptors, persona=None))
 
-        async def _drive() -> None:
-            from mcp.types import TextContent
+            async def _drive() -> None:
+                from mcp.types import TextContent
 
-            async with connect(server) as session:
-                result = await session.call_tool(WHOAMI_TOOL, {})
-            assert result.is_error is False
-            assert result.structured_content is not None
-            assert result.structured_content["active_profile"] == "Erika"
-            assert result.structured_content["active_profile"] != profile.bucket_id
-            content = result.content[0]
-            assert isinstance(content, TextContent)
-            assert "Erika" in content.text
+                async with connect(server) as session:
+                    result = await session.call_tool(WHOAMI_TOOL, {})
+                assert result.is_error is False
+                assert result.structured_content is not None
+                assert result.structured_content["active_profile"] == "Erika"
+                assert result.structured_content["active_profile"] != outcome.profile_id
+                content = result.content[0]
+                assert isinstance(content, TextContent)
+                assert "Erika" in content.text
 
-        anyio.run(_drive)
+            anyio.run(_drive)
 
 
 def test_floor_response_carries_the_active_identity_block(tmp_path: Any) -> None:
-    from ....tests.secure_sql import isolated_runtime_profile
+    from ....tests.secure_sql import isolated_profile_storage_root
     from .._server import build_server
 
     descriptors = build_tool_descriptors()
@@ -346,17 +411,23 @@ def test_floor_response_carries_the_active_identity_block(tmp_path: Any) -> None
             build_server(descriptors)
         return
 
-    with isolated_runtime_profile(tmp_path=tmp_path, label="Erika"):
-        server = cast("Any", build_server(descriptors, persona=None))
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        outcome = register_profile_with_credentials(label="Erika", passphrase=_PROFILE_PASSPHRASE, facts=_READY_FACTS)
+        with _authenticated_current_profile(
+            profile_id=outcome.profile_id,
+            passphrase=_PROFILE_PASSPHRASE,
+            storage_root=storage_root,
+        ):
+            server = cast("Any", build_server(descriptors, persona=None))
 
-        async def _drive() -> None:
-            async with connect(server) as session:
-                result = await session.call_tool(HARNESS_LOAD_TOOL, {})
-            assert result.is_error is False
-            assert result.structured_content is not None
-            assert result.structured_content["identity"]["active_profile"] == "Erika"
+            async def _drive() -> None:
+                async with connect(server) as session:
+                    result = await session.call_tool(HARNESS_LOAD_TOOL, {})
+                assert result.is_error is False
+                assert result.structured_content is not None
+                assert result.structured_content["identity"]["active_profile"] == "Erika"
 
-        anyio.run(_drive)
+            anyio.run(_drive)
 
 
 def test_server_negotiates_prompts_and_resources_capabilities() -> None:

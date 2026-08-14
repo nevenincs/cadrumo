@@ -88,11 +88,8 @@ def test_config_create_then_config_show_round_trips_iva_regime(
         facts = {row["path"]: row["value"] for row in _facts_payload["facts"]}
         assert facts["iva.regime"] == "GENERAL"
 
-        from ..user_profile import (
-            ProfileRecordRepository,
-            fact_value,
-            profile_storage_session,
-        )
+        from ...tests.profile_capsule import load_test_profile_record
+        from ..user_profile import fact_value, profile_storage_session
         from ..workflow import read_profile_bucket
 
         # The bucket directory is named by the minted UUID; resolve it
@@ -100,7 +97,7 @@ def test_config_create_then_config_show_round_trips_iva_regime(
         pointer = read_profile_bucket("default")
         assert pointer is not None
         with profile_storage_session(pointer.bucket_id):
-            record = ProfileRecordRepository(bucket_id=pointer.bucket_id).load(pointer.bucket_id)
+            record = load_test_profile_record(pointer.bucket_id)
             assert fact_value(record, "iva.regime") == "GENERAL"
 
 

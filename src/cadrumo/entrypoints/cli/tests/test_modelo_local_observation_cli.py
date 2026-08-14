@@ -11,12 +11,13 @@ from pathlib import Path
 import pytest
 
 from ....application.calculations import CalculationObservationRepository, resolve_bindings_from_local_store
-from ....application.user_profile import ProfileRecordRepository, profile_storage_session
+from ....application.user_profile import profile_storage_session
 from ....core import Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
-from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from .envelope_helpers import unwrap_envelope_notices, unwrap_schema_envelope
@@ -43,8 +44,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
         schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=runtime_profile.bucket_id,
-        display_name="Sofia Scratch",
-        status=UserProfileStatus.ACTIVE,
+        setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.name", value="Sofia"),
             UserProfileFact(path="identity.surnames", value="Scratch"),
@@ -64,10 +64,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )
-    ProfileRecordRepository(
-        bucket_id=runtime_profile.bucket_id,
-        objects=runtime_profile.repository,
-    ).save(record)
+    seed_test_profile_record(record, root=runtime_profile.storage_root, label="Local observation CLI test")
 
 
 def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(

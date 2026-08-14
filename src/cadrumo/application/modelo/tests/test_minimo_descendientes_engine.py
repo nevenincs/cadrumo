@@ -46,8 +46,8 @@ from ....domain.calculations.registry import (
 )
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import ProfileRecordRepository
 from .._profile_binding import inject_derived_minimo_descendientes_facts, resolve_profile_sourced_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -270,13 +270,12 @@ def _binding_id_for_estatal(snapshot: RegistrySnapshot) -> str:
 
 
 def test_profile_binding_resolution_routes_aggregate_into_decimal_channel(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL):
         descendientes = (DescendantInfo(birth_date=date(2012, 4, 1)),)
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
-        ProfileRecordRepository(bucket_id=_BUCKET, objects=profile.repository).save(
+        seed_test_profile_record(
             UserProfileRecord(
                 profile_id=_BUCKET,
-                display_name=_PROFILE_LABEL,
                 facts=tuple(facts),
                 created_at=_T0,
                 updated_at=_T0,
@@ -298,16 +297,15 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
     tarifa(35400) - tarifa(13450) = 4,399.75 - 1,302.75 = 3,097.00 EUR.
     """
     snapshot = _snapshot(2024)
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL):
         descendientes = (
             DescendantInfo(birth_date=date(2015, 1, 1)),
             DescendantInfo(birth_date=date(2023, 1, 15)),
         )
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
-        ProfileRecordRepository(bucket_id=_BUCKET, objects=profile.repository).save(
+        seed_test_profile_record(
             UserProfileRecord(
                 profile_id=_BUCKET,
-                display_name=_PROFILE_LABEL,
                 facts=(
                     *facts,
                     UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -474,17 +472,16 @@ def test_madrid_resident_three_descendants_autonomico_exceeds_estatal() -> None:
 
 def test_profile_binding_resolution_routes_madrid_autonomico_into_decimal_channel(tmp_path: Path) -> None:
     """End-to-end: a real Madrid profile resolves the autonómico binding to Madrid's own tercer tranche."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL):
         descendientes = (
             DescendantInfo(birth_date=date(2005, 1, 1)),
             DescendantInfo(birth_date=date(2008, 1, 1)),
             DescendantInfo(birth_date=date(2012, 1, 1)),
         )
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
-        ProfileRecordRepository(bucket_id=_BUCKET, objects=profile.repository).save(
+        seed_test_profile_record(
             UserProfileRecord(
                 profile_id=_BUCKET,
-                display_name=_PROFILE_LABEL,
                 facts=(*facts, UserProfileFact(path="tax_residence.ccaa", value="madrid")),
                 created_at=_T0,
                 updated_at=_T0,

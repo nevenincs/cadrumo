@@ -119,14 +119,12 @@ def _serialise_manifest(manifest: BucketManifest) -> str:
         lines.append("last_unlocked_at =")
     else:
         lines.append(f"last_unlocked_at = {_format_scalar(manifest.last_unlocked_at)}")
-    lines.append(f"recovery_enrolled = {_format_scalar(manifest.recovery_enrolled)}")
     if manifest.idle_lock_minutes is not None:
         lines.append(f"idle_lock_minutes = {_format_scalar(manifest.idle_lock_minutes)}")
     if manifest.session_absolute_minutes is not None:
         lines.append(f"session_absolute_minutes = {_format_scalar(manifest.session_absolute_minutes)}")
     lines.append(f"key_schedule = {_format_scalar(manifest.key_schedule.value)}")
     lines.append(f"schema_version = {_format_scalar(manifest.schema_version)}")
-    lines.append(f"status = {_format_scalar(manifest.status.value)}")
     lines.append("")
     lines.append("[kdf_params]")
     lines.append(f"algorithm = {_format_scalar(kdf.algorithm)}")
@@ -225,12 +223,11 @@ def read_manifest(paths: BucketPaths) -> BucketManifest:
     durability floor predates what this build can read. Until now the manifest
     was the only persisted format with a ``schema_version`` field and no gate of
     any kind on it, so a foreign version was accepted silently and flowed into
-    the key-schedule discriminator and the plaintext lifecycle mirror.
+    the key-schedule discriminator and discovery projection.
 
     Raises:
         StorageValidationError: When the manifest cannot be read, cannot be
-            parsed, is missing the lifecycle status key, or carries a schema
-            version outside the readable range.
+            parsed, or carries a schema version outside the readable range.
     """
     target = manifest_path(paths)
     try:
@@ -246,8 +243,6 @@ def read_manifest(paths: BucketPaths) -> BucketManifest:
     payload.setdefault("last_unlocked_at", None)
     payload.setdefault("idle_lock_minutes", None)
     payload.setdefault("session_absolute_minutes", None)
-    if "status" not in payload:
-        raise manifest_validation_error("bucket manifest is missing required lifecycle status")
     manifest = BucketManifest.model_validate(payload)
     ensure_manifest_schema_readable(manifest.schema_version)
     _require_manifest_claims_its_directory(paths, manifest)

@@ -33,9 +33,9 @@ from ....domain.calculations.registry import (
     RelationId,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceResolution
-from ...user_profile import ProfileRecordRepository
 from .. import ModeloError, calculate_modelo_revision, create_work_unit
 from .._profile_binding import (
     ProfileBindingResolutionError,
@@ -84,7 +84,7 @@ def _calculation_repositories() -> tuple[
 
 
 def _store_profile(record: UserProfileRecord) -> None:
-    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(record)
+    seed_test_profile_record(record)
 
 
 def _modelo_100_snapshot() -> RegistrySnapshot:
@@ -94,7 +94,6 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
     return UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="activities.description", value="economic activity"),
@@ -157,7 +156,6 @@ def test_profile_resolution_is_empty_when_no_profile_fact_is_set() -> None:
     """A profile without the CCAA fact contributes nothing for that binding."""
     record = UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Test runtime profile",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -204,7 +202,6 @@ def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel() -> Non
     snapshot = _snapshot_with_decimal_profile_binding(_modelo_100_snapshot())
     record = UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.37")),
@@ -353,7 +350,6 @@ def _snapshot_with_bool_profile_binding(snapshot: RegistrySnapshot) -> RegistryS
 def _profile_with_bool_fact(value: bool) -> UserProfileRecord:
     return UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="entity.new_entity_override", value=value),
@@ -423,7 +419,6 @@ class TestBoolTypedProfileBinding:
         snapshot = _modelo_100_snapshot()
         bool_profile = UserProfileRecord(
             profile_id=_PROFILE_ID,
-            display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="tax_residence.ccaa", value=True),
@@ -456,7 +451,6 @@ def test_string_decimal_profile_raises_type_invalid_error_without_leaking_value(
     snapshot = _snapshot_with_decimal_profile_binding(_modelo_100_snapshot())
     record = UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="usage_ratios.business_ratio", value="not-a-decimal-secret"),

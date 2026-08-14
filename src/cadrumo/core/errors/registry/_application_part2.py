@@ -408,16 +408,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._orchestration.ProfileAlreadyRegisteredError",
-        ErrorCode(
-            code="REFUSED_PROFILE_ALREADY_REGISTERED",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.profile_already_registered",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.user_profile._registration.ProfileRegistrationError",
         ErrorCode(
             code="REFUSED_PROFILE_REGISTRATION",
@@ -443,16 +433,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_PROFILE_LOGOUT_OVERRIDE",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_profile_logout_override",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.user_profile._integrity.ProfileIntegrityError",
-        ErrorCode(
-            code="ERROR_PROFILE_CROSS_STORE_DRIFT",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_profile_cross_store_drift",
             retryable=False,
             runbook_id=None,
         ),

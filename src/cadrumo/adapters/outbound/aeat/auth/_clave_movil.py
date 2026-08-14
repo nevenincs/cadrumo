@@ -635,7 +635,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 get_master_key_provider,
             )
             from .....application.user_profile import (
-                build_lifecycle_service,
+                ProfileRecordRepository,
                 record_to_path_values,
                 record_to_values,
             )
@@ -665,15 +665,16 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 # session would decrypt under the wrong key instead of taking
                 # the explicit provider branch below.
                 if active_bucket_session_serves(bucket_id):
-                    record = build_lifecycle_service(bucket_id=bucket_id).read(bucket_id)
+                    record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
                 else:
-                    with override_settings(cadrumo_active_profile=bucket_id):
-                        service = build_lifecycle_service(bucket_id=bucket_id)
-                        with activate_master_key_provider(
+                    with (
+                        override_settings(cadrumo_active_profile=bucket_id),
+                        activate_master_key_provider(
                             get_master_key_provider(),
                             fallback_bucket_id=bucket_id,
-                        ):
-                            record = service.read(bucket_id)
+                        ),
+                    ):
+                        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
             except ProfileNotFoundError:
                 return context
 

@@ -110,13 +110,12 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
     instructive, non-silent error naming the opt-in command.
     """
     from ....domain.user_profile import UserProfileFact, UserProfileRecord
-    from ...user_profile import ProfileRecordRepository
+    from ....tests.profile_capsule import seed_test_profile_record
 
     clock = datetime(2026, 1, 1, tzinfo=UTC)
-    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="Vision opted out",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="capabilities.llm_vision", value=False),

@@ -54,7 +54,6 @@ def test_completeness_reports_a_whitespace_only_required_field_missing(blank: st
 def test_overview_and_key_authority_agree_on_whitespace_only(blank: str) -> None:
     record = UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="presence-parity-operator",
         facts=(UserProfileFact(path=_TAX_ID_PATH, value=blank),),
     )
 
@@ -71,7 +70,6 @@ def test_overview_and_key_authority_agree_on_whitespace_only(blank: str) -> None
 def test_overview_and_key_authority_agree_on_a_real_value() -> None:
     record = UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="presence-parity-operator",
         facts=(UserProfileFact(path=_TAX_ID_PATH, value="12345678Z"),),
     )
 

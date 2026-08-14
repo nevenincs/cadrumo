@@ -15,13 +15,15 @@ from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
+from sqlalchemy import select
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
+from ....adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectRow
 from ....application.calculations import M303RegimenSimplificadoAnnualSummaryHandoffError
 from ....core import BindingSourceKind, CasillaId, M303RegimenSimplificadoFact, Period
 from ....core.resources import resources
@@ -56,8 +58,9 @@ from ....domain.modelos import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence, regimen_simplificado_filing_evidence
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
-from ...user_profile import ProfileRecordRepository
+from ....tests.secure_sql import mutate_encrypted_secure_object_json
 from .. import (
     ModeloExportCommand,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -80,10 +83,9 @@ _SOURCE_CASILLA_IDS: tuple[CasillaId, ...] = ("51", "53", "52", "54", "55", "56"
 
 
 def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="M390 annual-summary handoff test",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),
                 UserProfileFact(path="identity.name", value="Test"),
@@ -416,6 +418,7 @@ def test_m390_persists_exact_ten_value_handoff_from_one_filed_current_m303_4t_re
     assert handoff.target_calculation_revision_id == result.revision.calculation_revision_id
     assert CalculationRevision.model_validate_json(result.revision.model_dump_json()) == result.revision
     persisted = calculations.load().get(result.revision.calculation_revision_id)
+    assert persisted is not None
     assert persisted == result.revision
     assert_revision_content_integrity(persisted)
 
@@ -455,6 +458,68 @@ def test_m390_persists_exact_ten_value_handoff_from_one_filed_current_m303_4t_re
     )
     assert len(provenance) == 1
     assert provenance[0].fingerprint == handoff.digest
+
+
+@pytest.mark.parametrize("corruption", ("alter_value", "delete_digest"))
+def test_m390_encrypted_calculation_catalogue_refuses_a_corrupted_populated_handoff(
+    secure_objects: SecureObjectRepository,
+    corruption: str,
+) -> None:
+    """Deleting or changing persisted non-default handoff data fails on real load.
+
+    This is the persistence-boundary anti-tautology proof for the immutable
+    annual-summary carrier: the calculation catalogue is saved through the
+    production encrypted SQLite repository, then one encrypted JSON payload is
+    changed under its actual AEAD binding.  The next repository load must not
+    silently accept the altered typed handoff.
+    """
+    _store_ready_profile(secure_objects)
+    work_units, calculations, filings, _source = _persist_presentado_source(secure_objects)
+    target = _calculate_m390_annual(
+        secure_objects,
+        work_units=work_units,
+        calculations=calculations,
+        filings=filings,
+    ).revision
+    handoff = target.m303_regimen_simplificado_annual_summary_handoff
+    assert handoff is not None
+    assert handoff.target_calculation_revision_id == target.calculation_revision_id
+    assert handoff.values[M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[0]] != Decimal("0")
+
+    definition = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
+    statement = select(SecureObjectRow).where(
+        SecureObjectRow.namespace == definition.namespace,
+        SecureObjectRow.object_key == definition.require_default_object_key(),
+    )
+
+    def mutate(document: dict[str, object]) -> None:
+        payload = document["payload"]
+        assert isinstance(payload, dict), "calculation catalogue envelope must carry an object payload"
+        revisions = payload["revisions"]
+        assert isinstance(revisions, dict), "calculation catalogue payload must carry its revision mapping"
+        stored_target = revisions[target.calculation_revision_id]
+        assert isinstance(stored_target, dict), "fixture must persist the calculated Modelo 390 revision"
+        stored_handoff = stored_target["m303_regimen_simplificado_annual_summary_handoff"]
+        assert isinstance(stored_handoff, dict), "fixture must persist the populated annual-summary handoff"
+        if corruption == "alter_value":
+            values = stored_handoff["values"]
+            assert isinstance(values, dict), "fixture must persist the handoff's ten-value mapping"
+            casilla_id = M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[0]
+            assert values[casilla_id] != "999999", "corruption value must differ from the stored handoff"
+            values[casilla_id] = "999999"
+            return
+        assert corruption == "delete_digest"
+        assert "digest" in stored_handoff, "fixture must persist the handoff digest for this proof"
+        del stored_handoff["digest"]
+
+    mutate_encrypted_secure_object_json(
+        secure_objects._engine,
+        row_statement=statement,
+        mutate=mutate,
+    )
+
+    with pytest.raises(ValidationError):
+        calculations.load()
 
 
 def test_m390_refuses_a_source_when_current_calculation_pointer_diverges_from_filed(

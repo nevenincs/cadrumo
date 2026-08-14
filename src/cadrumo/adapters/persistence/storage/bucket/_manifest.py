@@ -103,7 +103,7 @@ class BucketKeySchedule(StrEnum):
 #: bump rode an unrelated routing change without announcing itself — the axis has
 #: already moved once unobserved, on the field that decides how a bucket's bytes
 #: are unlocked.
-BUCKET_MANIFEST_SCHEMA_VERSION: Final[int] = 2
+BUCKET_MANIFEST_SCHEMA_VERSION: Final[int] = 3
 
 #: Oldest bucket-manifest schema version the read path keeps readable.
 #:
@@ -112,7 +112,7 @@ BUCKET_MANIFEST_SCHEMA_VERSION: Final[int] = 2
 #: version therefore forces an explicit decision in the same change — raise the
 #: floor too (dropping older manifests, the pre-release posture), or land a
 #: version-aware reader with an old-manifest restorability test.
-BUCKET_MANIFEST_DURABILITY_FLOOR: Final[int] = 2
+BUCKET_MANIFEST_DURABILITY_FLOOR: Final[int] = 3
 
 
 class BucketManifest(BaseModel):
@@ -129,11 +129,11 @@ class BucketManifest(BaseModel):
     created_at: datetime
     last_unlocked_at: datetime | None
     kdf_params: ManifestKdfParams
-    recovery_enrolled: bool
     idle_lock_minutes: int | None = Field(default=None, gt=0)
     session_absolute_minutes: int | None = Field(default=None, gt=0)
     key_schedule: BucketKeySchedule
     schema_version: int = Field(ge=1)
+
     @field_validator("key_schedule", mode="before")
     @classmethod
     def _coerce_key_schedule(cls, value: object) -> BucketKeySchedule:

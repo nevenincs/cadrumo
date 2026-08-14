@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field, model_validator
 from ..core import STRICT_FROZEN_CONFIG, Hex64Str
 from ..core.identity import BucketId, ContentDigest
 from ..core.time import validate_utc_aware
-from ..domain.user_profile import UserProfileStatus
+from ..domain.user_profile import ProfileSetupState
 from ._bucket_deletion_contracts import BucketDeletionFingerprint
 
 CONFIG_RESET_SCHEMA_VERSION = 1
@@ -127,7 +127,7 @@ class ConfigResetTarget(BaseModel):
 
     bucket_id: BucketId
     label: str | None = Field(default=None, min_length=1, max_length=160)
-    status_at_snapshot: UserProfileStatus | None = None
+    setup_state_at_snapshot: ProfileSetupState | None = None
     exists_at_snapshot: bool
     fingerprint: BucketDeletionFingerprint | None = None
     phase: ConfigResetTargetPhase = ConfigResetTargetPhase.SNAPSHOTTED
@@ -145,8 +145,8 @@ class ConfigResetTarget(BaseModel):
     def _validate_existence_correlation(self) -> None:
         if self.exists_at_snapshot != (self.fingerprint is not None):
             raise ValueError("existing reset target requires a deletion fingerprint")
-        if self.exists_at_snapshot != (self.label is not None and self.status_at_snapshot is not None):
-            raise ValueError("existing reset target requires label and lifecycle status")
+        if self.exists_at_snapshot != (self.label is not None):
+            raise ValueError("existing reset target requires a label")
 
     def _validate_marker_phase(self) -> None:
         if self.deletion_marker is not None and self.deletion_marker.bucket_id != self.bucket_id:

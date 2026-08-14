@@ -108,6 +108,7 @@ from ....domain.transactions import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
     CalculationSourceContext,
@@ -122,7 +123,6 @@ from ...modelo import (
     create_work_unit,
     resolve_declaration_period_inputs,
 )
-from ...user_profile import ProfileRecordRepository
 from .. import IvaWalletDecisionRepository, RelationPrefillSourceResolver
 from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
@@ -191,11 +191,10 @@ _QUARTERS_115: dict[str, dict[CasillaId, Decimal]] = {
 }
 
 
-def _seed_ready_profile(objects: SecureObjectRepository) -> None:
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+def _seed_ready_profile() -> None:
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_PROFILE_ID,
-            display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="Test"),
@@ -226,7 +225,7 @@ def _seed_ready_profile(objects: SecureObjectRepository) -> None:
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        _seed_ready_profile(profile.repository)
+        _seed_ready_profile()
         yield profile.repository
 
 

@@ -54,13 +54,13 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import ProfileRecordRepository
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import calculate_registry_snapshot
-from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ._m130_source_support import seed_m130_income_transaction
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -239,8 +239,7 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
         schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
-        display_name=_PROFILE_LABEL,
-        status=UserProfileStatus.ACTIVE,
+        setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.name", value="Projection Test Autónomo"),
             UserProfileFact(path="identity.surnames", value="Regression Harness"),
@@ -272,11 +271,7 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
         ),
     )
-    lifecycle = ProfileRecordRepository(
-        bucket_id=_PROFILE_ID,
-        objects=runtime_profile.repository,
-    )
-    lifecycle.save(record)
+    seed_test_profile_record(record, root=runtime_profile.storage_root, label="Modelo projection test profile")
 
 
 def test_modelo_project_no_units_guides_natural_m130_creation(

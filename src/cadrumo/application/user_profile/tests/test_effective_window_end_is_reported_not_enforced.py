@@ -47,7 +47,7 @@ def _warned_paths(*facts: UserProfileFact) -> set[str | None]:
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(profile_id=_PROFILE_ID, display_name="Operator", facts=facts)
+    return UserProfileRecord(profile_id=_PROFILE_ID, facts=facts)
 
 
 def test_a_closed_window_still_projects_its_value() -> None:

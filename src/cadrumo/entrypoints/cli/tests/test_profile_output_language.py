@@ -4,22 +4,17 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Iterator, Mapping, Sequence
-from pathlib import Path
+from collections.abc import Mapping, Sequence
 
 import pytest
 from click.testing import Result
 
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ._isolated_profile_storage_fixtures import _isolated_backend
+
+__all__ = ["_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
 
 
 def _invoke(args: Sequence[str], *, env: Mapping[str, str | None] | None = None) -> Result:

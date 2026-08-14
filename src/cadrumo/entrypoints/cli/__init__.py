@@ -440,7 +440,6 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     from ...application.profile_preconditions import ProfileSelectionFailure, profile_selection_failure_verdict
     from ...application.workflow import (
         ProfileLabelAmbiguousError,
-        read_profile_bucket_by_id,
         resolve_profile_bucket,
     )
     from ...core import resolve_active_bucket_id
@@ -474,23 +473,6 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     except CadrumoError:
         return
     if pointer is None:
-        try:
-            inactive_bucket = read_profile_bucket_by_id(active)
-        except CadrumoError:
-            return
-        if inactive_bucket is not None:
-            raise attach_cli_policy_verdict(
-                CliRefusedBoundaryError(
-                    translated_message="cli.config.profile.unknown_profile",
-                    context={"name": active},
-                ),
-                verdict=profile_selection_failure_verdict(
-                    ProfileSelectionFailure.INACTIVE,
-                    requested_profile=active,
-                    lifecycle_status=inactive_bucket.status.value,
-                ),
-                requested_leaf=requested_cli_leaf(ctx),
-            )
         # Not a live label either; leave resolution to the per-command active
         # profile guard, which emits the canonical no-active-profile refusal.
         return

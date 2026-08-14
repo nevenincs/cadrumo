@@ -10,10 +10,8 @@ This concrete repository is the persistence adapter for the
 :class:`~domain.justificante.Justificante` audit-sink record. It lives in
 the persistence adapter (not in :mod:`~domain.justificante`) because its
 base :class:`~adapters.persistence.storage.SecureBoundRepository` is
-SQL/crypto-coupled; the domain package owns only the pure record and its
-parser. No domain-layer caller consumes the repository, so no domain port is
-declared (the prior zero-consumer ``_protocols.py`` was removed on 2026-06-01);
-the application layer constructs this concrete directly.
+SQL/crypto-coupled; the domain package owns the pure record and the
+:class:`~domain.justificante.JustificanteRepositoryProtocol` port.
 
 See Also:
     :class:`~domain.justificante.Justificante`

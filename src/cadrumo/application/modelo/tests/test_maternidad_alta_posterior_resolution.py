@@ -56,7 +56,6 @@ def _record(*descendientes: DescendantInfo) -> UserProfileRecord:
     facts = tuple(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list(descendientes))
     return UserProfileRecord(
         profile_id=_BUCKET,
-        display_name="alta posterior resolution probe",
         facts=facts,
         created_at=_T0,
         updated_at=_T0,

@@ -75,10 +75,10 @@ class StatusFactRow:
 
 @dataclass(frozen=True, slots=True)
 class StatusProfileRow:
-    """One registered profile bucket: label, lifecycle status token, active marker."""
+    """One registered profile bucket: label, setup-state token, active marker."""
 
     label: str
-    status: str
+    setup_state: str | None = None
     active: bool = False
 
 
@@ -134,10 +134,9 @@ class StatusPageData:
     omitted entirely rather than shown blank."""
 
 
-_PROFILE_STATUS_KEYS: dict[str, str] = {
-    "active": "flows.status.profiles.status.active",
-    "setup_incomplete": "flows.status.profiles.status.setup_incomplete",
-    "tombstoned": "flows.status.profiles.status.tombstoned",
+_PROFILE_SETUP_STATE_KEYS: dict[str, str] = {
+    "complete": "flows.status.profiles.status.complete",
+    "incomplete": "flows.status.profiles.status.incomplete",
 }
 
 _ACTIVE_MARKER = "●"
@@ -267,10 +266,12 @@ class StatusApp(App[None]):
             tr("flows.status.profiles.column.active"),
         )
         for index, row in enumerate(self._data.profiles):
-            # An unmapped lifecycle token is not operator copy. It must still
+            # An unmapped setup-state token is not operator copy. It must still
             # refuse to look healthy, but without exposing the storage token.
-            status_key = _PROFILE_STATUS_KEYS.get(row.status)
-            status_label = tr(status_key) if status_key is not None else tr("flows.status.profiles.status.unknown")
+            setup_state_key = _PROFILE_SETUP_STATE_KEYS.get(row.setup_state or "")
+            status_label = (
+                tr(setup_state_key) if setup_state_key is not None else tr("flows.status.profiles.status.unknown")
+            )
             marker = _ACTIVE_MARKER if row.active else ""
             table.add_row(row.label, status_label, marker, key=f"profile-{index}")
 

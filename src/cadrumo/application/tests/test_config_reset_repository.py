@@ -107,7 +107,7 @@ def test_create_persists_canonical_bucket_identities(
     tmp_path: Path,
 ) -> None:
     """Every persisted reset identity uses the storage-wide canonical spelling."""
-    from ...domain.user_profile import UserProfileStatus
+    from ...domain.user_profile import ProfileSetupState
 
     repository = ConfigResetJournalRepository(storage_root=tmp_path)
     started_at = datetime(2026, 7, 16, 8, 0, tzinfo=UTC)
@@ -126,7 +126,7 @@ def test_create_persists_canonical_bucket_identities(
             ConfigResetTarget(
                 bucket_id=wrapped_bucket_id,
                 label="Canonical operator",
-                status_at_snapshot=UserProfileStatus.ACTIVE,
+                setup_state_at_snapshot=ProfileSetupState.COMPLETE,
                 exists_at_snapshot=True,
                 fingerprint=BucketDeletionFingerprint(
                     digest="b" * 64,
@@ -269,7 +269,7 @@ def test_repository_excludes_non_journals_and_bucket_discovery(
     (repository.root / "operator-note.txt").write_text("not a reset journal", encoding="utf-8")
 
     assert repository.list() == (operation,)
-    assert list_profile_buckets(root=tmp_path, include_tombstoned=True) == {}
+    assert list_profile_buckets(root=tmp_path) == {}
 
 
 def test_repository_refuses_linked_root_redirected_into_bucket(

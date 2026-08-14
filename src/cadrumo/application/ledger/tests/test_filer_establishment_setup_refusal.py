@@ -49,7 +49,7 @@ def _profile(postcode: str | None) -> UserProfileRecord:
     facts = (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
     if postcode is not None:
         facts = (*facts, UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value=postcode))
-    return UserProfileRecord(profile_id=_PROFILE_ID, display_name="Territory Tester", facts=facts)
+    return UserProfileRecord(profile_id=_PROFILE_ID, facts=facts)
 
 
 @pytest.mark.parametrize(

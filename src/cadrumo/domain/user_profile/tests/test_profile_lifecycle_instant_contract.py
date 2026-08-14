@@ -1,8 +1,8 @@
 """Direct domain tests: profile lifecycle and snapshot instants are UTC.
 
-``UserProfileRecord``'s ``created_at`` / ``updated_at`` / ``removed_at`` and
-``UserProfileSnapshot.created_at`` documented lifecycle instants but were
-bare ``datetime`` fields, so direct construction and encrypted hydration
+``UserProfileRecord``'s ``created_at`` / ``updated_at`` and
+``UserProfileSnapshot.created_at`` are UTC instants, so direct construction
+and encrypted hydration
 could carry naive or local-time values into live profile state.
 
 The ordering and tombstone validators on the record made that worse rather
@@ -20,7 +20,7 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
-from .._values import UserProfileFact, UserProfileRecord, UserProfileSnapshot, UserProfileStatus
+from .._values import UserProfileFact, UserProfileRecord, UserProfileSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -47,7 +47,6 @@ def test_record_refuses_a_non_utc_lifecycle_instant(field: str, instant: datetim
         UserProfileRecord.model_validate(
             {
                 "profile_id": _PROFILE_ID,
-                "display_name": "lifecycle-instant-operator",
                 "facts": _facts(),
                 **values,
             },
@@ -55,24 +54,9 @@ def test_record_refuses_a_non_utc_lifecycle_instant(field: str, instant: datetim
 
 
 @pytest.mark.parametrize("instant", _REFUSED_INSTANTS, ids=_REFUSED_IDS)
-def test_record_refuses_a_non_utc_removed_at(instant: datetime) -> None:
-    with pytest.raises(ValidationError):
-        UserProfileRecord(
-            profile_id=_PROFILE_ID,
-            display_name="lifecycle-instant-operator",
-            facts=_facts(),
-            status=UserProfileStatus.TOMBSTONED,
-            created_at=_UTC_INSTANT,
-            updated_at=_UTC_INSTANT,
-            removed_at=instant,
-        )
-
-
-@pytest.mark.parametrize("instant", _REFUSED_INSTANTS, ids=_REFUSED_IDS)
 def test_snapshot_refuses_a_non_utc_created_at(instant: datetime) -> None:
     record = UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="lifecycle-instant-operator",
         facts=_facts(),
         created_at=_UTC_INSTANT,
         updated_at=_UTC_INSTANT,
@@ -86,7 +70,6 @@ def test_record_refuses_a_non_utc_instant_from_serialized_text() -> None:
     """Hydration is the path that mattered: a stored naive value must not reload."""
     record = UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="lifecycle-instant-operator",
         facts=_facts(),
         created_at=_UTC_INSTANT,
         updated_at=_UTC_INSTANT,
@@ -101,7 +84,6 @@ def test_record_refuses_a_non_utc_instant_from_serialized_text() -> None:
 def test_a_utc_record_round_trips_canonically() -> None:
     record = UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="lifecycle-instant-operator",
         facts=_facts(),
         created_at=_UTC_INSTANT,
         updated_at=_UTC_INSTANT,

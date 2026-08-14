@@ -13,14 +13,13 @@ runtime, and the real encrypted-SQLite profile store.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from pathlib import Path
-
 import pytest
 
 from ....core.i18n import tr
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ._isolated_profile_storage_fixtures import _isolated_backend
+
+__all__ = ["_isolated_backend"]
 from ._profile_cli_support import (
     create_quiet_profile as _create_profile,
 )
@@ -48,12 +47,6 @@ _M303_IVA_FACT_ARGS = (
     "--no-iva-voluntary-sii-enrolled",
     "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
 )
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
 
 
 def _registered_profile_exists(name: str) -> bool:

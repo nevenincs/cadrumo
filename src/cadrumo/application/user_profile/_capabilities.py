@@ -32,7 +32,7 @@ from ...core import STRICT_FROZEN_CONFIG, ServiceCapability
 from ...core.config import Settings, load_settings
 from ...core.parsing import parse_bool
 from ...domain.user_profile import UserProfileRecord
-from ._orchestration import fact_value
+from ._projections import record_to_path_values
 
 __all__ = [
     "CapabilityDecision",
@@ -122,7 +122,8 @@ def resolve_capability(
         )
     # llm_vision / google_export: profile fact, else the conservative default. No
     # safety-floor bar — vision is on-host, google export is non-sensitive.
-    fact = _parse_bool_fact(fact_value(profile_record, capability.schema_path))
+    values = record_to_path_values(profile_record) if profile_record is not None else {}
+    fact = _parse_bool_fact(values.get(capability.schema_path))
     if fact is not None:
         return CapabilityDecision(
             capability=capability,

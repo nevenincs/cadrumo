@@ -22,12 +22,11 @@ runtime, and the real encrypted-SQLite profile store.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from pathlib import Path
-
 import pytest
 
-from ....tests.secure_sql import isolated_profile_storage_root
+from ._isolated_profile_storage_fixtures import _isolated_backend
+
+__all__ = ["_isolated_backend"]
 from ._profile_cli_support import (
     create_quiet_profile as _create_profile,
 )
@@ -39,12 +38,6 @@ from ._profile_cli_support import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
 
 
 def test_incn_prior_12_months_flag_stores_the_decimal_fact() -> None:

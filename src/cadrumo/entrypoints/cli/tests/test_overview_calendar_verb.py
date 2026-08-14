@@ -792,7 +792,6 @@ def test_all_profiles_flag_iterates_every_registered_profile() -> None:
                 state,
                 profile_id="22222222-2222-4222-8222-222222222222",
                 display_name="Second Operator",
-                enforce_unique_tax_id=False,
             ),
         )
 
@@ -835,7 +834,6 @@ def test_operator_manual_censo_facts_are_never_treated_as_aeat_verified() -> Non
 
     record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Operator-declared censo",
         facts=(
             UserProfileFact(
                 path="activities.iae_epigraph",

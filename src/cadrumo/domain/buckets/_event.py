@@ -162,8 +162,6 @@ class BucketEventType(StrEnum):
     PROFILE_SELECTED = "profile.selected"
     PROFILE_VALUES_UPDATED = "profile.values.updated"
     PROFILE_VALUES_CLEARED = "profile.values.cleared"
-    PROFILE_TOMBSTONED = "profile.tombstoned"
-    PROFILE_REACTIVATED = "profile.reactivated"
     PROFILE_DUPLICATED = "profile.duplicated"
     PROFILE_RENAMED = "profile.renamed"
     PROFILE_EXPORTED = "profile.exported"

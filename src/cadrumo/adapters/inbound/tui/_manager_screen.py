@@ -18,8 +18,7 @@ ordering. Completeness names the schema-required information still missing
 
 The screen owns no profile logic. The page content is
 :func:`~cadrumo.application.user_profile.build_profile_overview`, and an
-edit is :func:`~cadrumo.application.user_profile.set_active_field` — the
-same door every other write path uses.
+edit is an authenticated revision-bound fact command.
 
 See Also:
     :class:`~cadrumo.application.user_profile.ProfileOverview`
