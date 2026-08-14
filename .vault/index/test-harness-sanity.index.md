@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:0a8cd26a52dd95afe798818ec532be4aa92c90aacca557b18f9acbece6e0ecfe'
+body_hash: 'sha256:f8af726150c0a8a379c94ace3f0cbfb0630c9a08123f367af8e1a903875c4f89'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -18,6 +18,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P18-S55]]'
   - '[[2026-08-14-test-harness-sanity-W07-P18-S56]]'
   - '[[2026-08-14-test-harness-sanity-W07-P19-S57]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P19-S58]]'
   - '[[2026-08-14-test-harness-sanity-W07-P19-S60]]'
   - '[[2026-08-14-test-harness-sanity-W07-P20-S61]]'
   - '[[2026-08-14-test-harness-sanity-W07-P20-S62]]'
@@ -73,6 +74,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P18-S55` - Canonicalize the exact secure-object-repository cluster without merging its divergent shape
 - `2026-08-14-test-harness-sanity-W07-P18-S56` - Canonicalize fixed-master-key fixtures across persistence storage tests
 - `2026-08-14-test-harness-sanity-W07-P19-S57` - Canonicalize isolated profile-storage fixtures used by wizard and CLI profile tests
+- `2026-08-14-test-harness-sanity-W07-P19-S58` - Canonicalize the overview CLI backend fixture shape at its narrowest owner
 - `2026-08-14-test-harness-sanity-W07-P19-S60` - Canonicalize schema-loader fixtures while preserving proven scope
 - `2026-08-14-test-harness-sanity-W07-P20-S61` - Remove local redeclarations of the canonical modelo repositories fixture
 - `2026-08-14-test-harness-sanity-W07-P20-S62` - Canonicalize the M130 committed registry snapshot family

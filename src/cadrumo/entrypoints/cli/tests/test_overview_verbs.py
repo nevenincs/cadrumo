@@ -19,10 +19,8 @@ from __future__ import annotations
 
 import json
 import time
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import click
 import pytest
@@ -31,8 +29,6 @@ from dev.ci.perf_measurement import CPU_CONTENTION_MARGIN
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....application.operator_actions import ActionReference
-from ....application.user_profile import profile_create_storage_span
-from ....application.workflow import workflow_state_repository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.json_contract import ResolvedNoticeAction
 from ....domain.calculations.registry import RegistrySnapshotRef
@@ -46,12 +42,14 @@ from ....domain.filing import (
 from ....domain.submission import ModeloDraftStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.filing import build_registry_filing_draft
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 from .._common import resolve_notice_action
 from .envelope_helpers import unwrap_envelope_notices
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.usefixtures("_isolated_backend"),
+]
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
@@ -70,18 +68,6 @@ def _snapshot_ref(*, modelo: str, period: Period, revision_id: str) -> RegistryS
         modelo_year=period.filing_year,
         period=period.registry_token,
     )
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
-    ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
-        )
-        yield
 
 
 # ---------------------------------------------------------------------------
