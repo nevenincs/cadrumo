@@ -32,7 +32,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ...core.resources import resources
-from ...domain.calculations.registry import RevisionId
+from ...domain.calculations.registry import RevisionId, select_revision
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,8 +54,16 @@ def revision_carry_outcome(
     """Return the single law-determined decision for a carried revision stamp.
 
     Uses
-    :meth:`~domain.calculations.registry.ValidatedRegistryAuthority.inspect_revision`
+    :func:`~domain.calculations.registry.select_revision`
     to resolve the current law-determined revision for the source context.
+    Deliberately NOT
+    :meth:`~domain.calculations.registry.ValidatedRegistryAuthority.inspect_revision`:
+    that method calls ``validate_registry()`` unconditionally, which validates
+    the ENTIRE tree rather than the one modelo this gate cares about, so a gap
+    anywhere else in the registry would refuse a carry re-confirmation that has
+    nothing to do with it. ``select_revision`` is a pure function over an
+    already-loaded :class:`~domain.calculations.registry.ModeloDefinition`
+    and performs no validation at all.
 
     - Indeterminate (source context fails to resolve) → carry refused. Current
       observations must be re-confirmable against the law-determined revision;
@@ -76,8 +84,9 @@ def revision_carry_outcome(
         plus the refusal reason when the stamp diverges or cannot be re-confirmed.
     """
     try:
-        inspection = resources().modelos.authority.inspect_revision(
-            source_modelo,
+        authority = resources().modelos.authority
+        revision = select_revision(
+            authority.modelo(source_modelo),
             filing_year=source_filing_year,
             period=source_period,
         )
@@ -87,7 +96,7 @@ def revision_carry_outcome(
             selected_revision_id=None,
             detail=f"revision selection failed: {type(exc).__name__}",
         )
-    selected_revision_id = inspection.revision_id
+    selected_revision_id = revision.id
     if stamped_revision_id != selected_revision_id:
         return RevisionCarryOutcome(
             refused=True,

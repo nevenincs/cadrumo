@@ -26,7 +26,7 @@ from .._record_design import (
     extract_record_design_pdf,
     extract_record_design_pdf_bytes,
 )
-from .._schema import DataBindingDefinition
+from .._schema import DataBindingDefinition, ModeloRevision
 from ._registry_schema_support import _committed_registry_tree
 
 __all__ = [
@@ -127,10 +127,12 @@ def _page_one_data_type(offset: int, type_code: str) -> str:
 
 def _fixed_export_selectors(
     bindings: Iterable[DataBindingDefinition],
+    *,
+    revision: ModeloRevision,
 ) -> tuple[tuple[DataBindingDefinition, BindingFixedExportSelector], ...]:
     members: list[tuple[DataBindingDefinition, BindingFixedExportSelector]] = []
     for binding in bindings:
-        selector = binding_export_selector(binding)
+        selector = binding_export_selector(binding, revision=revision)
         if isinstance(selector, BindingFixedExportSelector):
             members.append((binding, selector))
     return tuple(members)
