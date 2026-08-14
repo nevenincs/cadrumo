@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:9d2e742f9b7589dec4fee42d42c8c008333414974811e28d403d4f571f49723e'
+body_hash: 'sha256:2a2b7a85cf1be6bb55fe514a2dd59dc6ce6c75cfdac8f9d45263dc729b2e7502'
 related:
   - "[[2026-08-14-registry-campaign-sequencing-audit]]"
 ---

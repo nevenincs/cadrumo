@@ -8,7 +8,7 @@ from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
 
-from ..core import ForeignAssetObligationGroup, Modelo
+from ..core import ForeignAssetObligationGroup, Modelo, RevisionReviewStatus
 from ..core.resources import resources
 from ..domain.calculations.registry import (
     ModeloRevision,
@@ -45,6 +45,26 @@ class ForeignAssetDeclarationThreshold:
     redeclaration_increase_delta_eur: Decimal
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
+    revision_review_status: RevisionReviewStatus
+    """Whether a human has attested the revision these figures were read from.
+
+    Carried beside ``legal_refs`` and ``source_refs`` because it is the same kind
+    of fact: provenance travelling with the value. Obligation is answered from an
+    unattested revision on purpose — refusing would make a legal duty
+    unanswerable rather than merely unfilable — but the answer then rests on a
+    figure nobody has verified, and a taxpayer told they fall BELOW a wrong
+    threshold misses a penalised filing obligation silently.
+
+    This field only makes that knowable. It is not a disposition and it lets no
+    gate pass: the filing path still refuses an unattested revision. Surfacing it
+    to the operator belongs at the CLI envelope's ``notices`` channel, which no
+    caller of this module currently reaches.
+    """
+
+    @property
+    def is_operator_attested(self) -> bool:
+        """Whether the figures rest on a revision a human has signed off."""
+        return self.revision_review_status is RevisionReviewStatus.OPERATOR_REVIEWED
 
 
 def foreign_asset_declaration_thresholds(
@@ -60,16 +80,19 @@ def foreign_asset_declaration_thresholds(
     would make the obligation unanswerable rather than merely unfilable. The filing
     path builds its own filing-grade snapshot when it files.
     """
-    inspection = resources().modelos.authority.inspect_revision(
+    authority = resources().modelos.authority
+    inspection = authority.inspect_revision(
         modelo,
         filing_year=filing_year,
         period=_ANNUAL_PERIOD,
         on=date(filing_year, 12, 31),
     )
+    selected = authority.modelo(modelo).revisions[inspection.revision_id]
     return foreign_asset_declaration_thresholds_for_parameters(
         modelo=modelo,
         parameters=inspection.parameters,
         filing_date=date(filing_year, 12, 31),
+        revision_review_status=selected.review_status,
     )
 
 
@@ -92,6 +115,7 @@ def foreign_asset_declaration_thresholds_for_revision(
         modelo=modelo,
         parameters=revision.parameters,
         filing_date=filing_date,
+        revision_review_status=revision.review_status,
     )
 
 
@@ -100,6 +124,7 @@ def foreign_asset_declaration_thresholds_for_parameters(
     modelo: str,
     parameters: Sequence[ParameterDefinition],
     filing_date: date,
+    revision_review_status: RevisionReviewStatus,
 ) -> Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold]:
     """Resolve the thresholds from a already-selected revision's parameter declarations.
 
@@ -111,6 +136,9 @@ def foreign_asset_declaration_thresholds_for_parameters(
         modelo: The Modelo 720/721 code the thresholds are declared under.
         parameters: The selected revision's parameter declarations.
         filing_date: The date used to resolve a date-scoped parameter value.
+        revision_review_status: The selected revision's attestation stamp, carried
+            onto every threshold so a consumer can tell whether the figures rest
+            on a revision a human has verified.
     """
     try:
         modelo_member = Modelo(modelo)
@@ -137,6 +165,7 @@ def foreign_asset_declaration_thresholds_for_parameters(
             redeclaration_increase_delta_eur=redeclaration_value,
             legal_refs=legal_refs,
             source_refs=source_refs,
+            revision_review_status=revision_review_status,
         )
         for group in groups
     }
