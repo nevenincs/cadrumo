@@ -41,19 +41,15 @@ from ._declarations_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    return validated_casilla_id(value, surface="test casilla id")
-
-
-_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
-    "iva.compensacion-pendiente-periodos-anteriores",
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores"
 )
-_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
-_M303_POSTERIOR_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
-_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
-_M303_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
-_M303_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
-_M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = _casilla_id("87")
+_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
+_M303_POSTERIOR_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+_M303_GENERADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-generada-periodo")
+_M303_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = validated_casilla_id("87")
 
 
 def test_authoritative_declaration_selection_uses_latest_alta_row_for_duplicate_period() -> None:

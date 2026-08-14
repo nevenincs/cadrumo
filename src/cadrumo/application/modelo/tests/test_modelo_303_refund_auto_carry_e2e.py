@@ -97,15 +97,8 @@ _FILE_AT = datetime(2026, 7, 15, 10, 0, 0, tzinfo=UTC)
 _CARRY_RELATION: RelationId = "modelo-303-rel-self-compensacion-anteriores"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M303 refund auto-carry fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
-_SALDO_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+_SALDO_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
 
 #: A negative-result M303 credit scenario: cuota soportada (interiores) exceeds
 #: cuota repercutida, so the régimen-general result is negative — the IVA credit

@@ -35,44 +35,48 @@ from ._generator_shared import (
 # regex don't depend on page layout, only on line text.
 
 
-def _casilla_id(value: object) -> CasillaId:
-    return validated_casilla_id(value, surface="modelo_303_pdf_fixture._LABELS")
-
-
 _LABELS: Mapping[CasillaId, str] = {
-    _casilla_id("01"): "Base imponible tipo general",
-    _casilla_id("02"): "Tipo impositivo general (%)",
-    _casilla_id("03"): "Cuota repercutida tipo general",
-    _casilla_id("04"): "Base imponible tipo reducido",
-    _casilla_id("05"): "Tipo impositivo reducido (%)",
-    _casilla_id("06"): "Cuota repercutida tipo reducido",
-    _casilla_id("07"): "Base imponible tipo superreducido",
-    _casilla_id("08"): "Tipo impositivo superreducido (%)",
-    _casilla_id("09"): "Cuota repercutida tipo superreducido",
-    _casilla_id("28"): "Autoconsumo de bienes y servicios — base",
-    _casilla_id("29"): "Autoconsumo de bienes y servicios — cuota",
-    _casilla_id("30"): "Adquisiciones intracomunitarias — base",
-    _casilla_id("31"): "Adquisiciones intracomunitarias — cuota",
-    _casilla_id("32"): "Otros supuestos — base",
-    _casilla_id("33"): "Otros supuestos — cuota",
-    _casilla_id("34"): "IVA soportado operaciones interiores — base",
-    _casilla_id("35"): "IVA soportado operaciones interiores — cuota",
-    _casilla_id("36"): "IVA soportado importaciones — base",
-    _casilla_id("37"): "IVA soportado importaciones — cuota",
-    _casilla_id("38"): "IVA soportado intracomunitarias — base",
-    _casilla_id("39"): "IVA soportado intracomunitarias — cuota",
-    _casilla_id("40"): "IVA soportado bienes inversion — base",
-    _casilla_id("41"): "IVA soportado bienes inversion — cuota",
-    _casilla_id("42"): "Compensaciones régimen especial agrícola",
-    _casilla_id("43"): "Regularización de bienes de inversión",
-    _casilla_id("44"): "Suma IVA soportado deducible",
-    _casilla_id("45"): "Resultado régimen general (cuotas devengadas - cuotas deducibles)",
-    _casilla_id("64"): "Resultado de la liquidación antes de compensaciones",
-    _casilla_id("65"): "Compensaciones de períodos anteriores aplicadas",
-    _casilla_id("66"): "Resultado tras compensaciones",
-    _casilla_id("67"): "Entregas intracomunitarias y exportaciones",
-    _casilla_id("69"): "Resultado final antes del ingreso",
-    _casilla_id("71"): "Resultado a ingresar / a devolver",
+    validated_casilla_id("01", surface="modelo_303_pdf_fixture._LABELS"): "Base imponible tipo general",
+    validated_casilla_id("02", surface="modelo_303_pdf_fixture._LABELS"): "Tipo impositivo general (%)",
+    validated_casilla_id("03", surface="modelo_303_pdf_fixture._LABELS"): "Cuota repercutida tipo general",
+    validated_casilla_id("04", surface="modelo_303_pdf_fixture._LABELS"): "Base imponible tipo reducido",
+    validated_casilla_id("05", surface="modelo_303_pdf_fixture._LABELS"): "Tipo impositivo reducido (%)",
+    validated_casilla_id("06", surface="modelo_303_pdf_fixture._LABELS"): "Cuota repercutida tipo reducido",
+    validated_casilla_id("07", surface="modelo_303_pdf_fixture._LABELS"): "Base imponible tipo superreducido",
+    validated_casilla_id("08", surface="modelo_303_pdf_fixture._LABELS"): "Tipo impositivo superreducido (%)",
+    validated_casilla_id("09", surface="modelo_303_pdf_fixture._LABELS"): "Cuota repercutida tipo superreducido",
+    validated_casilla_id("28", surface="modelo_303_pdf_fixture._LABELS"): "Autoconsumo de bienes y servicios — base",
+    validated_casilla_id("29", surface="modelo_303_pdf_fixture._LABELS"): "Autoconsumo de bienes y servicios — cuota",
+    validated_casilla_id("30", surface="modelo_303_pdf_fixture._LABELS"): "Adquisiciones intracomunitarias — base",
+    validated_casilla_id("31", surface="modelo_303_pdf_fixture._LABELS"): "Adquisiciones intracomunitarias — cuota",
+    validated_casilla_id("32", surface="modelo_303_pdf_fixture._LABELS"): "Otros supuestos — base",
+    validated_casilla_id("33", surface="modelo_303_pdf_fixture._LABELS"): "Otros supuestos — cuota",
+    validated_casilla_id("34", surface="modelo_303_pdf_fixture._LABELS"): "IVA soportado operaciones interiores — base",
+    validated_casilla_id(
+        "35", surface="modelo_303_pdf_fixture._LABELS"
+    ): "IVA soportado operaciones interiores — cuota",
+    validated_casilla_id("36", surface="modelo_303_pdf_fixture._LABELS"): "IVA soportado importaciones — base",
+    validated_casilla_id("37", surface="modelo_303_pdf_fixture._LABELS"): "IVA soportado importaciones — cuota",
+    validated_casilla_id("38", surface="modelo_303_pdf_fixture._LABELS"): "IVA soportado intracomunitarias — base",
+    validated_casilla_id("39", surface="modelo_303_pdf_fixture._LABELS"): "IVA soportado intracomunitarias — cuota",
+    validated_casilla_id("40", surface="modelo_303_pdf_fixture._LABELS"): "IVA soportado bienes inversion — base",
+    validated_casilla_id("41", surface="modelo_303_pdf_fixture._LABELS"): "IVA soportado bienes inversion — cuota",
+    validated_casilla_id("42", surface="modelo_303_pdf_fixture._LABELS"): "Compensaciones régimen especial agrícola",
+    validated_casilla_id("43", surface="modelo_303_pdf_fixture._LABELS"): "Regularización de bienes de inversión",
+    validated_casilla_id("44", surface="modelo_303_pdf_fixture._LABELS"): "Suma IVA soportado deducible",
+    validated_casilla_id(
+        "45", surface="modelo_303_pdf_fixture._LABELS"
+    ): "Resultado régimen general (cuotas devengadas - cuotas deducibles)",
+    validated_casilla_id(
+        "64", surface="modelo_303_pdf_fixture._LABELS"
+    ): "Resultado de la liquidación antes de compensaciones",
+    validated_casilla_id(
+        "65", surface="modelo_303_pdf_fixture._LABELS"
+    ): "Compensaciones de períodos anteriores aplicadas",
+    validated_casilla_id("66", surface="modelo_303_pdf_fixture._LABELS"): "Resultado tras compensaciones",
+    validated_casilla_id("67", surface="modelo_303_pdf_fixture._LABELS"): "Entregas intracomunitarias y exportaciones",
+    validated_casilla_id("69", surface="modelo_303_pdf_fixture._LABELS"): "Resultado final antes del ingreso",
+    validated_casilla_id("71", surface="modelo_303_pdf_fixture._LABELS"): "Resultado a ingresar / a devolver",
 }
 
 _IDS_IN_ORDER: tuple[CasillaId, ...] = tuple(_LABELS.keys())

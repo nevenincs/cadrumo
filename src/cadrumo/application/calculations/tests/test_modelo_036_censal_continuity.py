@@ -70,15 +70,8 @@ _CLOCK_N = datetime(2025, 3, 1, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2026, 6, 15, 10, 0, 0, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M036 censal fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_EVENT_KIND_CASILLA: CasillaId = _casilla_id("decl.event-kind")
-_VIGENCIA_2025_CASILLA: CasillaId = _casilla_id("decl.vigencia-2025")
+_EVENT_KIND_CASILLA: CasillaId = validated_casilla_id("decl.event-kind")
+_VIGENCIA_2025_CASILLA: CasillaId = validated_casilla_id("decl.vigencia-2025")
 
 # The vigencia normativa value (informational casilla "decl.vigencia-2025").
 # Non-default string so a drop-then-default regression surfaces as inequality.

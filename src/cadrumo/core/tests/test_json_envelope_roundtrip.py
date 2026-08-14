@@ -61,20 +61,13 @@ _OBJECT_KEY = "wallet:2026-secret"
 _OTHER_OBJECT_KEY = "wallet:2026-other"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"JSON envelope fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_IVA_DEVENGADO_CASILLA: CasillaId = _casilla_id("iva.devengado")
-_IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.deducible")
-_IVA_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
-_RENDIMIENTO_NETO_CASILLA: CasillaId = _casilla_id("rendimiento_neto")
-_INGRESOS_CASILLA: CasillaId = _casilla_id("ingresos")
-_GASTOS_DEDUCIBLES_CASILLA: CasillaId = _casilla_id("gastos_deducibles")
-_SIMPLE_CASILLA: CasillaId = _casilla_id("01")
+_IVA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id("iva.devengado")
+_IVA_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id("iva.deducible")
+_IVA_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("rendimiento_neto")
+_INGRESOS_CASILLA: CasillaId = validated_casilla_id("ingresos")
+_GASTOS_DEDUCIBLES_CASILLA: CasillaId = validated_casilla_id("gastos_deducibles")
+_SIMPLE_CASILLA: CasillaId = validated_casilla_id("01")
 _IVA_RESULTADO_OPERANDS = (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
 _RENDIMIENTO_NETO_OPERANDS = (_INGRESOS_CASILLA, _GASTOS_DEDUCIBLES_CASILLA)
 

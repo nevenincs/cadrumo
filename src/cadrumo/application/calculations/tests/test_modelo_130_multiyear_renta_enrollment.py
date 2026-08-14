@@ -92,26 +92,19 @@ _PREV_YEAR_BINDING: BindingId = "irpf.previous_year_economic_activity_net_income
 _CARRY_FORWARD_BINDING: BindingId = "modelo-130-resultados-negativos-anteriores"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M130 multiyear fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
-_M130_GASTOS_CASILLA: CasillaId = _casilla_id("02")
-_M130_PREVIOUS_PAYMENTS_CASILLA: CasillaId = _casilla_id("05")
-_M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
-_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
-_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = _casilla_id("10")
-_MINORACION_CASILLA: CasillaId = _casilla_id("13")
-_M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
-_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
-_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
-_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = _casilla_id("1479")
-_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = _casilla_id("1553")
-_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = _casilla_id("1577")
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
+_M130_PREVIOUS_PAYMENTS_CASILLA: CasillaId = validated_casilla_id("05")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10")
+_MINORACION_CASILLA: CasillaId = validated_casilla_id("13")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
+_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
+_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")
+_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = validated_casilla_id("1479")
+_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = validated_casilla_id("1553")
+_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = validated_casilla_id("1577")
 
 #: Prior-year (renta year N) M100 actividad-económica net income, seeded as a
 #: real annual observation. €8000 falls in the ≤9000 minoración band, so renta

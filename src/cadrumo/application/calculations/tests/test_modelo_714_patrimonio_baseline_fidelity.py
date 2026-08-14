@@ -81,19 +81,12 @@ _CLOCK_N = datetime(2024, 5, 15, 10, 0, 0, tzinfo=UTC)  # M714 deadline window ~
 _CLOCK_N_PLUS_1 = datetime(2025, 5, 15, 10, 0, 0, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M714 patrimonio fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
-_PATRIMONIO_BASE_IMPONIBLE_CASILLA: CasillaId = _casilla_id("patrimonio.base-imponible")
-_PATRIMONIO_BASE_LIQUIDABLE_CASILLA: CasillaId = _casilla_id("patrimonio.base-liquidable")
-_PATRIMONIO_CUOTA_INTEGRA_CASILLA: CasillaId = _casilla_id("patrimonio.cuota-integra")
-_PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA: CasillaId = _casilla_id("patrimonio.total-cuota-integra")
-_PATRIMONIO_CUOTA_A_INGRESAR_CASILLA: CasillaId = _casilla_id("patrimonio.cuota-a-ingresar")
+_DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")
+_PATRIMONIO_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id("patrimonio.base-imponible")
+_PATRIMONIO_BASE_LIQUIDABLE_CASILLA: CasillaId = validated_casilla_id("patrimonio.base-liquidable")
+_PATRIMONIO_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("patrimonio.cuota-integra")
+_PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("patrimonio.total-cuota-integra")
+_PATRIMONIO_CUOTA_A_INGRESAR_CASILLA: CasillaId = validated_casilla_id("patrimonio.cuota-a-ingresar")
 
 
 def _find_observation(repo: CalculationObservationRepository, *, filing_year: int, period: str):

@@ -45,7 +45,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import BindingId
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
@@ -58,7 +58,7 @@ from ....tests.profile_capsule import (
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...user_profile import record_to_path_values
-from ...workflow import workflow_state_repository
+from ...workflow import WorkflowState
 from .. import calculate_modelo_revision_from_bucket_aggregation, create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -123,10 +123,6 @@ _UNRELATED_PROFILE_BINDINGS: tuple[BindingId, ...] = (
 )
 
 
-def _casilla_id(value: str) -> CasillaId:
-    return validated_casilla_id(value, surface="test_derived_aggregate_override_real_path.casilla")
-
-
 def _non_mesh_zero_bindings() -> dict[BindingId, Decimal]:
     """Zero-default every M100 binding the live bucket mesh does not own."""
     snapshot = resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
@@ -158,13 +154,15 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_BUCKET),
     ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id=_BUCKET,
-                display_name="derived override probe",
-                overrides=overrides,
-            ),
+        # Seeded through a detached WorkflowState, never a repository read:
+        # the capsule publishes by an atomic no-replace rename onto
+        # ``buckets/<profile-id>``, which a workflow-state repository
+        # construction would otherwise materialise first and collide with.
+        register_minimal_profile(
+            WorkflowState(),
+            profile_id=_BUCKET,
+            display_name="derived override probe",
+            overrides=overrides,
         )
         yield
 
@@ -189,7 +187,11 @@ def _calculate_estatal_minimo() -> Decimal:
         binding_values=_non_mesh_zero_bindings(),
         clock=_T0,
     )
-    return Decimal(revision.casilla_values[_casilla_id(_ESTATAL_CASILLA)])
+    return Decimal(
+        revision.casilla_values[
+            validated_casilla_id(_ESTATAL_CASILLA, surface="test_derived_aggregate_override_real_path.casilla")
+        ]
+    )
 
 
 def _store_sentinel_at_derived_path() -> None:

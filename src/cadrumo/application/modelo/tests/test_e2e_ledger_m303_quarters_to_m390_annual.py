@@ -125,23 +125,16 @@ type StoredIvaByPeriod = dict[str, dict[StoredIvaAxis, Decimal]]
 type ComputedM303CasillasByPeriod = dict[str, dict[CasillaId, Decimal]]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"ledger M303/M390 E2E fixture casilla key {value!r} is not a CasillaId") from exc
-
-
 # M303 computed-output casillas the M390 reconciliation relations fold.
-_DEVENGADA_TOTAL: CasillaId = _casilla_id("iva.cuota-devengada-total")
-_DEDUCIBLE_TOTAL: CasillaId = _casilla_id("iva.cuota-deducible-total")
-_RESULTADO: CasillaId = _casilla_id("iva.resultado-regimen-general")
-_CASILLA_59: CasillaId = _casilla_id("59")
+_DEVENGADA_TOTAL: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+_DEDUCIBLE_TOTAL: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
+_RESULTADO: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
+_CASILLA_59: CasillaId = validated_casilla_id("59")
 
 # M390 annual reconciliation casillas (folded from the four M303 quarters).
-_M390_DEVENGADA: CasillaId = _casilla_id("iva.anual.reconciliacion.devengada-303")
-_M390_DEDUCIBLE: CasillaId = _casilla_id("iva.anual.reconciliacion.deducible-303")
-_M390_RESULTADO: CasillaId = _casilla_id("iva.anual.reconciliacion.resultado-303")
+_M390_DEVENGADA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.devengada-303")
+_M390_DEDUCIBLE: CasillaId = validated_casilla_id("iva.anual.reconciliacion.deducible-303")
+_M390_RESULTADO: CasillaId = validated_casilla_id("iva.anual.reconciliacion.resultado-303")
 
 # Laura / Taller Sol annual IVA scenario. Domestic 21% issued and received
 # invoice rows drive the normal M303 cuota totals. Q2 additionally carries an

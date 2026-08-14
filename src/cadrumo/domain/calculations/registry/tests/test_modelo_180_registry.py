@@ -24,17 +24,10 @@ from ._registry_schema_support import _committed_modelo, _committed_snapshot
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"Modelo 180 registry fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M115_BASE_CASILLA: CasillaId = _casilla_id("02")
-_M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
-_M180_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
-_M180_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
+_M115_BASE_CASILLA: CasillaId = validated_casilla_id("02")
+_M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("decl.total-perceptores")
+_M180_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.base-total")
+_M180_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.retenciones-total")
 _M180_2023_AMENDMENT_REF = "orden-hfp-1284-2023:art-7"
 _M180_HISTORICAL_PROFILE_TARGET_LEGAL_REFS = frozenset(
     [

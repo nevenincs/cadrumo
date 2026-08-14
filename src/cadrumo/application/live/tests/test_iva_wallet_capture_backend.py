@@ -37,7 +37,7 @@ from ...calculations import (
     IvaWalletDecisionRepository,
     iva_wallet_decision_key,
 )
-from ...workflow import workflow_state_repository
+from ...workflow import WorkflowState
 from .. import load_iva_remote_state, persist_and_reconcile_iva_compensation_wallet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -378,9 +378,12 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
 def test_remote_iva_evidence_reload_opens_active_profile_session_without_cli_bootstrap(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         with open_test_profile_session(_SESSION_BUCKET_ID):
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id=_SESSION_BUCKET_ID),
-            )
+            # Seeded through a detached WorkflowState, never a repository
+            # read: the capsule publishes by an atomic no-replace rename
+            # onto ``buckets/<profile-id>``, which a workflow-state
+            # repository construction would otherwise materialise first
+            # and collide with.
+            register_minimal_profile(WorkflowState(), profile_id=_SESSION_BUCKET_ID)
             IvaCompensationHistoryRepository().save_period(
                 IvaCompensationPeriodState(
                     provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,

@@ -31,23 +31,20 @@ from ..errors import CoreValidationError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test result-disposition casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"result-disposition fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M303_RESULT_CASILLA: Final[CasillaId] = _casilla_id("71")
-_M130_RESULT_CASILLA: Final[CasillaId] = _casilla_id("19")
-_M131_RESULT_CASILLA: Final[CasillaId] = _casilla_id("15")
-_M111_RESULT_CASILLA: Final[CasillaId] = _casilla_id("30")
-_M115_RESULT_CASILLA: Final[CasillaId] = _casilla_id("05")
-_M123_RESULT_CASILLA: Final[CasillaId] = _casilla_id("14")
-_M123_2019_2023_RESULT_CASILLA: Final[CasillaId] = _casilla_id("08")
-_M200_RESULT_CASILLA: Final[CasillaId] = _casilla_id("DP200014B:00599")
-_M202_402_RESULT_CASILLA: Final[CasillaId] = _casilla_id("03")
-_M202_403_RESULT_CASILLA: Final[CasillaId] = _casilla_id("34")
+_M303_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("71", surface="test result-disposition casilla id")
+_M130_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("19", surface="test result-disposition casilla id")
+_M131_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("15", surface="test result-disposition casilla id")
+_M111_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("30", surface="test result-disposition casilla id")
+_M115_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("05", surface="test result-disposition casilla id")
+_M123_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("14", surface="test result-disposition casilla id")
+_M123_2019_2023_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id(
+    "08", surface="test result-disposition casilla id"
+)
+_M200_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id(
+    "DP200014B:00599", surface="test result-disposition casilla id"
+)
+_M202_402_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("03", surface="test result-disposition casilla id")
+_M202_403_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("34", surface="test result-disposition casilla id")
 
 
 def _values(casilla_id: CasillaId, amount: str) -> dict[CasillaId, Decimal]:

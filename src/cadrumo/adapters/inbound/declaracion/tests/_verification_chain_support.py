@@ -37,17 +37,6 @@ pytestmark = [
 ]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"verification fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-def _casilla_ids(*values: object) -> frozenset[CasillaId]:
-    return frozenset(_casilla_id(value) for value in values)
-
-
 def _declaracion_case_label(
     modelo: str,
     fixture_stem: str,
@@ -197,9 +186,9 @@ def _registry_modelo_observations_from_values(
     )
 
 
-_DECL_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
-_DECL_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
-_DECL_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
+_DECL_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("decl.total-perceptores")
+_DECL_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.base-total")
+_DECL_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.retenciones-total")
 _DECL_MONETARY_SUMMARY_CASILLAS: tuple[CasillaId, ...] = (
     _DECL_BASE_TOTAL_CASILLA,
     _DECL_RETENCIONES_TOTAL_CASILLA,
@@ -326,28 +315,19 @@ def _decimal_inputs_from_extracted_values(
     }
 
 
-_M303_STATE_ATTRIBUTION_RATIO_CASILLA: CasillaId = _casilla_id("65")
-_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("27")
-_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("45")
-_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
-_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
-    "iva.compensacion-pendiente-periodos-anteriores",
+_M303_STATE_ATTRIBUTION_RATIO_CASILLA: CasillaId = validated_casilla_id("65")
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("27")
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("45")
+_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores"
 )
-_COMPUTED_CASILLAS_M130: frozenset[CasillaId] = _casilla_ids(
-    "03",
-    "04",
-    "07",
-    "09",
-    "11",
-    "12",
-    "13",
-    "14",
-    "17",
-    "19",
-    "saldo-negativo-fin-periodo",
+_COMPUTED_CASILLAS_M130: frozenset[CasillaId] = frozenset(
+    validated_casilla_id(_v)
+    for _v in ("03", "04", "07", "09", "11", "12", "13", "14", "17", "19", "saldo-negativo-fin-periodo")
 )
 
-_COMPUTED_CASILLAS_M111: frozenset[CasillaId] = _casilla_ids("28", "30")
+_COMPUTED_CASILLAS_M111: frozenset[CasillaId] = frozenset(validated_casilla_id(_v) for _v in ("28", "30"))
 
 
 def _registry_snapshot(modelo: str, filing_year: int, period: str):
@@ -460,10 +440,13 @@ def _assert_m303_printed_resultado_regimen_general_arithmetic(
     )
 
 
-_COMPUTED_CASILLAS_M390: frozenset[CasillaId] = _casilla_ids(
-    "iva.anual.cuota-devengada-total",
-    "iva.anual.cuota-deducible-total",
-    "iva.anual.resultado-regimen-general",
+_COMPUTED_CASILLAS_M390: frozenset[CasillaId] = frozenset(
+    validated_casilla_id(_v)
+    for _v in (
+        "iva.anual.cuota-devengada-total",
+        "iva.anual.cuota-deducible-total",
+        "iva.anual.resultado-regimen-general",
+    )
 )
 
 _M390_PREVIOUS_FILING_BINDING_IDS = (
@@ -474,20 +457,16 @@ _M390_PREVIOUS_FILING_BINDING_IDS = (
     "modelo-390-prev-303-compensacion-generada-ejercicio-no-97",
 )
 
-_COMPUTED_CASILLAS_M115: frozenset[CasillaId] = _casilla_ids("03", "05")
+_COMPUTED_CASILLAS_M115: frozenset[CasillaId] = frozenset(validated_casilla_id(_v) for _v in ("03", "05"))
 
-_COMPUTED_CASILLAS_M123_2019: frozenset[CasillaId] = _casilla_ids("06", "08")
+_COMPUTED_CASILLAS_M123_2019: frozenset[CasillaId] = frozenset(validated_casilla_id(_v) for _v in ("06", "08"))
 
-_COMPUTED_CASILLAS_M123_2024: frozenset[CasillaId] = _casilla_ids("03", "06", "09", "12", "14")
+_COMPUTED_CASILLAS_M123_2024: frozenset[CasillaId] = frozenset(
+    validated_casilla_id(_v) for _v in ("03", "06", "09", "12", "14")
+)
 
-_COMPUTED_CASILLAS_M131: frozenset[CasillaId] = _casilla_ids(
-    "04",
-    "06",
-    "07",
-    "10",
-    "13",
-    "15",
-    "saldo-negativo-fin-periodo",
+_COMPUTED_CASILLAS_M131: frozenset[CasillaId] = frozenset(
+    validated_casilla_id(_v) for _v in ("04", "06", "07", "10", "13", "15", "saldo-negativo-fin-periodo")
 )
 
 

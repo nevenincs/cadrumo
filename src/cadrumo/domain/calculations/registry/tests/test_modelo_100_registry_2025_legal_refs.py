@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....core import validated_casilla_id
 from ._modelo_100_legal_refs_support import (
     _ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID,
     _ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID,
@@ -30,7 +31,6 @@ from ._modelo_100_legal_refs_support import (
     _OBJECTIVE_ESTIMATION_2025_SECTION_COUNTS,
     _PAYMENTS_ON_ACCOUNT_2025_CASILLA_SECTIONS,
     _PAYMENTS_ON_ACCOUNT_ARTICLE_REF,
-    _casilla_id,
     _loaded_registry,
     _modelo_100_snapshot,
     calculation_closure_legal_refs,
@@ -124,7 +124,11 @@ def test_modelo_100_fractional_payment_casilla_carries_payment_obligation_and_am
     filing_year: int,
 ) -> None:
     revision = _modelo_100_snapshot(filing_year).revision
-    casilla = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0604"))
+    casilla = next(
+        casilla
+        for casilla in revision.casillas
+        if casilla.id == validated_casilla_id("0604", surface="test_modelo_100_registry.casilla")
+    )
 
     expected_refs = {
         _PAYMENTS_ON_ACCOUNT_ARTICLE_REF,

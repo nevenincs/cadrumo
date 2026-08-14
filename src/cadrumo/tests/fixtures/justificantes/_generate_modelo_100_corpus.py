@@ -71,13 +71,6 @@ from ....core import CasillaId, validated_casilla_id
 from ._generate_base import _SEDE_ORIGIN
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="modelo_100_corpus_fixture casilla id")
-    except ValueError as exc:  # pragma: no cover - authoring guard
-        raise AssertionError(f"M100 corpus fixture casilla key {value!r} is not canonical") from exc
-
-
 @dataclass(frozen=True)
 class _Modelo100CorpusRow:
     """One printed declaracion line.
@@ -228,7 +221,13 @@ M100_CORPUS_AMOUNTS: dict[str, dict[str, str]] = {
 def _rows(labels: tuple[tuple[str, str], ...], ejercicio: str) -> tuple[_Modelo100CorpusRow, ...]:
     amounts = M100_CORPUS_AMOUNTS[ejercicio]
     return tuple(
-        _Modelo100CorpusRow(_casilla_id(casilla), label, amounts[casilla], casilla) for casilla, label in labels
+        _Modelo100CorpusRow(
+            validated_casilla_id(casilla, surface="modelo_100_corpus_fixture casilla id"),
+            label,
+            amounts[casilla],
+            casilla,
+        )
+        for casilla, label in labels
     )
 
 

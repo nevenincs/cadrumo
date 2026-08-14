@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....core import validated_casilla_id
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M131,
     BindingId,
@@ -9,7 +10,6 @@ from ._verification_chain_support import (
     Decimal,
     _assert_engine_closure_matches_extracted_decimal,
     _calculate_engine_values_from_inputs,
-    _casilla_id,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
 )
@@ -18,10 +18,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
 _M131_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
-    _casilla_id("07"),
-    _casilla_id("10"),
-    _casilla_id("13"),
-    _casilla_id("15"),
+    validated_casilla_id("07"),
+    validated_casilla_id("10"),
+    validated_casilla_id("13"),
+    validated_casilla_id("15"),
 )
 
 

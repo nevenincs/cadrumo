@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from ._parser_boundary_support import CasillaId, Decimal, _casilla_id
+from .....core import validated_casilla_id
+from ._parser_boundary_support import CasillaId, Decimal
 
-_M111_CASILLA_07: CasillaId = _casilla_id("07")
-_M111_CASILLA_08: CasillaId = _casilla_id("08")
-_M111_CASILLA_09: CasillaId = _casilla_id("09")
-_M111_CASILLA_28: CasillaId = _casilla_id("28")
-_M111_CASILLA_30: CasillaId = _casilla_id("30")
+_M111_CASILLA_07: CasillaId = validated_casilla_id("07", surface="declaracion_parser_boundary.casilla")
+_M111_CASILLA_08: CasillaId = validated_casilla_id("08", surface="declaracion_parser_boundary.casilla")
+_M111_CASILLA_09: CasillaId = validated_casilla_id("09", surface="declaracion_parser_boundary.casilla")
+_M111_CASILLA_28: CasillaId = validated_casilla_id("28", surface="declaracion_parser_boundary.casilla")
+_M111_CASILLA_30: CasillaId = validated_casilla_id("30", surface="declaracion_parser_boundary.casilla")
 _M111_CORPUS_PARAMS: tuple[tuple[str, int, str], ...] = (
     ("2024-1T", 2024, "1T"),
     ("2024-2T", 2024, "2T"),

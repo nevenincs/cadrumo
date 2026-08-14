@@ -33,39 +33,50 @@ from ._generator_shared import (
     format_amount,
 )
 
-
-def _casilla_id(value: object) -> CasillaId:
-    return validated_casilla_id(value, surface="modelo_100_pdf_fixture._SUMMARY_LABELS")
-
-
 _SUMMARY_LABELS: Mapping[CasillaId, str] = {
-    _casilla_id("0022"): "Rendimiento neto — rendimientos del trabajo",
-    _casilla_id("0049"): "Rendimiento neto — capital mobiliario",
-    _casilla_id("0107"): "Rendimiento neto — capital inmobiliario",
-    _casilla_id("0175"): "Rendimiento neto — actividades economicas (estimacion directa)",
-    _casilla_id("0400"): "Ganancia o perdida patrimonial total",
-    _casilla_id("0435"): "Base imponible general",
-    _casilla_id("0460"): "Base imponible del ahorro",
-    _casilla_id("0500"): "Minimo personal y familiar total",
-    _casilla_id("0505"): "Minimo del contribuyente",
-    _casilla_id("0510"): "Minimo por descendientes",
-    _casilla_id("0515"): "Minimo por ascendientes",
-    _casilla_id("0520"): "Minimo por discapacidad",
-    _casilla_id("0545"): "Base liquidable general",
-    _casilla_id("0555"): "Base liquidable del ahorro",
-    _casilla_id("0550"): "Cuota integra general estatal",
-    _casilla_id("0551"): "Cuota integra general autonomica",
-    _casilla_id("0560"): "Cuota integra del ahorro estatal",
-    _casilla_id("0561"): "Cuota integra del ahorro autonomica",
-    _casilla_id("0595"): "Cuota integra total",
-    _casilla_id("0620"): "Deducciones estatales",
-    _casilla_id("0622"): "Deducciones autonomicas",
-    _casilla_id("0630"): "Total deducciones",
-    _casilla_id("0698"): "Cuota liquida total",
-    _casilla_id("0699"): "Retenciones e ingresos a cuenta",
-    _casilla_id("0700"): "Pagos fraccionados (Modelo 130 / 131)",
-    _casilla_id("0720"): "Cuota resultante de la autoliquidacion",
-    _casilla_id("0721"): "Resultado a ingresar / a devolver",
+    validated_casilla_id(
+        "0022", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"
+    ): "Rendimiento neto — rendimientos del trabajo",
+    validated_casilla_id(
+        "0049", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"
+    ): "Rendimiento neto — capital mobiliario",
+    validated_casilla_id(
+        "0107", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"
+    ): "Rendimiento neto — capital inmobiliario",
+    validated_casilla_id(
+        "0175", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"
+    ): "Rendimiento neto — actividades economicas (estimacion directa)",
+    validated_casilla_id(
+        "0400", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"
+    ): "Ganancia o perdida patrimonial total",
+    validated_casilla_id("0435", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Base imponible general",
+    validated_casilla_id("0460", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Base imponible del ahorro",
+    validated_casilla_id("0500", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Minimo personal y familiar total",
+    validated_casilla_id("0505", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Minimo del contribuyente",
+    validated_casilla_id("0510", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Minimo por descendientes",
+    validated_casilla_id("0515", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Minimo por ascendientes",
+    validated_casilla_id("0520", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Minimo por discapacidad",
+    validated_casilla_id("0545", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Base liquidable general",
+    validated_casilla_id("0555", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Base liquidable del ahorro",
+    validated_casilla_id("0550", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Cuota integra general estatal",
+    validated_casilla_id("0551", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Cuota integra general autonomica",
+    validated_casilla_id("0560", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Cuota integra del ahorro estatal",
+    validated_casilla_id(
+        "0561", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"
+    ): "Cuota integra del ahorro autonomica",
+    validated_casilla_id("0595", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Cuota integra total",
+    validated_casilla_id("0620", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Deducciones estatales",
+    validated_casilla_id("0622", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Deducciones autonomicas",
+    validated_casilla_id("0630", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Total deducciones",
+    validated_casilla_id("0698", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Cuota liquida total",
+    validated_casilla_id("0699", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Retenciones e ingresos a cuenta",
+    validated_casilla_id(
+        "0700", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"
+    ): "Pagos fraccionados (Modelo 130 / 131)",
+    validated_casilla_id(
+        "0720", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"
+    ): "Cuota resultante de la autoliquidacion",
+    validated_casilla_id("0721", surface="modelo_100_pdf_fixture._SUMMARY_LABELS"): "Resultado a ingresar / a devolver",
 }
 
 

@@ -141,18 +141,11 @@ _PREFILL_TARGETS = (
 )
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_PRIOR_PENDING_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-anteriores")
-_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
-_POSTERIOR_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
-_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
-_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("71")
+_PRIOR_PENDING_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-anteriores")
+_APLICADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
+_POSTERIOR_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("71")
 
 
 @dataclass(frozen=True)

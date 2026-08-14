@@ -87,11 +87,7 @@ _LEDGER_CUOTA_BINDINGS = (
     "modelo-303-casilla-122-inversion-sujeto-pasivo-base",
     "modelo-303-iva-repercutido-general-base",
     "modelo-303-iva-repercutido-reducido-base",
-    "modelo-303-iva-repercutido-reducido-transitorio-base",
-    "modelo-303-iva-repercutido-reducido-transitorio-cuota",
     "modelo-303-iva-repercutido-super-reducido-base",
-    "modelo-303-iva-repercutido-super-reducido-transitorio-base",
-    "modelo-303-iva-repercutido-super-reducido-transitorio-cuota",
     "modelo-303-iva-soportado-interiores-base",
     "modelo-303-recargo-equivalencia-general-cuota",
     "modelo-303-recargo-equivalencia-reducido-cuota",
@@ -111,19 +107,10 @@ _STATE_RATIO_BINDING = "modelo-303-profile-state-attribution-ratio"
 _PRIOR_COMPENSATION_BINDING = "modelo-303-compensacion-pendiente-anteriores"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M303 special-case fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA: CasillaId = _casilla_id(
-    "iva.autorepercutido.intracomunitaria",
-)
-_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
-_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
-_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
+_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA: CasillaId = validated_casilla_id("iva.autorepercutido.intracomunitaria")
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
+_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
 
 
 def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota(tmp_path: Path) -> None:

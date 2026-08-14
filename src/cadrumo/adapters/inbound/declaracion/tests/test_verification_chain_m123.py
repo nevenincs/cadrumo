@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import pytest
 
+from .....core import validated_casilla_id
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M123_2019,
     _COMPUTED_CASILLAS_M123_2024,
     CasillaId,
     _assert_engine_closure_matches_extracted_decimal,
     _calculate_engine_values_from_inputs,
-    _casilla_id,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
 )
@@ -17,18 +17,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
 _M123_2019_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
-    _casilla_id("06"),
-    _casilla_id("08"),
+    validated_casilla_id("06"),
+    validated_casilla_id("08"),
 )
-_M123_TOTAL_RENTAS_CASILLA: CasillaId = _casilla_id("03")
-_M123_TOTAL_BASE_CASILLA: CasillaId = _casilla_id("06")
-_M123_TOTAL_RETENCIONES_CASILLA: CasillaId = _casilla_id("09")
+_M123_TOTAL_RENTAS_CASILLA: CasillaId = validated_casilla_id("03")
+_M123_TOTAL_BASE_CASILLA: CasillaId = validated_casilla_id("06")
+_M123_TOTAL_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("09")
 _M123_2024_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
     _M123_TOTAL_RENTAS_CASILLA,
     _M123_TOTAL_BASE_CASILLA,
     _M123_TOTAL_RETENCIONES_CASILLA,
-    _casilla_id("12"),
-    _casilla_id("14"),
+    validated_casilla_id("12"),
+    validated_casilla_id("14"),
 )
 
 

@@ -83,14 +83,7 @@ _FILING_PERIOD = Period.from_year_and_code(2025, "1T")
 _BUCKET_ID = "16161616-1616-4616-8616-161616161616"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_REVISION_CASILLA: CasillaId = _casilla_id("01")
+_REVISION_CASILLA: CasillaId = validated_casilla_id("01")
 
 
 def _txn(*, taxable_base: Decimal) -> Transaction:

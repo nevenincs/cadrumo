@@ -94,29 +94,16 @@ _RENTA_YEARS = (2025, 2026)
 _QUARTERS = ("1T", "2T", "3T", "4T")
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M390 reconciliation fixture casilla key {value!r} is not a CasillaId") from exc
-
-
 #: 390 annual computed totals and the parallel reconciliation casillas filled
 #: from the four 303 quarters via the relation resolver. The wiring invariant
 #: asserts each pair is equal.
-_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
-_M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-devengada-total")
-_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-deducible-total")
-_M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.anual.resultado-regimen-general")
-_M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.reconciliacion.devengada-303",
-)
-_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.reconciliacion.deducible-303",
-)
-_M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.reconciliacion.resultado-303",
-)
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+_M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.cuota-devengada-total")
+_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.cuota-deducible-total")
+_M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.resultado-regimen-general")
+_M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.devengada-303")
+_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.deducible-303")
+_M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.resultado-303")
 _RECONCILIATION_PAIRS: tuple[tuple[CasillaId, CasillaId], ...] = (
     (_M390_CUOTA_DEVENGADA_TOTAL_CASILLA, _M390_RECONCILIACION_DEVENGADA_303_CASILLA),
     (_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA, _M390_RECONCILIACION_DEDUCIBLE_303_CASILLA),

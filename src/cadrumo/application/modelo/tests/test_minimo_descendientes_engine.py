@@ -37,7 +37,7 @@ from typing import Any
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
+from ....core import validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     RegistrySnapshot,
@@ -61,10 +61,6 @@ _ENGINE_FILING_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
 _MADRID_PARTIAL_DIVERGENCE_YEARS = (2020, 2021)
 # Years where Madrid's own table diverges on all five tranches.
 _MADRID_FULL_DIVERGENCE_YEARS = (2022, 2023, 2024, 2025)
-
-
-def _casilla_id(value: str) -> CasillaId:
-    return validated_casilla_id(value, surface="test_minimo_descendientes_engine.casilla")
 
 
 @lru_cache
@@ -326,7 +322,7 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
     # oracle in test_modelo_100_tarifa_real.
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={_casilla_id("0003"): Decimal("37400")},
+        inputs={validated_casilla_id("0003", surface="test_minimo_descendientes_engine.casilla"): Decimal("37400")},
         date_context={"filing_period": date(2024, 12, 31)},
         binding_values={
             **resolution.binding_values,
@@ -354,9 +350,15 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
 
     assert resolution.binding_values["renta-2024-profile-minimo-descendientes-estatal"] == Decimal("7900.00")
     assert resolution.binding_values["renta-2024-profile-minimo-descendientes-autonomico"] == Decimal("7900.00")
-    assert result.values[_casilla_id("0513")] == Decimal("7900.00")
-    assert result.values[_casilla_id("0514")] == Decimal("7900.00")
-    assert result.values[_casilla_id("0545")] == Decimal("3097.00")
+    assert result.values[validated_casilla_id("0513", surface="test_minimo_descendientes_engine.casilla")] == Decimal(
+        "7900.00"
+    )
+    assert result.values[validated_casilla_id("0514", surface="test_minimo_descendientes_engine.casilla")] == Decimal(
+        "7900.00"
+    )
+    assert result.values[validated_casilla_id("0545", surface="test_minimo_descendientes_engine.casilla")] == Decimal(
+        "3097.00"
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -58,25 +58,18 @@ _PERIOD = "0A"
 _FILING_YEAR = 2025
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M100 base negativa fixture casilla key {value!r} is not a CasillaId") from exc
-
-
 #: Anexo-C base-liquidable-general-negativa casillas (ejercicio-2024 origin).
-_PENDIENTE_INICIO: CasillaId = _casilla_id("1388")  # opening pending (bound from prior 1391)
-_APLICADO: CasillaId = _casilla_id("1389")  # Anexo C applied amount
-_PENDIENTE_FIN: CasillaId = _casilla_id("1390")  # remainder rolled forward = 1388 − 1389
-_APLICADA_MAXIMA: CasillaId = _casilla_id("base-liq-neg-general-2024-aplicada-maxima")  # Art. 50.3 ceiling
-_BASE_IMPONIBLE_GENERAL: CasillaId = _casilla_id("0435")
-_BASE_LIQUIDABLE_GENERAL: CasillaId = _casilla_id("0500")
-_PRIOR_NEGATIVE_BASE_CASILLA: CasillaId = _casilla_id("1391")
+_PENDIENTE_INICIO: CasillaId = validated_casilla_id("1388")  # opening pending (bound from prior 1391)
+_APLICADO: CasillaId = validated_casilla_id("1389")  # Anexo C applied amount
+_PENDIENTE_FIN: CasillaId = validated_casilla_id("1390")  # remainder rolled forward = 1388 − 1389
+_APLICADA_MAXIMA: CasillaId = validated_casilla_id("base-liq-neg-general-2024-aplicada-maxima")  # Art. 50.3 ceiling
+_BASE_IMPONIBLE_GENERAL: CasillaId = validated_casilla_id("0435")
+_BASE_LIQUIDABLE_GENERAL: CasillaId = validated_casilla_id("0500")
+_PRIOR_NEGATIVE_BASE_CASILLA: CasillaId = validated_casilla_id("1391")
 
 #: Trabajo income leaf (Retribuciones dinerarias, importe íntegro) — a manual
 #: input that produces a positive base liquidable general before the Art. 50.3 carry.
-_TRABAJO_INGRESO: CasillaId = _casilla_id("0003")
+_TRABAJO_INGRESO: CasillaId = validated_casilla_id("0003")
 
 _CLOCK = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 
@@ -195,7 +188,7 @@ def test_base_liquidable_negative_compensation_surfaces_cite_art50_not_art48_or_
         formula for formula in revision.formulas if formula.id == _COMPENSACION_TOTAL_FORMULA_ID
     )
     opening_pending = next(casilla for casilla in revision.casillas if casilla.id == _PENDIENTE_INICIO)
-    compensation = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0501"))
+    compensation = next(casilla for casilla in revision.casillas if casilla.id == validated_casilla_id("0501"))
     casilla = next(casilla for casilla in revision.casillas if casilla.id == _APLICADA_MAXIMA)
     construct = next(
         construct for construct in revision.constructs if construct.id == _ANEXO_C_BASE_NEGATIVA_GENERAL_CONSTRUCT_ID
@@ -262,8 +255,8 @@ def test_applied_compensation_reduces_base_liquidable_general_by_applied_amount(
     # applied amount, while the Art. 48 base imponible general stays fixed.
     base_liq_drop = _v(baseline, _BASE_LIQUIDABLE_GENERAL) - _v(compensated, _BASE_LIQUIDABLE_GENERAL)
     base_imp_drop = _v(baseline, _BASE_IMPONIBLE_GENERAL) - _v(compensated, _BASE_IMPONIBLE_GENERAL)
-    assert _v(baseline, _casilla_id("0501")) == Decimal("0")
-    assert _v(compensated, _casilla_id("0501")) == applied
+    assert _v(baseline, validated_casilla_id("0501")) == Decimal("0")
+    assert _v(compensated, validated_casilla_id("0501")) == applied
     assert base_imp_drop == Decimal("0")
     assert base_liq_drop == applied
 

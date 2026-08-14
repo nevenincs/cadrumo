@@ -114,33 +114,26 @@ _M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-2024-modelo-100-esti
 _M100_SALARY_CERT_RETENCIONES_BINDING: BindingId = "renta-2024-certificado-trabajo-retenciones"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M130/M100 vertical fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
-_M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
-_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
-_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = _casilla_id("10")
-_M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
-_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
-_M130_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("19")
-_M100_PAGOS_CASILLA: CasillaId = _casilla_id("0604")
-_M100_RETENCIONES_TRABAJO_CASILLA: CasillaId = _casilla_id("0596")
-_M100_TOTAL_PAGOS_CASILLA: CasillaId = _casilla_id("0609")
-_M100_CUOTA_DIFERENCIAL_CASILLA: CasillaId = _casilla_id("0610")
-_M100_ACTIVITY_INCOME_CASILLA: CasillaId = _casilla_id("0171")
-_M100_ACTIVITY_EXPENSES_SUMMARY_CASILLA: CasillaId = _casilla_id("0199")
-_M100_EXPENSES_PREVIOUS_SUM_CASILLA: CasillaId = _casilla_id("0218")
-_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA: CasillaId = _casilla_id("0220")
-_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
-_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = _casilla_id("1479")
-_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = _casilla_id("1553")
-_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = _casilla_id("1577")
-_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = _casilla_id("1391")
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
+_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
+_M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19")
+_M100_PAGOS_CASILLA: CasillaId = validated_casilla_id("0604")
+_M100_RETENCIONES_TRABAJO_CASILLA: CasillaId = validated_casilla_id("0596")
+_M100_TOTAL_PAGOS_CASILLA: CasillaId = validated_casilla_id("0609")
+_M100_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id("0610")
+_M100_ACTIVITY_INCOME_CASILLA: CasillaId = validated_casilla_id("0171")
+_M100_ACTIVITY_EXPENSES_SUMMARY_CASILLA: CasillaId = validated_casilla_id("0199")
+_M100_EXPENSES_PREVIOUS_SUM_CASILLA: CasillaId = validated_casilla_id("0218")
+_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA: CasillaId = validated_casilla_id("0220")
+_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")
+_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = validated_casilla_id("1479")
+_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = validated_casilla_id("1553")
+_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = validated_casilla_id("1577")
+_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id("1391")
 
 # Prior-year (2023) actividad-económica net income. M130's casilla-13 minoración
 # reads ``irpf.previous_year_economic_activity_net_income`` — a previous_filing
@@ -682,7 +675,7 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
 
     annual = _calculate_m100_annual(
         secure_objects,
-        casilla_inputs={_casilla_id("0003"): _AUTONOMA_SALARY_GROSS},
+        casilla_inputs={validated_casilla_id("0003"): _AUTONOMA_SALARY_GROSS},
         binding_values={_M100_SALARY_CERT_RETENCIONES_BINDING: _AUTONOMA_SALARY_WITHHOLDING},
     )
 

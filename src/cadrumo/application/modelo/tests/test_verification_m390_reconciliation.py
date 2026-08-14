@@ -23,13 +23,6 @@ from ._verification_substance_support import _workflow_profile
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test_verification_m390_reconciliation")
-    except ValueError as exc:
-        raise AssertionError(f"M390 verification fixture casilla key {value!r} is not a CasillaId") from exc
-
-
 @dataclass(frozen=True)
 class _PredicateCase:
     label: str
@@ -44,8 +37,12 @@ _PREDICATE_CASES = (
     _PredicateCase(
         label="devengada",
         predicate_id="modelo-390-cuota-devengada-total-equals-reconciliacion-303",
-        total_id=_casilla_id("iva.anual.cuota-devengada-total"),
-        reconciliation_id=_casilla_id("iva.anual.reconciliacion.devengada-303"),
+        total_id=validated_casilla_id(
+            "iva.anual.cuota-devengada-total", surface="test_verification_m390_reconciliation"
+        ),
+        reconciliation_id=validated_casilla_id(
+            "iva.anual.reconciliacion.devengada-303", surface="test_verification_m390_reconciliation"
+        ),
         expression='equals(["iva.anual.cuota-devengada-total", "iva.anual.reconciliacion.devengada-303"])',
         legal_refs=frozenset(
             {
@@ -60,8 +57,12 @@ _PREDICATE_CASES = (
     _PredicateCase(
         label="deducible",
         predicate_id="modelo-390-cuota-deducible-total-equals-reconciliacion-303",
-        total_id=_casilla_id("iva.anual.cuota-deducible-total"),
-        reconciliation_id=_casilla_id("iva.anual.reconciliacion.deducible-303"),
+        total_id=validated_casilla_id(
+            "iva.anual.cuota-deducible-total", surface="test_verification_m390_reconciliation"
+        ),
+        reconciliation_id=validated_casilla_id(
+            "iva.anual.reconciliacion.deducible-303", surface="test_verification_m390_reconciliation"
+        ),
         expression='equals(["iva.anual.cuota-deducible-total", "iva.anual.reconciliacion.deducible-303"])',
         legal_refs=frozenset(
             {
@@ -76,8 +77,12 @@ _PREDICATE_CASES = (
     _PredicateCase(
         label="resultado",
         predicate_id="modelo-390-resultado-regimen-general-equals-reconciliacion-303",
-        total_id=_casilla_id("iva.anual.resultado-regimen-general"),
-        reconciliation_id=_casilla_id("iva.anual.reconciliacion.resultado-303"),
+        total_id=validated_casilla_id(
+            "iva.anual.resultado-regimen-general", surface="test_verification_m390_reconciliation"
+        ),
+        reconciliation_id=validated_casilla_id(
+            "iva.anual.reconciliacion.resultado-303", surface="test_verification_m390_reconciliation"
+        ),
         expression='equals(["iva.anual.resultado-regimen-general", "iva.anual.reconciliacion.resultado-303"])',
         legal_refs=frozenset(
             {

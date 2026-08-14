@@ -20,26 +20,19 @@ from .._ids import LegalRefId, SourceRefId
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"CasillaObservation fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_MINIMAL_CASILLA: CasillaId = _casilla_id("0511")
-_FULL_PROVENANCE_CASILLA: CasillaId = _casilla_id("0519")
-_VALUE_TYPE_TEST_CASILLA: CasillaId = _casilla_id("0001")
-_ABSENT_BY_DESIGN_CASILLA: CasillaId = _casilla_id("15")
-_ROUNDTRIP_CASILLA: CasillaId = _casilla_id("01")
+_MINIMAL_CASILLA: CasillaId = validated_casilla_id("0511")
+_FULL_PROVENANCE_CASILLA: CasillaId = validated_casilla_id("0519")
+_VALUE_TYPE_TEST_CASILLA: CasillaId = validated_casilla_id("0001")
+_ABSENT_BY_DESIGN_CASILLA: CasillaId = validated_casilla_id("15")
+_ROUNDTRIP_CASILLA: CasillaId = validated_casilla_id("01")
 _EMPTY_CASILLA_ID = ""
 _LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:art-56",)
 _SOURCE_REFS: tuple[SourceRefId, ...] = ("aeat-renta-2025-manual-parte1",)
 _OPERAND_CASILLAS: tuple[CasillaId, ...] = (
-    _casilla_id("0511"),
-    _casilla_id("0513"),
-    _casilla_id("0515"),
-    _casilla_id("0517"),
+    validated_casilla_id("0511"),
+    validated_casilla_id("0513"),
+    validated_casilla_id("0515"),
+    validated_casilla_id("0517"),
 )
 
 

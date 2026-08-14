@@ -42,7 +42,6 @@ import pytest
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import RelationAggregationOp
 from .. import RegistrySnapshot, calculate_registry_snapshot
-from .._authority import ValidatedRegistryAuthority
 from .._relation_aggregation import relation_aggregation_op
 from .._relations import resolve_relation_values
 
@@ -93,24 +92,21 @@ _RELATION_VALUES_2024: dict[str, Decimal] = {
 }
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test_modelo_100_ahorro_base_chain.casilla")
-    except ValueError as exc:
-        raise AssertionError(f"M100 ahorro-base test casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_CAPITAL_MOBILIARIO_INTERESES_CASILLA: CasillaId = _casilla_id("0027")
-_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: CasillaId = _casilla_id("0029")
-_CAPITAL_MOBILIARIO_TOTAL_INGRESOS_CASILLA: CasillaId = _casilla_id("0036")
-_CAPITAL_MOBILIARIO_RENDIMIENTOS_REDUCIDOS_CASILLA: CasillaId = _casilla_id("0041")
-_BASE_IMPONIBLE_AHORRO_CASILLA: CasillaId = _casilla_id("0460")
-
-
-@pytest.fixture
-def m100_2025_snapshot(registry_authority: ValidatedRegistryAuthority):
-    return registry_authority.snapshot("100", filing_year=2025, period="0A")
-
+_CAPITAL_MOBILIARIO_INTERESES_CASILLA: CasillaId = validated_casilla_id(
+    "0027", surface="test_modelo_100_ahorro_base_chain.casilla"
+)
+_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: CasillaId = validated_casilla_id(
+    "0029", surface="test_modelo_100_ahorro_base_chain.casilla"
+)
+_CAPITAL_MOBILIARIO_TOTAL_INGRESOS_CASILLA: CasillaId = validated_casilla_id(
+    "0036", surface="test_modelo_100_ahorro_base_chain.casilla"
+)
+_CAPITAL_MOBILIARIO_RENDIMIENTOS_REDUCIDOS_CASILLA: CasillaId = validated_casilla_id(
+    "0041", surface="test_modelo_100_ahorro_base_chain.casilla"
+)
+_BASE_IMPONIBLE_AHORRO_CASILLA: CasillaId = validated_casilla_id(
+    "0460", surface="test_modelo_100_ahorro_base_chain.casilla"
+)
 
 # ── helper ────────────────────────────────────────────────────────────────────
 

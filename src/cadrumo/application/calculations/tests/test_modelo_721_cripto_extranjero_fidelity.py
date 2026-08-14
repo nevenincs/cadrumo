@@ -130,19 +130,12 @@ _CLOCK_N = datetime(2024, 2, 15, 10, 0, 0, tzinfo=UTC)  # filed for ejercicio 20
 _CLOCK_N_PLUS_1 = datetime(2025, 2, 15, 10, 0, 0, tzinfo=UTC)  # filed for ejercicio 2024
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M721 cripto extranjero fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_EJERCICIO_CASILLA: CasillaId = _casilla_id("ejercicio")
-_TIPO_DECLARACION_CASILLA: CasillaId = _casilla_id("tipo-declaracion")
-_CUSTODIO_NOMBRE_CASILLA: CasillaId = _casilla_id("custodio.nombre-razon-social")
-_CUSTODIO_CODIGO_PAIS_CASILLA: CasillaId = _casilla_id("custodio.codigo-pais")
-_MONEDA_CLAVE_TOKEN_CASILLA: CasillaId = _casilla_id("moneda.clave-token")
-_MONEDA_SALDO_CASILLA: CasillaId = _casilla_id("moneda.saldo-31-diciembre")
+_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("ejercicio")
+_TIPO_DECLARACION_CASILLA: CasillaId = validated_casilla_id("tipo-declaracion")
+_CUSTODIO_NOMBRE_CASILLA: CasillaId = validated_casilla_id("custodio.nombre-razon-social")
+_CUSTODIO_CODIGO_PAIS_CASILLA: CasillaId = validated_casilla_id("custodio.codigo-pais")
+_MONEDA_CLAVE_TOKEN_CASILLA: CasillaId = validated_casilla_id("moneda.clave-token")
+_MONEDA_SALDO_CASILLA: CasillaId = validated_casilla_id("moneda.saldo-31-diciembre")
 _SALDO_31_DICIEMBRE_CASILLAS: tuple[CasillaId, ...] = (_MONEDA_SALDO_CASILLA,)
 _M721_SOURCE_REFS = ("aeat-modelo-721-procedure",)
 _M721_LEGAL_REFS = _MONEDAS_VIRTUALES_THRESHOLD.legal_refs

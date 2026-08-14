@@ -2,20 +2,15 @@ from __future__ import annotations
 
 import pytest
 
-from ._verification_chain_support import (
-    BindingId,
-    CasillaId,
-    Decimal,
-    _assert_annual_relation_closure_chain,
-    _casilla_id,
-)
+from .....core import validated_casilla_id
+from ._verification_chain_support import BindingId, CasillaId, Decimal, _assert_annual_relation_closure_chain
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
-_M115_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
-_M115_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("02")
-_M115_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
+_M115_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01")
+_M115_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id("02")
+_M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03")
 _M180_PERCEPTORES_BINDING: BindingId = "modelo-180-115-perceptores-anual"
 _M180_RETIRED_PERCEPTORES_RELATION = "modelo-180-rel-115-perceptores-anual"
 _M115_QUARTERLY_VALUES: dict[str, dict[CasillaId, Decimal]] = {

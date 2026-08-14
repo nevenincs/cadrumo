@@ -56,15 +56,8 @@ _CLOCK_N = datetime(2024, 6, 15, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2025, 9, 20, 10, 0, 0, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M308 ad-hoc fidelity fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
-_DECL_TIPO_SOLICITUD_CASILLA: CasillaId = _casilla_id("decl.tipo-solicitud")
+_DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")
+_DECL_TIPO_SOLICITUD_CASILLA: CasillaId = validated_casilla_id("decl.tipo-solicitud")
 
 
 def _find_observation(repo: CalculationObservationRepository, *, filing_year: int, period: str):

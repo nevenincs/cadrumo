@@ -122,20 +122,13 @@ _CLOCK_N = datetime(2024, 3, 15, 10, 0, 0, tzinfo=UTC)  # M720 deadline: 1-Mar t
 _CLOCK_N_PLUS_1 = datetime(2025, 3, 15, 10, 0, 0, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M720 prior-year baseline fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
-_TIPO_DECLARACION_CASILLA: CasillaId = _casilla_id("decl.tipo-declaracion")
-_CUENTAS_CODIGO_DE_CUENTA_CASILLA: CasillaId = _casilla_id("cuentas.codigo-de-cuenta")
-_CUENTAS_VALORACION_CASILLA: CasillaId = _casilla_id("cuentas.valoracion")
-_VALORES_IDENTIFICACION_CASILLA: CasillaId = _casilla_id("valores.identificacion")
-_VALORES_VALORACION_CASILLA: CasillaId = _casilla_id("valores.valoracion")
-_INMUEBLES_VALORACION_CASILLA: CasillaId = _casilla_id("inmuebles.valoracion")
+_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")
+_TIPO_DECLARACION_CASILLA: CasillaId = validated_casilla_id("decl.tipo-declaracion")
+_CUENTAS_CODIGO_DE_CUENTA_CASILLA: CasillaId = validated_casilla_id("cuentas.codigo-de-cuenta")
+_CUENTAS_VALORACION_CASILLA: CasillaId = validated_casilla_id("cuentas.valoracion")
+_VALORES_IDENTIFICACION_CASILLA: CasillaId = validated_casilla_id("valores.identificacion")
+_VALORES_VALORACION_CASILLA: CasillaId = validated_casilla_id("valores.valoracion")
+_INMUEBLES_VALORACION_CASILLA: CasillaId = validated_casilla_id("inmuebles.valoracion")
 
 _CUENTAS_BASELINE_BINDING = "modelo-720-prior-year-cuentas-valoracion-baseline"
 _VALORES_BASELINE_BINDING = "modelo-720-prior-year-valores-valoracion-baseline"

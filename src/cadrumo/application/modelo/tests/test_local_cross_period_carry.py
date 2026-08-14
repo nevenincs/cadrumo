@@ -102,18 +102,11 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         )
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"local carry fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M303_COMPENSACION_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
-_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
-    "iva.compensacion-pendiente-periodos-anteriores",
+_M303_COMPENSACION_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores"
 )
-_M130_DIFERENCIA_PREVIA_CASILLA: CasillaId = _casilla_id("14")
+_M130_DIFERENCIA_PREVIA_CASILLA: CasillaId = validated_casilla_id("14")
 
 # The M130 carry binding feeds computed casilla 15. Calculation caps the raw
 # previous_filing saldo-negativo at the current positive C14 before it flows through.

@@ -49,7 +49,7 @@ from ....domain.transactions import (
 )
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import workflow_state_repository
+from ...workflow import WorkflowState
 from .. import (
     FindingReviewItem,
     InvoiceReviewItem,
@@ -87,13 +87,17 @@ def _build_settings(tmp_path: Path) -> Settings:
 
 
 def _seed_active_profile(bucket_id: str = _PROFILE_ID) -> None:
-    """Register the minimal placeholder profile so drafts match the active tax id."""
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(
-            state,
-            profile_id=bucket_id,
-            overrides={"identity.tax_id": "00000000T"},
-        ),
+    """Register the minimal placeholder profile so drafts match the active tax id.
+
+    Seeded through a detached WorkflowState, never a repository read: the
+    capsule publishes by an atomic no-replace rename onto
+    ``buckets/<profile-id>``, which a workflow-state repository construction
+    would otherwise materialise first and collide with.
+    """
+    register_minimal_profile(
+        WorkflowState(),
+        profile_id=bucket_id,
+        overrides={"identity.tax_id": "00000000T"},
     )
 
 

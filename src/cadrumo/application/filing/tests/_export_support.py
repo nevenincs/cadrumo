@@ -103,66 +103,105 @@ def _typed_modelo_131_producer_snapshot() -> FilingProducerSnapshot:
     )
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test_export.casilla")
-    except ValueError as exc:
-        raise AssertionError(f"filing export test casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_M111_RETENCIONES_TOTAL_CASILLA, _M111_RESULTADO_CASILLA = _casilla_id("28"), _casilla_id("30")
-_M111_TRABAJO_DINERARIO_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
-_M111_TRABAJO_ESPECIE_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
-_M111_ACTIVIDAD_DINERARIA_RETENCIONES_CASILLA: CasillaId = _casilla_id("09")
-_M111_ACTIVIDAD_ESPECIE_RETENCIONES_CASILLA: CasillaId = _casilla_id("12")
-_M111_PREMIOS_DINERARIOS_RETENCIONES_CASILLA: CasillaId = _casilla_id("15")
-_M111_PREMIOS_ESPECIE_RETENCIONES_CASILLA: CasillaId = _casilla_id("18")
-_M111_FORESTAL_DINERARIO_RETENCIONES_CASILLA: CasillaId = _casilla_id("21")
-_M111_FORESTAL_ESPECIE_RETENCIONES_CASILLA: CasillaId = _casilla_id("24")
-_M111_IMAGEN_RETENCIONES_CASILLA: CasillaId = _casilla_id("27")
-_M111_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("29")
-_M115_PERCEPTORES_CASILLA, _M115_BASE_CASILLA = _casilla_id("01"), _casilla_id("02")
-_M115_RETENCIONES_CASILLA, _M115_PREVIOUS_RESULT_CASILLA = _casilla_id("03"), _casilla_id("04")
-_M115_RESULTADO_CASILLA = _casilla_id("05")
-_M130_INGRESOS_CASILLA, _M130_GASTOS_CASILLA = _casilla_id("01"), _casilla_id("02")
-_M130_PREVIOUS_PAYMENTS_CASILLA, _M130_RETENCIONES_CASILLA = _casilla_id("05"), _casilla_id("06")
-_M130_AGRARIAN_VOLUME_CASILLA, _M130_AGRARIAN_WITHHELD_CASILLA = _casilla_id("08"), _casilla_id("10")
-_M130_HOME_DEDUCTION_CASILLA, _M130_PRIOR_RETURN_RESULT_CASILLA = _casilla_id("16"), _casilla_id("18")
-_M131_RENDIMIENTO_MODULOS_CASILLA, _M131_VOLUME_AGRARIO_CASILLA = _casilla_id("03"), _casilla_id("05")
-_M123_PERCEPTORES_CASILLA, _M123_BASE_CASILLA = _casilla_id("03"), _casilla_id("06")
-_M123_RETENCIONES_CASILLA, _M123_INGRESOS_CUENTA_CASILLA = _casilla_id("09"), _casilla_id("12")
-_M123_RESULTADO_CASILLA = _casilla_id("14")
-_M123_DINERARIO_PERCEPTORES_CASILLA, _M123_ESPECIE_PERCEPTORES_CASILLA = _casilla_id("01"), _casilla_id("02")
-_M123_DINERARIO_BASE_CASILLA, _M123_ESPECIE_BASE_CASILLA = _casilla_id("04"), _casilla_id("05")
-_M123_DINERARIO_RETENCIONES_CASILLA, _M123_ESPECIE_RETENCIONES_CASILLA = _casilla_id("07"), _casilla_id("08")
-_M123_PREVIOUS_RESULT_CASILLA, _M123_INGRESOS_CUENTA_INPUT_CASILLA = _casilla_id("10"), _casilla_id("11")
-_M123_MINORACION_CASILLA = _casilla_id("13")
-_M123_2019_2023_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
-_M123_2019_2023_BASE_CASILLA: CasillaId = _casilla_id("02")
-_M123_2019_2023_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
-_M123_2019_2023_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("04")
-_M123_2019_2023_INGRESOS_CUENTA_CASILLA: CasillaId = _casilla_id("05")
-_M123_2019_2023_TOTAL_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
-_M123_2019_2023_MINORACION_CASILLA: CasillaId = _casilla_id("07")
-_M123_2019_2023_RESULTADO_CASILLA: CasillaId = _casilla_id("08")
-_M131_HISTORICAL_01_CASILLA: CasillaId = _casilla_id("01")
-_M131_HISTORICAL_02_CASILLA: CasillaId = _casilla_id("02")
-_M131_HISTORICAL_03_CASILLA: CasillaId = _casilla_id("03")
-_M131_HISTORICAL_04_CASILLA: CasillaId = _casilla_id("04")
-_M131_HISTORICAL_05_CASILLA: CasillaId = _casilla_id("05")
-_M131_HISTORICAL_06_CASILLA: CasillaId = _casilla_id("06")
-_M131_HISTORICAL_07_CASILLA: CasillaId = _casilla_id("07")
-_M131_HISTORICAL_08_CASILLA: CasillaId = _casilla_id("08")
-_M131_HISTORICAL_09_CASILLA: CasillaId = _casilla_id("09")
-_M131_HISTORICAL_10_CASILLA: CasillaId = _casilla_id("10")
-_M131_HISTORICAL_11_CASILLA: CasillaId = _casilla_id("11")
-_M131_HISTORICAL_12_CASILLA: CasillaId = _casilla_id("12")
-_M131_HISTORICAL_13_CASILLA: CasillaId = _casilla_id("13")
-_M131_HISTORICAL_14_CASILLA: CasillaId = _casilla_id("14")
-_M131_HISTORICAL_15_CASILLA: CasillaId = _casilla_id("15")
-_M390_REPERCUTIDO_GENERAL_CASILLA = _casilla_id("iva.anual.repercutido.general")
-_M390_REPERCUTIDO_REDUCIDO_CASILLA = _casilla_id("iva.anual.repercutido.reducido")
-_M390_REPERCUTIDO_SUPER_REDUCIDO_CASILLA = _casilla_id("iva.anual.repercutido.super-reducido")
+_M111_RETENCIONES_TOTAL_CASILLA, _M111_RESULTADO_CASILLA = (
+    validated_casilla_id("28", surface="test_export.casilla"),
+    validated_casilla_id("30", surface="test_export.casilla"),
+)
+_M111_TRABAJO_DINERARIO_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03", surface="test_export.casilla")
+_M111_TRABAJO_ESPECIE_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="test_export.casilla")
+_M111_ACTIVIDAD_DINERARIA_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("09", surface="test_export.casilla")
+_M111_ACTIVIDAD_ESPECIE_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("12", surface="test_export.casilla")
+_M111_PREMIOS_DINERARIOS_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("15", surface="test_export.casilla")
+_M111_PREMIOS_ESPECIE_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("18", surface="test_export.casilla")
+_M111_FORESTAL_DINERARIO_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("21", surface="test_export.casilla")
+_M111_FORESTAL_ESPECIE_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("24", surface="test_export.casilla")
+_M111_IMAGEN_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("27", surface="test_export.casilla")
+_M111_PREVIOUS_RESULT_CASILLA: CasillaId = validated_casilla_id("29", surface="test_export.casilla")
+_M115_PERCEPTORES_CASILLA, _M115_BASE_CASILLA = (
+    validated_casilla_id("01", surface="test_export.casilla"),
+    validated_casilla_id("02", surface="test_export.casilla"),
+)
+_M115_RETENCIONES_CASILLA, _M115_PREVIOUS_RESULT_CASILLA = (
+    validated_casilla_id("03", surface="test_export.casilla"),
+    validated_casilla_id("04", surface="test_export.casilla"),
+)
+_M115_RESULTADO_CASILLA = validated_casilla_id("05", surface="test_export.casilla")
+_M130_INGRESOS_CASILLA, _M130_GASTOS_CASILLA = (
+    validated_casilla_id("01", surface="test_export.casilla"),
+    validated_casilla_id("02", surface="test_export.casilla"),
+)
+_M130_PREVIOUS_PAYMENTS_CASILLA, _M130_RETENCIONES_CASILLA = (
+    validated_casilla_id("05", surface="test_export.casilla"),
+    validated_casilla_id("06", surface="test_export.casilla"),
+)
+_M130_AGRARIAN_VOLUME_CASILLA, _M130_AGRARIAN_WITHHELD_CASILLA = (
+    validated_casilla_id("08", surface="test_export.casilla"),
+    validated_casilla_id("10", surface="test_export.casilla"),
+)
+_M130_HOME_DEDUCTION_CASILLA, _M130_PRIOR_RETURN_RESULT_CASILLA = (
+    validated_casilla_id("16", surface="test_export.casilla"),
+    validated_casilla_id("18", surface="test_export.casilla"),
+)
+_M131_RENDIMIENTO_MODULOS_CASILLA, _M131_VOLUME_AGRARIO_CASILLA = (
+    validated_casilla_id("03", surface="test_export.casilla"),
+    validated_casilla_id("05", surface="test_export.casilla"),
+)
+_M123_PERCEPTORES_CASILLA, _M123_BASE_CASILLA = (
+    validated_casilla_id("03", surface="test_export.casilla"),
+    validated_casilla_id("06", surface="test_export.casilla"),
+)
+_M123_RETENCIONES_CASILLA, _M123_INGRESOS_CUENTA_CASILLA = (
+    validated_casilla_id("09", surface="test_export.casilla"),
+    validated_casilla_id("12", surface="test_export.casilla"),
+)
+_M123_RESULTADO_CASILLA = validated_casilla_id("14", surface="test_export.casilla")
+_M123_DINERARIO_PERCEPTORES_CASILLA, _M123_ESPECIE_PERCEPTORES_CASILLA = (
+    validated_casilla_id("01", surface="test_export.casilla"),
+    validated_casilla_id("02", surface="test_export.casilla"),
+)
+_M123_DINERARIO_BASE_CASILLA, _M123_ESPECIE_BASE_CASILLA = (
+    validated_casilla_id("04", surface="test_export.casilla"),
+    validated_casilla_id("05", surface="test_export.casilla"),
+)
+_M123_DINERARIO_RETENCIONES_CASILLA, _M123_ESPECIE_RETENCIONES_CASILLA = (
+    validated_casilla_id("07", surface="test_export.casilla"),
+    validated_casilla_id("08", surface="test_export.casilla"),
+)
+_M123_PREVIOUS_RESULT_CASILLA, _M123_INGRESOS_CUENTA_INPUT_CASILLA = (
+    validated_casilla_id("10", surface="test_export.casilla"),
+    validated_casilla_id("11", surface="test_export.casilla"),
+)
+_M123_MINORACION_CASILLA = validated_casilla_id("13", surface="test_export.casilla")
+_M123_2019_2023_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01", surface="test_export.casilla")
+_M123_2019_2023_BASE_CASILLA: CasillaId = validated_casilla_id("02", surface="test_export.casilla")
+_M123_2019_2023_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03", surface="test_export.casilla")
+_M123_2019_2023_PREVIOUS_RESULT_CASILLA: CasillaId = validated_casilla_id("04", surface="test_export.casilla")
+_M123_2019_2023_INGRESOS_CUENTA_CASILLA: CasillaId = validated_casilla_id("05", surface="test_export.casilla")
+_M123_2019_2023_TOTAL_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="test_export.casilla")
+_M123_2019_2023_MINORACION_CASILLA: CasillaId = validated_casilla_id("07", surface="test_export.casilla")
+_M123_2019_2023_RESULTADO_CASILLA: CasillaId = validated_casilla_id("08", surface="test_export.casilla")
+_M131_HISTORICAL_01_CASILLA: CasillaId = validated_casilla_id("01", surface="test_export.casilla")
+_M131_HISTORICAL_02_CASILLA: CasillaId = validated_casilla_id("02", surface="test_export.casilla")
+_M131_HISTORICAL_03_CASILLA: CasillaId = validated_casilla_id("03", surface="test_export.casilla")
+_M131_HISTORICAL_04_CASILLA: CasillaId = validated_casilla_id("04", surface="test_export.casilla")
+_M131_HISTORICAL_05_CASILLA: CasillaId = validated_casilla_id("05", surface="test_export.casilla")
+_M131_HISTORICAL_06_CASILLA: CasillaId = validated_casilla_id("06", surface="test_export.casilla")
+_M131_HISTORICAL_07_CASILLA: CasillaId = validated_casilla_id("07", surface="test_export.casilla")
+_M131_HISTORICAL_08_CASILLA: CasillaId = validated_casilla_id("08", surface="test_export.casilla")
+_M131_HISTORICAL_09_CASILLA: CasillaId = validated_casilla_id("09", surface="test_export.casilla")
+_M131_HISTORICAL_10_CASILLA: CasillaId = validated_casilla_id("10", surface="test_export.casilla")
+_M131_HISTORICAL_11_CASILLA: CasillaId = validated_casilla_id("11", surface="test_export.casilla")
+_M131_HISTORICAL_12_CASILLA: CasillaId = validated_casilla_id("12", surface="test_export.casilla")
+_M131_HISTORICAL_13_CASILLA: CasillaId = validated_casilla_id("13", surface="test_export.casilla")
+_M131_HISTORICAL_14_CASILLA: CasillaId = validated_casilla_id("14", surface="test_export.casilla")
+_M131_HISTORICAL_15_CASILLA: CasillaId = validated_casilla_id("15", surface="test_export.casilla")
+_M390_REPERCUTIDO_GENERAL_CASILLA = validated_casilla_id("iva.anual.repercutido.general", surface="test_export.casilla")
+_M390_REPERCUTIDO_REDUCIDO_CASILLA = validated_casilla_id(
+    "iva.anual.repercutido.reducido", surface="test_export.casilla"
+)
+_M390_REPERCUTIDO_SUPER_REDUCIDO_CASILLA = validated_casilla_id(
+    "iva.anual.repercutido.super-reducido", surface="test_export.casilla"
+)
 # Rate-specific box-layer casillas. The tier casillas above are the rate-BLIND
 # total layer and no longer reach an official box; these do, one per AEAT rate
 # box. A draft populating a tier total while leaving its boxes empty declares a
@@ -173,17 +212,39 @@ _M390_REPERCUTIDO_SUPER_REDUCIDO_CASILLA = _casilla_id("iva.anual.repercutido.su
 # the gate reads is the SUM against the tier total; a fixture giving every tier
 # exactly one box would let per-box exact equality read as the invariant, and it
 # is not one.
-_M390_REPERCUTIDO_TIPO_21_CUOTA_CASILLA = _casilla_id("iva.anual.repercutido.tipo-21.cuota")
-_M390_REPERCUTIDO_TIPO_10_CUOTA_CASILLA = _casilla_id("iva.anual.repercutido.tipo-10.cuota")
-_M390_REPERCUTIDO_TIPO_5_CUOTA_CASILLA = _casilla_id("iva.anual.repercutido.tipo-5.cuota")
-_M390_REPERCUTIDO_TIPO_4_CUOTA_CASILLA = _casilla_id("iva.anual.repercutido.tipo-4.cuota")
-_M390_SOPORTADO_INTERIORES_CASILLA = _casilla_id("iva.anual.soportado.interiores")
-_M390_SOPORTADO_IMPORTACIONES_CASILLA = _casilla_id("iva.anual.soportado.importaciones")
-_M390_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA = _casilla_id("iva.anual.autorepercutido.intracomunitaria")
-_M390_RECARGO_GENERAL_CASILLA = _casilla_id("iva.anual.repercutido.recargo.general")
-_M390_RECARGO_REDUCIDO_CASILLA = _casilla_id("iva.anual.repercutido.recargo.reducido")
-_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA = _casilla_id("iva.anual.compensacion-ultimo-periodo-97")
-_M390_COMPENSACION_GENERADA_EJERCICIO_CASILLA = _casilla_id("iva.anual.compensacion-generada-ejercicio-no-97")
+_M390_REPERCUTIDO_TIPO_21_CUOTA_CASILLA = validated_casilla_id(
+    "iva.anual.repercutido.tipo-21.cuota", surface="test_export.casilla"
+)
+_M390_REPERCUTIDO_TIPO_10_CUOTA_CASILLA = validated_casilla_id(
+    "iva.anual.repercutido.tipo-10.cuota", surface="test_export.casilla"
+)
+_M390_REPERCUTIDO_TIPO_5_CUOTA_CASILLA = validated_casilla_id(
+    "iva.anual.repercutido.tipo-5.cuota", surface="test_export.casilla"
+)
+_M390_REPERCUTIDO_TIPO_4_CUOTA_CASILLA = validated_casilla_id(
+    "iva.anual.repercutido.tipo-4.cuota", surface="test_export.casilla"
+)
+_M390_SOPORTADO_INTERIORES_CASILLA = validated_casilla_id(
+    "iva.anual.soportado.interiores", surface="test_export.casilla"
+)
+_M390_SOPORTADO_IMPORTACIONES_CASILLA = validated_casilla_id(
+    "iva.anual.soportado.importaciones", surface="test_export.casilla"
+)
+_M390_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA = validated_casilla_id(
+    "iva.anual.autorepercutido.intracomunitaria", surface="test_export.casilla"
+)
+_M390_RECARGO_GENERAL_CASILLA = validated_casilla_id(
+    "iva.anual.repercutido.recargo.general", surface="test_export.casilla"
+)
+_M390_RECARGO_REDUCIDO_CASILLA = validated_casilla_id(
+    "iva.anual.repercutido.recargo.reducido", surface="test_export.casilla"
+)
+_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA = validated_casilla_id(
+    "iva.anual.compensacion-ultimo-periodo-97", surface="test_export.casilla"
+)
+_M390_COMPENSACION_GENERADA_EJERCICIO_CASILLA = validated_casilla_id(
+    "iva.anual.compensacion-generada-ejercicio-no-97", surface="test_export.casilla"
+)
 
 
 def _narrative() -> str:

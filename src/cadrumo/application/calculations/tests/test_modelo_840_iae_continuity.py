@@ -77,15 +77,8 @@ _METADATA_STATUS_KEY = "iae_art82_exemption_status"
 _METADATA_LEGAL_REFS_KEY = "iae_art82_legal_refs"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M840 IAE fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_DECL_TIPO_DECLARACION_CASILLA: CasillaId = _casilla_id("decl.tipo-declaracion")
-_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
+_DECL_TIPO_DECLARACION_CASILLA: CasillaId = validated_casilla_id("decl.tipo-declaracion")
+_DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")
 
 
 def _find_observation(

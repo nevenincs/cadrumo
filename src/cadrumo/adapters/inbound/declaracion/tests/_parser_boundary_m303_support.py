@@ -16,7 +16,8 @@ See Also:
 
 from __future__ import annotations
 
-from ._parser_boundary_support import CasillaId, Decimal, _casilla_id, _expected_casilla_values
+from .....core import validated_casilla_id
+from ._parser_boundary_support import CasillaId, Decimal, _expected_casilla_values
 
 _M303_HISTORICAL_PARAMS: tuple[tuple[str, int, str], ...] = (
     ("2021-2T", 2021, "2T"),
@@ -70,7 +71,7 @@ _M303_HISTORICAL_PROFILE_CASILLAS: frozenset[str] = frozenset(
     },
 )
 
-_M303_C46_ALIAS: CasillaId = _casilla_id("c46")
+_M303_C46_ALIAS: CasillaId = validated_casilla_id("c46", surface="declaracion_parser_boundary.casilla")
 _M303_HISTORICAL_EXPECTED: dict[str, dict[CasillaId, Decimal]] = {
     "2021-2T": _expected_casilla_values(
         {"27": Decimal("12000.00"), "29": Decimal("7800.00"), "45": Decimal("7800.00"), "c46": Decimal("4200.00")},

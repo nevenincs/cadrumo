@@ -40,7 +40,7 @@ from .....domain.buckets import BucketEventType
 from .....tests.profile_capsule import open_test_profile_session
 from .....tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_minimal_profile
-from ....workflow import workflow_state_repository
+from ....workflow import WorkflowState, workflow_state_repository
 from .._persist import record_sync_run
 from .._records import (
     SyncRunCoverage,
@@ -66,7 +66,11 @@ _WIDE_SCOPE_MODELOS = tuple(f"{100 + index}" for index in range(120))
 def active_profile(tmp_path: Path) -> Iterator[str]:
     """Bind a real isolated encrypted profile bucket for one test."""
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID))
+        # Seeded through a detached WorkflowState, never a repository read:
+        # the capsule publishes by an atomic no-replace rename onto
+        # ``buckets/<profile-id>``, which a workflow-state repository
+        # construction would otherwise materialise first and collide with.
+        register_minimal_profile(WorkflowState(), profile_id=_BUCKET_ID)
         bucket_id = workflow_state_repository().load().active_profile_bucket_id()
         assert bucket_id is not None
         yield bucket_id

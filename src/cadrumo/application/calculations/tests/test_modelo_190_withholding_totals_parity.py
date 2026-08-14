@@ -70,12 +70,8 @@ _MODELO_190 = "190"
 _FILING_YEAR = 2025
 
 
-def _casilla_id(value: str) -> CasillaId:
-    return validated_casilla_id(value, surface="test casilla id")
-
-
-_M190_PERCEPCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.percepciones-total")
-_M190_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
+_M190_PERCEPCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.percepciones-total")
+_M190_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.retenciones-total")
 
 # The nine 190<-111 annual-summary relations feeding decl.percepciones-total;
 # the tenth feeds decl.retenciones-total. Values are the (arbitrary but

@@ -15,7 +15,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import SecureObjectRepository
-from ....core import BindingSourceKind, CasillaId, Period
+from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.invoices import (
     Invoice,
@@ -53,7 +53,7 @@ from .. import (
     export_modelo_revision,
     verify_modelo_revision,
 )
-from ._dormant_resolver_live_support import _T0, _T1, _casilla_id, _revision, _seed_ready_profile
+from ._dormant_resolver_live_support import _T0, _T1, _revision, _seed_ready_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -104,11 +104,11 @@ _M369_DE_GOODS = OssIossLedgerCandidate(
 _M369_DE_SERVICES_BINDING = "modelo-369-union-de-services-21pct"
 _M369_FR_SERVICES_BINDING = "modelo-369-union-fr-services-21pct"
 _M369_DE_GOODS_BINDING = "modelo-369-union-de-goods-distance-21pct"
-_M369_CUOTA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.union.cuota-total")
+_M369_CUOTA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.union.cuota-total")
 # Casilla bound to the DE-services OSS binding (used by the carve-out test).
-_M369_DE_SERVICES_BINDING_CASILLA: CasillaId = _casilla_id("iva.union.de.services-cuota")
-_M369_FR_SERVICES_BINDING_CASILLA: CasillaId = _casilla_id("iva.union.fr.services-cuota")
-_M369_DE_GOODS_BINDING_CASILLA: CasillaId = _casilla_id("iva.union.de.goods-distance-cuota")
+_M369_DE_SERVICES_BINDING_CASILLA: CasillaId = validated_casilla_id("iva.union.de.services-cuota")
+_M369_FR_SERVICES_BINDING_CASILLA: CasillaId = validated_casilla_id("iva.union.fr.services-cuota")
+_M369_DE_GOODS_BINDING_CASILLA: CasillaId = validated_casilla_id("iva.union.de.goods-distance-cuota")
 
 
 def _workflow_profile() -> TaxpayerProfile:

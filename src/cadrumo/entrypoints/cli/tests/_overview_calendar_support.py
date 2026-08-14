@@ -128,14 +128,7 @@ def calendar_backend_omitting_gating_facts(tmp_path: Path, *omitted: str) -> Ite
         yield
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"overview calendar fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_OBSERVED_CASILLA: CasillaId = _casilla_id("01")
+_OBSERVED_CASILLA: CasillaId = validated_casilla_id("01")
 
 
 def _observed_casilla_observations(value: Decimal):

@@ -85,30 +85,23 @@ _PREV_YEAR_BINDING: BindingId = "irpf.previous_year_economic_activity_net_income
 _PRIOR_YEAR_NET_INCOME = Decimal("5000")
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M130 carry-forward fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
-_M130_GASTOS_CASILLA: CasillaId = _casilla_id("02")
-_M130_PREVIOUS_PAYMENTS_CASILLA: CasillaId = _casilla_id("05")
-_M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
-_M130_PAGO_FRACCIONADO_CASILLA: CasillaId = _casilla_id("07")
-_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
-_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = _casilla_id("10")
-_M130_DIFERENCIA_PREVIA_CASILLA: CasillaId = _casilla_id("14")
-_M130_CARRY_FORWARD_CASILLA: CasillaId = _casilla_id("15")
-_M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
-_M130_DIFERENCIA_CASILLA: CasillaId = _casilla_id("17")
-_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
-_M130_SALDO_NEGATIVO_CASILLA: CasillaId = _casilla_id("saldo-negativo-fin-periodo")
-_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
-_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = _casilla_id("1479")
-_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = _casilla_id("1553")
-_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = _casilla_id("1577")
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
+_M130_PREVIOUS_PAYMENTS_CASILLA: CasillaId = validated_casilla_id("05")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
+_M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id("07")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10")
+_M130_DIFERENCIA_PREVIA_CASILLA: CasillaId = validated_casilla_id("14")
+_M130_CARRY_FORWARD_CASILLA: CasillaId = validated_casilla_id("15")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
+_M130_DIFERENCIA_CASILLA: CasillaId = validated_casilla_id("17")
+_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
+_M130_SALDO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id("saldo-negativo-fin-periodo")
+_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")
+_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = validated_casilla_id("1479")
+_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = validated_casilla_id("1553")
+_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = validated_casilla_id("1577")
 
 # Loss-making Q1 scenario (empirically grounded against the engine):
 #   ingresos 3000, gastos 1000 -> rendimiento neto 2000

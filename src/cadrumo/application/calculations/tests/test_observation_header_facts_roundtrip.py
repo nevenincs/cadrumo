@@ -54,11 +54,7 @@ _CAPTURED_AT = datetime(2026, 5, 28, 11, 35, 0, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2025, "1T")
 
 
-def _casilla_id(value: object) -> CasillaId:
-    return validated_casilla_id(value, surface="header facts roundtrip")
-
-
-_IVA_RESULTADO: CasillaId = _casilla_id("iva.resultado")
+_IVA_RESULTADO: CasillaId = validated_casilla_id("iva.resultado", surface="header facts roundtrip")
 
 
 def _observation() -> RegistryModeloObservation:

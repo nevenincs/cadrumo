@@ -67,18 +67,11 @@ _MODELO_202 = "202"
 #: The M200 source casilla the 40.2 base copies (cuota líquida).
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M202 continuity fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M200_CUOTA_LIQUIDA_CASILLA: CasillaId = _casilla_id("DP200014B:00592")
-_M202_BASE_CASILLA: CasillaId = _casilla_id("01")
-_M202_DEDUCCIONES_CASILLA: CasillaId = _casilla_id("02")
-_M202_A_INGRESAR_CASILLA: CasillaId = _casilla_id("03")
-_M202_1P_PAGO_CASILLA: CasillaId = _casilla_id("34")
+_M200_CUOTA_LIQUIDA_CASILLA: CasillaId = validated_casilla_id("DP200014B:00592")
+_M202_BASE_CASILLA: CasillaId = validated_casilla_id("01")
+_M202_DEDUCCIONES_CASILLA: CasillaId = validated_casilla_id("02")
+_M202_A_INGRESAR_CASILLA: CasillaId = validated_casilla_id("03")
+_M202_1P_PAGO_CASILLA: CasillaId = validated_casilla_id("34")
 
 #: The statutory modalidad 40.2 rate as declared in the registry parameter
 #: ``is.modalidad_cuota.percentage`` — grounded in LIS art. 40.2 via the

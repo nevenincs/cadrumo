@@ -18,23 +18,45 @@ _WWW6_HOST = aeat_host("www6")
 # intracomunitario / rectificaciones (500 bytes).
 
 
-def _casilla_id(value: object) -> CasillaId:
-    return validated_casilla_id(value, surface="test_modelo_349_registry._OFFICIAL_FIELD_POSITIONS")
-
-
-_DECL_NUMERO_OPERADORES_CASILLA: CasillaId = _casilla_id("decl.numero-operadores")
-_DECL_IMPORTE_OPERACIONES_CASILLA: CasillaId = _casilla_id("decl.importe-operaciones")
-_DECL_NUMERO_RECTIFICACIONES_CASILLA: CasillaId = _casilla_id("decl.numero-rectificaciones")
-_DECL_IMPORTE_RECTIFICACIONES_CASILLA: CasillaId = _casilla_id("decl.importe-rectificaciones")
-_OP_CODIGO_PAIS_CASILLA: CasillaId = _casilla_id("op.codigo-pais")
-_OP_NIF_COMUNITARIO_CASILLA: CasillaId = _casilla_id("op.nif-comunitario")
-_OP_APELLIDOS_RAZON_SOCIAL_CASILLA: CasillaId = _casilla_id("op.apellidos-razon-social")
-_OP_CLAVE_OPERACION_CASILLA: CasillaId = _casilla_id("op.clave-operacion")
-_OP_BASE_IMPONIBLE_CASILLA: CasillaId = _casilla_id("op.base-imponible")
-_RECT_EJERCICIO_RECTIFICADO_CASILLA: CasillaId = _casilla_id("rect.ejercicio-rectificado")
-_RECT_PERIODO_RECTIFICADO_CASILLA: CasillaId = _casilla_id("rect.periodo-rectificado")
-_RECT_BASE_RECTIFICADA_CASILLA: CasillaId = _casilla_id("rect.base-rectificada")
-_RECT_BASE_ANTERIOR_CASILLA: CasillaId = _casilla_id("rect.base-anterior")
+_DECL_NUMERO_OPERADORES_CASILLA: CasillaId = validated_casilla_id(
+    "decl.numero-operadores", surface="test_modelo_349_registry._OFFICIAL_FIELD_POSITIONS"
+)
+_DECL_IMPORTE_OPERACIONES_CASILLA: CasillaId = validated_casilla_id(
+    "decl.importe-operaciones", surface="test_modelo_349_registry._OFFICIAL_FIELD_POSITIONS"
+)
+_DECL_NUMERO_RECTIFICACIONES_CASILLA: CasillaId = validated_casilla_id(
+    "decl.numero-rectificaciones", surface="test_modelo_349_registry._OFFICIAL_FIELD_POSITIONS"
+)
+_DECL_IMPORTE_RECTIFICACIONES_CASILLA: CasillaId = validated_casilla_id(
+    "decl.importe-rectificaciones", surface="test_modelo_349_registry._OFFICIAL_FIELD_POSITIONS"
+)
+_OP_CODIGO_PAIS_CASILLA: CasillaId = validated_casilla_id(
+    "op.codigo-pais", surface="test_modelo_349_registry._OFFICIAL_FIELD_POSITIONS"
+)
+_OP_NIF_COMUNITARIO_CASILLA: CasillaId = validated_casilla_id(
+    "op.nif-comunitario", surface="test_modelo_349_registry._OFFICIAL_FIELD_POSITIONS"
+)
+_OP_APELLIDOS_RAZON_SOCIAL_CASILLA: CasillaId = validated_casilla_id(
+    "op.apellidos-razon-social", surface="test_modelo_349_registry._OFFICIAL_FIELD_POSITIONS"
+)
+_OP_CLAVE_OPERACION_CASILLA: CasillaId = validated_casilla_id(
+    "op.clave-operacion", surface="test_modelo_349_registry._OFFICIAL_FIELD_POSITIONS"
+)
+_OP_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
+    "op.base-imponible", surface="test_modelo_349_registry._OFFICIAL_FIELD_POSITIONS"
+)
+_RECT_EJERCICIO_RECTIFICADO_CASILLA: CasillaId = validated_casilla_id(
+    "rect.ejercicio-rectificado", surface="test_modelo_349_registry._OFFICIAL_FIELD_POSITIONS"
+)
+_RECT_PERIODO_RECTIFICADO_CASILLA: CasillaId = validated_casilla_id(
+    "rect.periodo-rectificado", surface="test_modelo_349_registry._OFFICIAL_FIELD_POSITIONS"
+)
+_RECT_BASE_RECTIFICADA_CASILLA: CasillaId = validated_casilla_id(
+    "rect.base-rectificada", surface="test_modelo_349_registry._OFFICIAL_FIELD_POSITIONS"
+)
+_RECT_BASE_ANTERIOR_CASILLA: CasillaId = validated_casilla_id(
+    "rect.base-anterior", surface="test_modelo_349_registry._OFFICIAL_FIELD_POSITIONS"
+)
 _DECLARANT_SUMMARY_CASILLAS: tuple[CasillaId, ...] = (
     _DECL_NUMERO_OPERADORES_CASILLA,
     _DECL_IMPORTE_OPERACIONES_CASILLA,

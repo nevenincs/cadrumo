@@ -28,25 +28,14 @@ _WWW1_HOST = aeat_host("www1")
 _WWW6_HOST = aeat_host("www6")
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"Modelo 369 fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M369_EXTERIOR_DE_SERVICES_CUOTA_CASILLA: CasillaId = _casilla_id("iva.exterior.de.services-cuota")
-_M369_EXTERIOR_CUOTA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.exterior.cuota-total")
-_M369_UNION_DE_SERVICES_CUOTA_CASILLA: CasillaId = _casilla_id("iva.union.de.services-cuota")
-_M369_UNION_FR_SERVICES_CUOTA_CASILLA: CasillaId = _casilla_id("iva.union.fr.services-cuota")
-_M369_UNION_DE_GOODS_DISTANCE_CUOTA_CASILLA: CasillaId = _casilla_id(
-    "iva.union.de.goods-distance-cuota",
-)
-_M369_UNION_CUOTA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.union.cuota-total")
-_M369_IMPORTACION_DE_LOW_VALUE_CUOTA_CASILLA: CasillaId = _casilla_id(
-    "iva.importacion.de.low-value-cuota",
-)
-_M369_IMPORTACION_CUOTA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.importacion.cuota-total")
+_M369_EXTERIOR_DE_SERVICES_CUOTA_CASILLA: CasillaId = validated_casilla_id("iva.exterior.de.services-cuota")
+_M369_EXTERIOR_CUOTA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.exterior.cuota-total")
+_M369_UNION_DE_SERVICES_CUOTA_CASILLA: CasillaId = validated_casilla_id("iva.union.de.services-cuota")
+_M369_UNION_FR_SERVICES_CUOTA_CASILLA: CasillaId = validated_casilla_id("iva.union.fr.services-cuota")
+_M369_UNION_DE_GOODS_DISTANCE_CUOTA_CASILLA: CasillaId = validated_casilla_id("iva.union.de.goods-distance-cuota")
+_M369_UNION_CUOTA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.union.cuota-total")
+_M369_IMPORTACION_DE_LOW_VALUE_CUOTA_CASILLA: CasillaId = validated_casilla_id("iva.importacion.de.low-value-cuota")
+_M369_IMPORTACION_CUOTA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.importacion.cuota-total")
 _M369_EXTERIOR_SCHEME_LEGAL_REFS: tuple[LegalRefId, ...] = (
     "ley-37-1992:art-163-octiesdecies",
     "ley-37-1992:art-163-noniesdecies",

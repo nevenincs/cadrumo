@@ -60,8 +60,6 @@ __all__ = [
     "Path",
     "PdfModeloImportError",
     "TemplateNotDetectedError",
-    "_casilla_id",
-    "_casilla_ids",
     "_expected_casilla_values",
     "_expected_period",
     "_extract_pages_words",
@@ -137,58 +135,61 @@ _MODELO_115_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "115" / "2024-1
 _MODELO_131_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "131" / "2024-1T.pdf"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    return validated_casilla_id(value, surface="declaracion_parser_boundary.casilla")
-
-
-def _casilla_ids(*values: object) -> tuple[CasillaId, ...]:
-    return tuple(_casilla_id(value) for value in values)
-
-
 def _expected_casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
-    return {_casilla_id(casilla_id): amount for casilla_id, amount in values.items()}
+    return {
+        validated_casilla_id(casilla_id, surface="declaracion_parser_boundary.casilla"): amount
+        for casilla_id, amount in values.items()
+    }
 
 
-_MODELO_130_EXPECTED_TARGETS: tuple[CasillaId, ...] = _casilla_ids(*(f"{index:02d}" for index in range(1, 20)))
-
-_MODELO_111_EXPECTED_TARGETS: tuple[CasillaId, ...] = _casilla_ids(
-    "01",
-    "04",
-    "07",
-    "10",
-    "13",
-    "16",
-    "19",
-    "22",
-    "25",  # col A
-    "02",
-    "05",
-    "08",
-    "11",
-    "14",
-    "17",
-    "20",
-    "23",
-    "26",  # col B
-    "03",
-    "06",
-    "09",
-    "12",
-    "15",
-    "18",
-    "21",
-    "24",
-    "27",
-    "28",
-    "30",  # col C
+_MODELO_130_EXPECTED_TARGETS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(_v, surface="declaracion_parser_boundary.casilla")
+    for _v in (*(f"{index:02d}" for index in range(1, 20)),)
 )
 
-_MODELO_123_CURRENT_EXPECTED_TARGETS: tuple[CasillaId, ...] = _casilla_ids(
-    *(f"{index:02d}" for index in range(1, 15)),
+_MODELO_111_EXPECTED_TARGETS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(_v, surface="declaracion_parser_boundary.casilla")
+    for _v in (
+        "01",
+        "04",
+        "07",
+        "10",
+        "13",
+        "16",
+        "19",
+        "22",
+        "25",  # col A
+        "02",
+        "05",
+        "08",
+        "11",
+        "14",
+        "17",
+        "20",
+        "23",
+        "26",  # col B
+        "03",
+        "06",
+        "09",
+        "12",
+        "15",
+        "18",
+        "21",
+        "24",
+        "27",
+        "28",
+        "30",
+    )
 )
 
-_MODELO_123_HISTORICAL_EXPECTED_TARGETS: tuple[CasillaId, ...] = _casilla_ids(
-    *(f"{index:02d}" for index in range(1, 9)),
+_MODELO_123_CURRENT_EXPECTED_TARGETS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(_v, surface="declaracion_parser_boundary.casilla")
+    for _v in (*(f"{index:02d}" for index in range(1, 15)),)
+)
+
+_MODELO_123_HISTORICAL_EXPECTED_TARGETS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(_v, surface="declaracion_parser_boundary.casilla")
+    for _v in (*(f"{index:02d}" for index in range(1, 9)),)
 )
 
 

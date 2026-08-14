@@ -38,26 +38,19 @@ from .._errors import ModeloValidationError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_INPUT_CASILLA_001: CasillaId = _casilla_id("001")
-_INPUT_CASILLA_002: CasillaId = _casilla_id("002")
-_PIN_INPUT_CASILLA_01: CasillaId = _casilla_id("01")
-_PIN_INPUT_CASILLA_02: CasillaId = _casilla_id("02")
-_PIN_INPUT_CASILLA_03: CasillaId = _casilla_id("03")
-_OUTPUT_CASILLA_002: CasillaId = _casilla_id("002")
-_PIN_OUTPUT_CASILLA_04: CasillaId = _casilla_id("04")
-_PIN_OUTPUT_CASILLA_07: CasillaId = _casilla_id("07")
-_PIN_OUTPUT_CASILLA_19: CasillaId = _casilla_id("19")
-_OBSERVATION_CASILLA_100: CasillaId = _casilla_id("100")
-_OBSERVATION_CASILLA_200: CasillaId = _casilla_id("200")
-_ORDERED_OUTPUT_CASILLA_010: CasillaId = _casilla_id("010")
-_ORDERED_OUTPUT_CASILLA_020: CasillaId = _casilla_id("020")
+_INPUT_CASILLA_001: CasillaId = validated_casilla_id("001")
+_INPUT_CASILLA_002: CasillaId = validated_casilla_id("002")
+_PIN_INPUT_CASILLA_01: CasillaId = validated_casilla_id("01")
+_PIN_INPUT_CASILLA_02: CasillaId = validated_casilla_id("02")
+_PIN_INPUT_CASILLA_03: CasillaId = validated_casilla_id("03")
+_OUTPUT_CASILLA_002: CasillaId = validated_casilla_id("002")
+_PIN_OUTPUT_CASILLA_04: CasillaId = validated_casilla_id("04")
+_PIN_OUTPUT_CASILLA_07: CasillaId = validated_casilla_id("07")
+_PIN_OUTPUT_CASILLA_19: CasillaId = validated_casilla_id("19")
+_OBSERVATION_CASILLA_100: CasillaId = validated_casilla_id("100")
+_OBSERVATION_CASILLA_200: CasillaId = validated_casilla_id("200")
+_ORDERED_OUTPUT_CASILLA_010: CasillaId = validated_casilla_id("010")
+_ORDERED_OUTPUT_CASILLA_020: CasillaId = validated_casilla_id("020")
 _PAGOS_RELATION: RelationId = "renta-2024-rel-130-pagos-fraccionados"
 _NONCANONICAL_CASILLA_KEY = "bad key"
 _WHITESPACE_CASILLA_KEY = " 001 "
@@ -116,7 +109,7 @@ def test_m303_exonerado_390_evidence_preserves_shape_refusal_precedence() -> Non
     """Endpoint identity refuses before rows or applicability completeness."""
     reference = FilingEvidenceReference(reference="test:exonerado-390:precedence")
     duplicate_endpoint = M303Exonerado390EndpointEvidence(
-        casilla_id=_casilla_id("79"),
+        casilla_id=validated_casilla_id("79"),
         value=Decimal("0"),
         evidence_reference=reference,
     )
@@ -277,7 +270,7 @@ def test_revision_id_changes_with_immutable_m303_filing_instance_evidence() -> N
                         applicability_reference=reference,
                         endpoints=(
                             M303Exonerado390EndpointEvidence(
-                                casilla_id=_casilla_id("79"),
+                                casilla_id=validated_casilla_id("79"),
                                 value=Decimal("0"),
                                 evidence_reference=reference,
                             ),

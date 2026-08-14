@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-from ._parser_boundary_support import (
-    CasillaId,
-    Decimal,
-    _casilla_id,
-    _expected_casilla_values,
-)
+from .....core import validated_casilla_id
+from ._parser_boundary_support import CasillaId, Decimal, _expected_casilla_values
 
-_M303_CASILLA_C46: CasillaId = _casilla_id("c46")
-_M303_CASILLA_C69: CasillaId = _casilla_id("c69")
+_M303_CASILLA_C46: CasillaId = validated_casilla_id("c46", surface="declaracion_parser_boundary.casilla")
+_M303_CASILLA_C69: CasillaId = validated_casilla_id("c69", surface="declaracion_parser_boundary.casilla")
 
 _M303_2023_2024_EXPECTED: dict[str, dict[CasillaId, Decimal]] = {
     # Per-specimen expected values derived from _MODELO_303_CORPUS_FIXTURES in _generate.py.

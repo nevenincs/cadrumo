@@ -26,34 +26,27 @@ _T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
 _T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"verification substance fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_CASILLA_01: CasillaId = _casilla_id("01")
-_CASILLA_02: CasillaId = _casilla_id("02")
-_CASILLA_03: CasillaId = _casilla_id("03")
-_CASILLA_05: CasillaId = _casilla_id("05")
-_CASILLA_06: CasillaId = _casilla_id("06")
-_CASILLA_07: CasillaId = _casilla_id("07")
-_CASILLA_08: CasillaId = _casilla_id("08")
-_CASILLA_09: CasillaId = _casilla_id("09")
-_CASILLA_10: CasillaId = _casilla_id("10")
-_CASILLA_11: CasillaId = _casilla_id("11")
-_CASILLA_12: CasillaId = _casilla_id("12")
-_CASILLA_14: CasillaId = _casilla_id("14")
-_CASILLA_15: CasillaId = _casilla_id("15")
-_CASILLA_16: CasillaId = _casilla_id("16")
-_CASILLA_18: CasillaId = _casilla_id("18")
-_CASILLA_00501: CasillaId = _casilla_id("00501")
-_ABSENT_REGISTRY_CASILLA: CasillaId = _casilla_id("99")
-_M200_BIN_OPEN_CASILLA: CasillaId = _casilla_id("00670")
-_M200_BIN_CLOSING_CASILLA: CasillaId = _casilla_id("00671")
-_M200_BIN_APPLIED_CASILLA: CasillaId = _casilla_id("DP200014:00547")
-_M200_BIN_GENERATED_CASILLA: CasillaId = _casilla_id("DP200014:00552")
+_CASILLA_01: CasillaId = validated_casilla_id("01")
+_CASILLA_02: CasillaId = validated_casilla_id("02")
+_CASILLA_03: CasillaId = validated_casilla_id("03")
+_CASILLA_05: CasillaId = validated_casilla_id("05")
+_CASILLA_06: CasillaId = validated_casilla_id("06")
+_CASILLA_07: CasillaId = validated_casilla_id("07")
+_CASILLA_08: CasillaId = validated_casilla_id("08")
+_CASILLA_09: CasillaId = validated_casilla_id("09")
+_CASILLA_10: CasillaId = validated_casilla_id("10")
+_CASILLA_11: CasillaId = validated_casilla_id("11")
+_CASILLA_12: CasillaId = validated_casilla_id("12")
+_CASILLA_14: CasillaId = validated_casilla_id("14")
+_CASILLA_15: CasillaId = validated_casilla_id("15")
+_CASILLA_16: CasillaId = validated_casilla_id("16")
+_CASILLA_18: CasillaId = validated_casilla_id("18")
+_CASILLA_00501: CasillaId = validated_casilla_id("00501")
+_ABSENT_REGISTRY_CASILLA: CasillaId = validated_casilla_id("99")
+_M200_BIN_OPEN_CASILLA: CasillaId = validated_casilla_id("00670")
+_M200_BIN_CLOSING_CASILLA: CasillaId = validated_casilla_id("00671")
+_M200_BIN_APPLIED_CASILLA: CasillaId = validated_casilla_id("DP200014:00547")
+_M200_BIN_GENERATED_CASILLA: CasillaId = validated_casilla_id("DP200014:00552")
 
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="00000000T"),

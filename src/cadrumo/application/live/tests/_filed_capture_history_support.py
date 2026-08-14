@@ -38,7 +38,7 @@ from ....tests import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import workflow_state_repository
+from ...workflow import WorkflowState, workflow_state_repository
 
 _CAPTURED_AT = datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC)
 #: A checksum-valid synthetic NIF. This value reaches
@@ -50,19 +50,15 @@ _SYNTHETIC_EXPEDIENTE_ID = "200030300000000Z"
 _SESSION_BUCKET_ID = "45454545-4545-4454-8454-454545454545"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    return validated_casilla_id(value, surface="test casilla id")
-
-
-_M303_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
-_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
-    "iva.compensacion-pendiente-periodos-anteriores",
+_M303_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores"
 )
-_M303_POSTERIOR_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
-_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
-_M303_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
-_M303_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
-_M303_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("71")
+_M303_POSTERIOR_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+_M303_GENERADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-generada-periodo")
+_M303_APLICADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
+_M303_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("71")
 _M303_DECLARATION_TYPE_N = ObservedHeaderFact(
     header_key="declaration_type",
     value="N",
@@ -137,12 +133,14 @@ def _profile_backend(tmp_path: Path, *, tax_id: str):
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session("11111111-1111-4111-8111-111111111111"),
     ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id="11111111-1111-4111-8111-111111111111",
-                overrides={"identity.tax_id": tax_id},
-            ),
+        # Seeded through a detached WorkflowState, never a repository read:
+        # the capsule publishes by an atomic no-replace rename onto
+        # ``buckets/<profile-id>``, which a workflow-state repository
+        # construction would otherwise materialise first and collide with.
+        register_minimal_profile(
+            WorkflowState(),
+            profile_id="11111111-1111-4111-8111-111111111111",
+            overrides={"identity.tax_id": tax_id},
         )
         bucket_id = workflow_state_repository().load().active_profile_bucket_id()
         assert bucket_id is not None

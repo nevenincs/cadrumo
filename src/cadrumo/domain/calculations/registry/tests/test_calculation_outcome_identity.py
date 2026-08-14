@@ -41,15 +41,8 @@ from .._ids import LegalRefId, SourceRefId
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"outcome-identity fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_CONTESTED_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
-_OTHER_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
+_CONTESTED_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+_OTHER_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
 _LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-37-1992:art-21",)
 _SOURCE_REFS: tuple[SourceRefId, ...] = ("aeat-iva-2025",)
 

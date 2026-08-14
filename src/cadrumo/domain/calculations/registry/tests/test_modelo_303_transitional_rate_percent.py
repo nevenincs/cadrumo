@@ -46,20 +46,23 @@ policy's own legal pedigree.
 from __future__ import annotations
 
 import shutil
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from .....core import CasillaId, validated_casilla_id
-from .....core.resources import resources
+from .....core.resources import bundled_path, resources
 from ....period import Period, calculation_filing_date
 from .. import (
     RegistryCalculationResult,
+    build_snapshot,
     calculate_registry_snapshot,
     resolve_available_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
+from .._errors import RegistryValidationError
 from .._loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -125,6 +128,64 @@ def test_the_flip_lands_exactly_on_the_09_3t_to_10_4t_2024_boundary() -> None:
 
     assert before.values[_CASILLA_154] != after.values[_CASILLA_154]
     assert before.values[_CASILLA_166] != after.values[_CASILLA_166]
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "period", "expected_revision_id"),
+    [(2025, "1T", "2025"), (2026, "2T", "2026-y-siguientes")],
+)
+def test_the_expired_window_is_not_declared_in_the_revisions_that_neutralise_it(
+    filing_year: int,
+    period: str,
+    expected_revision_id: str,
+) -> None:
+    """A neutralised revision declares the zero constant and NO transitional window.
+
+    `date_context` is caller-supplied, so a window the revision's own
+    `period_selector` can never reach is not inert: a stray in-window date fed to
+    a 2025 or 2026 snapshot would have printed 7,5 % on a return whose diseño
+    mandates `Constante "00000"`. Each parameter now declares exactly one value,
+    so the same stray date refuses instead of publishing a rate the filing cannot
+    carry -- fail-closed, not silently wrong.
+
+    Built through :func:`build_snapshot` rather than the authority so this asserts
+    the registry's own declaration independently of revision review status.
+    """
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(m for m in modelos if m.id == "303")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=filing_year,
+        period=period,
+    )
+    assert snapshot.revision.id == expected_revision_id
+
+    parameters = {p.id: p for p in snapshot.revision.parameters}
+    for parameter_id in (
+        "m303-dr303-154-transitional-rate-percent",
+        "m303-dr303-166-transitional-rate-percent",
+    ):
+        values = parameters[parameter_id].values
+        assert [v.value for v in values] == [Decimal("0.00")], (
+            f"{parameter_id} still declares a rate window this revision cannot reach"
+        )
+
+    binding_values = {
+        "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
+        "modelo-303-autoconsumo-promotor-base": Decimal("0"),
+        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
+        **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, ()),
+    }
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    with pytest.raises(RegistryValidationError, match="expected exactly one dated value"):
+        calculate_registry_snapshot(
+            snapshot,
+            inputs=inputs,
+            binding_values=binding_values,
+            date_context={"filing_period": date(2024, 12, 31)},
+        )
 
 
 def test_mutation_reverting_154_to_manual_reds_the_gate(tmp_path: Path) -> None:

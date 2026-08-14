@@ -56,23 +56,16 @@ _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _BUCKET_ID = "26262626-2626-4262-8262-262626262626"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"bucket aggregation fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M303_REPERCUTIDO_GENERAL_CASILLA: CasillaId = _casilla_id("iva.repercutido.general")
-_M303_SOPORTADO_INTERIORES_CASILLA: CasillaId = _casilla_id("iva.soportado.interiores")
-_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
-_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
-_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
-_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
-_M303_COMPENSACION_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
-_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
-_M303_2009_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("27")
-_M303_2009_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("45")
+_M303_REPERCUTIDO_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.repercutido.general")
+_M303_SOPORTADO_INTERIORES_CASILLA: CasillaId = validated_casilla_id("iva.soportado.interiores")
+_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
+_M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+_M303_COMPENSACION_GENERADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-generada-periodo")
+_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
+_M303_2009_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("27")
+_M303_2009_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("45")
 _M303_BUCKET_SOURCE_CASILLAS: tuple[CasillaId, CasillaId] = (
     _M303_REPERCUTIDO_GENERAL_CASILLA,
     _M303_SOPORTADO_INTERIORES_CASILLA,
@@ -748,7 +741,7 @@ def test_first_period_empty_ledger_m303_calculates_zero_sin_actividad(
         clock=_T1,
     )
 
-    prior_compensacion_casilla = _casilla_id("iva.compensacion-pendiente-periodos-anteriores")
+    prior_compensacion_casilla = validated_casilla_id("iva.compensacion-pendiente-periodos-anteriores")
     assert revision.source_transaction_ids == ()
     assert revision.casilla_values[_M303_REPERCUTIDO_GENERAL_CASILLA] == Decimal("0")
     assert revision.casilla_values[_M303_SOPORTADO_INTERIORES_CASILLA] == Decimal("0")

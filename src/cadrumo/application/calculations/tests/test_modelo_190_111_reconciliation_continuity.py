@@ -86,24 +86,13 @@ _YEAR_N_PLUS_1 = 2026
 _CLOCK = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M190/111 reconciliation fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-def _casilla_ids(*values: object) -> list[CasillaId]:
-    return [_casilla_id(value) for value in values]
-
-
-_M111_TRABAJO_DINERARIO_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
-_M111_TRABAJO_DINERARIO_IMPORTE_CASILLA: CasillaId = _casilla_id("02")
-_M111_TRABAJO_DINERARIO_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
-_M111_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("28")
-_M190_TOTAL_PERCEPCIONES_CASILLA: CasillaId = _casilla_id("decl.total-percepciones")
-_M190_PERCEPCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.percepciones-total")
-_M190_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
+_M111_TRABAJO_DINERARIO_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01")
+_M111_TRABAJO_DINERARIO_IMPORTE_CASILLA: CasillaId = validated_casilla_id("02")
+_M111_TRABAJO_DINERARIO_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03")
+_M111_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("28")
+_M190_TOTAL_PERCEPCIONES_CASILLA: CasillaId = validated_casilla_id("decl.total-percepciones")
+_M190_PERCEPCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.percepciones-total")
+_M190_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.retenciones-total")
 _M190_PERCEPCIONES_BINDING = "modelo-190-percepciones-anual"
 _RETIRED_M190_M111_PERCEPCIONES_BINDINGS = frozenset(
     {
@@ -142,35 +131,40 @@ _RETIRED_M190_M111_PERCEPCIONES_RELATIONS = frozenset(
 # Source casilla ids the remaining 190 relation machinery aggregates.
 # The importe relations source even casillas 02,05,08,11,14,17,20,23,26.
 # The retenciones relation sources casilla 28.
-_IMPORTE_CASILLAS: list[CasillaId] = _casilla_ids("02", "05", "08", "11", "14", "17", "20", "23", "26")
+_IMPORTE_CASILLAS: list[CasillaId] = list(
+    validated_casilla_id(_v) for _v in ("02", "05", "08", "11", "14", "17", "20", "23", "26")
+)
 
 # All 111 manual-input casillas not driven by the scenario are zero.
-_ZERO_CASILLAS: list[CasillaId] = _casilla_ids(
-    "04",
-    "05",
-    "06",  # trabajo especie
-    "07",
-    "08",
-    "09",  # actividades econ dinerario
-    "10",
-    "11",
-    "12",  # actividades econ especie
-    "13",
-    "14",
-    "15",  # premios dinerario
-    "16",
-    "17",
-    "18",  # premios especie
-    "19",
-    "20",
-    "21",  # ganancias forestales dinerario
-    "22",
-    "23",
-    "24",  # ganancias forestales especie
-    "25",
-    "26",
-    "27",  # cesión derechos imagen
-    "29",  # resultado anteriores autoliquidaciones
+_ZERO_CASILLAS: list[CasillaId] = list(
+    validated_casilla_id(_v)
+    for _v in (
+        "04",
+        "05",
+        "06",  # trabajo especie
+        "07",
+        "08",
+        "09",  # actividades econ dinerario
+        "10",
+        "11",
+        "12",  # actividades econ especie
+        "13",
+        "14",
+        "15",  # premios dinerario
+        "16",
+        "17",
+        "18",  # premios especie
+        "19",
+        "20",
+        "21",  # ganancias forestales dinerario
+        "22",
+        "23",
+        "24",  # ganancias forestales especie
+        "25",
+        "26",
+        "27",  # cesión derechos imagen
+        "29",
+    )
 )
 
 _YEAR_N_QUARTERS: dict[str, dict[CasillaId, Decimal]] = {

@@ -87,12 +87,11 @@ _RENTA_YEARS = (2025, 2026)
 #: asserts each reconciliation casilla equals Σ members' 322 source casilla.
 
 
-def _casilla_id(value: object) -> CasillaId:
-    return validated_casilla_id(value, surface="test_modelo_353_grupo_aggregation_continuity.casilla")
-
-
 def _reconciliation_pair(source: object, target: object) -> tuple[CasillaId, CasillaId]:
-    return (_casilla_id(source), _casilla_id(target))
+    return (
+        validated_casilla_id(source, surface="test_modelo_353_grupo_aggregation_continuity.casilla"),
+        validated_casilla_id(target, surface="test_modelo_353_grupo_aggregation_continuity.casilla"),
+    )
 
 
 _RECONCILIATION_BY_322_CASILLA: dict[CasillaId, CasillaId] = dict(

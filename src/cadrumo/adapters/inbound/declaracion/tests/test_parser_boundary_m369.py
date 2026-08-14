@@ -4,18 +4,15 @@ from __future__ import annotations
 
 import pytest
 
-from ._parser_boundary_support import (
-    _MODELO_369_SYNTHETIC_FIXTURE,
-    CasillaId,
-    _casilla_id,
-    _expected_period,
-    parse_declaracion,
-)
+from .....core import validated_casilla_id
+from ._parser_boundary_support import _MODELO_369_SYNTHETIC_FIXTURE, CasillaId, _expected_period, parse_declaracion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
-_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
-_DECL_PERIODO_CASILLA: CasillaId = _casilla_id("decl.periodo")
+_DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
+    "decl.ejercicio", surface="declaracion_parser_boundary.casilla"
+)
+_DECL_PERIODO_CASILLA: CasillaId = validated_casilla_id("decl.periodo", surface="declaracion_parser_boundary.casilla")
 _M369_EXPECTED_VALUES: dict[CasillaId, str] = {
     _DECL_EJERCICIO_CASILLA: "2024",
     _DECL_PERIODO_CASILLA: "1T",

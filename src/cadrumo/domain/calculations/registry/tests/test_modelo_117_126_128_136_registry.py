@@ -32,10 +32,6 @@ from ._registry_schema_support import _committed_modelo, _committed_snapshot
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _casilla_id(value: str) -> CasillaId:
-    return validated_casilla_id(value, surface="test_modelo_117_126_128_136_registry")
-
-
 class _ModeloArithmeticCase(NamedTuple):
     modelo_id: str
     revision_id: str
@@ -56,12 +52,15 @@ _CASES = (
         formula_ids=frozenset({"modelo-117-total-liquidacion", "modelo-117-resultado-ingresar"}),
         # 09 = [03] + [06] + [08]; 11 = [09] - [10].
         inputs={
-            _casilla_id("03"): Decimal("1000.00"),
-            _casilla_id("06"): Decimal("300.00"),
-            _casilla_id("08"): Decimal("200.00"),
-            _casilla_id("10"): Decimal("100.00"),
+            validated_casilla_id("03", surface="test_modelo_117_126_128_136_registry"): Decimal("1000.00"),
+            validated_casilla_id("06", surface="test_modelo_117_126_128_136_registry"): Decimal("300.00"),
+            validated_casilla_id("08", surface="test_modelo_117_126_128_136_registry"): Decimal("200.00"),
+            validated_casilla_id("10", surface="test_modelo_117_126_128_136_registry"): Decimal("100.00"),
         },
-        expected_values={_casilla_id("09"): Decimal("1500.00"), _casilla_id("11"): Decimal("1400.00")},
+        expected_values={
+            validated_casilla_id("09", surface="test_modelo_117_126_128_136_registry"): Decimal("1500.00"),
+            validated_casilla_id("11", surface="test_modelo_117_126_128_136_registry"): Decimal("1400.00"),
+        },
         filing_period=date(2025, 3, 31),
     ),
     _ModeloArithmeticCase(
@@ -72,11 +71,14 @@ _CASES = (
         formula_ids=frozenset({"modelo-126-total-liquidacion", "modelo-126-resultado-ingresar"}),
         # 10 = [02] + [06]; 12 = [10] - [11].
         inputs={
-            _casilla_id("02"): Decimal("800.00"),
-            _casilla_id("06"): Decimal("200.00"),
-            _casilla_id("11"): Decimal("150.00"),
+            validated_casilla_id("02", surface="test_modelo_117_126_128_136_registry"): Decimal("800.00"),
+            validated_casilla_id("06", surface="test_modelo_117_126_128_136_registry"): Decimal("200.00"),
+            validated_casilla_id("11", surface="test_modelo_117_126_128_136_registry"): Decimal("150.00"),
         },
-        expected_values={_casilla_id("10"): Decimal("1000.00"), _casilla_id("12"): Decimal("850.00")},
+        expected_values={
+            validated_casilla_id("10", surface="test_modelo_117_126_128_136_registry"): Decimal("1000.00"),
+            validated_casilla_id("12", surface="test_modelo_117_126_128_136_registry"): Decimal("850.00"),
+        },
         filing_period=date(2025, 3, 31),
     ),
     _ModeloArithmeticCase(
@@ -86,8 +88,11 @@ _CASES = (
         period="1T",
         formula_ids=frozenset({"modelo-128-resultado-ingresar"}),
         # 07 = [03] - [06].
-        inputs={_casilla_id("03"): Decimal("900.00"), _casilla_id("06"): Decimal("100.00")},
-        expected_values={_casilla_id("07"): Decimal("800.00")},
+        inputs={
+            validated_casilla_id("03", surface="test_modelo_117_126_128_136_registry"): Decimal("900.00"),
+            validated_casilla_id("06", surface="test_modelo_117_126_128_136_registry"): Decimal("100.00"),
+        },
+        expected_values={validated_casilla_id("07", surface="test_modelo_117_126_128_136_registry"): Decimal("800.00")},
         filing_period=date(2025, 3, 31),
     ),
     _ModeloArithmeticCase(
@@ -104,14 +109,14 @@ _CASES = (
         ),
         # 04 = [02] - [03]; 05 = 20 % of [04]; 07 = [05] - [06].
         inputs={
-            _casilla_id("02"): Decimal("100000.00"),
-            _casilla_id("03"): Decimal("40000.00"),
-            _casilla_id("06"): Decimal("0.00"),
+            validated_casilla_id("02", surface="test_modelo_117_126_128_136_registry"): Decimal("100000.00"),
+            validated_casilla_id("03", surface="test_modelo_117_126_128_136_registry"): Decimal("40000.00"),
+            validated_casilla_id("06", surface="test_modelo_117_126_128_136_registry"): Decimal("0.00"),
         },
         expected_values={
-            _casilla_id("04"): Decimal("60000.00"),
-            _casilla_id("05"): Decimal("12000.00"),
-            _casilla_id("07"): Decimal("12000.00"),
+            validated_casilla_id("04", surface="test_modelo_117_126_128_136_registry"): Decimal("60000.00"),
+            validated_casilla_id("05", surface="test_modelo_117_126_128_136_registry"): Decimal("12000.00"),
+            validated_casilla_id("07", surface="test_modelo_117_126_128_136_registry"): Decimal("12000.00"),
         },
         filing_period=date(2026, 3, 31),
     ),

@@ -2,36 +2,34 @@ from __future__ import annotations
 
 import pytest
 
+from .....core import validated_casilla_id
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M390,
     CasillaId,
     Decimal,
     _calculate_engine_values_from_inputs,
-    _casilla_id,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
-_M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-devengada-total")
-_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-deducible-total")
-_M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.anual.resultado-regimen-general")
-_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.compensacion-ultimo-periodo-97",
+_M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.cuota-devengada-total")
+_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.cuota-deducible-total")
+_M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.resultado-regimen-general")
+_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA: CasillaId = validated_casilla_id(
+    "iva.anual.compensacion-ultimo-periodo-97"
 )
-_M390_COMPENSACION_GENERADA_NO_97_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.compensacion-generada-ejercicio-no-97",
+_M390_COMPENSACION_GENERADA_NO_97_CASILLA: CasillaId = validated_casilla_id(
+    "iva.anual.compensacion-generada-ejercicio-no-97"
 )
-_M390_REPERCUTIDO_GENERAL_CASILLA: CasillaId = _casilla_id("iva.anual.repercutido.general")
-_M390_REPERCUTIDO_REDUCIDO_CASILLA: CasillaId = _casilla_id("iva.anual.repercutido.reducido")
-_M390_REPERCUTIDO_SUPER_REDUCIDO_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.repercutido.super-reducido",
+_M390_REPERCUTIDO_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.anual.repercutido.general")
+_M390_REPERCUTIDO_REDUCIDO_CASILLA: CasillaId = validated_casilla_id("iva.anual.repercutido.reducido")
+_M390_REPERCUTIDO_SUPER_REDUCIDO_CASILLA: CasillaId = validated_casilla_id("iva.anual.repercutido.super-reducido")
+_M390_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA: CasillaId = validated_casilla_id(
+    "iva.anual.autorepercutido.intracomunitaria"
 )
-_M390_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.autorepercutido.intracomunitaria",
-)
-_M390_SOPORTADO_INTERIORES_CASILLA: CasillaId = _casilla_id("iva.anual.soportado.interiores")
+_M390_SOPORTADO_INTERIORES_CASILLA: CasillaId = validated_casilla_id("iva.anual.soportado.interiores")
 _M390_REQUIRED_CASILLAS: tuple[CasillaId, ...] = (
     _M390_CUOTA_DEVENGADA_TOTAL_CASILLA,
     _M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA,

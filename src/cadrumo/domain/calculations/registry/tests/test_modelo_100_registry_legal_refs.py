@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....core import validated_casilla_id
 from .. import expression_casilla_refs
 from ._modelo_100_legal_refs_support import (
     _AUTONOMIC_DEDUCTION_ART_77_REF,
@@ -22,8 +23,6 @@ from ._modelo_100_legal_refs_support import (
     _RENTAL_HOUSING_DEDUCTION_DT_15_REF,
     _SAVINGS_BASE_ART_49_REF,
     _STATE_DEDUCTION_ART_67_REF,
-    _casilla_id,
-    _casilla_ids,
     _modelo_100_snapshot,
 )
 
@@ -99,7 +98,7 @@ def test_modelo_100_ceuta_melilla_deduction_cites_art_68_4() -> None:
             for casilla in revision.casillas
             if casilla.semantic_role == "irpf_anexo_a_ceuta_melilla_deduccion_importe"
         )
-        assert anexo_casilla.id == _casilla_id("0727"), filing_year
+        assert anexo_casilla.id == validated_casilla_id("0727", surface="test_modelo_100_registry.casilla"), filing_year
         assert _CEUTA_MELILLA_DEDUCTION_ART_68_4_REF in anexo_casilla.legal_refs
 
         formulas_by_id = {formula.id: formula for formula in revision.formulas}
@@ -137,7 +136,7 @@ def test_modelo_100_cultural_interest_deduction_cites_art_68_5() -> None:
             for casilla in revision.casillas
             if casilla.semantic_role == "irpf_anexo_a_interes_cultural_deduccion_importe"
         )
-        assert anexo_casilla.id == _casilla_id("0726"), filing_year
+        assert anexo_casilla.id == validated_casilla_id("0726", surface="test_modelo_100_registry.casilla"), filing_year
         assert _CULTURAL_INTEREST_DEDUCTION_ART_68_5_REF in anexo_casilla.legal_refs
         assert _DEDUCTION_LIMITS_ART_69_REF in anexo_casilla.legal_refs
 
@@ -169,9 +168,15 @@ def test_modelo_100_new_company_investment_deduction_cites_art_68_1() -> None:
             if casilla.semantic_role == "irpf_deduccion_nueva_empresa_entidad_nif"
         ]
 
-        assert state_casilla.id == _casilla_id("0549"), filing_year
-        assert {casilla.id for casilla in detail_casillas} == _casilla_ids("0711", "0712", "0713", "0714")
-        assert {casilla.id for casilla in entity_nif_casillas} == _casilla_ids("0711", "0713", "1131", "1133")
+        assert state_casilla.id == validated_casilla_id("0549", surface="test_modelo_100_registry.casilla"), filing_year
+        assert {casilla.id for casilla in detail_casillas} == frozenset(
+            validated_casilla_id(_v, surface="test_modelo_100_registry.casilla")
+            for _v in ("0711", "0712", "0713", "0714")
+        )
+        assert {casilla.id for casilla in entity_nif_casillas} == frozenset(
+            validated_casilla_id(_v, surface="test_modelo_100_registry.casilla")
+            for _v in ("0711", "0713", "1131", "1133")
+        )
 
         offenders = {
             casilla.id: casilla.legal_refs
@@ -186,9 +191,15 @@ def test_modelo_100_new_company_investment_deduction_cites_art_68_1() -> None:
 def test_modelo_100_business_investment_deductions_cite_art_68_2() -> None:
     section = ("resultados", "anexo_a_res", "deducciones_inversion_empresarial_res")
     rollup_roles = {
-        "irpf_deduccion_incentivos_inversion_empresarial_estatal": _casilla_id("0554"),
-        "irpf_deduccion_incentivos_inversion_empresarial_autonomica": _casilla_id("0555"),
-        "irpf_deducciones_incentivos_inversion_total": _casilla_id("0845"),
+        "irpf_deduccion_incentivos_inversion_empresarial_estatal": validated_casilla_id(
+            "0554", surface="test_modelo_100_registry.casilla"
+        ),
+        "irpf_deduccion_incentivos_inversion_empresarial_autonomica": validated_casilla_id(
+            "0555", surface="test_modelo_100_registry.casilla"
+        ),
+        "irpf_deducciones_incentivos_inversion_total": validated_casilla_id(
+            "0845", surface="test_modelo_100_registry.casilla"
+        ),
     }
 
     for filing_year in range(2020, 2026):

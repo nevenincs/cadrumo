@@ -63,21 +63,14 @@ _CLOCK_N = datetime(2025, 1, 27, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2026, 1, 27, 10, 0, 0, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M349 intracomunitario fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_DECL_NUMERO_OPERADORES_CASILLA: CasillaId = _casilla_id("decl.numero-operadores")
-_DECL_IMPORTE_OPERACIONES_CASILLA: CasillaId = _casilla_id("decl.importe-operaciones")
-_DECL_NUMERO_RECTIFICACIONES_CASILLA: CasillaId = _casilla_id("decl.numero-rectificaciones")
-_DECL_IMPORTE_RECTIFICACIONES_CASILLA: CasillaId = _casilla_id("decl.importe-rectificaciones")
-_OP_CODIGO_PAIS_CASILLA: CasillaId = _casilla_id("op.codigo-pais")
-_OP_NIF_COMUNITARIO_CASILLA: CasillaId = _casilla_id("op.nif-comunitario")
-_OP_CLAVE_OPERACION_CASILLA: CasillaId = _casilla_id("op.clave-operacion")
-_OP_BASE_IMPONIBLE_CASILLA: CasillaId = _casilla_id("op.base-imponible")
+_DECL_NUMERO_OPERADORES_CASILLA: CasillaId = validated_casilla_id("decl.numero-operadores")
+_DECL_IMPORTE_OPERACIONES_CASILLA: CasillaId = validated_casilla_id("decl.importe-operaciones")
+_DECL_NUMERO_RECTIFICACIONES_CASILLA: CasillaId = validated_casilla_id("decl.numero-rectificaciones")
+_DECL_IMPORTE_RECTIFICACIONES_CASILLA: CasillaId = validated_casilla_id("decl.importe-rectificaciones")
+_OP_CODIGO_PAIS_CASILLA: CasillaId = validated_casilla_id("op.codigo-pais")
+_OP_NIF_COMUNITARIO_CASILLA: CasillaId = validated_casilla_id("op.nif-comunitario")
+_OP_CLAVE_OPERACION_CASILLA: CasillaId = validated_casilla_id("op.clave-operacion")
+_OP_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id("op.base-imponible")
 
 
 def _find_observation(repo: CalculationObservationRepository, *, filing_year: int, period: str):

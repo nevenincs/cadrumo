@@ -49,7 +49,7 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...calculations import IvaCompensationHistoryRepository
-from ...workflow import workflow_state_repository
+from ...workflow import WorkflowState
 from .. import (
     ModeloIvaWalletCorrectionNoRecordError,
     ModeloIvaWalletCorrectionSealedError,
@@ -69,15 +69,8 @@ _SEED_PERIOD = "4T"
 _SEED_FILING_PERIOD = Period.from_year_and_code(_SEED_YEAR, _SEED_PERIOD)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"IVA wallet correction fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
-    "iva.compensacion-pendiente-periodos-anteriores",
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores"
 )
 
 
@@ -87,12 +80,14 @@ def _runtime(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_BUCKET_ID),
     ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id=_BUCKET_ID,
-                display_name=_BUCKET_LABEL,
-            ),
+        # Seeded through a detached WorkflowState, never a repository read:
+        # the capsule publishes by an atomic no-replace rename onto
+        # ``buckets/<profile-id>``, which a workflow-state repository
+        # construction would otherwise materialise first and collide with.
+        register_minimal_profile(
+            WorkflowState(),
+            profile_id=_BUCKET_ID,
+            display_name=_BUCKET_LABEL,
         )
         yield
 

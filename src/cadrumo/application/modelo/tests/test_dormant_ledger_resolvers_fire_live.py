@@ -14,7 +14,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import CasillaId, Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.transactions import (
     BusinessClassification,
@@ -35,7 +35,7 @@ from .. import (
     create_work_unit,
 )
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
-from ._dormant_resolver_live_support import _T0, _T1, _casilla_id, _revision, _seed_ready_profile
+from ._dormant_resolver_live_support import _T0, _T1, _revision, _seed_ready_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -45,19 +45,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _M130_BUCKET = "13000000-0000-4000-8000-000000000013"
 _M130_REVISION = "2019-y-siguientes"
 _M130_YEAR = 2026
-_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
 _M130_INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 _M130_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
-_M130_PREVIOUS_PAYMENTS_CASILLA: CasillaId = _casilla_id("05")
-_M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
-_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
-_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = _casilla_id("10")
-_M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
-_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
-_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
-_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = _casilla_id("1479")
-_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = _casilla_id("1553")
-_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = _casilla_id("1577")
+_M130_PREVIOUS_PAYMENTS_CASILLA: CasillaId = validated_casilla_id("05")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
+_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
+_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")
+_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = validated_casilla_id("1479")
+_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = validated_casilla_id("1553")
+_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = validated_casilla_id("1577")
 
 # Three DISTINCT non-equal income receipts inside the M130 1T cumulative window
 # (Jan 1 - Mar 31). Distinct values make the fold unmistakable: a single-receipt

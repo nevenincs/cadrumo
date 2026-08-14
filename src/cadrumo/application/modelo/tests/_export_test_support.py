@@ -39,7 +39,7 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import workflow_state_repository
+from ...workflow import WorkflowState, workflow_state_repository
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False
@@ -134,10 +134,12 @@ def _seed_profile(*, tax_id: str | None = None, profile_overrides: dict[str, str
     }
     if tax_id is not None:
         overrides["identity.tax_id"] = tax_id
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(
-            state, profile_id="11111111-1111-4111-8111-111111111111", overrides=overrides or None
-        ),
+    # Seeded through a detached WorkflowState, never a repository read: the
+    # capsule publishes by an atomic no-replace rename onto
+    # ``buckets/<profile-id>``, which a workflow-state repository
+    # construction would otherwise materialise first and collide with.
+    register_minimal_profile(
+        WorkflowState(), profile_id="11111111-1111-4111-8111-111111111111", overrides=overrides or None
     )
     bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     assert bucket_id is not None

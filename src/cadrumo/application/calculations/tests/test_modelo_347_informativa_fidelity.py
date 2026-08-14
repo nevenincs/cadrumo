@@ -74,21 +74,14 @@ _CLOCK_N = datetime(2025, 2, 10, 9, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2026, 2, 10, 9, 0, 0, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M347 informativa fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
-_DECL_TIPO_DECLARACION_CASILLA: CasillaId = _casilla_id("decl.tipo-declaracion")
-_CONTRAPARTE_NIF_CASILLA: CasillaId = _casilla_id("contraparte.nif")
-_CONTRAPARTE_CLAVE_OPERACION_CASILLA: CasillaId = _casilla_id("contraparte.clave-operacion")
-_CONTRAPARTE_IMPORTE_Q1_CASILLA: CasillaId = _casilla_id("contraparte.importe-Q1")
-_CONTRAPARTE_IMPORTE_Q2_CASILLA: CasillaId = _casilla_id("contraparte.importe-Q2")
-_CONTRAPARTE_IMPORTE_Q3_CASILLA: CasillaId = _casilla_id("contraparte.importe-Q3")
-_CONTRAPARTE_IMPORTE_Q4_CASILLA: CasillaId = _casilla_id("contraparte.importe-Q4")
+_DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")
+_DECL_TIPO_DECLARACION_CASILLA: CasillaId = validated_casilla_id("decl.tipo-declaracion")
+_CONTRAPARTE_NIF_CASILLA: CasillaId = validated_casilla_id("contraparte.nif")
+_CONTRAPARTE_CLAVE_OPERACION_CASILLA: CasillaId = validated_casilla_id("contraparte.clave-operacion")
+_CONTRAPARTE_IMPORTE_Q1_CASILLA: CasillaId = validated_casilla_id("contraparte.importe-Q1")
+_CONTRAPARTE_IMPORTE_Q2_CASILLA: CasillaId = validated_casilla_id("contraparte.importe-Q2")
+_CONTRAPARTE_IMPORTE_Q3_CASILLA: CasillaId = validated_casilla_id("contraparte.importe-Q3")
+_CONTRAPARTE_IMPORTE_Q4_CASILLA: CasillaId = validated_casilla_id("contraparte.importe-Q4")
 
 
 def _find_observation(

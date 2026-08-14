@@ -53,35 +53,50 @@ _RENTA_YEARS = (2023, 2024)
 _CAPTURED_AT = datetime(2025, 6, 20, 10, 0, 0, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="M714 enrollment casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M714 enrollment fixture casilla key {value!r} is not a CasillaId") from exc
+_M100_BASE_IMPONIBLE_GENERAL: CasillaId = validated_casilla_id("0435", surface="M714 enrollment casilla id")
+_M100_BASE_IMPONIBLE_AHORRO: CasillaId = validated_casilla_id("0460", surface="M714 enrollment casilla id")
+_M100_CUOTA_INTEGRA_ESTATAL: CasillaId = validated_casilla_id("0545", surface="M714 enrollment casilla id")
+_M100_CUOTA_INTEGRA_AUTONOMICA: CasillaId = validated_casilla_id("0546", surface="M714 enrollment casilla id")
 
-
-_M100_BASE_IMPONIBLE_GENERAL: CasillaId = _casilla_id("0435")
-_M100_BASE_IMPONIBLE_AHORRO: CasillaId = _casilla_id("0460")
-_M100_CUOTA_INTEGRA_ESTATAL: CasillaId = _casilla_id("0545")
-_M100_CUOTA_INTEGRA_AUTONOMICA: CasillaId = _casilla_id("0546")
-
-_PATRIMONIO_BASE_LIQUIDABLE: CasillaId = _casilla_id("patrimonio.base-liquidable")
-_PATRIMONIO_DIVIDENDOS_NO_IRPF: CasillaId = _casilla_id("patrimonio.dividendos-no-irpf")
-_PATRIMONIO_BASE_AHORRO_EXCLUIDA: CasillaId = _casilla_id("patrimonio.base-ahorro-excluida")
-_PATRIMONIO_IRPF_CUOTAS_EXCLUIDAS_BASE_AHORRO: CasillaId = _casilla_id(
-    "patrimonio.irpf-cuotas-excluidas-base-ahorro",
+_PATRIMONIO_BASE_LIQUIDABLE: CasillaId = validated_casilla_id(
+    "patrimonio.base-liquidable", surface="M714 enrollment casilla id"
 )
-_PATRIMONIO_CUOTA_INTEGRA_SUSCEPTIBLE_LIMITACION: CasillaId = _casilla_id(
-    "patrimonio.cuota-integra-susceptible-limitacion",
+_PATRIMONIO_DIVIDENDOS_NO_IRPF: CasillaId = validated_casilla_id(
+    "patrimonio.dividendos-no-irpf", surface="M714 enrollment casilla id"
 )
-_PATRIMONIO_CUOTA_INTEGRA: CasillaId = _casilla_id("patrimonio.cuota-integra")
-_PATRIMONIO_IRPF_BASES_IMPONIBLES: CasillaId = _casilla_id("patrimonio.irpf-bases-imponibles")
-_PATRIMONIO_LIMITE_CONJUNTO: CasillaId = _casilla_id("patrimonio.limite-conjunto")
-_PATRIMONIO_IRPF_CUOTAS_INTEGRAS: CasillaId = _casilla_id("patrimonio.irpf-cuotas-integras")
-_PATRIMONIO_SUMA_CUOTAS_LIMITE: CasillaId = _casilla_id("patrimonio.suma-cuotas-limite")
-_PATRIMONIO_EXCESO_LIMITE_CONJUNTO: CasillaId = _casilla_id("patrimonio.exceso-limite-conjunto")
-_PATRIMONIO_REDUCCION_LIMITE_80: CasillaId = _casilla_id("patrimonio.reduccion-limite-80")
-_PATRIMONIO_TOTAL_CUOTA_INTEGRA: CasillaId = _casilla_id("patrimonio.total-cuota-integra")
+_PATRIMONIO_BASE_AHORRO_EXCLUIDA: CasillaId = validated_casilla_id(
+    "patrimonio.base-ahorro-excluida", surface="M714 enrollment casilla id"
+)
+_PATRIMONIO_IRPF_CUOTAS_EXCLUIDAS_BASE_AHORRO: CasillaId = validated_casilla_id(
+    "patrimonio.irpf-cuotas-excluidas-base-ahorro", surface="M714 enrollment casilla id"
+)
+_PATRIMONIO_CUOTA_INTEGRA_SUSCEPTIBLE_LIMITACION: CasillaId = validated_casilla_id(
+    "patrimonio.cuota-integra-susceptible-limitacion", surface="M714 enrollment casilla id"
+)
+_PATRIMONIO_CUOTA_INTEGRA: CasillaId = validated_casilla_id(
+    "patrimonio.cuota-integra", surface="M714 enrollment casilla id"
+)
+_PATRIMONIO_IRPF_BASES_IMPONIBLES: CasillaId = validated_casilla_id(
+    "patrimonio.irpf-bases-imponibles", surface="M714 enrollment casilla id"
+)
+_PATRIMONIO_LIMITE_CONJUNTO: CasillaId = validated_casilla_id(
+    "patrimonio.limite-conjunto", surface="M714 enrollment casilla id"
+)
+_PATRIMONIO_IRPF_CUOTAS_INTEGRAS: CasillaId = validated_casilla_id(
+    "patrimonio.irpf-cuotas-integras", surface="M714 enrollment casilla id"
+)
+_PATRIMONIO_SUMA_CUOTAS_LIMITE: CasillaId = validated_casilla_id(
+    "patrimonio.suma-cuotas-limite", surface="M714 enrollment casilla id"
+)
+_PATRIMONIO_EXCESO_LIMITE_CONJUNTO: CasillaId = validated_casilla_id(
+    "patrimonio.exceso-limite-conjunto", surface="M714 enrollment casilla id"
+)
+_PATRIMONIO_REDUCCION_LIMITE_80: CasillaId = validated_casilla_id(
+    "patrimonio.reduccion-limite-80", surface="M714 enrollment casilla id"
+)
+_PATRIMONIO_TOTAL_CUOTA_INTEGRA: CasillaId = validated_casilla_id(
+    "patrimonio.total-cuota-integra", surface="M714 enrollment casilla id"
+)
 
 _M714_REL_100_BASE_IMPONIBLE_GENERAL: RelationId = "m714-rel-100-base-imponible-general"
 _M714_REL_100_BASE_IMPONIBLE_AHORRO: RelationId = "m714-rel-100-base-imponible-ahorro"

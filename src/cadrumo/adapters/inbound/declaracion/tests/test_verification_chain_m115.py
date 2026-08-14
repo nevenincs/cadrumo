@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import pytest
 
+from .....core import validated_casilla_id
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M115,
     CasillaId,
     _assert_engine_closure_matches_extracted_decimal,
     _calculate_engine_values_from_inputs,
-    _casilla_id,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,
 )
@@ -15,11 +15,11 @@ from ._verification_chain_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
-_M115_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
-_M115_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("02")
-_M115_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
-_M115_ANTERIORES_CASILLA: CasillaId = _casilla_id("04")
-_M115_RESULTADO_CASILLA: CasillaId = _casilla_id("05")
+_M115_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01")
+_M115_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id("02")
+_M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03")
+_M115_ANTERIORES_CASILLA: CasillaId = validated_casilla_id("04")
+_M115_RESULTADO_CASILLA: CasillaId = validated_casilla_id("05")
 _M115_REQUIRED_CASILLAS: tuple[CasillaId, ...] = (
     _M115_TOTAL_PERCEPTORES_CASILLA,
     _M115_BASE_TOTAL_CASILLA,

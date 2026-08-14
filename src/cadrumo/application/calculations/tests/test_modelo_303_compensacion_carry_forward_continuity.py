@@ -81,18 +81,9 @@ _CARRY_RELATION: RelationId = "modelo-303-rel-self-compensacion-anteriores"
 _CARRY_BINDING = "modelo-303-compensacion-pendiente-anteriores"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
-_M303_COMPENSACION_PENDIENTE_CASILLA: CasillaId = _casilla_id(
-    "iva.compensacion-pendiente-periodos-anteriores",
-)
-_M303_SALDO_COMPENSACION_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+_M303_COMPENSACION_PENDIENTE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-anteriores")
+_M303_SALDO_COMPENSACION_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
 
 #: WORKAROUND — the 303 2023+ revision carries a ``source = "profile"``
 #: binding ``modelo-303-autoconsumo-promotor-base`` (LIVA art. 9.1.c / 79.4

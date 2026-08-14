@@ -80,19 +80,12 @@ _CLOCK_N = datetime(2025, 2, 5, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2026, 2, 5, 10, 0, 0, tzinfo=UTC)
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M184 informativa fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
-_DECL_TIPO_DECLARACION_CASILLA: CasillaId = _casilla_id("decl.tipo-declaracion")
-_TIPO2_CLAVE_CASILLA: CasillaId = _casilla_id("tipo2.clave")
-_TIPO2_SUBCLAVE_CASILLA: CasillaId = _casilla_id("tipo2.subclave")
-_TIPO2_MIEMBRO_NIF_CASILLA: CasillaId = _casilla_id("tipo2.miembro-nif")
-_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA: CasillaId = _casilla_id("tipo2.renta-atribuible-importe")
+_DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")
+_DECL_TIPO_DECLARACION_CASILLA: CasillaId = validated_casilla_id("decl.tipo-declaracion")
+_TIPO2_CLAVE_CASILLA: CasillaId = validated_casilla_id("tipo2.clave")
+_TIPO2_SUBCLAVE_CASILLA: CasillaId = validated_casilla_id("tipo2.subclave")
+_TIPO2_MIEMBRO_NIF_CASILLA: CasillaId = validated_casilla_id("tipo2.miembro-nif")
+_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA: CasillaId = validated_casilla_id("tipo2.renta-atribuible-importe")
 
 
 def _find_observation(

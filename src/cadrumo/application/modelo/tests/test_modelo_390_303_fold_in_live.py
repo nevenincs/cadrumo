@@ -84,40 +84,25 @@ _YEAR = 2025
 _TAX_ID = "12345678Z"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M390 fold-in fixture casilla key {value!r} is not a CasillaId") from exc
-
-
 # Seeded M303 casilla ids consumed by the three M390←M303 relations and the
 # annual compensation partition source.
-_DEVENGADA: CasillaId = _casilla_id("iva.cuota-devengada-total")
-_DEDUCIBLE: CasillaId = _casilla_id("iva.cuota-deducible-total")
-_RESULTADO: CasillaId = _casilla_id("iva.resultado-regimen-general")
-_COMPENSACION: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
-_M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.reconciliacion.devengada-303",
-)
-_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.reconciliacion.deducible-303",
-)
-_M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.reconciliacion.resultado-303",
-)
+_DEVENGADA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+_DEDUCIBLE: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
+_RESULTADO: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
+_COMPENSACION: CasillaId = validated_casilla_id("iva.compensacion-generada-periodo")
+_M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.devengada-303")
+_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.deducible-303")
+_M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.resultado-303")
 # Régimen simplificado settles annually in the 4T Modelo 303 only (casilla 54,
 # "RS - Total cuota resultante"); the fourth relation copies that single 4T
 # value onto the M390 resumen anual (box 79), never summed across quarters.
-_SIMPLIFICADO_DEVENGADA: CasillaId = _casilla_id("54")
-_M390_RECONCILIACION_DEVENGADA_SIMPLIFICADO_303_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.reconciliacion.devengada-simplificado-303",
+_SIMPLIFICADO_DEVENGADA: CasillaId = validated_casilla_id("54")
+_M390_RECONCILIACION_DEVENGADA_SIMPLIFICADO_303_CASILLA: CasillaId = validated_casilla_id(
+    "iva.anual.reconciliacion.devengada-simplificado-303"
 )
-_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.compensacion-ultimo-periodo-97",
-)
-_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = _casilla_id(
-    "iva.anual.compensacion-generada-ejercicio-no-97",
+_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = validated_casilla_id("iva.anual.compensacion-ultimo-periodo-97")
+_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = validated_casilla_id(
+    "iva.anual.compensacion-generada-ejercicio-no-97"
 )
 
 # Per-quarter DISTINCT known values — four different Decimals per casilla so any

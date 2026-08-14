@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
@@ -63,10 +63,6 @@ def _modelo_303_revision():
 def _casilla_59(aggregation: IvaLedgerAggregation) -> Decimal:
     resolved = resolve_ledger_iva_aggregation_binding_values(_modelo_303_revision(), aggregation.observations)
     return resolved.get(_CASILLA_59_BASE, Decimal("0"))
-
-
-def _casilla_id(number: str) -> CasillaId:
-    return validated_casilla_id(number, surface="test_intracom_identification_not_establishment")
 
 
 def _raw(provider_id: str) -> RawTransaction:

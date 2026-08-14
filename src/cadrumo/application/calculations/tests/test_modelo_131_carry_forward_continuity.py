@@ -75,24 +75,17 @@ _CARRY_BINDING = "modelo-131-2024-resultados-negativos-anteriores"
 _CARRY_BINDING_2025 = "modelo-131-2025-resultados-negativos-anteriores"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M131 carry-forward fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_M131_RENDIMIENTO_MODULOS_CASILLA: CasillaId = _casilla_id("01")
-_M131_PAGO_PREVIO_CASILLA: CasillaId = _casilla_id("02")
-_M131_VOLUME_SIN_DATOS_BASE_CASILLA: CasillaId = _casilla_id("03")
-_M131_PAYMENT_SIN_DATOS_BASE_CASILLA: CasillaId = _casilla_id("04")
-_M131_VOLUME_AGRARIO_CASILLA: CasillaId = _casilla_id("05")
-_M131_RETENCIONES_CASILLA: CasillaId = _casilla_id("08")
-_M131_RETENCIONES_SOPORTADAS_CASILLA: CasillaId = _casilla_id("09")
-_M131_RESULTADO_CASILLA: CasillaId = _casilla_id("10")
-_M131_DEDUCCION_CASILLA: CasillaId = _casilla_id("12")
-_M131_RESULTADO_EJERCICIOS_ANTERIORES_CASILLA: CasillaId = _casilla_id("14")
-_M131_SALDO_NEGATIVO_CASILLA: CasillaId = _casilla_id("saldo-negativo-fin-periodo")
+_M131_RENDIMIENTO_MODULOS_CASILLA: CasillaId = validated_casilla_id("01")
+_M131_PAGO_PREVIO_CASILLA: CasillaId = validated_casilla_id("02")
+_M131_VOLUME_SIN_DATOS_BASE_CASILLA: CasillaId = validated_casilla_id("03")
+_M131_PAYMENT_SIN_DATOS_BASE_CASILLA: CasillaId = validated_casilla_id("04")
+_M131_VOLUME_AGRARIO_CASILLA: CasillaId = validated_casilla_id("05")
+_M131_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("08")
+_M131_RETENCIONES_SOPORTADAS_CASILLA: CasillaId = validated_casilla_id("09")
+_M131_RESULTADO_CASILLA: CasillaId = validated_casilla_id("10")
+_M131_DEDUCCION_CASILLA: CasillaId = validated_casilla_id("12")
+_M131_RESULTADO_EJERCICIOS_ANTERIORES_CASILLA: CasillaId = validated_casilla_id("14")
+_M131_SALDO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id("saldo-negativo-fin-periodo")
 
 # ---------------------------------------------------------------------------
 # Loss-making 1T/2024 scenario:

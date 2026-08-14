@@ -55,19 +55,12 @@ from .._observations_repository import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"observation repository fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_IVA_DEVENGADO_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
-_IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
-_IVA_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
-_M303_PRINTED_RESULT_REFERENCE_CASILLA: CasillaId = _casilla_id("69")
-_M130_ABSENT_BY_DESIGN_CASILLA: CasillaId = _casilla_id("15")
-_M130_PAYMENT_BASE_CASILLA: CasillaId = _casilla_id("14")
+_IVA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+_IVA_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
+_IVA_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+_M303_PRINTED_RESULT_REFERENCE_CASILLA: CasillaId = validated_casilla_id("69")
+_M130_ABSENT_BY_DESIGN_CASILLA: CasillaId = validated_casilla_id("15")
+_M130_PAYMENT_BASE_CASILLA: CasillaId = validated_casilla_id("14")
 _CAPTURED_AT = datetime(2026, 5, 28, 11, 35, 0, tzinfo=UTC)
 
 

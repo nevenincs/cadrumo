@@ -43,13 +43,6 @@ from .. import BindingId, RegistrySnapshot, RelationId, calculate_registry_snaps
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test_modelo_100_tarifa_real.casilla")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
 # -----------------------------------------------------------------------
 # Expected values — derived from LIRPF 2024 tables, not engine output.
 #
@@ -102,23 +95,41 @@ _EXPECTED_CUOTA_INTEGRA_AUTONOMICA = Decimal("4067.28")
 _EXPECTED_MINIMO_CONTRIBUYENTE = Decimal("5550.00")
 _TOLERANCE = Decimal("0.01")
 
-_TRABAJO_INGRESOS_INTEGROS_CASILLA: CasillaId = _casilla_id("0003")
-_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA: CasillaId = _casilla_id("0505")
-_MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA: CasillaId = _casilla_id("0511")
-_MINIMO_CONTRIBUYENTE_AUTONOMICA_CASILLA: CasillaId = _casilla_id("0512")
-_MINIMO_DESCENDIENTES_CASILLA: CasillaId = _casilla_id("0513")
-_MINIMO_ASCENDIENTES_CASILLA: CasillaId = _casilla_id("0515")
-_ANUALIDADES_TOTAL_CASILLA: CasillaId = _casilla_id("0527")
-_CUOTA_INTEGRA_ESTATAL_CASILLA: CasillaId = _casilla_id("0545")
-_CUOTA_INTEGRA_AUTONOMICA_CASILLA: CasillaId = _casilla_id("0546")
-_CUOTA_LIQUIDA_INCREMENTADA_ESTATAL_CASILLA: CasillaId = _casilla_id("0585")
-_CUOTA_LIQUIDA_INCREMENTADA_AUTONOMICA_CASILLA: CasillaId = _casilla_id("0586")
-_CUOTA_LIQUIDA_INCREMENTADA_TOTAL_CASILLA: CasillaId = _casilla_id("0587")
-_RETENCIONES_TRABAJO_CASILLA: CasillaId = _casilla_id("0592")
-_CUOTA_RESULTANTE_CASILLA: CasillaId = _casilla_id("0595")
-_TOTAL_PAGOS_A_CUENTA_CASILLA: CasillaId = _casilla_id("0609")
-_CUOTA_DIFERENCIAL_CASILLA: CasillaId = _casilla_id("0610")
-_ANUALIDADES_PRIMER_HIJO_CASILLA: CasillaId = _casilla_id("1741")
+_TRABAJO_INGRESOS_INTEGROS_CASILLA: CasillaId = validated_casilla_id(
+    "0003", surface="test_modelo_100_tarifa_real.casilla"
+)
+_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA: CasillaId = validated_casilla_id(
+    "0505", surface="test_modelo_100_tarifa_real.casilla"
+)
+_MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
+    "0511", surface="test_modelo_100_tarifa_real.casilla"
+)
+_MINIMO_CONTRIBUYENTE_AUTONOMICA_CASILLA: CasillaId = validated_casilla_id(
+    "0512", surface="test_modelo_100_tarifa_real.casilla"
+)
+_MINIMO_DESCENDIENTES_CASILLA: CasillaId = validated_casilla_id("0513", surface="test_modelo_100_tarifa_real.casilla")
+_MINIMO_ASCENDIENTES_CASILLA: CasillaId = validated_casilla_id("0515", surface="test_modelo_100_tarifa_real.casilla")
+_ANUALIDADES_TOTAL_CASILLA: CasillaId = validated_casilla_id("0527", surface="test_modelo_100_tarifa_real.casilla")
+_CUOTA_INTEGRA_ESTATAL_CASILLA: CasillaId = validated_casilla_id("0545", surface="test_modelo_100_tarifa_real.casilla")
+_CUOTA_INTEGRA_AUTONOMICA_CASILLA: CasillaId = validated_casilla_id(
+    "0546", surface="test_modelo_100_tarifa_real.casilla"
+)
+_CUOTA_LIQUIDA_INCREMENTADA_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
+    "0585", surface="test_modelo_100_tarifa_real.casilla"
+)
+_CUOTA_LIQUIDA_INCREMENTADA_AUTONOMICA_CASILLA: CasillaId = validated_casilla_id(
+    "0586", surface="test_modelo_100_tarifa_real.casilla"
+)
+_CUOTA_LIQUIDA_INCREMENTADA_TOTAL_CASILLA: CasillaId = validated_casilla_id(
+    "0587", surface="test_modelo_100_tarifa_real.casilla"
+)
+_RETENCIONES_TRABAJO_CASILLA: CasillaId = validated_casilla_id("0592", surface="test_modelo_100_tarifa_real.casilla")
+_CUOTA_RESULTANTE_CASILLA: CasillaId = validated_casilla_id("0595", surface="test_modelo_100_tarifa_real.casilla")
+_TOTAL_PAGOS_A_CUENTA_CASILLA: CasillaId = validated_casilla_id("0609", surface="test_modelo_100_tarifa_real.casilla")
+_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id("0610", surface="test_modelo_100_tarifa_real.casilla")
+_ANUALIDADES_PRIMER_HIJO_CASILLA: CasillaId = validated_casilla_id(
+    "1741", surface="test_modelo_100_tarifa_real.casilla"
+)
 
 
 def test_m100_2024_minimo_contribuyente_computed_not_zero(m100_2024_snapshot: RegistrySnapshot) -> None:

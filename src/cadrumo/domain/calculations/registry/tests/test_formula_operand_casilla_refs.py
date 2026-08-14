@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import BindingSourceKind, CasillaId, validated_casilla_id
+from .....core import BindingSourceKind, validated_casilla_id
 from .._errors import RegistryValidationError
 from .._schema import DataBindingDefinition, FormulaDefinition, FormulaExpression, InputKind
 from ._referential_integrity_support import (
@@ -18,15 +18,8 @@ from ._referential_integrity_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture {value!r} is not a CasillaId") from exc
-
-
-_SOURCE_CASILLA = _casilla_id("01")
-_TARGET_CASILLA = _casilla_id("02")
+_SOURCE_CASILLA = validated_casilla_id("01")
+_TARGET_CASILLA = validated_casilla_id("02")
 
 
 def test_snapshot_build_fails_when_non_casilla_operand_ref_collides_with_casilla_id() -> None:

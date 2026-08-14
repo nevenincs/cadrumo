@@ -92,15 +92,10 @@ _PERIOD = "0A"
 #: 1391 is the end-of-year *generated* saldo pending future application; 1388
 #: is the next year's *opening* pending for the immediately-prior origin
 #: ejercicio, bound from the prior year's 1391 by the carry binding.
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M100 multiyear fixture casilla key {value!r} is not a CasillaId") from exc
 
 
-_GENERATED_SALDO: CasillaId = _casilla_id("1391")
-_PENDIENTE_INICIO: CasillaId = _casilla_id("1388")
+_GENERATED_SALDO: CasillaId = validated_casilla_id("1391")
+_PENDIENTE_INICIO: CasillaId = validated_casilla_id("1388")
 
 #: Two distinct renta years the enrollment spans; each sources the prior year's 1391.
 _YEAR_N = 2024

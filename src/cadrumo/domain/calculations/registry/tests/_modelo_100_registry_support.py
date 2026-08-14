@@ -99,49 +99,47 @@ _PERSONAL_FAMILY_BINDINGS: frozenset[str] = frozenset(
 )
 
 
-def _casilla_id(value: object) -> CasillaId:
-    return validated_casilla_id(value, surface="test_modelo_100_registry.casilla")
-
-
-def _casilla_ids(*values: object) -> frozenset[CasillaId]:
-    return frozenset(_casilla_id(value) for value in values)
-
-
 def _binding_map_by_casilla(*pairs: tuple[object, str]) -> Mapping[CasillaId, str]:
-    return {_casilla_id(casilla_id): binding_id for casilla_id, binding_id in pairs}
+    return {
+        validated_casilla_id(casilla_id, surface="test_modelo_100_registry.casilla"): binding_id
+        for casilla_id, binding_id in pairs
+    }
 
 
-_PERSONAL_FAMILY_CASILLAS: frozenset[CasillaId] = _casilla_ids(
-    "DPNIF_D",
-    "DP_APENOM_D",
-    "ZCCAD",
-    "TIPOTRIBUTACION",
-    "SEXO_D",
-    "ECIVIL",
-    "DPFNAC_D",
-    "DPNIF_C",
-    "DP_APENOM_C",
-    "DPFNAC_C",
-    "SEXO_C",
-    "DPGMIN_D",
-    "DECFAL",
-    "DPGMIN_C",
-    "NORESIDENTE",
-    "RESIDENTEUE",
-    "ZRUE2",
-    "HIJOSUE",
-    "PH18",
-    "NIFDLG",
-    "APENOMDLG",
-    "FNACDLG",
-    "MINUSDLG",
-    "FALLDLG",
-    "DNIASDLG",
-    "APENOMDLG_ASC",
-    "ANOASDLG",
-    "PCTMINASDLG",
-    "CONVASDLG",
-    "FALLASDLG",
+_PERSONAL_FAMILY_CASILLAS: frozenset[CasillaId] = frozenset(
+    validated_casilla_id(_v, surface="test_modelo_100_registry.casilla")
+    for _v in (
+        "DPNIF_D",
+        "DP_APENOM_D",
+        "ZCCAD",
+        "TIPOTRIBUTACION",
+        "SEXO_D",
+        "ECIVIL",
+        "DPFNAC_D",
+        "DPNIF_C",
+        "DP_APENOM_C",
+        "DPFNAC_C",
+        "SEXO_C",
+        "DPGMIN_D",
+        "DECFAL",
+        "DPGMIN_C",
+        "NORESIDENTE",
+        "RESIDENTEUE",
+        "ZRUE2",
+        "HIJOSUE",
+        "PH18",
+        "NIFDLG",
+        "APENOMDLG",
+        "FNACDLG",
+        "MINUSDLG",
+        "FALLDLG",
+        "DNIASDLG",
+        "APENOMDLG_ASC",
+        "ANOASDLG",
+        "PCTMINASDLG",
+        "CONVASDLG",
+        "FALLASDLG",
+    )
 )
 
 _SOURCE_FOUNDATION_APPLICATION_LINKS: frozenset[str] = frozenset(
@@ -589,20 +587,31 @@ _ANEXO_B_TOTAL_SATISFECHO_SECTIONS = frozenset(
         "an_b_inf_adc_arrvm",
     }
 )
-_DONATION_DEDUCTION_CASILLAS = _casilla_ids("0552", "0553", "0722", "0723", "0724", "0725")
-_CASILLA_0921 = _casilla_id("0921")
+_DONATION_DEDUCTION_CASILLAS = frozenset(
+    validated_casilla_id(_v, surface="test_modelo_100_registry.casilla")
+    for _v in ("0552", "0553", "0722", "0723", "0724", "0725")
+)
+_CASILLA_0921 = validated_casilla_id("0921", surface="test_modelo_100_registry.casilla")
 _CANARIAS_DONACION_DESCENDIENTES_ROLE = "irpf_deduccion_canarias_donacion_descendientes"
 _ANDALUCIA_EJERCICIO_FISICO_ROLE = "irpf_deduccion_andalucia_ejercicio_fisico"
-_CASILLA_1091 = _casilla_id("1091")
+_CASILLA_1091 = validated_casilla_id("1091", surface="test_modelo_100_registry.casilla")
 _C_VALENCIANA_LABORES_NO_REMUNERADAS_ROLE = "irpf_deduccion_c_valenciana_labores_no_remuneradas_hogar"
 _EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE = "irpf_deduccion_extremadura_vivienda_zonas_rurales"
-_CASILLA_0581 = _casilla_id("0581")
-_CASILLA_0575 = _casilla_id("0575")
-_CASILLA_0580 = _casilla_id("0580")
-_INCENTIVO_ART_33_REGULARIZATION_CASILLAS = _casilla_ids("0568", "0569")
-_REGULARIZACION_PREVIOUS_INTEREST_CASILLAS = _casilla_ids("0582", "0583")
-_REGULARIZACION_DEDUCTION_LOSS_CASILLAS = _casilla_ids("0572", "0574", "0577", "0579")
-_REGULARIZACION_DEDUCTION_LOSS_INTEREST_CASILLAS = _casilla_ids("0573", "0576", "0578", "0581")
+_CASILLA_0581 = validated_casilla_id("0581", surface="test_modelo_100_registry.casilla")
+_CASILLA_0575 = validated_casilla_id("0575", surface="test_modelo_100_registry.casilla")
+_CASILLA_0580 = validated_casilla_id("0580", surface="test_modelo_100_registry.casilla")
+_INCENTIVO_ART_33_REGULARIZATION_CASILLAS = frozenset(
+    validated_casilla_id(_v, surface="test_modelo_100_registry.casilla") for _v in ("0568", "0569")
+)
+_REGULARIZACION_PREVIOUS_INTEREST_CASILLAS = frozenset(
+    validated_casilla_id(_v, surface="test_modelo_100_registry.casilla") for _v in ("0582", "0583")
+)
+_REGULARIZACION_DEDUCTION_LOSS_CASILLAS = frozenset(
+    validated_casilla_id(_v, surface="test_modelo_100_registry.casilla") for _v in ("0572", "0574", "0577", "0579")
+)
+_REGULARIZACION_DEDUCTION_LOSS_INTEREST_CASILLAS = frozenset(
+    validated_casilla_id(_v, surface="test_modelo_100_registry.casilla") for _v in ("0573", "0576", "0578", "0581")
+)
 _DEDUCTION_LOSS_INTEREST_STATE_ROLE = "irpf_intereses_demora_perdida_deduccion_estatal"
 _DEDUCTION_LOSS_INTEREST_AUTONOMIC_ROLE = "irpf_intereses_demora_perdida_deduccion_autonomica"
 _LIRPF_CAPITAL_GAINS_ART_33_REF = "ley-35-2006:art-33"
@@ -633,21 +642,23 @@ _ECONOMIC_ACTIVITY_SECTION_REFS = frozenset(
         _MODELO_100_2025_FORM_ORDER_REF,
     }
 )
-_GENERAL_BASE_GYP_LIMIT_CASILLA = _casilla_id("0433")
-_SAVINGS_BASE_GYP_LIMIT_CASILLA = _casilla_id("0446")
-_GENERAL_BASE_IMPONIBLE_CASILLA = _casilla_id("0435")
-_BASE_IMPONIBLE_AHORRO_CASILLA = _casilla_id("0460")
-_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA = _casilla_id("0505")
-_ANUALIDADES_ALIMENTOS_TOTAL_CASILLA = _casilla_id("0527")
-_CAPITAL_MOBILIARIO_AHORRO_CASILLA = _casilla_id("0041")
-_ATTRIBUTION_REGIME_BASE_IMPUTADA_CASILLA = _casilla_id("0259")
+_GENERAL_BASE_GYP_LIMIT_CASILLA = validated_casilla_id("0433", surface="test_modelo_100_registry.casilla")
+_SAVINGS_BASE_GYP_LIMIT_CASILLA = validated_casilla_id("0446", surface="test_modelo_100_registry.casilla")
+_GENERAL_BASE_IMPONIBLE_CASILLA = validated_casilla_id("0435", surface="test_modelo_100_registry.casilla")
+_BASE_IMPONIBLE_AHORRO_CASILLA = validated_casilla_id("0460", surface="test_modelo_100_registry.casilla")
+_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA = validated_casilla_id("0505", surface="test_modelo_100_registry.casilla")
+_ANUALIDADES_ALIMENTOS_TOTAL_CASILLA = validated_casilla_id("0527", surface="test_modelo_100_registry.casilla")
+_CAPITAL_MOBILIARIO_AHORRO_CASILLA = validated_casilla_id("0041", surface="test_modelo_100_registry.casilla")
+_ATTRIBUTION_REGIME_BASE_IMPUTADA_CASILLA = validated_casilla_id("0259", surface="test_modelo_100_registry.casilla")
 _GENERAL_BASE_IMPONIBLE_ROLE = "irpf_base_imponible_general"
 _ATTRIBUTION_REGIME_BASE_IMPUTADA_ROLE = "irpf_re_agrup_interes_economico_base_imponible_imputada"
 _ATTRIBUTION_REGIME_2025_MODE_FLAG_CASILLA_REFS: Mapping[CasillaId, frozenset[str]] = {
-    _casilla_id("0161"): _ATTRIBUTION_REGIME_MODE_FLAG_REFS,
-    _casilla_id("0162"): _ATTRIBUTION_REGIME_MODE_FLAG_REFS,
-    _casilla_id("0163"): _ATTRIBUTION_REGIME_AGRICULTURAL_MODE_FLAG_REFS,
-    _casilla_id("0164"): _ATTRIBUTION_REGIME_MODE_FLAG_REFS,
+    validated_casilla_id("0161", surface="test_modelo_100_registry.casilla"): _ATTRIBUTION_REGIME_MODE_FLAG_REFS,
+    validated_casilla_id("0162", surface="test_modelo_100_registry.casilla"): _ATTRIBUTION_REGIME_MODE_FLAG_REFS,
+    validated_casilla_id(
+        "0163", surface="test_modelo_100_registry.casilla"
+    ): _ATTRIBUTION_REGIME_AGRICULTURAL_MODE_FLAG_REFS,
+    validated_casilla_id("0164", surface="test_modelo_100_registry.casilla"): _ATTRIBUTION_REGIME_MODE_FLAG_REFS,
 }
 _INMUEBLE_ART_22_FORM_ORDER_REFS = frozenset({"ley-35-2006:art-22", _MODELO_100_2025_FORM_ORDER_REF})
 _INMUEBLE_2025_CONTINUITY_REFS: Mapping[str, frozenset[str]] = {
@@ -673,11 +684,19 @@ _MEMBER_GROUNDED_2025_CONSTRUCT_IDS = frozenset(
         _ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID,
     }
 )
-_GENERAL_BASE_CUOTA_CASILLAS = _casilla_ids("0532", "0533")
+_GENERAL_BASE_CUOTA_CASILLAS = frozenset(
+    validated_casilla_id(_v, surface="test_modelo_100_registry.casilla") for _v in ("0532", "0533")
+)
 _ARTISTIC_ACTIVITY_REDUCTION_2025_CASILLA_REFS: Mapping[CasillaId, frozenset[str]] = {
-    _casilla_id("0058"): frozenset({_ARTISTIC_ACTIVITY_EXCEPTIONAL_REDUCTION_REF}),
-    _casilla_id("0237"): frozenset({_ARTISTIC_ACTIVITY_EXCEPTIONAL_REDUCTION_REF}),
-    _casilla_id("0384"): frozenset({_ARTISTIC_ACTIVITY_EXCEPTIONAL_REDUCTION_REF, _MODELO_100_2025_FORM_ORDER_REF}),
+    validated_casilla_id("0058", surface="test_modelo_100_registry.casilla"): frozenset(
+        {_ARTISTIC_ACTIVITY_EXCEPTIONAL_REDUCTION_REF}
+    ),
+    validated_casilla_id("0237", surface="test_modelo_100_registry.casilla"): frozenset(
+        {_ARTISTIC_ACTIVITY_EXCEPTIONAL_REDUCTION_REF}
+    ),
+    validated_casilla_id("0384", surface="test_modelo_100_registry.casilla"): frozenset(
+        {_ARTISTIC_ACTIVITY_EXCEPTIONAL_REDUCTION_REF, _MODELO_100_2025_FORM_ORDER_REF}
+    ),
 }
 _CAPITAL_GAINS_2025_SECTION_COUNTS: Mapping[tuple[str, str], int] = {
     ("toma_datos_ampliada", "gp_fondos_coti"): 10,
@@ -792,23 +811,56 @@ _M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE: Mapping[str, frozenset[st
     ),
 }
 _PAYMENTS_ON_ACCOUNT_2025_CASILLA_SECTIONS: Mapping[CasillaId, tuple[str, ...]] = {
-    _casilla_id("0153"): ("rendimientos_capital_inmobiliario", "retenciones"),
-    _casilla_id("0591"): ("resultado_declaracion",),
-    _casilla_id("0592"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
-    _casilla_id("0593"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
-    _casilla_id("0594"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
-    _casilla_id("0596"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
-    _casilla_id("0597"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
-    _casilla_id("0598"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
-    _casilla_id("0599"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
-    _casilla_id("0600"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
-    _casilla_id("0601"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
-    _casilla_id("0602"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
-    _casilla_id("0603"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
-    _casilla_id("0604"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
-    _casilla_id("0605"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
-    _casilla_id("0606"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
-    _casilla_id("0609"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
+    validated_casilla_id("0153", surface="test_modelo_100_registry.casilla"): (
+        "rendimientos_capital_inmobiliario",
+        "retenciones",
+    ),
+    validated_casilla_id("0591", surface="test_modelo_100_registry.casilla"): ("resultado_declaracion",),
+    validated_casilla_id("0592", surface="test_modelo_100_registry.casilla"): (
+        "retenciones_ingresos_cuenta_pagos_fraccionados",
+    ),
+    validated_casilla_id("0593", surface="test_modelo_100_registry.casilla"): (
+        "retenciones_ingresos_cuenta_pagos_fraccionados",
+    ),
+    validated_casilla_id("0594", surface="test_modelo_100_registry.casilla"): (
+        "retenciones_ingresos_cuenta_pagos_fraccionados",
+    ),
+    validated_casilla_id("0596", surface="test_modelo_100_registry.casilla"): (
+        "retenciones_ingresos_cuenta_pagos_fraccionados",
+    ),
+    validated_casilla_id("0597", surface="test_modelo_100_registry.casilla"): (
+        "retenciones_ingresos_cuenta_pagos_fraccionados",
+    ),
+    validated_casilla_id("0598", surface="test_modelo_100_registry.casilla"): (
+        "retenciones_ingresos_cuenta_pagos_fraccionados",
+    ),
+    validated_casilla_id("0599", surface="test_modelo_100_registry.casilla"): (
+        "retenciones_ingresos_cuenta_pagos_fraccionados",
+    ),
+    validated_casilla_id("0600", surface="test_modelo_100_registry.casilla"): (
+        "retenciones_ingresos_cuenta_pagos_fraccionados",
+    ),
+    validated_casilla_id("0601", surface="test_modelo_100_registry.casilla"): (
+        "retenciones_ingresos_cuenta_pagos_fraccionados",
+    ),
+    validated_casilla_id("0602", surface="test_modelo_100_registry.casilla"): (
+        "retenciones_ingresos_cuenta_pagos_fraccionados",
+    ),
+    validated_casilla_id("0603", surface="test_modelo_100_registry.casilla"): (
+        "retenciones_ingresos_cuenta_pagos_fraccionados",
+    ),
+    validated_casilla_id("0604", surface="test_modelo_100_registry.casilla"): (
+        "retenciones_ingresos_cuenta_pagos_fraccionados",
+    ),
+    validated_casilla_id("0605", surface="test_modelo_100_registry.casilla"): (
+        "retenciones_ingresos_cuenta_pagos_fraccionados",
+    ),
+    validated_casilla_id("0606", surface="test_modelo_100_registry.casilla"): (
+        "retenciones_ingresos_cuenta_pagos_fraccionados",
+    ),
+    validated_casilla_id("0609", surface="test_modelo_100_registry.casilla"): (
+        "retenciones_ingresos_cuenta_pagos_fraccionados",
+    ),
 }
 _NO_FRACTIONAL_PAYMENT_2025_BINDING_IDS = frozenset(
     {
@@ -825,23 +877,18 @@ _NO_FRACTIONAL_PAYMENT_2025_CONSTRUCT_IDS = frozenset(
 )
 _NO_FRACTIONAL_PAYMENT_2025_APPLICATION_LINK_IDS = frozenset({"modelo-100-deadline"})
 _SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025: Mapping[CasillaId, str] = {
-    _casilla_id("0528"): _GENERAL_SCALE_ART_63_REF,
-    _casilla_id("0529"): _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
-    _casilla_id("0530"): _GENERAL_SCALE_ART_63_REF,
-    _casilla_id("0531"): _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
-    _casilla_id("0536"): _SAVINGS_STATE_SCALE_ART_66_REF,
-    _casilla_id("0537"): _AUTONOMIC_SAVINGS_SCALE_ART_76_REF,
-    _casilla_id("0538"): _SAVINGS_STATE_SCALE_ART_66_REF,
-    _casilla_id("0539"): _AUTONOMIC_SAVINGS_SCALE_ART_76_REF,
+    validated_casilla_id("0528", surface="test_modelo_100_registry.casilla"): _GENERAL_SCALE_ART_63_REF,
+    validated_casilla_id("0529", surface="test_modelo_100_registry.casilla"): _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
+    validated_casilla_id("0530", surface="test_modelo_100_registry.casilla"): _GENERAL_SCALE_ART_63_REF,
+    validated_casilla_id("0531", surface="test_modelo_100_registry.casilla"): _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
+    validated_casilla_id("0536", surface="test_modelo_100_registry.casilla"): _SAVINGS_STATE_SCALE_ART_66_REF,
+    validated_casilla_id("0537", surface="test_modelo_100_registry.casilla"): _AUTONOMIC_SAVINGS_SCALE_ART_76_REF,
+    validated_casilla_id("0538", surface="test_modelo_100_registry.casilla"): _SAVINGS_STATE_SCALE_ART_66_REF,
+    validated_casilla_id("0539", surface="test_modelo_100_registry.casilla"): _AUTONOMIC_SAVINGS_SCALE_ART_76_REF,
 }
-_ATTRIBUTION_DETAIL_ART_86_CASILLAS = _casilla_ids(
-    "0259",
-    "0264",
-    "0265",
-    "1597",
-    "1598",
-    "1599",
-    "1600",
+_ATTRIBUTION_DETAIL_ART_86_CASILLAS = frozenset(
+    validated_casilla_id(_v, surface="test_modelo_100_registry.casilla")
+    for _v in ("0259", "0264", "0265", "1597", "1598", "1599", "1600")
 )
 _ATTRIBUTION_DETAIL_SECTIONS = frozenset(
     {
@@ -850,34 +897,34 @@ _ATTRIBUTION_DETAIL_SECTIONS = frozenset(
         "re_agrup_interes_economico_res",
     }
 )
-_GENERAL_BASE_ART_48_ONLY_CASILLAS = _casilla_ids(
-    "0431",
-    "0432",
-    "0433",
-    "0434",
-    "0435",
+_GENERAL_BASE_ART_48_ONLY_CASILLAS = frozenset(
+    validated_casilla_id(_v, surface="test_modelo_100_registry.casilla")
+    for _v in ("0431", "0432", "0433", "0434", "0435")
 )
-_SAVINGS_BASE_ART_49_ONLY_CASILLAS = _casilla_ids(
-    "0429",
-    "0436",
-    "0439",
-    "0440",
-    "0441",
-    "0442",
-    "0443",
-    "0444",
-    "0445",
-    "0446",
-    "0447",
-    "0448",
-    "0449",
-    "0450",
-    "0451",
-    "0452",
-    "0453",
-    "0454",
-    "0455",
-    "0460",
+_SAVINGS_BASE_ART_49_ONLY_CASILLAS = frozenset(
+    validated_casilla_id(_v, surface="test_modelo_100_registry.casilla")
+    for _v in (
+        "0429",
+        "0436",
+        "0439",
+        "0440",
+        "0441",
+        "0442",
+        "0443",
+        "0444",
+        "0445",
+        "0446",
+        "0447",
+        "0448",
+        "0449",
+        "0450",
+        "0451",
+        "0452",
+        "0453",
+        "0454",
+        "0455",
+        "0460",
+    )
 )
 _SAVINGS_BASE_ART_49_ONLY_ROLES = frozenset(
     {

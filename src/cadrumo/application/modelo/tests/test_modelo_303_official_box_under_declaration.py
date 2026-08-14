@@ -97,42 +97,37 @@ _PURCHASE_CUOTA = Decimal("42.00")
 
 
 # The official numbered boxes the sale/purchase fixtures populate via projection.
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M303 official-box fixture casilla key {value!r} is not a CasillaId") from exc
 
 
-_OFFICIAL_REPERCUTIDO_SUPER_REDUCIDO_CUOTA: CasillaId = _casilla_id("03")
-_OFFICIAL_REPERCUTIDO_REDUCIDO_CUOTA: CasillaId = _casilla_id("06")
-_OFFICIAL_DEVENGADO_GENERAL_CUOTA: CasillaId = _casilla_id("09")
-_OFFICIAL_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO: CasillaId = _casilla_id("11")
-_OFFICIAL_AUTOREPERCUTIDO_INTERIOR_DEVENGADO: CasillaId = _casilla_id("13")
-_OFFICIAL_CUOTA_DEVENGADA_TOTAL: CasillaId = _casilla_id("27")
-_OFFICIAL_DEDUCIBLE_INTERIORES_CUOTA: CasillaId = _casilla_id("29")
-_OFFICIAL_SOPORTADO_IMPORTACIONES_CUOTA: CasillaId = _casilla_id("33")
-_OFFICIAL_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE: CasillaId = _casilla_id("37")
-_OFFICIAL_CUOTA_DEDUCIBLE_TOTAL: CasillaId = _casilla_id("45")
+_OFFICIAL_REPERCUTIDO_SUPER_REDUCIDO_CUOTA: CasillaId = validated_casilla_id("03")
+_OFFICIAL_REPERCUTIDO_REDUCIDO_CUOTA: CasillaId = validated_casilla_id("06")
+_OFFICIAL_DEVENGADO_GENERAL_CUOTA: CasillaId = validated_casilla_id("09")
+_OFFICIAL_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO: CasillaId = validated_casilla_id("11")
+_OFFICIAL_AUTOREPERCUTIDO_INTERIOR_DEVENGADO: CasillaId = validated_casilla_id("13")
+_OFFICIAL_CUOTA_DEVENGADA_TOTAL: CasillaId = validated_casilla_id("27")
+_OFFICIAL_DEDUCIBLE_INTERIORES_CUOTA: CasillaId = validated_casilla_id("29")
+_OFFICIAL_SOPORTADO_IMPORTACIONES_CUOTA: CasillaId = validated_casilla_id("33")
+_OFFICIAL_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE: CasillaId = validated_casilla_id("37")
+_OFFICIAL_CUOTA_DEDUCIBLE_TOTAL: CasillaId = validated_casilla_id("45")
 
-_M303_REPERCUTIDO_GENERAL_CASILLA: CasillaId = _casilla_id("iva.repercutido.general")
-_M303_REPERCUTIDO_REDUCIDO_CASILLA: CasillaId = _casilla_id("iva.repercutido.reducido")
-_M303_REPERCUTIDO_SUPER_REDUCIDO_CASILLA: CasillaId = _casilla_id("iva.repercutido.super-reducido")
-_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA: CasillaId = _casilla_id(
-    "iva.autorepercutido.intracomunitaria.devengado",
+_M303_REPERCUTIDO_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.repercutido.general")
+_M303_REPERCUTIDO_REDUCIDO_CASILLA: CasillaId = validated_casilla_id("iva.repercutido.reducido")
+_M303_REPERCUTIDO_SUPER_REDUCIDO_CASILLA: CasillaId = validated_casilla_id("iva.repercutido.super-reducido")
+_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id(
+    "iva.autorepercutido.intracomunitaria.devengado"
 )
-_M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA: CasillaId = _casilla_id(
-    "iva.autorepercutido.interior.devengado",
+_M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA: CasillaId = validated_casilla_id(
+    "iva.autorepercutido.interior.devengado"
 )
-_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
-_M303_SOPORTADO_INTERIORES_CASILLA: CasillaId = _casilla_id("iva.soportado.interiores")
-_M303_SOPORTADO_IMPORTACIONES_CASILLA: CasillaId = _casilla_id("iva.soportado.importaciones")
-_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id(
-    "iva.autorepercutido.intracomunitaria.deducible",
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+_M303_SOPORTADO_INTERIORES_CASILLA: CasillaId = validated_casilla_id("iva.soportado.interiores")
+_M303_SOPORTADO_IMPORTACIONES_CASILLA: CasillaId = validated_casilla_id("iva.soportado.importaciones")
+_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id(
+    "iva.autorepercutido.intracomunitaria.deducible"
 )
-_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
-_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
-    "iva.compensacion-pendiente-periodos-anteriores",
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores"
 )
 
 # Full Stage-2 box → semantic-source projection map (the ten in-scope cuota boxes).

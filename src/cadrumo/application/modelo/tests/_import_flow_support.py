@@ -53,28 +53,21 @@ _TAX_ID = "X1234567L"
 _PROFILE_ID = "13000000-0000-4000-8000-000000000001"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_IMPORT_INCOME_CASILLA: CasillaId = _casilla_id("01")
-_IMPORT_EXPENSE_CASILLA: CasillaId = _casilla_id("02")
-_UNKNOWN_IMPORT_CASILLA: CasillaId = _casilla_id("9999")
-_M303_PRINTED_RESULT_TOKEN: CasillaId = _casilla_id("69")
-_M111_AMENDMENT_CASILLA: CasillaId = _casilla_id("01")
-_M111_EMPLOYMENT_WITHHELD_CASILLA: CasillaId = _casilla_id("03")
-_M111_PROFESSIONAL_WITHHELD_CASILLA: CasillaId = _casilla_id("06")
-_M111_PRIZE_WITHHELD_CASILLA: CasillaId = _casilla_id("09")
-_M111_IMAGE_RIGHTS_WITHHELD_CASILLA: CasillaId = _casilla_id("12")
-_M111_FORESTRY_WITHHELD_CASILLA: CasillaId = _casilla_id("15")
-_M111_IMPUTED_INCOME_WITHHELD_CASILLA: CasillaId = _casilla_id("18")
-_M111_ACTIVITY_COUNT_CASILLA: CasillaId = _casilla_id("21")
-_M111_ACTIVITY_AMOUNT_CASILLA: CasillaId = _casilla_id("24")
-_M111_ACTIVITY_WITHHELD_CASILLA: CasillaId = _casilla_id("27")
-_M111_TOTAL_WITHHELD_CASILLA: CasillaId = _casilla_id("29")
+_IMPORT_INCOME_CASILLA: CasillaId = validated_casilla_id("01")
+_IMPORT_EXPENSE_CASILLA: CasillaId = validated_casilla_id("02")
+_UNKNOWN_IMPORT_CASILLA: CasillaId = validated_casilla_id("9999")
+_M303_PRINTED_RESULT_TOKEN: CasillaId = validated_casilla_id("69")
+_M111_AMENDMENT_CASILLA: CasillaId = validated_casilla_id("01")
+_M111_EMPLOYMENT_WITHHELD_CASILLA: CasillaId = validated_casilla_id("03")
+_M111_PROFESSIONAL_WITHHELD_CASILLA: CasillaId = validated_casilla_id("06")
+_M111_PRIZE_WITHHELD_CASILLA: CasillaId = validated_casilla_id("09")
+_M111_IMAGE_RIGHTS_WITHHELD_CASILLA: CasillaId = validated_casilla_id("12")
+_M111_FORESTRY_WITHHELD_CASILLA: CasillaId = validated_casilla_id("15")
+_M111_IMPUTED_INCOME_WITHHELD_CASILLA: CasillaId = validated_casilla_id("18")
+_M111_ACTIVITY_COUNT_CASILLA: CasillaId = validated_casilla_id("21")
+_M111_ACTIVITY_AMOUNT_CASILLA: CasillaId = validated_casilla_id("24")
+_M111_ACTIVITY_WITHHELD_CASILLA: CasillaId = validated_casilla_id("27")
+_M111_TOTAL_WITHHELD_CASILLA: CasillaId = validated_casilla_id("29")
 
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="00000000T"),

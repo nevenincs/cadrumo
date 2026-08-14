@@ -13,6 +13,13 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.inbound.financial.providers import ParsedLedgerRow
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage import AttachmentStore, SecureObjectRepository, StorageValidationError
 from ....application.ledger import (
     ExportSerializationFormat,
     LedgerExportCommand,
@@ -61,17 +68,6 @@ from ....domain.transactions import (
 )
 from ....domain.usage_ratios import UsageRatioProfile
 from ....tests import general_m303_filing_evidence
-from ....tests.ledger_action_adapters import (
-    AttachmentStore,
-    BucketEventHistoryRepository,
-    CalculationRevisionCatalogueRepository,
-    InvoiceCatalogueRepository,
-    ParsedLedgerRow,
-    SecureObjectRepository,
-    StorageValidationError,
-    TransactionCatalogueRepository,
-    WorkUnitCatalogueRepository,
-)
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import (
     TestRuntimeProfile,
@@ -83,14 +79,7 @@ from .. import ManualLedgerTransactionCommand, ManualLedgerTransactionResult, cr
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
-
-
-_REVISION_CASILLA: CasillaId = _casilla_id("01")
+_REVISION_CASILLA: CasillaId = validated_casilla_id("01")
 _BUCKET_ID = "26262626-2626-4626-8626-262626262626"
 _OTHER_BUCKET_ID = "27272727-2727-4727-8727-272727272727"
 

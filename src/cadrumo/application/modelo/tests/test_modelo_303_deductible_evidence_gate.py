@@ -89,16 +89,9 @@ _VERIFIED_AT = datetime(2026, 4, 6, 10, 0, tzinfo=UTC)
 _IVA_RATE = Decimal("0.21")
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="test casilla id")
-    except ValueError as exc:
-        raise AssertionError(f"M303 evidence-gate fixture casilla key {value!r} is not a CasillaId") from exc
-
-
-_DEVENGADA_TOTAL: CasillaId = _casilla_id("iva.cuota-devengada-total")
-_DEDUCIBLE_TOTAL: CasillaId = _casilla_id("iva.cuota-deducible-total")
-_RESULTADO: CasillaId = _casilla_id("iva.resultado-regimen-general")
+_DEVENGADA_TOTAL: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+_DEDUCIBLE_TOTAL: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
+_RESULTADO: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
 
 
 @pytest.fixture
