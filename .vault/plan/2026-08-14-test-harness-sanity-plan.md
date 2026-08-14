@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-14'
-body_hash: 'sha256:f130d4f24fd12ef69e9522ea1bbef6281c96f84d1d75f374c0a2209bcb350049'
+body_hash: 'sha256:e3c519ac78dc6ac70fc7160044a85f83a9abe0ac014643b7edede92bba32b5e6'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -108,7 +108,7 @@ Complete root source development and packaging census remediation with no unclas
 
 Apply collection policy exactly once from the root and prove domain-local live reach.
 
-- [ ] `W07.P22.S71` - Promote banned-live-import enforcement into the shared root policy helper; `src/cadrumo/tests/_marker_hook.py`.
+- [x] `W07.P22.S71` - Promote banned-live-import enforcement into the shared root policy helper; `src/cadrumo/tests/_marker_hook.py`.
 - [ ] `W07.P22.S72` - Make the repository root the sole collection-policy hook owner; `conftest.py`.
 - [ ] `W07.P22.S73` - Remove duplicate marker traversal and live-policy ownership from the child conftest; `src/cadrumo/tests/conftest.py`.
 - [ ] `W07.P22.S74` - Add real subprocess proofs for domain-local banned live imports and clean controls; `src/cadrumo/tests/test_marker_integrity.py`.

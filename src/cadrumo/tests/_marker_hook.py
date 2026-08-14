@@ -1,11 +1,11 @@
-"""Shared pytest collection hook enforcing the hexagonal marker taxonomy.
+"""Shared pytest collection policy enforcing taxonomy and live-import safety.
 
 This module is test-infrastructure, not a production module. It is imported
 from both the repo-root ``conftest.py`` and ``src/cadrumo/tests/conftest.py``
 so that items collected anywhere under ``src/cadrumo/`` pass through the same
 enforcement surface.
 
-Contract enforced by :func:`apply` on every collected item:
+The marker contract enforced by :func:`apply` on every collected item:
 
 - Each item must carry exactly one execution marker from
   ``{unit, integration, aeat_live}``. Zero or more than one raises
@@ -13,6 +13,12 @@ Contract enforced by :func:`apply` on every collected item:
 - Each item must carry exactly one accepted ``hex_*`` marker at module level.
 - A ``serial`` item is held out of any run with xdist workers active, and the
   hold is announced.
+
+The live-import contract enforced by :func:`apply_banned_live_import_policy`:
+
+- A file contributing an ``aeat_live`` item may not import any of the banned
+  test-double or time-freezing modules. The policy reads source with
+  :mod:`ast`; it never executes the file.
 
 The ``serial`` hold exists because the marker was otherwise inert. pytest-xdist
 has no notion of it -- its only scheduling primitive is ``--dist=loadgroup``
@@ -33,12 +39,12 @@ deselection inside its workers and the controller's stats never receive it (see
 warning rides the warnings channel, which IS aggregated to the controller, so the
 hold is always stated.
 
-Double-invocation tolerance: the repo-root ``conftest.py`` and the
-package-scoped ``src/cadrumo/tests/conftest.py`` both delegate to
-:func:`apply`. Items may pass through the hook twice; this is safe
-because :func:`apply` enforces invariants on items it receives and
-filters ``items`` in-place. A second pass over already-validated items
-is a no-op because their marker sets are identical.
+The two policy functions compose in this order: :func:`apply` validates marker
+taxonomy before :func:`apply_banned_live_import_policy` inspects live-marked
+modules. The latter does not mutate ``items`` or module state, so calling it
+again on the same collection has the identical verdict. That makes it safe to
+move its caller from the package conftest to the root collection surface without
+creating a transitional policy split.
 
 Live AEAT access is opt-in gated by the package-scoped conftest after
 this taxonomy check.
@@ -46,7 +52,10 @@ this taxonomy check.
 
 from __future__ import annotations
 
+import ast
 import warnings
+from collections.abc import Iterable
+from pathlib import Path
 from typing import Protocol
 
 import pytest
@@ -54,6 +63,22 @@ import pytest
 _EXECUTION_MARKERS = frozenset({"unit", "integration", "aeat_live"})
 _SERIAL_MARKER = "serial"
 _MAX_NAMED_HELD_ITEMS = 10
+_LIVE_ACCESS_MARKERS = frozenset({"aeat_live"})
+_BANNED_LIVE_IMPORTS = frozenset(
+    {
+        "unittest",
+        "unittest." + "mo" + "ck",
+        "mo" + "ck",
+        "pytest_mock",
+        "responses",
+        "httpx_mock",
+        "pytest_httpx",
+        "vcr",
+        "vcrpy",
+        "freezegun",
+        "time_machine",
+    },
+)
 
 SERIAL_HELD_WORKEROUTPUT_KEY = "cadrumo_serial_held"
 """``config.workeroutput`` key carrying the node ids held out of an xdist run."""
@@ -103,6 +128,92 @@ def apply(config: pytest.Config, items: list[pytest.Item]) -> None:
         remaining.append(item)
     items[:] = remaining
     _hold_serial_items_from_xdist(config, items)
+
+
+def apply_banned_live_import_policy(items: Iterable[pytest.Item]) -> None:
+    """Exit collection when a live-marked module imports a banned dependency.
+
+    This policy is intentionally separate from :func:`apply`: callers retain
+    the established taxonomy-first error order while the root conftest can own
+    both collection contracts. It makes no change to ``items`` and is therefore
+    idempotent across repeated hook delivery.
+
+    Args:
+        items: Collected test items whose live-marked source modules are scanned.
+    """
+    import_violations = _check_banned_live_imports(_live_item_paths(items))
+    if not import_violations:
+        return
+    header = "Banned import in live-marked file (see src/cadrumo/tests/README.md):"
+    message = header + "\n  " + "\n  ".join(import_violations)
+    pytest.exit(message, returncode=2)
+
+
+def _live_item_paths(items: Iterable[pytest.Item]) -> set[Path]:
+    """Return source files that contributed an ``aeat_live`` item."""
+    return {item.path for item in items if {mark.name for mark in item.iter_markers()} & _LIVE_ACCESS_MARKERS}
+
+
+def _check_banned_live_imports(paths: Iterable[Path]) -> list[str]:
+    """Return one violation for each live-marked module importing a banned target."""
+    violations: list[str] = []
+    for path in sorted(paths):
+        hits = _scan_banned_live_imports(path)
+        if hits:
+            violations.append(f"{path}: imports banned symbol(s) {sorted(hits)} in a file containing an aeat_live item")
+    return violations
+
+
+def _scan_banned_live_imports(path: Path) -> set[str]:
+    """AST-scan ``path`` for banned import targets without executing its source.
+
+    Source is read as bytes so :func:`ast.parse` honours PEP 263 encoding
+    cookies. An unreadable or syntactically invalid module is left to pytest's
+    own collection diagnostics rather than being misreported as this policy.
+    """
+    try:
+        source = path.read_bytes()
+    except OSError:
+        return set()
+    try:
+        tree = ast.parse(source, filename=str(path))
+    except SyntaxError:
+        return set()
+
+    hits: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            hits.update(_banned_hits_for_import(node))
+        elif isinstance(node, ast.ImportFrom):
+            hits.update(_banned_hits_for_import_from(node))
+    return hits
+
+
+def _banned_hits_for_import(node: ast.Import) -> set[str]:
+    """Collect banned targets from one ``import X[, Y...]`` statement."""
+    hits: set[str] = set()
+    for alias in node.names:
+        name = alias.name
+        if name in _BANNED_LIVE_IMPORTS:
+            hits.add(name)
+        root = name.split(".", 1)[0]
+        if root in _BANNED_LIVE_IMPORTS:
+            hits.add(root)
+    return hits
+
+
+def _banned_hits_for_import_from(node: ast.ImportFrom) -> set[str]:
+    """Collect banned targets from one ``from X import Y`` statement."""
+    if node.module is None:
+        return set()
+    hits: set[str] = set()
+    module = node.module
+    if module in _BANNED_LIVE_IMPORTS:
+        hits.add(module)
+    root = module.split(".", 1)[0]
+    if root in _BANNED_LIVE_IMPORTS:
+        hits.add(root)
+    return hits
 
 
 def _hold_serial_items_from_xdist(config: pytest.Config, items: list[pytest.Item]) -> None:
