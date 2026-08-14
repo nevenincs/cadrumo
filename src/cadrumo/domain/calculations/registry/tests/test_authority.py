@@ -11,7 +11,6 @@ from pathlib import Path
 import pytest
 
 from .....core import CasillaId, Period, validated_casilla_id
-from .....core.resources import resources
 from .. import (
     RegistrySnapshotError,
     RegistryValidationError,
@@ -36,15 +35,10 @@ _M130_CARRY_FORWARD_CASILLA: CasillaId = validated_casilla_id("15", surface="_M1
 _M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_CASILLA")
 
 
-@pytest.fixture(scope="module")
-def _packaged_authority():
-    return resources().modelos.authority
-
-
 def test_authority_returns_cached_validated_snapshot_for_repeated_filing_context(
-    _packaged_authority: ValidatedRegistryAuthority,
+    registry_authority: ValidatedRegistryAuthority,
 ) -> None:
-    authority = _packaged_authority
+    authority = registry_authority
     first = authority.snapshot("130", filing_year=2026, period="1T")
     second = authority.snapshot("130", filing_year=2026, period="1T")
 
@@ -53,8 +47,8 @@ def test_authority_returns_cached_validated_snapshot_for_repeated_filing_context
     assert "1T" in first.revision.period_selector.periods
 
 
-def test_authority_snapshot_runs_real_modelo_calculation(_packaged_authority: ValidatedRegistryAuthority) -> None:
-    authority = _packaged_authority
+def test_authority_snapshot_runs_real_modelo_calculation(registry_authority: ValidatedRegistryAuthority) -> None:
+    authority = registry_authority
     snapshot = authority.snapshot("130", filing_year=2026, period="1T")
 
     result = calculate_registry_snapshot(
@@ -87,9 +81,9 @@ def test_authority_snapshot_runs_real_modelo_calculation(_packaged_authority: Va
 
 
 def test_authority_snapshot_is_authority_owned_revision_projection(
-    _packaged_authority: ValidatedRegistryAuthority,
+    registry_authority: ValidatedRegistryAuthority,
 ) -> None:
-    authority = _packaged_authority
+    authority = registry_authority
 
     snapshot = authority.snapshot("130", filing_year=2026, period="1T")
     modelo = authority.modelo("130")
@@ -100,15 +94,15 @@ def test_authority_snapshot_is_authority_owned_revision_projection(
     assert "130" in authority._validated_modelos
 
 
-def test_authority_rejects_unknown_modelo(_packaged_authority: ValidatedRegistryAuthority) -> None:
-    authority = _packaged_authority
+def test_authority_rejects_unknown_modelo(registry_authority: ValidatedRegistryAuthority) -> None:
+    authority = registry_authority
 
     with pytest.raises(RegistrySnapshotError, match="999"):
         authority.snapshot("999", filing_year=2026, period="1T")
 
 
-def test_authority_deadline_windows_are_validated_and_sorted(_packaged_authority: ValidatedRegistryAuthority) -> None:
-    authority = _packaged_authority
+def test_authority_deadline_windows_are_validated_and_sorted(registry_authority: ValidatedRegistryAuthority) -> None:
+    authority = registry_authority
 
     windows = authority.deadline_windows(2026, modelos=("130",))
 

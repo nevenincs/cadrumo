@@ -37,7 +37,7 @@ _COUNT_PATH = "renta_family.descendientes_count"
 
 
 @pytest.fixture
-def _bucket_id() -> str:
+def bucket_id() -> str:
     return _BUCKET_ID
 
 
