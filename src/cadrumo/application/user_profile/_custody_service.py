@@ -6,7 +6,6 @@ import os
 import secrets
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
-from hashlib import sha256
 from importlib import import_module
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -15,6 +14,7 @@ from uuid import UUID, uuid4
 from pydantic import ValidationError
 
 from ...core import BucketPointer
+from ...core.hashing import prefixed_digest
 from ...core.paths import effective_storage_root
 from ._custody_hold import ProfileCustodyHoldAuthority
 from ._custody_pointer import ProfileCustodyPointerSnapshot
@@ -241,7 +241,7 @@ class _ProfileCustodyTransactionCapability:
                 profile_id,
                 self._adapters.PROFILE_CUSTODY_LABEL_FILENAME,
                 replacement.canonical_json_bytes(),
-                expected_sha256=f"sha256:{sha256(current.canonical_json_bytes()).hexdigest()}",
+                expected_sha256=prefixed_digest(current.canonical_json_bytes()),
                 root=self._root,
             )
             try:

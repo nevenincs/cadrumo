@@ -11,19 +11,14 @@ from pydantic import BaseModel, ValidationError, field_validator, model_validato
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.hashing import reject_duplicate_json_members, reject_json_constant
 from ..crypto import EncryptedBlob, decrypt_record
 from ._errors import ProfileCustodyRecordError
 from ._kdf_codec import (
-    canonical_json_bytes as _canonical_json_bytes,
+    canonical_frame_bytes as _canonical_frame_bytes,
 )
 from ._kdf_codec import (
     decode_canonical_b64 as _decode_canonical_b64,
-)
-from ._kdf_codec import (
-    reject_duplicate_members as _reject_duplicate_members,
-)
-from ._kdf_codec import (
-    reject_json_constant as _reject_json_constant,
 )
 from ._records import ProfileCustodyEnvelope
 
@@ -44,7 +39,7 @@ def profile_custody_sentinel_aad(envelope: ProfileCustodyEnvelope) -> bytes:
 
 def profile_custody_sentinel_aad_for(*, profile_id: UUID, dek_epoch: str) -> bytes:
     """Derive sentinel AAD from the immutable custody identity alone."""
-    return _canonical_json_bytes(
+    return _canonical_frame_bytes(
         {
             "data_format_version": _PROFILE_CUSTODY_DATA_FORMAT_VERSION,
             "dek_epoch": dek_epoch,
@@ -63,7 +58,7 @@ def profile_custody_sentinel_plaintext(
     data_format_version: Literal[1] = 1,
 ) -> bytes:
     """Derive the non-caller-selectable sentinel plaintext for one DEK epoch."""
-    return _canonical_json_bytes(
+    return _canonical_frame_bytes(
         {
             "data_format_version": data_format_version,
             "dek_epoch": dek_epoch,
@@ -143,18 +138,20 @@ class ProfileCustodySentinelRecord(BaseModel):
 
     def canonical_json_bytes(self) -> bytes:
         """Return the unique strict transport representation for a custody transaction."""
-        return _canonical_json_bytes(cast(dict[str, object], self.model_dump(mode="json")))
+        return _canonical_frame_bytes(cast(dict[str, object], self.model_dump(mode="json")))
 
 
 def parse_profile_custody_sentinel_record(value: bytes) -> ProfileCustodySentinelRecord:
     """Parse one canonical sentinel record without creating or publishing it."""
     try:
         decoded = value.decode(_UTF_8_ENCODING, errors="strict")
-        parsed = json.loads(decoded, object_pairs_hook=_reject_duplicate_members, parse_constant=_reject_json_constant)
+        parsed = json.loads(
+            decoded, object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant
+        )
         if not isinstance(parsed, dict):
             raise ValueError("profile custody sentinel must be an object")
         payload = cast("dict[str, object]", parsed)
-        record = ProfileCustodySentinelRecord.model_validate_json(_canonical_json_bytes(payload))
+        record = ProfileCustodySentinelRecord.model_validate_json(_canonical_frame_bytes(payload))
         if record.canonical_json_bytes() != value:
             raise ValueError("profile custody sentinel is not canonical")
         return record

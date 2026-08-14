@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import os
 import stat
 from contextlib import ExitStack
@@ -11,6 +10,7 @@ from hashlib import sha256
 from pathlib import Path
 from uuid import UUID
 
+from .....core.hashing import CONTENT_DIGEST_PREFIX, canonical_json_bytes, prefixed_digest
 from ._errors import ProfileCustodyRecordError
 from ._filesystem import (
     anchor_directory,
@@ -75,16 +75,12 @@ def _build_profile_custody_inventory(
     total_bytes = sum(entry.size_bytes for entry in ordered)
     if total_bytes > PROFILE_CUSTODY_INVENTORY_MAX_TOTAL_BYTES:
         raise ProfileCustodyRecordError("profile custody inventory exceeds its total byte limit")
-    canonical = json.dumps(
-        [[entry.relative_path, entry.size_bytes, entry.sha256] for entry in ordered],
-        ensure_ascii=True,
-        separators=(",", ":"),
-    ).encode("ascii")
+    canonical = canonical_json_bytes([[entry.relative_path, entry.size_bytes, entry.sha256] for entry in ordered])
     return ProfileCustodyInventory(
         profile_id=profile_id,
         entries=ordered,
         total_bytes=total_bytes,
-        digest=f"sha256:{sha256(canonical).hexdigest()}",
+        digest=prefixed_digest(canonical),
     )
 
 
@@ -174,7 +170,7 @@ def _inventory_posix_file(
             remaining -= len(chunk)
         if os.fstat(descriptor).st_size != metadata.st_size:
             raise ProfileCustodyRecordError("profile custody inventory file changed during reading")
-        return ProfileCustodyInventoryEntry(relative, metadata.st_size, f"sha256:{digest.hexdigest()}")
+        return ProfileCustodyInventoryEntry(relative, metadata.st_size, f"{CONTENT_DIGEST_PREFIX}{digest.hexdigest()}")
     finally:
         os.close(descriptor)
 
@@ -224,7 +220,7 @@ def _inventory_windows_entry(
     after = child.lstat()
     if (after.st_dev, after.st_ino, after.st_size) != (metadata.st_dev, metadata.st_ino, metadata.st_size):
         raise ProfileCustodyRecordError("profile custody inventory file changed during reading")
-    entries.append(ProfileCustodyInventoryEntry(relative, len(payload), f"sha256:{sha256(payload).hexdigest()}"))
+    entries.append(ProfileCustodyInventoryEntry(relative, len(payload), prefixed_digest(payload)))
     _ensure_inventory_entry_limit(entries)
 
 

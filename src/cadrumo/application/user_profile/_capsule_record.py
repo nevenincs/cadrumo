@@ -8,12 +8,10 @@ history through one ``SecureObjectRepository.apply_batch`` transaction.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from hashlib import sha256
 from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -21,6 +19,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
+from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.paths import effective_storage_root
 from ...domain.buckets import (
     BucketEvent,
@@ -157,8 +156,8 @@ class ProfileRecordSession:
             "profile_id": str(self.profile_id),
             "record_revision": record.record_revision,
         }
-        canonical = json.dumps(binding, sort_keys=True, separators=(",", ":")).encode("utf-8")
-        return f"{_RECORD_WRITE_PROVENANCE_PREFIX}:{sha256(canonical).hexdigest()}"
+        canonical = canonical_json_bytes(binding)
+        return f"{_RECORD_WRITE_PROVENANCE_PREFIX}:{sha256_hex(canonical)}"
 
     def assert_row_binding(self, raw: ProfileCustodySecureObjectRawRowPort, record: UserProfileRecord) -> None:
         """Authenticate the row header against the unlocked envelope and record."""

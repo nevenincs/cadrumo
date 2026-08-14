@@ -29,13 +29,13 @@ See Also:
 from __future__ import annotations
 
 import hashlib
-import json
 from collections.abc import Callable, Iterable, Mapping
 from datetime import datetime
 from enum import StrEnum
 from typing import Final, Protocol
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...core.hashing import canonical_json_bytes
 from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.i18n import tr
 from ...core.logging import get_logger
@@ -786,7 +786,7 @@ def _transaction_catalogue_fingerprint(catalogue: TransactionCatalogue) -> str:
     for index, transaction in enumerate(sorted(catalogue.values(), key=lambda item: item.transaction_id)):
         if index > 0:
             hasher.update(b",")
-        hasher.update(_canonical_json_bytes(_normalize_transaction(transaction)))
+        hasher.update(canonical_json_bytes(_normalize_transaction(transaction)))
     hasher.update(b"]")
     return hasher.hexdigest()
 
@@ -805,7 +805,7 @@ def _invoice_catalogue_fingerprint(catalogue: InvoiceCatalogue) -> str:
     for index, invoice in enumerate(sorted(catalogue.values(), key=lambda item: item.invoice_id)):
         if index > 0:
             hasher.update(b",")
-        hasher.update(_canonical_json_bytes(invoice.model_dump(mode="json")))
+        hasher.update(canonical_json_bytes(invoice.model_dump(mode="json")))
     hasher.update(b"]")
     return hasher.hexdigest()
 
@@ -857,13 +857,4 @@ def _schema_formula_fingerprint(
 
 
 def _sha256_payload(payload: object) -> str:
-    return _sha256_hex(_canonical_json_bytes(payload))
-
-
-def _canonical_json_bytes(payload: object) -> bytes:
-    return json.dumps(
-        payload,
-        ensure_ascii=True,
-        separators=(",", ":"),
-        sort_keys=True,
-    ).encode("utf-8")
+    return _sha256_hex(canonical_json_bytes(payload))

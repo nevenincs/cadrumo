@@ -31,7 +31,7 @@ from ...adapters.persistence.storage import (
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants
-from ...core.hashing import sha256_hex
+from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.time import now, validate_utc_aware
 from ._errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 
@@ -272,11 +272,7 @@ def record_auth_diagnostic_phone_state(
         classification=_DIAGNOSTIC_SENSITIVITY,
         schema_version=_DIAGNOSTIC_SCHEMA_VERSION,
         written_at=reported_at,
-        payload=json.dumps(
-            updated.model_dump(mode="json"),
-            ensure_ascii=False,
-            sort_keys=True,
-        ).encode(UTF_8_ENCODING),
+        payload=canonical_json_bytes(updated.model_dump(mode="json")),
     )
     return AuthDiagnosticReportResult(
         diagnostic_id=diagnostic_id,

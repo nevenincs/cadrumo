@@ -11,7 +11,6 @@ records ``LEDGER_TRANSACTION_IMPORTED`` bucket events, and returns
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterable, Mapping
 from datetime import datetime
 from decimal import Decimal
@@ -27,7 +26,7 @@ if TYPE_CHECKING:
 from ...adapters.persistence.storage import TRANSACTION_CATALOGUE_NAMESPACE
 from ...core.errors import resolve_error_message
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.hashing import sha256_file
+from ...core.hashing import canonical_json_bytes, sha256_file
 from ...core.i18n import tr
 from ...domain.buckets import (
     BucketEvent,
@@ -614,16 +613,15 @@ def _import_batch_id(
     source_command: str,
     imported_transaction_ids: tuple[str, ...],
 ) -> str:
-    encoded = json.dumps(
-        {
-            "bucket_id": bucket_id,
-            "source_command": source_command,
-            "imported_transaction_ids": imported_transaction_ids,
-        },
-        sort_keys=True,
-        separators=(",", ":"),
-    ).encode("utf-8")
-    return sha256_hex(encoded)
+    return sha256_hex(
+        canonical_json_bytes(
+            {
+                "bucket_id": bucket_id,
+                "source_command": source_command,
+                "imported_transaction_ids": imported_transaction_ids,
+            },
+        ),
+    )
 
 
 apply_fx_conversion = _apply_fx_conversion

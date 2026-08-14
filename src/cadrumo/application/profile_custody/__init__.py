@@ -8,12 +8,10 @@ different storage root or lifecycle is being composed.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Callable, Generator, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from hashlib import sha256
 from importlib import import_module
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, NoReturn, Protocol, TypeGuard, cast
@@ -24,6 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core import ProfileSessionRefusalReason, SecureObjectWrite, StorageCategory, storage_location
 from ...core.classification import SensitivityClass
 from ...core.config import SecretStoreBackend, Settings
+from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from ...core.paths import effective_storage_root
 
 if TYPE_CHECKING:
@@ -398,13 +397,13 @@ def canonical_snapshot_bytes(
     model: BaseModel,
     *,
     maximum_bytes: int,
-    limit_error: str,
+    subject: str,
 ) -> bytes:
     """Encode one snapshot deterministically, enforcing its byte budget."""
-    return canonical_json_bytes(
+    return bounded_canonical_json_bytes(
         model.model_dump(mode="json"),
         maximum_bytes=maximum_bytes,
-        limit_error=limit_error,
+        subject=subject,
     )
 
 
@@ -412,29 +411,14 @@ def canonical_snapshot_digest(
     model: BaseModel,
     *,
     maximum_bytes: int,
-    limit_error: str,
+    subject: str,
 ) -> str:
     """Digest the canonical snapshot fields that exclude ``self_digest``."""
-    return digest_bytes(
-        canonical_json_bytes(
-            canonical_snapshot_payload(model),
-            maximum_bytes=maximum_bytes,
-            limit_error=limit_error,
-        ),
+    return canonical_json_digest(
+        canonical_snapshot_payload(model),
+        maximum_bytes=maximum_bytes,
+        subject=subject,
     )
-
-
-def canonical_json_bytes(value: object, *, maximum_bytes: int, limit_error: str) -> bytes:
-    """Encode JSON with stable ordering and an explicit bounded size."""
-    encoded = json.dumps(value, ensure_ascii=True, sort_keys=True, separators=(",", ":")).encode("ascii")
-    if len(encoded) > maximum_bytes:
-        raise ValueError(limit_error)
-    return encoded
-
-
-def digest_bytes(value: bytes) -> str:
-    """Return the canonical SHA-256 digest representation used by snapshots."""
-    return f"sha256:{sha256(value).hexdigest()}"
 
 
 def profile_custody_owner_root(root: Path | None, owner: str) -> Path:

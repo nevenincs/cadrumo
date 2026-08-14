@@ -18,6 +18,13 @@ from pydantic import BaseModel, Field, ValidationError, field_validator, model_v
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.hashing import (
+    bounded_canonical_json_bytes,
+    canonical_json_digest,
+    reject_duplicate_json_members,
+    reject_json_constant,
+    validate_prefixed_digest,
+)
 from ._errors import ProfileCustodyRecordError
 from ._filesystem_primitives import (
     WindowsDirectoryAnchorErrors,
@@ -39,13 +46,8 @@ from ._recovery import (
     ProfileCustodyRecoveryAad,
     ProfileCustodyRecoveryEnvelope,
     ProfileCustodyRecoveryUnlock,
-    canonical_custody_digest,
-    canonical_custody_json_bytes,
     profile_custody_recovery_aad_for,
-    reject_custody_json_constant,
-    reject_duplicate_custody_members,
     validate_profile_custody_dek_epoch,
-    validate_profile_custody_digest,
 )
 from ._sentinel_contract import ProfileCustodySentinelRecord, verify_profile_custody_sentinel
 
@@ -87,7 +89,7 @@ class ProfileCustodyRecoveryArtifact(_RecoveryArtifactPayload):
     @field_validator("self_digest")
     @classmethod
     def _validate_self_digest(cls, value: str) -> str:
-        return validate_profile_custody_digest(value, field_name="self_digest")
+        return validate_prefixed_digest(value, field_name="self_digest")
 
     @model_validator(mode="after")
     def _verify_self_digest(self) -> ProfileCustodyRecoveryArtifact:
@@ -103,14 +105,14 @@ class ProfileCustodyRecoveryArtifact(_RecoveryArtifactPayload):
 
     @property
     def computed_self_digest(self) -> str:
-        return canonical_custody_digest(
+        return canonical_json_digest(
             self.canonical_payload,
             maximum_bytes=PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES,
             subject="profile recovery artifact",
         )
 
     def canonical_json_bytes(self) -> bytes:
-        return canonical_custody_json_bytes(
+        return bounded_canonical_json_bytes(
             self.model_dump(mode="json"),
             maximum_bytes=PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES,
             subject="profile recovery artifact",
@@ -127,14 +129,14 @@ class ProfileCustodyRecoveryArtifact(_RecoveryArtifactPayload):
             wrapped_dek=envelope.wrapped_dek,
             aad=envelope.aad,
         ).model_dump(mode="json")
-        payload["self_digest"] = canonical_custody_digest(
+        payload["self_digest"] = canonical_json_digest(
             payload,
             maximum_bytes=PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES,
             subject="profile recovery artifact",
         )
         try:
             return cls.model_validate_json(
-                canonical_custody_json_bytes(
+                bounded_canonical_json_bytes(
                     payload,
                     maximum_bytes=PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES,
                     subject="profile recovery artifact",
@@ -169,13 +171,13 @@ def parse_profile_custody_recovery_artifact(value: bytes) -> ProfileCustodyRecov
     try:
         parsed = json.loads(
             value.decode(_UTF_8_ENCODING, errors="strict"),
-            object_pairs_hook=reject_duplicate_custody_members,
-            parse_constant=reject_custody_json_constant,
+            object_pairs_hook=reject_duplicate_json_members,
+            parse_constant=reject_json_constant,
         )
         if not isinstance(parsed, dict):
             raise ValueError("profile recovery artifact must be a JSON object")
         artifact = ProfileCustodyRecoveryArtifact.model_validate_json(
-            canonical_custody_json_bytes(
+            bounded_canonical_json_bytes(
                 cast(dict[str, object], parsed),
                 maximum_bytes=PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES,
                 subject="profile recovery artifact",

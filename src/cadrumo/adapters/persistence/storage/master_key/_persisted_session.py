@@ -66,6 +66,11 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import ProfileSessionRefusalReason
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.hashing import (
+    canonical_json_bytes,
+    reject_duplicate_json_members,
+    reject_json_constant,
+)
 from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
 from .._storage_path_definitions import PROFILE_SESSION_FILENAME
@@ -220,7 +225,7 @@ def _associated_data(
     unambiguous for every UUID-bound receipt, so no metadata value can be
     smuggled across a field boundary.
     """
-    payload = json.dumps(
+    payload = canonical_json_bytes(
         {
             "absolute_deadline": absolute_deadline.isoformat(),
             "custody_generation": custody_generation,
@@ -231,10 +236,8 @@ def _associated_data(
             "schema_version": schema_version,
             "session_id": str(session_id),
         },
-        sort_keys=True,
-        separators=(",", ":"),
     )
-    return f"{_AAD_PREFIX}:{payload}".encode(_UTF_8_ENCODING)
+    return f"{_AAD_PREFIX}:".encode(_UTF_8_ENCODING) + payload
 
 
 # ALT-DEK-WRAP-RATIONALE-SESSION: wraps the SAME bucket DEK as
@@ -649,28 +652,9 @@ def _record_from_document(document: _PersistedSessionDocument) -> PersistedProfi
     )
 
 
-def _reject_duplicate_object_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
-    """Build one JSON object while refusing every duplicate key."""
-    object_value: dict[str, object] = {}
-    for key, value in pairs:
-        if key in object_value:
-            raise ValueError("session receipt contains a duplicate JSON member")
-        object_value[key] = value
-    return object_value
-
-
-def _reject_json_constant(value: str) -> object:
-    raise ValueError(f"session receipt contains non-finite JSON constant {value!r}")
-
-
 def _canonical_document_bytes(document: BaseModel) -> bytes:
     """Encode one strict receipt with the sole accepted JSON byte spelling."""
-    return json.dumps(
-        document.model_dump(mode="json"),
-        ensure_ascii=True,
-        sort_keys=True,
-        separators=(",", ":"),
-    ).encode(_UTF_8_ENCODING)
+    return canonical_json_bytes(document.model_dump(mode="json"))
 
 
 def _parse_canonical_document(payload: bytes, model: type[BaseModel]) -> BaseModel:
@@ -678,8 +662,8 @@ def _parse_canonical_document(payload: bytes, model: type[BaseModel]) -> BaseMod
     decoded = payload.decode(_UTF_8_ENCODING)
     parsed = json.loads(
         decoded,
-        object_pairs_hook=_reject_duplicate_object_keys,
-        parse_constant=_reject_json_constant,
+        object_pairs_hook=reject_duplicate_json_members,
+        parse_constant=reject_json_constant,
     )
     if not isinstance(parsed, dict):
         raise ValueError("session receipt must be a JSON object")
@@ -872,6 +856,8 @@ def delete_profile_session(*, storage_root: Path, profile_id: UUID) -> None:
             _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
     except ProfileCustodyRecordError as exc:
         _log.debug("profile-session receipt deletion refused error_type=%s", type(exc).__name__)
+
+
 def mint_profile_session(
     *,
     storage_root: Path,

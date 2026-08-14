@@ -13,16 +13,17 @@ from uuid import UUID
 from pydantic import BaseModel, ValidationError, field_validator, model_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.hashing import (
+    bounded_canonical_json_bytes,
+    canonical_json_digest,
+    reject_duplicate_json_members,
+    reject_json_constant,
+    validate_prefixed_digest,
+)
 from .....core.identity import ProfileLabel
 from ._errors import ProfileCustodyRecordError
 from ._filesystem import ProfileCustodyPasswordReadOperation
 from ._records import ProfileCustodyEnvelope
-from ._recovery import (
-    canonical_custody_digest,
-    canonical_custody_json_bytes,
-    reject_custody_json_constant,
-    reject_duplicate_custody_members,
-)
 from ._sentinel_contract import ProfileCustodySentinelRecord
 
 if TYPE_CHECKING:
@@ -60,7 +61,7 @@ class _ProfileCustodyCapsuleLabelPayload(BaseModel):
     def _validate_previous_label_digest(cls, value: str | None) -> str | None:
         if value is None:
             return None
-        return _validate_label_digest(value, subject="profile capsule previous label digest")
+        return validate_prefixed_digest(value, field_name="profile capsule previous label digest")
 
     @model_validator(mode="after")
     def _validate_label_lineage(self) -> _ProfileCustodyCapsuleLabelPayload:
@@ -69,16 +70,6 @@ class _ProfileCustodyCapsuleLabelPayload(BaseModel):
         if self.label_revision > 1 and self.previous_label_digest is None:
             raise ValueError("later profile capsule label revision must carry the previous label digest")
         return self
-
-
-def _validate_label_digest(value: str, *, subject: str) -> str:
-    if (
-        len(value) != 71
-        or not value.startswith("sha256:")
-        or any(character not in "0123456789abcdef" for character in value[7:])
-    ):
-        raise ValueError(f"{subject} must be a lowercase sha256 digest")
-    return value
 
 
 class ProfileCustodyCapsuleLabel(_ProfileCustodyCapsuleLabelPayload):
@@ -95,12 +86,12 @@ class ProfileCustodyCapsuleLabel(_ProfileCustodyCapsuleLabelPayload):
     @field_validator("content_digest")
     @classmethod
     def _validate_content_digest(cls, value: str) -> str:
-        return _validate_label_digest(value, subject="profile capsule label content digest")
+        return validate_prefixed_digest(value, field_name="profile capsule label content digest")
 
     @field_validator("self_digest")
     @classmethod
     def _validate_self_digest(cls, value: str) -> str:
-        return _validate_label_digest(value, subject="profile capsule label self digest")
+        return validate_prefixed_digest(value, field_name="profile capsule label self digest")
 
     @model_validator(mode="after")
     def _verify_digests(self) -> ProfileCustodyCapsuleLabel:
@@ -125,7 +116,7 @@ class ProfileCustodyCapsuleLabel(_ProfileCustodyCapsuleLabelPayload):
 
     @property
     def computed_content_digest(self) -> str:
-        return canonical_custody_digest(
+        return canonical_json_digest(
             self.content_payload,
             maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
             subject="profile capsule label content",
@@ -133,14 +124,14 @@ class ProfileCustodyCapsuleLabel(_ProfileCustodyCapsuleLabelPayload):
 
     @property
     def computed_self_digest(self) -> str:
-        return canonical_custody_digest(
+        return canonical_json_digest(
             self.self_payload,
             maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
             subject="profile capsule label",
         )
 
     def canonical_json_bytes(self) -> bytes:
-        return canonical_custody_json_bytes(
+        return bounded_canonical_json_bytes(
             self.model_dump(mode="json"),
             maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
             subject="profile capsule label",
@@ -163,19 +154,19 @@ class ProfileCustodyCapsuleLabel(_ProfileCustodyCapsuleLabelPayload):
                 label_revision=label_revision,
                 previous_label_digest=previous_label_digest,
             ).model_dump(mode="json")
-            content_digest = canonical_custody_digest(
+            content_digest = canonical_json_digest(
                 payload,
                 maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
                 subject="profile capsule label content",
             )
             with_content = {**payload, "content_digest": content_digest}
-            self_digest = canonical_custody_digest(
+            self_digest = canonical_json_digest(
                 with_content,
                 maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
                 subject="profile capsule label",
             )
             return cls.model_validate_json(
-                canonical_custody_json_bytes(
+                bounded_canonical_json_bytes(
                     {**with_content, "self_digest": self_digest},
                     maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
                     subject="profile capsule label",
@@ -237,14 +228,14 @@ class ProfileCustodyCommit(_ProfileCustodyCommitPayload):
 
     @property
     def computed_self_digest(self) -> str:
-        return canonical_custody_digest(
+        return canonical_json_digest(
             self.canonical_payload,
             maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
             subject="profile capsule commit",
         )
 
     def canonical_json_bytes(self) -> bytes:
-        return canonical_custody_json_bytes(
+        return bounded_canonical_json_bytes(
             self.model_dump(mode="json"),
             maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
             subject="profile capsule commit",
@@ -269,14 +260,14 @@ class ProfileCustodyCommit(_ProfileCustodyCommitPayload):
             publication_kind=publication_kind,
             published_at=serialized_time,
         ).model_dump(mode="json")
-        payload["self_digest"] = canonical_custody_digest(
+        payload["self_digest"] = canonical_json_digest(
             payload,
             maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
             subject="profile capsule commit",
         )
         try:
             return cls.model_validate_json(
-                canonical_custody_json_bytes(
+                bounded_canonical_json_bytes(
                     payload,
                     maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
                     subject="profile capsule commit",
@@ -308,14 +299,14 @@ class ProfileCustodyDeletionMarker(BaseModel):
     def computed_self_digest(self) -> str:
         payload = self.model_dump(mode="json")
         del payload["self_digest"]
-        return canonical_custody_digest(
+        return canonical_json_digest(
             payload,
             maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
             subject="profile deletion marker",
         )
 
     def canonical_json_bytes(self) -> bytes:
-        return canonical_custody_json_bytes(
+        return bounded_canonical_json_bytes(
             self.model_dump(mode="json"),
             maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
             subject="profile deletion marker",
@@ -330,14 +321,14 @@ class ProfileCustodyDeletionMarker(BaseModel):
             "transaction_id": str(transaction_id),
             "inventory_digest": inventory_digest,
         }
-        payload["self_digest"] = canonical_custody_digest(
+        payload["self_digest"] = canonical_json_digest(
             payload,
             maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
             subject="profile deletion marker",
         )
         try:
             return cls.model_validate_json(
-                canonical_custody_json_bytes(
+                bounded_canonical_json_bytes(
                     payload,
                     maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
                     subject="profile deletion marker",
@@ -354,13 +345,13 @@ def parse_profile_custody_commit(value: bytes) -> ProfileCustodyCommit:
     try:
         parsed = json.loads(
             value.decode("utf-8", errors="strict"),
-            object_pairs_hook=reject_duplicate_custody_members,
-            parse_constant=reject_custody_json_constant,
+            object_pairs_hook=reject_duplicate_json_members,
+            parse_constant=reject_json_constant,
         )
         if not isinstance(parsed, dict):
             raise ValueError("profile capsule commit must be a JSON object")
         commit = ProfileCustodyCommit.model_validate_json(
-            canonical_custody_json_bytes(
+            bounded_canonical_json_bytes(
                 cast(dict[str, object], parsed),
                 maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
                 subject="profile capsule commit",
@@ -380,13 +371,13 @@ def parse_profile_custody_capsule_label(value: bytes) -> ProfileCustodyCapsuleLa
     try:
         parsed = json.loads(
             value.decode("utf-8", errors="strict"),
-            object_pairs_hook=reject_duplicate_custody_members,
-            parse_constant=reject_custody_json_constant,
+            object_pairs_hook=reject_duplicate_json_members,
+            parse_constant=reject_json_constant,
         )
         if not isinstance(parsed, dict):
             raise ValueError("profile capsule label must be a JSON object")
         label = ProfileCustodyCapsuleLabel.model_validate_json(
-            canonical_custody_json_bytes(
+            bounded_canonical_json_bytes(
                 cast(dict[str, object], parsed),
                 maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
                 subject="profile capsule label",

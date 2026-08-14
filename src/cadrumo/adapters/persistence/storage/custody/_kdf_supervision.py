@@ -33,10 +33,10 @@ from ._kdf_codec import (
     write_kdf_frame,
 )
 from ._kdf_codec import (
-    canonical_digest as _canonical_digest,
+    canonical_frame_bytes as _canonical_frame_bytes,
 )
 from ._kdf_codec import (
-    canonical_json_bytes as _canonical_json_bytes,
+    canonical_frame_digest as _canonical_frame_digest,
 )
 from ._kdf_codec import (
     close_fd as _close_fd,
@@ -133,7 +133,7 @@ def profile_password_wrap_aad(
     """Build the canonical password-wrap AAD for one current custody envelope."""
     payload = {
         "dek_epoch": dek_epoch,
-        "kdf_digest": _canonical_digest(kdf.model_dump(mode="json")),
+        "kdf_digest": _canonical_frame_digest(kdf.model_dump(mode="json")),
         "key_schedule": "profile-password-dek-wrap/v1",
         "password_encoding": _UTF_8_ENCODING,
         "password_generation": password_generation,
@@ -142,7 +142,7 @@ def profile_password_wrap_aad(
         "purpose": "profile-password-dek-wrap/v1",
         "schema_version": 1,
     }
-    return _canonical_json_bytes(payload)
+    return _canonical_frame_bytes(payload)
 
 
 def profile_kdf_grid(*, salt: bytes) -> tuple[ProfileCustodyKdfParameters, ...]:

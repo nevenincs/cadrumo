@@ -8,6 +8,7 @@ from collections.abc import MutableMapping
 from pydantic import TypeAdapter, ValidationError
 
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.hashing import canonical_json_bytes
 from .errors import StorageValidationError
 
 _JSON_OBJECT = TypeAdapter(dict[str, object])
@@ -34,7 +35,7 @@ def _object_value(value: object, *, surface: str) -> dict[str, object]:
 
 
 def _encode(payload: MutableMapping[str, object]) -> bytes:
-    return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(UTF_8_ENCODING)
+    return canonical_json_bytes(payload)
 
 
 def upgrade_transaction_catalogue_v1_payload(payload: bytes) -> bytes:

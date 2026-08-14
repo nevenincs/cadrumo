@@ -18,7 +18,6 @@ See Also:
 
 from __future__ import annotations
 
-import json
 from collections.abc import Callable, Mapping
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING, Literal
@@ -29,7 +28,7 @@ from pydantic import AnyHttpUrl
 from .....core import CasillaId, CasillaValueKind, ExportLayoutFormat, Modelo, ObservedHeaderFact, Period
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
-from .....core.hashing import sha256_hex
+from .....core.hashing import canonical_json_bytes, sha256_hex
 from .....core.i18n import tr
 from .....core.resources import bundled_path, resources
 from .....core.time import now
@@ -122,12 +121,7 @@ def _register_row_artefact(
     *,
     source_url: AnyHttpUrl,
 ) -> tuple[FiledDeclaracionArtefact, bytes]:
-    payload = json.dumps(
-        declaration.model_dump(mode="json"),
-        ensure_ascii=True,
-        sort_keys=True,
-        separators=(",", ":"),
-    ).encode("utf-8")
+    payload = canonical_json_bytes(declaration.model_dump(mode="json"))
     captured_at = now()
     return (
         FiledDeclaracionArtefact(

@@ -19,6 +19,7 @@ from ._kdf_attestation import kdf_worker_ready_attestation
 from ._kdf_codec import (
     KDF_FRAME_CONTROL,
     KDF_FRAME_DEK,
+    canonical_frame_bytes,
     read_kdf_frame,
     write_kdf_frame,
 )
@@ -140,12 +141,7 @@ def _wrap(payload: Mapping[str, object]) -> bytes:
         ciphertext_b64=base64.b64encode(encrypted.ciphertext[:-16]).decode("ascii"),
         tag_b64=base64.b64encode(encrypted.ciphertext[-16:]).decode("ascii"),
     )
-    return json.dumps(
-        {"wrapped_dek": wrapped_dek.model_dump(mode="json")},
-        allow_nan=False,
-        separators=(",", ":"),
-        sort_keys=True,
-    ).encode("utf-8")
+    return canonical_frame_bytes({"wrapped_dek": wrapped_dek.model_dump(mode="json")})
 
 
 def _derive_key(*, secret: bytes, kdf: ProfileCustodyKdfParameters) -> bytes:
