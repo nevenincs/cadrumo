@@ -29,7 +29,9 @@ from typing import Protocol, runtime_checkable
 
 import pytest
 
+from ..adapters.persistence.storage.sql import SecureObjectRepository
 from ..tests import temporary_env
+from ..tests.secure_sql import isolated_runtime_profile
 
 
 @runtime_checkable
@@ -49,3 +51,16 @@ def isolated_aeat_root(request: pytest.FixtureRequest, tmp_path: Path) -> Iterat
         return
     with temporary_env(CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path)):
         yield
+
+
+@pytest.fixture
+def secure_objects(
+    tmp_path: Path,
+    request: pytest.FixtureRequest,
+) -> Iterator[SecureObjectRepository]:
+    """Yield the real encrypted-SQLite object repository for a module bucket."""
+    bucket_id = getattr(request.module, "_BUCKET_ID", None)
+    if not isinstance(bucket_id, str) or not bucket_id:
+        raise RuntimeError("secure_objects requires a non-empty module _BUCKET_ID")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
+        yield profile.repository

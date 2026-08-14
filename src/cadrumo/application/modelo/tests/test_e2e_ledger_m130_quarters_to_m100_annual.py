@@ -45,7 +45,6 @@ the *wiring*, leaving the rate's legal currency to the registry grounding gate.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -85,7 +84,6 @@ from ....domain.usage_ratios import UsageRatioProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
 from ...user_profile import ProfileRecordRepository
 from .. import (
@@ -207,13 +205,6 @@ _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
 # The M100 0604 formula sums BOTH the M130 and M131 pagos relations; this persona
 # files no estimacion objetiva, so the M131 leg resolves as not-applicable zero
 # without any synthetic M131 filings.
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    """Yield the active profile's real encrypted-SQLite object repository."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def _income_transaction(period: str) -> Transaction:

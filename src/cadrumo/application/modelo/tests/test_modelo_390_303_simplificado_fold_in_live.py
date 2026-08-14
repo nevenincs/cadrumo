@@ -8,7 +8,7 @@ hand-authored calculation result is involved.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -57,7 +57,6 @@ from ....domain.modelos import (
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence, regimen_simplificado_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import ProfileRecordRepository
 from .. import (
     ModeloExportCommand,
@@ -78,13 +77,6 @@ _T1 = datetime(2026, 8, 14, 10, 0, tzinfo=UTC)
 _T2 = datetime(2026, 8, 14, 11, 0, tzinfo=UTC)
 _TAX_ID = "12345678Z"
 _SOURCE_CASILLA_IDS: tuple[CasillaId, ...] = ("51", "53", "52", "54", "55", "56", "57", "58")
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    """Yield the active profile's real encrypted-SQLite object repository."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:

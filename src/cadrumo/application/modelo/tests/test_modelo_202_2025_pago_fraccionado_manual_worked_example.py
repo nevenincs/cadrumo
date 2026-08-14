@@ -73,7 +73,6 @@ multiplicative work, not returning a constant or ignoring casilla "01".
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -96,7 +95,6 @@ from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import BindingId, ValidatedRegistryAuthority
 from ....domain.period import calculation_filing_date
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import ProfileRecordRepository
 from .. import (
     BucketAggregationCalculationResult,
@@ -138,13 +136,6 @@ _A_INGRESAR_SEGUNDO_TERCER_PAGO_EXPECTED = Decimal("450.00")
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _SOURCE_ROOT = bundled_path()
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    """Yield the active profile's real encrypted-SQLite object repository."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def _seed_sociedad_m_profile() -> None:

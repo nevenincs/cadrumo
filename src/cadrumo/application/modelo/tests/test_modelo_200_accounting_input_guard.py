@@ -9,7 +9,6 @@ with business ledger rows cannot silently calculate a zero M200 merely because
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -35,7 +34,6 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import ProfileRecordRepository
 from .. import (
     BucketAggregationCalculationResult,
@@ -61,13 +59,6 @@ _FILING_YEAR = 2025
 _RESULTADO_CONTABLE: CasillaId = validated_casilla_id("00501", surface="_RESULTADO_CONTABLE")
 _BASE_IMPONIBLE: CasillaId = validated_casilla_id("DP200014:00552", surface="_BASE_IMPONIBLE")
 _CUOTA_EJERCICIO: CasillaId = validated_casilla_id("DP200014B:00599", surface="_CUOTA_EJERCICIO")
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    """Yield the active profile's real encrypted-SQLite object repository."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def _seed_m200_legal_entity_profile(objects: SecureObjectRepository) -> None:

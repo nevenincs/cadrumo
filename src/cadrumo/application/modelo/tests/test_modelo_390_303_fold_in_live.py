@@ -49,7 +49,6 @@ is stabilised.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -69,7 +68,6 @@ from ....domain.calculations.registry import (
 from ....domain.iva_compensation import M303_COMPENSATION_RESULTADO_CASILLA
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, ResultDispositionProjection
 from ...user_profile import ProfileRecordRepository
 from .. import (
@@ -171,13 +169,6 @@ _EXPECTED_SIMPLIFICADO_DEVENGADA = _M303_BY_PERIOD["4T"][_SIMPLIFICADO_DEVENGADA
 
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 _ANNUAL_PARTITION_SOURCE = "iva_compensation_annual_partition"
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    """Yield the active profile's real encrypted-SQLite object repository."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:

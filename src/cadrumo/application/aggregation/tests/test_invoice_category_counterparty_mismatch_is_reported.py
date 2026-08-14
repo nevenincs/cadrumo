@@ -32,10 +32,8 @@ screen. No mocks, stubs, skips, or xfail.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -45,7 +43,6 @@ from ....core import IntracomOperationType, Period
 from ....core.resources import resources
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.iva import InvoiceKind, IvaCategory
-from ....tests.secure_sql import isolated_runtime_profile
 from ...invoices import build_catalogue_invoice
 from .._modelo_bindings import (
     _category_counterparty_mismatch_diagnostics,
@@ -61,13 +58,6 @@ _BUCKET_ID = "bucket-category-counterparty-mismatch"
 _YEAR = 2024
 _PERIOD = "1T"
 _BASE = Decimal("4500.00")
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    """Yield the active profile's real encrypted-SQLite object repository."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def _persist_contradicted_supply(secure_objects: SecureObjectRepository) -> str:
