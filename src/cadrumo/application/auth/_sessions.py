@@ -1024,16 +1024,20 @@ def clave_auth_facts_from_profile_values(
 def _active_profile_auth_facts() -> ClaveAuthFacts:
     """Read the active profile's identity and Cl@ve credentials in one pass.
 
-    Returns empty facts when no profile is active or the record cannot be
-    found, leaving the settings surface as the sole source. Reading the
-    record requires an unlocked bucket session, so the locked case
-    activates the master key provider for the read.
+    Returns empty facts when no profile is active, when no authenticated
+    session serves it, or when the record cannot be found, leaving the settings
+    surface as the sole source.
+
+    The record is encrypted under the profile's own DEK, and that key exists
+    only inside the session its password envelope unwrapped.  There is
+    deliberately no route that reads it without one: the shared-master provider
+    could open a bucket with no password at all, and reaching for it here would
+    answer for a taxpayer's profile through a second custody lifecycle beside
+    the capsule that owns it.  An unread credential degrades to the settings
+    surface, which is the same outcome this function already returns when no
+    profile is active.
     """
-    from ...adapters.persistence.storage import (
-        activate_master_key_provider,
-        active_bucket_session_serves,
-        get_master_key_provider,
-    )
+    from ...adapters.persistence.storage import active_bucket_session_serves
     from ...core import resolve_active_bucket_id
     from ...domain.user_profile import ProfileNotFoundError
     from ..user_profile import (
@@ -1043,25 +1047,12 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
     )
 
     bucket_id = resolve_active_bucket_id()
-    if bucket_id is None:
+    # Read through the ambient session only when it is THIS bucket's; a session
+    # bound to another profile would decrypt this record under the wrong key.
+    if bucket_id is None or not active_bucket_session_serves(bucket_id):
         return ClaveAuthFacts()
     try:
-        # Read through the ambient session only when it is THIS bucket's; a
-        # session bound to another profile would decrypt this record under the
-        # wrong key rather than fall through to the provider branch below.
-        if active_bucket_session_serves(bucket_id):
-            record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
-        else:
-            from ...core.config import override_settings
-
-            with (
-                override_settings(cadrumo_active_profile=bucket_id),
-                activate_master_key_provider(
-                    get_master_key_provider(),
-                    fallback_bucket_id=bucket_id,
-                ),
-            ):
-                record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return ClaveAuthFacts()
 
