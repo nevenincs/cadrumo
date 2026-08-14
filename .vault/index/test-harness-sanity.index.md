@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:66744ca75039e34eed74afbbd19072a9af64d9de3a1041db884d7c3aac9b8cad'
+body_hash: 'sha256:f9e86d76e5fa9fb1a2042f993c024ce66ee8c223080e425d458a9445c397414c'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -70,6 +70,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W08-P28-S96]]'
   - '[[2026-08-14-test-harness-sanity-W08-P28-S97]]'
   - '[[2026-08-14-test-harness-sanity-audit]]'
+  - '[[2026-08-14-test-harness-sanity-harness-performance-audit]]'
   - '[[2026-08-14-test-harness-sanity-plan]]'
   - '[[2026-08-14-test-harness-sanity-semantic-test-corpus-drift-audit]]'
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -90,6 +91,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 ### audit
 
 - `2026-08-14-test-harness-sanity-audit` - `test-harness-sanity` audit: `test harness topology, fixtures, and performance`
+- `2026-08-14-test-harness-sanity-harness-performance-audit` - `test-harness-sanity` audit: harness performance
 - `2026-08-14-test-harness-sanity-semantic-test-corpus-drift-audit` - `test-harness-sanity` audit: semantic sweep of test-corpus drift
 - `2026-08-14-test-harness-sanity-w08-canonical-home-regressions-audit` - `test-harness-sanity` audit: W08 close review, canonical-home regressions
 
