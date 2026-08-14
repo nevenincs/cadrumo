@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-14'
-body_hash: 'sha256:3a806f0cd17658d390a19e550db11a8d50cb13239336f913111e85e6dc4e38eb'
+body_hash: 'sha256:1b3f3a5e5fd6d81429545623a47ab4a97dc55830098fc0c41e6f768469a3aa4a'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -71,7 +71,7 @@ Authenticate a candidate profile without disturbing the active one, then publish
 - [ ] `W02.P04.S52` - Have Terra XHigh bring the login-handover suite back under the storage-test time bar, since twenty-six tests now take three minutes forty-five seconds and the crash-recovery matrix dominates it, which is the same per-test supervised-child cost already removed from enrolment and must not be paid again per durable phase; `src/cadrumo/application/user_profile/tests/test_login_handover.py`.
 - [x] `W02.P04.S56` - Have Terra XHigh close the fourth unjudged profile-fact door, which promotes a record to complete setup state without validating it against the profile schema, so a record missing required residence and IVA-regime fields becomes COMPLETE without complaint and filing readiness keys off that state, this being the same defect class as the censal-adoption door and more serious because the promotion is what downstream surfaces trust; `src/cadrumo/application/user_profile/_profile_record_repository.py`.
 - [x] `W02.P04.S57` - Have Terra XHigh stop the auth session fallback raising where it is documented to degrade, since a profile created through credential registration holds a random custody key and no master-key-wrapped bucket key, no production site enrols one, and the fallback therefore raises a missing-material error that the surrounding handler does not catch, so it propagates instead of returning empty authority facts; `src/cadrumo/application/auth/_sessions.py and src/cadrumo/adapters/outbound/aeat/auth/_clave_movil.py`.
-- [ ] `W02.P04.S58` - Have Terra XHigh make the profile-record authority re-derive on liveness as well as identity, since a latched session that has been zeroised in place is still returned for the same profile and there is no closed predicate to detect it, which turns a clean refusal into an integrity error for any caller entering after an unrelated closed span; `src/cadrumo/application/user_profile/_profile_record_repository.py`.
+- [x] `W02.P04.S58` - Have Terra XHigh make the profile-record authority re-derive on liveness as well as identity, since a latched session that has been zeroised in place is still returned for the same profile and there is no closed predicate to detect it, which turns a clean refusal into an integrity error for any caller entering after an unrelated closed span; `src/cadrumo/application/user_profile/_profile_record_repository.py`.
 - [ ] `W02.P04.S74` - Have Terra XHigh remove the latent hazard in the persisted profile record whose setup-state field defaults to the completed value, so a record constructed without stating it silently claims completion, noting that all three production construction sites state it explicitly today which makes this latent rather than live, and that changing a persisted-model default is a shape change wanting its own deliberate commit; `src/cadrumo/application/user_profile/_capsule_record.py`.
 
 ## Wave `W03` - restorative transport and operator surfaces
