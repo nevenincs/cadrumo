@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.workflow import workflow_state_repository
+from ....application.workflow import WorkflowState
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
@@ -23,7 +23,5 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_BUCKET_ID),
     ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID),
-        )
+        register_minimal_profile(WorkflowState(), profile_id=_BUCKET_ID)
         yield

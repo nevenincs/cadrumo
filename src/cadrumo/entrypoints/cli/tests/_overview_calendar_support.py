@@ -16,7 +16,7 @@ from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....application.user_profile import (
     CENSO_SOURCE_TAG,
 )
-from ....application.workflow import workflow_state_repository
+from ....application.workflow import WorkflowState
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
@@ -74,13 +74,11 @@ def isolated_calendar_backend(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(PRIMARY_PROFILE_ID),
     ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id=PRIMARY_PROFILE_ID,
-                display_name="operator",
-                overrides=_CALENDAR_GATING_FACT_OVERRIDES,
-            ),
+        register_minimal_profile(
+            WorkflowState(),
+            profile_id=PRIMARY_PROFILE_ID,
+            display_name="operator",
+            overrides=_CALENDAR_GATING_FACT_OVERRIDES,
         )
         yield
 
@@ -117,13 +115,8 @@ def calendar_backend_omitting_gating_facts(tmp_path: Path, *omitted: str) -> Ite
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(PRIMARY_PROFILE_ID),
     ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id=PRIMARY_PROFILE_ID,
-                display_name="operator",
-                overrides=overrides,
-            ),
+        register_minimal_profile(
+            WorkflowState(), profile_id=PRIMARY_PROFILE_ID, display_name="operator", overrides=overrides
         )
         yield
 
