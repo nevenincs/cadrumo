@@ -1576,6 +1576,7 @@ resolve_profile_binding_value = _resolve_one
 is_madrid_resident = _is_madrid_resident
 is_indeterminate_unidad_familiar = _is_indeterminate_unidad_familiar
 madrid_nacimiento_adopcion_candidate_weighted_count = _madrid_nacimiento_adopcion_candidate_weighted_count
+MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR = _MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR
 
 
 __all__ = [
