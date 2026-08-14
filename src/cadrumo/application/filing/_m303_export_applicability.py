@@ -83,7 +83,7 @@ def _validate_snapshot_selection(
     layout: ExportLayoutDefinition,
 ) -> None:
     if (
-        registry_snapshot.modelo.id != "303"
+        registry_snapshot.modelo.id != Modelo.M303.value
         or registry_snapshot.filing_year != period.filing_year
         or registry_snapshot.period != period.registry_token
     ):

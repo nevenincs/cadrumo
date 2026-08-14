@@ -48,7 +48,7 @@ def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerS
     amendment = (
         AmendmentEvidence(
             kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-            motive="Codec producer proof",
+            m303_rectificativa_motive=None,
             original_aeat_receipt="1234567890123",
         )
         if complementaria

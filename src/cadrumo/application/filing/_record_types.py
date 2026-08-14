@@ -1,0 +1,25 @@
+"""Shared value objects for canonical filing record rendering."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from ...domain.calculations.registry import BindingId, FilingProjectionRef, RecordId
+
+
+@dataclass(frozen=True)
+class RecordRenderRow:
+    row_index: int | None
+    active_binding_ids: frozenset[BindingId]
+
+
+@dataclass(frozen=True)
+class RenderedRecordOccurrence:
+    """One canonical resolver-produced fixed-width record occurrence."""
+
+    record_id: RecordId
+    occurrence: int
+    payload: bytes
+
+
+type ProjectionAddress = tuple[RecordId, int, FilingProjectionRef]
