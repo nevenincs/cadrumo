@@ -446,6 +446,17 @@ fix-rag:
 
 pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
 
+# The dedicated harness verdict's members: the ONE declaration of which proofs
+# reach their subject by spawning a real child pytest. Each path is written
+# exactly once in this file. The enrolling recipe below runs exactly these, and
+# every corpus-walking lane excludes exactly these -- derived with `prepend`,
+# never restated, because a member list repeated at five call sites is five
+# chances to drift into a lane that silently nests a worker pool inside a pool.
+harness_worker_hook := "src/cadrumo/tests/test_worker_count_hook_harness.py"
+harness_full_corpus := "src/cadrumo/tests/test_full_corpus_collectability_harness.py"
+harness_members := harness_worker_hook + " " + harness_full_corpus
+harness_exclusions := prepend("--ignore=", harness_members)
+
 # Run the fast test-framework ratchets for discovery, markers, skip/xfail, mock/test-double, monkeypatch, broad raises, bare except, and tautology drift.
 [group('testing')]
 test-ratchets:
@@ -458,9 +469,9 @@ test-ratchets:
 [doc('Run the dedicated outer-serial test-harness verdict (installed hook and full-corpus collection proofs).')]
 [group('testing')]
 test-harness:
-    @uv run --no-sync pytest -q -m integration --collect-only -n0 src/cadrumo/tests/test_worker_count_hook_harness.py
-    @uv run --no-sync pytest -q -m integration --collect-only -n0 src/cadrumo/tests/test_full_corpus_collectability_harness.py
-    @uv run --no-sync pytest -q -m integration -rsf -n0 src/cadrumo/tests/test_worker_count_hook_harness.py src/cadrumo/tests/test_full_corpus_collectability_harness.py
+    @uv run --no-sync pytest -q -m integration --collect-only -n0 {{harness_worker_hook}}
+    @uv run --no-sync pytest -q -m integration --collect-only -n0 {{harness_full_corpus}}
+    @uv run --no-sync pytest -q -m integration -rsf -n0 {{harness_members}}
 
 # Run the unit test suite in parallel, ignoring workbook parity tests. Quiet
 # progress; failures shown. `durations` is optional and, when set, prints
@@ -492,8 +503,8 @@ test-unit-serial:
 [doc('Run the integration suite in two lanes: parallel xdist, then the isolation-sensitive serial tests alone.')]
 [group('testing')]
 test-integration:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "integration and not serial and not os_keychain and not harness"
-    @uv run --no-sync pytest -q -m "integration and serial and not perf and not os_keychain and not harness" -n0
+    @uv run --no-sync pytest -q -n {{pytest_workers}} {{harness_exclusions}} -m "integration and not serial and not os_keychain"
+    @uv run --no-sync pytest -q {{harness_exclusions}} -m "integration and serial and not perf and not os_keychain" -n0
 
 # THIS FILE IS THE SOLE DECLARATION SITE FOR EVERY `dev/` TEST LANE.
 #
@@ -624,12 +635,12 @@ test-both-lanes:
 [doc('Run only the parallel integration lane, holding the isolation-sensitive serial tests out.')]
 [group('testing')]
 test-integration-parallel:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "integration and not serial and not os_keychain and not harness"
+    @uv run --no-sync pytest -q -n {{pytest_workers}} {{harness_exclusions}} -m "integration and not serial and not os_keychain"
 
 # Run only the serial (isolation-sensitive) integration lane, no xdist workers.
 [group('testing')]
 test-integration-serial:
-    @uv run --no-sync pytest -q -m "integration and serial and not perf and not os_keychain and not harness" -n0
+    @uv run --no-sync pytest -q {{harness_exclusions}} -m "integration and serial and not perf and not os_keychain" -n0
 
 # Run the OS-credential-store custody tests. These carry `os_keychain` alongside
 # their execution marker, and EVERY lane above excludes it, so this recipe is the
