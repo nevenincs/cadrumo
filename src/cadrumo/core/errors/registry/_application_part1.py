@@ -168,6 +168,16 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.auth._operator_results.AuthOperationRequiresCustodySessionError",
+        ErrorCode(
+            code="REFUSED_AUTH_OPERATION_REQUIRES_CUSTODY_SESSION",
+            category=ErrorCategory.REFUSED,
+            message_key="application.auth.operator.errors.requires_custody_session",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.auth._operator_results.AuthProviderNotConfiguredError",
         ErrorCode(
             code="REFUSED_AUTH_PROVIDER_NOT_CONFIGURED",

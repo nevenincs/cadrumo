@@ -23,6 +23,7 @@ from ...core.identity import BucketId
 from ._catalogue import get_auth_provider, known_auth_provider_ids
 from ._operator_results import (
     AuthCleanupInProgressError,
+    AuthOperationRequiresCustodySessionError,
     AuthOperationScopeConflictError,
     AuthProviderNotConfiguredError,
     CertificateSecretMutationInProgressError,
@@ -145,7 +146,19 @@ def active_profile_storage_span(
     *,
     target_bucket_id: str | None = None,
 ):
-    """Return a storage context for the explicit target or active profile."""
+    """Return a storage context for the explicit target or active profile.
+
+    Yields the resolved bucket id when the ambient :class:`BucketSession`
+    already serves the target, and ``None`` when no target resolves at all.
+    Anything else is a refusal: an auth operation aimed at a profile whose
+    custody session is not open cannot borrow one, because opening it needs
+    the operator's password. The caller is told to authenticate into that
+    profile rather than silently reading whichever bucket happens to be bound.
+
+    Raises:
+        AuthOperationRequiresCustodySessionError: When a target bucket resolves
+            but the ambient session does not serve it on the target root.
+    """
     ambient_settings = load_settings()
     ambient_storage_root = _canonical_storage_root(ambient_settings.cadrumo_local_storage_root)
     explicitly_routed = _is_explicitly_routed(
@@ -171,8 +184,12 @@ def active_profile_storage_span(
             with nullcontext():
                 yield bucket_id
             return
-        raise AuthOperationScopeConflictError(
-            "auth operation requires the target profile's active authenticated custody session",
+        raise AuthOperationRequiresCustodySessionError(
+            translated_message="application.auth.operator.errors.requires_custody_session",
+            context={
+                "bucket_id": bucket_id,
+                "storage_root": target_storage_root,
+            },
         )
 
 

@@ -562,6 +562,10 @@ application:
           a `aeat config profile create NÉV` parancsot.
         provider_not_configured: Nincs beállított hitelesítési szolgáltató; adja meg
           a --provider értékét, vagy előbb állítson be egyet.
+        requires_custody_session: 'A hitelesítési művelet a(z) ''%{bucket_id}'' profilt
+          célozza itt: %{storage_root}, de ehhez a profilhoz nincs nyitott letéti
+          munkamenet. Futtassa az aeat config login parancsot erre a profilra, majd
+          próbálja újra.'
         scope_conflict: Válassza a --provider vagy a --all lehetőséget, de ne mindkettőt.
         unreadable_active_profile: 'Az aktív profil (%{active_profile}) rendelkezik
           bucket-manifeszttel, de nincs olvasható profil-rekorddal (állapot=%{status}).

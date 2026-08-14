@@ -602,6 +602,9 @@ application:
           NAME` antes de configurar la autenticación.
         provider_not_configured: No hay ningún proveedor de autenticación configurado;
           indica --provider o configura uno primero.
+        requires_custody_session: La operación de autenticación apunta al perfil '%{bucket_id}'
+          en %{storage_root}, pero ese perfil no tiene una sesión de custodia abierta.
+          Ejecute aeat config login para ese perfil y vuelva a intentarlo.
         scope_conflict: Elige --provider o --all, pero no ambos.
         unreadable_active_profile: 'El perfil activo ''%{active_profile}'' tiene un
           manifiesto de bucket pero no tiene un registro de perfil legible (status=%{status}).

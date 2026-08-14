@@ -251,6 +251,18 @@ class AuthOperationScopeConflictError(CadrumoError, ValueError):
     """Raised when ``--provider`` and ``--all`` are requested together."""
 
 
+class AuthOperationRequiresCustodySessionError(CadrumoError):
+    """Raised when an auth operation targets a profile with no open custody session.
+
+    Distinct from :class:`AuthOperationScopeConflictError` because the operator
+    remedy is different in kind: the scope conflict asks for one of two mutually
+    exclusive flags, while this refusal asks the operator to authenticate into
+    the target profile. Sharing one class would emit the flag instruction as the
+    localised message and the ``REFUSED_AUTH_OPERATION_SCOPE_CONFLICT`` code for
+    a custody failure, handing the operator an action that cannot resolve it.
+    """
+
+
 class AuthCleanupInProgressError(CadrumoError):
     """Raised when a non-resume auth mutation meets durable cleanup intent."""
 
@@ -411,6 +423,7 @@ __all__ = [
     "AuthLoginPreconditionError",
     "AuthLoginResult",
     "AuthLogoutResult",
+    "AuthOperationRequiresCustodySessionError",
     "AuthOperationScopeConflictError",
     "AuthProviderNotConfiguredError",
     "AuthProviderReservedError",

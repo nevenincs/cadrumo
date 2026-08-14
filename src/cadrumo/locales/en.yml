@@ -542,6 +542,9 @@ application:
           NAME` before configuring auth.
         provider_not_configured: No authentication provider is configured; specify
           --provider or configure one first.
+        requires_custody_session: Auth operation targets profile '%{bucket_id}' at
+          %{storage_root}, but that profile has no open custody session. Run aeat
+          config login for that profile, then retry.
         scope_conflict: Choose either --provider or --all, not both.
         unreadable_active_profile: Active profile '%{active_profile}' has a bucket
           manifest but no readable profile record (status=%{status}). Run `%{next_action}`
