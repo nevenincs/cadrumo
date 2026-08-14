@@ -428,16 +428,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._orchestration.ProfileLogoutOverrideError",
-        ErrorCode(
-            code="REFUSED_PROFILE_LOGOUT_OVERRIDE",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_profile_logout_override",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.domain.modelos._errors.PensionReduccionError",
         ErrorCode(
             code="REFUSED_PENSION_REDUCCION_COMPUTATION",
