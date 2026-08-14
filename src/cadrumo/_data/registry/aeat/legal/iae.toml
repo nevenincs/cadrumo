@@ -123,6 +123,7 @@ required_text = [
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
+record_design_epoch = "2003"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_840/files/01-840-orden-hac-2572-2003-99-kb-pdf.pdf"
 sha256 = "d0348a78787db7eb767dd8093ea84773c248c0b92bcefb512972573aff34391a"
 bytes = 101013

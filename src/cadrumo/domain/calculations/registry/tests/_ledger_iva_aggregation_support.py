@@ -23,8 +23,9 @@ from .....core import (
     result_disposition_casilla_ids,
     validated_casilla_id,
 )
+from .....core import RegistryAuthorityGrade
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
-from .....core.resources import resources
+from .....core.resources import bundled_path, resources
 from ....iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,
@@ -42,12 +43,14 @@ from .. import (
     RegistryCalculationResult,
     RegistryModeloObservation,
     calculate_registry_snapshot,
+    load_registry_tree,
     materialize_relation_binding_values,
     resolve_available_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from .._binding_selector_utils import selector_as_dict
 from .._relations import resolve_relation_values_from_observations
+from .._snapshot import build_snapshot
 
 _M303_APP_FILING_CAPTURED_AT = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 

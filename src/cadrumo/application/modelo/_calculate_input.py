@@ -47,7 +47,7 @@ from ...core import (
 )
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
-from ...core.resources import resources
+from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
@@ -60,6 +60,7 @@ from ...domain.calculations.registry import (
     casillas_by_id,
     declared_casilla_ids,
     enum_consumed_binding_ids,
+    load_registry_tree,
     registry_scalar_value_type,
     revision_date_binding_ids,
     select_revision,
@@ -1397,10 +1398,11 @@ def _semantic_role_casilla_id(work_unit_id: str, semantic_role: str) -> CasillaI
     work_unit = catalogue.get(work_unit_id)
     if work_unit is None:
         raise LookupError(f"work unit {work_unit_id!r} not found")
-    authority = resources().modelos.authority
     modelo_id = str(work_unit.modelo)
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(candidate for candidate in modelos if candidate.id == modelo_id)
     revision = select_revision(
-        authority.modelo(modelo_id),
+        modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
     )

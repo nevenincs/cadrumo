@@ -31,8 +31,6 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from pathlib import Path
 from typing import Final
 
 import pytest
@@ -41,17 +39,13 @@ from ....application.ledger import FILER_TAX_ID_FACT_PATH, resolve_filer_tax_id
 from ....application.workflow import workflow_state_repository
 from ....domain.user_profile import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
-from ._ledger_validation_support import open_bucket_session
+from ._ledger_validation_fixtures import bucket
+
+__all__ = ["bucket"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _DECLARED_NIF: Final = "B12345674"
-
-
-@pytest.fixture
-def bucket(tmp_path: Path) -> Iterator[None]:
-    with open_bucket_session(tmp_path):
-        yield
 
 
 @pytest.mark.usefixtures("bucket")

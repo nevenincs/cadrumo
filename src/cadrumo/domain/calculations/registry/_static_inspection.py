@@ -9,10 +9,8 @@ consumer may admit.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
-from importlib import import_module
+from collections.abc import Mapping
 from pathlib import Path
-from typing import cast
 
 from pydantic import Field, model_validator
 
@@ -85,12 +83,12 @@ class RegistryRevisionInspection(RegistryModel):
         # ``RegistrySnapshot``.  The import is local because the public
         # registry facade imports this module before the snapshot module; the
         # call itself only occurs after the authority has completed loading.
-        snapshot_module = import_module(f"{__package__}._snapshot")
-        snapshot_ref_collector_name = "_collect_snapshot_ref_ids"
-        collect_snapshot_ref_ids = cast(
-            Callable[[ModeloDefinition, ModeloRevision], tuple[set[str], set[str]]],
-            getattr(snapshot_module, snapshot_ref_collector_name),
-        )
+        # It is a literal statement rather than a computed module name so the
+        # target is legible to a reader and to static analysis alike: the
+        # deferral is what breaks the cycle, and naming the module through an
+        # f-string bought nothing while hiding where the call actually lands.
+        from ._snapshot import collect_snapshot_ref_ids
+
         selected_legal_ids, selected_source_ids = collect_snapshot_ref_ids(modelo, revision)
         missing_legal_refs = selected_legal_ids.difference(legal_ref_ids)
         if missing_legal_refs:

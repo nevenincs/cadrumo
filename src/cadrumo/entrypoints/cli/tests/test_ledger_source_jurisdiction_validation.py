@@ -7,13 +7,13 @@ from pathlib import Path
 
 import pytest
 
-from ._ledger_validation_fixtures import _open_bucket_session
+from ._ledger_validation_fixtures import _open_bucket_session, bucket
 from ._ledger_validation_support import _invoke, _set_profile_axis
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-__all__ = ["_open_bucket_session"]
+__all__ = ["_open_bucket_session", "bucket"]
 
 
 def test_ledger_add_defaults_source_jurisdiction_to_es_for_resident_general(

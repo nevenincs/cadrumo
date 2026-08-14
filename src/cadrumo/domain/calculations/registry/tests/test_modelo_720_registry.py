@@ -7,6 +7,7 @@ from typing import cast
 
 import pytest
 
+from .....core import RegistryAuthorityGrade
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .. import (
@@ -159,6 +160,7 @@ def test_committed_modelo_720_resolves_revision_by_filing_year(
         source_root=bundled_path(),
         filing_year=filing_year,
         period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
     assert snapshot.revision.id == expected_revision
     assert snapshot.revision.orden_aplicabilidad == ("orden-hap-72-2013:art-1",)

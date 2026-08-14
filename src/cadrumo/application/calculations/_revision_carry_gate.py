@@ -31,8 +31,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ...core.resources import resources
-from ...domain.calculations.registry import RevisionId, select_revision
+from ...core.resources import bundled_path
+from ...domain.calculations.registry import RevisionId, load_registry_tree, select_revision
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,14 +56,14 @@ def revision_carry_outcome(
     Uses
     :func:`~domain.calculations.registry.select_revision`
     to resolve the current law-determined revision for the source context.
-    Deliberately NOT
-    :meth:`~domain.calculations.registry.ValidatedRegistryAuthority.inspect_revision`:
-    that method calls ``validate_registry()`` unconditionally, which validates
-    the ENTIRE tree rather than the one modelo this gate cares about, so a gap
-    anywhere else in the registry would refuse a carry re-confirmation that has
-    nothing to do with it. ``select_revision`` is a pure function over an
-    already-loaded :class:`~domain.calculations.registry.ModeloDefinition`
-    and performs no validation at all.
+    Deliberately does NOT go through
+    :class:`~domain.calculations.registry.ValidatedRegistryAuthority` at all
+    (neither ``.snapshot()`` nor ``.inspect_revision()``): obtaining that
+    authority object at all now means ``.load()``'s own unconditional
+    ``validate_registry()`` call, which validates the ENTIRE tree -- so a gap
+    anywhere else in the registry, unrelated to this carry, would refuse it.
+    ``load_registry_tree`` compiles the tree without validating it, and
+    ``select_revision`` is a pure function with no validation of its own.
 
     - Indeterminate (source context fails to resolve) → carry refused. Current
       observations must be re-confirmable against the law-determined revision;
@@ -84,9 +84,10 @@ def revision_carry_outcome(
         plus the refusal reason when the stamp diverges or cannot be re-confirmed.
     """
     try:
-        authority = resources().modelos.authority
+        modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+        modelo = next(candidate for candidate in modelos if candidate.id == source_modelo)
         revision = select_revision(
-            authority.modelo(source_modelo),
+            modelo,
             filing_year=source_filing_year,
             period=source_period,
         )

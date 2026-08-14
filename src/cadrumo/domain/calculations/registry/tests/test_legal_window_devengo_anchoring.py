@@ -38,7 +38,7 @@ from pydantic import TypeAdapter
 
 from .._errors import RegistryValidationError
 from .._schema import ModeloDefinition, RegistryCatalogues
-from .._snapshot import _check_revision_scoped_legal_windows, _collect_snapshot_ref_ids
+from .._snapshot import _check_revision_scoped_legal_windows, collect_snapshot_ref_ids
 from .._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow
 from ._registry_schema_support import _committed_modelo
 
@@ -61,7 +61,7 @@ def _modelo_and_catalogues() -> tuple[ModeloDefinition, RegistryCatalogues]:
 
 def _revision_scoped_legal_ids_by_kind(modelo: ModeloDefinition, catalogues: RegistryCatalogues) -> dict[str, str]:
     """Return one revision-scoped legal id per distinct ``kind`` present."""
-    legal_ids, _source_ids = _collect_snapshot_ref_ids(modelo, modelo.revisions[_REVISION])
+    legal_ids, _source_ids = collect_snapshot_ref_ids(modelo, modelo.revisions[_REVISION])
     scoped = legal_ids - set(modelo.legal_refs)
     by_kind: dict[str, str] = {}
     for legal_id in sorted(scoped):

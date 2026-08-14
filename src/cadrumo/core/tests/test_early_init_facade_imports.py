@@ -1,20 +1,23 @@
-"""``cadrumo.core`` stays importable when its own body constructs ``Settings``.
+"""``cadrumo.core`` stays importable when a submodule import constructs ``Settings``.
 
-The package exposes ``BucketPointer``, ``pointer_path`` and ``read_pointer``
-through a PEP 562 ``__getattr__`` defined near the END of ``core/__init__``.
-Any module imported EARLIER in that file which reaches the settings validator
-therefore asks a half-built package for an attribute whose accessor does not
-exist yet, and ``import cadrumo.core`` fails outright for the whole process.
+The package once bound most of its surface eagerly and served a handful of names
+through a PEP 562 ``__getattr__`` defined near the END of ``core/__init__``. Any
+module imported EARLIER in that file which reached the settings validator asked a
+half-built package for an attribute whose accessor did not exist yet, and
+``import cadrumo.core`` failed outright for the whole process.
 
 That is not hypothetical: adding ``from .time import UtcInstant`` to
-``secure_object_write`` (imported at ``core/__init__`` line ~203) pulled
+``secure_object_write`` (then imported at ``core/__init__`` line ~203) pulled
 ``core.time._clock``, whose module-scope ``get_logger`` configures logging,
 which calls ``load_settings()`` — and the tree became unimportable for every
 agent until the chain was backed out.
 
-Both links on that path are pinned here, because fixing either one alone leaves
-the cycle armed: the settings validator must not reach the facade, and neither
-must the pointer-IO module it delegates to.
+The facade now resolves its ENTIRE public surface through ``__getattr__`` and
+imports no submodule while it executes, so there is no longer an "earlier"
+module to reach back from. That is asserted directly rather than assumed, and
+the two links on the original path stay pinned, because the reach-back returns
+the moment an eager import does: the settings validator must not reach the
+facade, and neither must the pointer-IO module it delegates to.
 """
 
 from __future__ import annotations
@@ -31,8 +34,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _CORE_DIR = Path(__file__).resolve().parent.parent
 
-#: Names the ``cadrumo.core`` facade serves only through its late ``__getattr__``.
-_LATE_BOUND_FACADE_NAMES = frozenset({"BucketPointer", "pointer_path", "read_pointer"})
+
+def _late_bound_facade_names() -> frozenset[str]:
+    """Every name the ``cadrumo.core`` facade serves through its ``__getattr__``.
+
+    Read from the live map rather than hand-listed. Three names were pinned here
+    when only three were late-bound; the facade now resolves its whole public
+    surface that way, and a hand-list would have kept asserting the original
+    three while the other three-hundred-odd went unwatched.
+    """
+    from ... import core
+
+    return frozenset(core._LAZY_EXPORTS)
+
 
 #: Modules on the settings-resolution path, which core's own body can reach.
 _SETTINGS_PATH_MODULES = ("config.py", "_bucket_pointer_io.py")
@@ -55,46 +69,66 @@ def _facade_imported_names(module_path: Path) -> set[str]:
 @pytest.mark.parametrize("module_name", _SETTINGS_PATH_MODULES)
 def test_settings_path_modules_never_import_late_bound_facade_names(module_name: str) -> None:
     """A module core can reach mid-init must name the owning submodule instead."""
+    late_bound = _late_bound_facade_names()
     imported = _facade_imported_names(_CORE_DIR / module_name)
 
-    assert not (imported & _LATE_BOUND_FACADE_NAMES), (
-        f"{module_name} imports {sorted(imported & _LATE_BOUND_FACADE_NAMES)} from the "
-        "cadrumo.core facade; those names are served by a __getattr__ defined after "
-        "the early submodule imports, so this breaks `import cadrumo.core` outright"
+    assert late_bound, "the facade exposed no late-bound names; this guard would pass vacuously"
+    assert not (imported & late_bound), (
+        f"{module_name} imports {sorted(imported & late_bound)} from the "
+        "cadrumo.core facade; those names are served by __getattr__, so a module "
+        "the settings path reaches must name the owning submodule instead"
     )
 
 
-def test_the_late_binding_premise_still_holds() -> None:
-    """Anti-tautology: the guard above is only meaningful while these names are late-bound.
+def test_core_init_performs_no_eager_submodule_imports() -> None:
+    """The invariant that retires the whole hazard class, not just its known instance.
 
-    If the facade ever binds them eagerly the constraint becomes vacuous, and
-    this test fails to say so rather than passing silently.
+    The outage above needed a module imported DURING ``core/__init__`` that
+    reached back for a name bound only later in the same file. That required an
+    eager submodule import to exist at all. The facade now resolves its entire
+    public surface through ``__getattr__`` and imports no submodule while it
+    executes, so there is no "earlier" module left to reach back from.
+
+    This replaces an ordering assertion (``__getattr__`` defined after the first
+    submodule import) that could no longer be evaluated once the last eager
+    import went: with none left, its ``min()`` had nothing to take. Asserting
+    the absence directly is strictly stronger -- it holds the condition that
+    makes the reach-back impossible, and it fails the moment an eager import
+    returns, which is also the moment the import-cost regression returns.
     """
-    source = (_CORE_DIR / "__init__.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-    getattr_line = next(
-        node.lineno for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "__getattr__"
-    )
-    first_submodule_import = min(
-        node.lineno
+    tree = ast.parse((_CORE_DIR / "__init__.py").read_text(encoding="utf-8"))
+    eager = [
+        f"line {node.lineno}: from {'.' * node.level}{node.module} import ..."
         for node in tree.body
         if isinstance(node, ast.ImportFrom) and node.level == 1 and node.module is not None
+    ]
+
+    assert eager == [], (
+        "core/__init__ imports its own submodules at import time again: "
+        f"{eager}. Every process in this tree imports this package, so an eager "
+        "binding here is paid by all of them, and it re-arms the mid-init "
+        "reach-back this module exists to prevent. Add the name to _LAZY_EXPORTS "
+        "and its static binding to the TYPE_CHECKING block instead."
     )
 
-    assert getattr_line > first_submodule_import, (
-        "core/__init__ now defines __getattr__ before its submodule imports; "
-        "re-derive whether the facade-import guard is still load-bearing"
-    )
 
+def test_core_survives_settings_construction_while_resolving_a_facade_name() -> None:
+    """The real failure mode, reproduced at the first module the facade resolves.
 
-def test_core_survives_settings_construction_during_its_own_init() -> None:
-    """The real failure mode, reproduced at the exact module that triggered it.
+    A meta-path hook fires when ``cadrumo.core.secure_object_write`` is imported
+    — the module whose eager import broke the tree — and constructs ``Settings``
+    there, which is what the logging chain did. This asserts the behaviour
+    rather than the import spelling, so it still holds after restructuring.
 
-    A meta-path hook fires when ``core/__init__`` reaches
-    ``secure_object_write`` — the line that broke the tree — and constructs
-    ``Settings`` there, which is what the logging chain did. This asserts the
-    behaviour rather than the import spelling, so it still holds if the fix is
-    later restructured.
+    The trigger used to fire during ``core/__init__`` itself. It cannot any
+    more: the facade imports no submodule while it executes, so the hook is
+    reached one step later, when ``__getattr__`` resolves a name that module
+    owns. That is the surviving shape of the same hazard — a settings
+    construction re-entering ``cadrumo.core`` from inside a submodule import —
+    and the assertion is unchanged: the facade name must still resolve.
+
+    Without re-pointing, the hook simply never ran and the test passed having
+    measured nothing, which is why the ``fired`` assertion below is load-bearing.
     """
     # Every other test in this worker process imported `cadrumo.*` before this
     # one ran, and every class object those tests hold (pydantic model schemas,
@@ -133,7 +167,11 @@ def test_core_survives_settings_construction_during_its_own_init() -> None:
         # Absolute, string-form import by necessity: the assertion IS a fresh
         # absolute import of `cadrumo.core` from a wiped `sys.modules`, which a
         # relative form cannot reproduce.
-        importlib.import_module("cadrumo.core")  # importing IS the assertion
+        core = importlib.import_module("cadrumo.core")
+        # Resolving a name owned by the triggering module is what now drives the
+        # hook, and reading it back IS the assertion: if the settings
+        # construction re-entered a half-built facade this raises.
+        assert core.SecureObjectWrite is not None
     finally:
         sys.meta_path.remove(trigger)
         for name in [key for key in sys.modules if key.startswith("cadrumo")]:

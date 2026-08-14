@@ -5,16 +5,16 @@ from __future__ import annotations
 import ast
 import json
 import re
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from dev.locales import LocaleManager
 
-from .....core.config import override_settings
 from .....core.i18n import tr
 from .....tests.cli_runner import invoke_cached_cli, semantic_cli_text
-from .....tests.secure_sql import isolated_profile_storage_root
+from ._isolated_storage_fixture import config_check_backend
+
+__all__ = ["config_check_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -294,18 +294,9 @@ def test_config_locale_keys_are_symmetric_resolved_and_consumed() -> None:
             assert isinstance(value, str) and value.strip() and value != key
 
 
-@pytest.fixture
-def _isolated_config_check(tmp_path: Path) -> Iterator[None]:
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path / "storage", cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-    ):
-        yield
-
-
 @pytest.mark.parametrize("locale", ("ca", "en", "es", "hu"))
 def test_config_check_json_and_text_resolve_the_same_localized_action_surface(
-    _isolated_config_check: None,
+    config_check_backend: None,
     locale: str,
 ) -> None:
     """The live check verb keeps JSON data locale-neutral and text catalogue-derived."""

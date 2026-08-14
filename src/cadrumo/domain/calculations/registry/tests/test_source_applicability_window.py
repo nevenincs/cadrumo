@@ -23,7 +23,7 @@ import pytest
 from .....core.resources import bundled_path
 from .._errors import RegistryValidationError
 from .._schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
-from .._snapshot import _SUBSTANTIVE_LAW_KINDS, _collect_snapshot_ref_ids, build_snapshot
+from .._snapshot import _SUBSTANTIVE_LAW_KINDS, build_snapshot, collect_snapshot_ref_ids
 from .._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
@@ -46,13 +46,13 @@ def _revision_scoped_source_ids(modelo: ModeloDefinition) -> set[str]:
     revision-scoped evidence lives on its nested records (casillas, formulas,
     bindings). This mirrors the gate rather than re-deriving a narrower set.
     """
-    _legal_ids, source_ids = _collect_snapshot_ref_ids(modelo, modelo.revisions[_REVISION])
+    _legal_ids, source_ids = collect_snapshot_ref_ids(modelo, modelo.revisions[_REVISION])
     return source_ids - set(modelo.source_refs)
 
 
 def _revision_scoped_legal_ids(modelo: ModeloDefinition) -> set[str]:
     """Return the legal ids the revision owns, matching the gate's own scope."""
-    legal_ids, _source_ids = _collect_snapshot_ref_ids(modelo, modelo.revisions[_REVISION])
+    legal_ids, _source_ids = collect_snapshot_ref_ids(modelo, modelo.revisions[_REVISION])
     return legal_ids - set(modelo.legal_refs)
 
 

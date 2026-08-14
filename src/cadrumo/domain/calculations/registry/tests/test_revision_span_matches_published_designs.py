@@ -129,6 +129,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import PeriodKind, registry_period_kind
 from .....core.resources import bundled_path
 from .. import ModeloDefinition
 from .._authority import ValidatedRegistryAuthority
@@ -847,84 +848,96 @@ def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]
     claimed_designs = _designs_claimed_by(modelo_id, revision)
 
     for earlier, later in pairwise(claimed_designs):
-        key = _boundary_label(earlier, later)
-        before_lengths, after_lengths = _page_lengths(earlier), _page_lengths(later)
-
-        def _record_count_delta(
-            before: tuple[str, ...] = before_lengths, after: tuple[str, ...] = after_lengths
-        ) -> str | None:
-            """``'9 -> 10 records'`` when the design's record SET changed, else None."""
-            if not before or not after or len(before) == len(after):
-                return None
-            return f"{len(before)} -> {len(after)} records"
-
-        before_boxes, after_boxes = _parse_design(earlier), _parse_design(later)
-        shared = set(before_boxes) & set(after_boxes)
-        moved = sorted(box for box in shared if before_boxes[box] != after_boxes[box])
-        if moved:
-            sample = ", ".join(f"[{box}] {before_boxes[box]}->{after_boxes[box]}" for box in moved[:3])
-            note = f"{len(moved)} of {len(shared)} shared boxes moved (e.g. {sample})"
-            # A displacement count measured across a decomposition change is not a
-            # clean in-record figure: a box that migrated into a NEW record counts
-            # as "moved" alongside one that shifted within its own. Both are real
-            # movement, but comparing the magnitude against a same-record
-            # boundary's is comparing different quantities.
-            if _record_count_delta():
-                note += " -- NOT a clean in-record displacement: the record set also changed"
-            boundaries.setdefault(key, []).append(note)
-
-        # FOURTH SIGNAL: the box SET changed, whether or not anything moved.
-        #
-        # The comparison above reads only DISPLACEMENT -- it iterates the boxes the two
-        # designs SHARE -- so a box present in one design and absent in the other is
-        # outside its loop entirely. That is not a lesser event: a box the later design
-        # declares and the earlier one does not cannot be declared at all under the
-        # earlier layout, and a box the earlier one declares and the later one drops is
-        # a value written into space the later design puts to another use.
-        #
-        # Measured on Modelo 390, where the whole class was invisible: 2015 to 2016 adds
-        # six boxes and 2016 to 2017 removes twenty, both with ZERO movement, identical
-        # or unreadable page lengths and no occupancy transition, so no signal in this
-        # module reported either boundary.
-        #
-        # The blindness survived because it is MASKED wherever membership changes
-        # alongside movement: the 2017 to 2018 boundary drops seventy-two boxes, and the
-        # displacement check reports that boundary anyway on its ninety-seven moved
-        # boxes, so a reader spot-checking the signal against that pair sees a
-        # membership change duly reported and concludes the set is compared.
-        membership = _box_set_evidence(before_boxes, after_boxes)
-        if membership:
-            boundaries.setdefault(key, []).append(membership)
-
-        if before_lengths and after_lengths and before_lengths != after_lengths:
-            delta = _record_count_delta()
-            # Say what a page-length change MEANS before showing the raw tuples. A
-            # record-count change is a different and larger event than a page growing,
-            # and stated as bare tuples it was under-read for hours by everyone
-            # looking at it, including its author.
-            headline = (
-                f"RECORD SET CHANGED ({delta}) -- the design's record decomposition differs, "
-                "so this is not an offset shift"
-                if delta
-                else "page byte-lengths differ, so something moved inside a record"
-            )
-            boundaries.setdefault(key, []).append(f"{headline}: {before_lengths} vs {after_lengths}")
-
-        _append_occupancy_evidence(boundaries, key, earlier, later)
-
-        description = _description_flip_evidence(earlier, later)
-        if description:
-            boundaries.setdefault(key, []).append(description)
+        evidence = _compare_design_pair(earlier, later)
+        if evidence:
+            boundaries[_boundary_label(earlier, later)] = evidence
 
     return boundaries
 
 
-def _append_occupancy_evidence(
-    boundaries: dict[tuple[int, int], list[str]],
-    key: tuple[int, int],
-    earlier: Path,
-    later: Path,
-) -> None:
+def _compare_design_pair(earlier: Path, later: Path) -> list[str]:
+    """Every signal's evidence that two designs diverge; empty when they agree.
+
+    THE ONE INSTRUMENT this module compares designs with, extracted so it has
+    exactly one caller-independent body. :func:`_boundaries_for` calls this once
+    per ADJACENT pair inside a revision's own claimed span, to prove no
+    re-layout crosses the span. The single-year neighbour check
+    (:func:`_neighbour_divergence`) calls the SAME function once against the
+    immediately adjacent revision's design, to prove a single-year split was
+    warranted. Two questions, one comparator -- never a second, parallel diff.
+    """
+    evidence: list[str] = []
+    before_lengths, after_lengths = _page_lengths(earlier), _page_lengths(later)
+
+    def _record_count_delta(
+        before: tuple[str, ...] = before_lengths, after: tuple[str, ...] = after_lengths
+    ) -> str | None:
+        """``'9 -> 10 records'`` when the design's record SET changed, else None."""
+        if not before or not after or len(before) == len(after):
+            return None
+        return f"{len(before)} -> {len(after)} records"
+
+    before_boxes, after_boxes = _parse_design(earlier), _parse_design(later)
+    shared = set(before_boxes) & set(after_boxes)
+    moved = sorted(box for box in shared if before_boxes[box] != after_boxes[box])
+    if moved:
+        sample = ", ".join(f"[{box}] {before_boxes[box]}->{after_boxes[box]}" for box in moved[:3])
+        note = f"{len(moved)} of {len(shared)} shared boxes moved (e.g. {sample})"
+        # A displacement count measured across a decomposition change is not a
+        # clean in-record figure: a box that migrated into a NEW record counts
+        # as "moved" alongside one that shifted within its own. Both are real
+        # movement, but comparing the magnitude against a same-record
+        # boundary's is comparing different quantities.
+        if _record_count_delta():
+            note += " -- NOT a clean in-record displacement: the record set also changed"
+        evidence.append(note)
+
+    # FOURTH SIGNAL: the box SET changed, whether or not anything moved.
+    #
+    # The comparison above reads only DISPLACEMENT -- it iterates the boxes the two
+    # designs SHARE -- so a box present in one design and absent in the other is
+    # outside its loop entirely. That is not a lesser event: a box the later design
+    # declares and the earlier one does not cannot be declared at all under the
+    # earlier layout, and a box the earlier one declares and the later one drops is
+    # a value written into space the later design puts to another use.
+    #
+    # Measured on Modelo 390, where the whole class was invisible: 2015 to 2016 adds
+    # six boxes and 2016 to 2017 removes twenty, both with ZERO movement, identical
+    # or unreadable page lengths and no occupancy transition, so no signal in this
+    # module reported either boundary.
+    #
+    # The blindness survived because it is MASKED wherever membership changes
+    # alongside movement: the 2017 to 2018 boundary drops seventy-two boxes, and the
+    # displacement check reports that boundary anyway on its ninety-seven moved
+    # boxes, so a reader spot-checking the signal against that pair sees a
+    # membership change duly reported and concludes the set is compared.
+    membership = _box_set_evidence(before_boxes, after_boxes)
+    if membership:
+        evidence.append(membership)
+
+    if before_lengths and after_lengths and before_lengths != after_lengths:
+        delta = _record_count_delta()
+        # Say what a page-length change MEANS before showing the raw tuples. A
+        # record-count change is a different and larger event than a page growing,
+        # and stated as bare tuples it was under-read for hours by everyone
+        # looking at it, including its author.
+        headline = (
+            f"RECORD SET CHANGED ({delta}) -- the design's record decomposition differs, so this is not an offset shift"
+            if delta
+            else "page byte-lengths differ, so something moved inside a record"
+        )
+        evidence.append(f"{headline}: {before_lengths} vs {after_lengths}")
+
+    evidence.extend(_occupancy_evidence(earlier, later))
+
+    description = _description_flip_evidence(earlier, later)
+    if description:
+        evidence.append(description)
+
+    return evidence
+
+
+def _occupancy_evidence(earlier: Path, later: Path) -> list[str]:
     """THIRD SIGNAL: a slot moving into or out of reserved space.
 
     It moves no box and changes no page length -- the reserved block absorbs the freed
@@ -954,6 +967,7 @@ def _append_occupancy_evidence(
     """
     before, after = _occupancy(earlier), _occupancy(later)
     shared = set(before) & set(after)
+    evidence: list[str] = []
     for slots, headline in (
         (
             sorted(slot for slot in shared if not before[slot] and after[slot]),
@@ -967,11 +981,12 @@ def _append_occupancy_evidence(
         if not slots:
             continue
         sample = ", ".join(f"{sheet} offset {offset}" for sheet, offset in slots[:3])
-        boundaries.setdefault(key, []).append(
+        evidence.append(
             f"{len(slots)} slot(s) {headline} (e.g. {sample}) -- no box moved and no page "
             "length changed, so one side of this boundary declares a quantity at a position "
             "the other side marks reserved"
         )
+    return evidence
 
 
 def test_no_revision_spans_a_design_relayout() -> None:
@@ -1521,16 +1536,21 @@ def test_the_plural_and_range_naming_variants_are_read() -> None:
     assert _design_years("01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes.xlsx") == (2019,)
 
 
-def test_every_modelo_revision_span_is_corpus_proven_never_undecidable() -> None:
-    """HARD FAIL: every declared revision span must be corpus-PROVEN clean, tree-wide.
+def test_every_modelo_revision_span_is_corpus_proven() -> None:
+    """HARD FAIL: every declared revision span must be corpus-PROVEN, tree-wide.
 
-    Operator directive, verbatim in substance: no modelo schema may be missing
-    supported time-range grounding, and no schema gap of this kind is allowed
-    to pass any test. This is the property that answers it, over every
-    modelo's every revision, not the exporting subset the sibling tests in
-    this module calibrate the detection signal against.
+    Operator directive, verbatim in substance: this is a law-derived project.
+    AEAT published a record design for every filing year of every modelo that
+    has ever existed. Whether this repository has BUNDLED that document is a
+    fact about the repository, never a fact about the world -- so a revision
+    this module cannot yet compare is NOT UNKNOWABLE, it is NOT YET PROVEN,
+    and the correct treatment of "not yet proven" is the same as any other
+    unmet requirement: the gate FAILS, by name, naming the one concrete act
+    that clears it. There is no third verdict here and no soft status that
+    lets a gap flow onward looking like a passed check.
 
-    PASS requires BOTH, per revision:
+    ONE VERDICT: a revision's span is corpus-proven, or the gate fails on it.
+    Corpus-proven requires BOTH:
 
     1. ``_boundaries_for(modelo.id, revision) == {}`` -- the SAME corpus-diffing
        instrument the sibling tests in this module already prove trustworthy
@@ -1538,28 +1558,25 @@ def test_every_modelo_revision_span_is_corpus_proven_never_undecidable() -> None
        retire/revive, and unnumbered-slot signals, unioned into one verdict)
        finds no re-layout the declared span crosses.
     2. At least TWO comparable bundled design years fall inside the revision's
-       claimed span (``_claimed_years`` against ``_designs_for``'s output).
-
-    Both are required because they answer different questions and collapsing
-    them into one hides which is missing. A revision with zero boundaries but
-    fewer than two comparable years is UNDECIDABLE, not clean: an open-ended
-    or multi-year span is a CLAIM that one layout serves every year in it, and
-    a claim nobody has checked is not thereby true. Passing it here would mean
-    this gate reports "clean" for exactly the modelos it looked hardest at and
-    found nothing to compare -- the same shape as the sweep that withdrew nine
-    modelos' export layouts behind real-looking legal citations while the
-    validator checked only that a citation RESOLVED, never that it PROHIBITED
-    anything: the larger the evidence gap, the quieter it was. This gate is
-    built to make that shape impossible to reproduce by omission.
+       claimed span (``_claimed_years`` against ``_designs_for``'s output) --
+       an open-ended or multi-year span is a CLAIM that one layout serves
+       every year in it, and a claim nobody has checked is not thereby true.
+       Passing on fewer than two would mean this gate reports "proven" for
+       exactly the modelos it looked hardest at and found nothing to compare
+       -- the same shape as the sweep that withdrew nine modelos' export
+       layouts behind real-looking legal citations while the validator
+       checked only that a citation RESOLVED, never that it PROHIBITED
+       anything: the larger the evidence gap, the quieter it was. This gate
+       is built to make that shape impossible to reproduce by omission.
 
     NO ALLOWLIST. NO PER-MODELO EXEMPTION. NO SKIP, XFAIL, OR CONDITIONAL
-    GUARD. A modelo that cannot be proven fails, by name, and stays failing
-    until real coverage is built -- either the missing bundled design
-    evidence is acquired, or the revision is split at its corpus-proven
-    boundaries. The two failure classes are named separately in the assertion
-    because they have different fixes: a fix-owner who reads "split this
-    revision" when the real need is "acquire more corpus evidence" wastes a
-    day and then invents a split with no basis.
+    GUARD. A failing revision names its own fix in the same line, because the
+    two remedies are different acts and a fix-owner who reads "split this
+    revision" when the real need is "bundle the missing design" wastes a day
+    and invents a split with no basis: either split the revision at a
+    corpus-proven boundary, or bundle AEAT's published design for a named
+    year. Both remedies have an owner and an action. Neither is a status to
+    wait out.
 
     Measured at authoring time, PER REVISION, which is the precision this
     property needs -- a modelo-level tally (design-year COUNT anywhere against
@@ -1567,22 +1584,21 @@ def test_every_modelo_revision_span_is_corpus_proven_never_undecidable() -> None
     whether the comparable years fall INSIDE the specific revision being
     judged. Modelo 100 makes the gap concrete -- its bundled designs run
     2009-2019 while all six of its revisions run 2020-2025, zero overlap --
-    and the modelo-level tally called that "11 designs, 0 boundaries, clean"
+    and the modelo-level tally called that "11 designs, 0 boundaries, proven"
     by counting the absence of a comparison as the success of one. The
     per-revision check this test runs does not make that mistake.
 
     97 total revisions. 3 PASS (131 revision 2019-2023; 202 revisions
-    2019-2022 and 2023-2024). 7 modelos carry at least one PROVEN GAP
-    revision (200, 220, 303, 322, 353, 604, 714). 67 modelos carry at least
-    one UNDECIDABLE revision. 0 of 73 modelos have EVERY revision proven
-    clean -- even 131 and 202, each with a passing revision, have other
-    revisions (131's 2024/2025/2026; 202's 2025-y-siguientes) that fail
-    because no bundled design exists for those specific years. This is the
-    honest, expected result of a real coverage gap this campaign exists to
-    surface -- it is not a signal this gate needs tuning.
+    2019-2022 and 2023-2024). 94 FAIL: 9 for a corpus-proven re-layout
+    crossing, across 7 modelos (200, 220, 303, 322, 353, 604, 714); 85 for
+    missing bundled design evidence, across 67 modelos. 0 of 73 modelos have
+    EVERY revision proven -- even 131 and 202, each with a passing revision,
+    have other revisions (131's 2024/2025/2026; 202's 2025-y-siguientes) that
+    fail because no bundled design exists for those specific years. This is
+    the honest, expected result of a real coverage gap this campaign exists
+    to surface -- it is not a signal this gate needs tuning.
     """
-    proven_gap: list[str] = []
-    undecidable: list[str] = []
+    failures: list[str] = []
     for modelo, revision_id, revision in _all_declared_revisions():
         boundaries = _boundaries_for(modelo.id, revision)
         if boundaries:
@@ -1590,29 +1606,28 @@ def test_every_modelo_revision_span_is_corpus_proven_never_undecidable() -> None
                 f"{f'{earlier} mid-year' if earlier == later else f'{earlier}/{later}'} ({' + '.join(evidence)})"
                 for (earlier, later), evidence in sorted(boundaries.items())
             )
-            proven_gap.append(
-                f"modelo {modelo.id} revision {revision_id!r}: PROVEN GAP -- spans {len(boundaries)} "
-                f"corpus-evidenced re-layout(s), needs {len(boundaries) + 1} revisions -- {detail}",
+            failures.append(
+                f"modelo {modelo.id} revision {revision_id!r}: spans {len(boundaries)} corpus-evidenced "
+                f"re-layout(s), needs {len(boundaries) + 1} revisions -- {detail} -- FIX: split the "
+                "revision at the named boundary year(s)",
             )
             continue
         design_years, _unreadable = _designs_for(modelo.id)
         claimed = _claimed_years(revision, set(design_years))
         if len(claimed) < 2:
-            undecidable.append(
-                f"modelo {modelo.id} revision {revision_id!r}: UNDECIDABLE -- only {len(claimed)} comparable "
-                "bundled design year(s) fall inside its claimed span; acquire more per-year corpus evidence "
-                "before this revision's span can be trusted -- it must not be split on today's evidence, "
-                "and it must not be reported clean either",
+            failures.append(
+                f"modelo {modelo.id} revision {revision_id!r}: only {len(claimed)} comparable bundled "
+                "design year(s) fall inside its claimed span -- FIX: bundle AEAT's published record "
+                "design for the missing year(s); do not split this revision on today's evidence, and "
+                "do not treat the gap as anything other than a failure",
             )
 
-    assert not proven_gap and not undecidable, (
-        "every modelo's declared revision span must be corpus-proven clean before it may pass: zero "
+    assert not failures, (
+        "every modelo's declared revision span must be corpus-proven before it may pass: zero "
         "corpus-evidenced re-layout boundaries AND at least two comparable bundled design years checked "
-        "inside the span. An open-ended or multi-year span is a CLAIM the layout serves every year in it; "
-        "an unchecked claim is not thereby true.\n"
-        "PROVEN GAP -- split the revision at the named boundaries:\n  " + "\n  ".join(sorted(proven_gap)) + "\n"
-        "UNDECIDABLE -- acquire bundled corpus evidence; do not attempt a split with no basis:\n  "
-        + "\n  ".join(sorted(undecidable))
+        "inside the span. AEAT published a design for every filing year; a gap here is a fact about "
+        "this repository's bundled corpus, never about the world -- it is fixed by bundling the design "
+        "or splitting the revision, never accepted as a standing state:\n  " + "\n  ".join(sorted(failures))
     )
 
 
@@ -1698,6 +1713,46 @@ def _earliest_declared_year(revisions: list[tuple[str, object]]) -> int | None:
     return min(starts) if starts else None
 
 
+def _offset_annual_modelo(revisions: list[tuple[str, object]]) -> bool:
+    """Whether every one of a modelo's revisions declares ONLY annual-cadence periods.
+
+    Derived, not declared: :class:`~core.PeriodKind` is already the canonical,
+    closed cadence classifier every period token resolves through
+    (:func:`~core.registry_period_kind`), and a modelo whose every revision
+    declares nothing but the annual token (``0A``) is, by construction, filed
+    IN ARREARS -- an annual return cannot be computed before its own ejercicio
+    closes, so its filing window necessarily opens the FOLLOWING calendar
+    year. A periodic modelo (quarterly, monthly) files within its own
+    ejercicio instead.
+
+    Confirmed against the bundled corpus's own declared ``deadline_windows``
+    rather than assumed: every revision of modelos 100, 189, 280, 289, 345
+    and 390 that declares a deadline window shows ``opens_on.year ==
+    filing_year + 1`` (e.g. Modelo 100's 2025 revision opens 2026-04-08); the
+    periodic control, Modelo 303, shows ``opens_on.year == filing_year``. No
+    new field is declared for this -- the offset is arithmetic on data the
+    registry already carries (the period cadence), not a second axis beside
+    it, per the operator's instruction not to redeclare what is already
+    derivable.
+
+    A modelo with NO declared periods at all, or with even one non-annual
+    period on any revision, is treated as NOT offset -- the strict, urgent
+    default a permissive read would invert. Silently classifying an
+    ambiguous modelo as filed-in-arrears would hide a live gap behind an
+    assumption nothing in the registry actually states.
+    """
+    kinds: set[PeriodKind] = set()
+    any_periods = False
+    for _revision_id, revision in revisions:
+        for token in revision.period_selector.periods:
+            any_periods = True
+            try:
+                kinds.add(registry_period_kind(token))
+            except ValueError:
+                return False
+    return any_periods and kinds == {PeriodKind.ANNUAL}
+
+
 def test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_through_today() -> None:
     """HARD FAIL: a coverage HOLE or OVERLAP in filing-year resolution, tree-wide.
 
@@ -1710,30 +1765,49 @@ def test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_throug
     ever compares years a span already claims -- it cannot see a year no span
     claims at all.
 
-    Modelo 390 is the confirmed live case, measured 2026-08-14 via the raw
-    loader (``bundled_authority()`` itself now refuses to build, over an
-    unrelated export-layout-completeness gate, so this reads the same tier the
-    relayout gate does): every revision is closed-ended --
+    Modelo 390 is why a PAIRWISE abutment check would have been wrong here.
+    Measured 2026-08-14 via the raw loader (``bundled_authority()`` itself
+    refuses to build, over an unrelated export-layout-completeness gate, so
+    this reads the same tier the relayout gate does), every revision is
+    closed-ended --
 
         2022 | valid_from 2022-01-01 | valid_to 2022-12-31
         2023 | valid_from 2023-01-01 | valid_to 2023-12-31
         2024 | valid_from 2024-01-01 | valid_to 2024-12-31
         2025 | valid_from 2025-01-01 | valid_to 2025-12-31
 
-    The revisions abut each other with no gap BETWEEN them, so a PAIRWISE
-    abutment check -- does each revision's start equal the previous revision's
-    end plus one day -- would call this clean. It is not: nothing resolves
-    filing year 2026, the CURRENT filing year, and nothing resolves any year
-    before 2022 either, because the earlier open-ended revision that used to
-    reach back to 2010 was replaced by these per-year epochs without carrying
-    that earlier span forward. The annual IVA summary has no revision that
-    resolves TODAY. The hole is at the TAIL, past the last revision, which
-    pairwise abutment cannot see because it only ever compares consecutive
-    revisions to EACH OTHER, never the last one to the calendar.
+    The revisions abut each other with no gap BETWEEN them, so a check that
+    only compares consecutive revisions to EACH OTHER would call this clean
+    and never notice the TAIL -- whether the last revision still reaches the
+    present. This check does reach the tail: it sweeps every year through
+    today. But "today" is not the same question for every modelo, which is
+    the second thing this check gets right.
+
+    THE HORIZON IS OFFSET-AWARE, NOT A FLAT "THROUGH TODAY" FOR EVERY MODELO.
+    Operator directive, verbatim in substance: an annual return is filed IN
+    ARREARS -- ejercicio 2025's Renta is filed in 2026, ejercicio 2026's is
+    not filed until 2027 -- while a periodic modelo (quarterly, monthly)
+    files WITHIN its own ejercicio. A flat "must resolve through this
+    calendar year" horizon is wrong for the first shape: it would demand a
+    2026 revision for Modelo 390 (the annual IVA summary) today, when AEAT's
+    own filing window for ejercicio 2026 does not open until 2027 and no
+    operator could file it even if the revision existed. :func:`_offset_annual_modelo`
+    derives which shape a modelo is from its ALREADY-DECLARED period cadence
+    -- no new field, an arithmetic ceiling instead of a stored exemption --
+    and the sweep's upper bound becomes last year for an arrears modelo,
+    this year for a periodic one. Measured 2026-08-14: modelos 100, 189,
+    280, 289, 345, 390 and 714 are ALL annual-in-arrears (confirmed against
+    their own declared ``deadline_windows``, not assumed), so none of their
+    "missing 2026" cases were live gaps -- every one was premature, and the
+    gate now correctly does not ask the question until the year the filing
+    window could actually open. No periodic modelo carries a coverage hole
+    at all; if one ever does, it is live TODAY, not next year, and this
+    gate's horizon does not soften that case.
 
     PASS requires, per modelo, for every filing year from its earliest declared
-    coverage (:func:`_earliest_declared_year`) through today's calendar year
-    (:func:`_current_filing_year`): at least one revision resolves
+    coverage (:func:`_earliest_declared_year`) through its own horizon
+    (:func:`_current_filing_year`, offset back one year by
+    :func:`_offset_annual_modelo`): at least one revision resolves
     (:func:`_covers_year`), and no two resolving revisions genuinely COLLIDE.
     Zero resolving revisions is a HOLE -- this application cannot even attempt
     the calculation for that year. A collision is an OVERLAP -- two revisions
@@ -1756,10 +1830,22 @@ def test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_throug
     ``aeat-registry-authority-flow``'s revision-resolution mandate, and is
     upstream of whether a design exists to export it against.
 
-    NO ALLOWLIST. NO PER-MODELO EXEMPTION. A closed-ended tail reads as tidy,
-    deliberate structure right up until the calendar passes it, which is
-    exactly why a static snapshot of this check would rot: it would go green
-    the day it is authored and silently start lying every January after.
+    NO ALLOWLIST. NO PER-MODELO EXEMPTION. The offset horizon is the ONLY
+    per-modelo variation this check makes, and it is computed fresh every run
+    from the modelo's own declared period cadence -- never a stored flag, a
+    disposition, or a list of modelo ids to skip. A closed-ended tail reads
+    as tidy, deliberate structure right up until the calendar passes it,
+    which is exactly why a static snapshot of this check would rot: it would
+    go green the day it is authored and silently start lying every January
+    after -- and an arrears modelo's horizon rolls forward with it the SAME
+    way, computed from ``date.today()`` on every run, never pinned.
+
+    Measured at authoring time (2026-08-14): PASSES. Zero holes, zero
+    overlaps, tree-wide. This is not a weakened result -- the seven prior
+    "holes" were re-classified, not deleted: their offset status is verified
+    against real declared ``deadline_windows`` data, not asserted, and every
+    one of them still resolves its own current-arrears year (2025). No
+    periodic modelo has ever failed this check.
     """
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     today_year = _current_filing_year()
@@ -1771,7 +1857,12 @@ def test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_throug
         earliest = _earliest_declared_year(revisions)
         if earliest is None:
             continue
-        for year in range(earliest, today_year + 1):
+        # An annual-in-arrears modelo's most recent FILEABLE ejercicio is last
+        # year, not this one -- its filing window for this year's ejercicio has
+        # not opened yet, arithmetic derived from the declared period cadence
+        # (see :func:`_offset_annual_modelo`), never a stored exemption.
+        horizon = today_year - 1 if _offset_annual_modelo(revisions) else today_year
+        for year in range(earliest, horizon + 1):
             covering = [(rid, rev) for rid, rev in revisions if _covers_year(rev, year)]
             if not covering:
                 holes.append(f"modelo {modelo.id}: no revision resolves filing year {year}")

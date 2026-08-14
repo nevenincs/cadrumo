@@ -326,7 +326,7 @@ def _build_validated_snapshot(
     _validate_materialized_export_record_families(revision)
     if grade is RegistryAuthorityGrade.FILING:
         _check_snapshot_filing_capability(modelo, revision)
-    legal_ids, source_ids = _collect_snapshot_ref_ids(modelo, revision)
+    legal_ids, source_ids = collect_snapshot_ref_ids(modelo, revision)
     if grade is RegistryAuthorityGrade.FILING:
         _check_snapshot_legal_review_status(modelo, revision, catalogues, legal_ids)
     _check_revision_scoped_legal_windows(modelo, revision, catalogues)
@@ -531,7 +531,7 @@ def _check_revision_scoped_legal_windows(
     :func:`_legal_window_covers_devengo` -- devengo-anchored for substantive law,
     presentation-window-tolerant for procedural/administrative kinds.
     """
-    revision_legal_ids, _revision_source_ids = _collect_snapshot_ref_ids(modelo, revision)
+    revision_legal_ids, _revision_source_ids = collect_snapshot_ref_ids(modelo, revision)
     scoped_legal_ids = revision_legal_ids - set(modelo.legal_refs)
     applicability_window = RevisionLegalApplicabilityWindow.from_revision(revision)
     failures: list[str] = []
@@ -621,7 +621,7 @@ def _check_revision_scoped_source_windows(
         RegistryValidationError: If any revision-scoped source window fails to
             overlap the revision's own validity window.
     """
-    _revision_legal_ids, revision_source_ids = _collect_snapshot_ref_ids(modelo, revision)
+    _revision_legal_ids, revision_source_ids = collect_snapshot_ref_ids(modelo, revision)
     scoped_source_ids = revision_source_ids - set(modelo.source_refs)
     failures: list[str] = []
     for source_id in sorted(scoped_source_ids):
@@ -649,7 +649,7 @@ def _check_revision_scoped_source_windows(
         )
 
 
-def _collect_snapshot_ref_ids(
+def collect_snapshot_ref_ids(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
 ) -> tuple[set[str], set[str]]:

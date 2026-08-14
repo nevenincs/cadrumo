@@ -8,7 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id, validated_casilla_id_map
+from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id, validated_casilla_id_map
 from .. import (
     calculate_registry_snapshot,
     parse_export_payload,
@@ -16,7 +16,6 @@ from .. import (
     resolve_export_layout,
     resolve_relation_values,
 )
-from .._authority import ValidatedRegistryAuthority
 from .._schema import RegistrySnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -217,7 +216,7 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
     legal_ref: str,
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("131", filing_year, "1T")
+    snapshot = registry_snapshot("131", filing_year, "1T", grade=RegistryAuthorityGrade.CALCULATION)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=_inputs(
@@ -286,7 +285,7 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
 def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_modelo_115_relations_and_count_binding(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("180", 2026, "0A")
+    snapshot = registry_snapshot("180", 2026, "0A", grade=RegistryAuthorityGrade.CALCULATION)
     relation_values = resolve_relation_values(
         snapshot.revision,
         {
@@ -408,21 +407,22 @@ _MODELO_180_EXPECTED_CASILLAS: tuple[tuple[CasillaId, object], ...] = (
 
 @pytest.fixture(scope="module")
 def _modelo_180_parsed_casillas(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> dict[CasillaId, object]:
     """Parse the synthetic Modelo 180 declarante + perceptor record bundle once.
 
     Module-scoped so the record-design parse runs a single time and
     every parametrize case in
     test_committed_modelo_180_record_design_parses asserts against
-    the same payload. Pulls the snapshot directly from the
-    session-scoped ``registry_authority`` instead of the per-test
-    ``registry_snapshot`` factory so the module scope is compatible.
+    the same payload. This is a genuine filing/export-record concern
+    (parses a fixed-width export layout), so it keeps the default FILING
+    grade -- ``registry_snapshot`` is now session-scoped, so a module-scoped
+    consumer no longer needs to bypass it via the raw ``registry_authority``.
 
     The fixed-width field maps and the expected casilla values are
     module-level constants so the test row table reads top-down.
     """
-    snapshot = registry_authority.snapshot("180", filing_year=2026, period="0A")
+    snapshot = registry_snapshot("180", 2026, "0A")
     layout = resolve_export_layout(snapshot).layout
     declarante = _fixed_width_record(500, _MODELO_180_DECLARANTE_FIELDS)
     perceptor = _fixed_width_record(500, _MODELO_180_PERCEPTOR_FIELDS)

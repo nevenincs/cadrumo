@@ -9,9 +9,14 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from decimal import Decimal
 
-from ..core import CasillaId
-from ..core.resources import resources
-from ..domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ..core import CasillaId, RegistryAuthorityGrade
+from ..core.resources import bundled_path
+from ..domain.calculations.registry import (
+    CasillaObservation,
+    RegistryModeloObservation,
+    load_registry_tree,
+)
+from ..domain.calculations.registry.tests import build_snapshot
 
 
 def registry_grounded_observations(
@@ -20,6 +25,7 @@ def registry_grounded_observations(
     filing_year: int,
     period: str,
     casilla_values: Mapping[CasillaId, Decimal],
+    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
 ) -> tuple[CasillaObservation, ...]:
     """Return observations grounded in the selected registry snapshot."""
 
@@ -28,6 +34,7 @@ def registry_grounded_observations(
         filing_year=filing_year,
         period=period,
         casilla_values=casilla_values.items(),
+        grade=grade,
     )
 
 
@@ -37,10 +44,31 @@ def registry_grounded_observation_rows(
     filing_year: int,
     period: str,
     casilla_values: Iterable[tuple[CasillaId, Decimal]],
+    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
 ) -> tuple[CasillaObservation, ...]:
-    """Return ordered observations grounded in the selected registry snapshot."""
+    """Return ordered observations grounded in the selected registry snapshot.
 
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+    Built from the compile-only registry tree, scoped to ``modelo`` alone,
+    rather than through ``resources().modelos.authority`` -- the authority
+    validates every modelo in the bundled tree before it returns anything, so
+    one unrelated modelo missing filing capability broke this fixture for
+    every caller, on any modelo, anywhere it was imported. ``grade`` defaults
+    to :attr:`RegistryAuthorityGrade.FILING`, preserving the prior strict
+    contract for callers that need it; a caller asking a narrower question
+    (a formula-runtime calculation, an applicability/scheduling fact) should
+    pass a lower grade explicitly.
+    """
+
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo_definition = next(item for item in modelos if item.id == modelo)
+    snapshot = build_snapshot(
+        modelo_definition,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=filing_year,
+        period=period,
+        grade=grade,
+    )
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     observations: list[CasillaObservation] = []
     for casilla_id, value in casilla_values:
@@ -67,6 +95,7 @@ def registry_grounded_modelo_observation(
     filing_year: int,
     period: str,
     casilla_values: Mapping[CasillaId, Decimal],
+    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
 ) -> RegistryModeloObservation:
     """Return a RegistryModeloObservation grounded in the selected snapshot."""
 
@@ -79,5 +108,6 @@ def registry_grounded_modelo_observation(
             filing_year=filing_year,
             period=period,
             casilla_values=casilla_values,
+            grade=grade,
         ),
     )

@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from ....iva import IvaLedgerObservationRole
@@ -165,13 +165,13 @@ def test_modelo_390_revision_period_selector_starts_at_2010() -> None:
 
 def test_modelo_390_snapshot_builds_for_each_published_filing_year() -> None:
     for filing_year in (2020, 2021, 2022, 2023, 2024, 2025, 2026):
-        snapshot = _committed_snapshot("390", filing_year, "0A")
+        snapshot = _committed_snapshot("390", filing_year, "0A", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.revision.id == "2010-y-siguientes"
 
 
 def test_modelo_390_snapshot_carries_legal_authority_and_record_design() -> None:
     _, catalogues = _load_modelo_390()
-    snapshot = _committed_snapshot("390", 2025, "0A")
+    snapshot = _committed_snapshot("390", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)
     assert "orden-eha-3111-2009:art-1" in snapshot.legal
     assert "orden-eha-3111-2009:art-8" in snapshot.legal
     assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3111-2009:art-1",)

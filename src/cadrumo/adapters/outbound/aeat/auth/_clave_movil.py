@@ -629,11 +629,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
     def _active_profile_diagnostic_context(self, provider_identity: str) -> dict[str, object]:
         try:
-            from .....adapters.persistence.storage import (
-                activate_master_key_provider,
-                active_bucket_session_serves,
-                get_master_key_provider,
-            )
+            from .....adapters.persistence.storage import active_bucket_session_serves
             from .....application.user_profile import (
                 ProfileRecordRepository,
                 record_to_path_values,
@@ -641,7 +637,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             )
             from .....application.workflow import read_profile_bucket_by_id
             from .....core import resolve_active_bucket_id
-            from .....core.config import override_settings
             from .....domain.user_profile import ProfileNotFoundError
 
             bucket_id = resolve_active_bucket_id()
@@ -660,21 +655,22 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             if bucket_id is None:
                 context["identity_alignment"] = "no_active_profile"
                 return context
+            # Only this bucket's own session may serve the read; a foreign
+            # session would decrypt under the wrong key.  Without one the record
+            # stays sealed: it is encrypted under the profile's own DEK, which
+            # exists only inside the session its password envelope unwrapped.
+            #
+            # The locked case reports itself rather than borrowing the
+            # absent-identity token.  This context is read by an operator
+            # debugging a Cl@ve identity mismatch, and "the profile carries no
+            # tax id" and "the profile's tax id could not be read" call for
+            # opposite next steps -- re-enrol the identity, or unlock the
+            # profile and re-run.
+            if not active_bucket_session_serves(bucket_id):
+                context["identity_alignment"] = "profile_record_locked"
+                return context
             try:
-                # Only this bucket's own session may serve the read; a foreign
-                # session would decrypt under the wrong key instead of taking
-                # the explicit provider branch below.
-                if active_bucket_session_serves(bucket_id):
-                    record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
-                else:
-                    with (
-                        override_settings(cadrumo_active_profile=bucket_id),
-                        activate_master_key_provider(
-                            get_master_key_provider(),
-                            fallback_bucket_id=bucket_id,
-                        ),
-                    ):
-                        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+                record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
             except ProfileNotFoundError:
                 return context
 

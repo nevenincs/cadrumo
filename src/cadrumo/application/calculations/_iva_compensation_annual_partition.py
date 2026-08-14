@@ -69,11 +69,13 @@ def _observed_value(values: Mapping[CasillaId, Decimal], casilla_id: CasillaId) 
 
 
 def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation) -> None:
-    from ...core.resources import resources
+    from ...core.resources import bundled_path
+    from ...domain.calculations.registry import load_registry_tree
 
-    authority = resources().modelos.authority
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(candidate for candidate in modelos if candidate.id == observation.modelo)
     revision = select_revision(
-        authority.modelo(observation.modelo),
+        modelo,
         filing_year=observation.filing_year,
         period=observation.period,
     )
@@ -251,10 +253,13 @@ class IvaCompensationAnnualPartitionSourceResolver:
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         revision = self._registry_snapshot.revision if self._registry_snapshot is not None else None
         if revision is None:
-            from ...core.resources import resources
+            from ...core.resources import bundled_path
+            from ...domain.calculations.registry import load_registry_tree
 
+            modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+            modelo = next(candidate for candidate in modelos if candidate.id == context.modelo)
             revision = select_revision(
-                resources().modelos.authority.modelo(context.modelo),
+                modelo,
                 filing_year=context.filing_year,
                 period=context.period.registry_token,
             )

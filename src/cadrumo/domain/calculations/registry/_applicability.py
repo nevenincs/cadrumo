@@ -634,7 +634,7 @@ def _undetermined_applicability(
     payer_fact: PayerFact,
     legal_refs: tuple[LegalRefId, ...],
 ) -> ModeloApplicability:
-    """Return the ``INCOMPLETE`` applicability for an *undecidable* fact.
+    """Return the ``INCOMPLETE`` applicability for a fact only the taxpayer can supply.
 
     Used when a modelo gates on a :class:`PayerFact` (Modelo
     111 / 115 / 349 / 347 / 720 / 721) and the profile does not positively declare
@@ -650,7 +650,7 @@ def _undetermined_applicability(
         payer_fact: The specific profile fact required to positively
             establish applicability.
         legal_refs: The concrete rule legal refs that ground the
-            undecidable payer-fact question.
+            payer-fact requirement, pending the taxpayer's own answer.
 
     Returns:
         A :class:`ModeloApplicability` with ``INCOMPLETE`` verdict and the

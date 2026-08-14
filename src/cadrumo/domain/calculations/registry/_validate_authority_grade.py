@@ -14,7 +14,7 @@ reason, rather than left empty and silent.
 
 from __future__ import annotations
 
-from ....core import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
+from ....core import RegistryAuthorityGrade
 from ._schema import ModeloRevision
 from ._schema_family_coverage import build_revision_coverage_manifest
 
@@ -28,18 +28,48 @@ def validate_authority_grade_section(
     modelo_id: str,
     revision: ModeloRevision,
 ) -> list[str]:
-    """Return every way this revision's declared grade outruns its coverage.
+    """Return every way this revision's grade is absent, or outruns its coverage.
+
+    Two distinct failures, deliberately not merged. A revision that declares NO
+    grade fails on the absence: silence reads as the floor, and the floor has no
+    coverage claim to outrun, so an ungraded revision would otherwise take the
+    exemption and escape this check entirely. A revision that declares a rung its
+    families do not back fails on the gap.
 
     Accumulating and never raising, so one revision's unbacked claim does not
     hide the next one's.
 
     Returns:
-        One message per unbacked rung, empty when the declared grade holds.
+        One message for an absent grade, or one per unbacked rung; empty when a
+        declared grade holds.
     """
-    grade = revision.authority_grade or UNDECLARED_REGISTRY_AUTHORITY_GRADE
+    if not revision.is_graded:
+        return [
+            f"{prefix} declares no authority_grade, so it makes no claim about how far its "
+            "authority reaches and silently takes the weakest treatment this check applies. "
+            "Declare the rung this revision is INTENDED to support: "
+            f"{RegistryAuthorityGrade.APPLICABILITY.value!r} if it is only ever meant to answer "
+            "when the modelo is due and to whom it applies; "
+            f"{RegistryAuthorityGrade.CALCULATION.value!r} if it is also meant to compute the "
+            "modelo's amounts; "
+            f"{RegistryAuthorityGrade.FILING.value!r} if it is additionally meant to back a "
+            "filing draft and its export. "
+            "DO NOT pick the rung by looking at which families this revision currently has. A "
+            "grade read off present content makes the claim agree with the content by "
+            "construction, so this check could never fail and would be inert again -- harder to "
+            "notice than the silence it replaced, because every number would agree. The point of "
+            "the declaration is that a revision INTENDED to reach filing, whose families do not "
+            "yet back it, fails here and stays failing until they do.",
+        ]
+
+    grade = revision.effective_authority_grade
     if grade is RegistryAuthorityGrade.APPLICABILITY:
-        # The floor asserts scheduling reach only, which the schema already
-        # validates; there is no coverage claim to outrun.
+        # A DECLARED floor asserts scheduling reach only, which the schema already
+        # validates; there is no coverage claim to outrun. Read through
+        # ``is_graded`` above rather than by collapsing absence into this value:
+        # an ungraded revision and one declared at the floor read as the same
+        # scope but are not the same claim, and only one of them is a backlog
+        # entry.
         return []
 
     manifest = build_revision_coverage_manifest(modelo=modelo_id, revision=revision)

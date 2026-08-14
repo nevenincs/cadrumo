@@ -29,7 +29,7 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ...core.money import round_to_cents
-from ...core.resources import resources
+from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
@@ -45,6 +45,7 @@ from ...domain.calculations.registry import (
     SourceRefId,
     calculate_registry_snapshot,
     enum_consumed_binding_ids,
+    load_registry_tree,
     revision_date_binding_ids,
     select_revision,
 )
@@ -818,8 +819,8 @@ def compare_modelo_years(
     rev_a, draft_a, period_a = _best_revision_for_compare(modelo=modelo, filing_year=year_a)
     rev_b, draft_b, period_b = _best_revision_for_compare(modelo=modelo, filing_year=year_b)
 
-    authority = resources().modelos.authority
-    modelo_definition = authority.modelo(modelo)
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
     rev_b_static = select_revision(modelo_definition, filing_year=year_b, period=period_b)
     rev_a_static = select_revision(modelo_definition, filing_year=year_a, period=period_a)
 

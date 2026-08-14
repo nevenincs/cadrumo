@@ -47,7 +47,7 @@ from pydantic import BaseModel, TypeAdapter
 
 from ...core import STR_KEYED_MAPPING_ADAPTER, BindingSourceKind, CasillaId, Modelo, Period
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.resources import resources
+from ...core.resources import bundled_path
 from ...core.time import now
 from ...domain.calculations.registry import (
     MODELO_303_IVA_COMPENSATION_BINDING_ID,
@@ -61,6 +61,7 @@ from ...domain.calculations.registry import (
     RevisionId,
     binding_source_casilla_ids,
     expression_casilla_refs,
+    load_registry_tree,
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
     select_revision,
@@ -450,9 +451,10 @@ def _observation_from_iva_compensation_history(
     state: IvaCompensationPeriodState,
 ) -> RegistryModeloObservation:
     """Project secure IVA compensation history into the registry resolver contract."""
-    authority = resources().modelos.authority
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(candidate for candidate in modelos if candidate.id == Modelo.M303.value)
     revision = select_revision(
-        authority.modelo(Modelo.M303.value),
+        modelo,
         filing_year=state.filing_year,
         period=state.period.registry_token,
     )

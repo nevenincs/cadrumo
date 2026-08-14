@@ -29,8 +29,8 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG, Modelo
-from ...core.resources import resources
-from ...domain.calculations.registry import RevisionId, select_revision
+from ...core.resources import bundled_path
+from ...domain.calculations.registry import RevisionId, load_registry_tree, select_revision
 
 M145_COMMUNICATION_MODELO = Modelo.M145.value
 M145_COMMUNICATION_PERIOD = "comunicacion"
@@ -94,9 +94,10 @@ def build_m145_communication_service_contract(*, filing_year: int = 2026) -> M14
     the revision is read structurally (:func:`select_revision`) rather than
     through a filing-grade snapshot.
     """
-    authority = resources().modelos.authority
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(candidate for candidate in modelos if candidate.id == M145_COMMUNICATION_MODELO)
     revision = select_revision(
-        authority.modelo(M145_COMMUNICATION_MODELO),
+        modelo,
         filing_year=filing_year,
         period=M145_COMMUNICATION_PERIOD,
     )

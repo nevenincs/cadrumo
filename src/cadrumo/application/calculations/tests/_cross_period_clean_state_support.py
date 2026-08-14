@@ -15,9 +15,11 @@ from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ....core import CasillaId, Period
-from ....core.resources import resources
+from ....core import CasillaId, Period, RegistryAuthorityGrade
+from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import Modelo202Modality, RegistrySnapshot
+from ....domain.calculations.registry._loader import load_registry_tree
+from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
     CalculationRevision,
@@ -101,7 +103,24 @@ def _store_ready_profile(
 
 @cache
 def _snapshot_390() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("390", filing_year=_M390_YEAR, period=_M390_PERIOD)
+    """Build a CALCULATION-grade snapshot directly, bypassing filing-grade admission.
+
+    Modelo 390 carries a real fichero-BOE layout on every revision, so this
+    succeeds without going through
+    :class:`~domain.calculations.registry.ValidatedRegistryAuthority`, whose
+    ``.load()`` validates the entire registry tree -- including modelos with no
+    export layout at all -- and currently refuses unconditionally as a result.
+    """
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(candidate for candidate in modelos if candidate.id == "390")
+    return build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=_M390_YEAR,
+        period=_M390_PERIOD,
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
 
 
 def _m390_first_quarter_evidence(verdict: CrossPeriodCleanStateVerdict) -> CrossPeriodDependencyEvidence:

@@ -40,6 +40,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import RegistryAuthorityGrade
 from .....core.money import round_to_cents
 from .._formula_runtime import calculate_registry_snapshot
 from ._modelo_131_modulos_engine_support import (
@@ -562,7 +563,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
     """The pequeña-dimensión-ignorado and temporada/inicio-conflicto advisory-support flags."""
 
     def test_pequena_dimension_ignorado_flag_fires_on_especial_epigrafe(self) -> None:
-        snapshot = _committed_snapshot("131", 2025, "1T")
+        snapshot = _committed_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
@@ -577,7 +578,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
         assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("1")
 
     def test_pequena_dimension_ignorado_flag_stays_zero_on_ordinary_epigrafe(self) -> None:
-        snapshot = _committed_snapshot("131", 2025, "1T")
+        snapshot = _committed_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
@@ -591,7 +592,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
         assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("0")
 
     def test_pequena_dimension_ignorado_flag_stays_zero_when_not_declared(self) -> None:
-        snapshot = _committed_snapshot("131", 2025, "1T")
+        snapshot = _committed_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
@@ -602,7 +603,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
         assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("0")
 
     def test_temporada_inicio_conflicto_flag_fires_when_both_declared(self) -> None:
-        snapshot = _committed_snapshot("131", 2025, "1T")
+        snapshot = _committed_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
@@ -617,7 +618,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
         assert result.values["modulos-temporada-inicio-actividad-conflicto-flag"] == Decimal("1")
 
     def test_temporada_inicio_conflicto_flag_stays_zero_when_only_one_declared(self) -> None:
-        snapshot = _committed_snapshot("131", 2025, "1T")
+        snapshot = _committed_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,

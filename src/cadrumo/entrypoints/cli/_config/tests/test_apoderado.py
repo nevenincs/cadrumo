@@ -7,9 +7,9 @@ import pytest
 from pydantic import ValidationError
 
 from .....tests.cli_runner import invoke_typer_app
-from ._isolated_storage_fixture import isolated_storage
+from .....tests.profile_storage_root_fixture import profile_storage_root_fixture
 
-__all__ = ["isolated_storage"]
+__all__ = ["profile_storage_root_fixture"]
 
 from .....tests.secure_sql import isolated_profile_storage_root
 from ... import app as root_app
@@ -67,7 +67,7 @@ def test_apoderado_service_importable_and_has_cli_callers() -> None:
     assert "GENERALNT" in scope_codes
 
 
-def test_apoderado_happy_path_against_active_profile(isolated_storage: Path) -> None:
+def test_apoderado_happy_path_against_active_profile(profile_storage_root: Path) -> None:
     """status/configure/clear succeed against the active profile.
 
     The active-profile pointer carries the immutable UUID identity; the
@@ -183,7 +183,7 @@ def _create_active_profile() -> None:
     assert create.exit_code == 0, f"create failed: {create.output}"
 
 
-def test_apoderado_configure_without_nif_refuses_naming_the_flags(isolated_storage: Path) -> None:
+def test_apoderado_configure_without_nif_refuses_naming_the_flags(profile_storage_root: Path) -> None:
     """The interactive door under a non-interactive host names the recovery flags.
 
     Invoked without ``--represented-nif`` the verb opens the paged flow; the
@@ -202,7 +202,7 @@ def test_apoderado_configure_without_nif_refuses_naming_the_flags(isolated_stora
     assert "--represented-nif" in result.output, result.output
 
 
-def test_apoderado_configure_without_scope_lists_the_accepted_codes(isolated_storage: Path) -> None:
+def test_apoderado_configure_without_scope_lists_the_accepted_codes(profile_storage_root: Path) -> None:
     """A missing --scope refuses by enumerating the accepted catalogue codes."""
     from .....adapters.persistence.storage.sql.engine import dispose_engine
 
@@ -220,7 +220,7 @@ def test_apoderado_configure_without_scope_lists_the_accepted_codes(isolated_sto
     assert "GENERALNT" in result.output, result.output
 
 
-def test_apoderado_configure_rejects_invalid_nif_on_the_flags_path(isolated_storage: Path) -> None:
+def test_apoderado_configure_rejects_invalid_nif_on_the_flags_path(profile_storage_root: Path) -> None:
     """The flags path validates the represented NIF through the same identity authority.
 
     A malformed ``--represented-nif`` refuses (parity with the interactive
@@ -240,7 +240,7 @@ def test_apoderado_configure_rejects_invalid_nif_on_the_flags_path(isolated_stor
     assert "NOTANIF" not in result.output, f"raw represented NIF leaked: {result.output!r}"
 
 
-def test_apoderado_configure_leaves_profile_facts_untouched(isolated_storage: Path) -> None:
+def test_apoderado_configure_leaves_profile_facts_untouched(profile_storage_root: Path) -> None:
     """Configuring apoderado writes only to the ApoderadoService namespace.
 
     Representation is NOT a profile fact: the door routes writes to the
