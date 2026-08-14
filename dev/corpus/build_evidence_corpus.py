@@ -10,10 +10,10 @@ script, not shipped or imported by ``src/cadrumo``.
 from __future__ import annotations
 
 import hashlib
+import http.client
 import json
 import re
 import urllib.parse
-import urllib.request
 from pathlib import Path
 from typing import Final
 
@@ -24,19 +24,55 @@ _CLEAN_LICENCE_PATTERN = re.compile(
     r"(?:public domain|cc0|cc[- ]by(?:[- ]sa)?|pd(?:-old(?:-\d+)?)?|cc-pd-mark)(?:\s+\d+(?:\.\d+)*)?",
 )
 _MAX_BYTES = 4_000_000
+_COMMONS_API_HOST = "commons.wikimedia.org"
+_COMMONS_DOWNLOAD_HOSTS = frozenset({_COMMONS_API_HOST, "upload.wikimedia.org"})
+
+
+def _validated_https_target(url: str, *, allowed_hosts: frozenset[str]) -> tuple[str, str]:
+    parsed = urllib.parse.urlsplit(url)
+    hostname = parsed.hostname
+    if (
+        parsed.scheme != "https"
+        or hostname is None
+        or hostname.casefold() not in allowed_hosts
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.port is not None
+        or parsed.fragment
+    ):
+        raise ValueError(f"unexpected Wikimedia URL: {url!r}")
+    target = parsed.path or "/"
+    if parsed.query:
+        target += f"?{parsed.query}"
+    return hostname, target
+
+
+def _get_https(url: str, *, timeout: float, allowed_hosts: frozenset[str], maximum_bytes: int | None) -> bytes:
+    hostname, target = _validated_https_target(url, allowed_hosts=allowed_hosts)
+    connection = http.client.HTTPSConnection(hostname, timeout=timeout)
+    try:
+        connection.request("GET", target, headers={"User-Agent": _UA})
+        response = connection.getresponse()
+        if not 200 <= response.status < 300:
+            raise OSError(f"Wikimedia request returned HTTP {response.status}")
+        return response.read() if maximum_bytes is None else response.read(maximum_bytes)
+    finally:
+        connection.close()
 
 
 def _api(params: dict[str, str]) -> dict[str, object]:
     url = "https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(url, headers={"User-Agent": _UA})  # https Commons API
-    with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
-        return json.loads(resp.read().decode(_UTF_8))
+    payload = _get_https(url, timeout=30, allowed_hosts=frozenset({_COMMONS_API_HOST}), maximum_bytes=None)
+    return json.loads(payload.decode(_UTF_8))
 
 
 def _download(url: str) -> bytes:
-    req = urllib.request.Request(url, headers={"User-Agent": _UA})  # noqa: S310
-    with urllib.request.urlopen(req, timeout=60) as resp:  # noqa: S310
-        return resp.read(_MAX_BYTES + 1)
+    return _get_https(
+        url,
+        timeout=60,
+        allowed_hosts=_COMMONS_DOWNLOAD_HOSTS,
+        maximum_bytes=_MAX_BYTES + 1,
+    )
 
 
 def _licence_is_clean(short: str) -> bool:

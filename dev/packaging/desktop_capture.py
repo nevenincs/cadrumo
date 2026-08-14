@@ -32,13 +32,13 @@ independently testable functions.
 
 from __future__ import annotations
 
+import http.client
 import json
 import re
 import shutil
 import subprocess
 import time
-import urllib.error
-import urllib.request
+import urllib.parse
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
@@ -48,6 +48,9 @@ from typing import Any, Final
 _UTF_8: Final[str] = "utf-8"
 _NUMERIC_TOKEN_PATTERN: Final[re.Pattern[str]] = re.compile(r"(?<![0-9A-Za-z])\d(?:[\d., ]*\d)?(?![0-9A-Za-z])")
 _POWERSHELL: Final[str] = shutil.which("powershell.exe") or r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+_CDP_SCHEME: Final[str] = "http"
+_CDP_HOST: Final[str] = "127.0.0.1"
+_CDP_PATH: Final[str] = "/json/version"
 
 # The Store AppUserModelId and the running-process signature of Claude Desktop.
 # Discovered empirically (Get-AppxPackage Claude): the package family is stable,
@@ -541,6 +544,35 @@ def collect_seed_secrets(config_json_path: Path) -> tuple[str, ...]:
     return tuple(dict.fromkeys(value for value in document.values() if isinstance(value, str) and len(value) >= 32))
 
 
+def _validated_cdp_target(port: int) -> tuple[str, int, str]:
+    parsed = urllib.parse.urlsplit(f"{_CDP_SCHEME}://{_CDP_HOST}:{port}{_CDP_PATH}")
+    if (
+        parsed.scheme != _CDP_SCHEME
+        or parsed.hostname != _CDP_HOST
+        or parsed.port != port
+        or parsed.path != _CDP_PATH
+        or parsed.query
+        or parsed.fragment
+        or parsed.username is not None
+        or parsed.password is not None
+    ):
+        raise ValueError("CDP target is not the fixed local HTTP endpoint")
+    return parsed.hostname, parsed.port, parsed.path
+
+
+def _read_cdp_version(port: int) -> bytes:
+    host, validated_port, target = _validated_cdp_target(port)
+    connection = http.client.HTTPConnection(host, validated_port, timeout=5)
+    try:
+        connection.request("GET", target)
+        response = connection.getresponse()
+        if not 200 <= response.status < 300:
+            raise ConnectionError(f"CDP endpoint returned HTTP {response.status}")
+        return response.read()
+    finally:
+        connection.close()
+
+
 def wait_for_cdp(port: int, *, timeout_seconds: float = 60.0, poll_seconds: float = 1.0) -> dict[str, Any]:
     """Poll the CDP ``/json/version`` endpoint until the launched app answers.
 
@@ -552,13 +584,11 @@ def wait_for_cdp(port: int, *, timeout_seconds: float = 60.0, poll_seconds: floa
         DesktopCaptureError: If no CDP endpoint answers within the budget.
     """
     deadline = time.monotonic() + timeout_seconds
-    url = f"http://127.0.0.1:{port}/json/version"
     last_error = "no response"
     while time.monotonic() < deadline:
         try:
-            with urllib.request.urlopen(url, timeout=5) as response:  # fixed loopback CDP endpoint
-                return json.loads(response.read().decode(_UTF_8))
-        except (urllib.error.URLError, TimeoutError, ConnectionError, json.JSONDecodeError, OSError) as exc:
+            return json.loads(_read_cdp_version(port).decode(_UTF_8))
+        except (http.client.HTTPException, TimeoutError, ConnectionError, json.JSONDecodeError, OSError) as exc:
             last_error = str(exc)
             time.sleep(poll_seconds)
     raise DesktopCaptureError(
