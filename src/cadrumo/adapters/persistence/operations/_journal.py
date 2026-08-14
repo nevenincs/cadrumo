@@ -246,6 +246,8 @@ class _SnapshotJournalRepository(JournalRepositoryBase[_OperationJournalRecord])
                 self._validate_advance(current.snapshot, snapshot, expected_revision)
                 record = _OperationJournalRecord(snapshot=snapshot, history=(*current.history, *snapshot.events))
             else:
+                if snapshot.idempotency_claim is not None:
+                    raise RepositoryError("idempotent operation creation requires the journal create protocol")
                 self._validate_create(snapshot, expected_revision)
                 record = _OperationJournalRecord(snapshot=snapshot, history=snapshot.events)
             self._write(path, record)
@@ -330,8 +332,8 @@ def _validate_advance_consumed_interactions(
     current: OperationPersistedSnapshot,
     snapshot: OperationPersistedSnapshot,
 ) -> None:
-    consumed_before = tuple(item.interaction_id for item in current.consumed_interactions)
-    consumed_after = tuple(item.interaction_id for item in snapshot.consumed_interactions)
+    consumed_before = current.consumed_interactions
+    consumed_after = snapshot.consumed_interactions
     _raise_if(
         consumed_after[: len(consumed_before)] != consumed_before,
         "operation journal transition cannot rewrite consumed interaction history",
@@ -377,8 +379,13 @@ class OperationJournalRepository(OperationJournal, OperationEventStream):
         return self._repository.load(operation_id).snapshot
 
     @override
-    async def claim_idempotency(self, claim: OperationIdempotencyClaim) -> str:
-        return self._repository.claim_idempotency(claim)
+    async def resolve_idempotency(self, claim: OperationIdempotencyClaim) -> str | None:
+        return self._repository.resolve_idempotency(claim)
+
+    @override
+    async def create(self, snapshot: OperationPersistedSnapshot, *, lease: OperationOwnerLease) -> str:
+        """Create a complete initial journal before making an idempotency replay visible."""
+        return self._repository.create(snapshot, lease=lease)
 
     @override
     async def read_after(
