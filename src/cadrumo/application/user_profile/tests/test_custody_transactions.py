@@ -41,8 +41,8 @@ from ....core import BucketPointer, Period, capture_pointer, restore_pointer
 from ....core.config import Settings
 from ....domain.modelos import ModeloCode, ModeloRecord, derive_filing_record_id
 from ... import user_profile as user_profiles
-from ...evidence._profile_legal_hold import LegalHoldCaseAuthority
-from ...filing._profile_filing_retention import FilingRetentionAuthority
+from ...evidence import LegalHoldCaseAuthority
+from ...filing import FilingRetentionAuthority
 from .._custody_pointer import ProfileCustodyPointerSnapshot
 from .._custody_repository import compare_and_swap_profile_pointer, profile_custody_transaction_lock
 from .._custody_service import _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService
