@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-14'
-body_hash: 'sha256:3b265cef9b370a268e43b22e8b3e26adeee71cddb7e03fa3f249cedd08e3ae94'
+body_hash: 'sha256:968ca734afa67ea07b8e292594223bc431127babb8cd3e544a04f350873ff6c9'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -71,7 +71,7 @@ Run codebase-wide fixture canonicalization and the complete audit-remediation la
 Remove substitutable secure runtime and repository fixtures while preserving lifecycle and visibility.
 
 - [x] `W07.P18.S53` - Canonicalize duplicated LLM secure-runtime fixtures at their narrowest common owner; `src/cadrumo/llm/conftest.py, src/cadrumo/adapters/outbound/llm/conftest.py`.
-- [ ] `W07.P18.S54` - Canonicalize the secure-runtime-profile cluster after coordinating active secure-sql ownership; `src/cadrumo/tests/secure_sql.py, src/cadrumo/tests/profile_capsule.py`.
+- [x] `W07.P18.S54` - Canonicalize the secure-runtime-profile cluster after coordinating active secure-sql ownership; `src/cadrumo/tests/secure_sql.py, src/cadrumo/tests/profile_capsule.py`.
 - [x] `W07.P18.S55` - Canonicalize the exact secure-object-repository cluster without merging its divergent shape; `src/cadrumo/application/aggregation/tests, src/cadrumo/application/modelo/tests`.
 - [x] `W07.P18.S56` - Canonicalize fixed-master-key fixtures across persistence storage tests; `src/cadrumo/adapters/persistence/storage`.
 

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:d037cb4565151350755ed1f74ece4ee0e14c66d627f44bcee2dd2c92e8458b20'
+body_hash: 'sha256:f5fb9ffa6b724580676d33c94415d4ce1a3356622e4475ff8eaf0816184df9c1'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -15,6 +15,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W06-P17-S51]]'
   - '[[2026-08-14-test-harness-sanity-W06-P17-S52]]'
   - '[[2026-08-14-test-harness-sanity-W07-P18-S53]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P18-S54]]'
   - '[[2026-08-14-test-harness-sanity-W07-P18-S55]]'
   - '[[2026-08-14-test-harness-sanity-W07-P18-S56]]'
   - '[[2026-08-14-test-harness-sanity-W07-P19-S57]]'
@@ -72,6 +73,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W06-P17-S51` - Enroll the harness verdict in CI independently from unit and integration verdicts
 - `2026-08-14-test-harness-sanity-W06-P17-S52` - Prove the harness recipe selects every declared member and fails when membership collapses
 - `2026-08-14-test-harness-sanity-W07-P18-S53` - Canonicalize duplicated LLM secure-runtime fixtures at their narrowest common owner
+- `2026-08-14-test-harness-sanity-W07-P18-S54` - Canonicalize the secure-runtime-profile cluster after coordinating active secure-sql ownership
 - `2026-08-14-test-harness-sanity-W07-P18-S55` - Canonicalize the exact secure-object-repository cluster without merging its divergent shape
 - `2026-08-14-test-harness-sanity-W07-P18-S56` - Canonicalize fixed-master-key fixtures across persistence storage tests
 - `2026-08-14-test-harness-sanity-W07-P19-S57` - Canonicalize isolated profile-storage fixtures used by wizard and CLI profile tests

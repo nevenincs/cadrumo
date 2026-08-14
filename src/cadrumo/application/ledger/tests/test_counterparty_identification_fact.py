@@ -20,14 +20,12 @@ it as an answer would let a note correction silently withdraw the registration.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
 
 from ....domain.iva import EUMemberState, IvaTerritorialScope
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile
 from .._counterparty_establishment import (
     ConfirmedCounterpartyFactsRepository,
     CounterpartyEstablishmentConflictError,
@@ -35,23 +33,15 @@ from .._counterparty_establishment import (
     record_confirmed_counterparty_facts,
     resolve_confirmed_counterparty_facts,
 )
+from ._counterparty_fact_fixtures import repository, runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+__all__ = ["repository", "runtime_profile"]
 
 _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
 _ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
 _CIF = "B12345674"
-
-
-@pytest.fixture
-def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
-
-
-@pytest.fixture
-def repository(runtime_profile: TestRuntimeProfile) -> ConfirmedCounterpartyFactsRepository:
-    return ConfirmedCounterpartyFactsRepository(objects=runtime_profile.repository)
 
 
 def _confirm(
