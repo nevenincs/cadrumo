@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from .._authority import ValidatedRegistryAuthority
+from .....core import RegistryAuthorityGrade
 from .._errors import RegistryValidationError
 from .._formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .._schema import RegistrySnapshot
@@ -20,8 +21,15 @@ _FORMULA_ID = "renta-2024-capital-inmobiliario-reduccion-arrendamiento-vivienda-
 
 
 @pytest.fixture(scope="module")
-def m100_2024_snapshot(registry_authority: ValidatedRegistryAuthority) -> RegistrySnapshot:
-    return registry_authority.snapshot("100", filing_year=2024, period="0A", revision_id="2024")
+def m100_2024_snapshot(registry_snapshot: Callable[..., RegistrySnapshot]) -> RegistrySnapshot:
+    """A formula-runtime calculation claim, never a filing one."""
+    return registry_snapshot(
+        "100",
+        2024,
+        "0A",
+        revision_id="2024",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
 
 
 def _calculate(

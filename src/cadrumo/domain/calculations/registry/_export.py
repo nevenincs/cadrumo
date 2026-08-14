@@ -115,7 +115,7 @@ def derive_export_layouts_from_bindings(revision: ModeloRevision) -> tuple[Expor
         return ()
     bindings_by_record: dict[str, list[_BindingExportMember]] = {}
     for binding in revision.bindings:
-        selector = binding_export_selector(binding)
+        selector = binding_export_selector(binding, revision=revision)
         if selector is None:
             continue
         bindings_by_record.setdefault(selector.record, []).append((binding, selector))

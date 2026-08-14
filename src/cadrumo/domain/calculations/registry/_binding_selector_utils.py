@@ -9,9 +9,10 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ....core import STR_KEYED_MAPPING_ADAPTER
-from ....core.aggregation import BindingSourceKind
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from ._binding_aggregation import binding_aggregation_op
 from ._errors import RegistryValidationError
-from ._schema import DataBindingDefinition, OneBasedExportOffset
+from ._schema import DataBindingDefinition, ModeloRevision, OneBasedExportOffset
 
 __all__ = [
     "BindingExportDataType",
@@ -267,14 +268,36 @@ def _fields_owned_by(model_cls: type[BaseModel], raw: Mapping[str, object]) -> d
     return {key: value for key, value in raw.items() if key in known}
 
 
-def binding_export_selector(binding: DataBindingDefinition) -> BindingExportSelector | None:
+def binding_export_selector(
+    binding: DataBindingDefinition,
+    *,
+    revision: ModeloRevision,
+) -> BindingExportSelector | None:
     """Return the typed export projection embedded in ``binding.selector``.
 
     Binding source-family selectors remain authoritative for business facts.
     Export record resolution only needs the official record-coordinate
     projection; this helper parses that projection once into a typed fixed-field
     or row-field selector instead of letting callers probe the raw selector map.
+
+    A binding is only export-eligible when its OWN revision declares at least
+    one export layout; several unrelated source families (invoice,
+    previous_filing) reuse the field name ``record`` for their own, different
+    concepts, so calling this on a binding belonging to a layout-less revision
+    would misread a foreign field as an incomplete export claim. Every current
+    caller already checks ``revision.export_layouts`` before calling; this is
+    the same precondition enforced here too, so a future caller that forgets it
+    fails with a named cause instead of a misattributed completeness error.
+
+    Raises:
+        RegistryValidationError: When ``revision`` declares no export layouts
+            at all, or when the export projection ``binding`` declares is
+            malformed or incomplete.
     """
+    if not revision.export_layouts:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} is not export-eligible: its revision {revision.id!r} declares no export layout",
+        )
     try:
         projection = _BindingExportProjection.model_validate(
             _fields_owned_by(_BindingExportProjection, selector_as_dict(binding)),
@@ -294,10 +317,30 @@ def binding_row_set_selector(binding: DataBindingDefinition) -> BindingRowSetSel
     that names the detail grouping and the emitted row field, so callers parse
     that projection once instead of probing the raw selector map.
 
+    Only a ``BindingAggregationOp.ROWS`` binding is row-set-eligible; several
+    unrelated source families (invoice, previous_filing) reuse the field names
+    ``record`` / ``grouping`` / ``fact`` for their own, different concepts, so
+    calling this on a non-``ROWS`` binding would misread a foreign field as an
+    incomplete row-set claim. Every current caller already checks the
+    aggregation op before calling; this is the same precondition enforced here
+    too, so a future caller that forgets it fails with a named cause instead of
+    a misattributed completeness error.
+
     Returns:
         The parsed :class:`BindingRowSetSelector`, or ``None`` when the binding
         selector does not declare a row-set projection.
+
+    Raises:
+        RegistryValidationError: When ``binding`` is not row-set-eligible (its
+            resolved aggregation op is not ``rows``), or when the row-set
+            projection it declares is malformed or incomplete.
     """
+    op = binding_aggregation_op(binding)
+    if op != BindingAggregationOp.ROWS:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} is not row-set-eligible: aggregation op is {op.value!r}, "
+            f"not {BindingAggregationOp.ROWS.value!r}",
+        )
     try:
         projection = _BindingRowSetProjection.model_validate(
             _fields_owned_by(_BindingRowSetProjection, selector_as_dict(binding)),

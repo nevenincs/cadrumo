@@ -30,12 +30,13 @@ from .._binding_selector_utils import (
     BindingRowExportSelector,
     binding_export_selector,
 )
+from .._errors import RegistryValidationError
 from .._export import (
     _justification_for_binding_data_type,
     _padding_for_binding_data_type,
     export_fields_overlap,
 )
-from .._schema import CasillaFieldKind, DataBindingDefinition, ExportFieldDefinition
+from .._schema import CasillaFieldKind, DataBindingDefinition, ExportFieldDefinition, ModeloRevision
 from ._loader_directory_mode_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -237,6 +238,18 @@ def test_every_fixed_width_export_surface_refuses_zero_offset() -> None:
         BindingFixedExportSelector(record="DPA", offset=0, length=1, data_type="text")
 
 
+def _export_eligible_revision() -> ModeloRevision:
+    """Return a real committed revision declaring at least one export layout.
+
+    ``binding_export_selector`` now asserts its revision precondition itself;
+    these tests exercise the projection logic, not the precondition, so they
+    need a genuinely export-eligible revision in scope. The binding under test
+    is synthetic and unrelated to this revision's own bindings -- only
+    ``export_layouts`` non-emptiness is read by the precondition.
+    """
+    return _committed_modelo("390").revisions["2025"]
+
+
 def test_binding_export_selector_accepts_fixed_field_shape() -> None:
     binding = _binding(
         {
@@ -248,7 +261,7 @@ def test_binding_export_selector_accepts_fixed_field_shape() -> None:
         },
     )
 
-    selector = binding_export_selector(binding)
+    selector = binding_export_selector(binding, revision=_export_eligible_revision())
 
     assert isinstance(selector, BindingFixedExportSelector)
     assert selector.record == "DPA"
@@ -270,7 +283,7 @@ def test_binding_export_selector_accepts_row_field_shape() -> None:
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
     )
 
-    selector = binding_export_selector(binding)
+    selector = binding_export_selector(binding, revision=_export_eligible_revision())
 
     assert isinstance(selector, BindingRowExportSelector)
     assert selector.record == "perceptor"
@@ -288,13 +301,32 @@ def test_binding_export_selector_ignores_non_export_row_fact_without_record() ->
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
     )
 
-    assert binding_export_selector(binding) is None
+    assert binding_export_selector(binding, revision=_export_eligible_revision()) is None
 
 
 def test_binding_export_selector_ignores_value_data_type_without_record() -> None:
     binding = _binding({"casilla_id": "0168", "data_type": "boolean", "true_value": "N", "false_value": "S"})
 
-    assert binding_export_selector(binding) is None
+    assert binding_export_selector(binding, revision=_export_eligible_revision()) is None
+
+
+def test_binding_export_selector_rejects_layout_less_revision() -> None:
+    """A binding belonging to a revision with no export layout is refused by name.
+
+    ``m347``'s counterpart-summary bindings declare ``record`` for their OWN
+    ``_InvoiceSelector`` grouping concept, unrelated to export -- exactly the
+    shape that used to be misread as an incomplete export claim before the
+    precondition moved into the callee.
+    """
+    binding = _binding(
+        {"fact": "operator_count", "record": "m347_declarante_summary", "rectification_scope": "any"},
+        source=BindingSourceKind.COLLECTIBLE_INVOICE,
+    )
+    layout_less_revision = _committed_modelo("200").revisions["2024-y-siguientes"]
+    assert layout_less_revision.export_layouts == ()
+
+    with pytest.raises(RegistryValidationError, match="is not export-eligible"):
+        binding_export_selector(binding, revision=layout_less_revision)
 
 
 def test_binding_export_selector_rejects_partial_fixed_field_shape() -> None:

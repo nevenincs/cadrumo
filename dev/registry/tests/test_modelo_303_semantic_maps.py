@@ -31,9 +31,8 @@ from cadrumo.domain.calculations.registry import (
     ExportEncoding,
     RegistryRevisionInspection,
     RegistryValidationError,
-    bundled_authority,
-    bundled_revision_inspection,
 )
+from cadrumo.domain.calculations.registry._loader import load_registry_tree
 
 from .._export_tree import (
     _DECIMAL_CONTENT_RE,
@@ -72,6 +71,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _MODELO: Final[str] = "303"
 _MAPPING_ROOT: Final[Path] = Path("dev/registry/mappings/modelo_303")
 _PROFILE_ROOT: Final[Path] = Path("dev/registry/render_profiles/modelo_303")
+_SOURCE_ROOT: Final[Path] = Path("src/cadrumo/_data")
+_REGISTRY_ROOT: Final[Path] = _SOURCE_ROOT / "registry" / "aeat"
 #: The body records every bundled 303 design lays out, in official order.
 _RECORD_IDS: Final[tuple[str, ...]] = (
     "m303-declaration",
@@ -290,13 +291,14 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
             for ordinal, cohort, fact, slot, sub_index in _M303_2025_SUPERFICIE_ADDITIONS
         ),
         retired_homes=(
-            # The three transitional rungs lose their dated rate: [154] and
-            # [166] drop the Nota 8 and Nota 10 constants and [17] drops its
-            # Nota 9 enumeration, so each becomes a fixed mandated zero and
-            # its value stops coming from a casilla.
-            ("DP30301", 32, "casilla:154"),
+            # [17] loses its Nota 9 enumeration and becomes a plain mandated
+            # `Constante "00000"`. It is `manual` with no formula and no dated
+            # parameter, so no computed authority stands behind the slot and a
+            # literal is the faithful home; [154] and [166] keep their casilla
+            # homes precisely because they DO have one. Same design shape, two
+            # homes, decided by whether an authority exists rather than by how
+            # the slot reads.
             ("DP30301", 50, "casilla:17"),
-            ("DP30301", 81, "casilla:166"),
             # The DANA relief of RD-ley 6/2024 and 7/2024 was a 2024-only
             # measure; the 2025 design reclaims its slots as reserved space
             # and drops the Lorca eligibility flags with it.
@@ -415,15 +417,26 @@ def _discovered_design_epochs() -> tuple[str, ...]:
 _DESIGN_EPOCHS: Final[tuple[str, ...]] = _discovered_design_epochs()
 
 
-def _resolve_owning_inspection(source_ref: str) -> tuple[RegistryRevisionInspection, int]:
-    """Resolve the revision owning one record-design source, law-determined.
+#: These proofs verify AUTHORING artefacts -- semantic maps and render profiles --
+#: against the compiled design, so they read the compiler tier rather than
+#: `ValidatedRegistryAuthority`. The authority is a filing-grade gate that
+#: refuses a tree which cannot file yet, which is the state these maps exist to
+#: move the tree out of; asking it to load here would make map verification wait
+#: on an operator attestation it has no bearing on.
+@cache
+def _compiled_modelo():
+    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    return next(modelo for modelo in modelos if str(modelo.id) == _MODELO), catalogues
 
-    The revision is found by the design source it declares, and its coordinate
-    is then taken from its own published period selector and pushed BACK
-    through the canonical temporal resolver.  The stored revision id is only
-    ever asserted equal to what resolution returns, never fed into it.
+
+def _resolve_owning_inspection(source_ref: str) -> tuple[RegistryRevisionInspection, int]:
+    """Resolve the revision owning one record-design source, from its own declaration.
+
+    The revision is found BY the design source it declares, never by feeding a
+    stored revision id into resolution, and its filing year is read from that
+    revision's own published period selector.
     """
-    modelo = bundled_authority().modelo(_MODELO)
+    modelo, catalogues = _compiled_modelo()
     owners = tuple(revision for revision in modelo.revisions.values() if source_ref in revision.source_refs)
     if len(owners) != 1:
         raise AssertionError(
@@ -434,12 +447,14 @@ def _resolve_owning_inspection(source_ref: str) -> tuple[RegistryRevisionInspect
     selector = revision.period_selector
     filing_year = selector.years[0] if selector.years else selector.year_from
     assert filing_year is not None
-    inspection = bundled_revision_inspection(
-        _MODELO,
-        filing_year=int(filing_year),
-        period=str(selector.periods[0]),
+    inspection = RegistryRevisionInspection.from_revision(
+        modelo=modelo,
+        revision=revision,
+        source_root=_SOURCE_ROOT,
+        sources=catalogues.sources,
+        legal_ref_ids=frozenset(catalogues.legal),
     )
-    assert inspection.revision_id == revision.id
+    assert str(inspection.revision_id) == str(revision.id)
     return inspection, int(filing_year)
 
 
@@ -453,7 +468,7 @@ def _bundled_design_note_forms() -> tuple[_NoteBearingForm, ...]:
     the newest bundled designs -- the ones a future map will be authored
     against -- unexamined until somebody authored that map.
     """
-    modelo = bundled_authority().modelo(_MODELO)
+    modelo, _catalogues = _compiled_modelo()
     epochs_by_form: dict[tuple[str, str], set[str]] = {}
     for revision in modelo.revisions.values():
         design_refs = tuple(ref for ref in revision.source_refs if str(ref).startswith(_DESIGN_SOURCE_PREFIX))
@@ -710,7 +725,7 @@ def test_the_note_form_sweep_reaches_every_bundled_design_and_all_three_shapes()
     A sweep that silently reads nothing reports the same clean verdict as a
     corpus with no defect, so the reach is asserted before the property is.
     """
-    modelo = bundled_authority().modelo(_MODELO)
+    modelo, _catalogues = _compiled_modelo()
     declared_designs = {
         str(ref)
         for revision in modelo.revisions.values()
