@@ -6,9 +6,10 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:ca19afdf4b0c5e2c82e6221c6c27b634a9592a4b183708bcc8ec6e147bd189ba'
+body_hash: 'sha256:7de2912e29a87ccce3203330f127edc9fe53587ff19b2484d9dfad2f8696b1f7'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
+  - '[[2026-08-14-test-harness-sanity-W06-P17-S50]]'
   - '[[2026-08-14-test-harness-sanity-audit]]'
   - '[[2026-08-14-test-harness-sanity-plan]]'
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -32,6 +33,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 ### exec
 
 - `2026-08-14-test-harness-sanity-W06-P16-S47` - Implement the AST-backed fixture census with decorator scope autouse constraint owner and consumer fields
+- `2026-08-14-test-harness-sanity-W06-P17-S50` - Define the outer-serial harness recipe with explicit membership non-vacuity and exit-status preservation
 
 ### plan
 
