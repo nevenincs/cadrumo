@@ -30,7 +30,7 @@ ratchets like the lazy-import policy gate: adding an entry is a reviewed edit
 that must justify why the namespace cannot be registered.
 
 The incident seen three times is pinned at the bottom: the
-status-page lifecycle labels expand exactly the ``UserProfileStatus`` values,
+status-page setup-state labels expand exactly the ``ProfileSetupState`` values,
 and the verdict-factory and required/optional badge keys stay scanner-visible.
 """
 
@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.user_profile import UserProfileStatus
+from cadrumo.domain.user_profile import ProfileSetupState
 
 from .._ast_scanner import scan_namespace_markers, scan_source_tree
 from .._fstring_registry import get_registered_keys
@@ -210,21 +210,21 @@ def test_allowlist_entries_are_live_and_reasoned() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_status_page_registration_expands_exactly_user_profile_status() -> None:
-    """Incident 3: flows.status.profiles.status.* expands the UserProfileStatus set.
+def test_status_page_registration_expands_exactly_profile_setup_state() -> None:
+    """Incident 3: flows.status.profiles.status.* expands setup-state values.
 
     The status-page lifecycle labels are built by
     ``f"flows.status.profiles.status.{status.value}"`` and were caught only after
     a live English render. The registration must expand to exactly the
-    ``UserProfileStatus`` members — no more (dead leaves), no fewer (silent
+    ``ProfileSetupState`` members — no more (dead leaves), no fewer (silent
     blanks) — so a new lifecycle state cannot ship unlocalised.
     """
     registered_keys = get_registered_keys()
     expanded = {key for key in registered_keys if key.startswith("flows.status.profiles.status.")}
-    expected = {f"flows.status.profiles.status.{member.value}" for member in UserProfileStatus}
+    expected = {f"flows.status.profiles.status.{member.value}" for member in ProfileSetupState}
     assert expanded == expected, (
         "flows.status.profiles.status.* registration is out of sync with "
-        f"UserProfileStatus.\n  registered: {sorted(expanded)}\n  expected:   {sorted(expected)}\n"
+        f"ProfileSetupState.\n  registered: {sorted(expanded)}\n  expected:   {sorted(expected)}\n"
         "Update the registration in dev/locales/_fstring_registry.py."
     )
 

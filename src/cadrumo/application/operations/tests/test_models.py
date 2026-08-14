@@ -238,6 +238,26 @@ def test_terminal_receipt_enforces_result_and_refusal_meaning() -> None:
     )
     assert refusal.refusal_ref == "refusal:precondition"
 
+    failed = OperationTerminalReceipt(
+        identity=_identity(),
+        revision=1,
+        condition=OperationTerminalCondition.FAILED,
+        effect=OperationEffect.NONE,
+        settled_at=_NOW,
+        diagnostic_ref="sha256:0123456789ab",
+    )
+    assert failed.diagnostic_ref == "sha256:0123456789ab"
+
+    with pytest.raises(ValidationError):
+        OperationTerminalReceipt(
+            identity=_identity(),
+            revision=1,
+            condition=OperationTerminalCondition.FAILED,
+            effect=OperationEffect.NONE,
+            settled_at=_NOW,
+            diagnostic_ref="C:/Users/operator/private.log",
+        )
+
 
 def test_operation_identity_is_random_hex64_and_definition_ids_are_closed_by_shape() -> None:
     first = new_operation_id()

@@ -15,9 +15,10 @@ from .._events import (
     OperationLogRecord,
     OperationLogSeverity,
     OperationProgressEvent,
+    OperationReconciliationEvent,
     OperationTerminalEvent,
 )
-from .._models import OperationIdentity, OperationTerminalReceipt
+from .._models import OperationIdentity, OperationReconciliationOutcome, OperationTerminalReceipt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -106,6 +107,23 @@ def test_terminal_event_binds_exact_receipt_identity_revision_and_time() -> None
 
     with pytest.raises(ValidationError, match="revision does not match"):
         OperationTerminalEvent(**_base(revision=4), receipt=receipt)
+
+
+def test_reconciliation_event_round_trips_closed_outcome_and_opaque_lease_evidence() -> None:
+    adapter = TypeAdapter(OperationEvent)
+    event = OperationReconciliationEvent(
+        **_base(code="operation.reconciliation"),
+        outcome=OperationReconciliationOutcome.RECOVERED,
+        lease_evidence_ref="a" * 64,
+    )
+
+    assert adapter.validate_json(adapter.dump_json(event)) == event
+    with pytest.raises(ValidationError):
+        OperationReconciliationEvent(
+            **_base(code="operation.reconciliation"),
+            outcome="frontend_decision",
+            lease_evidence_ref="unsafe prose",
+        )
 
 
 def test_event_models_are_strict_frozen_and_codes_are_stable() -> None:

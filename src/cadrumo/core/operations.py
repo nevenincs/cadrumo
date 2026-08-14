@@ -78,6 +78,7 @@ class OperationEventKind(StrEnum):
     LOG = "log"
     EFFECT = "effect"
     NOTICE = "notice"
+    RECONCILIATION = "reconciliation"
     DIAGNOSTIC = "diagnostic"
     INTERACTION = "interaction"
     TERMINAL = "terminal"

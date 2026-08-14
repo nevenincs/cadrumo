@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 from collections.abc import Callable
 from pathlib import Path
+from typing import Protocol
 
 from ._errors import RegistryLoadError
 from ._loader_cache import toml_file_fingerprint
@@ -18,11 +19,28 @@ type RegistryFingerprintCache = dict[
 type DirectoryFingerprintCollector = Callable[[Path], RegistryPathFingerprints]
 type SourceFingerprintCollector = Callable[[Path], RegistryPathFingerprints]
 type BundledRootPredicate = Callable[[Path], bool]
-type LiveFingerprintLookup = Callable[
-    [Path, float, float, RegistryPathFingerprints | None],
-    RegistryPathFingerprints | None,
-]
 type FingerprintStore = Callable[..., None]
+
+
+class LiveFingerprintLookup(Protocol):
+    """Return the cached fingerprints for a root when its entry is still live.
+
+    A protocol rather than a bare ``Callable`` alias because the lookup takes
+    its window and comparison basis as keyword-only arguments, which a
+    positional ``Callable[...]`` signature cannot express.
+    """
+
+    def __call__(
+        self,
+        resolved: Path,
+        *,
+        now: float,
+        ttl: float,
+        directory_fingerprints: RegistryPathFingerprints | None,
+    ) -> RegistryPathFingerprints | None:
+        """Return the live cached fingerprints, or ``None`` to recollect."""
+        ...
+
 
 _registry_fingerprint_cache: RegistryFingerprintCache = {}
 
@@ -105,22 +123,43 @@ def collect_registry_tree_fingerprints_for_cache(
     collect_sources: SourceFingerprintCollector,
     store: FingerprintStore,
 ) -> RegistryPathFingerprints:
-    """Build a complete cache key while rejecting a concurrent directory edit."""
+    """Build a complete cache key while rejecting a concurrent directory edit.
+
+    A cached tuple may be served only where the freshness check that guards it
+    covers everything the tuple asserts. The entry holds the COMPLETE tree
+    fingerprint -- one ``(path, size, mtime_ns, content_digest)`` row per
+    directory and per TOML file -- and it is that tuple which keys the compiled
+    registry, the disk pickle and the validation verdict. The only cheap
+    freshness signal available is the directory walk, and writing to an existing
+    file moves no parent-directory stat on any mainstream filesystem, so a
+    directory-only check cannot speak for the per-file rows.
+
+    For the package-bundled tree the per-file rows carry an empty content digest
+    by construction (read-only package data, see
+    :func:`~domain.calculations.registry._loader_cache.is_bundled_registry_path`),
+    and its window is a declared bound on how often the 17k-entry walk is
+    redone rather than a claim about file content, so the directory-level check
+    is the whole of what its entry asserts. A mutable authoring tree's rows DO
+    carry content digests, and nothing short of re-reading the files can
+    validate them -- which is the entire cost the cache would be skipping. Such
+    a tree therefore recomputes its complete fingerprint on every call and is
+    neither served from nor written to the cache; the compiled result is still
+    reused through the fingerprint-keyed caches above.
+    """
     started = time.time()
     bundled = use_cache and is_bundled_root(resolved)
-    ttl = bundled_ttl if bundled else mutable_ttl
 
     if bundled:
-        hit = live_cached(resolved, now=started, ttl=ttl, directory_fingerprints=None)
+        hit = live_cached(resolved, now=started, ttl=bundled_ttl, directory_fingerprints=None)
         if hit is not None:
             return hit
 
     directory_fingerprints = collect_directory(resolved)
-    if use_cache:
+    if bundled:
         hit = live_cached(
             resolved,
             now=started,
-            ttl=ttl,
+            ttl=bundled_ttl,
             directory_fingerprints=directory_fingerprints,
         )
         if hit is not None:
@@ -134,13 +173,14 @@ def collect_registry_tree_fingerprints_for_cache(
             f"{resolved}: registry directory changed during cache fingerprinting; "
             "retry after concurrent registry writes settle",
         )
-    store(
-        resolved,
-        directory_fingerprints=refreshed_directory_fingerprints,
-        fingerprints=fingerprints,
-        walk_started=started,
-        bundled=bundled,
-    )
+    if bundled:
+        store(
+            resolved,
+            directory_fingerprints=refreshed_directory_fingerprints,
+            fingerprints=fingerprints,
+            walk_started=started,
+            bundled=bundled,
+        )
     return fingerprints
 
 

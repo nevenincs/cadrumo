@@ -62,6 +62,16 @@ def executor_factory() -> Executor:
     return Executor()
 
 
+class ResumableExecutor(Executor):
+    async def resume(self, request: OperationRequest[BaseModel], checkpoint: object, context: object) -> str | None:
+        del checkpoint
+        return await self.execute(request, context)
+
+
+def resumable_executor_factory() -> ResumableExecutor:
+    return ResumableExecutor()
+
+
 def capabilities() -> OperationCapabilities:
     return OperationCapabilities(
         durability=OperationDurability.RECORDED,
@@ -72,7 +82,7 @@ def capabilities() -> OperationCapabilities:
         sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
         conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
         owned_resources=frozenset(),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED}),
+        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
         close_policy=OperationClosePolicy.REQUEST_CANCEL,
     )
 
@@ -183,6 +193,94 @@ def test_definition_requires_explicit_reconciliation_and_projection_policy() -> 
     payload = definition(definition_id="profile.sync").model_dump()
     payload.pop("reconciliation_policy")
     with pytest.raises(ValidationError):
+        OperationDefinition.model_validate(payload)
+
+
+def test_definition_requires_unknown_effect_for_owner_loss_reconciliation() -> None:
+    payload = definition(definition_id="profile.sync").model_dump()
+    payload["capabilities"]["permitted_effects"] = frozenset({OperationEffect.NONE})
+
+    with pytest.raises(ValidationError, match="must permit unknown effect"):
+        OperationDefinition.model_validate(payload)
+
+
+def test_definition_allows_ephemeral_none_effect_without_owner_loss_unknown_effect() -> None:
+    payload = definition(definition_id="profile.ephemeral").model_dump()
+    payload["capabilities"] = {
+        **payload["capabilities"],
+        "durability": OperationDurability.EPHEMERAL,
+        "cancellation": OperationCancellation.UNSUPPORTED,
+        "deadline": OperationDeadline.ABSENT,
+        "replay": OperationReplayPolicy.NONE,
+        "baseline": OperationBaselinePolicy.NONE,
+        "sensitive_input": OperationSensitiveInputPolicy.NONE,
+        "conflict_scope": OperationConflictScope.NONE,
+        "permitted_effects": frozenset({OperationEffect.NONE}),
+        "close_policy": OperationClosePolicy.DETACH_ALLOWED,
+    }
+
+    resolved = OperationDefinition.model_validate(payload)
+
+    assert resolved.capabilities.durability is OperationDurability.EPHEMERAL
+    assert resolved.capabilities.permitted_effects == frozenset({OperationEffect.NONE})
+
+
+@pytest.mark.parametrize(
+    ("capabilities_payload", "interaction_kinds", "executor_type", "build", "message"),
+    (
+        (
+            {
+                "durability": OperationDurability.EPHEMERAL,
+                "replay": OperationReplayPolicy.NONE,
+                "conflict_scope": OperationConflictScope.NONE,
+                "permitted_effects": frozenset({OperationEffect.NONE}),
+            },
+            frozenset({OperationInteractionKind.REVIEW}),
+            ResumableExecutor,
+            resumable_executor_factory,
+            "resumable durability",
+        ),
+        (
+            {"durability": OperationDurability.RECORDED, "replay": OperationReplayPolicy.IDEMPOTENT_SUBMIT},
+            frozenset({OperationInteractionKind.REVIEW}),
+            ResumableExecutor,
+            resumable_executor_factory,
+            "resumable durability",
+        ),
+        (
+            {"durability": OperationDurability.RESUMABLE, "replay": OperationReplayPolicy.RESUMABLE},
+            frozenset(),
+            ResumableExecutor,
+            resumable_executor_factory,
+            "declared interaction checkpoint",
+        ),
+        (
+            {"durability": OperationDurability.RESUMABLE, "replay": OperationReplayPolicy.RESUMABLE},
+            frozenset({OperationInteractionKind.REVIEW}),
+            Executor,
+            executor_factory,
+            "resumable executor",
+        ),
+    ),
+)
+def test_definition_refuses_invalid_resume_policy_combinations(
+    capabilities_payload: dict[str, object],
+    interaction_kinds: frozenset[OperationInteractionKind],
+    executor_type: type[object],
+    build: object,
+    message: str,
+) -> None:
+    payload = definition(definition_id="profile.resume").model_dump()
+    payload["capabilities"] = {**payload["capabilities"], **capabilities_payload}
+    payload["interaction_kinds"] = interaction_kinds
+    payload["executor_factory"] = OperationExecutorFactory(
+        request_type=RequestPayload,
+        executor_type=executor_type,
+        build=build,
+    )
+    payload["reconciliation_policy"] = OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT
+
+    with pytest.raises(ValidationError, match=message):
         OperationDefinition.model_validate(payload)
 
 

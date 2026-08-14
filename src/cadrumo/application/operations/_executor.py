@@ -181,6 +181,20 @@ class OperationExecutor[RequestPayloadT: BaseModel](Protocol):
         ...
 
 
+@runtime_checkable
+class OperationResumableExecutor[RequestPayloadT: BaseModel](Protocol):
+    """Re-enter one declared pending-interaction checkpoint after owner recovery."""
+
+    async def resume(
+        self,
+        request: OperationRequest[RequestPayloadT],
+        checkpoint: OperationPendingInteraction,
+        context: OperationExecutorContext,
+    ) -> OperationReference | None:
+        """Resume from the exact durable checkpoint under a new supervisor lease."""
+        ...
+
+
 __all__ = [
     "OperationCancellationScope",
     "OperationCleanupOwner",
@@ -189,5 +203,6 @@ __all__ = [
     "OperationExecutor",
     "OperationExecutorContext",
     "OperationInteractionAccess",
+    "OperationResumableExecutor",
     "OperationSecureOperandLookup",
 ]

@@ -49,6 +49,7 @@ _LEGAL_REF = "ley-58-2003:art-29"
 #: A TOML literal for each manifest-only scalar, so the parametrized refusal
 #: can write a well-formed value for whichever field the marker enrols.
 _FIELD_LITERALS: dict[str, str] = {
+    "authority_grade": '"calculation"',
     "legal_refs": f'["{_LEGAL_REF}"]',
     "orden_aplicabilidad": f'["{_ORDEN_REF}"]',
     "valid_to": "2025-12-31",
@@ -213,7 +214,7 @@ def test_the_governance_stamp_is_manifest_only_by_type_not_by_a_second_marker() 
 
 def test_the_manifest_only_set_is_exactly_todays_marked_fields() -> None:
     """Pin the derived set, so a marker lost in a rebase is a red test."""
-    expected = REVISION_GOVERNANCE_FIELDS | {"legal_refs", "orden_aplicabilidad", "valid_to"}
+    expected = REVISION_GOVERNANCE_FIELDS | {"authority_grade", "legal_refs", "orden_aplicabilidad", "valid_to"}
 
     assert expected == REVISION_MANIFEST_ONLY_FIELDS
     assert set(ModeloRevision.model_fields) >= REVISION_MANIFEST_ONLY_FIELDS

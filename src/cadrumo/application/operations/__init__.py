@@ -33,6 +33,7 @@ from ._events import (
     OperationNoticeEvent,
     OperationPhaseEvent,
     OperationProgressEvent,
+    OperationReconciliationEvent,
     OperationTerminalEvent,
 )
 from ._executor import (
@@ -43,6 +44,7 @@ from ._executor import (
     OperationExecutor,
     OperationExecutorContext,
     OperationInteractionAccess,
+    OperationResumableExecutor,
     OperationSecureOperandLookup,
 )
 from ._interactions import (
@@ -79,6 +81,7 @@ from ._models import (
     OperationId,
     OperationIdempotencyClaim,
     OperationIdentity,
+    OperationReconciliationOutcome,
     OperationReference,
     OperationRequest,
     OperationRevision,
@@ -155,6 +158,8 @@ __all__ = [
     "OperationPersistedSnapshot",
     "OperationPhaseEvent",
     "OperationProgressEvent",
+    "OperationReconciliationEvent",
+    "OperationReconciliationOutcome",
     "OperationReconciliationPolicy",
     "OperationReference",
     "OperationRegistry",
@@ -166,6 +171,7 @@ __all__ = [
     "OperationRequest",
     "OperationResponseIntent",
     "OperationResponseToken",
+    "OperationResumableExecutor",
     "OperationRevision",
     "OperationSecureOperandLookup",
     "OperationSecureReferenceStore",

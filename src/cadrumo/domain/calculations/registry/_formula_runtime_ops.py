@@ -25,7 +25,6 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal
 from enum import StrEnum
-from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -41,7 +40,6 @@ from ._schema_rounding import RegistryRoundingCode
 if TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons
 
-    from ._authority import ValidatedRegistryAuthority
     from ._formula_runtime import EvalContext as _EvalContext
 
 _ZERO = Decimal("0")
@@ -445,13 +443,6 @@ def _require_non_empty(op: str, args: list[Decimal]) -> None:
         raise RegistryValidationError(f"formula op {op!r} expects at least one arg")
 
 
-@cache
-def _default_read_parameter_authority(root: Path, source_root: Path) -> ValidatedRegistryAuthority:
-    from ._authority import ValidatedRegistryAuthority
-
-    return ValidatedRegistryAuthority.load(root, source_root=source_root)
-
-
 def read_parameter(
     modelo_id: str,
     revision_id: RevisionId,
@@ -466,17 +457,24 @@ def read_parameter(
     snapshot callers, narrows to the selected
     :class:`~domain.calculations.registry.ModeloRevision`, and delegates the
     dated value lookup to :func:`resolve_parameter`.
+
+    The default registry root takes the identical path as an explicit one, and
+    neither may be memoised here. Every argument this function could be keyed on
+    -- a modelo id, a revision id, a parameter id, a root path -- is an argument
+    of a registry READ, and none of them moves when the registry itself moves, so
+    any memo at this level outlives the tree its value was compiled from.
+    :meth:`ValidatedRegistryAuthority.load` is the bound: it re-collects the
+    complete registry, treaty, supplementary-orden and source-evidence
+    fingerprints on every call and keys its own cache on them, so repeat reads of
+    an unchanged tree resolve to the same compiled authority while an edited tree
+    resolves to a new one.
     """
     from ....core.resources import bundled_path
     from ._authority import ValidatedRegistryAuthority
 
     source_root = bundled_path()
-    if registry_root is None:
-        root = bundled_path("registry", "aeat")
-        authority = _default_read_parameter_authority(root, source_root)
-    else:
-        root = registry_root
-        authority = ValidatedRegistryAuthority.load(root, source_root=source_root)
+    root = bundled_path("registry", "aeat") if registry_root is None else registry_root
+    authority = ValidatedRegistryAuthority.load(root, source_root=source_root)
     try:
         modelo_match = authority.modelo(modelo_id)
     except RegistrySnapshotError as exc:

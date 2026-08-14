@@ -131,9 +131,7 @@ document_id = "BOE-T-001"
 article = "1"
 permalink = "https://example.com/test"
 effective_from = 2025-01-01
-review_status = "reviewed"
-reviewed_at = 2025-01-01
-reviewed_by = "registry-test"
+review_status = "pending_review"
 required_text = ["test provision text"]
 
 [sources."test-source-001"]
@@ -205,8 +203,26 @@ source_refs = ["test-source-001"]
 """
 
 
+_SECOND_CASILLA_FRAGMENT_TOML = """
+[[revisions."2025".casillas]]
+id = "02"
+number = "02"
+section = ["test"]
+data_type = "integer"
+legal_refs = ["test-ley-001:art-1"]
+source_refs = ["test-source-001"]
+"""
+
+
 def test_authority_cache_invalidates_when_fragmented_revision_changes(tmp_path: Path) -> None:
-    """Authority caching must track recursive revision fragment fingerprints."""
+    """Authority caching must track recursive revision fragment fingerprints.
+
+    The mutation is confined to a fragment file BELOW the revision directory and
+    the scalar ``revision.toml`` manifest is asserted byte-identical across it.
+    A fingerprint walk that stopped at the manifest would therefore serve the
+    stale authority and red this test, rather than passing on a manifest change
+    that says nothing about recursive coverage.
+    """
 
     registry_root = tmp_path / "registry" / "aeat"
     legal_dir = registry_root / "legal"
@@ -229,20 +245,25 @@ def test_authority_cache_invalidates_when_fragmented_revision_changes(tmp_path: 
         _MINIMAL_REVISION_TOML_TEMPLATE.format(source_ref="test-source-001"),
     )
 
-    first = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
-    write_fragmented_revision(
-        revision_dir,
-        _MINIMAL_REVISION_TOML_TEMPLATE.format(source_ref="test-source-002"),
-    )
+    manifest = revision_dir / "revision.toml"
+    casilla_fragment = revision_dir / "casillas" / "0001-casillas.toml"
+    manifest_before = manifest.read_bytes()
 
-    from .._loader import clear_fingerprint_cache
+    clear_fingerprint_cache()
+    first = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+
+    casilla_fragment.write_text(
+        casilla_fragment.read_text(encoding="utf-8") + _SECOND_CASILLA_FRAGMENT_TOML,
+        encoding="utf-8",
+    )
+    assert manifest.read_bytes() == manifest_before
 
     clear_fingerprint_cache()
     second = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
 
     assert first is not second
-    assert first.modelo("999").revisions["2025"].source_refs == ("test-source-001",)
-    assert second.modelo("999").revisions["2025"].source_refs == ("test-source-002",)
+    assert tuple(casilla.id for casilla in first.modelo("999").revisions["2025"].casillas) == ("01",)
+    assert tuple(casilla.id for casilla in second.modelo("999").revisions["2025"].casillas) == ("01", "02")
 
 
 def test_authority_uses_fingerprint_backed_process_cache_and_invalidates(tmp_path: Path) -> None:

@@ -9,19 +9,21 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, Hex64Str, OperationEffect, OperationEventKind
+from ...core.identity import ContentDigest
 from ...core.time import validate_utc_aware
-from ._models import OperationIdentity, OperationRevision, OperationTerminalReceipt
+from ._models import (
+    OperationDiagnosticReference,
+    OperationIdentity,
+    OperationReconciliationOutcome,
+    OperationRevision,
+    OperationTerminalReceipt,
+)
 
 OperationEventSequence = Annotated[int, Field(ge=1)]
 OperationEventCode = Annotated[
     str,
     Field(min_length=3, max_length=128, pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"),
 ]
-OperationDiagnosticReference = Annotated[
-    str,
-    Field(pattern=r"^sha256:(?:[0-9a-f]{12}|[0-9a-f]{64})$"),
-]
-"""Opaque correlation fingerprint; never raw diagnostic or identity content."""
 
 
 class OperationLogSeverity(StrEnum):
@@ -88,6 +90,14 @@ class OperationNoticeEvent(_OperationEventBase):
     notice_code: OperationEventCode
 
 
+class OperationReconciliationEvent(_OperationEventBase):
+    """One credential-free durable classification of startup reconciliation."""
+
+    kind: Literal[OperationEventKind.RECONCILIATION] = OperationEventKind.RECONCILIATION
+    outcome: OperationReconciliationOutcome
+    lease_evidence_ref: ContentDigest
+
+
 class OperationDiagnosticEvent(_OperationEventBase):
     """Reference existing redacted diagnostics without duplicating capture."""
 
@@ -123,6 +133,7 @@ OperationEvent = Annotated[
     | OperationLogRecord
     | OperationEffectEvent
     | OperationNoticeEvent
+    | OperationReconciliationEvent
     | OperationDiagnosticEvent
     | OperationInteractionEvent
     | OperationTerminalEvent,
@@ -142,5 +153,6 @@ __all__ = [
     "OperationNoticeEvent",
     "OperationPhaseEvent",
     "OperationProgressEvent",
+    "OperationReconciliationEvent",
     "OperationTerminalEvent",
 ]

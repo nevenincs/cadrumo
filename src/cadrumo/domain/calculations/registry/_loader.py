@@ -543,8 +543,9 @@ def _merge_revision_manifest(path: Path, expected_revision_id: RevisionId, merge
 
     In the fragmented layout the ``revision.toml`` manifest carries ONLY scalar
     revision metadata (label, valid_from/valid_to, period_selector, legal_refs,
-    source_refs, orden_aplicabilidad, continuidad_validation) plus the declared
-    governance stamp (:data:`REVISION_GOVERNANCE_FIELDS`). Every per-section
+    source_refs, orden_aplicabilidad, continuidad_validation, authority_grade)
+    plus the declared governance stamp
+    (:data:`REVISION_GOVERNANCE_FIELDS`). Every per-section
     array-of-tables (bindings, casillas, formulas, verification_expectations, …)
     and the completeness_manifest live in per-section fragment subdirectories;
     an inline section table in ``revision.toml`` is a loud load error naming the
@@ -552,10 +553,12 @@ def _merge_revision_manifest(path: Path, expected_revision_id: RevisionId, merge
 
     Some of that scalar metadata is manifest-only in the other direction too
     (:data:`REVISION_MANIFEST_ONLY_FIELDS`): the governance stamp, because it is
-    an authorship and signoff claim about the whole revision, and ``legal_refs``,
+    an authorship and signoff claim about the whole revision, ``legal_refs``,
     ``orden_aplicabilidad`` and ``valid_to``, because they are the revision's
-    legal grounding, its approving ordenes and the date it stops applying.
-    :func:`_merge_revision_fragment_field` refuses all of them inside a section
+    legal grounding, its approving ordenes and the date it stops applying, and
+    ``authority_grade``, because it is the claim about how far the whole
+    revision's authority reaches.
+    :func:`_merge_revision_fragment` refuses all of them inside a section
     fragment rather than letting one hide among thousands of fragment files
     where no reviewer would look for it.
     """
@@ -572,13 +575,24 @@ def _merge_revision_manifest(path: Path, expected_revision_id: RevisionId, merge
 
 
 def _merge_revision_fragment(path: Path, expected_revision_id: RevisionId, merged_revision: dict[str, object]) -> None:
-    """Merge one per-section fragment TOML into a single raw revision payload."""
+    """Merge one per-section fragment TOML into a single raw revision payload.
+
+    Two refusals govern what a fragment may declare, and the narrower one runs
+    first. A manifest-only field is refused by
+    :func:`_reject_revision_fragment_field` with the instruction that moves it to
+    ``revision.toml``; every other foreign key is refused as not belonging to the
+    folder's owned section. Ordered the other way, the owned-section refusal
+    swallows every manifest-only key — no fragment folder is named after one —
+    and tells the author to find a different fragment folder for a field whose
+    only legal home is the manifest.
+    """
     raw_revision_table = _read_single_revision_table(path, expected_revision_id)
     if not raw_revision_table:
         raise RegistryLoadError(f"{path}: revision fragment declares no section fields")
     fragment_directory = path.relative_to(path.parents[1]).parts[0]
     section_name = "export_layouts" if fragment_directory == "export" else fragment_directory
     for key, value in raw_revision_table.items():
+        _reject_revision_fragment_field(path, key)
         if key != section_name:
             raise RegistryLoadError(
                 f"{path}: revision fragment folder {fragment_directory!r} may declare only its owned section; "
@@ -593,7 +607,6 @@ def _merge_revision_fragment_field(
     value: object,
     merged_revision: dict[str, object],
 ) -> None:
-    _reject_revision_fragment_field(path, key)
     if key == _REVISION_CONSTRUCTS:
         _merge_revision_fragment_constructs(path, value, merged_revision)
         return
