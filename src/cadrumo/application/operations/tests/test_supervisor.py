@@ -53,8 +53,11 @@ from .. import (
     OperationLeaseDisposition,
     OperationLifecycle,
     OperationOwnedResource,
+    OperationOwnerLease,
     OperationPendingInteraction,
     OperationPersistedSnapshot,
+    OperationReconciliationEvent,
+    OperationReconciliationOutcome,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationRejectResponse,
@@ -216,6 +219,55 @@ class ReviewExecutor:
     ) -> str | None:
         del request
         await context.interactions.request(_pending_interaction(context.identity))
+        return None
+
+
+class ResumableReviewExecutor:
+    """A real declared checkpoint executor that proves supervisor re-entry."""
+
+    def __init__(self) -> None:
+        self.resume_checkpoints: list[OperationPendingInteraction] = []
+
+    async def execute(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        del request
+        await context.interactions.request(_pending_interaction(context.identity))
+        return None
+
+    async def resume(
+        self,
+        request: OperationRequest[BaseModel],
+        checkpoint: OperationPendingInteraction,
+        context: OperationExecutorContext,
+    ) -> str | None:
+        del request
+        self.resume_checkpoints.append(checkpoint)
+        await context.events.phase("operation.phase.declared")
+        return None
+
+
+class ResumableIdleExecutor:
+    """A resumable declaration whose initial execution publishes no checkpoint."""
+
+    async def execute(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        del request, context
+        return None
+
+    async def resume(
+        self,
+        request: OperationRequest[BaseModel],
+        checkpoint: OperationPendingInteraction,
+        context: OperationExecutorContext,
+    ) -> str | None:
+        del request, checkpoint
+        await context.events.phase("operation.phase.declared")
         return None
 
 
@@ -592,13 +644,15 @@ def _capabilities(
     cancellation: OperationCancellation = OperationCancellation.UNSUPPORTED,
     deadline: OperationDeadline = OperationDeadline.ABSENT,
     owned_resources: frozenset[OperationOwnedResource] = frozenset(),
-    permitted_effects: frozenset[OperationEffect] = frozenset({OperationEffect.NONE}),
+    permitted_effects: frozenset[OperationEffect] = frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
+    durability: OperationDurability = OperationDurability.RECORDED,
+    replay: OperationReplayPolicy = OperationReplayPolicy.IDEMPOTENT_SUBMIT,
 ) -> OperationCapabilities:
     return OperationCapabilities(
-        durability=OperationDurability.RECORDED,
+        durability=durability,
         cancellation=cancellation,
         deadline=deadline,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
+        replay=replay,
         baseline=OperationBaselinePolicy.NONE,
         sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
         conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
@@ -614,6 +668,7 @@ def _definition(
     build: Callable[[], object],
     capabilities: OperationCapabilities | None = None,
     interaction_kinds: frozenset[OperationInteractionKind] = frozenset(),
+    reconciliation_policy: OperationReconciliationPolicy = OperationReconciliationPolicy.INTERRUPT,
 ) -> OperationDefinition:
     return OperationDefinition(
         definition_id="operation.supervisor.test",
@@ -627,7 +682,7 @@ def _definition(
         phase_codes=("operation.phase.declared",),
         interaction_kinds=interaction_kinds,
         capabilities=_capabilities() if capabilities is None else capabilities,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        reconciliation_policy=reconciliation_policy,
         permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
 
@@ -638,6 +693,7 @@ def _registry(
     build: Callable[[], object],
     capabilities: OperationCapabilities | None = None,
     interaction_kinds: frozenset[OperationInteractionKind] = frozenset(),
+    reconciliation_policy: OperationReconciliationPolicy = OperationReconciliationPolicy.INTERRUPT,
 ) -> OperationRegistry:
     return OperationRegistry(
         definitions=(
@@ -646,6 +702,7 @@ def _registry(
                 build=build,
                 capabilities=capabilities,
                 interaction_kinds=interaction_kinds,
+                reconciliation_policy=reconciliation_policy,
             ),
         )
     )
@@ -844,7 +901,9 @@ def test_start_settles_unexpected_executor_failure_with_correlated_opaque_diagno
                 build=lambda: executor,
                 capabilities=_capabilities(
                     owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
-                    permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED}),
+                    permitted_effects=frozenset(
+                        {OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}
+                    ),
                 ),
             ),
             journal=journal,
@@ -1904,8 +1963,378 @@ def test_reconcile_takes_over_expired_owner_settles_and_releases_scope(tmp_path:
         assert terminal.lifecycle is OperationLifecycle.TERMINAL
         assert terminal.terminal_condition is OperationTerminalCondition.INTERRUPTED
         assert terminal.effect is OperationEffect.UNKNOWN
+        replayed = asyncio.run(journal.read_after(operation_id, 0, limit=20))
+        outcomes = tuple(event.outcome for event in replayed.events if isinstance(event, OperationReconciliationEvent))
+        assert outcomes == (OperationReconciliationOutcome.INTERRUPTED,)
         assert released.current is None
         assert replacement == "6" * 64
+
+
+def test_reconcile_foreign_expired_lease_orphans_target_without_mutating_foreign_journal(tmp_path: Path) -> None:
+    """A target owns only its acquired takeover; the foreign operation record is untouched."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        storage_root = tmp_path / "durable-state"
+        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            lease_duration=timedelta(minutes=1),
+        )
+        target_id = asyncio.run(owner.submit(_request(subject_ref="subject:shared"), operation_id="3" * 64))
+        target = asyncio.run(journal.load(target_id))
+        scope_ref = operation_conflict_scope_reference(
+            definition_id=target.identity.definition_id,
+            subject_ref=target.identity.subject_ref,
+        )
+        target_lease = asyncio.run(leases.inspect(scope_ref, target_id, observed_at=_NOW)).current
+        assert target_lease is not None
+        foreign_at = _NOW + timedelta(minutes=2)
+        foreign_lease = OperationOwnerLease(
+            operation_id="6" * 64,
+            scope_ref=scope_ref,
+            owner_id="7" * 64,
+            token="8" * 64,
+            acquired_at=foreign_at,
+            expires_at=foreign_at + timedelta(minutes=1),
+        )
+        assert (
+            asyncio.run(leases.compare_and_swap(target_lease, foreign_lease, observed_at=foreign_at)).disposition
+            is OperationLeaseDisposition.TAKEN_OVER
+        )
+        foreign_snapshot = OperationPersistedSnapshot(
+            identity=OperationIdentity(
+                operation_id=foreign_lease.operation_id,
+                definition_id=target.identity.definition_id,
+                subject_ref=target.identity.subject_ref,
+            ),
+            request_reference=target.request_reference,
+            revision=0,
+            lifecycle=OperationLifecycle.CREATED,
+            started_at=foreign_at,
+            updated_at=foreign_at,
+            execution_deadline=None,
+            cleanup_deadline=None,
+            cancellation_requested_at=None,
+            cancellation_acknowledged_at=None,
+        )
+        asyncio.run(journal.create(foreign_snapshot, lease=foreign_lease))
+        foreign_path = storage_root / "operation-journals" / f"{foreign_lease.operation_id}.json"
+        foreign_before = foreign_path.read_bytes()
+        recovered_at = foreign_at + timedelta(minutes=2)
+        recovery = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="4" * 64,
+            token="5" * 64,
+            clock=lambda: recovered_at,
+        )
+
+        terminal = asyncio.run(recovery.reconcile(target_id))
+        released = asyncio.run(leases.inspect(scope_ref, target_id, observed_at=recovered_at))
+        replayed = asyncio.run(journal.read_after(target_id, 0, limit=20))
+
+    assert terminal.terminal_condition is OperationTerminalCondition.INTERRUPTED
+    assert terminal.effect is OperationEffect.UNKNOWN
+    assert tuple(event.outcome for event in replayed.events if isinstance(event, OperationReconciliationEvent)) == (
+        OperationReconciliationOutcome.ORPHANED,
+    )
+    assert foreign_path.read_bytes() == foreign_before
+    assert asyncio.run(journal.load(foreign_lease.operation_id)) == foreign_snapshot
+    assert released.current is None
+
+
+def test_reconcile_recovers_an_unstarted_expired_entry_with_new_durable_ownership(tmp_path: Path) -> None:
+    """A separate startup supervisor re-establishes only a provably effect-free created entry."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            lease_duration=timedelta(minutes=1),
+        )
+        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        recovery = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="4" * 64,
+            token="5" * 64,
+            clock=lambda: _NOW + timedelta(minutes=2),
+        )
+
+        recovered = asyncio.run(recovery.reconcile(operation_id))
+        restarted = asyncio.run(recovery.start(operation_id))
+
+    assert recovered.lifecycle is OperationLifecycle.CREATED
+    assert isinstance(recovered.events[0], OperationReconciliationEvent)
+    assert recovered.events[0].outcome is OperationReconciliationOutcome.RECOVERED
+    assert len(recovered.events[0].lease_evidence_ref) == 64
+    assert restarted.lifecycle is OperationLifecycle.RUNNING
+
+
+def test_reconcile_reenters_only_a_declared_valid_checkpoint(tmp_path: Path) -> None:
+    """A resumable definition resumes its actual executor, not merely its old snapshot."""
+    executors: list[ResumableReviewExecutor] = []
+
+    def build() -> ResumableReviewExecutor:
+        executor = ResumableReviewExecutor()
+        executors.append(executor)
+        return executor
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        registry = _registry(
+            executor_type=ResumableReviewExecutor,
+            build=build,
+            capabilities=_capabilities(
+                durability=OperationDurability.RESUMABLE,
+                replay=OperationReplayPolicy.RESUMABLE,
+            ),
+            interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+            reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
+        )
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            lease_duration=timedelta(minutes=1),
+        )
+        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        waiting = asyncio.run(owner.start(operation_id))
+        recovery = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="4" * 64,
+            token="5" * 64,
+            clock=lambda: _NOW + timedelta(minutes=2),
+        )
+
+        resumed = asyncio.run(recovery.reconcile(operation_id))
+        replayed = asyncio.run(journal.read_after(operation_id, 0, limit=20))
+
+    assert waiting.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
+    assert len(executors) == 2
+    assert executors[1].resume_checkpoints == [waiting.pending_interaction]
+    assert resumed.lifecycle is OperationLifecycle.RUNNING
+    assert resumed.pending_interaction is None
+    assert tuple(event.outcome for event in replayed.events if isinstance(event, OperationReconciliationEvent)) == (
+        OperationReconciliationOutcome.RESUMED,
+    )
+
+
+def test_reconcile_refuses_changed_undeclared_checkpoint_kind_before_reentry(tmp_path: Path) -> None:
+    """A checkpoint valid for the old registry cannot enter a changed definition."""
+    executors: list[ResumableReviewExecutor] = []
+
+    def build() -> ResumableReviewExecutor:
+        executor = ResumableReviewExecutor()
+        executors.append(executor)
+        return executor
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        owner_registry = _registry(
+            executor_type=ResumableReviewExecutor,
+            build=build,
+            capabilities=_capabilities(
+                durability=OperationDurability.RESUMABLE,
+                replay=OperationReplayPolicy.RESUMABLE,
+            ),
+            interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+            reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
+        )
+        owner = _supervisor(
+            registry=owner_registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            lease_duration=timedelta(minutes=1),
+        )
+        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        waiting = asyncio.run(owner.start(operation_id))
+        changed_registry = _registry(
+            executor_type=ResumableReviewExecutor,
+            build=build,
+            capabilities=_capabilities(
+                durability=OperationDurability.RESUMABLE,
+                replay=OperationReplayPolicy.RESUMABLE,
+            ),
+            interaction_kinds=frozenset({OperationInteractionKind.INPUT}),
+            reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
+        )
+        recovery = _supervisor(
+            registry=changed_registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="4" * 64,
+            token="5" * 64,
+            clock=lambda: _NOW + timedelta(minutes=2),
+        )
+
+        terminal = asyncio.run(recovery.reconcile(operation_id))
+        replayed = asyncio.run(journal.read_after(operation_id, 0, limit=20))
+
+    assert waiting.pending_interaction is not None
+    assert terminal.terminal_condition is OperationTerminalCondition.INTERRUPTED
+    assert terminal.effect is OperationEffect.UNKNOWN
+    assert len(executors) == 1
+    assert tuple(event.outcome for event in replayed.events if isinstance(event, OperationReconciliationEvent)) == (
+        OperationReconciliationOutcome.INTERRUPTED,
+    )
+
+
+def test_reconcile_refuses_resume_without_a_declared_valid_checkpoint(tmp_path: Path) -> None:
+    """An expired resumable definition without a checkpoint settles unknown interruption."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        registry = _registry(
+            executor_type=ResumableIdleExecutor,
+            build=ResumableIdleExecutor,
+            capabilities=_capabilities(
+                durability=OperationDurability.RESUMABLE,
+                replay=OperationReplayPolicy.RESUMABLE,
+            ),
+            interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+            reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
+        )
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            lease_duration=timedelta(minutes=1),
+        )
+        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        asyncio.run(owner.start(operation_id))
+        recovery = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="4" * 64,
+            token="5" * 64,
+            clock=lambda: _NOW + timedelta(minutes=2),
+        )
+
+        terminal = asyncio.run(recovery.reconcile(operation_id))
+
+    assert terminal.terminal_condition is OperationTerminalCondition.INTERRUPTED
+    assert terminal.effect is OperationEffect.UNKNOWN
+
+
+def test_reconcile_classifies_absent_lease_as_orphan_before_unknown_interruption(tmp_path: Path) -> None:
+    """An existing journal without a current durable lease cannot become a resumed operation."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        scope_ref = operation_conflict_scope_reference(
+            definition_id="operation.supervisor.test", subject_ref="subject:one"
+        )
+        observed = asyncio.run(leases.inspect(scope_ref, operation_id, observed_at=_NOW))
+        assert observed.current is not None
+        assert (
+            asyncio.run(leases.release(observed.current, observed_at=_NOW)).disposition
+            is OperationLeaseDisposition.RELEASED
+        )
+        recovery = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="4" * 64,
+            token="5" * 64,
+        )
+
+        terminal = asyncio.run(recovery.reconcile(operation_id))
+        replayed = asyncio.run(journal.read_after(operation_id, 0, limit=20))
+
+    assert terminal.terminal_condition is OperationTerminalCondition.INTERRUPTED
+    assert terminal.effect is OperationEffect.UNKNOWN
+    assert tuple(event.outcome for event in replayed.events if isinstance(event, OperationReconciliationEvent)) == (
+        OperationReconciliationOutcome.ORPHANED,
+    )
+
+
+def test_reconcile_refuses_active_or_corrupt_lease_without_journal_mutation(tmp_path: Path) -> None:
+    """Live or unreadable owner evidence never authorizes a reconciliation transition."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        storage_root = tmp_path / "durable-state"
+        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        journal_path = storage_root / "operation-journals" / f"{operation_id}.json"
+        journal_before = journal_path.read_bytes()
+        recovery = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="4" * 64,
+            token="5" * 64,
+        )
+
+        with pytest.raises(ValueError, match="active owner"):
+            asyncio.run(recovery.reconcile(operation_id))
+        assert journal_path.read_bytes() == journal_before
+
+        scope_ref = operation_conflict_scope_reference(
+            definition_id="operation.supervisor.test", subject_ref="subject:one"
+        )
+        lease_path = storage_root / "operation-journals" / f"{scope_ref}.lease.json"
+        lease_path.write_bytes(b"invalid durable lease")
+        with pytest.raises(RepositoryError, match="invalid operation lease"):
+            asyncio.run(recovery.reconcile(operation_id))
+        assert journal_path.read_bytes() == journal_before
 
 
 def test_settle_refuses_definition_forbidden_effect_before_cleanup_or_journal_mutation(tmp_path: Path) -> None:

@@ -5,7 +5,7 @@ from __future__ import annotations
 import secrets
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
-from enum import Enum
+from enum import Enum, StrEnum
 from pathlib import PurePath
 from typing import Annotated, cast
 from uuid import UUID
@@ -47,6 +47,15 @@ OperationDiagnosticReference = Annotated[
     Field(pattern=r"^sha256:(?:[0-9a-f]{12}|[0-9a-f]{64})$"),
 ]
 """Opaque correlation fingerprint; never diagnostic prose or identity content."""
+
+
+class OperationReconciliationOutcome(StrEnum):
+    """Closed durable classifications emitted only by the supervisor at restart."""
+
+    RECOVERED = "recovered"
+    RESUMED = "resumed"
+    INTERRUPTED = "interrupted"
+    ORPHANED = "orphaned"
 
 
 class OperationIdentity(BaseModel):
@@ -250,6 +259,7 @@ __all__ = [
     "OperationId",
     "OperationIdempotencyClaim",
     "OperationIdentity",
+    "OperationReconciliationOutcome",
     "OperationReference",
     "OperationRequest",
     "OperationRevision",

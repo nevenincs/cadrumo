@@ -8,11 +8,11 @@ from typing import cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, OperationInteractionKind
+from ...core import STRICT_FROZEN_CONFIG, OperationDurability, OperationEffect, OperationInteractionKind
 from ..operator_actions import ActionReference
 from ._capabilities import OperationCapabilities
 from ._events import OperationEventCode
-from ._executor import OperationExecutor
+from ._executor import OperationExecutor, OperationResumableExecutor
 from ._models import OperationDefinitionId, OperationIdentity, OperationRequest, OperationSnapshot
 
 
@@ -116,6 +116,18 @@ class OperationDefinition(BaseModel):
     def _validate_factory_request_type(self) -> OperationDefinition:
         if self.executor_factory.request_type is not self.request_type:
             raise ValueError("operation executor factory request type must match the definition request type")
+        if (
+            self.capabilities.durability is not OperationDurability.EPHEMERAL
+            and OperationEffect.UNKNOWN not in self.capabilities.permitted_effects
+        ):
+            raise ValueError("operation definition must permit unknown effect for owner-loss reconciliation")
+        if self.reconciliation_policy is OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT:
+            if self.capabilities.durability is not OperationDurability.RESUMABLE:
+                raise ValueError("checkpoint reconciliation requires resumable durability")
+            if not self.interaction_kinds:
+                raise ValueError("checkpoint reconciliation requires a declared interaction checkpoint")
+            if not issubclass(self.executor_factory.executor_type, OperationResumableExecutor):
+                raise ValueError("checkpoint reconciliation requires a resumable executor")
         return self
 
 

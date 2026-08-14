@@ -51,6 +51,7 @@ _EXPECTED_MEMBERS = {
         "log",
         "effect",
         "notice",
+        "reconciliation",
         "diagnostic",
         "interaction",
         "terminal",

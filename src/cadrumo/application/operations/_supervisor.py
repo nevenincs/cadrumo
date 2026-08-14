@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
+from typing import cast
 
 from pydantic import BaseModel
 
@@ -25,9 +26,11 @@ from ._events import (
     OperationInteractionEvent,
     OperationNoticeEvent,
     OperationPhaseEvent,
+    OperationReconciliationEvent,
     OperationTerminalEvent,
 )
 from ._execution_context import DefinitionBoundContext
+from ._executor import OperationResumableExecutor
 from ._interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
@@ -52,11 +55,12 @@ from ._models import (
     OperationId,
     OperationIdempotencyClaim,
     OperationIdentity,
+    OperationReconciliationOutcome,
     OperationRequest,
     OperationTerminalReceipt,
     new_operation_id,
 )
-from ._registry import OperationReconciliationPolicy, OperationRegistry
+from ._registry import OperationDefinition, OperationReconciliationPolicy, OperationRegistry
 from ._replay import OperationEventCursor, OperationReplayLimit, OperationReplayPage
 from ._supervisor_lease import OperationSupervisorLeaseMixin
 
@@ -638,9 +642,11 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self._resources.pop(operation_id, None)
 
     async def reconcile(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+        """Recover one startup entry only through its durable owner evidence."""
         snapshot = await self.inspect(operation_id)
         if snapshot.lifecycle is OperationLifecycle.TERMINAL:
             return snapshot
+        definition = self._registry.lookup(snapshot.identity.definition_id)
         scope_ref = operation_conflict_scope_reference(
             definition_id=snapshot.identity.definition_id,
             subject_ref=snapshot.identity.subject_ref,
@@ -649,23 +655,144 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         observed = await self._leases.inspect(scope_ref, operation_id, observed_at=now)
         if observed.disposition is OperationLeaseObservationDisposition.ACTIVE:
             raise ValueError("operation has active owner")
+        if observed.disposition is OperationLeaseObservationDisposition.ABSENT:
+            acquired = await self._leases.acquire(self._candidate(snapshot.identity, now), observed_at=now)
+            if acquired.disposition is not OperationLeaseDisposition.ACQUIRED or acquired.current is None:
+                raise ValueError("operation orphan lease acquisition was refused")
+            self._leases_by_operation[operation_id] = acquired.current
+            return await self._interrupt_reconciliation(
+                snapshot,
+                outcome=OperationReconciliationOutcome.ORPHANED,
+                lease_evidence_ref=acquired.evidence_ref,
+            )
         if observed.disposition is not OperationLeaseObservationDisposition.EXPIRED or observed.current is None:
-            raise ValueError("operation has no expired owner lease to take over")
+            raise ValueError("operation lease observation cannot establish startup reconciliation ownership")
+        checkpoint = snapshot.pending_interaction
+        may_resume = (
+            definition.reconciliation_policy is OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT
+            and self._is_valid_resume_checkpoint(snapshot, checkpoint, definition)
+        )
         takeover = self._candidate(snapshot.identity, now)
         taken_over = await self._leases.compare_and_swap(observed.current, takeover, observed_at=now)
         if taken_over.disposition is not OperationLeaseDisposition.TAKEN_OVER or taken_over.current != takeover:
             raise ValueError("operation expired owner lease takeover was refused")
         self._leases_by_operation[operation_id] = takeover
-        if (
-            self._registry.lookup(snapshot.identity.definition_id).reconciliation_policy
-            is OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT
-        ):
-            return snapshot
-        receipt = OperationTerminalReceipt(
+        if observed.current.operation_id != operation_id:
+            return await self._interrupt_reconciliation(
+                snapshot,
+                outcome=OperationReconciliationOutcome.ORPHANED,
+                lease_evidence_ref=taken_over.evidence_ref,
+            )
+        if snapshot.lifecycle is OperationLifecycle.CREATED:
+            return await self._record_reconciliation(
+                snapshot,
+                outcome=OperationReconciliationOutcome.RECOVERED,
+                lease_evidence_ref=taken_over.evidence_ref,
+            )
+        if may_resume:
+            assert checkpoint is not None
+            resumed = await self._record_reconciliation(
+                snapshot,
+                outcome=OperationReconciliationOutcome.RESUMED,
+                lease_evidence_ref=taken_over.evidence_ref,
+            )
+            return await self._resume_from_checkpoint(resumed, definition, checkpoint)
+        return await self._interrupt_reconciliation(
+            snapshot,
+            outcome=OperationReconciliationOutcome.INTERRUPTED,
+            lease_evidence_ref=taken_over.evidence_ref,
+        )
+
+    @staticmethod
+    def _is_valid_resume_checkpoint(
+        snapshot: OperationPersistedSnapshot,
+        checkpoint: OperationPendingInteraction | None,
+        definition: OperationDefinition,
+    ) -> bool:
+        """Accept only the exact persisted interaction checkpoint contract."""
+        return (
+            snapshot.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
+            and checkpoint is not None
+            and checkpoint.request.identity == snapshot.identity
+            and checkpoint.request.revision <= snapshot.revision
+            and checkpoint.request.interaction_id
+            not in {item.interaction_id for item in snapshot.consumed_interactions}
+            and checkpoint.request.kind in definition.interaction_kinds
+        )
+
+    async def _resume_from_checkpoint(
+        self,
+        snapshot: OperationPersistedSnapshot,
+        definition: OperationDefinition,
+        checkpoint: OperationPendingInteraction,
+    ) -> OperationPersistedSnapshot:
+        """Re-enter one registered executor from its declared durable checkpoint."""
+        executor = definition.executor_factory.create()
+        if not isinstance(executor, OperationResumableExecutor):
+            raise ValueError("checkpoint reconciliation executor is not resumable")
+        resumable_executor = cast(OperationResumableExecutor[BaseModel], executor)
+        payload = await self._operands.resolve(snapshot.request_reference, definition.request_type)
+        request = OperationRequest(
+            definition_id=snapshot.identity.definition_id,
+            subject_ref=snapshot.identity.subject_ref,
+            payload=payload,
+            idempotency_key=None,
+        )
+        context = DefinitionBoundContext(
+            snapshot=snapshot,
+            registry=self._registry,
+            operands=self._operands,
+            clock=self._clock,
+            resources=self._resources,
+            advance=self._advance,
+            acknowledge_cancellation=self._acknowledge_cancellation,
+        )
+        self._contexts[snapshot.identity.operation_id] = context
+        try:
+            await self._execute_with_deadlines(
+                identity=snapshot.identity,
+                context=context,
+                executor=resumable_executor.resume(request, checkpoint, context),
+            )
+        except Exception as error:
+            return await self._settle_executor_failure(context.snapshot, error)
+        return context.snapshot
+
+    async def _record_reconciliation(
+        self,
+        snapshot: OperationPersistedSnapshot,
+        *,
+        outcome: OperationReconciliationOutcome,
+        lease_evidence_ref: str,
+    ) -> OperationPersistedSnapshot:
+        event = OperationReconciliationEvent(
             identity=snapshot.identity,
-            revision=snapshot.revision + 1,
+            revision=0,
+            sequence=1,
+            timestamp=self._clock(),
+            code="operation.reconciliation",
+            outcome=outcome,
+            lease_evidence_ref=lease_evidence_ref,
+        )
+        return await self._advance(snapshot, lifecycle=snapshot.lifecycle, events=(event,))
+
+    async def _interrupt_reconciliation(
+        self,
+        snapshot: OperationPersistedSnapshot,
+        *,
+        outcome: OperationReconciliationOutcome,
+        lease_evidence_ref: str,
+    ) -> OperationPersistedSnapshot:
+        classified = await self._record_reconciliation(
+            snapshot,
+            outcome=outcome,
+            lease_evidence_ref=lease_evidence_ref,
+        )
+        receipt = OperationTerminalReceipt(
+            identity=classified.identity,
+            revision=classified.revision + 1,
             condition=OperationTerminalCondition.INTERRUPTED,
             effect=OperationEffect.UNKNOWN,
-            settled_at=now,
+            settled_at=self._clock(),
         )
-        return await self.settle(operation_id, receipt)
+        return await self.settle(classified.identity.operation_id, receipt)

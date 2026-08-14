@@ -171,7 +171,7 @@ def _capabilities() -> OperationCapabilities:
         sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
         conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
         owned_resources=frozenset(),
-        permitted_effects=frozenset({OperationEffect.NONE}),
+        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
         close_policy=OperationClosePolicy.DETACH_ALLOWED,
     )
 
