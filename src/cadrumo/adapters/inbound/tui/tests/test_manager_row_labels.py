@@ -100,7 +100,6 @@ def test_the_shipped_clave_route_row_never_renders_app_request() -> None:
     storage_value = "app_request"
     record = UserProfileRecord(
         profile_id="00000000-0000-4000-8000-0000000000c1",
-        display_name="Cl@ve route projection",
         facts=(UserProfileFact(path="auth.clave_movil_route", value=storage_value),),
     )
     overview = build_profile_overview(record)

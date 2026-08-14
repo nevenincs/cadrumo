@@ -3,30 +3,21 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
-from contextlib import suppress
+from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import Any
 
 from pydantic import BaseModel
 
 from ...core import Hex64Str, OperationCancellation, OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...core.async_cleanup import AsyncCloseable, close_async_resources
-from ._capabilities import OperationOwnedResource
 from ._events import (
-    OperationDiagnosticEvent,
-    OperationDiagnosticReference,
-    OperationEffectEvent,
     OperationEvent,
-    OperationEventCode,
     OperationInteractionEvent,
-    OperationLogRecord,
-    OperationLogSeverity,
     OperationNoticeEvent,
     OperationPhaseEvent,
-    OperationProgressEvent,
     OperationTerminalEvent,
 )
+from ._execution_context import DefinitionBoundContext
 from ._interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
@@ -34,6 +25,7 @@ from ._interactions import (
     OperationRejectResponse,
 )
 from ._journal import (
+    OperationEventStream,
     OperationJournal,
     OperationLeaseRepository,
     OperationPersistedSnapshot,
@@ -55,198 +47,20 @@ from ._models import (
     new_operation_id,
 )
 from ._registry import OperationReconciliationPolicy, OperationRegistry
+from ._replay import OperationEventCursor, OperationReplayLimit, OperationReplayPage
+from ._supervisor_lease import OperationSupervisorLeaseMixin
 
 _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS = 0.025
 _AWAIT_TERMINAL_MAX_BACKOFF_SECONDS = 0.25
 
 
-class _Cancellation:
-    def __init__(self) -> None:
-        self.cancellation_requested = False
-
-    async def acknowledge_cancellation(self) -> None:
-        self.cancellation_requested = True
-
-
-class _Deadlines:
-    execution_deadline: datetime | None = None
-    cleanup_deadline: datetime | None = None
-
-
-class _DefinitionBoundContext:
-    """One executor view whose declarations are checked before state mutation."""
-
-    def __init__(
-        self,
-        *,
-        snapshot: OperationPersistedSnapshot,
-        registry: OperationRegistry,
-        operands: OperationSecureReferenceStore,
-        clock: Callable[[], datetime],
-        resources: dict[OperationId, list[AsyncCloseable]],
-        advance: Callable[..., Awaitable[OperationPersistedSnapshot]],
-    ) -> None:
-        self.registry = registry
-        self.clock = clock
-        self.resources = resources
-        self.advance_transition = advance
-        self.snapshot = snapshot
-        self.identity = snapshot.identity
-        self.cancellation = _Cancellation()
-        self.deadlines = _Deadlines()
-        self.events = _DefinitionBoundEvents(self)
-        self.operands = operands
-        self.cleanup = _DefinitionBoundCleanup(self)
-        self.interactions = _DefinitionBoundInteractions(self)
-
-    async def advance(
-        self,
-        *,
-        lifecycle: OperationLifecycle,
-        events: tuple[OperationEvent, ...] = (),
-        pending: OperationPendingInteraction | None = None,
-        effect: OperationEffect | None = None,
-    ) -> None:
-        self.snapshot = await self.advance_transition(
-            self.snapshot,
-            lifecycle=lifecycle,
-            events=events,
-            pending=pending,
-            effect=effect,
-        )
-
-
-class _DefinitionBoundEvents:
-    def __init__(self, context: _DefinitionBoundContext) -> None:
-        self._context = context
-
-    async def phase(self, phase_code: OperationEventCode) -> None:
-        definition = self._context.registry.lookup(self._context.identity.definition_id)
-        if phase_code not in definition.phase_codes:
-            raise ValueError("operation phase is not declared by its definition")
-        event = OperationPhaseEvent(
-            identity=self._context.identity,
-            revision=0,
-            sequence=1,
-            timestamp=self._context.clock(),
-            code=phase_code,
-            phase_code=phase_code,
-        )
-        await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,))
-
-    async def progress(self, *, completed: int, total: int, unit_code: OperationEventCode | None = None) -> None:
-        event = OperationProgressEvent(
-            identity=self._context.identity,
-            revision=0,
-            sequence=1,
-            timestamp=self._context.clock(),
-            code="operation.progress",
-            completed=completed,
-            total=total,
-            unit_code=unit_code,
-        )
-        await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,))
-
-    async def log(
-        self,
-        *,
-        code: OperationEventCode,
-        severity: OperationLogSeverity,
-        diagnostic_ref: OperationDiagnosticReference | None = None,
-    ) -> None:
-        event = OperationLogRecord(
-            identity=self._context.identity,
-            revision=0,
-            sequence=1,
-            timestamp=self._context.clock(),
-            code=code,
-            severity=severity,
-            diagnostic_ref=diagnostic_ref,
-        )
-        await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,))
-
-    async def effect(self, effect: OperationEffect) -> None:
-        definition = self._context.registry.lookup(self._context.identity.definition_id)
-        if effect not in definition.capabilities.permitted_effects:
-            raise ValueError("operation effect is not declared by its definition")
-        event = OperationEffectEvent(
-            identity=self._context.identity,
-            revision=0,
-            sequence=1,
-            timestamp=self._context.clock(),
-            code="operation.effect",
-            effect=effect,
-        )
-        await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,), effect=effect)
-
-    async def notice(self, notice_code: OperationEventCode) -> None:
-        event = OperationNoticeEvent(
-            identity=self._context.identity,
-            revision=0,
-            sequence=1,
-            timestamp=self._context.clock(),
-            code=notice_code,
-            notice_code=notice_code,
-        )
-        await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,))
-
-    async def diagnostic(self, diagnostic_ref: OperationDiagnosticReference) -> None:
-        event = OperationDiagnosticEvent(
-            identity=self._context.identity,
-            revision=0,
-            sequence=1,
-            timestamp=self._context.clock(),
-            code="operation.diagnostic",
-            diagnostic_ref=diagnostic_ref,
-        )
-        await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,))
-
-
-class _DefinitionBoundCleanup:
-    def __init__(self, context: _DefinitionBoundContext) -> None:
-        self._context = context
-
-    def own(self, resource: AsyncCloseable, *, family: OperationOwnedResource) -> None:
-        definition = self._context.registry.lookup(self._context.identity.definition_id)
-        if family not in definition.capabilities.owned_resources:
-            raise ValueError("operation resource family is not declared by its definition")
-        self._context.resources.setdefault(self._context.identity.operation_id, []).append(resource)
-
-
-class _DefinitionBoundInteractions:
-    def __init__(self, context: _DefinitionBoundContext) -> None:
-        self._context = context
-
-    async def request(self, pending: OperationPendingInteraction) -> None:
-        definition = self._context.registry.lookup(self._context.identity.definition_id)
-        if pending.request.kind not in definition.interaction_kinds:
-            raise ValueError("operation interaction kind is not declared by its definition")
-        if pending.request.identity != self._context.identity:
-            raise ValueError("operation interaction identity does not match executor context")
-        successor_revision = self._context.snapshot.revision + 1
-        if pending.request.revision != successor_revision:
-            raise ValueError("operation interaction revision does not match checkpoint revision")
-        event = OperationInteractionEvent(
-            identity=self._context.identity,
-            revision=0,
-            sequence=1,
-            timestamp=self._context.clock(),
-            code="operation.interaction.pending",
-            interaction_id=pending.request.interaction_id,
-        )
-        await self._context.advance(
-            lifecycle=OperationLifecycle.WAITING_FOR_INTERACTION,
-            events=(event,),
-            pending=pending,
-        )
-
-
-class OperationSupervisor:
+class OperationSupervisor(OperationSupervisorLeaseMixin):
     def __init__(
         self,
         *,
         registry: OperationRegistry,
         journal: OperationJournal,
+        event_stream: OperationEventStream,
         leases: OperationLeaseRepository,
         operands: OperationSecureReferenceStore,
         owner_id: Hex64Str,
@@ -256,6 +70,7 @@ class OperationSupervisor:
     ) -> None:
         self._registry = registry
         self._journal = journal
+        self._event_stream = event_stream
         self._leases = leases
         self._operands = operands
         self._owner_id = owner_id
@@ -270,129 +85,6 @@ class OperationSupervisor:
 
         if lease_duration <= timedelta():
             raise ValueError("operation lease duration must be positive")
-
-    def _candidate(self, identity: OperationIdentity, now: datetime) -> OperationOwnerLease:
-        return OperationOwnerLease(
-            operation_id=identity.operation_id,
-            scope_ref=operation_conflict_scope_reference(
-                definition_id=identity.definition_id,
-                subject_ref=identity.subject_ref,
-            ),
-            owner_id=self._owner_id,
-            token=self._lease_token,
-            acquired_at=now,
-            expires_at=now + self._lease_duration,
-        )
-
-    def _lease_lock(self, operation_id: OperationId) -> asyncio.Lock:
-        """Return the supervisor-local guard for one durable owner lease."""
-        return self._lease_locks.setdefault(operation_id, asyncio.Lock())
-
-    def _renewal_interval_seconds(self) -> float:
-        """Bound scheduler wakeups without making scheduler time lease authority."""
-        return min(max(self._lease_duration.total_seconds() / 3, 0.001), 30.0)
-
-    async def _require_owned_lease(self, identity: OperationIdentity, now: datetime) -> OperationOwnerLease:
-        """Return this supervisor's exact live lease under its local CAS guard."""
-        async with self._lease_lock(identity.operation_id):
-            return await self._require_owned_lease_unlocked(identity, now)
-
-    async def _require_owned_lease_unlocked(
-        self,
-        identity: OperationIdentity,
-        now: datetime,
-    ) -> OperationOwnerLease:
-        """Return this supervisor's exact live lease, renewing it only by CAS."""
-        scope_ref = operation_conflict_scope_reference(
-            definition_id=identity.definition_id,
-            subject_ref=identity.subject_ref,
-        )
-        held = await self._load_owned_lease(identity, scope_ref=scope_ref, now=now)
-        if now >= held.expires_at:
-            raise ValueError("operation exact lease expired before renewal")
-        successor = OperationOwnerLease(
-            operation_id=held.operation_id,
-            scope_ref=held.scope_ref,
-            owner_id=held.owner_id,
-            token=held.token,
-            acquired_at=held.acquired_at,
-            expires_at=now + self._lease_duration,
-        )
-        if successor.expires_at <= held.expires_at:
-            return await self._retain_owned_lease(identity, scope_ref=scope_ref, held=held, now=now)
-        renewed = await self._leases.compare_and_swap(held, successor, observed_at=now)
-        if renewed.disposition is not OperationLeaseDisposition.RENEWED or renewed.current != successor:
-            raise ValueError("operation exact lease renewal was refused")
-        self._leases_by_operation[identity.operation_id] = successor
-        return successor
-
-    async def _load_owned_lease(
-        self,
-        identity: OperationIdentity,
-        *,
-        scope_ref: str,
-        now: datetime,
-    ) -> OperationOwnerLease:
-        held = self._leases_by_operation.get(identity.operation_id)
-        if held is not None:
-            if held.scope_ref != scope_ref:
-                raise ValueError("operation lease no longer matches this supervisor's conflict scope")
-            return held
-        observed = await self._leases.inspect(scope_ref, identity.operation_id, observed_at=now)
-        current = observed.current
-        if (
-            observed.disposition is not OperationLeaseObservationDisposition.ACTIVE
-            or current is None
-            or current.owner_id != self._owner_id
-            or current.token != self._lease_token
-        ):
-            raise ValueError("operation is not owned by this supervisor")
-        self._leases_by_operation[identity.operation_id] = current
-        return current
-
-    async def _retain_owned_lease(
-        self,
-        identity: OperationIdentity,
-        *,
-        scope_ref: str,
-        held: OperationOwnerLease,
-        now: datetime,
-    ) -> OperationOwnerLease:
-        observed = await self._leases.inspect(scope_ref, identity.operation_id, observed_at=now)
-        if observed.disposition is not OperationLeaseObservationDisposition.ACTIVE or observed.current != held:
-            raise ValueError("operation lease no longer matches this supervisor's exact held lease")
-        return held
-
-    async def _renew_while_executing(
-        self,
-        *,
-        identity: OperationIdentity,
-        executor: Coroutine[Any, Any, object],
-    ) -> None:
-        """Join one executor while renewing its exact durable lease on schedule."""
-        executor_task = asyncio.create_task(executor, name=f"operation-executor-{identity.operation_id}")
-        try:
-            while not executor_task.done():
-                done, pending = await asyncio.wait(
-                    (executor_task,),
-                    timeout=self._renewal_interval_seconds(),
-                )
-                if executor_task in done or not pending:
-                    break
-                await self._require_owned_lease(identity, self._clock())
-            await executor_task
-        finally:
-            if not executor_task.done():
-                executor_task.cancel()
-            with suppress(asyncio.CancelledError):
-                await executor_task
-
-    async def _release_exact_lease(self, lease: OperationOwnerLease, *, observed_at: datetime) -> None:
-        """Release one exact current lease and refuse any ownership loss."""
-        released = await self._leases.release(lease, observed_at=observed_at)
-        if released.disposition is not OperationLeaseDisposition.RELEASED:
-            raise ValueError("operation exact lease release was refused")
-        self._leases_by_operation.pop(lease.operation_id, None)
 
     async def submit(
         self, request: OperationRequest[BaseModel], *, operation_id: OperationId | None = None
@@ -444,17 +136,6 @@ class OperationSupervisor:
         if not isinstance(request.payload, request_type):
             raise ValueError("request payload does not match definition")
 
-    async def _resolve_idempotency(self, claim: OperationIdempotencyClaim | None) -> OperationId | None:
-        if claim is None:
-            return None
-        return await self._journal.resolve_idempotency(claim)
-
-    async def _resolve_conflict_submission(self, claim: OperationIdempotencyClaim | None) -> OperationId:
-        existing_operation_id = await self._resolve_idempotency(claim)
-        if existing_operation_id is not None:
-            return existing_operation_id
-        raise ValueError("operation conflict lease was not acquired")
-
     async def start(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Start one owned registered executor from its durable secure operand."""
         snapshot = await self.inspect(operation_id)
@@ -477,7 +158,7 @@ class OperationSupervisor:
             notice_code="operation.started",
         )
         running = await self._advance(snapshot, lifecycle=OperationLifecycle.RUNNING, events=(started,))
-        context = _DefinitionBoundContext(
+        context = DefinitionBoundContext(
             snapshot=running,
             registry=self._registry,
             operands=self._operands,
@@ -498,6 +179,16 @@ class OperationSupervisor:
     async def observe(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Return the latest durable operation observation."""
         return await self.inspect(operation_id)
+
+    async def replay(
+        self,
+        operation_id: OperationId,
+        cursor: OperationEventCursor,
+        *,
+        limit: OperationReplayLimit,
+    ) -> OperationReplayPage:
+        """Read one bounded authoritative event page after an exclusive cursor."""
+        return await self._event_stream.read_after(operation_id, cursor, limit=limit)
 
     async def detach(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         return await self.inspect(operation_id)
@@ -525,12 +216,6 @@ class OperationSupervisor:
                 backoff_seconds = min(backoff_seconds * 2, _AWAIT_TERMINAL_MAX_BACKOFF_SECONDS)
             else:
                 backoff_seconds = _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS
-
-    def _notify_durable_change(self, snapshot: OperationPersistedSnapshot) -> None:
-        """Signal one local durable commit while leaving journal bytes authoritative."""
-        operation_id = snapshot.identity.operation_id
-        self._durable_revisions[operation_id] = snapshot.revision
-        self._durable_change_events.setdefault(operation_id, asyncio.Event()).set()
 
     async def _advance(
         self,
