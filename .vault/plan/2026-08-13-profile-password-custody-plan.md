@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-14'
-body_hash: 'sha256:85dfc3fd424f2030465badb56f22b995fe57b1723cbfb7aea8a3b4079e73ff11'
+body_hash: 'sha256:c4607d94289d77f66f2980a4dc51a08545892b0123a2e4276d1cba227297da50'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -123,6 +123,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S48` - Have Sol Medium rule whether the profile values updated lifecycle event should have a production emitter, since the operator edit path writes facts while stamping strings that are not members of the event taxonomy, leaving the declared event with no emitter anywhere; `src/cadrumo/application/wizard/ and src/cadrumo/domain/buckets/`.
 - [ ] `W04.P07.S49` - Have Terra XHigh resolve the collision between capsule publication and the workflow repository, where reading workflow state materialises a database beneath the bucket directory that capsule publication then tries to claim by atomic no-replace rename, so the seeding idiom the discovery step itself shipped always refuses, and sweep every module still using that shape; `src/cadrumo/application/user_profile/ and src/cadrumo/application/workflow/ and src/cadrumo/application/modelo/tests/`.
 - [ ] `W04.P07.S50` - Have Terra XHigh make the profile-record session authority re-derive when the latched session does not serve the requested identity, since a latched authority is never refreshed on an in-process profile switch and every record read for the second profile refuses until the process restarts, which a one-command-per-process command line hides but a long-lived terminal or tool host does not; `src/cadrumo/application/user_profile/_profile_record_repository.py`.
+- [ ] `W04.P07.S53` - Have Terra XHigh stop the supervised key-derivation child from importing the custody package graph to perform one hash, since the child costs one point seven one seconds to import and zero point two seven five seconds to derive, so eighty-six percent of every wrap and unwrap is the import and only eleven percent is the cryptography, a cost paid on the production login path as well as in tests, and neither the memory nor the iteration parameter may be weakened to buy the time back; `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker.py and src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py`.
 
 ## Wave `W05` - end-to-end proof
 
