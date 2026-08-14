@@ -20,13 +20,15 @@ import re
 from pathlib import Path
 from typing import Final
 
+from dev._paths import REPO_ROOT, UTF_8
+
 _ARG_PATTERN: Final = re.compile(r"^\s*ARG\s+PYTHON_BASE_IMAGE=(?P<image>\S+)\s*$", re.MULTILINE)
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 
 def dockerfile_path() -> Path:
     """Return the repository-root ``Dockerfile`` that declares the base image."""
-    return Path(__file__).resolve().parents[2] / "Dockerfile"
+    return REPO_ROOT / "Dockerfile"
 
 
 def linux_base_image() -> str:

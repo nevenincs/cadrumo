@@ -20,6 +20,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, Literal, cast
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from .error_code_default_suggestion_preimage_ledger import (
     SOURCE_COMMIT,
     ErrorCodeDefaultPreimageError,
@@ -46,10 +48,9 @@ __all__ = [
 ]
 
 
-REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 DEFAULT_REHOMING_LEDGER_PATH: Final[Path] = REPO_ROOT / "dev" / "quality" / "error_code_default_recovery_rehoming.toml"
 _PLAN_PATH: Final[Path] = REPO_ROOT / ".vault" / "plan" / "2026-08-09-cli-action-envelope-hardening-plan.md"
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _SCHEMA_VERSION: Final[int] = 1
 _STEP_PREFIX: Final[str] = "S"
 _TOP_LEVEL_FIELDS: Final[frozenset[str]] = frozenset({"meta", "rehoming"})

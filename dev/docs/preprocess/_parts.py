@@ -19,10 +19,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
+from dev._paths import UTF_8
+
 from ._schema import PreprocessOutput, PreprocessUnit
 from ._sidecar import write_sidecar
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 #: Indexable text sidecars must stay under the walker's 10 MB file cap. A
 #: source whose full rendering would exceed this budget is split across

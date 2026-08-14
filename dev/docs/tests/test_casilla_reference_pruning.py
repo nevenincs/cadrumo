@@ -19,11 +19,13 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..casilla_reference import generate_casilla_reference
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 
 def _generated_casilla_dir(docs_root: Path) -> Path:

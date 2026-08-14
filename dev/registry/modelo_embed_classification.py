@@ -50,7 +50,8 @@ from functools import cache
 from pathlib import Path
 from typing import Final
 
-REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+from dev._paths import REPO_ROOT, UTF_8
+
 SOURCE_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo"
 REGISTRY_PACKAGE_ROOT: Final[Path] = SOURCE_ROOT / "domain" / "calculations" / "registry"
 LEDGER_PATH: Final[Path] = Path(__file__).with_suffix(".toml")
@@ -77,7 +78,7 @@ __all__ = [
     "render_ledger",
 ]
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _SCHEMA_VERSION: Final[int] = 1
 _MODULE_SCOPE: Final[str] = "<module>"
 

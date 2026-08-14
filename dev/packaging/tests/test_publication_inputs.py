@@ -16,6 +16,7 @@ from typing import Final
 import pytest
 
 from cadrumo.tests.env_scope import scoped_env_var
+from dev._paths import REPO_ROOT
 
 from ...docs.download_matrix import Availability, DownloadDescriptor, claimed_channels, load_descriptor
 from ..publication_inputs import (
@@ -38,7 +39,7 @@ from ..publication_inputs import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
+_REPO_ROOT: Final[Path] = REPO_ROOT
 _SCOOP: Final[str] = "scoop"
 _HOMEBREW: Final[str] = "homebrew"
 

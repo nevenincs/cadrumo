@@ -24,9 +24,11 @@ from typing import Final
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 #: Every module the docs build, the docs gates, and the preprocess hook load.
 _DOCS_WORK_MODULES: Final[tuple[str, ...]] = (

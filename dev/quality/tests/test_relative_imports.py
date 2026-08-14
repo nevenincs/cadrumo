@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..relative_imports import _package_for_path, _scan_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -36,7 +38,7 @@ def test_scanner_permits_cross_package_and_relative_imports(tmp_path: Path) -> N
 
 def test_package_owner_resolves_only_governed_roots() -> None:
     """Target routing covers both package roots and rejects boundary files."""
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = REPO_ROOT
     assert _package_for_path(repo_root / "src" / "cadrumo" / "core" / "__init__.py") == "cadrumo"
     assert _package_for_path(repo_root / "dev" / "quality" / "relative_imports.py") == "dev"
     assert _package_for_path(repo_root / "tests" / "test_example.py") is None

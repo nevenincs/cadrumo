@@ -14,12 +14,11 @@ separate sparse-relevance axis.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority
+from dev._paths import REPO_ROOT
 
 from ..casilla_reference import CasillaReferenceResult, render_casilla_reference
 from ..terminology._casilla_anchor import casilla_page_anchor, casilla_reference_target
@@ -31,7 +30,7 @@ from ..terminology._unified_record import to_search_record
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _M130_CASILLA_15_SOURCE = (
     "src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/"
     "casillas/c01__csaldo-negativo-fin-periodo.toml"

@@ -34,6 +34,8 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from ._schema import ExtractionStatus, PreprocessOutput
 
 if TYPE_CHECKING:
@@ -46,7 +48,7 @@ UPSTREAM_SCHEMA_VERSION: Final[int] = 1
 
 _EXIT_UNSUPPORTED: Final[int] = 2
 _EXIT_EMPTY: Final[int] = 3
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 __all__ = [
     "UPSTREAM_SCHEMA_VERSION",
@@ -164,7 +166,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("path", type=Path, help="Source file matched by a preprocess rule.")
     args = parser.parse_args(argv)
     source: Path = args.path
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = REPO_ROOT
     try:
         outputs = build_for_source(source, repo_root=repo_root)
     except LookupError as error:

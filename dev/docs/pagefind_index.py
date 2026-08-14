@@ -54,6 +54,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+from dev._paths import UTF_8
+
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
 
@@ -69,7 +71,7 @@ InjectCallback = Callable[["PagefindIndex"], Awaitable[None]]
 #: ``data-pagefind-ignore`` on the ``<body>`` of each page drops it from the
 #: index (the page's anchors stay in the DOM for the deep links to resolve).
 _PAGEFIND_EXCLUDED_SUBDIRS: Final[tuple[str, ...]] = ("_generated/casillas",)
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 _BODY_TAG_RE: Final[re.Pattern[str]] = re.compile(r"<body\b(?![^>]*\bdata-pagefind-ignore\b)")
 

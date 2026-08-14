@@ -19,6 +19,8 @@ from typing import Any, Final
 
 import pytest
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from ..marketplace_publish import (
     _SUPERSESSION_REPORT,
     MarketplacePublishError,
@@ -32,7 +34,7 @@ from ..marketplace_publish import _read_cohort_index as read_cohort_index
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _INDEX: Final[Path] = Path(".claude-plugin") / "marketplace.json"
 
 
@@ -507,7 +509,7 @@ def test_the_shipped_cohort_manifest_retires_the_former_product_identity() -> No
     the declaration that retires it on the first publication and keeps refusing
     its resurrection on every later one.
     """
-    scaffold = Path(__file__).resolve().parents[3] / "packaging" / "marketplace"
+    scaffold = REPO_ROOT / "packaging" / "marketplace"
     index = read_cohort_index(scaffold)
     assert superseded_names(index) == frozenset({"aeat"})
     declared = {entry["name"] for entry in index["plugins"]}

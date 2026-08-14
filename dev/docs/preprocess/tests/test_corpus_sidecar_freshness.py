@@ -67,6 +67,8 @@ from typing import Final
 import pytest
 from pydantic import ValidationError
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from .._html import build_outputs
 from .._parts import part_stand_in_path
 from .._schema import PreprocessOutput
@@ -81,7 +83,7 @@ from .._sidecar import (
 pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
 
 # dev/docs/preprocess/tests/test_corpus_sidecar_freshness.py -> parents[4] is repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[4]
+_REPO_ROOT = REPO_ROOT
 _CORPUS_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 
 # A single BOE article slice, small and single-part: the anti-tautology proof
@@ -98,7 +100,7 @@ _MINIMUM_EXPECTED_SIDECARS = 400
 #: sidecar sits beside is its name with that infix removed.
 _PART_INFIX = re.compile(r"\.part-\d+$")
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 
 def _payload_beside(json_path: Path) -> Path:

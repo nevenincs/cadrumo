@@ -17,13 +17,14 @@ documents — so this gate also asserts that scoping statement survives.
 from __future__ import annotations
 
 import tomllib
-from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 _PROJECT_DIRS = {
     "cadrumo": _REPO_ROOT,

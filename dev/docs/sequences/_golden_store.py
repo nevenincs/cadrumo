@@ -47,6 +47,7 @@ from pydantic import BaseModel, Field, JsonValue, StringConstraints, ValidationE
 
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.observability import GOLDEN_MASK_FIELDS, MASK_SENTINEL
+from dev._paths import REPO_ROOT, UTF_8
 
 from ._errors import SequenceGoldenError
 from ._runner import CapturedValue, EnvelopeSource, SequenceTranscript
@@ -73,7 +74,7 @@ __all__ = [
     "write_golden",
 ]
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 #: Stable token replacing the per-run isolated storage root in text frames.
 SANDBOX_STORAGE_ROOT_TOKEN: str = "<sandbox-storage-root>"  # noqa: S105 - a display placeholder, not a secret
@@ -122,7 +123,7 @@ def _repo_root() -> Path:
     :func:`default_goldens_root`, so it equals the prefix of the absolute corpus
     and data paths the CLI emits from this checkout.
     """
-    return Path(__file__).resolve().parents[3]
+    return REPO_ROOT
 
 
 def _path_replacements(*, storage_root: str, workdir: str) -> list[tuple[str, str]]:
@@ -249,7 +250,7 @@ def default_goldens_root() -> Path:
     Resolved relative to this module so the engine finds goldens regardless of
     the process working directory (the same anchoring as seeds and fixtures).
     """
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = REPO_ROOT
     return repo_root / "docs" / "_sequences"
 
 

@@ -49,14 +49,15 @@ import re
 import shlex
 import subprocess
 import sys
-from pathlib import Path
 from typing import Final, NamedTuple
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_REPO_ROOT: Final = Path(__file__).resolve().parents[3]
+_REPO_ROOT: Final = REPO_ROOT
 _JUSTFILE: Final = _REPO_ROOT / "justfile"
 _TARGET_DIRECTORY: Final = "dev/packaging/tests"
 _COLLECT_TIMEOUT_SECONDS: Final = 300

@@ -47,13 +47,15 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from ..packaging.cohort_manifest import ArtifactKind
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from typing import Self
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 #: Marker slug for the generated zone in ``docs/download.md`` (the
 #: ``vaultspec:generated`` convention shared with the CLI reference).
@@ -260,13 +262,13 @@ class DownloadDescriptor(BaseModel):
 
 def descriptor_path(repo_root: Path | None = None) -> Path:
     """Return the descriptor path under ``docs/_data``."""
-    root = repo_root or Path(__file__).resolve().parents[2]
+    root = repo_root or REPO_ROOT
     return root / "docs" / "_data" / "download_channels.toml"
 
 
 def download_page_path(repo_root: Path | None = None) -> Path:
     """Return the ``docs/download.md`` page path."""
-    root = repo_root or Path(__file__).resolve().parents[2]
+    root = repo_root or REPO_ROOT
     return root / "docs" / "download.md"
 
 

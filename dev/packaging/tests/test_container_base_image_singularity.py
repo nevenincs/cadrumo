@@ -33,15 +33,16 @@ from __future__ import annotations
 
 import ast
 import re
-from pathlib import Path
 
 import pytest
+
+from dev._paths import REPO_ROOT
 
 from .._base_image import dockerfile_path, linux_base_image
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 # Distributions whose package names the Dockerfile's explicit apt list is
 # written against. A base tag that does not pin one of these is a moving

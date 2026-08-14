@@ -25,6 +25,7 @@ from cadrumo.domain.calculations.registry._modelo_localization import (
     casilla_occurrence_locale_key,
 )
 from cadrumo.domain.calculations.registry._schema_base import ContinuidadId
+from dev._paths import REPO_ROOT as _REPO_ROOT
 
 from ..adjudications import (
     AdjudicationError,
@@ -55,8 +56,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 # restated here, so a change to the real annotation fails this gate instead of
 # silently diverging from a copied regex.
 _CHAIN_ID_ADAPTER = TypeAdapter(ContinuidadId)
-
-_REPO_ROOT = Path(__file__).resolve().parents[4]
 
 # The chain H1 already stamped into the corpus. The scheme must reproduce it
 # exactly, or the scheme supersedes a landed stamp without saying so.

@@ -15,6 +15,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import (
     InjectionStats,
@@ -27,7 +29,7 @@ from ._pagefind_inject_support import concept_records
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 # dev/docs/tests -> parents[3] is the repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _BUILT_HTML = _REPO_ROOT / "docs" / "_build" / "html"
 _PAGEFIND_YML = _REPO_ROOT / "docs" / "pagefind.yml"
 

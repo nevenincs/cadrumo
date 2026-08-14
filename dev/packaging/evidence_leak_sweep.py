@@ -30,7 +30,9 @@ import sys
 from pathlib import Path
 from typing import Final
 
-_UTF_8: Final = "utf-8"
+from dev._paths import UTF_8
+
+_UTF_8: Final = UTF_8
 
 
 class EvidenceLeakSweepError(RuntimeError):

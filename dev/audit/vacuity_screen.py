@@ -42,7 +42,9 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import REPO_ROOT, UTF_8
+
+_UTF_8: Final[str] = UTF_8
 
 #: Trees carrying gate modules. Both are required to exist: a screen that
 #: silently walked nothing would be the very defect it hunts.
@@ -263,7 +265,7 @@ def screen(root: Path) -> tuple[int, list[tuple[str, str, int]]]:
 
 def main() -> int:
     """Print the worklist. Always exits 0 -- this reports, it does not gate."""
-    root = Path(__file__).resolve().parents[2]
+    root = REPO_ROOT
     scanned, flagged = screen(root)
 
     if scanned == 0:

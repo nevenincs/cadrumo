@@ -91,9 +91,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Final
 
+from dev._paths import UTF_8
+
 _API_HOST: Final = "api.github.com"
 _API_VERSION: Final = "2022-11-28"
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _TERMINAL_RUN_STATUS: Final = frozenset({"completed"})
 
 # How many in-progress runs to read when building repository-wide occupancy.

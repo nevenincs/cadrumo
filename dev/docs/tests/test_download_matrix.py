@@ -15,6 +15,8 @@ from typing import Final
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ...packaging.cohort_manifest import ArtifactKind
 from ..download_matrix import (
     _ZONE_BEGIN,
@@ -30,7 +32,7 @@ from ..download_matrix import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
-_REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
+_REPO_ROOT: Final[Path] = REPO_ROOT
 
 
 def test_descriptor_loads_and_validates() -> None:

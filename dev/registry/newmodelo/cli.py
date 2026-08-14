@@ -7,6 +7,8 @@ from typing import Annotated
 
 import typer
 
+from dev._paths import REPO_ROOT
+
 from .checklist import render_checklist
 from .manager import NewModeloError, NewModeloScaffoldManager, ScaffoldResult
 
@@ -19,7 +21,7 @@ app = typer.Typer(
 
 def _default_manager() -> NewModeloScaffoldManager:
     # cli.py lives at dev/registry/newmodelo/cli.py; parents[3] is the repo root.
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = REPO_ROOT
     modelos_root = repo_root / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
     return NewModeloScaffoldManager(registry_modelos_root=modelos_root)
 

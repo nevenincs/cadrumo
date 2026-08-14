@@ -18,9 +18,9 @@ about - the test reports the shortfall rather than hiding it.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
+
+from dev._paths import REPO_ROOT
 
 from .._golden_queries import (
     GOLDEN_QUERIES,
@@ -35,7 +35,7 @@ from .._golden_queries import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.resident_service]
 
 # dev/docs/preprocess/tests/test_golden_queries.py -> parents[4] is repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[4]
+_REPO_ROOT = REPO_ROOT
 
 
 def test_xlsm_record_design_is_a_corpus_and_diseno_source() -> None:

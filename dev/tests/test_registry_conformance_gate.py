@@ -42,11 +42,13 @@ from typing import Final
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..registry.conformance.manager import baseline_path
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+_REPO_ROOT: Final[Path] = REPO_ROOT
 _COMMITTED_FLOORS: Final[dict[str, int]] = json.loads(baseline_path().read_text(encoding="utf-8"))["floors"]
 _COMPOSED_REVISIONS_FLOOR_PATTERN: Final = re.compile(r"floor population=composed_revisions current=(\d+)")
 

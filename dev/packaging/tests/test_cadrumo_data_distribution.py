@@ -50,11 +50,13 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _PACKAGING_ROOT = _REPO_ROOT / "packaging"
 _CORPUS_SOURCE_PREFIX = "src/cadrumo/_data/corpus/"
 _CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip")

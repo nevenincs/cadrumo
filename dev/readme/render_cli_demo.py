@@ -13,6 +13,7 @@ from functools import cache
 from hashlib import sha256
 from typing import Final
 
+from dev._paths import UTF_8
 from PIL import Image, ImageDraw, ImageFont
 
 from cadrumo.application.filing import build_runtime_schema_provider
@@ -21,7 +22,7 @@ from cadrumo.domain.calculations.registry import parse_export_payload
 
 from .prepare_cli_demo import DEMO_ROOT, REPO_ROOT, demo_environment, prepare_demo
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 OUTPUT_PATH = REPO_ROOT / "docs" / "_static" / "readme" / "cli-demo.gif"
 FONT_PATH = REPO_ROOT / "docs" / "_static" / "readme" / "fonts" / "CascadiaMono-Regular.ttf"

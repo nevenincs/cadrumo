@@ -36,6 +36,8 @@ from email.parser import Parser
 from pathlib import Path
 from typing import Any, Final
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from ._command import CommandResult, run_command
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
@@ -91,7 +93,7 @@ __all__ = [
 ]
 
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _REPRESENTATIVE_DATA_LEAVES = (
     "registry/aeat/modelos/036/manifest.toml",
     "registry/cadrumo/user_profile/schema.toml",
@@ -206,7 +208,7 @@ class DependencySurfaces:
 
 def find_repo_root() -> Path:
     """Return the repository root for this module."""
-    return Path(__file__).resolve().parents[2]
+    return REPO_ROOT
 
 
 def head_extract(repo_root: Path, work_dir: Path) -> Path:

@@ -17,6 +17,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final, override
 
+from dev._paths import REPO_ROOT
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
@@ -768,7 +770,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--repo-root",
         type=Path,
-        default=Path(__file__).resolve().parents[2],
+        default = REPO_ROOT,
     )
     parser.add_argument(
         "--retain-install",

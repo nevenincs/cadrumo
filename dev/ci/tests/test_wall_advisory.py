@@ -30,6 +30,8 @@ from typing import Final
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..perf_measurement import WallClockAdvisory, wall_advisory_message
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -156,9 +158,8 @@ def test_the_consumers_pass_the_thresholds_this_gate_asserts() -> None:
     consumer could relax its threshold to silence a real wedge and every
     assertion here would keep passing against the stale copy.
     """
-    from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = REPO_ROOT
     ledger = (
         repo_root / "src" / "cadrumo" / "application" / "aggregation" / "tests" / "test_ledger_scale_benchmark.py"
     ).read_text(encoding="utf-8")

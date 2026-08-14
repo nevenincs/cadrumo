@@ -18,15 +18,16 @@ under ``docs/reference``.
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 import pytest
+
+from dev._paths import REPO_ROOT
 
 from ..env_reference import render_environment_reference, target_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _ENV_EXAMPLE = _REPO_ROOT / "env" / ".env.example"
 _KEY_RE = re.compile(r"^#?\s*([A-Z][A-Z0-9_]+)=", re.MULTILINE)
 

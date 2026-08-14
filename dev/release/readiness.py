@@ -54,6 +54,7 @@ from typing import Final, cast
 from pydantic import ValidationError
 
 from cadrumo.core import PRODUCT_IDENTITY
+from dev._paths import REPO_ROOT, UTF_8
 
 from ..docs.download_matrix import load_descriptor, required_evidence_rows
 from ..packaging.cohort_manifest import load_release_cohort
@@ -64,7 +65,7 @@ from ..packaging.evidence import (
     load_distribution_evidence,
 )
 
-_UTF_8: Final = "utf-8"
+_UTF_8: Final = UTF_8
 _VERSION_RE: Final = re.compile(r"^__version__\s*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)
 _BLOCKER_LABEL: Final = "priority:P0-blocker"
 _GH_TIMEOUT_SECONDS: Final = 15
@@ -77,7 +78,7 @@ _PROJECT_NAME_PATHS: Final = (
 
 def _repo_root() -> Path:
     """Return the repository root two levels above this module."""
-    return Path(__file__).resolve().parents[2]
+    return REPO_ROOT
 
 
 @dataclass(frozen=True, slots=True)

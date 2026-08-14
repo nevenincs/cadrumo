@@ -17,6 +17,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
+from dev._paths import UTF_8
+
 from ._acquire_common import (
     PYTHON_COHORT_WHEEL_NAMES,
     AcquisitionError,
@@ -31,7 +33,7 @@ from .distribution_evidence_emit import emit_installed_oracle_evidence
 from .evidence import AcquisitionIdentity, DestinationIdentity
 from .python_cohort import PythonCohort, load_python_cohort
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _DEFAULT_INDEX_URL: Final[str] = "https://pypi.org/simple"
 _DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")
 

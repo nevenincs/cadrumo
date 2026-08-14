@@ -16,10 +16,11 @@ import pytest
 import yaml
 
 from cadrumo.tests.env_scope import scoped_env_var
+from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
+_REPO_ROOT: Final[Path] = REPO_ROOT
 _WORKFLOW: Final[Path] = _REPO_ROOT / ".github" / "workflows" / "release-orchestrator.yml"
 
 

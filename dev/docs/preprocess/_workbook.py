@@ -32,6 +32,8 @@ import json
 from pathlib import Path
 from typing import Any, Final
 
+from dev._paths import UTF_8
+
 from ._parts import (
     split_units_by_budget,
     stamp_part_anchors,
@@ -54,7 +56,7 @@ WORKBOOK_EXTRACTOR_ID = "diseno-registro-workbook"
 #: Version of this extractor; part of the cache identity. Bump when the
 #: rendering changes so a regeneration is distinguishable from a no-op.
 WORKBOOK_EXTRACTOR_VERSION = "1.0"
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 #: Column separator in the rendered field table. A pipe keeps each row on
 #: one line and survives the text chunker without being mistaken for prose.

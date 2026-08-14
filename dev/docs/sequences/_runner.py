@@ -77,6 +77,7 @@ from cadrumo.domain.user_profile import UserProfileFact
 from cadrumo.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from cadrumo.tests.profile_capsule import open_test_profile_session
 from cadrumo.tests.secure_sql import isolated_profile_storage_root
+from dev._paths import REPO_ROOT
 
 from ._errors import SequenceExecutionError
 from ._schema import (
@@ -303,7 +304,7 @@ def default_fixtures_root() -> Path:
     Resolved relative to this module so the engine finds fixtures regardless of
     the process working directory (the same anchoring as the seed recipes).
     """
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = REPO_ROOT
     return repo_root / "docs" / "_sequences" / "fixtures"
 
 

@@ -43,7 +43,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import REPO_ROOT, UTF_8
+
+_UTF_8: Final[str] = UTF_8
 _FINDING_CAP: Final[int] = 40
 _SEMGREP_SPEC: Final[str] = "semgrep==1.168.0"
 _SEMGREP_TIMEOUT_SECONDS: Final[float] = 600.0
@@ -323,7 +325,7 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="Emit the result as JSON.")
     args = parser.parse_args()
 
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = REPO_ROOT
     result = run_security_scan(repo_root)
 
     if args.json:

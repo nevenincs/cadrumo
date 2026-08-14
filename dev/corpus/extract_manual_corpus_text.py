@@ -44,11 +44,12 @@ from cadrumo.core import (
     normalise_corpus_text,
 )
 from cadrumo.core.hashing import sha256_file
+from dev._paths import REPO_ROOT, UTF_8
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 # dev/corpus/extract_manual_corpus_text.py is two levels below the repo root.
-_REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+_REPO_ROOT: Final[Path] = REPO_ROOT
 _CORPUS_ROOT: Final[Path] = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 _SIDECAR_ROOT: Final[Path] = _REPO_ROOT / "src" / "cadrumo" / "_data" / "manual_corpus_text"
 

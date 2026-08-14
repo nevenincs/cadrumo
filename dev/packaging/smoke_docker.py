@@ -13,12 +13,14 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from ._base_image import linux_base_image
 from ._proof_ledger import record_proof
 from ._smoke_common import relative_manifest_path, require_executable, write_smoke_manifest
 from .python_cohort import load_python_cohort
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _DOCKER_COMMAND_TIMEOUT_SECONDS: Final[int] = 30
 
 
@@ -33,7 +35,7 @@ class DockerCli:
 
 def _repo_root() -> Path:
     """Return the repository root for this module."""
-    return Path(__file__).resolve().parents[2]
+    return REPO_ROOT
 
 
 def _work_dir(repo_root: Path, requested: str | None, mode: str) -> Path:

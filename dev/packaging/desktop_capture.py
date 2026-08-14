@@ -45,7 +45,9 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Final
 
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import UTF_8
+
+_UTF_8: Final[str] = UTF_8
 _NUMERIC_TOKEN_PATTERN: Final[re.Pattern[str]] = re.compile(r"(?<![0-9A-Za-z])\d(?:[\d., ]*\d)?(?![0-9A-Za-z])")
 _POWERSHELL: Final[str] = shutil.which("powershell.exe") or r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
 _CDP_SCHEME: Final[str] = "http"

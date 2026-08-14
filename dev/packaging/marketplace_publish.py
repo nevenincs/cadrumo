@@ -43,7 +43,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Final
 
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import UTF_8
+
+_UTF_8: Final[str] = UTF_8
 _INDEX_RELATIVE: Final[Path] = Path(".claude-plugin") / "marketplace.json"
 # The retirement declaration rides beside the manifest, not inside it, because
 # ``claude plugin validate --strict`` rejects an unknown manifest field and

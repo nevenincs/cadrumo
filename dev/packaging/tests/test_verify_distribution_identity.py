@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..verify_distribution_identity import (
     ModelFacingDescriptionCheck,
     _labeled_product_description,
@@ -19,7 +21,7 @@ from ..verify_distribution_identity import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 
 def test_real_authored_and_generated_harness_inventory_is_fully_cadrumo_prefixed() -> None:

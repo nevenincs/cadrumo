@@ -25,6 +25,8 @@ from typing import cast
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..hook import (
     UPSTREAM_SCHEMA_VERSION,
     adapt_outputs,
@@ -33,7 +35,7 @@ from ..hook import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
 
-_REPO_ROOT = Path(__file__).resolve().parents[4]
+_REPO_ROOT = REPO_ROOT
 _RULE_FILE = _REPO_ROOT / ".vaultragpreprocess.toml"
 _CORPUS = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 _HOOK_COMMAND = "python -m dev.docs.preprocess.hook {path}"

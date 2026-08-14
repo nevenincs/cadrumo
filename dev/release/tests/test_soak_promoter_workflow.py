@@ -15,9 +15,11 @@ from typing import Any, Final
 import pytest
 import yaml
 
+from dev._paths import REPO_ROOT
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
+_REPO_ROOT: Final[Path] = REPO_ROOT
 _WORKFLOW: Final[Path] = _REPO_ROOT / ".github" / "workflows" / "release-soak-promoter.yml"
 
 

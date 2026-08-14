@@ -61,7 +61,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import REPO_ROOT, UTF_8
+
+_UTF_8: Final[str] = UTF_8
 
 # Bind every interface so containers / VMs / LAN peers can reach the preview.
 _DEFAULT_HOST = "0.0.0.0"  # noqa: S104 - a LAN-reachable dev preview is the intent
@@ -131,7 +133,7 @@ class Resolution:
 
 def _repo_root() -> Path:
     """Return the repository root for this module."""
-    return Path(__file__).resolve().parents[2]
+    return REPO_ROOT
 
 
 def _ignore_patterns() -> list[str]:

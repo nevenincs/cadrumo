@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Annotated
 
 import typer
+
+from dev._paths import REPO_ROOT
 
 from .manager import ApiStubManager
 
@@ -18,7 +19,7 @@ app = typer.Typer(
 
 def _default_manager() -> ApiStubManager:
     # cli.py lives at dev/docs/apidocs/cli.py; parents[3] is the repo root.
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = REPO_ROOT
     return ApiStubManager(
         src_cadrumo=repo_root / "src" / "cadrumo",
         docs_api=repo_root / "docs" / "api",

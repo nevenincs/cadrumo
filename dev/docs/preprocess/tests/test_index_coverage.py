@@ -17,9 +17,9 @@ no live search and spawns no service of its own.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
+
+from dev._paths import REPO_ROOT
 
 from .._reindex import (
     expected_data_files,
@@ -35,7 +35,7 @@ from .._reindex import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 # dev/docs/preprocess/tests/test_index_coverage.py -> parents[4] is repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[4]
+_REPO_ROOT = REPO_ROOT
 
 
 def test_index_metadata_exists() -> None:

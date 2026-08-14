@@ -24,6 +24,8 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, Final
 
+from dev._paths import UTF_8
+
 from ._acquire_common import capture_owned_server_launch
 from .cohort_manifest import load_release_cohort
 from .desktop_capture import collect_seed_secrets
@@ -32,7 +34,7 @@ from .evidence import AcquisitionIdentity, ClientIdentity, DestinationIdentity
 from .installed_mcp_oracle import isolated_mcp_environment
 
 _DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 # A real-client session summary is a handful of short status fields
 # (connected, status, tool_called, model, ...). Anything token-shaped or an

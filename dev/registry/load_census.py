@@ -70,7 +70,8 @@ from typing import Final
 
 import grimp
 
-REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+from dev._paths import REPO_ROOT
+
 SOURCE_ROOT: Final[Path] = REPO_ROOT / "src"
 ROOT_PACKAGE: Final[str] = "cadrumo"
 REGISTRY_PACKAGE: Final[str] = "cadrumo.domain.calculations.registry"

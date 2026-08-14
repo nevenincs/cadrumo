@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 from typing import Any, Final, cast
 
+from dev._paths import UTF_8
+
 from ..packaging.installed_tax_oracle import (
     EXPECTED_FORMULA,
     EXPECTED_LEGAL_REF,
@@ -17,7 +19,7 @@ from ..packaging.installed_tax_oracle import (
 from ..packaging.python_cohort import PythonCohort, load_python_cohort
 from .version_identity import VersionIdentityError, pypi_projects_owning
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _PYPI_PROJECTS: Final[tuple[str, ...]] = (
     "cadrumo",
     "cadrumo-data-manuals",

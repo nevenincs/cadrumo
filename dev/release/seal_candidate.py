@@ -27,6 +27,8 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from ..docs.download_matrix import claimed_channels, load_descriptor
 from ._asset_transport import (
     EvidenceLane,
@@ -41,7 +43,7 @@ from .release_candidate import (
     seal_candidate,
 )
 
-_UTF_8 = "utf-8"
+_UTF_8 = UTF_8
 _COHORT_ARCHIVE = "cadrumo-release-cohort.tar.gz"
 _COHORT_MANIFEST = "release-cohort.json"
 
@@ -88,7 +90,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "release tag. The four claude-* rows come from an operator-minted evidence RELEASE; the "
             "packaging-claude acquisition lane's run id is a different fact and must not be substituted.",
         )
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = REPO_ROOT
     descriptor = load_descriptor()
 
     with tempfile.TemporaryDirectory() as scratch:

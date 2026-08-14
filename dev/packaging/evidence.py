@@ -15,6 +15,8 @@ from typing import Final, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from ._command import CommandResult
 from ._hashing import sha256_path
 from .cohort_manifest import (
@@ -27,7 +29,7 @@ from .cohort_manifest import (
 _MANIFEST_NAME: Final[str] = "packaging-smoke-manifest.json"
 _EVIDENCE_SCHEMA: Final[Literal["cadrumo.distribution-evidence.v1"]] = "cadrumo.distribution-evidence.v1"
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 
 class EvidenceStatus(StrEnum):
@@ -431,7 +433,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = REPO_ROOT
     smoke_root = repo_root / "var" / "packaging-smoke"
     evidence_root = repo_root / "var" / "packaging-smoke-evidence"
     checkpointed = checkpoint_smoke_evidence(

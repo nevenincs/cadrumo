@@ -13,7 +13,8 @@ from __future__ import annotations
 
 import sys
 from collections import Counter
-from pathlib import Path
+
+from dev._paths import REPO_ROOT
 
 from ._tree_scan import (
     EXCLUDED_PATH_FRAGMENTS,
@@ -23,7 +24,7 @@ from ._tree_scan import (
     scan_tree,
 )
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
+_REPO_ROOT = REPO_ROOT
 
 
 def _bucket(relative_path: str) -> str:

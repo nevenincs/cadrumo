@@ -39,12 +39,14 @@ from typing import Final
 import pydantic
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ...packaging.evidence import DistributionEvidence, EvidenceStatus
 from ...release.readiness import ALL_DISTRIBUTION_ROWS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
-_REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
+_REPO_ROOT: Final[Path] = REPO_ROOT
 _EVIDENCE_DIR: Final[Path] = _REPO_ROOT / "var" / "distribution-install-readiness"
 _README: Final[Path] = _REPO_ROOT / "README.md"
 _DOCS_ROOT: Final[Path] = _REPO_ROOT / "docs"

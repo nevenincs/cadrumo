@@ -55,9 +55,11 @@ from typing import Final
 
 from packaging.version import InvalidVersion, Version
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from .burned_versions import burn_reason, is_burned
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _PROBE_TIMEOUT_S: Final[int] = 20
 
 #: The three projects one cohort publishes together. A conflict on any one of
@@ -70,7 +72,7 @@ PYPI_PROJECTS: Final[tuple[str, ...]] = (
 )
 
 #: The release-please manifest, whose recorded version is the monotonic floor.
-MANIFEST_PATH: Final[Path] = Path(__file__).resolve().parents[2] / ".release-please-manifest.json"
+MANIFEST_PATH: Final[Path] = REPO_ROOT / ".release-please-manifest.json"
 
 
 class VersionIdentityError(RuntimeError):

@@ -6,6 +6,8 @@ import argparse
 import os
 from pathlib import Path
 
+from dev._paths import REPO_ROOT
+
 from ._smoke_common import (
     install_wheel,
     record_proof,
@@ -160,7 +162,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = REPO_ROOT
     uv = require_executable("uv")
     work_dir = resolve_work_dir(repo_root, args.work_dir, prefix="browser")
     env = _browser_env(work_dir)

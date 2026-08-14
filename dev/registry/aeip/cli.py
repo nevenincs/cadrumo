@@ -7,6 +7,8 @@ from typing import Annotated
 
 import typer
 
+from dev._paths import REPO_ROOT
+
 from .adjudications import DEFAULT_ADJUDICATIONS_FILENAME, load_adjudications
 from .manager import (
     AeipInventory,
@@ -25,8 +27,7 @@ app = typer.Typer(
 
 
 def _repo_root() -> Path:
-    # cli.py lives at dev/registry/aeip/cli.py; parents[3] is the repo root.
-    return Path(__file__).resolve().parents[3]
+    return REPO_ROOT
 
 
 def _modelos_root() -> Path:

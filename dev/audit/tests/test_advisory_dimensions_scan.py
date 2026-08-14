@@ -14,14 +14,14 @@ test that would routinely time out this lane.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
+
+from dev._paths import REPO_ROOT
 
 from ..advisory import audit_checkout_drift, audit_dead_code
 from ..report import Status
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

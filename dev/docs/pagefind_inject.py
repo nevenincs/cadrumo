@@ -45,6 +45,7 @@ from typing import TYPE_CHECKING, Final
 from pydantic import ValidationError
 
 from cadrumo.core.external_constants import OutputLanguage
+from dev._paths import REPO_ROOT, UTF_8
 
 from .terminology._sweep import SweepResult
 from .terminology._unified_record import SearchRecord, derive_display_class, to_search_record
@@ -54,7 +55,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 InjectCallback = Callable[["PagefindIndex"], Awaitable[None]]
 
@@ -172,7 +173,7 @@ def _materialise_records(repo_root: Path | None = None) -> _Materialised:
     from .terminology._legal_projection import project_legal_search_records
 
     out = _Materialised()
-    root = repo_root if repo_root is not None else Path(__file__).resolve().parents[2]
+    root = repo_root if repo_root is not None else REPO_ROOT
 
     # Inject APPROVED concept cards only. A draft concept is scaffold-empty
     # (placeholder short_description) and absent from the approved-only

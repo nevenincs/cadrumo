@@ -46,10 +46,11 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core import PRODUCT_IDENTITY
+from dev._paths import REPO_ROOT, UTF_8
 
 from . import readiness, version_identity
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 #: The seven declaration surfaces the retired manual bump checklist printed
 #: as steps 1-7,
@@ -697,7 +698,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--github-output", default=os.environ.get("GITHUB_OUTPUT", ""))
     args = parser.parse_args(argv)
 
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = REPO_ROOT
     if not args.token:
         raise VersionBumpError("a forge token is required to compute the next version; pass --token or set GH_TOKEN")
 

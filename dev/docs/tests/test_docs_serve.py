@@ -23,6 +23,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..serve import (
     _DEFAULT_HOST,
     _DEFAULT_PORT,
@@ -44,7 +46,7 @@ from ..serve import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 
 def test_serve_command_scopes_the_autodoc_source_watch() -> None:

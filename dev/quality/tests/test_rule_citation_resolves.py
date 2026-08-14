@@ -60,13 +60,14 @@ from __future__ import annotations
 
 import re
 import subprocess
-from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _RULES_DIR = _REPO_ROOT / ".vaultspec" / "rules"
 
 # A citation is a backticked token. Two shapes carry locators precise enough to

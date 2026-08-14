@@ -32,11 +32,12 @@ from pydantic import SecretStr
 from pydantic_core import PydanticUndefined
 
 from cadrumo.core.external_constants import OutputLanguage
+from dev._paths import REPO_ROOT, UTF_8
 
 from ._locale_chrome import docs_chrome
 from .build import docs_build_language
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 if TYPE_CHECKING:
     from pydantic.fields import FieldInfo
@@ -125,7 +126,7 @@ def render_environment_reference() -> str:
 
 def target_path(repo_root: Path | None = None) -> Path:
     """Return the generated page's path under ``docs/reference``."""
-    root = repo_root or Path(__file__).resolve().parents[2]
+    root = repo_root or REPO_ROOT
     return root / "docs" / "reference" / "environment-overrides.md"
 
 

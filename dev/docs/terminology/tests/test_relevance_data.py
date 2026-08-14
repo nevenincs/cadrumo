@@ -32,6 +32,7 @@ from typing import TypedDict
 import pytest
 
 from cadrumo.domain.calculations.registry import bundled_authority
+from dev._paths import REPO_ROOT
 
 from ...terminology_handbook import load_terminology_handbook
 from .._search_record import SearchRecordKind
@@ -42,7 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 # Dev tooling runs from a source checkout by definition, so it owns its own
 # repo-root anchor. Production code has no repository concept and must never
 # export one (see cadrumo.core._config_state_root for the runtime data root).
-_REPO_ROOT = Path(__file__).resolve().parents[4]
+_REPO_ROOT = REPO_ROOT
 
 _RELEVANCE_PATH = _REPO_ROOT / "src" / "cadrumo" / "_data" / "terminology" / "relevance" / "relevance.json"
 _PARSEABLE_CASILLA_RECORD_ID_RE = re.compile(r"^casilla:[^:]+:.+")

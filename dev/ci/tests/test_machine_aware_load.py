@@ -20,12 +20,14 @@ from typing import Any, Final
 import pytest
 import yaml
 
+from dev._paths import REPO_ROOT
+
 from ...packaging._command import run_command
 from ..lane_reachability import Lane, declared_lanes, expression_selects, marker_sets_in
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_REPOSITORY_ROOT: Final = Path(__file__).resolve().parents[3]
+_REPOSITORY_ROOT: Final = REPO_ROOT
 _WORKFLOWS_DIR: Final = _REPOSITORY_ROOT / ".github" / "workflows"
 _JUSTFILE: Final = _REPOSITORY_ROOT / "justfile"
 _EXPLICIT_WORKERS: Final = re.compile(r"pytest\b[^\n]*\s-n\s*\d+")

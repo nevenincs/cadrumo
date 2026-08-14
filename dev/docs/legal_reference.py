@@ -26,6 +26,7 @@ from typing import Final, cast
 from urllib.parse import urlsplit
 
 from cadrumo.core.external_constants import OutputLanguage
+from dev._paths import UTF_8
 
 from ._locale_chrome import docs_chrome
 from .build import docs_build_language
@@ -51,7 +52,7 @@ __all__ = [
     "render_legal_reference",
 ]
 
-_UTF_8 = "utf-8"
+_UTF_8 = UTF_8
 LEGAL_REFERENCE_DIR: Final[str] = "_generated/legal"
 _ANCHOR_PREFIX: Final[str] = "legal-"
 

@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..release_cohort import build_release_cohort, deterministic_zip_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -57,7 +59,7 @@ def test_deterministic_zip_refuses_empty_or_existing_output(tmp_path: Path) -> N
 
 def test_build_refuses_an_expected_commit_other_than_checked_out_head() -> None:
     """The commit option is an assertion and never silently selects other bytes."""
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = REPO_ROOT
     output = repo_root / "var" / f"release-cohort-refusal-{uuid.uuid4().hex}"
 
     with pytest.raises(SystemExit, match="does not equal the currently checked-out HEAD"):

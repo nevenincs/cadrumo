@@ -17,6 +17,8 @@ from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import Any, Final, cast
 
+from dev._paths import UTF_8
+
 _HERE = Path(__file__).resolve().parent
 _REPO_ROOT = _HERE.parents[1]
 _SOURCE_ROOT = _REPO_ROOT / "src"
@@ -42,7 +44,7 @@ from .python_cohort import (  # noqa: E402
     source_snapshot_drift,
 )
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _ZIP_TIMESTAMP: Final[tuple[int, int, int, int, int, int]] = (1980, 1, 1, 0, 0, 0)
 _RELEASE_BASE: Final[str] = "https://github.com/nevenincs/cadrumo/releases/download"
 _REQUIRED_PYTHON_VERSION: Final[str] = "3.13.11"

@@ -25,11 +25,12 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT as _REPO_ROOT
+
 from ..campaign import _LANES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
 _PACKAGING = Path(__file__).resolve().parents[1]
 _WORKFLOWS = _REPO_ROOT / ".github" / "workflows"
 

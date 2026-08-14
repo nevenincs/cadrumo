@@ -22,6 +22,7 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core.resources import bundled_path
+from dev._paths import UTF_8
 
 from ._sweep import SweepResult
 
@@ -45,7 +46,7 @@ __all__ = [
 # that accepted number; never loosen it ad hoc.
 #: A hit counts only within the top five shipped results.
 TOP_RESULTS_BOUND = 5
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 
 class MissReason(StrEnum):

@@ -11,15 +11,16 @@ campaign or into an evidence producer.
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any, Final
 
 import pytest
 import yaml
 
+from dev._paths import REPO_ROOT
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_WORKFLOWS_DIR: Final = Path(__file__).resolve().parents[3] / ".github" / "workflows"
+_WORKFLOWS_DIR: Final = REPO_ROOT / ".github" / "workflows"
 _QUICK: Final = _WORKFLOWS_DIR / "packaging-quick.yml"
 _SMOKE: Final = _WORKFLOWS_DIR / "packaging-smoke.yml"
 

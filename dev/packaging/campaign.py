@@ -39,9 +39,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from . import proof_cache
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _QUICK_PROOF_KIND: Final[str] = "quick-core-install"
 _COHORT_DIR: Final[str] = "var/packaging-smoke-cohort/python"
 # Lane concurrency is sized against the PHYSICAL MACHINE, not "a runner": the
@@ -274,7 +276,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = REPO_ROOT
     selectors = _PROFILES[args.profile]
     # Resolve every selector up front so an unknown lane or form refuses before
     # the cohort build, not after several minutes of wheel work.

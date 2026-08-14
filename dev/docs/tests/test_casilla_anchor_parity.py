@@ -25,9 +25,9 @@ shape generalised to the casilla kind):
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
+
+from dev._paths import REPO_ROOT
 
 from ..casilla_reference import CasillaReferenceError, CasillaReferenceResult, render_casilla_reference
 from ..terminology import project_casilla_search_records
@@ -37,7 +37,7 @@ from ..terminology._unified_record import to_search_record
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 
 @pytest.fixture(scope="module")

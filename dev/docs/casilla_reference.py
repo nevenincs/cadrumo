@@ -60,6 +60,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from ._locale_chrome import docs_chrome
 from .legal_reference import legal_reference_target, load_legal_provisions
 from .terminology import CasillaSearchRecord, project_casilla_search_records
@@ -77,7 +79,7 @@ if TYPE_CHECKING:
 
     from .legal_reference import LegalProvisionRecord
 
-_UTF_8 = "utf-8"
+_UTF_8 = UTF_8
 
 
 class CasillaReferenceError(RuntimeError):
@@ -336,7 +338,7 @@ def display_locale_keys() -> tuple[str, ...]:
 
 def _repo_root() -> Path:
     """The repository checkout this dev-side module lives in."""
-    return Path(__file__).resolve().parents[2]
+    return REPO_ROOT
 
 
 def _rst_escape(text: str) -> str:

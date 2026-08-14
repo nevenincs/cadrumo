@@ -177,6 +177,7 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core import CorpusAnchorResolutionError, normalise_corpus_text, resolve_anchored_extracted_unit
+from dev._paths import REPO_ROOT, UTF_8
 
 from ..corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
@@ -191,7 +192,7 @@ from .legal_catalogue import load_legal_entries
 #: unshipped tooling and must not reach into the shipped package's internals,
 #: so every dev module carries its own constant (see the sibling screens in
 #: this package).
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 _CORPUS_DIR: Final = Path("src/cadrumo/_data/corpus/normatives/html")
 
@@ -1106,7 +1107,7 @@ def main() -> int:
     silent all-clear is the one output this screen must never emit. "Always
     exits 0" described the findings and read as a promise about the process.
     """
-    root = Path(__file__).resolve().parents[2]
+    root = REPO_ROOT
     result = screen(root)
     findings = list(result.findings)
     if not findings:

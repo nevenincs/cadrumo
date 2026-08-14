@@ -7,6 +7,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from dev._paths import REPO_ROOT
+
 from ..cli import _default_manager, app
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -21,7 +23,7 @@ def test_default_manager_targets_the_live_cadrumo_registry_tree() -> None:
 
     assert manager.registry_modelos_root.is_dir()
     assert manager.registry_modelos_root == (
-        Path(__file__).resolve().parents[4] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
+        REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
     )
 
 

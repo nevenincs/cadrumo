@@ -9,17 +9,19 @@ from pathlib import Path
 import pytest
 import yaml
 
+from dev._paths import REPO_ROOT
+
 from ...packaging._command import run_command
 from ..lane_reachability import declared_lanes, resolved_recipe_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_WORKFLOW = Path(__file__).resolve().parents[3] / ".github" / "workflows" / "ci.yml"
-_JUSTFILE = Path(__file__).resolve().parents[3] / "justfile"
+_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "ci.yml"
+_JUSTFILE = REPO_ROOT / "justfile"
 #: The one tool-dependent module the unit lane must not collect. Named here so
 #: the lane's exclusion is asserted against the module's real marker rather
 #: than against whichever mechanism happens to exclude it today.
-_WORKBOOK_PARITY = Path(__file__).resolve().parents[3] / "dev" / "registry" / "tests" / "test_workbook_parity.py"
+_WORKBOOK_PARITY = REPO_ROOT / "dev" / "registry" / "tests" / "test_workbook_parity.py"
 _PROHIBITED_AEAT_PRODUCT_FORMS = (
     (
         "python-import",
@@ -59,7 +61,7 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
     return tuple(label for label, pattern in _PROHIBITED_AEAT_PRODUCT_FORMS if pattern.search(surface))
 
 
-_FULL_WORKFLOW = Path(__file__).resolve().parents[3] / ".github" / "workflows" / "ci-full.yml"
+_FULL_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "ci-full.yml"
 _REPOSITORY_ROOT = _WORKFLOW.parents[2]
 _PYPROJECT = _REPOSITORY_ROOT / "pyproject.toml"
 #: Per-test wall ceiling for the harness lane's combined real-proof pass, in

@@ -24,7 +24,9 @@ import sys
 from dataclasses import dataclass
 from typing import Final
 
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import UTF_8
+
+_UTF_8: Final[str] = UTF_8
 
 # Each gate's underlying command, kept byte-identical to the tool invocation
 # the matching `just check-*` recipe wraps (see justfile). Direct invocation

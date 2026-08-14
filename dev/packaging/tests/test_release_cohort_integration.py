@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..cohort_manifest import REQUIRED_ARTIFACT_KINDS
 from ..release_cohort import build_release_cohort
 
@@ -50,7 +52,7 @@ def _stable_source_clone(repo_root: Path, destination: Path) -> Path:
 
 def test_real_clean_source_build_is_complete_and_reproducible() -> None:
     """Build the real 12-member cohort twice from the branch tip and compare every digest."""
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = REPO_ROOT
     var = (repo_root / "var").resolve(strict=True)
     run_id = uuid.uuid4().hex
     snapshot = var / f"release-cohort-integration-{run_id}-source"

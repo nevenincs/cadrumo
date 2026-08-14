@@ -10,16 +10,16 @@ shared one file.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
+
+from dev._paths import REPO_ROOT
 
 from ..pagefind_index import PagefindUnavailableError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 # dev/docs/tests/test_pagefind_config.py -> parents[3] is the repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _DOCS = _REPO_ROOT / "docs"
 
 

@@ -73,9 +73,11 @@ from typing import Any, Final
 
 import yaml
 
+from dev._paths import REPO_ROOT, UTF_8
+
 _GH_TIMEOUT_SECONDS: Final[float] = 30.0
 _DEFAULT_REPO_SLUG: Final[str] = "nevenincs/cadrumo"
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 #: The protection rule that gates a deployment on a human approval click. This
 #: is the rule OP-9 removes; every other rule type is left alone.
@@ -109,7 +111,7 @@ ALERT_LABEL: Final[str] = "release-alert"
 
 def _repo_root() -> Path:
     """Return the repository root two levels above this module."""
-    return Path(__file__).resolve().parents[2]
+    return REPO_ROOT
 
 
 @dataclass(frozen=True, slots=True)

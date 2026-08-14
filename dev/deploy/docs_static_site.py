@@ -21,6 +21,8 @@ from urllib.parse import urlsplit
 
 from defusedxml import ElementTree
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from ..docs.i18n import DEFAULT_SITE_LANGUAGE, DEFAULT_SOURCE_LANGUAGE, SITE_ROOT_LANGUAGES
 from ..docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
@@ -31,7 +33,7 @@ STACK_REGION = "us-east-1"
 _BUCKET_NAME_RE = re.compile(r"[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?")
 _DISTRIBUTION_ID_RE = re.compile(r"[A-Z0-9]+")
 _CACHE_CONTROL = "public, max-age=300, must-revalidate"
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _REQUIRED_ARTIFACTS = (
     "index.html",
     "404.html",
@@ -75,7 +77,7 @@ class DeploymentTarget:
 
 def _repo_root() -> Path:
     """Return the repository root."""
-    return Path(__file__).resolve().parents[2]
+    return REPO_ROOT
 
 
 def _command_label(command: Sequence[str]) -> str:

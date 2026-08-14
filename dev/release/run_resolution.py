@@ -50,11 +50,13 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Final
 
+from dev._paths import UTF_8
+
 from ..packaging._command import run_command
 
 _GH_TIMEOUT_SECONDS: Final[float] = 60.0
 _DEFAULT_REPO_SLUG: Final[str] = "nevenincs/cadrumo"
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 #: Bounded backoff poll defaults. A cheap poll on a short-lived job: the fleet
 #: is four self-hosted runners shared across products, so a poll that busy-holds

@@ -46,10 +46,11 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+from dev._paths import REPO_ROOT, UTF_8
+
 SRC_ROOT = REPO_ROOT / "src"
 PKG_ROOT = SRC_ROOT / "cadrumo"
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 LEGACY_TUI_PACKAGE: Final[str] = "cadrumo.adapters.inbound.tui"
 LEGACY_TUI_ROOT: Final[Path] = PKG_ROOT / "adapters" / "inbound" / "tui"

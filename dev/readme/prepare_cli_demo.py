@@ -10,9 +10,10 @@ import sys
 from pathlib import Path
 from typing import Final
 
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import REPO_ROOT, UTF_8
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+_UTF_8: Final[str] = UTF_8
+
 VAR_ROOT = REPO_ROOT / "var"
 DEMO_ROOT = VAR_ROOT / "readme-demo"
 DEMO_PASSPHRASE = "readme-demo-only-synthetic-passphrase-2026"  # noqa: S105 - published synthetic value

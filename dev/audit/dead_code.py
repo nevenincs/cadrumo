@@ -36,7 +36,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import REPO_ROOT, UTF_8
+
+_UTF_8: Final[str] = UTF_8
 _TARGETS: Final[tuple[str, ...]] = ("src/cadrumo", "dev/audit/vulture_whitelist.py")
 _FINDING_CAP: Final[int] = 40
 _VULTURE_TIMEOUT_SECONDS: Final[float] = 180.0
@@ -216,7 +218,7 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="Emit the result as JSON.")
     args = parser.parse_args()
 
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = REPO_ROOT
     result = run_dead_code_scan(repo_root)
 
     if args.json:

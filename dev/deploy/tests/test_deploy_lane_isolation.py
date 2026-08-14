@@ -34,11 +34,13 @@ from pathlib import Path
 import pytest
 import yaml
 
+from dev._paths import REPO_ROOT
+
 from ...ci.lane_reachability import resolve_just_executable
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _JUSTFILE = _REPO_ROOT / "justfile"
 _WORKFLOWS = _REPO_ROOT / ".github" / "workflows"
 

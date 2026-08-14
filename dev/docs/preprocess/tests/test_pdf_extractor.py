@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from .._parts import TEXT_BUDGET_BYTES, split_units_by_budget, stamp_part_anchors
 from .._pdf import (
     PDF_EXTRACTOR_ID,
@@ -41,7 +43,7 @@ from .._sidecar import (
 pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
 
 # dev/docs/preprocess/tests/test_pdf_extractor.py -> parents[4] is repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[4]
+_REPO_ROOT = REPO_ROOT
 _CORPUS = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 
 # A small real Diseno-de-registro instruction PDF (26 KB, one page) - fast to

@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
 from typing import Final
 
 import pytest
 import yaml
 
+from dev._paths import REPO_ROOT
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_WORKFLOW = Path(__file__).resolve().parents[3] / ".github" / "workflows" / "packaging-smoke.yml"
+_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "packaging-smoke.yml"
 _SHELL_COMMAND_BOUNDARY = r"(?:^|[\r\n]|&&|\|\||[;|])"
 _ENVIRONMENT_PREFIX = r"(?:(?:env\s+)?(?:[A-Za-z_]\w*=(?:[^\s;&|]+|\"[^\"]*\"|'[^']*')\s+)+)"
 _UV_RUN_PREFIX = r"(?:uv\s+run(?:\s+--[a-z][\w-]*(?:=(?:[^\s;&|]+|\"[^\"]*\"|'[^']*'))?)*\s+)?"
