@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-14'
-body_hash: 'sha256:c4bf50ecfae23e573a7be4c2c37e7255b0d76c89f64b80659a60d2b255f41ce3'
+body_hash: 'sha256:b2035639bae7d2dc61c8069a9cea52f7e00d656cf133bafdddf8ac515b7851cc'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -102,7 +102,11 @@ Complete root source development and packaging census remediation with no unclas
 - [x] `W07.P21.S67` - Adjudicate and canonicalize every remaining development fixture cluster in the census; `dev`.
 - [x] `W07.P21.S68` - Adjudicate and canonicalize every remaining packaging fixture cluster in the census; `packaging`.
 - [x] `W07.P21.S69` - Adjudicate root conftest and explicit-import support factories and remove substitute owners; `conftest.py, src/cadrumo/tests`.
-- [ ] `W07.P21.S70` - Make census drift fail on any unclassified or substitutable duplicate fixture; `dev/quality/tests/test_fixture_census.py`.
+- [x] `W07.P21.S70` - Make census drift fail on any unclassified or substitutable duplicate fixture; `dev/quality/tests/test_fixture_census.py`.
+- [x] `W07.P21.S102` - Delete the production re-export bridge the import-hygiene gate reports and repoint its consumers; `src/cadrumo/adapters/persistence/storage/custody`.
+- [x] `W07.P21.S103` - Give the re-export-bridge gate a declared reach over the test tree instead of silent exclusion; `dev/quality/import_hygiene_scan.py`.
+- [x] `W07.P21.S104` - Collapse every identical-constraint fixture cluster to one definition preserving scope and autouse reach; `src/cadrumo`.
+- [x] `W07.P21.S105` - Key the ownership manifest disposition on full constraint shape rather than repeated name; `dev/quality/fixture_ownership.py, dev/quality/tests/test_fixture_census.py`.
 
 ### Phase `W07.P22` - unify marker and live-import enforcement
 
@@ -130,7 +134,10 @@ Retain installed-process evidence without nested pools or recursive collection i
 - [x] `W07.P24.S80` - Move installed-hook worker-pool proofs out of routine unit execution; `src/cadrumo/tests/test_worker_count_hook.py`.
 - [x] `W07.P24.S81` - Move full-corpus collectability out of unit while retaining bounded controls; `src/cadrumo/tests/test_every_test_module_is_collectable.py`.
 - [x] `W07.P24.S82` - Align worker tests with repository-owned six-worker authority and explicit overrides; `src/cadrumo/tests/_worker_count_hook.py, src/cadrumo/tests/test_worker_count_hook.py`.
-- [ ] `W07.P24.S83` - Measure routine unit and dedicated harness runtime without nested outer xdist; `dev/ci/tests/test_machine_aware_load.py`.
+- [x] `W07.P24.S83` - Measure routine unit and dedicated harness runtime without nested outer xdist; `dev/ci/tests/test_machine_aware_load.py`.
+- [x] `W07.P24.S99` - Resolve justfile variables and model lane exclusions in the one lane authority; `dev/ci/lane_reachability.py, src/cadrumo/tests/test_lane_reachability.py`.
+- [x] `W07.P24.S100` - Delete the private justfile parsers in the CI gate modules and consume the lane authority; `dev/ci/tests/test_machine_aware_load.py, dev/ci/tests/test_ci_workflow.py`.
+- [x] `W07.P24.S101` - Derive the first-party corpus boundary from the tracked-file authority instead of a directory name list; `src/cadrumo/tests/test_every_test_module_is_collectable.py`.
 
 ### Phase `W07.P25` - deconflate central test responsibility
 
@@ -150,25 +157,25 @@ Independently review both lanes and prove the full mandate with focused lane col
 Run exact focused and lane-level gates for each migrated surface and enforcement boundary.
 
 - [ ] `W08.P26.S88` - Run the fixture census and require zero unclassified or substitutable duplicates; `dev/quality/fixture_ownership.toml`.
-- [ ] `W08.P26.S89` - Run marker banned-import topology ownership and no-monkeypatch gates; `src/cadrumo/tests`.
-- [ ] `W08.P26.S90` - Run the dedicated harness lane and verify non-vacuity and independent verdict; `justfile, .github/workflows/ci.yml`.
+- [x] `W08.P26.S89` - Run marker banned-import topology ownership and no-monkeypatch gates; `src/cadrumo/tests`.
+- [x] `W08.P26.S90` - Run the dedicated harness lane and verify non-vacuity and independent verdict; `justfile, .github/workflows/ci.yml`.
 - [ ] `W08.P26.S91` - Run unit and integration recipes and compare measured runtime to baseline; `justfile`.
 
 ### Phase `W08.P27` - perform independent architecture and code review
 
 Use fresh-context Sol review to validate ownership real behavior performance and absence of bridges.
 
-- [ ] `W08.P27.S92` - Audit every fixture disposition against current consumers and lifecycle; `.vault/audit`.
-- [ ] `W08.P27.S93` - Audit every original high-through-low finding against current code and evidence; `.vault/audit`.
-- [ ] `W08.P27.S94` - Run the close honesty review and action every surviving item; `.vault/audit`.
+- [x] `W08.P27.S92` - Audit every fixture disposition against current consumers and lifecycle; `.vault/audit`.
+- [x] `W08.P27.S93` - Audit every original high-through-low finding against current code and evidence; `.vault/audit`.
+- [x] `W08.P27.S94` - Run the close honesty review and action every surviving item; `.vault/audit`.
 
 ### Phase `W08.P28` - close broad verification and provenance
 
 Bind collection VaultSpec execution records and plan state into one auditable completion boundary.
 
-- [ ] `W08.P28.S95` - Run full first-party collection and retain complete status and errors; `pyproject.toml`.
-- [ ] `W08.P28.S96` - Run feature-scoped and repository-wide VaultSpec checks without rewriting unrelated debt; `.vault`.
-- [ ] `W08.P28.S97` - Create and validate one execution record per completed Step; `.vault/exec/2026-08-14-test-harness-sanity`.
+- [x] `W08.P28.S95` - Run full first-party collection and retain complete status and errors; `pyproject.toml`.
+- [x] `W08.P28.S96` - Run feature-scoped and repository-wide VaultSpec checks without rewriting unrelated debt; `.vault`.
+- [x] `W08.P28.S97` - Create and validate one execution record per completed Step; `.vault/exec/2026-08-14-test-harness-sanity`.
 - [ ] `W08.P28.S98` - Prove every mandate requirement has authoritative evidence and no work remains; `.vault/plan/2026-08-14-test-harness-sanity-plan.md`.
 
 ## Parallelization
