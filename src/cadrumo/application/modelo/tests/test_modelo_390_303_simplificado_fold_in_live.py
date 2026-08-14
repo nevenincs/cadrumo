@@ -609,8 +609,12 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
         filings=filings,
         previous=source,
     )
-    assert replacement.filing_instance_evidence.m303.regimen_simplificado.calculation_result.digest != (
-        source.filing_instance_evidence.m303.regimen_simplificado.calculation_result.digest
+    replacement_evidence = replacement.filing_instance_evidence
+    source_evidence = source.filing_instance_evidence
+    assert replacement_evidence is not None
+    assert source_evidence is not None
+    assert replacement_evidence.m303.regimen_simplificado.calculation_result.digest != (
+        source_evidence.m303.regimen_simplificado.calculation_result.digest
     )
 
     with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="no longer matches"):
