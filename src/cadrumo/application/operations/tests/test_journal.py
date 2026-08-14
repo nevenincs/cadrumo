@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import inspect
+import json
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -80,6 +81,10 @@ def _persisted_snapshot() -> OperationPersistedSnapshot:
         phase_code=event.phase_code,
         started_at=runtime.updated_at,
         updated_at=runtime.updated_at,
+        execution_deadline=None,
+        cleanup_deadline=None,
+        cancellation_requested_at=None,
+        cancellation_acknowledged_at=None,
         event_cursor=event.sequence,
         events=(event,),
     )
@@ -113,6 +118,10 @@ def _terminal_persisted_snapshot() -> OperationPersistedSnapshot:
         effect=receipt.effect,
         started_at=datetime(2026, 8, 13, 20, tzinfo=UTC),
         updated_at=observed,
+        execution_deadline=None,
+        cleanup_deadline=None,
+        cancellation_requested_at=None,
+        cancellation_acknowledged_at=None,
         event_cursor=event.sequence,
         terminal_receipt=receipt,
         events=(event,),
@@ -132,13 +141,60 @@ def test_persisted_snapshot_is_versioned_and_excludes_the_runtime_request() -> N
     with pytest.raises(ValidationError, match="frozen_instance"):
         restored.revision = 1
     payload = persisted.model_dump()
-    payload["schema_version"] = 1
-    with pytest.raises(ValidationError):
-        OperationPersistedSnapshot.model_validate(payload)
+    for schema_version in (1, 2):
+        payload = persisted.model_dump(mode="json")
+        payload["schema_version"] = schema_version
+        with pytest.raises(ValidationError):
+            OperationPersistedSnapshot.model_validate_json(json.dumps(payload))
+    for safety_field in (
+        "execution_deadline",
+        "cleanup_deadline",
+        "cancellation_requested_at",
+        "cancellation_acknowledged_at",
+    ):
+        payload = persisted.model_dump(mode="json")
+        del payload[safety_field]
+        with pytest.raises(ValidationError, match="Field required"):
+            OperationPersistedSnapshot.model_validate_json(json.dumps(payload))
     payload = persisted.model_dump()
     payload["request"] = runtime.request
     with pytest.raises(ValidationError):
         OperationPersistedSnapshot.model_validate(payload)
+
+
+def test_persisted_snapshot_correlates_deadline_and_cooperative_cancellation_facts() -> None:
+    """Deadline, request, acknowledgement, and cleanup facts remain ordered durable state."""
+    persisted = _persisted_snapshot()
+    requested_at = persisted.updated_at + timedelta(minutes=1)
+    acknowledged_at = requested_at + timedelta(seconds=10)
+    cleanup_deadline = requested_at + timedelta(minutes=1)
+    payload = persisted.model_dump()
+    payload.update(
+        events=(),
+        lifecycle=OperationLifecycle.SETTLING,
+        updated_at=acknowledged_at,
+        execution_deadline=requested_at,
+        cleanup_deadline=cleanup_deadline,
+        cancellation_requested_at=requested_at,
+        cancellation_acknowledged_at=acknowledged_at,
+    )
+
+    accepted = OperationPersistedSnapshot.model_validate(payload)
+
+    assert accepted.execution_deadline == requested_at
+    assert accepted.cleanup_deadline == cleanup_deadline
+    assert accepted.cancellation_requested_at == requested_at
+    assert accepted.cancellation_acknowledged_at == acknowledged_at
+    for mutation, message in (
+        ({"cleanup_deadline": requested_at}, "later cleanup deadline"),
+        ({"cancellation_requested_at": None}, "cleanup deadline requires"),
+        ({"cancellation_acknowledged_at": requested_at - timedelta(seconds=1)}, "must follow the request"),
+        ({"lifecycle": OperationLifecycle.CANCELLATION_REQUESTED}, "requires settlement lifecycle"),
+    ):
+        changed = accepted.model_dump()
+        changed.update(mutation)
+        with pytest.raises(ValidationError, match=message):
+            OperationPersistedSnapshot.model_validate(changed)
 
 
 def test_persisted_snapshot_binds_event_identity_revision_sequence_and_cursor() -> None:

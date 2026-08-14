@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import json
 import os
 from pathlib import Path
-from typing import cast, override
+from typing import override
 
 from pydantic import BaseModel
 
@@ -39,17 +38,8 @@ class _OperationReplayRequest(BaseModel):
 
 
 def _parse_operation_journal_record(raw: str | bytes) -> OperationJournalRecord:
-    """Migrate the credential-free v1 snapshot before any lease decision."""
-    document = cast(dict[str, object], json.loads(raw))
-    snapshot = document.get("snapshot")
-    if isinstance(snapshot, dict):
-        snapshot_document = cast(dict[str, object], snapshot)
-        if snapshot_document.get("schema_version") == 1:
-            snapshot_document["schema_version"] = 2
-            snapshot_document.setdefault("idempotency_claim", None)
-            snapshot_document.setdefault("pending_interaction", None)
-            snapshot_document.setdefault("consumed_interactions", [])
-    return OperationJournalRecord.model_validate_json(json.dumps(document))
+    """Parse only the current credential-free operation journal schema."""
+    return OperationJournalRecord.model_validate_json(raw)
 
 
 class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):

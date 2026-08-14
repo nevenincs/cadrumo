@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-14'
-body_hash: 'sha256:89a25e171e11035f2a09371f543002da440e44db4a6877853f71422c76424353'
+body_hash: 'sha256:f2cc3becd6a2a7378aa2b4d1d7de3087079e2d068330d05f5d0ec7d8ad100d9a'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -81,7 +81,7 @@ Implement authoritative submission, observation, response, cancellation, deadlin
 - [x] `W02.P05.S22` - Implement submit, start, inspect, observe, await, respond, reject, request-cancel, detach, settle, and reconcile operations with a durable idempotent claim under the journal lock, schema-v2 migration before lease acquisition, persisted pending and consumed interaction checkpoints with safe events, exact single-use response binding across restart, conflict-scope lease addressing, definition-bound executor context that refuses undeclared phase, effect, and typed cleanup-family registration before mutation, encrypted content-addressed secure references, and full journal and lease compare-and-swap invariants; `src/cadrumo/application/operations/_models.py, src/cadrumo/application/operations/_events.py, src/cadrumo/application/operations/_interactions.py, src/cadrumo/application/operations/_leases.py, src/cadrumo/application/operations/_journal.py, src/cadrumo/application/operations/_executor.py, src/cadrumo/application/operations/_supervisor.py, src/cadrumo/application/operations/__init__.py, src/cadrumo/adapters/persistence/operations/_lease.py, src/cadrumo/adapters/persistence/operations/_journal.py, src/cadrumo/adapters/persistence/operations/_secure_refs.py, src/cadrumo/adapters/persistence/operations/__init__.py, and focused application and real-filesystem persistence tests`.
 - [x] `W02.P05.S16` - Prove through the production supervisor executor context that duplicate registry identities and definition-undeclared effects, phases, and resource-family ownership are refused before event or journal mutation; `src/cadrumo/application/operations/tests/test_executor_contract.py`.
 - [x] `W02.P05.S23` - Implement cursor replay and bounded live observation without making subscriber connectivity operation authority; `src/cadrumo/application/operations/_supervisor.py`.
-- [ ] `W02.P05.S24` - Implement aggregate deadline, cooperative cancellation acknowledgement, irreversible-section protection, and cleanup deadlines; `src/cadrumo/application/operations/_supervisor.py`.
+- [x] `W02.P05.S24` - Implement aggregate deadline, cooperative cancellation acknowledgement, irreversible-section protection, and cleanup deadlines; `src/cadrumo/application/operations/_supervisor.py`.
 - [ ] `W02.P05.S25` - Normalize expected refusals and unexpected failures into safe terminal diagnostics while retaining correlation evidence; `src/cadrumo/application/operations/_supervisor.py`.
 - [ ] `W02.P05.S26` - Reconcile non-terminal journal entries into resumed, recovered, interrupted, or orphaned states at startup; `src/cadrumo/application/operations/_supervisor.py`.
 - [ ] `W02.P05.S27` - Prove every terminal condition waits for resource cleanup and preserves the truthful effect axis; `src/cadrumo/application/operations/tests/test_supervisor_lifecycle.py`.

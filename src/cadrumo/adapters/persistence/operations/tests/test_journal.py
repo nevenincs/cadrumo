@@ -51,6 +51,10 @@ def _snapshot(*, revision: int, sequence: int) -> OperationPersistedSnapshot:
         phase_code=event.phase_code,
         started_at=_STARTED,
         updated_at=updated_at,
+        execution_deadline=None,
+        cleanup_deadline=None,
+        cancellation_requested_at=None,
+        cancellation_acknowledged_at=None,
         event_cursor=sequence,
         events=(event,),
     )
@@ -171,6 +175,10 @@ def test_operation_journal_requires_coherent_initial_history(tmp_path: Path) -> 
         lifecycle=OperationLifecycle.RUNNING,
         started_at=_STARTED,
         updated_at=_STARTED,
+        execution_deadline=None,
+        cleanup_deadline=None,
+        cancellation_requested_at=None,
+        cancellation_acknowledged_at=None,
     )
     _claim_lease(tmp_path, _lease())
     asyncio.run(repository.commit(empty, expected_revision=0, lease=_lease()))

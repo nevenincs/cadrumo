@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
+from contextlib import asynccontextmanager
 from datetime import datetime
 
 from ...core import OperationEffect, OperationLifecycle
@@ -28,16 +29,56 @@ from ._registry import OperationRegistry
 
 
 class _Cancellation:
-    def __init__(self) -> None:
-        self.cancellation_requested = False
+    def __init__(
+        self,
+        *,
+        context: DefinitionBoundContext,
+        acknowledge: Callable[[OperationPersistedSnapshot], Awaitable[OperationPersistedSnapshot]],
+    ) -> None:
+        self._context = context
+        self._acknowledge = acknowledge
+        self._irreversible_section_depth = 0
+
+    @property
+    def cancellation_requested(self) -> bool:
+        return self._context.snapshot.cancellation_requested_at is not None
 
     async def acknowledge_cancellation(self) -> None:
-        self.cancellation_requested = True
+        if not self.cancellation_requested:
+            raise ValueError("cancellation acknowledgement requires a supervisor request")
+        if self._irreversible_section_depth:
+            raise ValueError("cancellation acknowledgement is unsafe within an irreversible section")
+        self._context.snapshot = await self._acknowledge(self._context.snapshot)
+
+    def record_request(self, snapshot: OperationPersistedSnapshot) -> None:
+        """Synchronize a durably accepted supervisor request into this view."""
+        if snapshot.identity != self._context.identity:
+            raise ValueError("cancellation request identity does not match executor context")
+        self._context.snapshot = snapshot
+
+    @asynccontextmanager
+    async def irreversible_section(self) -> AsyncGenerator[None]:
+        """Protect one executor-owned mutation boundary from an unsafe stop."""
+        if self.cancellation_requested:
+            raise ValueError("cancellation was requested before the irreversible section began")
+        self._irreversible_section_depth += 1
+        try:
+            yield
+        finally:
+            self._irreversible_section_depth -= 1
 
 
 class _Deadlines:
-    execution_deadline: datetime | None = None
-    cleanup_deadline: datetime | None = None
+    def __init__(self, context: DefinitionBoundContext) -> None:
+        self._context = context
+
+    @property
+    def execution_deadline(self) -> datetime | None:
+        return self._context.snapshot.execution_deadline
+
+    @property
+    def cleanup_deadline(self) -> datetime | None:
+        return self._context.snapshot.cleanup_deadline
 
 
 class DefinitionBoundContext:
@@ -52,6 +93,7 @@ class DefinitionBoundContext:
         clock: Callable[[], datetime],
         resources: dict[OperationId, list[AsyncCloseable]],
         advance: Callable[..., Awaitable[OperationPersistedSnapshot]],
+        acknowledge_cancellation: Callable[[OperationPersistedSnapshot], Awaitable[OperationPersistedSnapshot]],
     ) -> None:
         self.registry = registry
         self.clock = clock
@@ -59,8 +101,8 @@ class DefinitionBoundContext:
         self.advance_transition = advance
         self.snapshot = snapshot
         self.identity = snapshot.identity
-        self.cancellation = _Cancellation()
-        self.deadlines = _Deadlines()
+        self.cancellation = _Cancellation(context=self, acknowledge=acknowledge_cancellation)
+        self.deadlines = _Deadlines(self)
         self.events = _DefinitionBoundEvents(self)
         self.operands = operands
         self.cleanup = _DefinitionBoundCleanup(self)
