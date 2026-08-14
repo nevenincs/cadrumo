@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-14'
-body_hash: 'sha256:c282f9cfa4c087ad3defcf6e4262982949861ddcc8bea3c99dc976d9d4ef6167'
+body_hash: 'sha256:d67fb735fbc207c1ae0ee1f744bc2f627a92be5a37086c4a673d5c0b8694fa75'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -138,6 +138,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S64` - Have Terra XHigh open the core facade as the next import-cost lever, since every process imports it and roughly a quarter of a second of the supervised child's remaining half second is its eager graph, noting it is nine hundred and fifteen lines with eighty-nine eager imports and already partially lazy, so it resists the mechanical generation that converted the storage facades and wants deliberate conversion rather than an opportunistic edit; `src/cadrumo/core/__init__.py`.
 - [ ] `W04.P07.S65` - Have Sol Medium give the M303 per-activity prorrata completeness refusal one home, since the invariant is genuinely enforced on the live export path but raises an untranslated internal registry error, while an orphaned second implementation that can never fire carries the operator-facing typed refusal whose localisation key already ships in all four catalogues, so the better surface and the better position are currently in different objects and deleting either loses something real; `src/cadrumo/application/filing/ and src/cadrumo/domain/calculations/registry/_m303_prorrata_activity_projection.py`.
 - [ ] `W04.P07.S67` - Have Terra XHigh delete the retired workspace-initialisation package in one atomic commit, its entry point being an unconditional refusal with no callers kept alive only by two string references, re-homing the four genuinely valuable tests it hosts onto the package that owns active-profile registration and deleting the typing test that keeps a retired contract alive, the atomicity mattering because removing the package without updating both string references reds the import-smoke inventory; `src/cadrumo/application/setup/ and src/cadrumo/tests/test_layout_import_smoke.py`.
+- [ ] `W04.P07.S68` - Have Terra XHigh widen the substrate signatures that force ten delegate sites to narrow a handle and then hand the same object back to a substrate demanding its concrete type, one of which returns a type guard, since the interim fail-closed identity check correctly refuses a structurally conforming stand-in the substrate never minted but is a guard standing in for a boundary that should not need one; `src/cadrumo/adapters/persistence/storage/master_key/ and src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/adapters/persistence/storage/bucket/ and src/cadrumo/application/profile_custody/`.
 
 ## Wave `W05` - end-to-end proof
 
