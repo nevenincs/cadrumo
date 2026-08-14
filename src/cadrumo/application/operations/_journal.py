@@ -154,11 +154,15 @@ def _validate_events(snapshot: OperationPersistedSnapshot) -> None:
 
 
 def _validate_empty_events(snapshot: OperationPersistedSnapshot) -> None:
-    """Validate the only legal event-free snapshot states."""
+    """Validate the only legal event-free snapshot states.
+
+    A revision can intentionally advance without publishing a new event. That
+    transition retains the prior cursor and phase projection; requiring a
+    phase-less state here would make cancellation and other event-free
+    compare-and-swap transitions impossible after a phase has been published.
+    """
     if snapshot.lifecycle is OperationLifecycle.TERMINAL:
         raise ValueError("terminal persisted operation snapshot requires one terminal event")
-    if snapshot.phase_code is not None:
-        raise ValueError("persisted snapshot without phase events requires no phase code")
 
 
 def _validate_event_identity_and_revision(snapshot: OperationPersistedSnapshot) -> None:
@@ -214,8 +218,12 @@ class OperationJournal(Protocol):
 
     async def load(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
 
-    async def claim_idempotency(self, claim: OperationIdempotencyClaim) -> OperationId:
-        """Atomically create or resolve one definition-and-subject retry claim."""
+    async def resolve_idempotency(self, claim: OperationIdempotencyClaim) -> OperationId | None:
+        """Resolve a claim only when its matching operation journal exists."""
+        ...
+
+    async def create(self, snapshot: OperationPersistedSnapshot, *, lease: OperationOwnerLease) -> OperationId:
+        """Atomically create one initial snapshot and its optional retry claim."""
         ...
 
     async def commit(
