@@ -31,7 +31,6 @@ from ...domain.buckets import (
 from ...domain.user_profile import UserProfileRecord
 from ..profile_custody import (
     ProfileCustodySecureObjectNamespace,
-    ProfileCustodySecureObjectRawRowPort,
     ProfileCustodySecureObjectRecordPort,
     ProfileCustodySecureObjectRepositoryPort,
     default_profile_bucket_event_history_repository,
@@ -39,6 +38,7 @@ from ..profile_custody import (
     profile_custody_secure_object_namespace,
     profile_custody_secure_object_repository,
 )
+from ._custody_ports import ProfileCustodySecureObjectRawRowPort
 
 if TYPE_CHECKING:
     from ._custody_ports import ProfileCustodyEnvelopePort

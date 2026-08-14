@@ -17,6 +17,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Never
 from uuid import uuid4
 
 import pytest
@@ -25,9 +26,6 @@ from ....adapters.persistence.storage import StorageValidationError
 from ....core import SecureObjectWrite
 from ....core.classification import SensitivityClass
 from .. import (
-    ProfileCustodySecureObjectRawRowPort,
-    ProfileCustodySecureObjectRecordPort,
-    ProfileCustodySecureObjectRepositoryPort,
     default_profile_bucket_event_history_repository,
     profile_advance_session_idle_deadline,
     profile_bind_bucket_session,
@@ -110,7 +108,7 @@ def test_event_history_refuses_a_repository_the_substrate_did_not_mint() -> None
     class _StandInRepository:
         """Satisfies the narrowed repository port without being the real store."""
 
-        def iter_all_records_raw(self) -> Iterator[ProfileCustodySecureObjectRawRowPort]:
+        def iter_all_records_raw(self) -> Iterator[Never]:
             return iter(())
 
         def load(
@@ -120,15 +118,14 @@ def test_event_history_refuses_a_repository_the_substrate_did_not_mint() -> None
             *,
             expected_class: SensitivityClass,
             max_supported_version: int,
-        ) -> ProfileCustodySecureObjectRecordPort | None:
+        ) -> None:
             return None
 
         def apply_batch(self, writes: tuple[SecureObjectWrite, ...]) -> None:
             return None
 
-    conforming: ProfileCustodySecureObjectRepositoryPort = _StandInRepository()
     with pytest.raises(TypeError, match="did not originate from the custody substrate"):
-        default_profile_bucket_event_history_repository(objects=conforming)
+        default_profile_bucket_event_history_repository(objects=_StandInRepository())
 
 
 def test_event_history_leaves_the_default_composition_path_to_the_substrate() -> None:

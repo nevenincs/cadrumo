@@ -47,6 +47,7 @@ if TYPE_CHECKING:
         ProfileBucketSessionPort,
         ProfileCustodyEnvelopePort,
         ProfileCustodyPasswordMaterialPort,
+        ProfileCustodySecureObjectRawRowPort,
         ProfileCustodySentinelPort,
         ProfilePersistedSessionPort,
         ProfileSessionResumeOutcomePort,
@@ -164,55 +165,6 @@ class ProfileLoginThrottleEvaluationPort(Protocol):
     @property
     def remaining_seconds(self) -> int:
         """Seconds left on the current backoff window."""
-        ...
-
-
-class ProfileCustodySecureObjectRawRowPort(Protocol):
-    """Metadata and payload fields exposed by one secure-object row."""
-
-    @property
-    def namespace(self) -> str:
-        """The registered namespace this row was written under."""
-        ...
-
-    @property
-    def object_key(self) -> bytes:
-        """The opaque digest addressing this row within its namespace."""
-        ...
-
-    @property
-    def payload(self) -> bytes:
-        """The row's stored ciphertext."""
-        ...
-
-    @property
-    def revision_id(self) -> str | None:
-        """The row's current CAS revision token."""
-        ...
-
-    @property
-    def previous_revision_id(self) -> str | None:
-        """The revision this row replaced."""
-        ...
-
-    @property
-    def payload_hash(self) -> str | None:
-        """The plaintext digest recorded at write time."""
-        ...
-
-    @property
-    def ciphertext_hash(self) -> str | None:
-        """The ciphertext digest recorded at write time."""
-        ...
-
-    @property
-    def write_provenance(self) -> str | None:
-        """The recorded origin of this row's most recent write."""
-        ...
-
-    @property
-    def source_event_id(self) -> str | None:
-        """The lifecycle event that produced this row, if any."""
         ...
 
 
@@ -1016,7 +968,6 @@ __all__ = [
     "ProfileCustodyRecordSessionMaterial",
     "ProfileCustodyRegistrationMaterial",
     "ProfileCustodySecureObjectNamespace",
-    "ProfileCustodySecureObjectRawRowPort",
     "ProfileCustodySecureObjectRecordPort",
     "ProfileCustodySecureObjectRepositoryPort",
     "ProfileCustodyUnlockPort",
