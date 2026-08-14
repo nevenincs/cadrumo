@@ -1,0 +1,93 @@
+# Base imponible casillas of the annual régimen-general block. Each is the
+# sibling of an already-declared cuota casilla and carries the official AEAT box
+# number read off the bundled 2024 Diseño de Registros (apartado 5, "Operaciones
+# Reg. Gral. - Base Imponible y cuota - Reg. ordin."): the design pairs a base
+# box with every cuota box, so these amounts are asked for by the form.
+#
+# Unlike most casillas on this revision, these carry REAL official box numbers
+# rather than a repeated semantic id, because the record design states them
+# unambiguously. They declare no export_refs: the M390 export layout is the
+# fixed-width fichero-BOE, and adding positional fields to it is a separate
+# change with its own parity gate. A bound casilla with no export_ref is a valid
+# internal aggregation surface — it is drawn, persisted and shown, but not yet
+# written into the fichero.
+#
+# None of these participates in a formula. The annual devengada and deducible
+# totals sum CUOTAS; the base boxes sit beside them on the form and are declared
+# in their own right, so adding these cannot alter
+# iva.anual.resultado-regimen-general.
+
+[[revisions."2024".casillas]]
+id = "iva.anual.repercutido.general.base"
+number = "iva.anual.repercutido.general.base"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_base_imponible_repercutida_general"
+continuidad_id = "iva-base-imponible-repercutida-general"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-general-base"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".casillas]]
+id = "iva.anual.repercutido.reducido.base"
+number = "iva.anual.repercutido.reducido.base"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_base_imponible_repercutida_reducido"
+continuidad_id = "iva-base-imponible-repercutida-reducido"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct base imponible rate tier (10pct) from the super-reducido (4pct) tier; a genuine LIVA art. 90/91 tier split, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-reducido-base"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".casillas]]
+id = "iva.anual.repercutido.super-reducido.base"
+number = "iva.anual.repercutido.super-reducido.base"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_base_imponible_repercutida_super_reducido"
+continuidad_id = "iva-base-imponible-repercutida-super-reducido"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct base imponible rate tier (4pct) from the reducido (10pct) tier; a genuine LIVA art. 90/91 tier split, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-super-reducido-base"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".casillas]]
+id = "iva.anual.repercutido.zero.base"
+number = "iva.anual.repercutido.zero.base"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_base_imponible_repercutida_zero"
+continuidad_id = "iva-base-imponible-repercutida-zero"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct base imponible rate tier (0pct) from the reducido and super-reducido tiers; a statutory zero tipo, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-zero-base"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+# Box [48] "Total oper. inter. corrientes bienes y servic. - Base imponible",
+# the deducible-side counterpart of cuota box [49]. The sibling cuota binding
+# aggregates all three domestic rate tiers, which is exactly what the official
+# "Total" box asks for, so the base mirror selects the same three tiers.
+[[revisions."2024".casillas]]
+id = "iva.anual.soportado.interiores.base"
+number = "48"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_base_imponible_soportada_interiores"
+continuidad_id = "iva-base-imponible-soportada-interiores"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-soportado-interiores-base"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]

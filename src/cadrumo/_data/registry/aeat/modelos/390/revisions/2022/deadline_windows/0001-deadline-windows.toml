@@ -1,0 +1,9 @@
+[[revisions."2022".deadline_windows]]
+id = "modelo-390-2022-0a"
+filing_year = 2022
+period = "2022 0A"
+period_kind = "annual"
+opens_on = 2023-01-01
+closes_on = 2023-01-30
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
+source_refs = ["boe-modelo-390-2009-form", "aeat-modelo-390-procedure"]

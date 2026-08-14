@@ -1,0 +1,101 @@
+# Per-tier rate-blind AIC bindings backing the casillas above. Fact scoped to
+# base_amount_sum only, matching the established precedent
+# (test_every_rate_split_base_tier_carries_exactly_one_rate_blind_binding);
+# the cuota counterpart is a separate, deliberately deferred decision (see
+# that domestic gate's own zero-tier docstring).
+
+[[revisions."2024".bindings]]
+id = "modelo-390-iva-aic-bienes-zero-blind-base"
+source = "ledger_iva_aggregation"
+selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["zero"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2024".bindings]]
+id = "modelo-390-iva-aic-bienes-super-reduced-blind-base"
+source = "ledger_iva_aggregation"
+selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2024".bindings]]
+id = "modelo-390-iva-aic-bienes-reduced-blind-base"
+source = "ledger_iva_aggregation"
+selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2024".bindings]]
+id = "modelo-390-iva-aic-bienes-general-blind-base"
+source = "ledger_iva_aggregation"
+selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2024".bindings]]
+id = "modelo-390-iva-aic-servicios-zero-blind-base"
+source = "ledger_iva_aggregation"
+selector = { categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["zero"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2024".bindings]]
+id = "modelo-390-iva-aic-servicios-super-reduced-blind-base"
+source = "ledger_iva_aggregation"
+selector = { categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2024".bindings]]
+id = "modelo-390-iva-aic-servicios-reduced-blind-base"
+source = "ledger_iva_aggregation"
+selector = { categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2024".bindings]]
+id = "modelo-390-iva-aic-servicios-general-blind-base"
+source = "ledger_iva_aggregation"
+selector = { categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]

@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-14'
-body_hash: 'sha256:b2014c7951bdeadfe690acf241a19e8f27a451c235f7fe8ea2fb2c6e99bcb8af'
+body_hash: 'sha256:71e94ec6a8e956f6a567b5e2b9cc5bad5ce9f1e777f0256fddbd573b27a60667'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -88,6 +88,7 @@ Cover every authority boundary with positive and negative real-behavior tests.
 
 Verify generated layouts as loadable complete structures and as real emitted filing bytes.
 
+
 ## Wave `W04` - regenerate and release relayout waves
 
 Use the proven authority to replace unverified trees, close the blocked split spans, and restore architecture-consistent model bindings.
@@ -146,7 +147,7 @@ Regenerate the highest-priority calculation-model revisions and discharge the he
 - [x] `W04.P07.S83` - Bundle and compile the exact ejercicio-2022 annual Orden authority, ground the official two-digit agricultural activity-code crosswalk and the 2022 Lorca annual-reduction authority or retain an explicit evidence-bearing refusal/input where official authority is absent, with no description matching, raw key, or zero default; `src/cadrumo/_data/corpus/, src/cadrumo/_data/registry/aeat/m303_orden_anual/, src/cadrumo/domain/calculations/registry/, src/cadrumo/domain/iva/`.
 - [ ] `W04.P07.S84` - Introduce the typed M303 fourth-quarter to Modelo 390 annual-summary handoff over the one canonical simplified-regime annual result, carrying strict source and target calculation identity, year, period, revision, evidence and digest checks, and atomically retire the scalar-only box-79 relation when boxes 74-83 arrive through the typed handoff; `src/cadrumo/core/, src/cadrumo/domain/calculations/registry/, src/cadrumo/application/calculations/, src/cadrumo/application/filing/, src/cadrumo/_data/registry/aeat/modelos/390/`.
 - [ ] `W04.P07.S85` - Census all 537 numbered-page Modelo 390 2022 anchors by canonical semantic owner and value-arrival path, then author the M390-specific closed activity, module and other repeated-row projection families and revision-owned declarations for page-one activity and representative rows, page-five simplified-regime rows, page-seven prorrata rows and page-eight differentiated-deduction rows, preserving numbered boxes 74-83 as canonical Casilla owners and refusing every ungrounded class; `src/cadrumo/core/, src/cadrumo/domain/calculations/registry/, src/cadrumo/application/filing/, dev/registry/, src/cadrumo/_data/registry/aeat/modelos/390/revisions/`.
-- [ ] `W04.P07.S87` - Replace Modelo 390 revision 2010-y-siguientes with disjoint source-grounded 2022, 2023, 2024, and 2025 revisions. Select only each year own record design, cap the 2025 source at 2025-12-31, confine RDL 4/2024 article 1 to 2024, preserve proven identities and continuity, delete the open compatibility revision, and prove 2010-2021 and 2026 refuse until exact authority is enrolled; `src/cadrumo/_data/registry/aeat/modelos/390/, src/cadrumo/domain/calculations/registry/, src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W04.P07.S87` - Replace Modelo 390 revision 2010-y-siguientes with disjoint source-grounded 2022, 2023, 2024, and 2025 revisions. Select only each year own record design, cap the 2025 source at 2025-12-31, confine RDL 4/2024 article 1 to 2024, preserve proven identities and continuity, delete the open compatibility revision, and prove 2010-2021 and 2026 refuse until exact authority is enrolled; `src/cadrumo/_data/registry/aeat/modelos/390/, src/cadrumo/domain/calculations/registry/, src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W04.P07.S88` - Prepare the exact shared-nine legal worklist after the Modelo 390 split, then require the human operator to review and attest each reference one at a time against live official authority with exact identity, provision, corpus anchor, presence and absence clauses, applicability, amounts and rates. Refuse agent or bulk promotion and prove the partition remains exact; `src/cadrumo/_data/registry/aeat/legal/iva.toml, .vault/audit/`.
 - [ ] `W04.P07.S89` - Prepare the exact Modelo-303-only-nine legal worklist after the Modelo 390 split, then require the human operator to review and attest each reference one at a time against live official authority with exact identity, provision, corpus anchor, presence and absence clauses, applicability, amounts and rates. Refuse agent or bulk promotion and prove the partition remains exact; `src/cadrumo/_data/registry/aeat/legal/iva.toml, .vault/audit/`.
 - [ ] `W04.P07.S90` - Prepare the exact Modelo-390-only-two legal worklist after the Modelo 390 split, prove RDL 4/2024 article 1 is selected only for 2024, then require the human operator to review and attest each reference one at a time against live official authority. Refuse agent or bulk promotion and prove the partition remains exact; `src/cadrumo/_data/registry/aeat/legal/iva.toml, .vault/audit/`.

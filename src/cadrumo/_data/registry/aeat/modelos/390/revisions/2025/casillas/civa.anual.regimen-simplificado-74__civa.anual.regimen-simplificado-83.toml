@@ -1,0 +1,152 @@
+# Exact Modelo 390/2022 page-one annual simplified-regime arrival endpoints.
+# Their values are atomically supplied by the immutable M303 4T handoff; no
+# endpoint recreates a relation or accepts a manual scalar replacement.
+[[revisions."2025".casillas]]
+id = "iva.anual.regimen-simplificado.cuota-resultante-no-agricola"
+number = "74"
+section = ["iva", "anual", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "iva_anual_regimen_simplificado_cuota_resultante_no_agricola"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The official Modelo 390 2022 design declares one unique numbered annual simplified-regime endpoint for this role."
+continuidad_id = "iva-anual-regimen-simplificado-cuota-resultante-no-agricola"
+required = false
+input_kind = "bound"
+binding = "modelo-390-m303-simplificado-74-cuota-resultante-no-agricola"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casillas]]
+id = "iva.anual.regimen-simplificado.cuota-resultante-agricola"
+number = "75"
+section = ["iva", "anual", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "iva_anual_regimen_simplificado_cuota_resultante_agricola"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The official Modelo 390 2022 design declares one unique numbered annual simplified-regime endpoint for this role."
+continuidad_id = "iva-anual-regimen-simplificado-cuota-resultante-agricola"
+required = false
+input_kind = "bound"
+binding = "modelo-390-m303-simplificado-75-cuota-resultante-agricola"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casillas]]
+id = "iva.anual.regimen-simplificado.aic-bienes-cuota-devengada"
+number = "76"
+section = ["iva", "anual", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "iva_anual_regimen_simplificado_aic_bienes_cuota_devengada"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The official Modelo 390 2022 design declares one unique numbered annual simplified-regime endpoint for this role."
+continuidad_id = "iva-anual-regimen-simplificado-aic-bienes-cuota-devengada"
+required = false
+input_kind = "bound"
+binding = "modelo-390-m303-simplificado-76-aic"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casillas]]
+id = "iva.anual.regimen-simplificado.inversion-sujeto-pasivo"
+number = "77"
+section = ["iva", "anual", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "iva_anual_regimen_simplificado_inversion_sujeto_pasivo_cuota_devengada"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The official Modelo 390 2022 design declares one unique numbered annual simplified-regime endpoint for this role."
+continuidad_id = "iva-anual-regimen-simplificado-inversion-sujeto-pasivo"
+required = false
+input_kind = "bound"
+binding = "modelo-390-m303-simplificado-77-inversion-sujeto-pasivo"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casillas]]
+id = "iva.anual.regimen-simplificado.entrega-activos-fijos"
+number = "78"
+section = ["iva", "anual", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "iva_anual_regimen_simplificado_entrega_activos_fijos_cuota_devengada"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The official Modelo 390 2022 design declares one unique numbered annual simplified-regime endpoint for this role."
+continuidad_id = "iva-anual-regimen-simplificado-entrega-activos-fijos"
+required = false
+input_kind = "bound"
+binding = "modelo-390-m303-simplificado-78-entregas-activos"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casillas]]
+id = "iva.anual.reconciliacion.devengada-simplificado-303"
+number = "79"
+section = ["iva", "anual", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "iva_anual_reconciliacion_devengada_simplificado_303"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The official Modelo 390 2022 design declares one unique numbered annual simplified-regime endpoint for this role."
+continuidad_id = "iva-anual-reconciliacion-devengada-simplificado-303"
+required = false
+input_kind = "bound"
+binding = "modelo-390-m303-simplificado-79-total-cuota-resultante"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casillas]]
+id = "iva.anual.regimen-simplificado.iva-soportado-activos-fijos"
+number = "80"
+section = ["iva", "anual", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "iva_anual_regimen_simplificado_iva_soportado_activos_fijos"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The official Modelo 390 2022 design declares one unique numbered annual simplified-regime endpoint for this role."
+continuidad_id = "iva-anual-regimen-simplificado-iva-soportado-activos-fijos"
+required = false
+input_kind = "bound"
+binding = "modelo-390-m303-simplificado-80-activos-fijos"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casillas]]
+id = "iva.anual.regimen-simplificado.regularizacion-bienes-inversion"
+number = "81"
+section = ["iva", "anual", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "iva_anual_regimen_simplificado_regularizacion_bienes_inversion"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The official Modelo 390 2022 design declares one unique numbered annual simplified-regime endpoint for this role."
+continuidad_id = "iva-anual-regimen-simplificado-regularizacion-bienes-inversion"
+required = false
+input_kind = "bound"
+binding = "modelo-390-m303-simplificado-81-regularizacion-inversion"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casillas]]
+id = "iva.anual.regimen-simplificado.suma-deducciones"
+number = "82"
+section = ["iva", "anual", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "iva_anual_regimen_simplificado_suma_deducciones"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The official Modelo 390 2022 design declares one unique numbered annual simplified-regime endpoint for this role."
+continuidad_id = "iva-anual-regimen-simplificado-suma-deducciones"
+required = false
+input_kind = "bound"
+binding = "modelo-390-m303-simplificado-82-suma-deducciones"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casillas]]
+id = "iva.anual.regimen-simplificado.resultado"
+number = "83"
+section = ["iva", "anual", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "iva_anual_regimen_simplificado_resultado"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The official Modelo 390 2022 design declares one unique numbered annual simplified-regime endpoint for this role."
+continuidad_id = "iva-anual-regimen-simplificado-resultado"
+required = false
+input_kind = "bound"
+binding = "modelo-390-m303-simplificado-83-resultado"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]

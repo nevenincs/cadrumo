@@ -1,0 +1,230 @@
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-repercutido-general-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_general"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-repercutido-reducido-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_reduced"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-repercutido-super-reducido-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-soportado-interiores-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+# Annual IVA soportado deducible en importaciones — mirrors the M303
+# import-deducible cuota onto the annual resumen so the deducible total includes
+# imports. Selects import_third_country soportado lines across the rate tiers.
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-soportado-importaciones-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-prorrata-regularizacion-anual"
+source = "prorrata_regularizacion"
+selector = { source_modelo = "303", source_casilla_ids = ["iva.cuota-deducible-total", "iva.prorrata-volumen-con-derecho", "iva.prorrata-volumen-total", "iva.prorrata-porcentaje"], source_periods = ["1T", "2T", "3T", "4T"], regularizacion_output = "modelo_390_regularizacion_anual" }
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-bienes-inversion-regularizacion-casilla-63"
+source = "bienes_inversion_regularizacion"
+selector = { source_modelo = "303", regularizacion_output = "modelo_390_casilla_63" }
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+# The annual devengada must carry the SAME intracomunitaria cuota the four
+# M303 quarters carry, or the M390<->M303 reconciliation diverges. Both the
+# goods leg (LIVA arts. 13/15) and the services leg (art. 69.Uno.1, read
+# subject to art. 70) self-assess under art. 84.Uno.2.a), and the quarterly
+# line combines them because the official M303 boxes 10/11 and 36/37 are
+# titled "de bienes y servicios"; the annual aggregate therefore selects both
+# categories too.
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+# Recargo de equivalencia cuota devengada — annual, mirrors the M303
+# casillas 21/24/158 (LIVA art. 161) so the ledger-derived annual devengada
+# total includes the recargo cuota a supplier charges a recargo-de-equivalencia
+# retailer. Without these, iva.anual.cuota-devengada-total silently excludes
+# recargo (grounded against the AEAT Manual practico IVA 2024 Cap. 9 annual
+# worked example — see the formula's comment for the cross-quarter figures).
+# The super-reduced 1.0pct tier (M303 casilla 18) has no ledger binding on
+# M303 either (manual input there); it stays out of scope of this fix. The
+# super-reducido 0.5pct recargo tier (M303 casilla 158, domestic_super_reduced
+# / rate_kind "super_reduced") mirrors the general/reducido tiers above and
+# closes the residual gap left after the general/reducido wiring: without it,
+# any recargo-de-equivalencia filer whose supplier charges the 4pct
+# super-reducido rate (and therefore the 0.5pct recargo, LIVA art. 161) had
+# that tier's annual cuota silently excluded from
+# iva.anual.cuota-devengada-total, symmetrically breaking the
+# modelo-390-cuota-devengada-total-equals-reconciliacion-303 BLOCKING_RULE for
+# that filer (the reconciled-against figure sums the four filed Modelo 303
+# quarters' casilla 27, which includes recargo casilla 158 per the M303
+# 2023-y-siguientes and 2009-y-siguientes fixes).
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-recargo-equivalencia-general-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_general"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-recargo-equivalencia-reducido-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_reduced"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-recargo-equivalencia-super-reducido-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+# -----------------------------------------------------------------------------
+# Cross-modelo previous_filing bindings — aggregate the four 303 quarterly
+# autoliquidaciones into the annual resumen totals. Implements the canonical
+# 390 <- 303 dependency where the resumen anual reconciles against the four
+# trimestrales filed during the ejercicio.
+# -----------------------------------------------------------------------------
+
+[[revisions."2022".bindings]]
+id = "modelo-390-prev-303-cuota-devengada-total"
+source = "relation_prefill"
+selector = { source_modelo = "303", source_casilla_id = "iva.cuota-devengada-total" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-prev-303-cuota-deducible-total"
+source = "relation_prefill"
+selector = { source_modelo = "303", source_casilla_id = "iva.cuota-deducible-total" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-prev-303-resultado-regimen-general"
+source = "relation_prefill"
+selector = { source_modelo = "303", source_casilla_id = "iva.resultado-regimen-general" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-prev-303-compensacion-ultimo-periodo"
+source = "iva_compensation_annual_partition"
+selector = { source_modelo = "303", source_casilla_ids = ["iva.compensacion-generada-periodo", "iva.compensacion-aplicada-periodo", "iva.compensacion-disponible-fin-periodo", "iva.compensacion-pendiente-periodos-posteriores"], source_periods = ["1T", "2T", "3T", "4T"], partition_output = "last_period_amount" }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
+source = "iva_compensation_annual_partition"
+selector = { source_modelo = "303", source_casilla_ids = ["iva.compensacion-generada-periodo", "iva.compensacion-aplicada-periodo", "iva.compensacion-disponible-fin-periodo", "iva.compensacion-pendiente-periodos-posteriores"], source_periods = ["1T", "2T", "3T", "4T"], partition_output = "generated_not_in_last_amount" }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+# -----------------------------------------------------------------------------
+# Bound casillas surfacing the 5 ledger_iva_aggregation bindings + the 3
+# previous_filing bindings as casilla values. Annual resumen mirrors the 303
+# result-casilla shape (devengada / deducible / resultado) plus reconciliation
+# casillas pulling each total from the four 303 quarters.
+# -----------------------------------------------------------------------------

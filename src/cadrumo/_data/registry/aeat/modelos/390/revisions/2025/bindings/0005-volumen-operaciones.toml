@@ -1,0 +1,71 @@
+# Volumen de operaciones (LIVA art. 121) ledger draws for apartado 10 boxes
+# [103] and [104]. Both are base-only, zero-cuota disclosure aggregations: the
+# ledger_iva_aggregation resolver sums the base_amount of the matching exempt
+# repercutido observations. They mirror the M303 casilla-59 and casilla-60
+# selectors exactly, which is what lets the annual return and the summed
+# quarters state the same population.
+#
+# Box [103] admits ONLY intra_community_supply, and the official box title is
+# NOT authority to widen it. The ejercicio-2021 design widened the printed
+# label to "Entregas intracomunitarias de bienes y servicios", which reads as
+# an invitation to add a services category; it is not one. A plain B2B service
+# supplied to an EU-established taxable person is located outside the TAI by
+# LIVA art. 69.Uno.1, so it is not subject in Spain and belongs in the
+# no-sujetas box, never here. Only a supply with a Spanish fiscal adjustment
+# point under art. 25 belongs in [103], and the operator declares that by
+# tagging intra_community_supply explicitly. This is the same ruling the M303
+# casilla-59 binding records, applied to the same population on the annual
+# return; widening one side alone would also break their agreement.
+#
+# Box [104] is "Exportaciones y otras operaciones exentas con derecho a
+# deduccion", so its selector accepts both zero-rated export members: art. 21
+# grounds the exportaciones de bienes leg and art. 22 the operations assimilated
+# to exports.
+#
+# The flow direction is repercutido on both, which is the whole reason these
+# two boxes are modellable and the sibling inversion-del-sujeto-pasivo volumen
+# box is not: art. 121 counts only supplies "efectuadas por el sujeto pasivo",
+# and a reverse-charge category collapses the supplier and recipient sides onto
+# one flow, so no selector can restrict it to the taxpayer's own supplies.
+
+[[revisions."2025".bindings]]
+id = "modelo-390-volumen-entregas-intracomunitarias-base"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-25", "ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions."2025".bindings.selector]
+categories = ["intra_community_supply"]
+rate_kinds = ["zero"]
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+[revisions."2025".bindings.aggregation]
+op = "sum"
+
+[[revisions."2025".bindings]]
+id = "modelo-390-volumen-exportaciones-exentas-base"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions."2025".bindings.selector]
+categories = ["export_third_country_zero_rated", "export_assimilated_zero_rated"]
+rate_kinds = ["zero"]
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+[revisions."2025".bindings.aggregation]
+op = "sum"

@@ -1,0 +1,99 @@
+# Annual régimen-general base-imponible aggregation bindings. The resumen anual
+# already aggregated the CUOTA of these rows (the sibling *-cuota bindings,
+# fact = iva_amount_sum) but drew no base imponible at all: every IVA observation
+# carries a base_amount that reached no binding on the annual return, while the
+# quarterly Modelo 303 draws its base through the matching
+# modelo-303-iva-*-base bindings. The AEAT Diseño de Registros pairs a "Base
+# imponible" box with every "Cuota" box of the Reg. ordinario block (2024 design,
+# apartado 5: 21% base [05] / cuota [06], 10% base [03] / cuota [04], 4% base
+# [01] / cuota [02]) and pairs the deducible total likewise ("Total oper. inter.
+# corrientes bienes y servic." base [48] / cuota [49]), so the annual form does
+# ask for these amounts — the omission was ours, not the form's.
+#
+# Each selector mirrors its sibling cuota binding EXACTLY (same categories, same
+# rate_kinds, same flow_direction) and differs only in fact = base_amount_sum, so
+# the base and the cuota of one tier are drawn from the same observation set and
+# cannot select divergent rows.
+#
+# These bindings feed casillas that participate in NO formula: the annual
+# devengada/deducible totals sum cuotas, never bases. Adding them therefore
+# cannot move iva.anual.resultado-regimen-general — the base boxes are declared
+# alongside the cuota boxes on the official form, not summed into it.
+#
+# legal_refs are kept a subset of each target casilla's sibling cuota refs (and
+# therefore of the enclosing construct's refs) so the bound-casilla coverage
+# check holds without authoring a new legal-catalogue entry; LIVA art. 78 (base
+# imponible, regla general) is not currently in the bundled catalogue and
+# fabricating an entry for it would breach the bundled-corpus grounding rule.
+
+[[revisions."2023".bindings]]
+id = "modelo-390-iva-repercutido-general-base"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_general"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-iva-repercutido-reducido-base"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_reduced"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-iva-repercutido-super-reducido-base"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+# The rate-blind total for the zero tier. Its three sibling tiers each carry
+# one, so a row whose applied_rate was never recorded still reaches that tier's
+# total and only the RATE box goes unclaimed. The zero tier had no blind layer
+# at all: its only two bindings both pin applied_rates = 0.00, so a zero-rated
+# row with no recorded rate reached NOTHING and its base imponible left the
+# return silently. No cuota is lost -- a zero-rated supply's cuota is zero --
+# but the base is a declared figure AEAT reconciles.
+#
+# Declares no export_refs, exactly like its three siblings: this is the internal
+# total layer, and box [700] is the rate layer that writes to the record. That
+# split is what lets the rate-box coverage gate read a shortfall here, which is
+# the whole point of adding it.
+[[revisions."2023".bindings]]
+id = "modelo-390-iva-repercutido-zero-base"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_zero"], rate_kinds = ["zero"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-iva-soportado-interiores-base"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]

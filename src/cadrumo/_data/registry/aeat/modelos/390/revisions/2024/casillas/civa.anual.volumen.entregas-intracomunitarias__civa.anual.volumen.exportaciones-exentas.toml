@@ -1,0 +1,51 @@
+# Apartado 10 "Volumen de operaciones" disclosure boxes. LIVA art. 121 defines
+# volumen de operaciones as "el importe total ... de las entregas de bienes y
+# prestaciones de servicios efectuadas por el sujeto pasivo durante el ano
+# natural anterior, incluidas las exentas del Impuesto" — read verbatim from
+# the bundled consolidated corpus. Two clauses of that definition govern these
+# two casillas: "efectuadas por el sujeto pasivo" makes the ladder the
+# taxpayer's OWN outgoing supplies, and "incluidas las exentas" is why an
+# exempt entrega intracomunitaria and an exempt exportacion belong in it at all
+# despite carrying no cuota.
+#
+# Both boxes carry REAL official numbers rather than a repeated semantic id,
+# and both numbers are safe on a revision spanning 2010 onward: they were
+# measured present, with the same apartado-10 identity, in ALL NINE bundled
+# Diseno de Registros workbooks (ejercicios 2016, 2017, 2018, 2019-2020, 2021,
+# 2022, 2023-y-siguientes, 2024 and 2025). Box [103]'s printed LABEL widened in
+# the ejercicio-2021 design from "Entregas intracomunitarias exentas" to
+# "... de bienes y servicios"; its selector does not widen with it, for the
+# reason recorded on the binding.
+#
+# These are disclosure boxes, not settlement boxes. Neither participates in any
+# formula, so neither can alter iva.anual.resultado-regimen-general: the
+# revision's four formulas were enumerated and their complete operand set
+# contains no volumen casilla. They declare no export_refs — the M390 export
+# layout is the fixed-width fichero-BOE, and adding positional fields to it is
+# a separate change with its own parity gate.
+
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.entregas-intracomunitarias"
+number = "103"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_operaciones_entregas_intracomunitarias"
+continuidad_id = "iva-volumen-operaciones-entregas-intracomunitarias"
+required = false
+input_kind = "bound"
+binding = "modelo-390-volumen-entregas-intracomunitarias-base"
+legal_refs = ["ley-37-1992:art-25", "ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.exportaciones-exentas"
+number = "104"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_operaciones_exportaciones_exentas"
+continuidad_id = "iva-volumen-operaciones-exportaciones-exentas"
+required = false
+input_kind = "bound"
+binding = "modelo-390-volumen-exportaciones-exentas-base"
+legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2024"]
