@@ -31,24 +31,31 @@ the composition boundary the assertion is actually about: it is where a caller
 adapters reach the retired surface too and are outside this root; they are
 covered by the same replacement work and are not silently exonerated here.
 
-Two nets, and why the module one is primary
--------------------------------------------
-The MODULE net is the load-bearing one: any import resolving into
-``adapters/persistence/storage/master_key`` is reported, whatever symbol it
-names.  A name list can only ever assert "not these particular names", which is
-a far weaker claim than "no route into the shared-master package remains", and
-it silently loses its teeth the moment the surface is renamed or re-wrapped.
+Two nets catching disjoint sets
+------------------------------
+Neither net is redundant, and neither is a backstop for the other: each alone is
+blind to a whole class of reach that the other is the only thing that sees.
+Delete either and the gate keeps passing over real routes into the shared-master
+package.
+
+The MODULE net reports any import resolving into
+``adapters/persistence/storage/master_key``, whatever symbol it names.  It is
+primary because a name list can only ever assert "not these particular names",
+which is a far weaker claim than "no route into the shared-master package
+remains", and it loses its teeth the moment the surface is renamed or re-wrapped.
 The forwarding layer in ``profile_custody`` is the worked example: it forwards
 ``current_active_bucket_session``, ``BucketSession.open``,
 ``load_or_mint_bucket_dek``, ``mint_profile_session``, ``resume_profile_session``
 and ``zeroise``, none of which a provider-family name list contains, so a
 name-only gate passes it at any scan width.
 
-The NAME net is kept as a second, narrower catch, because a reach can arrive
-without ever naming the package: ``auth/_sessions.py``, ``diagnostics.py`` and
+The NAME net catches what the module net structurally cannot see: a reach that
+never names the package at all.  ``auth/_sessions.py``, ``diagnostics.py`` and
 ``repair_integrity.py`` import the provider from the ``storage`` package facade,
-so the module net cannot see where those names resolve to and only the symbol
-identifies them.
+so no module path in their source mentions ``master_key`` and only the symbol
+identifies where the import resolves to.  These are the reaches that most
+directly instantiate what this module forbids, and the module net reports every
+one of them clean.
 
 A dotted module path handed to :func:`importlib.import_module` is a string, so
 an AST walk over ``ImportFrom``/``Attribute``/``Name`` cannot see it, and the
