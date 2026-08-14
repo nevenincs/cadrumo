@@ -3,20 +3,17 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ._ledger_ux_support import _MINIMAL_PDF, _N26_HEADER, _imported_transaction_id, _invoke, _open_ledger_ux_session
+from ._ledger_ux_support import _MINIMAL_PDF, _N26_HEADER, _imported_transaction_id, _invoke
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
-    with _open_ledger_ux_session(tmp_path):
-        yield
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.usefixtures("open_bucket_cli_backend"),
+]
 
 
 def test_ledger_view_shows_iva_counterparty_and_notes_detail(

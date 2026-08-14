@@ -55,7 +55,7 @@ class _TyperAwareCliRunner(CliRunner):
 
 
 @pytest.fixture
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+def overview_cli_backend(tmp_path: Path) -> Iterator[None]:
     """Provide the profile-backed storage lifecycle required by overview CLI tests."""
     from ...application.user_profile import profile_create_storage_span
 
@@ -67,6 +67,15 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         workflow_state_repository().update(
             lambda state: register_minimal_profile(state, profile_id=profile_id)
         )
+        yield
+
+
+@pytest.fixture
+def open_bucket_cli_backend(tmp_path: Path) -> Iterator[None]:
+    """Open the dedicated ledger UX bucket lifecycle for one requesting test."""
+    from .tests._ledger_ux_support import _open_ledger_ux_session
+
+    with _open_ledger_ux_session(tmp_path):
         yield
 
 

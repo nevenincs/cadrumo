@@ -48,7 +48,7 @@ from .envelope_helpers import unwrap_envelope_notices
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
-    pytest.mark.usefixtures("_isolated_backend"),
+    pytest.mark.usefixtures("overview_cli_backend"),
 ]
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
