@@ -1,31 +1,37 @@
-"""Audit gate: every production module is reachable from a test.
+"""Audit gate: every production module is exercised by the test suite.
 
-Walks the static import graph rooted at every `test_*.py` /
-`conftest.py` under `src/cadrumo/`, resolves relative imports to absolute
-`cadrumo.*` dotted paths, and computes the transitive closure of
-production modules reachable from any test. A production module is
-considered covered if it sits inside that closure — either directly
-imported by a test or transitively through an aggregator `__init__.py`,
-a sibling helper, or any other static dependency chain.
+The judged property is per-module and behavioural: *can an executing test
+reach code defined in this module?* It is answered over a **symbol-use
+graph**, not an import graph. An edge ``A -> B`` exists when module ``A``
+references a name that module ``B`` **defines**, resolved through ``A``'s
+import bindings and through any chain of re-exporting facades. The closure
+is rooted at the test surface (``test_*.py``, ``conftest.py``, and modules
+under a ``tests/`` package, whose fixtures and helpers really do run).
 
-The gate fails when a new production module is added that no test
-transitively reaches. There is no allowlist: every gap is either
-covered by authoring a real-behavior test, by routing the module
-through an existing covered aggregator, or by adding the file to
-the narrow `_EXEMPTIONS` set with a one-line domain rationale.
+Re-export is deliberately **not** a use. A package ``__init__.py`` that
+does ``from ._x import Y`` and lists ``Y`` in ``__all__`` contributes no
+edge to ``_x``, because importing a facade executes only ``_x``'s
+module-level definitions — it never calls ``_x``'s functions. That single
+distinction is what the gate exists to enforce. Judging static import
+reachability instead lets one import of a package facade from any
+surviving test report every module in that package as covered, so an
+entire package's tests can be deleted while the gate stays green.
 
-Exemption criteria (always excluded from the requirement):
-  - `__init__.py` files (package roots; covered transitively)
-  - `conftest.py` (pytest configuration; not production logic)
-  - Modules named `fixtures.py` or `_fixtures.py` (test-support only)
-  - Modules under `__pycache__` directories
-  - `test_*.py` files themselves
+Transitive use is preserved, because it is genuine exercise: a test that
+calls a function which calls a helper really does run the helper, so the
+helper is exercised even though no test names it. The closure therefore
+follows use edges through production code to any depth.
 
-Limitations: the walker only follows static `import` / `from ... import`
-statements. Dynamic imports (`importlib.import_module` on a runtime-
-built string) are invisible to the walker; modules loaded only through
-dynamic dispatch must either be reachable through some other static
-path or carry an explicit `test_*.py` file alongside.
+Scope. Package ``__init__.py`` files carry no requirement: they execute
+whenever any module beneath them is imported, and their content is
+re-export plumbing rather than behaviour. Every other module under
+``src/cadrumo/`` must land in the closure or carry an exemption.
+
+Limits worth stating. The walker reads static references only, so a
+symbol reached exclusively through a runtime-built string — a subprocess
+entry point, a dynamically registered CLI verb — is invisible to it. Those
+are the entire content of the exemption table below, and each entry names
+the dispatch mechanism that hides it.
 """
 
 from __future__ import annotations
@@ -33,8 +39,10 @@ from __future__ import annotations
 import ast
 from collections import deque
 from collections.abc import Mapping
+from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -42,328 +50,434 @@ from ._inventory import REPO_ROOT, SRC_CADRUMO, ast_for_path, module_name, packa
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = SRC_CADRUMO
+_SRC_ROOT: Final[Path] = SRC_CADRUMO
+_CADRUMO_PACKAGE: Final[str] = "cadrumo"
 
-# Modules exempted from the pairing requirement.  Each entry is a
-# POSIX path relative to PROJECT_ROOT.  Add a one-line justification
-# comment for each.
-_EXEMPTIONS: frozenset[str] = frozenset(
-    {
-        # Package __init__ files are tested transitively through their submodules.
-        # Fixtures / conftest modules are test-support infrastructure.
-        # _playwright.py requires a running browser; browser integration tests
-        # live in a separate live-test suite.
-        "src/cadrumo/adapters/outbound/aeat/_playwright.py",
-        # Typer subcommand modules registered via _lazy(...) in
-        # entrypoints/cli/__init__.py (importlib.import_module on a
-        # string arg); the AST walker cannot follow dynamic dispatch.
-        # Each is exercised end-to-end via the CLI surface tests under
-        # entrypoints/cli/test_*.py that invoke `aeat app <verb> ...`.
-        "src/cadrumo/entrypoints/cli/_registry_corpus.py",
-        "src/cadrumo/entrypoints/cli/_review.py",
-        "src/cadrumo/entrypoints/cli/registry.py",
-        # aeat app quickfile / aeat app agent: same _lazy(...) dispatch as
-        # above; each has a dedicated entrypoints/cli/tests/test_app_*.py
-        # driving the real CLI end-to-end, and its payload module is only
-        # reachable through that same dynamically-dispatched command module.
-        "src/cadrumo/entrypoints/cli/_app_quickfile.py",
-        "src/cadrumo/entrypoints/cli/_app_quickfile_payloads.py",
-        "src/cadrumo/entrypoints/cli/_app_agent_workspace.py",
-        "src/cadrumo/entrypoints/cli/_app_agent_workspace_payloads.py",
-        # Registry payload modules are imported by CLI/schema registration
-        # paths that are exercised by docs-tool conformance gates outside the
-        # production package. They must not be pulled into coverage only by a
-        # production-embedded documentation generator.
-        "src/cadrumo/entrypoints/cli/_registry_corpus_payloads.py",
-        "src/cadrumo/entrypoints/cli/_registry_payloads.py",
-        # aeat app diagnostics: same _lazy(...) dispatch as the CLI verb
-        # modules above; only reachable via the dynamically-dispatched
-        # `_app_diagnostics` command module. Each is exercised end-to-end via
-        # the dedicated entrypoints/cli/tests/test_app_diagnostics_*.py suite
-        # driving the real CLI (invoke_cached_cli), not by direct import.
-        "src/cadrumo/entrypoints/cli/_app_diagnostics.py",
-        "src/cadrumo/entrypoints/cli/_app_diagnostics_telemetry.py",
-        "src/cadrumo/entrypoints/cli/_diagnostics_payloads.py",
-        # aeat app maintenance: same _lazy("app", "maintenance", ...) dispatch as
-        # the CLI verb modules above, so the AST walker cannot follow it. Both are
-        # exercised end-to-end by
-        # entrypoints/cli/tests/test_app_maintenance_export_reconcile.py driving
-        # the real CLI through invoke_cached_cli; the payload module is only
-        # reachable through that same dynamically-dispatched command module.
-        "src/cadrumo/entrypoints/cli/_app_maintenance.py",
-        "src/cadrumo/entrypoints/cli/_app_maintenance_payloads.py",
-        # Structural Protocol-only module: FicheroBoeRecordRenderer declares a
-        # shape (render_record_body) for adapter classes to satisfy by duck
-        # typing, per the same pattern as application.calculations._ports. It
-        # carries no executable logic of its own, so there is nothing for a
-        # real-behavior test to exercise; the concrete renderer that satisfies
-        # the shape (adapters.outbound.aeat.export._registry_record_renderer)
-        # is independently tested there.
-        "src/cadrumo/application/modelo/_ports.py",
-    },
-)
+_MAX_REEXPORT_HOPS: Final[int] = 12
+"""Bound on facade-chasing when resolving one symbol to its defining module.
 
-# `COVERAGE_GAPS` allowlist retired 2026-06-01: the AST import-graph
-# helper below proves transitive coverage for every entry that used to
-# live here (62 of 66 reach via aggregator __init__.py imports; the
-# remaining 4 — reconciliation errors + 3 fixture generators — now
-# have dedicated test_*.py files). No allowlist remains.
+A re-export chain crosses one package boundary per hop. Twelve exceeds the
+deepest chain in the tree while keeping resolution terminating on a
+pathological cycle.
+"""
 
 
-def _is_exempt(rel: str) -> bool:
-    """Return True if ``rel`` is exempted from the coverage requirement."""
-    if rel in _EXEMPTIONS:
+_DYNAMIC_DISPATCH_EXEMPTIONS: Final[Mapping[str, str]] = {
+    # Every entry states the runtime dispatch that hides the module from a
+    # static reference walk, and what does exercise it instead. An entry is
+    # retired the moment the module lands in the closure on its own -- the
+    # redundancy gate below fails until it is deleted.
+    "src/cadrumo/adapters/outbound/aeat/_playwright.py": (
+        "Driven only through a live Playwright browser process; the browser "
+        "integration suite that exercises it runs outside the default lanes. "
+        "Retire when a lane-resident test references its symbols."
+    ),
+    "src/cadrumo/adapters/persistence/storage/custody/_kdf_worker.py": (
+        "Child-process entry point spawned as `python -m "
+        "cadrumo.adapters.persistence.storage.custody._kdf_worker` by "
+        "adapters/persistence/storage/custody/_kdf_process.py, so the only "
+        "reference to it is a module-path string. The custody KDF suite drives "
+        "it end-to-end through that spawn. Retire when the worker body is "
+        "reachable without the subprocess boundary."
+    ),
+    "src/cadrumo/entrypoints/cli/_app_agent_workspace.py": (
+        "Typer subcommand registered through the `_lazy(...)` "
+        "importlib.import_module dispatch in entrypoints/cli/__init__.py. "
+        "Exercised end-to-end by the app-agent CLI suite invoking the real "
+        "command. Retire when the command module is registered statically."
+    ),
+    "src/cadrumo/entrypoints/cli/_app_maintenance.py": (
+        "Typer subcommand registered through the same `_lazy(...)` dispatch; "
+        "exercised end-to-end by the maintenance export-reconcile CLI suite. "
+        "Retire when the command module is registered statically."
+    ),
+    "src/cadrumo/entrypoints/cli/_app_maintenance_payloads.py": (
+        "Response payload models reachable only through the dynamically "
+        "dispatched maintenance command module above, which the CLI suite "
+        "drives. Retire when the owning command is registered statically."
+    ),
+    "src/cadrumo/entrypoints/cli/_app_quickfile.py": (
+        "Typer subcommand registered through the same `_lazy(...)` dispatch; "
+        "exercised end-to-end by the app-quickfile CLI suite. Retire when the "
+        "command module is registered statically."
+    ),
+    "src/cadrumo/entrypoints/cli/_registry_corpus.py": (
+        "Typer subcommand registered through the same `_lazy(...)` dispatch; "
+        "exercised through the registry-corpus CLI surface. Retire when the "
+        "command module is registered statically."
+    ),
+    "src/cadrumo/entrypoints/cli/registry.py": (
+        "Typer subcommand registered through the same `_lazy(...)` dispatch; "
+        "exercised through the registry CLI surface. Retire when the command "
+        "module is registered statically."
+    ),
+}
+"""Modules whose only entry into execution is a runtime-built string.
+
+Keyed by repository-relative POSIX path so an exemption names one reviewed
+module and can never widen to a directory. Two gates keep the table honest:
+an entry naming a vanished path fails, and an entry naming a module the
+closure already reaches fails as redundant.
+"""
+
+
+def _is_structural_non_requirement(path: Path) -> bool:
+    """Return True for files that carry no exercise requirement at all."""
+    name = path.name
+    return name in {"__init__.py", "conftest.py", "fixtures.py", "_fixtures.py"}
+
+
+def _is_test_surface(path: Path) -> bool:
+    """Return True when *path* is code the test run itself executes.
+
+    Fixtures and helpers under a ``tests/`` package run as surely as the
+    ``test_*.py`` bodies do, so their symbol references are real roots.
+    """
+    if path.name.startswith("test_") or path.name == "conftest.py":
         return True
-    parts = Path(rel).parts
-    name = parts[-1] if parts else ""
-    if name in {"__init__.py", "conftest.py", "fixtures.py", "_fixtures.py"}:
-        return True
-    if "__pycache__" in parts:
-        return True
-    return False
-
-
-def _collect_production_modules() -> list[Path]:
-    """Return every non-test, non-exempt Python module under src/cadrumo/."""
-    return [
-        p
-        for p in package_python_files(include_data=True)
-        if not p.name.startswith("test_") and "__pycache__" not in p.parts and not _is_exempt(repo_relative(p))
-    ]
-
-
-# ---------------------------------------------------------------------------
-# Import-graph coverage helper — the canonical gate.
-# ---------------------------------------------------------------------------
-
-
-_CADRUMO_PACKAGE = "cadrumo"
-
-
-def _module_path_for_dotted(dotted: str) -> Path | None:
-    """Return the on-disk file for an ``cadrumo.*`` dotted module name.
-
-    Resolves to either ``<rel>.py`` or ``<rel>/__init__.py`` if either
-    exists; returns ``None`` for names that do not map to a real file
-    (e.g. ``from .foo import bar`` where ``bar`` is a re-exported name
-    in ``foo``'s namespace and not a submodule).
-    """
-    if not dotted.startswith(_CADRUMO_PACKAGE):
-        return None
-    parts = dotted.split(".")
-    base = _SRC_ROOT.parent  # src/
-    candidate_module = base.joinpath(*parts).with_suffix(".py")
-    if candidate_module.is_file():
-        return candidate_module
-    candidate_package = base.joinpath(*parts, "__init__.py")
-    if candidate_package.is_file():
-        return candidate_package
-    return None
-
-
-def _file_to_dotted(file_path: Path) -> str:
-    """Convert a file under ``src/cadrumo/`` to its dotted module name."""
-    return module_name(file_path)
-
-
-def _resolve_relative(current_dotted: str, level: int, module: str | None) -> str | None:
-    """Resolve a relative-import target to an absolute dotted name.
-
-    ``current_dotted`` is the dotted name of the file containing the
-    ``from ... import`` statement (e.g. ``cadrumo.domain.portals._registry``).
-    ``level`` is the number of leading dots in the relative import.
-    ``module`` is the module name after the dots, or ``None`` for
-    ``from . import x``.
-    """
-    if level == 0:
-        return module
-    parts = current_dotted.split(".")
-    # __init__-style files are represented without the trailing __init__,
-    # so the file at cadrumo.domain.portals (init) treats `.foo` as
-    # cadrumo.domain.portals.foo. A submodule file like
-    # cadrumo.domain.portals._registry treats `.foo` as
-    # cadrumo.domain.portals.foo (level=1 strips _registry).
-    init_path = _SRC_ROOT.parent.joinpath(*parts, "__init__.py")
-    is_init = init_path.is_file()
-    if is_init:
-        # `current_dotted` is the package; level 1 stays in the same package.
-        ancestor = parts[: len(parts) - (level - 1)] if level > 0 else parts
-    else:
-        # `current_dotted` is a module file; level 1 means the parent package.
-        ancestor = parts[: len(parts) - level]
-    if not ancestor:
-        return None
-    if module:
-        return ".".join([*ancestor, module])
-    return ".".join(ancestor)
-
-
-def _cadrumo_imports_in(file_path: Path, source_tree_ast: Mapping[Path, ast.AST] | None = None) -> set[str]:
-    """Return absolute ``cadrumo.*`` dotted names imported by ``file_path``.
-
-    For ``from X import Y, Z`` the returned set includes ``X``, ``X.Y``,
-    and ``X.Z``; the caller resolves each candidate to a file via
-    :func:`_module_path_for_dotted` and silently drops non-module names.
-    """
-    tree = ast_for_path(file_path, source_tree_ast)
-    if tree is None:
-        return set()
-
-    current_dotted = _file_to_dotted(file_path)
-    found: set[str] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            for alias in node.names:
-                if alias.name.startswith(_CADRUMO_PACKAGE):
-                    found.add(alias.name)
-        elif isinstance(node, ast.ImportFrom):
-            base = _resolve_relative(current_dotted, node.level, node.module)
-            if base is None or not base.startswith(_CADRUMO_PACKAGE):
-                continue
-            found.add(base)
-            for alias in node.names:
-                if alias.name == "*":
-                    continue
-                found.add(f"{base}.{alias.name}")
-    return found
-
-
-def _collect_test_entrypoints() -> list[Path]:
-    """Return every ``test_*.py`` and ``conftest.py`` under ``src/cadrumo/``."""
-    return [
-        p
-        for p in package_python_files(include_data=True)
-        if "__pycache__" not in p.parts and (p.name.startswith("test_") or p.name == "conftest.py")
-    ]
-
-
-def _transitively_reachable_from_tests(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> set[Path]:
-    """Return the set of production module paths reachable from any test.
-
-    The closure starts at every test/conftest entrypoint, follows static
-    ``cadrumo.*`` imports, and stops when no new on-disk module is added.
-    Returned paths are absolute and may include both ``foo.py`` modules
-    and ``foo/__init__.py`` package roots.
-    """
-    seen: set[Path] = set()
-    queue: deque[Path] = deque(_collect_test_entrypoints())
-    while queue:
-        current = queue.popleft()
-        for dotted in _cadrumo_imports_in(current, source_tree_ast):
-            target = _module_path_for_dotted(dotted)
-            if target is None or target in seen:
-                continue
-            seen.add(target)
-            queue.append(target)
-    return seen
+    return "tests" in path.relative_to(_SRC_ROOT).parts
 
 
 @cache
-def _cached_transitively_reachable_from_tests() -> set[Path]:
-    """Return the no-argument import closure once per test process."""
-    return _transitively_reachable_from_tests()
+def _tracked_modules() -> tuple[Path, ...]:
+    """Return every package ``.py`` file the graph is built over."""
+    return package_python_files(include_data=True)
 
 
-def _has_import_graph_coverage(module: Path, reachable: set[Path]) -> bool:
-    """Return True if ``module`` is in the test-rooted import closure.
-
-    Package ``__init__.py`` files are considered covered when any module
-    under the same package is reachable; the package always imports as a
-    side-effect of its submodules being touched.
-    """
-    if module in reachable:
-        return True
-    if module.name == "__init__.py":
-        package_root = module.parent
-        return any(package_root in p.parents for p in reachable)
-    return False
+@cache
+def _test_surface_modules() -> tuple[Path, ...]:
+    """Return the roots of the exercise closure."""
+    return tuple(path for path in _tracked_modules() if _is_test_surface(path))
 
 
-def test_import_graph_helper_recognises_aggregator_pattern() -> None:
-    """Positive control: portal entries are covered via _registry aggregator."""
-    reachable = _cached_transitively_reachable_from_tests()
-    # _registry.py imports every portal entry; test_registry.py imports
-    # _registry. The closure must therefore include at least one of the
-    # portal entry files even though no test_*.py sits next to them.
-    portal_entries_dir = _SRC_ROOT / "domain" / "portals" / "_entries"
-    portal_modules = [p for p in portal_entries_dir.glob("portal_*.py") if not p.name.startswith("test_")]
-    assert portal_modules, "expected portal_*.py entries to exist"
-    reached = [p for p in portal_modules if p in reachable]
-    assert reached, (
-        "import-graph helper failed to reach any portal entry via cadrumo.domain.portals._registry aggregator imports"
+@cache
+def _production_modules() -> tuple[Path, ...]:
+    """Return every non-test module that must be exercised."""
+    return tuple(
+        path for path in _tracked_modules() if not _is_test_surface(path) and not _is_structural_non_requirement(path)
     )
 
 
-def test_import_graph_helper_skips_orphan_modules() -> None:
-    """Negative control: a synthetic dotted name with no file resolves to None."""
-    assert _module_path_for_dotted("cadrumo.does.not.exist.module") is None
-    # And a non-cadrumo dotted name is never resolved.
-    assert _module_path_for_dotted("os.path") is None
+@cache
+def _known_dotted_names() -> frozenset[str]:
+    """Return the dotted name of every module in the tree."""
+    return frozenset(module_name(path) for path in _tracked_modules())
 
 
-def test_every_production_module_is_reachable_from_a_test() -> None:
-    """Canonical coverage gate. No allowlist.
+@cache
+def _module_file_for(dotted: str) -> Path | None:
+    """Return the on-disk file for a ``cadrumo.*`` dotted module name."""
+    if dotted not in _known_dotted_names():
+        return None
+    parts = dotted.split(".")
+    base = _SRC_ROOT.parent
+    candidate = base.joinpath(*parts).with_suffix(".py")
+    if candidate.is_file():
+        return candidate
+    candidate = base.joinpath(*parts, "__init__.py")
+    return candidate if candidate.is_file() else None
 
-    Every production module under ``src/cadrumo/`` (minus the narrow
-    ``_EXEMPTIONS`` set) must be statically reachable from at least
-    one ``test_*.py`` / ``conftest.py`` entrypoint through the import
-    graph. Reachable means the AST walker rooted at any test file
-    transitively imports the module — directly, via a sibling
-    aggregator, via the package ``__init__.py``, or via any chain of
-    static ``import`` / ``from ... import`` statements.
 
-    The gate fails loudly when a new module is added that no test
-    transitively reaches. The fix is one of:
+def _resolve_relative(current_dotted: str, level: int, module: str | None, *, is_package: bool) -> str | None:
+    """Resolve a relative-import target to an absolute dotted name."""
+    if level == 0:
+        return module
+    parts = current_dotted.split(".")
+    anchor = parts[: len(parts) - (level - 1)] if is_package else parts[: len(parts) - level]
+    if not anchor:
+        return None
+    return ".".join([*anchor, module]) if module else ".".join(anchor)
 
-    1. Author a real-behavior test next to the module (creates a new
-       test_*.py entrypoint that imports the module).
-    2. Re-export the module's public surface through a sibling
-       aggregator that an existing test already imports.
-    3. (Last resort) Add the module to ``_EXEMPTIONS`` with a one-line
-       domain rationale comment.
 
-    Per ``test-quality is a review gate`` memory: do NOT author a
-    tautological test just to silence this gate. The point is real
-    behavior coverage, not gate green-ness.
+_NESTING_STATEMENTS: Final[tuple[type[ast.stmt], ...]] = (ast.If, ast.Try, ast.With, ast.For, ast.While)
+
+
+def _collect_module_level_names(body: list[ast.stmt], into: set[str]) -> None:
+    """Record every name *body* binds at module level.
+
+    Descends into conditional and guarded blocks -- a ``TYPE_CHECKING``
+    branch or an optional-dependency ``try``/``except ImportError`` fallback
+    binds real module-level names -- but never into a function or class
+    body, whose names belong to that scope rather than the module.
     """
-    production_modules = _collect_production_modules()
-    assert production_modules, "no production modules were collected; a coverage gate over an empty tree has no gaps"
-    reachable = _cached_transitively_reachable_from_tests()
-    assert reachable, (
-        "the test-reachability walk found nothing reachable; every module would read as a gap or none would"
-    )
-    gaps: list[str] = []
-    for module in production_modules:
-        if _has_import_graph_coverage(module, reachable):
+    for node in body:
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            into.add(node.name)
+        elif isinstance(node, ast.Assign):
+            for target in node.targets:
+                into.update(sub.id for sub in ast.walk(target) if isinstance(sub, ast.Name))
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            into.add(node.target.id)
+        elif isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
+            into.add(node.name.id)
+        elif isinstance(node, _NESTING_STATEMENTS):
+            for block in ("body", "orelse", "finalbody"):
+                _collect_module_level_names(getattr(node, block, []) or [], into)
+            for handler in getattr(node, "handlers", []) or []:
+                _collect_module_level_names(handler.body, into)
+
+
+@dataclass(frozen=True)
+class _SourceIndex:
+    """Per-module definition, re-export and import-binding tables."""
+
+    defines: Mapping[str, frozenset[str]]
+    reexports: Mapping[str, Mapping[str, str]]
+    bindings: Mapping[Path, Mapping[str, str]]
+
+
+@cache
+def _source_index() -> _SourceIndex:
+    """Build the definition / re-export / binding tables once per process."""
+    defines: dict[str, frozenset[str]] = {}
+    reexports: dict[str, Mapping[str, str]] = {}
+    bindings: dict[Path, Mapping[str, str]] = {}
+
+    for path in _tracked_modules():
+        tree = ast_for_path(path)
+        if not isinstance(tree, ast.Module):
             continue
-        gaps.append(repo_relative(module))
+        dotted = module_name(path)
+        is_package = path.name == "__init__.py"
 
-    assert not gaps, (
-        f"Coverage gaps detected ({len(gaps)} modules).\n"
-        "These production modules are not reachable through the static\n"
-        "import graph from any test entrypoint. Either author a real-\n"
-        "behavior test, route the module through an existing covered\n"
-        "aggregator, or exempt it in _EXEMPTIONS with a rationale.\n\n" + "\n".join(f"  {g}" for g in sorted(gaps))
+        defined: set[str] = set()
+        _collect_module_level_names(tree.body, defined)
+
+        imported: set[str] = set()
+        module_reexports: dict[str, str] = {}
+        module_bindings: dict[str, str] = {}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    bound = alias.asname or alias.name.split(".")[0]
+                    origin = alias.name if alias.asname else alias.name.split(".")[0]
+                    imported.add(bound)
+                    module_bindings[bound] = origin
+                    if origin.startswith(_CADRUMO_PACKAGE):
+                        module_reexports[bound] = origin
+            elif isinstance(node, ast.ImportFrom):
+                base = _resolve_relative(dotted, node.level, node.module, is_package=is_package)
+                if base is None:
+                    continue
+                for alias in node.names:
+                    if alias.name == "*":
+                        continue
+                    bound = alias.asname or alias.name
+                    origin = f"{base}.{alias.name}"
+                    imported.add(bound)
+                    module_bindings[bound] = origin
+                    if base.startswith(_CADRUMO_PACKAGE):
+                        module_reexports[bound] = origin
+
+        # A name this module imported is defined elsewhere; keeping it out of
+        # `defines` is what makes a re-export transparent rather than a home.
+        defines[dotted] = frozenset(defined - imported)
+        reexports[dotted] = module_reexports
+        bindings[path] = module_bindings
+
+    return _SourceIndex(defines=defines, reexports=reexports, bindings=bindings)
+
+
+@cache
+def _defining_module(reference: str, hops: int = 0) -> Path | None:
+    """Return the module that *defines* the symbol named by *reference*.
+
+    ``reference`` is an absolute dotted name such as
+    ``cadrumo.core.Modelo``. Resolution splits it into the longest prefix
+    that names a real module plus the symbol taken from it, then either
+    finds the symbol defined there or follows that module's re-export of it
+    one hop further. A bare module reference resolves to ``None``: importing
+    a module is not using a symbol from it.
+    """
+    if hops > _MAX_REEXPORT_HOPS or not reference.startswith(_CADRUMO_PACKAGE):
+        return None
+    if reference in _known_dotted_names():
+        return None
+
+    index = _source_index()
+    parts = reference.split(".")
+    for boundary in range(len(parts) - 1, 0, -1):
+        prefix = ".".join(parts[:boundary])
+        owner = _module_file_for(prefix)
+        if owner is None:
+            continue
+        symbol = parts[boundary]
+        if symbol in index.defines.get(prefix, frozenset()):
+            return owner
+        origin = index.reexports.get(prefix, {}).get(symbol)
+        if origin is None or origin == reference:
+            return None
+        if origin in _known_dotted_names():
+            # The re-exported name is itself a submodule; any remaining
+            # attribute chain is the symbol actually taken from it.
+            remainder = parts[boundary + 1 :]
+            return _defining_module(f"{origin}.{'.'.join(remainder)}", hops + 1) if remainder else None
+        return _defining_module(origin, hops + 1)
+    return None
+
+
+def _referenced_origins(tree: ast.Module, module_bindings: Mapping[str, str]) -> set[str]:
+    """Return the absolute dotted names *tree* references outside its imports.
+
+    Only the outermost node of an attribute chain is read, so ``a.b.c`` is
+    one reference rather than three. Import statements are skipped: binding
+    a name is not using it.
+    """
+    origins: set[str] = set()
+    pending: list[ast.AST] = [tree]
+    while pending:
+        node = pending.pop()
+        if isinstance(node, ast.Import | ast.ImportFrom):
+            continue
+        if isinstance(node, ast.Name | ast.Attribute):
+            attributes: list[str] = []
+            cursor: ast.AST = node
+            while isinstance(cursor, ast.Attribute):
+                attributes.append(cursor.attr)
+                cursor = cursor.value
+            if not isinstance(cursor, ast.Name):
+                pending.append(cursor)
+                continue
+            origin = module_bindings.get(cursor.id)
+            if origin is not None and origin.startswith(_CADRUMO_PACKAGE):
+                tail = ".".join(reversed(attributes))
+                origins.add(f"{origin}.{tail}" if tail else origin)
+            continue
+        pending.extend(ast.iter_child_nodes(node))
+    return origins
+
+
+@cache
+def _symbol_use_edges() -> Mapping[Path, frozenset[Path]]:
+    """Return, per module, the modules whose defined symbols it references."""
+    index = _source_index()
+    edges: dict[Path, frozenset[Path]] = {}
+    for path in _tracked_modules():
+        tree = ast_for_path(path)
+        if not isinstance(tree, ast.Module):
+            edges[path] = frozenset()
+            continue
+        targets = {
+            defining
+            for reference in _referenced_origins(tree, index.bindings.get(path, {}))
+            if (defining := _defining_module(reference)) is not None and defining != path
+        }
+        edges[path] = frozenset(targets)
+    return edges
+
+
+@cache
+def _exercised_modules() -> frozenset[Path]:
+    """Return every module the test surface can reach through symbol use."""
+    edges = _symbol_use_edges()
+    reached: set[Path] = set()
+    queue: deque[Path] = deque()
+    for root in _test_surface_modules():
+        for target in edges.get(root, frozenset()):
+            if target not in reached:
+                reached.add(target)
+                queue.append(target)
+    while queue:
+        for target in edges.get(queue.popleft(), frozenset()):
+            if target not in reached:
+                reached.add(target)
+                queue.append(target)
+    return frozenset(reached)
+
+
+def test_reexport_facade_does_not_launder_exercise() -> None:
+    """The load-bearing distinction: importing a facade is not using its members.
+
+    This is the anti-tautology proof for the whole gate. A package
+    ``__init__.py`` whose body is ``from ._x import Y`` plus an ``__all__``
+    list must contribute **no** use edge to ``_x``. If it did, one import of
+    any package facade from any surviving test would re-cover every module
+    in that package, which is precisely the blindness this gate replaced.
+    """
+    edges = _symbol_use_edges()
+    pure_reexport_facades = [
+        path
+        for path in _tracked_modules()
+        if path.name == "__init__.py" and not _is_test_surface(path) and not _source_index().defines[module_name(path)]
+    ]
+    assert pure_reexport_facades, "expected the tree to contain pure re-export package facades"
+
+    laundering = sorted(repo_relative(path) for path in pure_reexport_facades if edges[path])
+    assert not laundering, (
+        f"{len(laundering)} package facade(s) that define nothing still emit symbol-use edges, "
+        "so a bare import of the facade would report its submodules as exercised:\n"
+        + "\n".join(f"  {entry}" for entry in laundering)
+    )
+
+
+def test_symbol_use_closure_follows_production_call_chains() -> None:
+    """Positive control: exercise travels through production code, not just tests.
+
+    A helper no test names by hand is still genuinely run when an exercised
+    production module calls it, so the closure must reach it. Without this
+    the gate would demand a test file per module and stop measuring
+    behaviour.
+    """
+    edges = _symbol_use_edges()
+    exercised = _exercised_modules()
+    directly_referenced = {target for root in _test_surface_modules() for target in edges.get(root, frozenset())}
+
+    indirect = exercised - directly_referenced
+    assert indirect, (
+        "no module was reached only through a production-to-production use edge; "
+        "the closure has collapsed to modules tests name directly"
+    )
+
+
+def test_symbol_resolution_rejects_names_with_no_defining_module() -> None:
+    """Negative control: unresolvable and non-first-party names never resolve."""
+    assert _defining_module("cadrumo.does.not.exist.Symbol") is None
+    assert _defining_module("os.path.join") is None
+    # A bare module reference is an import, not a use of a defined symbol.
+    assert _defining_module("cadrumo.core") is None
+
+
+def test_every_production_module_is_exercised_by_a_test() -> None:
+    """Canonical gate: every production module lands in the exercise closure.
+
+    A module fails here when nothing an executing test reaches references a
+    symbol it defines -- neither a test directly, nor any chain of
+    production code a test drives. That is the honest statement that the
+    module's behaviour is unproven.
+
+    The fix is to author a real-behavior test that exercises it, or to
+    delete the module if nothing calls it. Adding a tautological test to
+    silence this gate defeats its purpose, and an exemption is only correct
+    when a runtime-built string genuinely hides real execution.
+    """
+    production = _production_modules()
+    assert production, "no production modules were collected; a coverage gate over an empty tree proves nothing"
+    exercised = _exercised_modules()
+    assert exercised, "the symbol-use closure reached nothing; every module would read as a gap"
+
+    unexercised = sorted(
+        repo_relative(path)
+        for path in production
+        if path not in exercised and repo_relative(path) not in _DYNAMIC_DISPATCH_EXEMPTIONS
+    )
+
+    assert not unexercised, (
+        f"{len(unexercised)} production module(s) are never exercised by the test suite.\n"
+        "Nothing an executing test reaches references any symbol these modules\n"
+        "define, directly or through the production code the tests drive.\n"
+        "Author a real-behavior test, or delete the module if nothing calls it:\n\n"
+        + "\n".join(f"  {entry}" for entry in unexercised)
     )
 
 
 def test_every_exemption_still_names_a_live_module() -> None:
-    """An exemption whose module no longer exists must fail, not sit quietly.
+    """An exemption whose module vanished must fail, not sit quietly.
 
-    A stale entry is worse than no entry. It costs nothing while the path is
-    absent, and the moment anyone creates a module at that path it silently
-    exempts it from the coverage requirement -- a rubber stamp granted by
-    someone who never saw the file. This gate's whole value is that every
-    exemption was a deliberate judgement about a specific module, and an entry
-    outliving its module quietly converts one into a blanket.
-
-    Found live: ``src/cadrumo/locales/scaffold.py`` sat here exempted, and
-    ``git log`` shows no commit ever placed a file at that path. The comment
-    beside a neighbouring entry also claimed ``locales/__main__`` dispatches
-    into it, when it dispatches into ``locales/cli.py``. Both were removed with
-    this gate, which is the only reason either was noticed.
+    A stale entry costs nothing while the path is absent, and the moment
+    anyone creates a module there it silently exempts it -- a waiver granted
+    by someone who never saw the file.
     """
-    dead = sorted(entry for entry in _EXEMPTIONS if not (REPO_ROOT / entry).is_file())
+    dead = sorted(entry for entry in _DYNAMIC_DISPATCH_EXEMPTIONS if not (REPO_ROOT / entry).is_file())
 
     assert not dead, (
         f"{len(dead)} exemption(s) name a module that no longer exists, so each is a "
@@ -371,4 +485,24 @@ def test_every_exemption_still_names_a_live_module() -> None:
         + "\n".join(f"  {entry}" for entry in dead)
         + "\n\nDelete the entry. If the module moved, exempt its new path only after "
         "confirming the original rationale still holds there."
+    )
+
+
+def test_no_exemption_covers_an_already_exercised_module() -> None:
+    """An exemption the closure has overtaken must fail as redundant.
+
+    This is the half that keeps the table shrinking. Once a module is
+    genuinely exercised, its exemption stops describing reality and starts
+    pre-authorising the loss of that coverage: delete the module's only test
+    later and the waiver absorbs the regression in silence. Every entry
+    states the condition that retires it, and this gate enforces retirement.
+    """
+    exercised = _exercised_modules()
+    redundant = sorted(entry for entry in _DYNAMIC_DISPATCH_EXEMPTIONS if (REPO_ROOT / entry).resolve() in exercised)
+
+    assert not redundant, (
+        f"{len(redundant)} exemption(s) name a module the test suite already exercises, "
+        "so each is a standing waiver that would silently absorb the loss of that coverage:\n"
+        + "\n".join(f"  {entry}" for entry in redundant)
+        + "\n\nDelete the entry."
     )
