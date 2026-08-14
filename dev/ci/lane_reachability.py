@@ -107,6 +107,17 @@ _PRUNED: Final[frozenset[str]] = frozenset(
     {".git", ".venv", "node_modules", "__pycache__", "_build", ".mypy_cache", ".ruff_cache", ".pytest_cache"},
 )
 
+#: Top-level directories a pytest invocation can positionally name. A BARE
+#: reference to one of these -- no slash, e.g. a hypothetical `pytest
+#: packaging` -- would otherwise match none of `_paths_of`'s other checks and
+#: silently fall back to the configured testpaths, the same silent-widening
+#: shape as the `--ignore` and `{{}}`-residue defects already fixed here. No
+#: current recipe exercises the bare form -- every real invocation already
+#: names a subpath (`src/cadrumo`, `packaging/homebrew/tests`), which the
+#: `"/" in token` check catches -- so this only closes the gap for whenever
+#: one does.
+_TOP_LEVEL_TEST_DIRS: Final[frozenset[str]] = frozenset({"src", "dev", "packaging"})
+
 #: Where lane declarations live. Anything else is not a lane.
 _WORKFLOW_DIR: Final[str] = ".github/workflows"
 
@@ -116,6 +127,15 @@ _RECIPE_HEADER: Final = re.compile(r"^(?P<name>[a-z][\w-]*)\b[^:\n]*:(?![=])")
 
 #: A `just <recipe>` call, in a workflow `run:` or in another recipe's body.
 _JUST_CALL: Final = re.compile(r"\bjust\s+(?P<recipe>[a-z][\w-]*)")
+
+#: A bare `{{name}}` justfile interpolation. Deliberately narrow: an expression
+#: like `{{ if durations == "" { "" } else { ... } }}` does not match a bare
+#: identifier and is left exactly as written, per the rule that an unresolved
+#: template must stay visibly unresolved rather than being guessed at.
+_JUST_VARIABLE_REF: Final = re.compile(r"\{\{\s*(?P<name>[A-Za-z_]\w*)\s*\}\}")
+
+#: A `just --evaluate` output line: `name := "value"`, one per top-level variable.
+_JUST_EVALUATE_LINE: Final = re.compile(r'^(?P<name>\S+)\s*:=\s*"(?P<value>.*)"\s*$')
 
 
 @dataclass(frozen=True, slots=True)
@@ -179,9 +199,16 @@ class Lane:
     paths: tuple[str, ...]
     marker_expression: str | None
     recipe: str | None = None
+    exclusions: tuple[str, ...] = ()
 
     def covers(self, relative_path: str) -> bool:
-        """Return whether this lane's path scope reaches ``relative_path``."""
+        """Return whether this lane's path scope reaches ``relative_path``.
+
+        A path inside an excluded ``--ignore`` scope is not covered even when
+        it sits inside a covered ``paths`` scope: ``covers()`` had no concept
+        of ``--ignore`` at all, so a lane that both selects ``src/`` and
+        excludes two files under it read as reaching them anyway.
+        """
         if not self.paths:
             # A pathless invocation takes the configured testpaths, which the
             # caller supplies as this lane's paths. An empty scope reaches
@@ -189,6 +216,8 @@ class Lane:
             # gate silently reports full coverage.
             return False
         posix = relative_path.replace("\\", "/")
+        if any(posix == excluded or posix.startswith(f"{excluded.rstrip('/')}/") for excluded in self.exclusions):
+            return False
         return any(posix == scope or posix.startswith(f"{scope.rstrip('/')}/") for scope in self.paths)
 
 
@@ -218,9 +247,33 @@ def _paths_of(tokens: list[str]) -> tuple[str, ...]:
             continue
         if index == 0 or token in {"pytest", "uv", "run", "python", "-m"}:
             continue
-        if token.endswith(".py") or "/" in token or token.startswith("src") or token.startswith("dev"):
+        if token.endswith(".py") or "/" in token or token.split("/")[0] in _TOP_LEVEL_TEST_DIRS:
             paths.append(token.split("::")[0])
     return tuple(paths)
+
+
+def _exclusions_of(tokens: list[str]) -> tuple[str, ...]:
+    """Return every path a pytest argv's ``--ignore`` flags exclude.
+
+    Pytest accepts two spellings for the same flag -- ``--ignore=PATH`` as one
+    token and ``--ignore PATH`` as two -- and a lane declared with either form
+    excludes the path just as much as the other. Modelling only one form is how
+    a lane written the other way keeps reading as if it still reached the file.
+    """
+    ignore_flag = "--ignore"  # a pytest selector, not a credential
+    excluded: list[str] = []
+    take_next = False
+    for token in tokens:
+        if take_next:
+            excluded.append(token.split("::")[0])
+            take_next = False
+            continue
+        if token == ignore_flag:
+            take_next = True
+            continue
+        if token.startswith(f"{ignore_flag}="):
+            excluded.append(token[len(ignore_flag) + 1 :].split("::")[0])
+    return tuple(excluded)
 
 
 def _pytest_invocations(text: str, *, source: str, default_paths: tuple[str, ...]) -> list[Lane]:
@@ -243,7 +296,14 @@ def _pytest_invocations(text: str, *, source: str, default_paths: tuple[str, ...
         if "pytest" not in tokens and not any(token.endswith("pytest") for token in tokens):
             continue
         paths = _paths_of(tokens) or default_paths
-        lanes.append(Lane(source=source, paths=paths, marker_expression=_marker_expression_of(tokens)))
+        lanes.append(
+            Lane(
+                source=source,
+                paths=paths,
+                marker_expression=_marker_expression_of(tokens),
+                exclusions=_exclusions_of(tokens),
+            )
+        )
     return lanes
 
 
@@ -269,7 +329,13 @@ def _justfile_lanes(text: str, *, default_paths: tuple[str, ...]) -> list[Lane]:
             current = None
         for lane in _pytest_invocations(raw, source="justfile", default_paths=default_paths):
             lanes.append(
-                Lane(source=lane.source, paths=lane.paths, marker_expression=lane.marker_expression, recipe=current)
+                Lane(
+                    source=lane.source,
+                    paths=lane.paths,
+                    marker_expression=lane.marker_expression,
+                    recipe=current,
+                    exclusions=lane.exclusions,
+                )
             )
     return lanes
 
@@ -391,15 +457,102 @@ def configured_marker_expression(root: Path) -> str | None:
     return inner.group(1) if inner else None
 
 
+def _just_variables(root: Path) -> dict[str, str]:
+    """Return every top-level justfile variable, resolved by ``just`` itself.
+
+    This module parses the justfile as TEXT, so a recipe body that names a
+    variable (``{{harness_exclusions}}``) reads as the literal eight characters
+    ``harness_exclusions`` wrapped in braces -- not the ``--ignore=...`` string
+    it expands to at run time -- unless that expansion is resolved here first.
+    An unresolved template can still happen to parse as a plausible-looking
+    path, which is exactly how this class of gap produces a wrong answer
+    instead of a loud one. Delegating to ``just`` rather than hand-rolling
+    justfile expression evaluation keeps this module honest about what it can
+    and cannot parse: a construct richer than a bare variable reference (an
+    ``if`` expression, a function call) is not attempted and is left visibly
+    unresolved.
+
+    Fails closed: a missing or failing ``just`` raises rather than silently
+    falling back to the unresolved text, because a silent fallback is
+    indistinguishable from a correct empty result.
+    """
+    just = shutil.which("just")
+    if just is None:
+        message = "just is not on PATH, so justfile variables cannot be resolved"
+        raise RuntimeError(message)
+    completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no caller input
+        [just, "--evaluate"],
+        cwd=root,
+        capture_output=True,
+        check=True,
+    )
+    variables: dict[str, str] = {}
+    for line in completed.stdout.decode(_UTF_8).splitlines():
+        match = _JUST_EVALUATE_LINE.match(line)
+        if match is not None:
+            variables[match.group("name")] = match.group("value")
+    return variables
+
+
+def _substitute_just_variables(text: str, variables: dict[str, str]) -> str:
+    """Replace every bare ``{{name}}`` reference in ``text`` with its value.
+
+    A reference naming a variable ``just --evaluate`` did not resolve -- an
+    unrecognised name, or a richer expression this module does not attempt --
+    is left exactly as written rather than guessed at.
+    """
+    return _JUST_VARIABLE_REF.sub(lambda match: variables.get(match.group("name"), match.group(0)), text)
+
+
+def resolved_justfile_text(root: Path) -> str:
+    """Return the justfile's text with every top-level ``{{name}}`` resolved.
+
+    The one place any consumer should ask "what does this justfile actually
+    say": resolution is real ``just`` resolution (``just --evaluate``), not a
+    hand-rolled regex against raw text, so a consumer reading this text sees
+    exactly what ``just`` would substitute -- never a literal ``{{name}}``
+    token misread as a nonsense path. Returns the empty string when there is
+    no justfile, so a caller can treat "no justfile" and "empty justfile" the
+    same way without a separate existence check.
+    """
+    justfile = root / "justfile"
+    if not justfile.exists():
+        return ""
+    return _substitute_just_variables(justfile.read_text(encoding=_UTF_8), _just_variables(root))
+
+
+def resolved_recipe_commands(root: Path, recipe: str) -> tuple[str, ...]:
+    """Return one justfile recipe's command lines, resolved and ``@``-stripped.
+
+    This is what ``just <recipe>`` actually executes, in order. A consumer that
+    instead regexed raw justfile text for a recipe's body would see the
+    literal token ``{{name}}`` in place of the value it expands to, which stops
+    matching the moment a recipe's paths move into a variable -- exactly the
+    shape that broke when the harness recipe's member paths did.
+    """
+    body = _recipe_bodies(resolved_justfile_text(root)).get(recipe, "")
+    # `_recipe_bodies` does not treat an unindented comment as ending a body (a
+    # doc comment can sit between a header and its own body without splitting
+    # it), so a trailing comment block belonging to the NEXT recipe reads as
+    # part of THIS one until the next non-comment line. A real command line is
+    # never a bare comment, so it is filtered here rather than by widening the
+    # shared boundary rule other callers already depend on.
+    return tuple(
+        line.strip().removeprefix("@")
+        for line in body.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    )
+
+
 def declared_lanes(root: Path) -> tuple[Lane, ...]:
     """Return every lane declared by config, recipes, and workflows."""
     testpaths = configured_testpaths(root)
     default_expression = configured_marker_expression(root)
     lanes: list[Lane] = []
 
-    justfile = root / "justfile"
-    if justfile.exists():
-        lanes.extend(_justfile_lanes(justfile.read_text(encoding=_UTF_8), default_paths=testpaths))
+    text = resolved_justfile_text(root)
+    if text:
+        lanes.extend(_justfile_lanes(text, default_paths=testpaths))
 
     workflow_dir = root / _WORKFLOW_DIR
     if workflow_dir.is_dir():
@@ -417,7 +570,13 @@ def declared_lanes(root: Path) -> tuple[Lane, ...]:
     for lane in lanes:
         expression = lane.marker_expression if lane.marker_expression is not None else default_expression
         resolved.append(
-            Lane(source=lane.source, paths=lane.paths, marker_expression=expression, recipe=lane.recipe),
+            Lane(
+                source=lane.source,
+                paths=lane.paths,
+                marker_expression=expression,
+                recipe=lane.recipe,
+                exclusions=lane.exclusions,
+            ),
         )
     return tuple(resolved)
 

@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import re
 import shlex
-import shutil
 from pathlib import Path
 
 import pytest
 import yaml
 
 from ...packaging._command import run_command
+from ..lane_reachability import declared_lanes, resolved_recipe_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -61,10 +61,17 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
 
 _FULL_WORKFLOW = Path(__file__).resolve().parents[3] / ".github" / "workflows" / "ci-full.yml"
 _REPOSITORY_ROOT = _WORKFLOW.parents[2]
-_TEST_HARNESS_MEMBERS = (
-    "src/cadrumo/tests/test_worker_count_hook_harness.py",
-    "src/cadrumo/tests/test_full_corpus_collectability_harness.py",
-)
+
+
+def _declared_harness_members() -> tuple[str, ...]:
+    """Return the harness recipe's member paths, from the one canonical parser.
+
+    Derived, never restated: the combined real-proof line is the ``test-harness``
+    lane carrying the most paths, so a member added, dropped, or renamed at its
+    one declaration site (the justfile) moves this without a second edit here.
+    """
+    harness_lanes = [lane for lane in declared_lanes(_REPOSITORY_ROOT) if lane.recipe == "test-harness"]
+    return max((lane.paths for lane in harness_lanes), key=len, default=())
 
 
 def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
@@ -106,17 +113,14 @@ def test_harness_recipe_runs_every_real_proof_outer_serially_and_non_vacuously()
     outer-serial, preventing their real child processes from nesting inside an
     xdist pool.
     """
-    recipe = re.search(
-        r"(?m)^test-harness:\r?\n((?:    @[^\r\n]+\r?\n?)+)",
-        _JUSTFILE.read_text(encoding="utf-8"),
-    )
-    assert recipe is not None, "no justfile recipe named test-harness"
-    commands = tuple(line.strip().removeprefix("@") for line in recipe.group(1).splitlines())
+    members = _declared_harness_members()
+    assert members, "no justfile recipe named test-harness declares any member"
+    commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-harness")
 
     pytest_prefix = "uv run --no-sync pytest -q -m integration"
     assert commands == (
-        *(f"{pytest_prefix} --collect-only -n0 {member}" for member in _TEST_HARNESS_MEMBERS),
-        f"{pytest_prefix} -rsf -n0 {' '.join(_TEST_HARNESS_MEMBERS)}",
+        *(f"{pytest_prefix} --collect-only -n0 {member}" for member in members),
+        f"{pytest_prefix} -rsf -n0 {' '.join(members)}",
     )
     assert all("-n0" in command for command in commands)
     assert all("||" not in command and ";" not in command for command in commands)
@@ -135,25 +139,13 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
         encoding="utf-8",
     )
 
-    just = shutil.which("just")
-    assert just is not None, "test-harness requires the installed just executable"
-    shown_recipe = run_command(
-        [just, "--show", "test-harness"],
-        cwd=_REPOSITORY_ROOT,
-        timeout_seconds=30,
-    )
-    assert shown_recipe.returncode == 0, (
-        f"could not render the real test-harness recipe\nstdout:\n{shown_recipe.stdout}\nstderr:\n{shown_recipe.stderr}"
-    )
+    members = _declared_harness_members()
+    commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-harness")
     preflight = next(
-        (
-            line.strip().removeprefix("@")
-            for line in shown_recipe.stdout.splitlines()
-            if "--collect-only" in line and _TEST_HARNESS_MEMBERS[0] in line
-        ),
+        (command for command in commands if "--collect-only" in command and members[0] in command),
         None,
     )
-    assert preflight is not None, "the rendered test-harness recipe has no worker-hook member preflight"
+    assert preflight is not None, "the resolved test-harness recipe has no worker-hook member preflight"
     command = shlex.split(preflight)
     assert command == [
         "uv",
@@ -165,7 +157,7 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
         "integration",
         "--collect-only",
         "-n0",
-        _TEST_HARNESS_MEMBERS[0],
+        members[0],
     ]
 
     aggregate = run_command(
