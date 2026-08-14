@@ -98,14 +98,20 @@ def test_binding_row_set_selector_rejects_row_fact_without_grouping() -> None:
 
 
 def test_binding_row_set_selector_rejects_grouping_with_non_row_fact() -> None:
-    binding = _binding({"fact": "perceptor_count", "grouping": "per_perceptor", "row_field": "perceptor_tax_id"})
+    binding = _binding(
+        {"fact": "perceptor_count", "grouping": "per_perceptor", "row_field": "perceptor_tax_id"},
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+    )
 
     with pytest.raises(RegistryValidationError, match="non-row fact"):
         binding_row_set_selector(binding)
 
 
 def test_binding_row_set_selector_rejects_non_row_fact_with_row_keys() -> None:
-    binding = _binding({"fact": "perceptor_count", "grouping": "per_perceptor"})
+    binding = _binding(
+        {"fact": "perceptor_count", "grouping": "per_perceptor"},
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+    )
 
     with pytest.raises(RegistryValidationError, match="non-row fact"):
         binding_row_set_selector(binding)
