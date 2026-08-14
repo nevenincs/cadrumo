@@ -9,7 +9,8 @@ from __future__ import annotations
 import pytest
 
 from ....core.resources import resources
-from .. import ProfileSchemaDefinition, load_user_profile_schema
+from .. import ProfileSchemaDefinition
+from ._schema_loader_fixtures import function_scoped_schema  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -25,11 +26,6 @@ CENSO_DERIVED_FIELDS: tuple[tuple[str, str], ...] = (
     ("vivienda_office", "office_m2"),
     ("activities", "iae_epigraph"),
 )
-
-
-@pytest.fixture
-def schema() -> ProfileSchemaDefinition:
-    return load_user_profile_schema()
 
 
 def _field(schema: ProfileSchemaDefinition, path: tuple[str, str]):

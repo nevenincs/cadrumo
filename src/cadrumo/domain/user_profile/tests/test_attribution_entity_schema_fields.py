@@ -8,15 +8,10 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.resources import resources
-from .._loader import load_user_profile_schema
 from .._schema import ProfileFieldDefinition, ProfileFieldType, ProfileSchemaDefinition
+from ._schema_loader_fixtures import module_scoped_schema  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-@pytest.fixture(scope="module")
-def schema() -> ProfileSchemaDefinition:
-    return load_user_profile_schema()
 
 
 @pytest.fixture(scope="module")

@@ -12,14 +12,10 @@ from __future__ import annotations
 import pytest
 
 from ....core.resources import bundled_path, resources
-from .. import ProfileSchemaDefinition, load_user_profile_schema
+from .. import ProfileSchemaDefinition
+from ._schema_loader_fixtures import module_scoped_schema  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-@pytest.fixture(scope="module")
-def schema() -> ProfileSchemaDefinition:
-    return load_user_profile_schema()
 
 
 @pytest.fixture(scope="module")

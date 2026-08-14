@@ -33,7 +33,8 @@ import pytest
 
 from ....core import AuthProviderKind
 from ....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
-from .. import ProfileSchemaDefinition, load_user_profile_schema
+from .. import ProfileSchemaDefinition
+from ._schema_loader_fixtures import function_scoped_schema  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -42,11 +43,6 @@ AUTH_FIELD_KEYS: frozenset[str] = frozenset(
     {"provider", "clave_movil_route", "dni_nie", "numero_soporte", "fecha_validez"},
 )
 CONTRASTE_FIELD_KEYS: frozenset[str] = frozenset({"numero_soporte", "fecha_validez"})
-
-
-@pytest.fixture
-def schema() -> ProfileSchemaDefinition:
-    return load_user_profile_schema()
 
 
 def test_no_auth_field_declares_a_plaintext_at_rest_class(

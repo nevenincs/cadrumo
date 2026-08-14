@@ -6,12 +6,12 @@ schema = "fixture-ownership-v2"
 census_algorithm = "dev.quality.fixture_census:census"
 census_algorithm_version = "fixture-census-python-ast-v1"
 snapshot_source = "working-tree"
-fixture_count = 690
-source_count = 5462
+fixture_count = 685
+source_count = 5469
 dynamic_request_count = 3
-sources_sha256 = "94cb1e16b139ff320175bcc1b2ca07aada990c6a8f750e9f8301b06e64c38c3a"
-records_sha256 = "49812b7fb1050fd0e27523170a6f30f8a08047dcc33b3222640c4e4e749152cf"
-fixture_rows_sha256 = "46d3a4b3f86e906b0cbba4941635e016b714e344e5f723caa25f2dde8dd5dc4d"
+sources_sha256 = "eb71d2ceaa84c9d215acb51476505227f86f2dce970e47d6ec5085e5b313dd4b"
+records_sha256 = "b6c1f6857212b60314348e420149c641712363cb55bc41c18388ea6caf38b801"
+fixture_rows_sha256 = "0bed5ce79f067a2b330e243863a5a6e9753bcacaf768a4123c92129f533ddaad"
 id_format = "repository-relative-posix-path:line:qualname"
 owner_rule = "owner is the current source declaration nominated as canonical until a later atomic semantic canonicalization"
 dispositions = "retained-current-owner,semantic-adjudication-required"
@@ -6457,7 +6457,7 @@ scope = "module"
 autouse = false
 constraints_sha256 = "89d103f915b0f2a94591217ce293519e59cb486479cbac921b3ce3d012249c4f"
 semantic_name_group_id = "effective-name-sha256:a50dde9a71a786a7f314d0c04853ccdd8b67680fee3304e4a5a4f905e65e1714"
-semantic_name_group_member_count = 8
+semantic_name_group_member_count = 3
 semantic_name_group_anchor_id = "src/cadrumo/application/user_profile/tests/test_services.py:38:schema"
 exact_group_id = ""
 exact_group_member_count = 1
@@ -7842,26 +7842,43 @@ candidate_group_id = ""
 candidate_anchor_id = ""
 
 [[fixture]]
-id = "src/cadrumo/domain/user_profile/tests/test_attribution_entity_schema_fields.py:18:schema"
+id = "src/cadrumo/domain/user_profile/tests/_schema_loader_fixtures.py:17:function_scoped_schema"
 effective_name = "schema"
-owner = "src/cadrumo/domain/user_profile/tests/test_attribution_entity_schema_fields.py:18:schema"
+owner = "src/cadrumo/domain/user_profile/tests/_schema_loader_fixtures.py:17:function_scoped_schema"
 disposition = "semantic-adjudication-required"
-body_sha256 = "3b72c4e1a693fe42dd9c69b0cbb372d0150b7677a75176ce6f59ddfdda5e2e2f"
-scope = "module"
+body_sha256 = "28d9033d6f50393582668c6c66d47885a581d8be3ff2b7e2002b7ea6f3d20c45"
+scope = "function"
 autouse = false
-constraints_sha256 = "89d103f915b0f2a94591217ce293519e59cb486479cbac921b3ce3d012249c4f"
+constraints_sha256 = "841e7b2c19220cb9a830bc9157e7abcbd97348e569c5130778798ccd610a3152"
 semantic_name_group_id = "effective-name-sha256:a50dde9a71a786a7f314d0c04853ccdd8b67680fee3304e4a5a4f905e65e1714"
-semantic_name_group_member_count = 8
+semantic_name_group_member_count = 3
 semantic_name_group_anchor_id = "src/cadrumo/application/user_profile/tests/test_services.py:38:schema"
-exact_group_id = "exact-body-sha256:3b72c4e1a693fe42dd9c69b0cbb372d0150b7677a75176ce6f59ddfdda5e2e2f"
-exact_group_member_count = 7
-candidate_group_id = "substitution-candidate-sha256:ebd6b45284bc78a4054328baf4e32c8f215ec89158e6e20544ec569729880b4d"
-candidate_anchor_id = "src/cadrumo/domain/user_profile/tests/test_attribution_entity_schema_fields.py:18:schema"
+exact_group_id = ""
+exact_group_member_count = 1
+candidate_group_id = ""
+candidate_anchor_id = ""
 
 [[fixture]]
-id = "src/cadrumo/domain/user_profile/tests/test_attribution_entity_schema_fields.py:23:legal_ids"
+id = "src/cadrumo/domain/user_profile/tests/_schema_loader_fixtures.py:23:module_scoped_schema"
+effective_name = "schema"
+owner = "src/cadrumo/domain/user_profile/tests/_schema_loader_fixtures.py:23:module_scoped_schema"
+disposition = "semantic-adjudication-required"
+body_sha256 = "1970932bda4ea856eaef081813e4508df6f530f906856ba329dd19348d053645"
+scope = "module"
+autouse = false
+constraints_sha256 = "4a97f07e139d7d790c0688221fc2677d7c2f8832bfce07331dc963daec493e30"
+semantic_name_group_id = "effective-name-sha256:a50dde9a71a786a7f314d0c04853ccdd8b67680fee3304e4a5a4f905e65e1714"
+semantic_name_group_member_count = 3
+semantic_name_group_anchor_id = "src/cadrumo/application/user_profile/tests/test_services.py:38:schema"
+exact_group_id = ""
+exact_group_member_count = 1
+candidate_group_id = ""
+candidate_anchor_id = ""
+
+[[fixture]]
+id = "src/cadrumo/domain/user_profile/tests/test_attribution_entity_schema_fields.py:18:legal_ids"
 effective_name = "legal_ids"
-owner = "src/cadrumo/domain/user_profile/tests/test_attribution_entity_schema_fields.py:23:legal_ids"
+owner = "src/cadrumo/domain/user_profile/tests/test_attribution_entity_schema_fields.py:18:legal_ids"
 disposition = "semantic-adjudication-required"
 body_sha256 = "8a3708d29d765b4dd079c142c9044c4c85cc5c46026f14955894e8bce1c3a790"
 scope = "module"
@@ -7873,29 +7890,12 @@ semantic_name_group_anchor_id = "dev/docs/terminology/tests/test_coverage.py:65:
 exact_group_id = "exact-body-sha256:8a3708d29d765b4dd079c142c9044c4c85cc5c46026f14955894e8bce1c3a790"
 exact_group_member_count = 2
 candidate_group_id = "substitution-candidate-sha256:23e14d1708db0530c73089d4fa7101cc47edb0d4381c0b9852ae9710cee3ec87"
-candidate_anchor_id = "src/cadrumo/domain/user_profile/tests/test_attribution_entity_schema_fields.py:23:legal_ids"
+candidate_anchor_id = "src/cadrumo/domain/user_profile/tests/test_attribution_entity_schema_fields.py:18:legal_ids"
 
 [[fixture]]
-id = "src/cadrumo/domain/user_profile/tests/test_attribution_received_schema_fields.py:25:schema"
-effective_name = "schema"
-owner = "src/cadrumo/domain/user_profile/tests/test_attribution_received_schema_fields.py:25:schema"
-disposition = "semantic-adjudication-required"
-body_sha256 = "3b72c4e1a693fe42dd9c69b0cbb372d0150b7677a75176ce6f59ddfdda5e2e2f"
-scope = "module"
-autouse = false
-constraints_sha256 = "89d103f915b0f2a94591217ce293519e59cb486479cbac921b3ce3d012249c4f"
-semantic_name_group_id = "effective-name-sha256:a50dde9a71a786a7f314d0c04853ccdd8b67680fee3304e4a5a4f905e65e1714"
-semantic_name_group_member_count = 8
-semantic_name_group_anchor_id = "src/cadrumo/application/user_profile/tests/test_services.py:38:schema"
-exact_group_id = "exact-body-sha256:3b72c4e1a693fe42dd9c69b0cbb372d0150b7677a75176ce6f59ddfdda5e2e2f"
-exact_group_member_count = 7
-candidate_group_id = "substitution-candidate-sha256:ebd6b45284bc78a4054328baf4e32c8f215ec89158e6e20544ec569729880b4d"
-candidate_anchor_id = "src/cadrumo/domain/user_profile/tests/test_attribution_entity_schema_fields.py:18:schema"
-
-[[fixture]]
-id = "src/cadrumo/domain/user_profile/tests/test_attribution_received_schema_fields.py:30:legal_ids"
+id = "src/cadrumo/domain/user_profile/tests/test_attribution_received_schema_fields.py:25:legal_ids"
 effective_name = "legal_ids"
-owner = "src/cadrumo/domain/user_profile/tests/test_attribution_received_schema_fields.py:30:legal_ids"
+owner = "src/cadrumo/domain/user_profile/tests/test_attribution_received_schema_fields.py:25:legal_ids"
 disposition = "semantic-adjudication-required"
 body_sha256 = "8a3708d29d765b4dd079c142c9044c4c85cc5c46026f14955894e8bce1c3a790"
 scope = "module"
@@ -7907,63 +7907,12 @@ semantic_name_group_anchor_id = "dev/docs/terminology/tests/test_coverage.py:65:
 exact_group_id = "exact-body-sha256:8a3708d29d765b4dd079c142c9044c4c85cc5c46026f14955894e8bce1c3a790"
 exact_group_member_count = 2
 candidate_group_id = "substitution-candidate-sha256:23e14d1708db0530c73089d4fa7101cc47edb0d4381c0b9852ae9710cee3ec87"
-candidate_anchor_id = "src/cadrumo/domain/user_profile/tests/test_attribution_entity_schema_fields.py:23:legal_ids"
+candidate_anchor_id = "src/cadrumo/domain/user_profile/tests/test_attribution_entity_schema_fields.py:18:legal_ids"
 
 [[fixture]]
-id = "src/cadrumo/domain/user_profile/tests/test_auth_schema_fields.py:48:schema"
-effective_name = "schema"
-owner = "src/cadrumo/domain/user_profile/tests/test_auth_schema_fields.py:48:schema"
-disposition = "semantic-adjudication-required"
-body_sha256 = "3b72c4e1a693fe42dd9c69b0cbb372d0150b7677a75176ce6f59ddfdda5e2e2f"
-scope = "function"
-autouse = false
-constraints_sha256 = "8220bddbf21c1370c8c28b26bb74fff9f9c7f39edeaf96ca473b47ac8b9afedf"
-semantic_name_group_id = "effective-name-sha256:a50dde9a71a786a7f314d0c04853ccdd8b67680fee3304e4a5a4f905e65e1714"
-semantic_name_group_member_count = 8
-semantic_name_group_anchor_id = "src/cadrumo/application/user_profile/tests/test_services.py:38:schema"
-exact_group_id = "exact-body-sha256:3b72c4e1a693fe42dd9c69b0cbb372d0150b7677a75176ce6f59ddfdda5e2e2f"
-exact_group_member_count = 7
-candidate_group_id = "substitution-candidate-sha256:c9e7424a0b6bcb727c6b82f1c0542dc5271602681625668fe1537a5fce5d97e1"
-candidate_anchor_id = "src/cadrumo/domain/user_profile/tests/test_auth_schema_fields.py:48:schema"
-
-[[fixture]]
-id = "src/cadrumo/domain/user_profile/tests/test_censo_schema_fields.py:31:schema"
-effective_name = "schema"
-owner = "src/cadrumo/domain/user_profile/tests/test_censo_schema_fields.py:31:schema"
-disposition = "semantic-adjudication-required"
-body_sha256 = "3b72c4e1a693fe42dd9c69b0cbb372d0150b7677a75176ce6f59ddfdda5e2e2f"
-scope = "function"
-autouse = false
-constraints_sha256 = "8220bddbf21c1370c8c28b26bb74fff9f9c7f39edeaf96ca473b47ac8b9afedf"
-semantic_name_group_id = "effective-name-sha256:a50dde9a71a786a7f314d0c04853ccdd8b67680fee3304e4a5a4f905e65e1714"
-semantic_name_group_member_count = 8
-semantic_name_group_anchor_id = "src/cadrumo/application/user_profile/tests/test_services.py:38:schema"
-exact_group_id = "exact-body-sha256:3b72c4e1a693fe42dd9c69b0cbb372d0150b7677a75176ce6f59ddfdda5e2e2f"
-exact_group_member_count = 7
-candidate_group_id = "substitution-candidate-sha256:c9e7424a0b6bcb727c6b82f1c0542dc5271602681625668fe1537a5fce5d97e1"
-candidate_anchor_id = "src/cadrumo/domain/user_profile/tests/test_auth_schema_fields.py:48:schema"
-
-[[fixture]]
-id = "src/cadrumo/domain/user_profile/tests/test_labels.py:38:schema"
-effective_name = "schema"
-owner = "src/cadrumo/domain/user_profile/tests/test_labels.py:38:schema"
-disposition = "semantic-adjudication-required"
-body_sha256 = "3b72c4e1a693fe42dd9c69b0cbb372d0150b7677a75176ce6f59ddfdda5e2e2f"
-scope = "module"
-autouse = false
-constraints_sha256 = "89d103f915b0f2a94591217ce293519e59cb486479cbac921b3ce3d012249c4f"
-semantic_name_group_id = "effective-name-sha256:a50dde9a71a786a7f314d0c04853ccdd8b67680fee3304e4a5a4f905e65e1714"
-semantic_name_group_member_count = 8
-semantic_name_group_anchor_id = "src/cadrumo/application/user_profile/tests/test_services.py:38:schema"
-exact_group_id = "exact-body-sha256:3b72c4e1a693fe42dd9c69b0cbb372d0150b7677a75176ce6f59ddfdda5e2e2f"
-exact_group_member_count = 7
-candidate_group_id = "substitution-candidate-sha256:ebd6b45284bc78a4054328baf4e32c8f215ec89158e6e20544ec569729880b4d"
-candidate_anchor_id = "src/cadrumo/domain/user_profile/tests/test_attribution_entity_schema_fields.py:18:schema"
-
-[[fixture]]
-id = "src/cadrumo/domain/user_profile/tests/test_labels.py:43:section"
+id = "src/cadrumo/domain/user_profile/tests/test_labels.py:38:section"
 effective_name = "section"
-owner = "src/cadrumo/domain/user_profile/tests/test_labels.py:43:section"
+owner = "src/cadrumo/domain/user_profile/tests/test_labels.py:38:section"
 disposition = "retained-current-owner"
 body_sha256 = "b8e3dfc06d9e691ed1967ee38b9a90f3c1ee0ceaf104368bc6ed6d61f123d03e"
 scope = "module"
@@ -7978,9 +7927,9 @@ candidate_group_id = ""
 candidate_anchor_id = ""
 
 [[fixture]]
-id = "src/cadrumo/domain/user_profile/tests/test_labels.py:48:field"
+id = "src/cadrumo/domain/user_profile/tests/test_labels.py:43:field"
 effective_name = "field"
-owner = "src/cadrumo/domain/user_profile/tests/test_labels.py:48:field"
+owner = "src/cadrumo/domain/user_profile/tests/test_labels.py:43:field"
 disposition = "retained-current-owner"
 body_sha256 = "8f1172c5d4f832c5b5f339b3f5f0ee4174d831edbc76bbad8122a026602dec4c"
 scope = "module"
@@ -7995,43 +7944,9 @@ candidate_group_id = ""
 candidate_anchor_id = ""
 
 [[fixture]]
-id = "src/cadrumo/domain/user_profile/tests/test_maritime_worker_schema_fields.py:14:schema"
-effective_name = "schema"
-owner = "src/cadrumo/domain/user_profile/tests/test_maritime_worker_schema_fields.py:14:schema"
-disposition = "semantic-adjudication-required"
-body_sha256 = "3b72c4e1a693fe42dd9c69b0cbb372d0150b7677a75176ce6f59ddfdda5e2e2f"
-scope = "function"
-autouse = false
-constraints_sha256 = "8220bddbf21c1370c8c28b26bb74fff9f9c7f39edeaf96ca473b47ac8b9afedf"
-semantic_name_group_id = "effective-name-sha256:a50dde9a71a786a7f314d0c04853ccdd8b67680fee3304e4a5a4f905e65e1714"
-semantic_name_group_member_count = 8
-semantic_name_group_anchor_id = "src/cadrumo/application/user_profile/tests/test_services.py:38:schema"
-exact_group_id = "exact-body-sha256:3b72c4e1a693fe42dd9c69b0cbb372d0150b7677a75176ce6f59ddfdda5e2e2f"
-exact_group_member_count = 7
-candidate_group_id = "substitution-candidate-sha256:c9e7424a0b6bcb727c6b82f1c0542dc5271602681625668fe1537a5fce5d97e1"
-candidate_anchor_id = "src/cadrumo/domain/user_profile/tests/test_auth_schema_fields.py:48:schema"
-
-[[fixture]]
-id = "src/cadrumo/domain/user_profile/tests/test_taxpayer_type_schema_fields.py:21:schema"
-effective_name = "schema"
-owner = "src/cadrumo/domain/user_profile/tests/test_taxpayer_type_schema_fields.py:21:schema"
-disposition = "semantic-adjudication-required"
-body_sha256 = "3b72c4e1a693fe42dd9c69b0cbb372d0150b7677a75176ce6f59ddfdda5e2e2f"
-scope = "module"
-autouse = false
-constraints_sha256 = "89d103f915b0f2a94591217ce293519e59cb486479cbac921b3ce3d012249c4f"
-semantic_name_group_id = "effective-name-sha256:a50dde9a71a786a7f314d0c04853ccdd8b67680fee3304e4a5a4f905e65e1714"
-semantic_name_group_member_count = 8
-semantic_name_group_anchor_id = "src/cadrumo/application/user_profile/tests/test_services.py:38:schema"
-exact_group_id = "exact-body-sha256:3b72c4e1a693fe42dd9c69b0cbb372d0150b7677a75176ce6f59ddfdda5e2e2f"
-exact_group_member_count = 7
-candidate_group_id = "substitution-candidate-sha256:ebd6b45284bc78a4054328baf4e32c8f215ec89158e6e20544ec569729880b4d"
-candidate_anchor_id = "src/cadrumo/domain/user_profile/tests/test_attribution_entity_schema_fields.py:18:schema"
-
-[[fixture]]
-id = "src/cadrumo/domain/user_profile/tests/test_taxpayer_type_schema_fields.py:26:legal_ids"
+id = "src/cadrumo/domain/user_profile/tests/test_taxpayer_type_schema_fields.py:22:legal_ids"
 effective_name = "legal_ids"
-owner = "src/cadrumo/domain/user_profile/tests/test_taxpayer_type_schema_fields.py:26:legal_ids"
+owner = "src/cadrumo/domain/user_profile/tests/test_taxpayer_type_schema_fields.py:22:legal_ids"
 disposition = "semantic-adjudication-required"
 body_sha256 = "6555644fcfc3292b7fb1bbb095ee04efa55f8395420d9e8b64d003c05ad62a9b"
 scope = "module"
@@ -11412,9 +11327,9 @@ candidate_group_id = ""
 candidate_anchor_id = ""
 
 [[fixture]]
-id = "src/cadrumo/tests/test_importlinter_ledger.py:231:ignore_edges"
+id = "src/cadrumo/tests/test_importlinter_ledger.py:230:ignore_edges"
 effective_name = "ignore_edges"
-owner = "src/cadrumo/tests/test_importlinter_ledger.py:231:ignore_edges"
+owner = "src/cadrumo/tests/test_importlinter_ledger.py:230:ignore_edges"
 disposition = "retained-current-owner"
 body_sha256 = "a9edadf01b3fecaf6e0d3acc79c96ba5f9bbaea7a0e0986418332e99cac65f04"
 scope = "module"
@@ -11429,9 +11344,9 @@ candidate_group_id = ""
 candidate_anchor_id = ""
 
 [[fixture]]
-id = "src/cadrumo/tests/test_importlinter_ledger.py:237:layered_edges"
+id = "src/cadrumo/tests/test_importlinter_ledger.py:236:layered_edges"
 effective_name = "layered_edges"
-owner = "src/cadrumo/tests/test_importlinter_ledger.py:237:layered_edges"
+owner = "src/cadrumo/tests/test_importlinter_ledger.py:236:layered_edges"
 disposition = "retained-current-owner"
 body_sha256 = "0dea61c29def1a975c1901cfc57aaaa0597828659e263b705318c8d86a8446af"
 scope = "module"

@@ -22,7 +22,7 @@ from .._labels import (
     profile_section_title,
     profile_section_title_key,
 )
-from .._loader import load_user_profile_schema
+from ._schema_loader_fixtures import module_scoped_schema  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -32,11 +32,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # path the schema no longer declares.
 _SECTION_KEY = "identity"
 _FIELD_KEY = "tax_id"
-
-
-@pytest.fixture(scope="module")
-def schema():
-    return load_user_profile_schema()
 
 
 @pytest.fixture(scope="module")
