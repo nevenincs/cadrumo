@@ -15,6 +15,7 @@ from pydantic import ValidationError
 
 from ......tests.aeat_literal_fixtures import PDF_MODELO_130_2024_PATH_FIXTURE, aeat_url, sede_pdf_url
 from .. import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
+from .._secure_object_records import SecureObjectRawRow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -43,6 +44,36 @@ def test_records_are_frozen() -> None:
     record = ModeloCatalogueRecord(identifier="MODELO_130", name="Pagos fraccionados")
     with pytest.raises(ValidationError):
         record.identifier = "MODELO_303"
+
+
+def test_secure_object_raw_row_is_frozen_and_validates_revision_hashes() -> None:
+    """Raw secure-object records freeze payload metadata and enforce hash width."""
+    revision_id = "a" * 64
+    row = SecureObjectRawRow(
+        row_id=1,
+        namespace="aeat.test",
+        object_key=b"object-key",
+        classification="cache",
+        schema_version=1,
+        written_at=datetime.now(UTC),
+        payload=b"payload",
+        revision_id=revision_id,
+    )
+
+    assert row.revision_id == revision_id
+    with pytest.raises(ValidationError, match="Instance is frozen"):
+        row.payload = b"changed"
+    with pytest.raises(ValidationError, match="String should have at least 64 characters"):
+        SecureObjectRawRow(
+            row_id=1,
+            namespace="aeat.test",
+            object_key=b"object-key",
+            classification="cache",
+            schema_version=1,
+            written_at=datetime.now(UTC),
+            payload=b"payload",
+            revision_id="short",
+        )
 
 
 def test_records_forbid_extra_fields() -> None:

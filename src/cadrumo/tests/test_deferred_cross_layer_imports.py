@@ -182,7 +182,6 @@ _UNADJUDICATED: frozenset[tuple[str, str]] = frozenset(
         ("application/workflow/_adapters.py", "_live_expedientes_source"),
         ("application/workflow/_adapters.py", "_live_notifications_source"),
         ("application/workflow/_models.py", "active_transaction_catalogue_repository"),
-        ("application/workflow/_profile_health.py", "assess_active_profile_health_with_session"),
     },
 )
 

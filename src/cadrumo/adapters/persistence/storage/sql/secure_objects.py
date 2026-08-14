@@ -433,7 +433,7 @@ class SecureObjectRepository:
             stmt = text(
                 "SELECT id, namespace, object_key, classification, schema_version, "
                 "written_at, payload, revision_id, previous_revision_id, revision_ancestor_ids, previous_payload_hash, "
-                "payload_hash, ciphertext_hash, revision_written_at "
+                "payload_hash, ciphertext_hash, revision_written_at, write_provenance, source_event_id "
                 "FROM secure_objects "
                 "ORDER BY namespace, object_key",
             ).execution_options(yield_per=batch_size)
@@ -487,6 +487,8 @@ class SecureObjectRepository:
                     payload_hash=raw.payload_hash,
                     ciphertext_hash=raw.ciphertext_hash,
                     revision_written_at=revision_written_at_value,
+                    write_provenance=raw.write_provenance,
+                    source_event_id=raw.source_event_id,
                 )
 
     def list_namespaces(self) -> tuple[str, ...]:
