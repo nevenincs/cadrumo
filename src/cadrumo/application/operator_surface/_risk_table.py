@@ -172,8 +172,6 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.profile.status": CommandRiskDeclaration(),
     "config.profile.subject_access_request": CommandRiskDeclaration(handoff=True),
     "config.profile.validate": CommandRiskDeclaration(),
-    "config.recover": CommandRiskDeclaration(destructive=True),
-    "config.passphrase.change": CommandRiskDeclaration(destructive=True),
     "config.repair": CommandRiskDeclaration(),
     "config.repair.connectivity": CommandRiskDeclaration(),
     "config.repair.integrity.objects": CommandRiskDeclaration(),
@@ -201,13 +199,6 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.storage.list": CommandRiskDeclaration(),
     "config.storage.reclaim": CommandRiskDeclaration(destructive=True),
     "config.storage.show": CommandRiskDeclaration(),
-    # Recovery lifecycle: ``status`` and ``verify`` read; ``create`` enrolls a
-    # first envelope (nothing replaced); ``rotate`` invalidates the previous
-    # recovery code, so it elicits human confirmation on the MCP surface.
-    "config.recovery.create": CommandRiskDeclaration(),
-    "config.recovery.rotate": CommandRiskDeclaration(destructive=True),
-    "config.recovery.status": CommandRiskDeclaration(),
-    "config.recovery.verify": CommandRiskDeclaration(),
     "config.login": CommandRiskDeclaration(),
     "config.logout": CommandRiskDeclaration(destructive=True),
     # Diagnostics reads run-health, latency, error, and LLM-usage telemetry and

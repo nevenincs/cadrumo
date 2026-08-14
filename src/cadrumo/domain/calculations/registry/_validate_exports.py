@@ -422,7 +422,7 @@ def _validate_export_record_binding_link(
     matching_bindings: list[tuple[DataBindingDefinition, BindingExportSelector]] = []
     for binding in revision.bindings:
         try:
-            selector = binding_export_selector(binding)
+            selector = binding_export_selector(binding, revision=revision)
         except RegistryValidationError as exc:
             failures.append(f"{prefix}: {exc}")
             continue

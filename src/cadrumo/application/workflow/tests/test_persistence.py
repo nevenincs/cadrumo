@@ -8,14 +8,13 @@ and traversal-safe id validation.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.storage.bucket import bucket_paths
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from .. import (
     WorkflowResult,
     WorkflowStage,
@@ -31,10 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "56f638b9-5bbe-4888-bb30-574a8e7bc0e9"
 
 
-@pytest.fixture(autouse=True)
-def _patch_secure_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        yield
+_patch_secure_backend = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=True, name="_patch_secure_backend")
 
 
 def _database_bytes(tmp_path: Path) -> bytes:

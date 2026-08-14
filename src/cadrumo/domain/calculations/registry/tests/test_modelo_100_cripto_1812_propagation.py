@@ -25,14 +25,14 @@ the crypto gain never reached base imponible del ahorro.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .. import BindingId, RegistrySnapshot, RelationId, calculate_registry_snapshot
-from .._authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -302,13 +302,14 @@ def _run_prior_year(snapshot: RegistrySnapshot, filing_year: int, valor_1804: De
 
 
 @pytest.fixture
-def m100_2022_snapshot(registry_authority: ValidatedRegistryAuthority):
-    return registry_authority.snapshot("100", filing_year=2022, period="0A")
+def m100_2022_snapshot(registry_snapshot: Callable[..., RegistrySnapshot]) -> RegistrySnapshot:
+    """1812/1811 identity-copy propagation, a calculation claim, never filing."""
+    return registry_snapshot("100", 2022, "0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
 @pytest.fixture
-def m100_2023_snapshot(registry_authority: ValidatedRegistryAuthority):
-    return registry_authority.snapshot("100", filing_year=2023, period="0A")
+def m100_2023_snapshot(registry_snapshot: Callable[..., RegistrySnapshot]) -> RegistrySnapshot:
+    return registry_snapshot("100", 2023, "0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
 @pytest.mark.parametrize(

@@ -11,12 +11,12 @@ from pathlib import Path
 from typing import cast
 from urllib.parse import urlsplit
 
-from ....core import OrdenAnualIvaAuthorityUnit, normalise_corpus_text, render_corpus_sidecar_text
-from ....core._orden_anual_html import (
+from ....core import (
     OrdenAnualIvaActivityTable,
     OrdenAnualIvaAgriculturalIndex,
     OrdenAnualIvaAgriculturalIngresoACuenta,
     OrdenAnualIvaAuthority,
+    OrdenAnualIvaAuthorityUnit,
     OrdenAnualIvaDifficultJustification,
     OrdenAnualIvaIngresoACuenta,
     OrdenAnualIvaLorca2022Reduction,
@@ -24,9 +24,11 @@ from ....core._orden_anual_html import (
     OrdenAnualIvaSeasonalIndex,
     extract_orden_anual_iva_authority,
     extract_orden_anual_iva_tables,
+    normalise_corpus_text,
     orden_anual_iva_activity_anchors,
     orden_anual_iva_authority_units,
     orden_anual_iva_table_text,
+    render_corpus_sidecar_text,
 )
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._m303_orden_constants import (

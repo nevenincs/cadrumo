@@ -16,6 +16,7 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     RevisionId,
     m303_regimen_simplificado_annual_summary_requirement,
+    select_revision,
 )
 from ...domain.filing_evidence import FilingEvidenceReference
 from ...domain.iva import ActividadAgricolaSimplificado
@@ -272,12 +273,19 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             )
         m303 = evidence.m303
         result = m303.regimen_simplificado.calculation_result
-        source_inspection = resources().modelos.authority.inspect_revision(
-            Modelo.M303.value,
+        authority = resources().modelos.authority
+        source_revision_at_coordinate = select_revision(
+            authority.modelo(Modelo.M303.value),
             filing_year=source.filing_year,
             period=source.period.registry_token,
         )
-        self._require_source_evidence_coordinate(source, source_revision, m303, result, source_inspection.revision_id)
+        self._require_source_evidence_coordinate(
+            source,
+            source_revision,
+            m303,
+            result,
+            source_revision_at_coordinate.id,
+        )
         self._require_non_agricultural_rows(m303)
         evidence_references = tuple(
             reference for activity in result.activities for reference in activity.evidence_references

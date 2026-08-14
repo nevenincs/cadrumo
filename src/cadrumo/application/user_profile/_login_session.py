@@ -516,24 +516,44 @@ def _recover_interrupted_handover(
     return journal
 
 
+def _revoke_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> None:
+    """Revoke the durable session artefacts owned by ``bucket_id`` (idempotent).
+
+    The single authority for "this profile's stored session is void": deletes
+    the on-disk session record AND its OS-keychain session key (split
+    knowledge, so either alone is already useless) and clears the failed-login
+    backoff.
+
+    Deliberately owns no process-local state. A caller that already holds the
+    exact session objects it must close -- the cross-profile handover, which
+    closes A's two authorities by identity while B is the live one -- needs the
+    durable revocation without a process teardown that would reach the wrong
+    profile. Splitting it here keeps that revocation a single implementation
+    rather than a second copy at the handover.
+
+    Args:
+        storage_root: The Cadrumo storage root owning the bucket keystore.
+        bucket_id: Identifier of the profile whose stored session to revoke.
+    """
+    profile_delete_session(storage_root=storage_root, profile_id=UUID(bucket_id))
+    profile_reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
+
+
 def close_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> None:
     """Tear down every session artefact owned by ``bucket_id`` (idempotent).
 
-    The single authority for "this profile is no longer logged in":
-    deletes the on-disk session record AND its OS-keychain session key
-    (split knowledge, so either alone is already useless) and clears the
-    failed-login backoff. Composed by both the cross-profile handover in
-    :func:`login_profile` and the strong close in
-    :func:`~cadrumo.application.user_profile.logout_active_profile`, so
-    neither surface owns a second teardown path.
+    The single authority for "this profile is no longer logged in": clears the
+    process-local record authority, then revokes the durable artefacts through
+    :func:`_revoke_profile_session_artefacts`. Composed by the strong close in
+    :func:`~cadrumo.application.user_profile.logout_active_profile`, so neither
+    surface owns a second teardown path.
 
     Args:
         storage_root: The Cadrumo storage root owning the bucket keystore.
         bucket_id: Identifier of the profile whose session to tear down.
     """
     close_active_profile_record_session()
-    profile_delete_session(storage_root=storage_root, profile_id=UUID(bucket_id))
-    profile_reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
+    _revoke_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
 
 
 def logout_active_profile() -> str | None:
@@ -1061,16 +1081,18 @@ def _promote_candidate_login(
         storage_root=storage_root,
     )
 
+    closed_previous = _closed_previous_bucket_id(
+        previous_bucket_id=previous_bucket_id,
+        candidate_bucket_id=candidate.bucket_id,
+    )
     # Only now can A be retired.  B is durable (or deliberately process-local)
     # and both current-context authorities serve its exact UUID.
     _retire_previous_authorities(
         candidate=candidate,
         previous_live=previous_live,
         previous_record=promotion.previous_record,
-    )
-    closed_previous = _closed_previous_bucket_id(
-        previous_bucket_id=previous_bucket_id,
-        candidate_bucket_id=candidate.bucket_id,
+        retired_bucket_id=closed_previous,
+        storage_root=storage_root,
     )
     handover = promotion.journal.at_phase(_HandoverPhase.A_RETIRED)
     _save_handover_journal(storage_root=storage_root, journal=handover)
@@ -1223,12 +1245,30 @@ def _retire_previous_authorities(
     candidate: _CandidateProfileLogin,
     previous_live: ProfileBucketSessionPort | None,
     previous_record: ProfileRecordSession | None,
+    retired_bucket_id: str | None,
+    storage_root: Path,
 ) -> None:
-    """Close A's process authorities only after B is fully durable."""
+    """Retire A completely, in process and on disk, after B is fully durable.
+
+    Closing A's two in-process authorities is not retirement on its own. A's
+    acceleration receipt wraps A's bucket DEK under a key the OS keychain still
+    holds, and a handover rotates neither A's custody generation nor its DEK
+    epoch, so a receipt left behind stays resumable: it hands back A's bucket
+    DEK without A's passphrase, which is the profile-A resurrection this phase
+    exists to refuse. Revoking the durable artefacts is therefore part of
+    retiring A, not cleanup that can be deferred.
+
+    ``retired_bucket_id`` is the bucket the handover actually moved away from,
+    and is ``None`` when the login re-entered the profile already live. That
+    distinction is load-bearing: revoking on a same-profile re-login would
+    destroy the receipt this very login just minted.
+    """
     if previous_live is not None and previous_live is not candidate.session:
         previous_live.close()
     if previous_record is not None and previous_record is not candidate.record_session:
         previous_record.close()
+    if retired_bucket_id is not None:
+        _revoke_profile_session_artefacts(storage_root=storage_root, bucket_id=retired_bucket_id)
 
 
 def _closed_previous_bucket_id(*, previous_bucket_id: str | None, candidate_bucket_id: str) -> str | None:

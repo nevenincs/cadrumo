@@ -16,9 +16,7 @@ involved: the repository, the encryption, and the SQLite backend are real.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
 
@@ -27,9 +25,9 @@ from ....adapters.persistence.storage import (
     ClassificationError,
     secure_object_repository_for_bucket,
 )
+from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....core.classification import SensitivityClass
 from ....domain.user_profile import CarriedSecureObject
-from ....tests.secure_sql import isolated_runtime_profile
 from .._custody_carry import restore_carried_objects
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -106,7 +104,4 @@ def test_a_restore_is_replayable_after_a_refusal() -> None:
     assert _stored("run-retry") is not None
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        yield
+_isolated_backend = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=True, name="_isolated_backend")
