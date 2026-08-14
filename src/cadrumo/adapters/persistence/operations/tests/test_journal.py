@@ -11,6 +11,7 @@ import pytest
 
 from .....application.operations import (
     OperationIdentity,
+    OperationConsumedInteraction,
     OperationLeaseDisposition,
     OperationOwnerLease,
     OperationPersistedSnapshot,
@@ -208,6 +209,33 @@ def test_operation_journal_replays_full_history_by_exclusive_bounded_cursor(tmp_
     assert caught_up.status is OperationReplayStatus.CAUGHT_UP
     assert caught_up.events == ()
     assert caught_up.next_cursor == second_page.next_cursor
+
+
+@pytest.mark.parametrize("field", ("response_digest", "consumed_at"))
+def test_operation_journal_refuses_rewriting_full_consumed_interaction_evidence(tmp_path: Path, field: str) -> None:
+    """A real CAS keeps every consumed response fact immutable, not only its ID."""
+    repository, snapshots = _commit_history(tmp_path)
+    accepted_consumption = OperationConsumedInteraction(
+        interaction_id="e" * 64,
+        response_digest="f" * 64,
+        consumed_at=_STARTED + timedelta(minutes=3),
+    )
+    accepted = _snapshot(revision=3, sequence=4).model_copy(
+        update={"consumed_interactions": (accepted_consumption,)}
+    )
+    asyncio.run(repository.commit(accepted, expected_revision=snapshots[-1].revision, lease=_lease()))
+
+    changed_value = "9" * 64 if field == "response_digest" else _STARTED + timedelta(minutes=4)
+    planted = accepted_consumption.model_copy(update={field: changed_value})
+    tampered = _snapshot(revision=4, sequence=5).model_copy(
+        update={"consumed_interactions": (planted,)}
+    )
+    path = tmp_path / "operation-journals" / f"{accepted.operation_id}.json"
+    stable_bytes = path.read_bytes()
+
+    with pytest.raises(RepositoryError, match="cannot rewrite consumed interaction history"):
+        asyncio.run(repository.commit(tampered, expected_revision=accepted.revision, lease=_lease()))
+    assert path.read_bytes() == stable_bytes
 
 
 @pytest.mark.parametrize(

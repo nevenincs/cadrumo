@@ -44,7 +44,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.modelos import (
     CalculationRevision,
-    derive_calculation_revision_id,
+    derive_calculation_revision_id_from_revision,
 )
 from ._action_errors import (
     AmendmentOverrideCasillaError,
@@ -556,22 +556,7 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
     :exc:`~cadrumo.application.modelo.StoredCalculationDriftError` before the
     revision is treated as authoritative.
     """
-    expected = derive_calculation_revision_id(
-        work_unit_id=revision.work_unit_id,
-        input_values_by_casilla_id=revision.input_values_by_casilla_id,
-        binding_overrides=revision.binding_overrides,
-        row_binding_values=revision.row_binding_values,
-        relation_overrides=revision.relation_overrides,
-        casilla_values=revision.casilla_values,
-        source_transaction_ids=revision.source_transaction_ids,
-        m210_official_tipo_renta_code=revision.m210_official_tipo_renta_code,
-        m210_gross_income_source_mode=revision.m210_gross_income_source_mode,
-        borrador_snapshot_id=revision.borrador_snapshot_id,
-        bindings_sourced_from_borrador=revision.bindings_sourced_from_borrador,
-        detail_rows=revision.detail_rows,
-        source_issues=revision.source_issues,
-        filing_instance_evidence=revision.filing_instance_evidence,
-    )
+    expected = derive_calculation_revision_id_from_revision(revision)
     if expected != revision.calculation_revision_id:
         raise StoredCalculationDriftError(
             f"calculation revision {revision.calculation_revision_id!r} content-address mismatch: "

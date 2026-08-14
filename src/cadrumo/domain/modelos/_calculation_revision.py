@@ -1623,23 +1623,7 @@ class CalculationRevision(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_invariants(self) -> CalculationRevision:
-        derived = derive_calculation_revision_id(
-            work_unit_id=self.work_unit_id,
-            input_values_by_casilla_id=self.input_values_by_casilla_id,
-            binding_overrides=self.binding_overrides,
-            row_binding_values=self.row_binding_values,
-            relation_overrides=self.relation_overrides,
-            casilla_values=self.casilla_values,
-            source_transaction_ids=self.source_transaction_ids,
-            m210_official_tipo_renta_code=self.m210_official_tipo_renta_code,
-            m210_gross_income_source_mode=self.m210_gross_income_source_mode,
-            borrador_snapshot_id=self.borrador_snapshot_id,
-            bindings_sourced_from_borrador=self.bindings_sourced_from_borrador,
-            detail_rows=self.detail_rows,
-            source_issues=self.source_issues,
-            filing_instance_evidence=self.filing_instance_evidence,
-            m303_regimen_simplificado_annual_summary_handoff=(self.m303_regimen_simplificado_annual_summary_handoff),
-        )
+        derived = derive_calculation_revision_id_from_revision(self)
         _validate_revision_identity(self, derived)
         _validate_annual_summary_handoff_target(self)
         _validate_replay_channels(self)
@@ -1839,5 +1823,8 @@ __all__ = [
     "M303RegimenSimplificadoAnnualSummaryHandoff",
     "M303RegimenSimplificadoFilingEvidence",
     "assert_revision_snapshot_evidence_coverage",
+    "calculation_revision_identity_inputs",
+    "calculation_revision_identity_inputs_from_revision",
     "derive_calculation_revision_id",
+    "derive_calculation_revision_id_from_revision",
 ]

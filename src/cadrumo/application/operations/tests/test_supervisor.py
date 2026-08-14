@@ -161,6 +161,24 @@ class UndeclaredResourceExecutor:
         return None
 
 
+class DeclaredResourceExecutor:
+    """Concrete executor that transfers one declared resource to settlement."""
+
+    def __init__(self) -> None:
+        self.resource: TrackedAsyncResource | None = None
+
+    async def execute(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        del request
+        resource = TrackedAsyncResource()
+        self.resource = resource
+        context.cleanup.own(resource, family=OperationOwnedResource.ASYNC_TASK)
+        return None
+
+
 class UndeclaredInteractionExecutor:
     """Concrete executor that attempts an interaction outside its definition."""
 
@@ -222,12 +240,13 @@ def _registered_objects(profile_objects: SecureObjectRepository) -> SecureObject
 
 def _capabilities(
     *,
+    cancellation: OperationCancellation = OperationCancellation.UNSUPPORTED,
     owned_resources: frozenset[OperationOwnedResource] = frozenset(),
     permitted_effects: frozenset[OperationEffect] = frozenset({OperationEffect.NONE}),
 ) -> OperationCapabilities:
     return OperationCapabilities(
         durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.UNSUPPORTED,
+        cancellation=cancellation,
         deadline=OperationDeadline.ABSENT,
         replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
         baseline=OperationBaselinePolicy.NONE,
@@ -243,6 +262,7 @@ def _definition(
     *,
     executor_type: type[object],
     build: Callable[[], object],
+    capabilities: OperationCapabilities | None = None,
     interaction_kinds: frozenset[OperationInteractionKind] = frozenset(),
 ) -> OperationDefinition:
     return OperationDefinition(
@@ -256,7 +276,7 @@ def _definition(
         ),
         phase_codes=("operation.phase.declared",),
         interaction_kinds=interaction_kinds,
-        capabilities=_capabilities(),
+        capabilities=_capabilities() if capabilities is None else capabilities,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
     )
@@ -266,6 +286,7 @@ def _registry(
     *,
     executor_type: type[object],
     build: Callable[[], object],
+    capabilities: OperationCapabilities | None = None,
     interaction_kinds: frozenset[OperationInteractionKind] = frozenset(),
 ) -> OperationRegistry:
     return OperationRegistry(
@@ -273,6 +294,7 @@ def _registry(
             _definition(
                 executor_type=executor_type,
                 build=build,
+                capabilities=capabilities,
                 interaction_kinds=interaction_kinds,
             ),
         )
@@ -287,6 +309,8 @@ def _supervisor(
     operands: OperationSecureReferenceStore,
     owner_id: str,
     token: str,
+    clock: Callable[[], datetime] | None = None,
+    lease_duration: timedelta = timedelta(minutes=10),
 ) -> OperationSupervisor:
     return OperationSupervisor(
         registry=registry,
@@ -295,8 +319,8 @@ def _supervisor(
         operands=operands,
         owner_id=owner_id,
         lease_token_factory=lambda: token,
-        clock=lambda: _NOW,
-        lease_duration=timedelta(minutes=10),
+        clock=(lambda: _NOW) if clock is None else clock,
+        lease_duration=lease_duration,
     )
 
 
