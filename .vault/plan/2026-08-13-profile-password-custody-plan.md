@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-14'
-body_hash: 'sha256:f541d58ea142ea8b14619bb4b2eabc746041b1afc9761e7fa1560adfbc78dcb2'
+body_hash: 'sha256:3a806f0cd17658d390a19e550db11a8d50cb13239336f913111e85e6dc4e38eb'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -150,6 +150,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S77` - Have Sol Medium rule on the four error classes that are defined, exported and registered but never raised anywhere in production, taking the retention-floor refusal FIRST and separately because its own documentation describes it as the refusal a destructive erase raises and nothing raises it, so unlike the other three its absence removes a guard rather than leaving dead code, and establish whether the erase path lost that guard or never had one before deciding between deleting the class and restoring its raise site; `src/cadrumo/domain/retention/_errors.py and src/cadrumo/domain/buckets/_errors.py and src/cadrumo/adapters/persistence/storage/bucket/_errors.py`.
 - [ ] `W04.P07.S78` - Have Sol Medium escalate to the owning campaign that nine of its plan steps were closed while producers inside their own declared scope still author raw sentences positionally, one readiness-gate module carrying migrated and unmigrated raise sites side by side under a single checked step that accounts for twenty-four of the forty-two findings, this being the recorded-but-not-implemented checkbox failure the orchestration rules name, and do not silently repair another campaign's plan; `.vault/plan/`.
 - [ ] `W04.P07.S79` - Have Terra XHigh extend the open steps' declared scopes to cover the paths their producers have since moved into, before regenerating the rehoming ledger, since the generator accepts an owner only from an open step whose scope covers the fingerprint path and therefore aborts on more than thirty qualnames whose code now lives in modules no open scope names, making regeneration fail loudly rather than converge; `dev/quality/error_code_default_recovery_rehoming.py and .vault/plan/`.
+- [ ] `W04.P07.S80` - Have Terra XHigh restore lane reachability for the eight keychain-marked tests this campaign's custody work placed in storage paths no keychain lane names, since the standing lane-reachability gate is red on exactly them and a test selected by no lane is a test that never runs, the repair being one recipe scope-path edit rather than a new mechanism; `justfile and src/cadrumo/adapters/persistence/storage/master_key/tests/ and src/cadrumo/adapters/persistence/storage/tests/`.
 
 ## Wave `W05` - end-to-end proof
 
