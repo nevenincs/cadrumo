@@ -19,35 +19,6 @@ from ...tests.secure_sql import isolated_profile_storage_root
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _seed_active_profile(tax_id: str = "00000000T", activity: str = "design") -> None:
-    """Seed an active profile through the profile application service."""
-
-    from ...domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
-    from ...tests.profile_capsule import seed_test_profile_record
-    from ..user_profile import ProfileCapsuleLifecycle
-
-    profile_id = "00000000-0000-4000-8000-000000000000"
-    facts = (
-        UserProfileFact(path="identity.tax_id", value=tax_id),
-        UserProfileFact(path="identity.name", value="operator"),
-        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-        UserProfileFact(path="iva.regime", value="GENERAL"),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-        UserProfileFact(path="activities.description", value=activity),
-        UserProfileFact(path="provenance.source", value="manual_cli"),
-    )
-    seed_test_profile_record(
-        UserProfileRecord(profile_id=profile_id, facts=facts, setup_state=ProfileSetupState.COMPLETE),
-        label="operator",
-    )
-    ProfileCapsuleLifecycle().select(profile_id)
-
-
 def test_config_create_then_config_show_round_trips_iva_regime(
     tmp_path: Path,
 ) -> None:

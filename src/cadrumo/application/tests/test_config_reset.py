@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Mapping
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -29,54 +29,22 @@ def _isolated_reset_root(tmp_path: Path) -> Generator[Path]:
         yield root
 
 
-def _profile_facts(
-    *,
-    tax_id: str,
-    name: str,
-    overrides: Mapping[str, object] | None = None,
-):
-    from ...domain.user_profile import UserProfileFact
-
-    values: dict[str, object] = {
-        "identity.tax_id": tax_id,
-        "identity.name": name,
-        "tax_residence.ccaa": "madrid",
-        "tax_residence.jurisdiction_scope": "common_regime",
-        "iva.regime": "GENERAL",
-        "iva.m303_regime_composition": "general",
-        "iva.redeme_enrolled": "false",
-        "iva.cash_accounting_regime_enrolled": "false",
-        "iva.voluntary_sii_enrolled": "false",
-        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-        "provenance.source": "manual_cli",
-    }
-    if overrides:
-        values.update(overrides)
-    return tuple(UserProfileFact.model_validate({"path": path, "value": value}) for path, value in values.items())
-
-
 def _create_profile(
     profile_id: str,
     *,
     label: str,
     tax_id: str,
 ) -> None:
-    from ...domain.user_profile import ProfileSetupState, UserProfileRecord
-    from ...tests.profile_capsule import seed_test_profile_record
-    from ..user_profile import ProfileCapsuleLifecycle
-    from ..wizard import WIZARD_FLOWS
+    from ...tests.user_profile import register_minimal_profile
+    from ..workflow import WorkflowState
 
-    assert WIZARD_FLOWS
     with open_test_profile_session(profile_id):
-        seed_test_profile_record(
-            UserProfileRecord(
-                profile_id=profile_id,
-                facts=_profile_facts(tax_id=tax_id, name=label),
-                setup_state=ProfileSetupState.COMPLETE,
-            ),
-            label=label,
+        register_minimal_profile(
+            WorkflowState(),
+            profile_id=profile_id,
+            display_name=label,
+            overrides={"identity.tax_id": tax_id, "identity.name": label},
         )
-        ProfileCapsuleLifecycle().select(profile_id)
 
 
 def _write_active_pointer(root: Path, bucket_id: str) -> None:
