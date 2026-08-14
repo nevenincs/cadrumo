@@ -60,15 +60,13 @@ def open_test_profile_session(profile_id: str | UUID) -> Iterator[str]:
     later read against that capsule still opens the exact durable DEK written
     by the first call; no key or repository is faked.
 
-    The record authority is retired on both edges, which is what makes a
-    second profile reachable in one process.  A record session that a prior
-    read auto-derived stays latched in :data:`_ACTIVE_RECORD_SESSION`, and
-    ``require_profile_record_session`` only derives when that slot is empty --
-    so without this retirement the first profile's authority survives the
-    switch and every record read for the second profile refuses.  Retiring on
-    entry is exactly what a real profile switch does; retiring on exit hands
-    the outer context back a clean slot, which is re-derived from its own
-    still-open custody session on next use.
+    The record authority is retired on both edges because this helper owns
+    the custody span the authority is bound to: retiring on entry is exactly
+    what a real profile switch does, and retiring on exit zeroises the DEK
+    this span unlocked instead of leaving it latched past the session that
+    justified it.  Reachability of a second profile does not depend on either
+    edge -- ``require_profile_record_session`` re-derives whenever the latched
+    authority does not serve the requested identity.
     """
     identity = str(UUID(str(profile_id)))
     from ..adapters.persistence.storage.errors import (

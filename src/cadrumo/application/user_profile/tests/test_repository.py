@@ -27,7 +27,9 @@ from ....adapters.persistence.storage.custody import (
     unlock_profile_custody,
 )
 from ....adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ....adapters.persistence.storage.master_key import activate_master_key_provider, get_master_key_provider
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core.config import override_settings
 from ....core.i18n import tr
 from ....core.time import now
 from ....domain.user_profile import (
@@ -40,9 +42,15 @@ from ....domain.user_profile import (
     UserProfileSnapshot,
     new_profile_snapshot_id,
 )
+from ....tests.profile_capsule import open_test_profile_session, seed_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from .._capsule_record import ProfileRecordSession
-from .._profile_record_repository import ProfileRecordRepository, bound_profile_record_session
+from .._profile_record_repository import (
+    ProfileRecordRepository,
+    bound_profile_record_session,
+    close_active_profile_record_session,
+    require_profile_record_session,
+)
 from .._registration import register_profile_with_credentials
 from .._repository import (
     USER_PROFILE_SNAPSHOT_NAMESPACE,
@@ -56,6 +64,8 @@ _RUNTIME_BUCKET_ID = "8127d068-f112-445b-b90e-ccf5e0139167"
 _BUCKET_ID = "eab96552-b170-4499-9436-5f06884dd062"
 _FOREIGN_PROFILE_ID = "f7c5a9e3-7b1d-4c2e-8a6f-1234567890ab"
 _PROFILE_PASSPHRASE = "repository-current-record-test-passphrase"  # noqa: S105 - synthetic test credential
+_FIRST_SWITCH_PROFILE_ID = "3f5f7d94-1a2b-4c3d-8e4f-5a6b7c8d9e01"
+_SECOND_SWITCH_PROFILE_ID = "3f5f7d94-1a2b-4c3d-8e4f-5a6b7c8d9e02"
 
 
 @pytest.fixture
@@ -141,6 +151,64 @@ def test_profile_record_repository_refuses_a_foreign_profile_id(tmp_path: Path) 
 def test_profile_record_repository_rejects_a_non_uuid_identity() -> None:
     with pytest.raises(ProfileNotFoundError, match="canonical UUID"):
         ProfileRecordRepository.for_current_session(" ")
+
+
+def test_record_authority_re_derives_for_a_second_profile_in_one_process(tmp_path: Path) -> None:
+    """A second profile's record stays readable after an in-process switch.
+
+    The ambient-provider fact readers bind the target's own custody session
+    and then ask for its record authority.  A process that already read the
+    first profile carries that profile's latched authority, so the second
+    profile is reachable only when the authority is re-derived from the
+    custody session that is actually live.
+    """
+    first_facts = (UserProfileFact(path="identity.tax_id", value="12345678Z"),)
+    second_facts = (UserProfileFact(path="identity.tax_id", value="87654321X"),)
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        for identity, facts, label in (
+            (_FIRST_SWITCH_PROFILE_ID, first_facts, "Switch first"),
+            (_SECOND_SWITCH_PROFILE_ID, second_facts, "Switch second"),
+        ):
+            with open_test_profile_session(identity):
+                seed_test_profile_record(
+                    UserProfileRecord(profile_id=identity, facts=facts),
+                    root=storage_root,
+                    label=label,
+                )
+
+        provider = get_master_key_provider()
+        try:
+            with (
+                override_settings(cadrumo_active_profile=_FIRST_SWITCH_PROFILE_ID),
+                activate_master_key_provider(
+                    provider,
+                    fallback_bucket_id=_FIRST_SWITCH_PROFILE_ID,
+                    allow_bucket_dek_enrollment=True,
+                ),
+            ):
+                first_repository = ProfileRecordRepository.for_current_session(
+                    _FIRST_SWITCH_PROFILE_ID,
+                    root=storage_root,
+                )
+                assert first_repository.load(_FIRST_SWITCH_PROFILE_ID).facts == first_facts
+
+            with (
+                override_settings(cadrumo_active_profile=_SECOND_SWITCH_PROFILE_ID),
+                activate_master_key_provider(
+                    provider,
+                    fallback_bucket_id=_SECOND_SWITCH_PROFILE_ID,
+                    allow_bucket_dek_enrollment=True,
+                ),
+            ):
+                session = require_profile_record_session(_SECOND_SWITCH_PROFILE_ID)
+                assert session.profile_id == UUID(_SECOND_SWITCH_PROFILE_ID)
+                second_repository = ProfileRecordRepository.for_current_session(
+                    _SECOND_SWITCH_PROFILE_ID,
+                    root=storage_root,
+                )
+                assert second_repository.load(_SECOND_SWITCH_PROFILE_ID).facts == second_facts
+        finally:
+            close_active_profile_record_session()
 
 
 def test_snapshot_round_trip_carries_canonical_hash(secure_objects: SecureObjectRepository) -> None:
