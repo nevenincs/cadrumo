@@ -174,6 +174,10 @@ class FixtureRecord:
     imported_bindings: tuple[FixtureImport, ...]
     consumers: tuple[FixtureConsumer, ...]
     autouse_reach: tuple[FixtureConsumer, ...]
+    #: Derived from the body by the census, which always sets it explicitly. The
+    #: default exists for records built directly in tests, where a fixture that
+    #: was never classified is by definition not a scaffold.
+    raises_without_producing: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -190,6 +194,15 @@ class AliasedBehaviour:
     differ in scope, autouse, or the module values they close over, so this is
     the population a reviewer must adjudicate -- not a verdict that they are
     interchangeable.
+
+    Fixtures whose body only raises are excluded, because they carry no
+    behaviour to share. A required-override scaffold -- a base fixture whose
+    default raises so a consuming module must supply its own value -- normalises
+    to the same body as every other scaffold in the tree, no matter what concept
+    it scaffolds or which composite it serves. Grouping those together reports
+    identical absence of behaviour as duplication, and a detector that fires on
+    non-duplicates is one reviewers learn to skip. They are counted separately
+    instead of being dropped.
     """
 
     body_sha256: str
@@ -226,6 +239,8 @@ class FixtureCensus:
         """Return every fixture body reached through more than one name."""
         by_body: dict[str, list[FixtureRecord]] = {}
         for record in self.fixtures:
+            if record.raises_without_producing:
+                continue
             by_body.setdefault(record.normalized_body_sha256, []).append(record)
         return tuple(
             AliasedBehaviour(
@@ -241,6 +256,21 @@ class FixtureCensus:
     def aliased_behaviour_count(self) -> int:
         """Return how many distinct behaviours are reached through several names."""
         return len(self.aliased_behaviours)
+
+    @property
+    def required_override_scaffolds(self) -> tuple[FixtureRecord, ...]:
+        """Return every fixture whose body only raises, excluded from aliasing.
+
+        Surfaced rather than silently discarded: these are a real population
+        with a real shape, and a reader comparing the aliasing count across two
+        runs needs to see what the detector chose not to consider.
+        """
+        return tuple(
+            sorted(
+                (record for record in self.fixtures if record.raises_without_producing),
+                key=lambda record: (record.path, record.line),
+            ),
+        )
 
     @property
     def factory_fixture_candidate_count(self) -> int:
@@ -474,22 +504,51 @@ def _keyword_map(call: ast.Call | None) -> dict[str, ast.expr]:
     return keywords
 
 
-def _literal_string(value: ast.expr | None, *, field: str, line: int) -> str | None:
+def _is_deferred_to_call_site(value: ast.expr, deferred_names: frozenset[str]) -> bool:
+    """Return whether this value is an enclosing factory's parameter.
+
+    Such a value is not unknowable, only not-yet-known: it is supplied where the
+    factory is called, and that binding is censused in its own right. Treating it
+    as dynamic refuses a correct factory; treating any non-literal as deferred
+    would hide genuinely unmeasurable expressions, so only a bare parameter name
+    qualifies.
+    """
+    return bool(deferred_names) and isinstance(value, ast.Name) and value.id in deferred_names
+
+
+def _literal_string(
+    value: ast.expr | None,
+    *,
+    field: str,
+    line: int,
+    deferred_names: frozenset[str] = frozenset(),
+) -> str | None:
     """Return a static string or fail rather than inventing an effective value."""
     if value is None:
         return None
     if isinstance(value, ast.Constant) and isinstance(value.value, str):
         return value.value
+    if _is_deferred_to_call_site(value, deferred_names):
+        return None
     message = f"fixture {field} at line {line} is dynamic; static census cannot state its effective value"
     raise FixtureCensusError(message)
 
 
-def _literal_bool(value: ast.expr | None, *, field: str, line: int, default: bool) -> bool:
+def _literal_bool(
+    value: ast.expr | None,
+    *,
+    field: str,
+    line: int,
+    default: bool,
+    deferred_names: frozenset[str] = frozenset(),
+) -> bool:
     """Return a static boolean or fail rather than silently applying a default."""
     if value is None:
         return default
     if isinstance(value, ast.Constant) and isinstance(value.value, bool):
         return value.value
+    if _is_deferred_to_call_site(value, deferred_names):
+        return default
     message = f"fixture {field} at line {line} is dynamic; static census cannot state its effective value"
     raise FixtureCensusError(message)
 
@@ -596,6 +655,18 @@ class _ModuleVisitor(ast.NodeVisitor):
         self.dynamic_fixture_requests: list[DynamicFixtureRequest] = []
         self._qualname: list[str] = []
         self._class_depth = 0
+        #: Fixtures nested inside a function are FACTORY TEMPLATES, not fixtures.
+        #: pytest discovers module-level and class-level definitions; what a
+        #: factory returns is discovered only where the caller binds it, and the
+        #: census already resolves those bindings as factory-bound candidates.
+        #: Reading the template as a definition asks a question it cannot answer
+        #: -- its ``name`` and ``autouse`` are the factory's parameters, literal
+        #: only at the call site -- and the fail-closed refusal then reports a
+        #: correctly-written factory as an unmeasurable fixture.
+        self._function_depth = 0
+        #: Parameter names of the enclosing function, if any. Only these may be
+        #: read as deferred-to-call-site; any other non-literal stays a refusal.
+        self._enclosing_parameters: tuple[str, ...] = ()
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         self._qualname.append(node.name)
@@ -651,9 +722,26 @@ class _ModuleVisitor(ast.NodeVisitor):
         if fixture_decorator is not None:
             decorator_node, (callee, form, call) = fixture_decorator
             keywords = _keyword_map(call)
-            explicit_name = _literal_string(keywords.get("name"), field="name", line=node.lineno)
+            # A fixture nested inside a function is a FACTORY TEMPLATE: pytest
+            # discovers what the factory returns where the caller binds it, not
+            # here, so `name` and `autouse` are legitimately the factory's own
+            # parameters and are literal only at the call site. Refusing them
+            # reports a correctly-written factory as unmeasurable. The template
+            # keeps its own function name, the expression is preserved so the
+            # dynamism stays visible, and the binding is resolved separately as
+            # a factory-bound candidate.
+            deferred = frozenset(self._enclosing_parameters) if self._function_depth else frozenset()
+            explicit_name = _literal_string(
+                keywords.get("name"), field="name", line=node.lineno, deferred_names=deferred
+            )
             scope = _literal_string(keywords.get("scope"), field="scope", line=node.lineno) or _DEFAULT_SCOPE
-            autouse = _literal_bool(keywords.get("autouse"), field="autouse", line=node.lineno, default=False)
+            autouse = _literal_bool(
+                keywords.get("autouse"),
+                field="autouse",
+                line=node.lineno,
+                default=False,
+                deferred_names=deferred,
+            )
             decorator = FixtureDecorator(
                 callee=callee,
                 form=form,
@@ -668,10 +756,14 @@ class _ModuleVisitor(ast.NodeVisitor):
                     sorted((name, _expression(value) or "") for name, value in keywords.items()),
                 ),
             )
+            executable_body = _executable_body(node.body)
             normalized_body = ast.dump(
-                ast.Module(body=_executable_body(node.body), type_ignores=[]),
+                ast.Module(body=executable_body, type_ignores=[]),
                 annotate_fields=True,
                 include_attributes=False,
+            )
+            raises_without_producing = bool(executable_body) and all(
+                isinstance(statement, ast.Raise) for statement in executable_body
             )
             record = FixtureRecord(
                 path=relative,
@@ -690,6 +782,7 @@ class _ModuleVisitor(ast.NodeVisitor):
                 imported_bindings=(),
                 consumers=(),
                 autouse_reach=(),
+                raises_without_producing=raises_without_producing,
             )
             self.fixtures.append(
                 _FixtureDraft(
@@ -700,7 +793,12 @@ class _ModuleVisitor(ast.NodeVisitor):
                 ),
             )
         self._qualname.append(node.name)
+        self._function_depth += 1
+        outer_parameters = self._enclosing_parameters
+        self._enclosing_parameters = tuple(parameter.name for parameter in parameters)
         self.generic_visit(node)
+        self._enclosing_parameters = outer_parameters
+        self._function_depth -= 1
         self._qualname.pop()
 
 
@@ -1161,7 +1259,9 @@ def main(argv: list[str] | None = None) -> int:
         f"fixture census: {result.fixture_count} fixtures in {len(result.sources)} source files; "
         f"dynamic requests={len(result.dynamic_fixture_requests)}; "
         f"factory-bound fixtures={result.factory_fixture_candidate_count}; "
-        f"aliased behaviours={result.aliased_behaviour_count}",
+        f"aliased behaviours={result.aliased_behaviour_count} "
+        f"(excluding {len(result.required_override_scaffolds)} required-override "
+        f"scaffolds, whose bodies only raise and so share a body by construction)",
     )
     for behaviour in result.aliased_behaviours:
         print(

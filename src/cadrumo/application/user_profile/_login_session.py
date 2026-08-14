@@ -61,9 +61,6 @@ from ...core.time import validate_utc_aware
 from ...domain.user_profile import ProfileNotFoundError, UserProfileError
 from ..profile_custody import (
     ProfileCustodyLocalRecordStore,
-    ProfileCustodyPasswordMaterialPort,
-    ProfilePersistedSessionPort,
-    ProfileSessionResumeOutcomePort,
     default_profile_bucket_event_history_repository,
     default_profile_custody_local_record_store,
     load_profile_custody_password_material,
@@ -88,7 +85,12 @@ from ..profile_custody import (
     unlock_profile_custody_password,
 )
 from ._capsule_record import ProfileRecordSession
-from ._custody_ports import ProfileBucketSessionPort
+from ._custody_ports import (
+    ProfileBucketSessionPort,
+    ProfileCustodyPasswordMaterialPort,
+    ProfilePersistedSessionPort,
+    ProfileSessionResumeOutcomePort,
+)
 from ._profile_pointer_transaction import (
     ActiveProfilePointerTransaction,
     ActiveProfilePointerTransactionError,

@@ -4,6 +4,14 @@ Discovery-phase tool: builds an inventory of cross-package private imports,
 shim/re-export modules, and redundantly re-exported symbols across
 ``src/cadrumo``. READ-ONLY: it does not modify production code.
 
+A forwarding layer has two syntaxes and the scanner reads both. Written as
+import aliases it has zero real definitions, which :func:`module_body_defs`
+sees; written as wrapper definitions
+(``def foo(a, *, b): return _real_foo(a, b=b)``) it evades that test by
+construction, because such a module defines plenty of its own things. Family 2
+covers the first syntax and Family 2b the second; they are one rule, and they
+live together so a fix to one cannot silently leave the other behind.
+
 It is also the SINGLE AUTHORITY for the one-way ``src/cadrumo`` -> ``dev/``
 boundary, in both the shapes that boundary breaks in: Family 5 detects a
 shipped module IMPORTING ``dev.*``, and Family 6 detects a shipped module
@@ -347,6 +355,26 @@ class ImportSite:
     in_type_checking: bool
 
 
+def type_checking_guarded_nodes(tree: ast.Module) -> set[int]:
+    """Return the ``id()`` of every node under an ``if TYPE_CHECKING:`` guard.
+
+    The one canonical answer to "is this statement type-only?", shared by the
+    import walk and the wrapper-binding map so the two cannot disagree about
+    what the guard covers.
+    """
+    guarded: set[int] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.If):
+            continue
+        test = node.test
+        is_guard = (isinstance(test, ast.Name) and test.id == "TYPE_CHECKING") or (
+            isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
+        )
+        if is_guard:
+            guarded.update(id(child) for child in ast.walk(node))
+    return guarded
+
+
 def walk_module_imports(path: Path, *, src_root: Path = SRC_ROOT) -> list[ImportSite]:
     """Parse a module and return every resolved import site it contains.
 
@@ -365,21 +393,7 @@ def walk_module_imports(path: Path, *, src_root: Path = SRC_ROOT) -> list[Import
     sites: list[ImportSite] = []
     test_flag = is_test_module(mod, path)
 
-    # Track TYPE_CHECKING guard membership via a simple ancestor stack walk.
-    type_checking_nodes: set[int] = set()
-
-    def mark_type_checking(node: ast.If) -> None:
-        test_expr = node.test
-        is_tc = (isinstance(test_expr, ast.Name) and test_expr.id == "TYPE_CHECKING") or (
-            isinstance(test_expr, ast.Attribute) and test_expr.attr == "TYPE_CHECKING"
-        )
-        if is_tc:
-            for child in ast.walk(node):
-                type_checking_nodes.add(id(child))
-
-    for node in ast.walk(tree):
-        if isinstance(node, ast.If):
-            mark_type_checking(node)
+    type_checking_nodes = type_checking_guarded_nodes(tree)
 
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
@@ -1159,11 +1173,14 @@ REGISTRY_LOADER_PACKAGE: Final[str] = "cadrumo.domain.calculations.registry"
 #: W01.P04.S34 for ``build_snapshot`` -- the plan's own text calls it "the
 #: same unguarded-entry-point class as the raw loader family"). Each had zero
 #: cross-package production OR test consumers at demotion time, EXCEPT
-#: ``build_snapshot``, whose sole external caller is a test fixture (confirmed
-#: by an AST scan over ``walk_module_imports``, not a text grep -- a
-#: multi-line ``from ... import (...)`` block hides a name from a per-line
-#: regex, which is exactly how ``collect_registry_tree_fingerprints`` was
-#: nearly misclassified here). The eight raw-loader siblings that stayed
+#: ``build_snapshot``, whose only external caller at demotion time was a test
+#: fixture (confirmed by an AST scan over ``walk_module_imports``, not a text
+#: grep -- a multi-line ``from ... import (...)`` block hides a name from a
+#: per-line regex, which is exactly how ``collect_registry_tree_fingerprints``
+#: was nearly misclassified here). Test callers of a demoted name are never
+#: gated below (``site.is_test`` short-circuits); ``build_snapshot`` has since
+#: gained more of them, routed through the ``domain.calculations.registry.tests``
+#: facade rather than this package directly. The eight raw-loader siblings that stayed
 #: exported (``load_registry_tree``, ``load_legal_parameters_only``,
 #: ``load_catalogue_file``, ``load_modelo_directory``, ``load_modelo_file``,
 #: ``load_modelo_path``, ``clear_fingerprint_cache``,
@@ -1414,6 +1431,240 @@ def find_shim_modules(py_files: list[Path], facades: dict[str, FacadeInfo]) -> l
                     )
                 )
     return shims
+
+
+# ---------------------------------------------------------------------------
+# Violation family 2b: forwarding layers written as wrapper DEFINITIONS
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class DelegateWrapper:
+    """One public callable whose entire body forwards to another package.
+
+    The second syntax of the same rule :class:`ShimModule` enforces. A
+    forwarding layer written as import aliases has zero real definitions and
+    :func:`module_body_defs` sees it; a forwarding layer written as
+    ``def foo(a, *, b): return _real_foo(a, b=b)`` evades that test BY
+    CONSTRUCTION, because a module full of wrapper definitions has plenty of
+    real definitions and a def-counting check always answers "yes, this module
+    defines its own things".
+
+    ``is_test`` mirrors :attr:`ShimModule.is_test`: the test tree is walked and
+    tagged, never skipped, but the production policy governs the
+    ``is_test=False`` subset.
+    """
+
+    mod: str
+    path: str
+    function: str
+    lineno: int
+    target_mod: str
+    target: str
+    is_test: bool
+
+
+# staticmethod/classmethod only rebind how the callable receives its first
+# argument; they leave WHAT the call does untouched, so a forwarding body under
+# one is still a forwarding body. Every other decorator gives the callable a
+# role beyond forwarding -- a pydantic ``field_validator``/``field_serializer``
+# hook, a ``property``, a cache, a Typer command registration -- and a body that
+# delegates to the canonical implementation is then exactly what the
+# centralisation policy asks for, not a bridge around it.
+_BINDING_ONLY_DECORATORS: Final[frozenset[str]] = frozenset({"staticmethod", "classmethod"})
+
+
+def _decorator_root_name(node: ast.expr) -> str:
+    current: ast.expr = node
+    if isinstance(current, ast.Call):
+        current = current.func
+    while isinstance(current, ast.Attribute):
+        current = current.value
+    return current.id if isinstance(current, ast.Name) else ""
+
+
+def _carries_role_decorator(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    """True if any decorator gives the callable a role beyond plain forwarding."""
+    return any(_decorator_root_name(node) not in _BINDING_ONLY_DECORATORS for node in fn.decorator_list)
+
+
+def module_import_bindings(tree: ast.Module, mod: str, *, is_package: bool) -> dict[str, str]:
+    """Map each module-level import binding to the module it was imported FROM.
+
+    ``from ..storage import custody`` binds ``custody`` to
+    ``cadrumo.adapters.persistence.storage`` -- the module the name came from,
+    not the name's own dotted path -- because that is the package whose surface
+    a wrapper around ``custody.<anything>`` reaches into.
+
+    A binding made under ``if TYPE_CHECKING:`` still counts, on the same
+    reading the cross-package private-import family already applies: the
+    ownership rule governs WHERE a symbol lives, never WHEN its module
+    executes, so deferring an import to type-check time does not change which
+    package owns the name. A runtime binding of the same name WINS, though --
+    a module that imports a symbol for real and re-imports it under the guard
+    for typing reaches the runtime one, and that is the package the wrapper
+    actually forwards into.
+    """
+    guarded = type_checking_guarded_nodes(tree)
+    runtime: dict[str, str] = {}
+    type_only: dict[str, str] = {}
+    for node in ast.walk(tree):
+        sink = type_only if id(node) in guarded else runtime
+        if isinstance(node, ast.ImportFrom):
+            target = resolve_relative_import(mod, is_package, node.level, node.module)
+            if not target:
+                continue
+            for alias in node.names:
+                sink[alias.asname or alias.name] = target
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                sink[alias.asname or alias.name.split(".", 1)[0]] = alias.name
+    return {**type_only, **runtime}
+
+
+def iter_module_level_callables(tree: ast.Module) -> Iterable[tuple[str, ast.FunctionDef | ast.AsyncFunctionDef]]:
+    """Yield ``(qualname, node)`` for every module-level function and method.
+
+    Walks through module-level ``if``/``try`` branches via
+    :func:`_flatten_module_level_branches`, so a wrapper defined only under a
+    platform or optional-dependency branch is still reached.
+    """
+    for node in _flatten_module_level_branches(tree.body):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            yield node.name, node
+        elif isinstance(node, ast.ClassDef):
+            for member in _flatten_module_level_branches(node.body):
+                if isinstance(member, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    yield f"{node.name}.{member.name}", member
+
+
+def sole_forwarded_call(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> ast.Call | None:
+    """Return the one call a body consists of, or ``None`` if it does more.
+
+    The body must be exactly one statement after its docstring, and that
+    statement must return the call's value unchanged or discard it (a void
+    forward). Anything that wraps, unpacks, compares, or branches on the result
+    is a real definition, not a forward.
+    """
+    body = list(fn.body)
+    first = body[0] if body else None
+    if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+        body = body[1:]
+    if len(body) != 1:
+        return None
+    statement = body[0]
+    if isinstance(statement, (ast.Return, ast.Expr)):
+        value = statement.value
+    else:
+        return None
+    if isinstance(value, ast.Await):
+        value = value.value
+    return value if isinstance(value, ast.Call) else None
+
+
+def forwards_own_parameters_only(call: ast.Call, fn: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    """True if every argument is a bare reference to one of ``fn``'s parameters.
+
+    This is the line between a forwarding wrapper and a translating adapter.
+    An adapter changes something observable at the boundary: it converts a
+    handle, supplies an argument the caller never gave, reshapes a value on the
+    way in. Each of those makes an argument something other than a bare
+    parameter name, and each is a real decision the wrapper owns. A wrapper
+    whose every argument is a bare parameter reference owns no decision at all:
+    same values in, same value out, and its only effect is to move the import
+    site. That is an import alias written with ``def``.
+
+    A keyword may be RELABELLED (``subject=`` forwarded as ``field_name=``) and
+    the call is still a forward: relabelling an argument is not translating it.
+    """
+    arguments = fn.args
+    parameters = {parameter.arg for parameter in (*arguments.posonlyargs, *arguments.args, *arguments.kwonlyargs)} - {
+        "self",
+        "cls",
+    }
+    if arguments.vararg:
+        parameters.add(arguments.vararg.arg)
+    if arguments.kwarg:
+        parameters.add(arguments.kwarg.arg)
+
+    passed: list[ast.expr] = []
+    for positional in call.args:
+        passed.append(positional.value if isinstance(positional, ast.Starred) else positional)
+    passed.extend(keyword.value for keyword in call.keywords)
+    return all(isinstance(node, ast.Name) and node.id in parameters for node in passed)
+
+
+def find_delegate_wrapper_shims(py_files: list[Path], *, src_root: Path = SRC_ROOT) -> list[DelegateWrapper]:
+    """Return every public callable that only re-calls another package's symbol.
+
+    Four conditions, all required, each drawing part of the line between a
+    forwarding wrapper and a legitimate module:
+
+    - The callable is PUBLIC by name. A private ``_helper`` is module-local
+      shorthand, not a standing bridge -- nothing outside the module may import
+      it without tripping the cross-package private-import family.
+    - It carries no role decorator (see :func:`_carries_role_decorator`).
+    - Its body is one call whose value is returned unchanged or discarded (see
+      :func:`sole_forwarded_call`).
+    - Every argument is a bare reference to one of its own parameters (see
+      :func:`forwards_own_parameters_only`), and the callee resolves through a
+      module-level import to a first-party package that is NOT the wrapper's
+      own. A package facade assembling its own surface from its own private
+      modules therefore never appears here, which is the shape the policy
+      explicitly permits.
+
+    Args:
+        py_files: Module files to scan.
+        src_root: Source root module names and reported paths resolve against;
+            injectable so a caller can scan a synthetic tree, matching the
+            convention of the other families in this module.
+    """
+
+    def reported_path(path: Path) -> str:
+        try:
+            relative = path.relative_to(REPO_ROOT)
+        except ValueError:
+            relative = path.relative_to(src_root.parent)
+        return str(relative).replace("\\", "/")
+
+    wrappers: list[DelegateWrapper] = []
+    for path in py_files:
+        try:
+            tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
+        except (FileNotFoundError, SyntaxError, UnicodeDecodeError):
+            continue
+        mod = module_name_for(path, src_root=src_root)
+        bindings = module_import_bindings(tree, mod, is_package=path.name == "__init__.py")
+        test_flag = is_test_module(mod, path)
+
+        for qualname, fn in iter_module_level_callables(tree):
+            if is_underscore_named(fn.name) or _carries_role_decorator(fn):
+                continue
+            call = sole_forwarded_call(fn)
+            if call is None or not forwards_own_parameters_only(call, fn):
+                continue
+            target = _expression_reference(call.func, {})
+            if target is None:
+                continue
+            root = target.split(".", 1)[0]
+            target_mod = bindings.get(root)
+            if target_mod is None or target_mod.split(".", 1)[0] != PKG_ROOT.name:
+                continue
+            owner = owning_package(target_mod)
+            if mod == owner or mod.startswith(owner + "."):
+                continue
+            wrappers.append(
+                DelegateWrapper(
+                    mod=mod,
+                    path=reported_path(path),
+                    function=qualname,
+                    lineno=fn.lineno,
+                    target_mod=target_mod,
+                    target=target,
+                    is_test=test_flag,
+                )
+            )
+    return sorted(wrappers, key=lambda w: (w.path, w.function))
 
 
 # ---------------------------------------------------------------------------
@@ -1774,6 +2025,29 @@ def _require_accepted_tui_migration_identities(
         )
 
 
+def tui_migration_census_drift(
+    rows: tuple[TuiMigrationRow, ...],
+    *,
+    accepted_sha256: str = _ACCEPTED_TUI_MIGRATION_IDENTITY_SHA256,
+) -> str | None:
+    """Return the census-drift message, or ``None`` when the census matches.
+
+    The reporting counterpart of :func:`_require_accepted_tui_migration_identities`.
+    A scan is a diagnostic that answers several independent questions, and one
+    check disagreeing must not decide whether the other answers are printed:
+    a tool that refuses to report anything because one of its many checks is
+    unhappy stops being run at all, and the findings it was consulted for
+    become unreadable behind an unrelated traceback. The refusal keeps its
+    teeth through the caller's exit code; only its power to abort the report
+    is removed.
+    """
+    try:
+        _require_accepted_tui_migration_identities(rows, accepted_sha256=accepted_sha256)
+    except TuiMigrationManifestError as drift:
+        return str(drift)
+    return None
+
+
 def _qualified_tui_references(tree: ast.Module) -> tuple[tuple[int, str, str | None], ...]:
     """Return fully-qualified legacy-TUI references embedded in Python strings."""
     found: list[tuple[int, str, str | None]] = []
@@ -1972,6 +2246,7 @@ def main() -> int:
 
     priv_violations = find_private_import_violations(all_sites)
     shims = find_shim_modules(py_files, facades)
+    delegate_wrappers = find_delegate_wrapper_shims(py_files)
     multi_sourced = find_multi_sourced_symbols(facades, all_sites)
     fix_classes = classify_fix_strategy(priv_violations, facades)
     underscore_in_all = find_underscore_in_all_violations(facades)
@@ -1982,6 +2257,7 @@ def main() -> int:
     # change to one sub-census, and raising mid-run discarded the six unrelated
     # families already computed above without printing any of them.
     tui_migration_rows = generate_tui_migration_manifest(accepted_identity_sha256=None)
+    census_drift = tui_migration_census_drift(tui_migration_rows)
 
     # ---- Reporting ----
     print(f"Scanned {len(py_files)} .py files under {PKG_ROOT}")
@@ -2022,6 +2298,15 @@ def main() -> int:
     print()
     for s in shims:
         print(f"  [{'test' if s.is_test else 'prod'}][{s.reason}] {s.path} :: {s.detail}")
+    print()
+
+    print(f"=== FAMILY 2b: forwarding wrappers (the same rule, written as defs): {len(delegate_wrappers)} total ===")
+    wrappers_non_test = [w for w in delegate_wrappers if not w.is_test]
+    print(f"  production: {len(wrappers_non_test)}   test-tree: {len(delegate_wrappers) - len(wrappers_non_test)}")
+    print("  (a public callable whose whole body re-calls another package's symbol with its own")
+    print("   arguments unchanged; it owns no decision, so it is an import alias written with def)")
+    for w in delegate_wrappers:
+        print(f"  [{'test' if w.is_test else 'prod'}] {w.path}:{w.lineno} {w.function} -> {w.target} [{w.target_mod}]")
     print()
 
     by_confidence = Counter(m.confidence for m in multi_sourced)
@@ -2067,9 +2352,7 @@ def main() -> int:
         print(f"  [{reach.form}] {reach.module_path}:{reach.lineno} -> {reach.detail!r}")
     print()
 
-    print(
-        f"=== FAMILY 7: production imports of a demoted registry raw-loader symbol: {len(registry_loader_imports)} total ==="
-    )
+    print(f"=== FAMILY 7: production imports of a demoted raw-loader symbol: {len(registry_loader_imports)} total ===")
     print(f"  (demoted set: {sorted(DEMOTED_REGISTRY_LOADER_SYMBOLS)})")
     for v in registry_loader_imports:
         print(f"  {v.importer_path}:{v.lineno} imports {v.imported_names} from {REGISTRY_LOADER_PACKAGE}")
@@ -2116,6 +2399,7 @@ def main() -> int:
     print(f"  distinct symbol names touched: {len(distinct_symbols_all)}")
     print(f"  distinct symbols needing facade promotion: {len({f.symbol for f in needs_promotion})}")
     print(f"  distinct owning packages needing >=1 promotion: {len(promo_by_owner)}")
+    print(f"  production forwarding wrappers (Family 2b): {len(wrappers_non_test)}")
     print(f"  underscore-named __all__ entries (Family 4): {len(underscore_in_all)}")
     print(f"  shipped modules importing dev/ tooling (Family 5): {len(dev_tooling_imports)}")
     print(f"  shipped modules reaching a dev/ path (Family 6): {len(dev_path_reaches)}")
@@ -2150,6 +2434,18 @@ def main() -> int:
             "shim_modules": [
                 {"mod": s.mod, "path": s.path, "reason": s.reason, "detail": s.detail, "is_test": s.is_test}
                 for s in shims
+            ],
+            "delegate_wrapper_shims": [
+                {
+                    "mod": w.mod,
+                    "path": w.path,
+                    "function": w.function,
+                    "lineno": w.lineno,
+                    "target_mod": w.target_mod,
+                    "target": w.target,
+                    "is_test": w.is_test,
+                }
+                for w in delegate_wrappers
             ],
             "multi_sourced_symbols": [
                 {
@@ -2207,12 +2503,14 @@ def main() -> int:
         args.json.write_text(json.dumps(payload, indent=2), encoding=_UTF_8, newline="\n")
         print(f"Wrote full JSON inventory to {args.json}")
 
-    _require_accepted_tui_migration_identities(
-        tui_migration_rows,
-        accepted_sha256=_ACCEPTED_TUI_MIGRATION_IDENTITY_SHA256,
-    )
-
-    return 0
+    if census_drift is None:
+        return 0
+    print("=== LEGACY TUI MIGRATION CENSUS: DRIFTED ===")
+    print(f"  {census_drift}")
+    print("  Every finding above was still scanned and printed; this refusal decides the exit")
+    print("  code only. Establish whether the new identities are legitimate before touching the")
+    print("  accepted constant -- refreshing it to silence this says nothing about the census.")
+    return 1
 
 
 if __name__ == "__main__":

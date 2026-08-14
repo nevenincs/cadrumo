@@ -909,6 +909,42 @@ def test_crash_after_b_handover_recovers_only_durable_b_pointer(tmp_path: Path) 
                 crashing_child.join(timeout=30)
 
 
+#: Phases at which the handover was already complete when the process died,
+#: so the recovery login has nothing to replay.
+_TERMINAL_CRASH_PHASES = frozenset({_HandoverPhase.ACTIVATED, _HandoverPhase.A_RETIRED})
+
+
+def _assert_journal_settled_for(phase: _HandoverPhase, *, storage_root: Path) -> None:
+    """Assert the journal reached the settled state this crash phase implies.
+
+    The two outcomes differ because the journal is an operation record, not an
+    audit record, and the recovery login is the observer that retires it.
+
+    A crash *before* activation leaves work to replay: recovery re-authenticates
+    B, drives the handover to its end, and writes the terminal receipt, which is
+    then deliberately retained for the NEXT login to observe -- so the file is
+    present and terminal here.
+
+    A crash *at or after* activation leaves nothing to replay: the recovery
+    login is itself that next observer, classifies the witnessed journal as
+    complete, and clears it. Asserting a surviving file in that case would
+    require the journal to outlive the operation it records.
+
+    Absence is unambiguous rather than merely permissive: the caller has already
+    asserted the pointer names B, so the rollback branch that also clears
+    (pointer still at the pre-handover state) cannot have fired.
+    """
+    journal_path = _handover_journal_path(storage_root)
+    if phase in _TERMINAL_CRASH_PHASES:
+        assert not journal_path.exists(), (
+            f"a crash at the terminal phase {phase.value} left an operation journal behind; "
+            "recovery observed a completed handover and must retire the record"
+        )
+        return
+    terminal_journal = json.loads(journal_path.read_text(encoding="utf-8"))
+    assert terminal_journal["phase"] == _HandoverPhase.A_RETIRED.value
+
+
 @pytest.mark.parametrize(
     "phase",
     (
@@ -958,8 +994,7 @@ def test_crash_at_each_durable_handover_phase_recovers_selected_b(
                     "outcome_bucket": profile_b,
                     "record_profile": profile_b,
                 }
-                terminal_journal = json.loads(_handover_journal_path(storage_root).read_text(encoding="utf-8"))
-                assert terminal_journal["phase"] == _HandoverPhase.A_RETIRED.value
+                _assert_journal_settled_for(phase, storage_root=storage_root)
             finally:
                 if recovery_child.is_alive():
                     recovery_child.terminate()

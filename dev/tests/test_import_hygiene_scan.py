@@ -418,3 +418,230 @@ def test_live_tree_has_zero_underscore_in_all_violations() -> None:
         f"underscore-named __all__ entries found (public facade exporting a private-named "
         f"symbol): {[(v.package, v.name) for v in violations]}"
     )
+
+
+def _synthetic_package(root: Path, module: str, source: str) -> Path:
+    """Write ``source`` as ``cadrumo.<module>`` inside a synthetic ``src`` tree."""
+    path = root / "src" / "cadrumo"
+    path.mkdir(parents=True, exist_ok=True)
+    for part in module.split(".")[:-1]:
+        path = path / part
+        path.mkdir(exist_ok=True)
+        (path / "__init__.py").touch()
+    leaf = module.split(".")[-1]
+    target = path / ("__init__.py" if leaf == "__init__" else f"{leaf}.py")
+    target.write_text(source, encoding="utf-8")
+    return target
+
+
+def _wrapper_functions(tmp_path: Path, module: str, source: str) -> list[str]:
+    from ..quality.import_hygiene_scan import find_delegate_wrapper_shims
+
+    target = _synthetic_package(tmp_path, module, source)
+    return [w.function for w in find_delegate_wrapper_shims([target], src_root=tmp_path / "src")]
+
+
+def test_find_delegate_wrapper_shims_catches_a_forwarding_layer_written_as_defs(tmp_path: Path) -> None:
+    """The wrapper syntax evades the zero-definitions test; this is what catches it.
+
+    Every callable below has a real ``def``, so ``module_body_defs`` reports a
+    module full of genuine definitions and Family 2 stays silent -- while the
+    module is a forwarding layer over another package's surface and nothing
+    else.
+    """
+    functions = _wrapper_functions(
+        tmp_path,
+        "application.ports",
+        "from ...cadrumo.adapters.persistence import custody\n"
+        "from ..adapters.persistence.storage import read_record\n"
+        "\n"
+        "def load_record(path, *, maximum_bytes):\n"
+        '    """Load one record."""\n'
+        "    return read_record(path, maximum_bytes=maximum_bytes)\n"
+        "\n"
+        "def clear_record(path):\n"
+        "    custody.clear_record(path)\n"
+        "\n"
+        "class _Adapter:\n"
+        "    def lock(self, path, *, wait_seconds):\n"
+        "        return custody.lock(path, wait_seconds=wait_seconds)\n",
+    )
+
+    assert sorted(functions) == ["_Adapter.lock", "clear_record", "load_record"]
+
+
+def test_find_delegate_wrapper_shims_ignores_a_facade_over_its_own_private_modules(tmp_path: Path) -> None:
+    """A package assembling its own public surface from its own internals is not a bridge."""
+    functions = _wrapper_functions(
+        tmp_path,
+        "application.custody.__init__",
+        "from ._records import read_record\n"
+        "\n"
+        "def load_record(path, *, maximum_bytes):\n"
+        "    return read_record(path, maximum_bytes=maximum_bytes)\n",
+    )
+
+    assert functions == []
+
+
+def test_find_delegate_wrapper_shims_ignores_a_translating_adapter(tmp_path: Path) -> None:
+    """Converting, re-raising, or supplying an argument is a real decision the callable owns."""
+    functions = _wrapper_functions(
+        tmp_path,
+        "application.adapters",
+        "from ..adapters.persistence.storage import crypto, read_record\n"
+        "\n"
+        "def load_record(path, *, maximum_bytes):\n"
+        "    return Blob(read_record(path, maximum_bytes=maximum_bytes))\n"
+        "\n"
+        "def widen(handle, *, wait_seconds):\n"
+        "    return crypto.lock(_substrate(handle), wait_seconds=wait_seconds)\n"
+        "\n"
+        "def pinned(path):\n"
+        "    return read_record(path, maximum_bytes=4096)\n"
+        "\n"
+        "def guarded(path):\n"
+        "    try:\n"
+        "        return read_record(path)\n"
+        "    except OSError as exc:\n"
+        "        raise CustodyError from exc\n",
+    )
+
+    assert functions == []
+
+
+def test_find_delegate_wrapper_shims_ignores_private_helpers_and_role_decorated_hooks(tmp_path: Path) -> None:
+    """A module-local shorthand is not a standing bridge, and a hook is not an alias.
+
+    A leading-underscore callable is unreachable from outside its module
+    without tripping the cross-package private-import family, so it cannot be
+    the standing bridge this check exists to find. A ``field_validator`` body
+    that delegates to the canonical validator is what the centralisation policy
+    ASKS for -- the decorator makes the callable a registration, not a second
+    name for the target.
+    """
+    functions = _wrapper_functions(
+        tmp_path,
+        "application.models",
+        "from pydantic import field_validator\n"
+        "from ..core.time import validate_utc_aware\n"
+        "\n"
+        "def _utcnow(value):\n"
+        "    return validate_utc_aware(value)\n"
+        "\n"
+        "class Record:\n"
+        '    @field_validator("created_at")\n'
+        "    @classmethod\n"
+        "    def check_created_at(cls, value):\n"
+        "        return validate_utc_aware(value)\n",
+    )
+
+    assert functions == []
+
+
+def test_find_delegate_wrapper_shims_still_sees_a_wrapper_under_a_binding_only_decorator(tmp_path: Path) -> None:
+    """``staticmethod``/``classmethod`` rebind the first argument; they do not add a role.
+
+    The exclusion above is deliberately narrow. If it were "any decorator", a
+    forwarding layer would only have to spell its wrappers ``@staticmethod`` to
+    disappear from this scan again.
+    """
+    functions = _wrapper_functions(
+        tmp_path,
+        "application.statics",
+        "from ..adapters.persistence.storage import read_record\n"
+        "\n"
+        "class Ports:\n"
+        "    @staticmethod\n"
+        "    def load_record(path, *, maximum_bytes):\n"
+        "        return read_record(path, maximum_bytes=maximum_bytes)\n",
+    )
+
+    assert functions == ["Ports.load_record"]
+
+
+def test_find_delegate_wrapper_shims_ignores_a_wrapper_over_a_third_party_boundary(tmp_path: Path) -> None:
+    """Wrapping an external library is a boundary adapter; this check is about internal bridges."""
+    functions = _wrapper_functions(
+        tmp_path,
+        "adapters.outbound.http",
+        "import httpx\n\ndef get(url, *, timeout):\n    return httpx.get(url, timeout=timeout)\n",
+    )
+
+    assert functions == []
+
+
+def test_find_delegate_wrapper_shims_tolerates_a_file_removed_after_discovery(tmp_path: Path) -> None:
+    """A generated module removed after discovery is not a scanner failure."""
+    from ..quality.import_hygiene_scan import find_delegate_wrapper_shims
+
+    generated = tmp_path / "generated_test_module.py"
+    generated.write_text("from pathlib import Path\n", encoding="utf-8")
+    generated.unlink()
+
+    assert find_delegate_wrapper_shims([generated]) == []
+
+
+def test_find_delegate_wrapper_shims_sees_a_forward_to_a_type_checking_bound_name(tmp_path: Path) -> None:
+    """Deferring an import to type-check time does not change which package owns the name.
+
+    The same reading the cross-package private-import family already applies:
+    the ownership rule governs WHERE a symbol lives, never WHEN its module
+    executes. A wrapper cannot escape this scan by moving its import under the
+    guard.
+    """
+    functions = _wrapper_functions(
+        tmp_path,
+        "application.deferred",
+        "from typing import TYPE_CHECKING\n"
+        "\n"
+        "if TYPE_CHECKING:\n"
+        "    from ..adapters.persistence.storage import read_record\n"
+        "\n"
+        "def load_record(path, *, maximum_bytes):\n"
+        "    return read_record(path, maximum_bytes=maximum_bytes)\n",
+    )
+
+    assert functions == ["load_record"]
+
+
+def test_module_import_bindings_prefer_the_runtime_binding_over_the_guarded_one() -> None:
+    """A name imported for real and re-imported for typing resolves to the runtime package.
+
+    Both bindings are real, so the map must not be left at the mercy of walk
+    order: the wrapper forwards into whichever package the runtime import named.
+    """
+    import ast
+
+    from ..quality.import_hygiene_scan import module_import_bindings
+
+    tree = ast.parse(
+        "from typing import TYPE_CHECKING\n"
+        "from cadrumo.adapters.persistence.storage import read_record\n"
+        "if TYPE_CHECKING:\n"
+        "    from cadrumo.application.user_profile._ports import read_record\n"
+    )
+
+    bindings = module_import_bindings(tree, "cadrumo.application.ports", is_package=False)
+
+    assert bindings["read_record"] == "cadrumo.adapters.persistence.storage"
+
+
+def test_tui_migration_census_drift_reports_instead_of_raising() -> None:
+    """One check disagreeing must not decide whether every other finding is printed.
+
+    The refusal keeps its teeth through the caller's exit code; what it loses
+    is the power to abort the report, which is what made an unrelated census
+    mismatch hide every shim, boundary, and duplicate finding behind a
+    traceback.
+    """
+    from ..quality.import_hygiene_scan import _tui_migration_identity_sha256, tui_migration_census_drift
+
+    matching = _tui_migration_identity_sha256(())
+
+    assert tui_migration_census_drift((), accepted_sha256=matching) is None
+
+    drift = tui_migration_census_drift((), accepted_sha256="0" * 64)
+    assert drift is not None
+    assert matching in drift, "the drift message must name the found census so it can be investigated"
+    assert "0" * 64 in drift, "the drift message must name the accepted census it was compared against"
