@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 from uuid import UUID
+
+if TYPE_CHECKING:
+    from ...core import ProfileSessionRefusalReason
 
 
 class ProfileBucketSessionPort(Protocol):
@@ -114,6 +117,25 @@ class ProfilePersistedSessionPort(Protocol):
         ...
 
 
+class ProfileSessionResumeOutcomePort(Protocol):
+    """Fail-closed persisted-session evaluation result."""
+
+    @property
+    def resumed(self) -> bool:
+        """Whether the persisted receipt was accepted."""
+        ...
+
+    @property
+    def refusal(self) -> ProfileSessionRefusalReason | None:
+        """The typed reason a resume was refused, if it was."""
+        ...
+
+    @property
+    def record(self) -> ProfilePersistedSessionPort | None:
+        """The evaluated receipt, present whether or not it was accepted."""
+        ...
+
+
 class ProfileCustodyEnvelopePort(Protocol):
     """Opaque password-envelope contract accepted by custody transactions."""
 
@@ -140,4 +162,5 @@ __all__ = [
     "ProfileCustodyRecoveryEnvelopePort",
     "ProfileCustodySentinelPort",
     "ProfilePersistedSessionPort",
+    "ProfileSessionResumeOutcomePort",
 ]

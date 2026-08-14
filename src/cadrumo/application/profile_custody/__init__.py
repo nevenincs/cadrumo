@@ -35,7 +35,7 @@ from ...adapters.persistence.storage import (
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
 )
-from ...core import ProfileSessionRefusalReason, SecureObjectWrite, StorageCategory, storage_location
+from ...core import SecureObjectWrite, StorageCategory, storage_location
 from ...core.classification import SensitivityClass
 from ...core.config import Settings
 from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest
@@ -49,6 +49,7 @@ if TYPE_CHECKING:
         ProfileCustodyPasswordMaterialPort,
         ProfileCustodySentinelPort,
         ProfilePersistedSessionPort,
+        ProfileSessionResumeOutcomePort,
     )
 
 
@@ -149,25 +150,6 @@ class ProfileCustodyBucketSessionPort(Protocol):
     @property
     def dek(self) -> bytes:
         """The session's bound data-encryption key."""
-        ...
-
-
-class ProfileSessionResumeOutcomePort(Protocol):
-    """Fail-closed persisted-session evaluation result."""
-
-    @property
-    def resumed(self) -> bool:
-        """Whether the persisted receipt was accepted."""
-        ...
-
-    @property
-    def refusal(self) -> ProfileSessionRefusalReason | None:
-        """The typed reason a resume was refused, if it was."""
-        ...
-
-    @property
-    def record(self) -> ProfilePersistedSessionPort | None:
-        """The evaluated receipt, present whether or not it was accepted."""
         ...
 
 
@@ -1043,7 +1025,6 @@ __all__ = [
     "ProfileRecordCryptoPort",
     "ProfileRecordEncryptedBlob",
     "ProfileSecureObjectInventoryPort",
-    "ProfileSessionResumeOutcomePort",
     "canonical_snapshot_bytes",
     "canonical_snapshot_digest",
     "canonical_snapshot_payload",
