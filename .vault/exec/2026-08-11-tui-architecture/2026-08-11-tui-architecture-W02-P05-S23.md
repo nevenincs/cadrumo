@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:7be09a5526e8398bbffd3a016e5ae9b5cc59ff2dad3e1ffbb0c42e90ddd43e4f'
+body_hash: 'sha256:853b368b20b57145e79288fdf6d9d2ad72463294b617990b8421e65f1ea963e9'
 step_id: 'S23'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -27,8 +27,12 @@ Implement cursor replay and bounded live observation without making subscriber c
 
 Implementation and independent Sol Medium review are complete. Review verdict: PASS with no CRITICAL, HIGH, or MEDIUM findings. Focused verification passed 26 implementation tests; the independent review reran 12 focused tests, Ruff, BasedPyright, and diff hygiene successfully.
 
-The row remains open and uncommitted pending a shared-worktree dependency-delivery boundary. The current reviewed supervisor and journal diffs preserve pre-existing extractions into `_execution_context.py`, `_supervisor_lease.py`, and `_journal_validation.py`. Those untracked modules are required imports after their former inline definitions were removed. Omitting them from a path-scoped S23 commit would break runtime imports, while absorbing them without ownership would capture peer WIP. S23 will close only after their owner lands them or explicitly coordinates atomic inclusion.
+The shared-worktree dependency boundary resolved naturally: the complete canonical extraction and S23 replay code landed together in reachable commit `5a6fcd09e4`. Fresh independent re-review of that enlarged exact set returned PASS with no findings, proving exact extractions, deletion of old inline duplicates, complete constructor migration, and unique durable replay authority.
 
 ## Notes
 
 Both semantic RAG corpora remained offline with HTTP 500 responses. The user explicitly waived mandatory RAG and authorized execution from the self-contained plan and linked corpus; no service/process/store mutation or fallback semantic authority was used.
+
+Final verification on the enlarged tree: 214 application-and-persistence operation tests passed in 11.89s; Ruff passed; 37 files were already formatted; BasedPyright reported 0 errors, 0 warnings, and 0 notes; diff hygiene passed. The fresh independent reviewer additionally passed 181 scoped tests under --noconftest.
+
+`uvx vaultspec-core vault check all` exited 0 with 1,318 unrelated shared-corpus warnings; S23 structure, links, placeholders, modified stamps, plan transition, and review evidence are clean.

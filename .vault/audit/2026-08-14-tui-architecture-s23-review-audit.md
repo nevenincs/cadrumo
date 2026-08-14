@@ -102,4 +102,3 @@ lane at 214 passed with the same static gates clean.
 No implementation changes are required. The enlarged exact S23 boundary is
 review-ready as one atomic delivery. Keep the plan row open and uncommitted for
 the authorized executor to record and deliver.
-
