@@ -23,11 +23,11 @@ from ....application.workflow import (
     WorkflowObligationFacts,
     WorkflowResult,
     WorkflowStage,
+    WorkflowState,
     WorkflowStep,
     list_runs,
     load_run,
     save_run,
-    workflow_state_repository,
 )
 from ....core import (
     ActionArgumentStatus,
@@ -93,13 +93,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_PROFILE_ID),
     ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id=_PROFILE_ID,
-                display_name=_PROFILE_LABEL,
-            )
-        )
+        register_minimal_profile(WorkflowState(), profile_id=_PROFILE_ID, display_name=_PROFILE_LABEL)
         _seed_ready_profile_record(_PROFILE_ID)
         yield
 
