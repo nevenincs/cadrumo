@@ -22,6 +22,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from ....adapters.persistence.storage.bucket import ARCHIVE_SCHEMA_VERSION
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage, isolated_profile_storage_root
 
@@ -60,31 +61,15 @@ def _create_profile(name: str, *, tax_id: str) -> Result:
     )
 
 
-def _archive_export(
-    name: str,
-    out: Path,
-    *,
-    recovery_wrap_passphrase: str | None = None,
-    json_format: bool = True,
-) -> Result:
+def _archive_export(name: str, out: Path, *, json_format: bool = True) -> Result:
     args = ["config", "profile", "archive", "export", name, "--to", str(out)]
-    if recovery_wrap_passphrase is not None:
-        args.extend(("--recovery-wrap-passphrase", recovery_wrap_passphrase))
     if json_format:
         args = ["--format", "json", *args]
     return _invoke(args)
 
 
-def _archive_import(
-    source: Path,
-    *,
-    recovery_wrap_passphrase: str | None = None,
-    force: bool = False,
-    json_format: bool = True,
-) -> Result:
+def _archive_import(source: Path, *, force: bool = False, json_format: bool = True) -> Result:
     args = ["config", "profile", "archive", "import", str(source)]
-    if recovery_wrap_passphrase is not None:
-        args.extend(("--recovery-wrap-passphrase", recovery_wrap_passphrase))
     if force:
         args.append("--force")
     if json_format:
@@ -110,17 +95,17 @@ def _seed_transaction(csv_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Recovery-wrap export/import roundtrip (cross-host transport)
+# Export/import roundtrip (cross-host transport)
 # ---------------------------------------------------------------------------
 
 
-def test_archive_export_import_recovery_wrap_roundtrip(tmp_path: Path) -> None:
-    """A recovery-wrap sealed archive restores full profile state in a fresh root.
+def test_archive_export_import_roundtrip(tmp_path: Path) -> None:
+    """A sealed archive restores full profile state in a fresh root.
 
-    Recovery-wrap sealing is the cross-host transport: the archive is
-    portable because it is sealed under a passphrase-derived key rather
-    than the source bucket's live DEK. This is the transport a real
-    disk-failure recovery uses.
+    This is the transport a real disk-failure recovery uses. The archive is
+    portable because it carries the profile's own custody, and the profile
+    password is what opens it on the new host; no recovery material is
+    involved on either side.
     """
     from ....core import resolve_active_bucket_id
 
@@ -133,11 +118,9 @@ def test_archive_export_import_recovery_wrap_roundtrip(tmp_path: Path) -> None:
     assert source_bucket_id is not None
 
     archive_path = tmp_path / "profile-backup.cadrumo-bucket.tar.gz"
-    passphrase = "correct-horse-battery-staple-9"  # noqa: S105 - synthetic test fixture, not a secret
-    r_export = _archive_export("profile", archive_path, recovery_wrap_passphrase=passphrase)
+    r_export = _archive_export("profile", archive_path)
     assert r_export.exit_code == 0, r_export.output
-    export_payload = assert_public_profile_payload_redacted(r_export.output, source_bucket_id)
-    assert export_payload["recovery_wrap_present"] is True
+    assert_public_profile_payload_redacted(r_export.output, source_bucket_id)
     assert archive_path.is_file()
 
     # Load originals while still in source storage context.
@@ -159,7 +142,7 @@ def test_archive_export_import_recovery_wrap_roundtrip(tmp_path: Path) -> None:
     # true portable backup, not merely a same-host convenience copy.
     restore_root = tmp_path / "restore-root"
     with isolated_profile_storage_root(tmp_path=restore_root):
-        r_import = _archive_import(archive_path, recovery_wrap_passphrase=passphrase)
+        r_import = _archive_import(archive_path)
         assert r_import.exit_code == 0, r_import.output
         assert_public_profile_payload_redacted(r_import.output, source_bucket_id)
 
@@ -177,7 +160,7 @@ def test_archive_export_import_recovery_wrap_roundtrip(tmp_path: Path) -> None:
 
 
 def test_archive_transfer_file_does_not_expose_identity_cleartext(tmp_path: Path) -> None:
-    """A passphrase-wrapped transfer archive does not expose raw profile identity bytes.
+    """A transfer archive does not expose raw profile identity bytes.
 
     A gestor needs a bundle suitable for cross-host/email transfer. The sealed
     archive may expose only its header metadata in clear; the profile payload
@@ -189,11 +172,7 @@ def test_archive_transfer_file_does_not_expose_identity_cleartext(tmp_path: Path
     assert r_create.exit_code == 0, r_create.output
 
     archive_path = tmp_path / "profile-identity-transfer.cadrumo-bucket.tar.gz"
-    r_export = _archive_export(
-        "profile-identity",
-        archive_path,
-        recovery_wrap_passphrase="identity-transfer-passphrase-42",  # noqa: S106 - synthetic test fixture
-    )
+    r_export = _archive_export("profile-identity", archive_path)
     assert r_export.exit_code == 0, r_export.output
     assert archive_path.is_file()
 
@@ -206,7 +185,7 @@ def test_archive_transfer_file_does_not_expose_identity_cleartext(tmp_path: Path
             assert extracted is not None
             member_payloads[member.name] = extracted.read()
 
-    assert set(member_payloads) == {"header.json", "payload.envelope", "recovery.wrap"}
+    assert set(member_payloads) == {"header.json", "payload.envelope"}
     joined_members = b"\n".join(member_payloads.values())
     for forbidden in (b"12345678Z", b"Archive", b"Roundtrip", b"profile-identity"):
         assert forbidden not in joined_members
@@ -227,13 +206,12 @@ def test_archive_import_switches_active_profile_with_notice(tmp_path: Path) -> N
     assert source_bucket_id is not None
 
     archive_path = tmp_path / "profile2-backup.cadrumo-bucket.tar.gz"
-    passphrase = "another-recovery-passphrase-42"  # noqa: S105 - synthetic test fixture, not a secret
-    r_export = _archive_export("profile2", archive_path, recovery_wrap_passphrase=passphrase)
+    r_export = _archive_export("profile2", archive_path)
     assert r_export.exit_code == 0, r_export.output
 
     restore_root = tmp_path / "restore-root-2"
     with isolated_profile_storage_root(tmp_path=restore_root):
-        r_import = _archive_import(archive_path, recovery_wrap_passphrase=passphrase)
+        r_import = _archive_import(archive_path)
         assert r_import.exit_code == 0, r_import.output
 
         notices = unwrap_envelope_notices(r_import.output)
@@ -257,29 +235,6 @@ def test_archive_import_switches_active_profile_with_notice(tmp_path: Path) -> N
         assert resolve_active_bucket_id() == source_bucket_id
 
 
-def test_archive_import_refuses_wrong_recovery_wrap_passphrase(tmp_path: Path) -> None:
-    """A passphrase-wrapped transfer archive refuses restore with the wrong passphrase."""
-    r_create = _create_profile("profile-wrong-passphrase", tax_id="87654321X")
-    assert r_create.exit_code == 0, r_create.output
-
-    archive_path = tmp_path / "profile-wrong-passphrase.cadrumo-bucket.tar.gz"
-    r_export = _archive_export(
-        "profile-wrong-passphrase",
-        archive_path,
-        recovery_wrap_passphrase="right-recovery-passphrase-42",  # noqa: S106 - synthetic test fixture
-    )
-    assert r_export.exit_code == 0, r_export.output
-
-    restore_root = tmp_path / "wrong-passphrase-root"
-    with isolated_profile_storage_root(tmp_path=restore_root):
-        r_import = _archive_import(
-            archive_path,
-            recovery_wrap_passphrase="wrong-recovery-passphrase-42",  # noqa: S106 - synthetic test fixture
-        )
-        assert r_import.exit_code != 0, r_import.output
-        assert "Traceback" not in r_import.output
-
-
 # ---------------------------------------------------------------------------
 # Inspect: read-only header preview
 # ---------------------------------------------------------------------------
@@ -291,18 +246,14 @@ def test_archive_inspect_reads_header_without_decrypting(tmp_path: Path) -> None
     The critical property this proves is that ``inspect`` runs cleanly with
     NO profile ever unlocked afterward (a fresh, disjoint storage root),
     since it is a pure plaintext-header read and must stay reachable when
-    an operator wants to check a backup file before deciding whether (and
-    with what passphrase) to restore it.
+    an operator wants to check a backup file before deciding whether to
+    restore it.
     """
     r_create = _create_profile("profile3", tax_id="11111111H")
     assert r_create.exit_code == 0, r_create.output
 
     archive_path = tmp_path / "profile3-backup.cadrumo-bucket.tar.gz"
-    r_export = _archive_export(
-        "profile3",
-        archive_path,
-        recovery_wrap_passphrase="inspect-me-passphrase-7",  # noqa: S106 - synthetic test fixture, not a secret
-    )
+    r_export = _archive_export("profile3", archive_path)
     assert r_export.exit_code == 0, r_export.output
 
     inspect_root = tmp_path / "inspect-root"
@@ -310,8 +261,7 @@ def test_archive_inspect_reads_header_without_decrypting(tmp_path: Path) -> None
         r_inspect = _archive_inspect(archive_path)
         assert r_inspect.exit_code == 0, r_inspect.output
         payload = unwrap_schema_envelope(r_inspect.output)
-        assert payload["recovery_wrap_present"] is True
-        assert payload["archive_schema_version"] == 3
+        assert payload["archive_schema_version"] == ARCHIVE_SCHEMA_VERSION
         assert payload["size_bytes"] == archive_path.stat().st_size
         assert isinstance(payload["created_at"], str) and payload["created_at"]
 
@@ -342,8 +292,7 @@ def test_archive_import_refuses_corrupted_payload(tmp_path: Path) -> None:
     assert r_create.exit_code == 0, r_create.output
 
     archive_path = tmp_path / "profile4-backup.cadrumo-bucket.tar.gz"
-    passphrase = "tamper-test-passphrase-321"  # noqa: S105 - synthetic test fixture, not a secret
-    r_export = _archive_export("profile4", archive_path, recovery_wrap_passphrase=passphrase)
+    r_export = _archive_export("profile4", archive_path)
     assert r_export.exit_code == 0, r_export.output
 
     # Extract, corrupt the payload member, and re-pack the tar.gz.
@@ -361,14 +310,14 @@ def test_archive_import_refuses_corrupted_payload(tmp_path: Path) -> None:
 
     tampered_path = tmp_path / "profile4-backup-tampered.cadrumo-bucket.tar.gz"
     with tarfile.open(tampered_path, mode="w:gz") as archive:
-        for member_name in ("header.json", "payload.envelope", "recovery.wrap"):
+        for member_name in ("header.json", "payload.envelope"):
             member_path = extract_dir / member_name
-            if member_path.is_file():
-                archive.add(member_path, arcname=member_name)
+            assert member_path.is_file()
+            archive.add(member_path, arcname=member_name)
 
     restore_root = tmp_path / "restore-tampered-root"
     with isolated_profile_storage_root(tmp_path=restore_root):
-        r_import = _archive_import(tampered_path, recovery_wrap_passphrase=passphrase)
+        r_import = _archive_import(tampered_path)
         assert r_import.exit_code != 0, r_import.output
         assert "Traceback" not in r_import.output
 
@@ -383,12 +332,11 @@ def test_archive_import_refuses_uuid_collision(tmp_path: Path) -> None:
     assert source_bucket_id is not None
 
     archive_path = tmp_path / "profile5-backup.cadrumo-bucket.tar.gz"
-    passphrase = "collision-test-passphrase-654"  # noqa: S105 - synthetic test fixture, not a secret
-    r_export = _archive_export("profile5", archive_path, recovery_wrap_passphrase=passphrase)
+    r_export = _archive_export("profile5", archive_path)
     assert r_export.exit_code == 0, r_export.output
 
     # Re-import into the SAME storage root, where the bucket id already exists.
-    r_import = _archive_import(archive_path, recovery_wrap_passphrase=passphrase)
+    r_import = _archive_import(archive_path)
     assert r_import.exit_code != 0, r_import.output
     assert_public_profile_id_not_leaked(r_import.output, source_bucket_id)
     assert "Traceback" not in r_import.output

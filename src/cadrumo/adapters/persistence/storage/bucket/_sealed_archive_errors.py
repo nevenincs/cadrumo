@@ -15,12 +15,11 @@ from .....domain.buckets import BucketExportError, BucketImportError
 class SealedArchiveLayoutError(BucketImportError):
     """Raised when the sealed archive's tar layout does not match the expected contract.
 
-    The expected layout is exactly two or three named members in the
-    order ``header.json``, ``payload.envelope``, and optionally
-    ``recovery.wrap``. Extra members, out-of-order members, and
-    unknown member names all raise this error before any decryption
-    attempt so a tampered or wrong-version archive fast-fails at the
-    layout boundary.
+    The expected layout is exactly two named members in the order
+    ``header.json``, ``payload.envelope``. Extra members, out-of-order
+    members, and unknown member names all raise this error before any
+    decryption attempt so a tampered or wrong-framing archive fast-fails
+    at the layout boundary.
     """
 
 
@@ -39,8 +38,7 @@ class SealedArchivePayloadError(BucketImportError):
     Distinct from :class:`SealedArchiveHeaderError` so the operator
     sees a precise failure mode: a bad header is fixable
     upstream (re-export); a bad payload typically means the archive
-    was tampered with or the wrong KEK / recovery passphrase was
-    supplied.
+    was tampered with or the wrong key was supplied.
     """
 
 

@@ -1137,19 +1137,18 @@ class ConfigProfileRenameResult(OutputSchema):
 class ConfigProfileArchiveExportResult(OutputSchema):
     """JSON envelope for ``aeat config profile archive export``.
 
-    Reports the exported profile id, the written archive path, the manifest
-    digest recorded in the archive header, and whether the archive is sealed
-    under a recovery passphrase rather than the active bucket key. Unlike
+    Reports the exported profile id, the written archive path, and the
+    manifest digest recorded in the archive header. Unlike
     ``config profile export`` this archive is a full, AEAD-encrypted backup:
     it carries attachment evidence bytes, the audit trail, and the
-    cross-period calculation inputs.
+    cross-period calculation inputs. It does not carry recovery material,
+    which is exported separately as its own artifact.
     """
 
     profile_id: ProfileId
     display_name: str
     out: str
     manifest_digest: ContentDigest
-    recovery_wrap_present: bool
 
 
 @register_schema("config.profile.archive.import")
@@ -1174,14 +1173,12 @@ class ConfigProfileArchiveInspectResult(OutputSchema):
 
     A read-only preview of a sealed archive's plaintext header plus the
     on-disk file size: the profile id it holds, when it was written, its
-    manifest digest, whether it requires a recovery passphrase, and its
-    archive schema version. The encrypted payload is never opened, so no
-    per-store contents are reported here.
+    manifest digest, and its archive schema version. The encrypted payload
+    is never opened, so no per-store contents are reported here.
     """
 
     profile_id: BucketId
     manifest_digest: ContentDigest
-    recovery_wrap_present: bool
     archive_schema_version: int = Field(ge=1)
     created_at: datetime
     size_bytes: int = Field(ge=0)

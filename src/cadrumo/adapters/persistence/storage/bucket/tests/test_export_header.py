@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from .._export_header import ExportArchiveHeader
+from .._export_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -23,8 +23,7 @@ def _header_payload(**overrides: object) -> dict[str, Any]:
         "product": "cadrumo",
         "bucket_id": "bucket-001",
         "manifest_digest": _VALID_DIGEST,
-        "recovery_wrap_present": True,
-        "archive_schema_version": 3,
+        "archive_schema_version": ARCHIVE_SCHEMA_VERSION,
         "created_at": _CREATED_AT,
     }
     defaults.update(overrides)
@@ -88,10 +87,27 @@ def test_rejects_invalid_header_scalars() -> None:
         ("bucket_id", ""),
         ("archive_schema_version", 0),
         ("archive_schema_version", "1"),
-        ("recovery_wrap_present", 1),
     ):
         with pytest.raises(ValidationError):
             _header(**{field_name: value})
+
+
+def test_rejects_a_recovery_presence_flag() -> None:
+    """The header has no recovery axis, so declaring one is an unknown key.
+
+    The strict config already refuses unknown keys generally; this pins the
+    specific field the retired shared-master framing carried, so reintroducing
+    it as a header flag cannot pass unnoticed.
+    """
+    with pytest.raises(ValidationError, match="recovery_wrap_present"):
+        ExportArchiveHeader.model_validate(_header_payload(recovery_wrap_present=False))
+
+
+def test_rejects_every_archive_schema_version_but_the_current_one() -> None:
+    """One framing is readable; both neighbours are refused, not adapted."""
+    for version in (1, ARCHIVE_SCHEMA_VERSION - 1, ARCHIVE_SCHEMA_VERSION + 1):
+        with pytest.raises(ValidationError, match="archive_schema_version must be"):
+            _header(archive_schema_version=version)
 
 
 def test_rejects_non_utc_created_at() -> None:

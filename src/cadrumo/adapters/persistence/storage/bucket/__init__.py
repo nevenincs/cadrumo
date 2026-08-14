@@ -19,13 +19,15 @@ taxpayer payloads, or secure-object ciphertext. Keystore helpers
 enforce that custody material lives outside the ``buckets/`` tree and the
 per-bucket database directory.
 
-The sealed-archive surface re-exports :class:`ExportArchiveHeader`,
-:class:`SealedArchiveContents`, :func:`write_sealed_archive`, and
-:func:`read_sealed_archive` for application-level bucket export/import. These
-helpers own archive shape and metadata normalisation only; profile payload
-composition remains in :mod:`application.user_profile`, while
-:mod:`application.bucket_maintenance` orchestrates operator-facing export
-and import.
+The sealed-archive surface re-exports :data:`ARCHIVE_SCHEMA_VERSION`,
+:class:`ExportArchiveHeader`, :class:`SealedArchiveContents`,
+:func:`write_sealed_archive`, and :func:`read_sealed_archive` for
+application-level bucket export/import. These helpers own archive shape and
+metadata normalisation only; profile payload composition remains in
+:mod:`application.user_profile`, while :mod:`application.bucket_maintenance`
+orchestrates operator-facing export and import. The archive is a transport for
+committed profile data alone: recovery material is a separate per-profile
+artifact and never travels as an archive member.
 
 See Also:
     :class:`BucketManifest`
@@ -54,7 +56,7 @@ from ._errors import (
     RecoveryUnavailableError,
     RecoveryVerificationError,
 )
-from ._export_header import ExportArchiveHeader
+from ._export_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 from ._keystore_paths import keystore_path, keystore_root, keystore_sidecar_path, validate_keystore_separation
 from ._layout import BucketPaths, bucket_paths, provision_bucket_directory, trash_rename_and_remove
 from ._lockfile import acquire_lock, lock_path, release_lock
@@ -83,6 +85,7 @@ from ._sealed_archive_reader import SealedArchiveContents, read_sealed_archive
 from ._sealed_archive_writer import CADRUMO_BUCKET_BUNDLE_SUFFIX, write_sealed_archive
 
 __all__ = [
+    "ARCHIVE_SCHEMA_VERSION",
     "BUCKET_MANIFEST_DURABILITY_FLOOR",
     "BUCKET_MANIFEST_SCHEMA_VERSION",
     "CADRUMO_BUCKET_BUNDLE_SUFFIX",

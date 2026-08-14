@@ -18,7 +18,7 @@ from .. import (
     dispose_engine,
     secure_object_repository_for_active_bucket,
 )
-from ..bucket import ExportArchiveHeader, read_sealed_archive, write_sealed_archive
+from ..bucket import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader, read_sealed_archive, write_sealed_archive
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -67,8 +67,7 @@ def test_fresh_state_uses_one_cadrumo_identity_across_persistence_boundaries(tmp
         product="cadrumo",
         bucket_id=_BUCKET_ID,
         manifest_digest="7" * 64,
-        recovery_wrap_present=False,
-        archive_schema_version=3,
+        archive_schema_version=ARCHIVE_SCHEMA_VERSION,
         created_at=_INSTANT,
     )
     write_sealed_archive(archive_path, header=header, payload_envelope_bytes=b"encrypted-envelope")

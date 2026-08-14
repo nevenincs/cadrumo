@@ -1,11 +1,17 @@
 """Strict pydantic v2 record for the sealed-export archive header.
 
 The export archive header is the plaintext frontmatter of every sealed
-export bundle produced by ``aeat config profile archive export``. The wrapped DEK
-and the recovery wrap travel as separate archive members; the header
-itself carries only the bucket identifier, the manifest digest, the
-recovery-presence flag, the archive schema version, and the export
-timestamp.
+export bundle. It carries only the product marker, the bucket
+identifier, the manifest digest, the archive schema version, and the
+export timestamp; the encrypted payload travels as the archive's one
+other member.
+
+Recovery material is not part of this transport. A profile's recovery
+record is an exclusive per-profile artifact with its own file, schema
+and export grammar, so no archive member, header flag, or member-count
+rule depends on it. Optional material that could not be produced, or
+arrived damaged, can therefore no longer make an otherwise complete
+backup read as malformed.
 """
 
 from __future__ import annotations
@@ -19,6 +25,13 @@ from .....core.errors import CoreValidationError
 from .....core.identity import BucketId, ContentDigest
 from .....core.product_identity import PRODUCT_IDENTITY
 from .....core.time import validate_utc_aware
+
+#: The one archive framing this build reads and writes. The header declares
+#: it and the model refuses every other value, so a bundle carrying a
+#: superseded framing is rejected at the boundary rather than parsed under
+#: assumptions its bytes do not satisfy. There is deliberately no branch that
+#: accepts a lower version: this is a forward marker, not a compatibility axis.
+ARCHIVE_SCHEMA_VERSION = 4
 
 
 class ExportArchiveHeader(BaseModel):
@@ -40,7 +53,6 @@ class ExportArchiveHeader(BaseModel):
     product: str = Field(min_length=1)
     bucket_id: BucketId
     manifest_digest: ContentDigest
-    recovery_wrap_present: bool
     archive_schema_version: int = Field(ge=1)
     created_at: datetime
 
@@ -52,6 +64,24 @@ class ExportArchiveHeader(BaseModel):
             raise ValueError(f"product must be {PRODUCT_IDENTITY.python_package!r}")
         return value
 
+    @field_validator("archive_schema_version")
+    @classmethod
+    def _check_archive_schema_version(cls, value: int) -> int:
+        """Require the one framing this build understands, in either direction.
+
+        A lower version names a superseded framing whose members and header
+        fields differ from these; a higher one names a framing that has not
+        been written yet. Reading either would mean interpreting bytes under
+        the wrong contract, so both are refused here rather than handled by a
+        branch further in.
+        """
+        if value != ARCHIVE_SCHEMA_VERSION:
+            raise ValueError(
+                f"archive_schema_version must be {ARCHIVE_SCHEMA_VERSION}, got {value}; "
+                f"this build neither reads nor writes any other archive framing",
+            )
+        return value
+
     @field_validator("created_at")
     @classmethod
     def _check_created_at(cls, value: datetime) -> datetime:
@@ -61,4 +91,4 @@ class ExportArchiveHeader(BaseModel):
             raise ValueError(str(exc)) from exc
 
 
-__all__ = ["ExportArchiveHeader"]
+__all__ = ["ARCHIVE_SCHEMA_VERSION", "ExportArchiveHeader"]

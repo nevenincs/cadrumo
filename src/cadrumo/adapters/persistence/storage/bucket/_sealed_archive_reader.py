@@ -1,10 +1,16 @@
 """Sealed bucket-export archive reader.
 
-Validates the gzipped tar layout, strict-parses the header, and
-yields the encrypted payload bytes + optional recovery-wrap bytes
-for the caller to decrypt. Fast-fails on layout drift (extra,
-missing, out-of-order, or unknown members) before any decryption
-attempt so a tampered or wrong-version archive surfaces precisely.
+Validates the gzipped tar layout, strict-parses the header, and yields
+the encrypted payload bytes for the caller to decrypt. Fast-fails on
+layout drift (extra, missing, out-of-order, or unknown members) before
+any decryption attempt so a tampered or wrong-framing archive surfaces
+precisely.
+
+The accepted layout is one fixed tuple of member names, so the member
+set is not a function of anything the header says. An archive is either
+exactly those members in exactly that order or it is refused; there is
+no shape whose validity depends on a declaration inside the archive
+being truthful about itself.
 """
 
 from __future__ import annotations
@@ -28,7 +34,7 @@ from ._sealed_archive_writer import (
     FORMER_PRODUCT_BUCKET_BUNDLE_SUFFIX,
     HEADER_MEMBER_NAME,
     PAYLOAD_MEMBER_NAME,
-    RECOVERY_WRAP_MEMBER_NAME,
+    SEALED_ARCHIVE_MEMBER_NAMES,
 )
 
 
@@ -47,7 +53,6 @@ class SealedArchiveContents:
 
     header: ExportArchiveHeader
     payload_envelope_bytes: bytes
-    recovery_wrap_bytes: bytes | None
 
 
 def _read_member_info(archive: tarfile.TarFile, member: tarfile.TarInfo) -> bytes:
@@ -65,11 +70,9 @@ def _read_member(archive: tarfile.TarFile, expected_name: str) -> bytes:
     """Read one required tar member by name, refusing an absent or empty one.
 
     The docstring already promised the empty case was refused; the check was
-    missing. Both required members carry encrypted material, so zero bytes
+    missing. The payload member carries encrypted material, so zero bytes
     cannot be a legitimate value: an archive with an empty ``payload.envelope``
-    is structurally valid, round-trips cleanly, and carries nothing to
-    decrypt, while an empty declared ``recovery.wrap`` silently loses the
-    recovery material the header says is present.
+    is structurally valid, round-trips cleanly, and carries nothing to decrypt.
     """
     try:
         member = archive.getmember(expected_name)
@@ -125,13 +128,6 @@ def _read_archive_header(archive: tarfile.TarFile) -> ExportArchiveHeader:
         ) from exc
 
 
-def _read_recovery_wrap(archive: tarfile.TarFile, header: ExportArchiveHeader) -> bytes | None:
-    """Return the recovery-wrap member bytes when the header declares one present."""
-    if header.recovery_wrap_present:
-        return _read_member(archive, RECOVERY_WRAP_MEMBER_NAME)
-    return None
-
-
 def read_sealed_archive(source_path: Path) -> SealedArchiveContents:
     """Read and strict-validate a sealed bucket-export archive.
 
@@ -139,16 +135,17 @@ def read_sealed_archive(source_path: Path) -> SealedArchiveContents:
         source_path: Operator-specified input path.
 
     Returns:
-        A :class:`SealedArchiveContents` carrying the parsed header,
-        the encrypted payload bytes, and the optional recovery-wrap
-        bytes when ``header.recovery_wrap_present`` is ``True``.
+        A :class:`SealedArchiveContents` carrying the parsed header and
+        the encrypted payload bytes.
 
     Raises:
         SealedArchiveLayoutError: When the tar layout deviates from
             the expected contract (extra / missing / out-of-order /
             unknown members, non-regular members).
         SealedArchiveHeaderError: When ``header.json`` fails strict
-            validation as :class:`ExportArchiveHeader`.
+            validation as :class:`ExportArchiveHeader`, which includes
+            an ``archive_schema_version`` naming any framing other than
+            the one this build reads.
         SealedArchivePayloadError: When the payload member cannot be
             read, or when a torn write truncated the gzip stream so the
             decompression layer raises ``EOFError`` / ``gzip.BadGzipFile``.
@@ -158,7 +155,7 @@ def read_sealed_archive(source_path: Path) -> SealedArchiveContents:
     Truncation-detection scope: a torn write that damages the gzip stream
     (the common case) is caught here at read time and surfaces as
     ``SealedArchivePayloadError``. A *near-complete* truncation that still
-    decompresses to the expected two or three members passes this reader;
+    decompresses to the expected two members passes this reader;
     it is caught downstream by the AEAD tag on the encrypted payload, which
     the importer verifies before it provisions any bucket store, so a torn
     archive never restores a partial bucket. Read-time detection of a
@@ -173,10 +170,8 @@ def read_sealed_archive(source_path: Path) -> SealedArchiveContents:
 
             member_names = tuple(member.name for member in archive.getmembers())
             _validate_layout(member_names)
-            _validate_member_cardinality(member_names, header)
 
             payload_bytes = _read_member(archive, PAYLOAD_MEMBER_NAME)
-            recovery_wrap_bytes = _read_recovery_wrap(archive, header)
     except tarfile.TarError as exc:
         raise SealedArchiveLayoutError(
             f"sealed-archive read refused: tar layer rejected the archive: {type(exc).__name__}: {exc}",
@@ -196,49 +191,24 @@ def read_sealed_archive(source_path: Path) -> SealedArchiveContents:
             f"sealed-archive read of {source_path!s} failed at IO layer: {type(exc).__name__}: {exc}",
         ) from exc
 
-    return SealedArchiveContents(
-        header=header,
-        payload_envelope_bytes=payload_bytes,
-        recovery_wrap_bytes=recovery_wrap_bytes,
-    )
+    return SealedArchiveContents(header=header, payload_envelope_bytes=payload_bytes)
 
 
 def _validate_layout(member_names: tuple[str, ...]) -> None:
-    """Ensure the archive carries exactly the expected member set in order."""
-    if len(member_names) not in (2, 3):
-        raise SealedArchiveLayoutError(
-            f"sealed-archive read refused: expected 2 or 3 members, got {len(member_names)}: {list(member_names)!r}",
-        )
-    if member_names[0] != HEADER_MEMBER_NAME:
-        raise SealedArchiveLayoutError(
-            f"sealed-archive read refused: first member must be {HEADER_MEMBER_NAME!r}, got {member_names[0]!r}",
-        )
-    if member_names[1] != PAYLOAD_MEMBER_NAME:
-        raise SealedArchiveLayoutError(
-            f"sealed-archive read refused: second member must be {PAYLOAD_MEMBER_NAME!r}, got {member_names[1]!r}",
-        )
-    if len(member_names) == 3 and member_names[2] != RECOVERY_WRAP_MEMBER_NAME:
-        raise SealedArchiveLayoutError(
-            f"sealed-archive read refused: third member must be {RECOVERY_WRAP_MEMBER_NAME!r}, got {member_names[2]!r}",
-        )
+    """Ensure the archive carries exactly the expected members in order.
 
-
-def _validate_member_cardinality(member_names: tuple[str, ...], header: ExportArchiveHeader) -> None:
-    """Bind the member count to the header's own recovery declaration.
-
-    Layout validation permits a third member by NAME, and the recovery reader
-    consults only the header, so an archive repacked with an undeclared
-    ``recovery.wrap`` read back cleanly: the header said no recovery material
-    was present, the reader returned ``None``, and the extra member rode along
-    unexamined. The count and the declaration are two statements about one
-    fact and must agree.
+    The comparison is against the whole canonical tuple rather than a
+    per-position check with a permitted tail, because a permitted tail is what
+    once let undeclared bytes ride along: an optional third member was allowed
+    by NAME while the code deciding whether to read it consulted only the
+    header, so a repacked archive carrying material the header did not declare
+    read back as valid and the extra member was never examined. With one fixed
+    tuple there is no position whose admissibility is decided elsewhere.
     """
-    expected_members = 3 if header.recovery_wrap_present else 2
-    if len(member_names) != expected_members:
+    if member_names != SEALED_ARCHIVE_MEMBER_NAMES:
         raise SealedArchiveLayoutError(
-            f"sealed-archive read refused: header declares recovery_wrap_present="
-            f"{header.recovery_wrap_present}, which requires exactly {expected_members} members, "
-            f"got {len(member_names)}: {list(member_names)!r}",
+            f"sealed-archive read refused: members must be exactly "
+            f"{list(SEALED_ARCHIVE_MEMBER_NAMES)!r} in that order, got {list(member_names)!r}",
         )
 
 
