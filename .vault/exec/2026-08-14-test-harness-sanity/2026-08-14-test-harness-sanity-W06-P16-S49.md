@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:7a08d1e35786d34cae0376251fd11b55abb595fb68ba4b1b14237b26a2b26777'
+body_hash: 'sha256:ab351f478d6b243b2711d4ea804d4ae7e77fab492b32cc8c9e06f36fd7a7cdcf'
 step_id: 'S49'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
@@ -30,3 +30,5 @@ The ownership manifest accounts for all 709 current fixtures with no unclassifie
 ## Notes
 
 The initial manifest used an exact name, body, and constraint match as its disposition boundary. Independent review rejected that narrow rule because it hid divergent same-name and same-body fixtures. Manifest v2 uses the conservative union rule; narrower static substitution groups remain evidence only. TOML parsing, 709 unique ordered IDs, group counts and anchors, row-digest integrity, diff integrity, and final structural review passed. The final census generation took 32.6 seconds.
+
+The W06 phase-close feature-surface gate passed: Ruff reported no diagnostics across the three campaign Python files; the fixture-census unit surface passed 8 tests in 0.81 seconds; the CI integration surface passed 37 tests in 4.65 seconds; `just --list` and the dry-run harness recipe exposed all three outer-serial commands; and the feature-scoped VaultSpec check reported no diagnostics.
