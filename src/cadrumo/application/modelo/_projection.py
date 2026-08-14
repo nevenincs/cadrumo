@@ -46,6 +46,7 @@ from ...domain.calculations.registry import (
     calculate_registry_snapshot,
     enum_consumed_binding_ids,
     revision_date_binding_ids,
+    select_revision,
 )
 from ...domain.modelos import (
     CalculationRevision,
@@ -804,8 +805,10 @@ def compare_modelo_years(
 
     Verified :class:`CalculationRevision` rows win over drafts. Each emitted
     :class:`ModeloCompareDeltaRow` is grounded against the compared
-    :class:`RegistrySnapshot` metadata or the revision's recorded observation
-    provenance before the :class:`ModeloCompareServiceResult` is returned.
+    :class:`ModeloRevision` casilla metadata or the revision's recorded
+    observation provenance before the :class:`ModeloCompareServiceResult` is
+    returned; comparing two already-persisted revisions is not itself a
+    filing act, so the registry side is read structurally.
     """
     requested_years = list(years)
     if len(requested_years) != 2:
@@ -816,12 +819,13 @@ def compare_modelo_years(
     rev_b, draft_b, period_b = _best_revision_for_compare(modelo=modelo, filing_year=year_b)
 
     authority = resources().modelos.authority
-    snap_b = authority.snapshot(modelo, filing_year=year_b, period=period_b)
-    snap_a = authority.snapshot(modelo, filing_year=year_a, period=period_a)
+    modelo_definition = authority.modelo(modelo)
+    rev_b_static = select_revision(modelo_definition, filing_year=year_b, period=period_b)
+    rev_a_static = select_revision(modelo_definition, filing_year=year_a, period=period_a)
 
     casilla_meta: dict[CasillaId, CasillaDefinition] = {}
-    for snapshot in (snap_a, snap_b):
-        for cdef in snapshot.revision.casillas:
+    for static_revision in (rev_a_static, rev_b_static):
+        for cdef in static_revision.casillas:
             casilla_meta[cdef.id] = cdef
 
     def _meta(casilla_id: CasillaId) -> tuple[str, str]:

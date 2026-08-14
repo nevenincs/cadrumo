@@ -64,6 +64,7 @@ from ...domain.calculations.registry import (
     ModeloRevision,
     RegistrySnapshot,
     SourceRefId,
+    select_revision,
 )
 from ...domain.iva import (
     IvaCategory,
@@ -612,10 +613,10 @@ def _unresolved_binding_diagnostics(
 def _current_year_values_provenance(
     *,
     context: CalculationSourceContext,
-    snapshot: RegistrySnapshot,
+    revision: ModeloRevision,
     source_periods: tuple[str, ...] | None = None,
 ) -> CalculationSourceProvenance:
-    periods = source_periods or _prorrata_source_periods(snapshot.revision)
+    periods = source_periods or _prorrata_source_periods(revision)
     period_ref = ",".join(periods)
     return CalculationSourceProvenance(
         source_kind=_SOURCE_KIND.value,
@@ -624,8 +625,8 @@ def _current_year_values_provenance(
         source_filing_year=context.filing_year,
         source_periods=periods,
         source_casilla_ids=_SOURCE_CASILLA_IDS,
-        legal_refs=_binding_legal_refs(snapshot.revision),
-        source_refs=_binding_source_refs(snapshot.revision),
+        legal_refs=_binding_legal_refs(revision),
+        source_refs=_binding_source_refs(revision),
     )
 
 
@@ -646,7 +647,7 @@ def _register_provenance(
     context: CalculationSourceContext,
     entry: ProrrataRegisterEntry | None,
     provisional_resolution: ProrrataProvisionalResolution,
-    snapshot: RegistrySnapshot,
+    revision: ModeloRevision,
 ) -> CalculationSourceProvenance:
     provenance = provisional_resolution.provenance
     provenance_token = provenance.value if provenance is not None else "resolved"
@@ -659,15 +660,15 @@ def _register_provenance(
         source_kind=_SOURCE_KIND.value,
         source_ref=f"prorrata-register:{context.filing_year}:{suffix}",
         source_filing_year=context.filing_year,
-        legal_refs=_binding_legal_refs(snapshot.revision),
-        source_refs=_binding_source_refs(snapshot.revision),
+        legal_refs=_binding_legal_refs(revision),
+        source_refs=_binding_source_refs(revision),
     )
 
 
 def _prior_definitiva_provenance(
     *,
     carry: _PriorDefinitivaCarry,
-    snapshot: RegistrySnapshot,
+    revision: ModeloRevision,
 ) -> CalculationSourceProvenance:
     return CalculationSourceProvenance(
         source_kind=_SOURCE_KIND.value,
@@ -676,8 +677,8 @@ def _prior_definitiva_provenance(
         source_filing_year=carry.source_filing_year,
         source_periods=(carry.source_period,),
         source_casilla_ids=(_PORCENTAJE_ID,),
-        legal_refs=_binding_legal_refs(snapshot.revision),
-        source_refs=_binding_source_refs(snapshot.revision),
+        legal_refs=_binding_legal_refs(revision),
+        source_refs=_binding_source_refs(revision),
     )
 
 
@@ -726,10 +727,10 @@ def _stamped_prior_year_definitiva(
 def _source_period_feed_from_observations(
     repository: CalculationObservationRepository,
     *,
-    snapshot: RegistrySnapshot,
+    revision: ModeloRevision,
     filing_year: int,
 ) -> _CurrentYearSourcePeriodFeed:
-    periods = _prorrata_source_periods(snapshot.revision)
+    periods = _prorrata_source_periods(revision)
     if not periods:
         return _CurrentYearSourcePeriodFeed(values={}, source_periods=())
 
@@ -845,21 +846,21 @@ class ProrrataRegularizacionSourceResolver:
         self._registry_snapshot = registry_snapshot
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        snapshot = self._registry_snapshot
-        if snapshot is None:
-            snapshot = resources().modelos.authority.snapshot(
-                context.modelo,
+        revision = self._registry_snapshot.revision if self._registry_snapshot is not None else None
+        if revision is None:
+            revision = select_revision(
+                resources().modelos.authority.modelo(context.modelo),
                 filing_year=context.filing_year,
                 period=context.period.registry_token,
             )
-        declared_binding_ids = _prorrata_declared_binding_ids(snapshot.revision)
+        declared_binding_ids = _prorrata_declared_binding_ids(revision)
         if not declared_binding_ids:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
 
         try:
             source_period_feed = _source_period_feed_from_observations(
                 self._observation_repository,
-                snapshot=snapshot,
+                revision=revision,
                 filing_year=context.filing_year,
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:
@@ -922,7 +923,7 @@ class ProrrataRegularizacionSourceResolver:
 
         current_provenance = _current_year_values_provenance(
             context=context,
-            snapshot=snapshot,
+            revision=revision,
             source_periods=source_period_feed.source_periods,
         )
         register_entries = register.entries_for_ejercicio(context.filing_year)
@@ -938,7 +939,7 @@ class ProrrataRegularizacionSourceResolver:
                 owned_sources=self.owned_sources,
                 binding_values=zero_values,
                 bound_inputs_by_casilla_id=_modelo_303_target_inputs(
-                    snapshot.revision,
+                    revision,
                     binding_values=zero_values,
                     modelo=context.modelo,
                 ),
@@ -955,7 +956,7 @@ class ProrrataRegularizacionSourceResolver:
                     context=context,
                     entry=register_entry,
                     provisional_resolution=provisional,
-                    snapshot=snapshot,
+                    revision=revision,
                 ),
             )
             assert provisional.percentage is not None
@@ -963,7 +964,7 @@ class ProrrataRegularizacionSourceResolver:
         elif prior_definitiva is not None:
             provenance = (
                 current_provenance,
-                _prior_definitiva_provenance(carry=prior_definitiva, snapshot=snapshot),
+                _prior_definitiva_provenance(carry=prior_definitiva, revision=revision),
             )
             provisional_percentage = prior_definitiva.percentage
         else:
@@ -984,7 +985,7 @@ class ProrrataRegularizacionSourceResolver:
             )
 
         binding_values = _resolve_prorrata_regularizacion_binding_values(
-            snapshot.revision,
+            revision,
             current_year_values=current_year_values,
             provisional_percentage=provisional_percentage,
         )
@@ -999,7 +1000,7 @@ class ProrrataRegularizacionSourceResolver:
             owned_sources=self.owned_sources,
             binding_values=binding_values,
             bound_inputs_by_casilla_id=_modelo_303_target_inputs(
-                snapshot.revision,
+                revision,
                 binding_values=binding_values,
                 modelo=context.modelo,
             ),

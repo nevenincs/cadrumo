@@ -45,6 +45,7 @@ from ...domain.calculations.registry import (
     binding_profile_keys,
     bound_casilla_binding_ids,
     build_profile_grounding_index,
+    select_revision,
 )
 from ._binding_readiness import profile_resolvable_binding_ids
 from ._registry_resources import authority_via_resources
@@ -209,8 +210,7 @@ def data_inventory_checklist(
         A :class:`DataInventoryChecklist`.
     """
     authority = authority_via_resources()
-    snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
-    revision = snapshot.revision
+    revision = select_revision(authority.modelo(modelo), filing_year=filing_year, period=period.registry_token)
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
     buckets = _collect_inventory_buckets(revision, bindings_by_id)
 
@@ -234,7 +234,7 @@ def data_inventory_checklist(
         profile_checked = False
 
     return DataInventoryChecklist(
-        modelo=str(snapshot.modelo.id),
+        modelo=str(modelo),
         revision_id=str(revision.id),
         filing_year=filing_year,
         period=period.registry_token,
@@ -347,9 +347,9 @@ def profile_requirements_for_binding(
 
     try:
         authority = authority_via_resources()
-        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
+        revision = select_revision(authority.modelo(modelo), filing_year=filing_year, period=period.registry_token)
         keys = next(
-            (binding_profile_keys(b) for b in snapshot.revision.bindings if str(b.id) == binding_id),
+            (binding_profile_keys(b) for b in revision.bindings if str(b.id) == binding_id),
             (),
         )
         if not keys:

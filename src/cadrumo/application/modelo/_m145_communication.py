@@ -30,7 +30,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG, Modelo
 from ...core.resources import resources
-from ...domain.calculations.registry import RevisionId
+from ...domain.calculations.registry import RevisionId, select_revision
 
 M145_COMMUNICATION_MODELO = Modelo.M145.value
 M145_COMMUNICATION_PERIOD = "comunicacion"
@@ -87,17 +87,19 @@ class M145CommunicationServiceContract(BaseModel):
 def build_m145_communication_service_contract(*, filing_year: int = 2026) -> M145CommunicationServiceContract:
     """Return the registry-backed Modelo 145 local communication contract.
 
-    Reads the active Modelo 145 registry snapshot for the communication period
+    Reads the law-selected Modelo 145 revision for the communication period
     and refuses if the registry exposes filing, deadline, live-read, portal, or
     other non-local surfaces. The returned record is read-only ownership data;
-    it does not create, persist, export, or transition any communication.
+    it does not create, persist, export, or transition any communication, so
+    the revision is read structurally (:func:`select_revision`) rather than
+    through a filing-grade snapshot.
     """
-    snapshot = resources().modelos.authority.snapshot(
-        M145_COMMUNICATION_MODELO,
+    authority = resources().modelos.authority
+    revision = select_revision(
+        authority.modelo(M145_COMMUNICATION_MODELO),
         filing_year=filing_year,
         period=M145_COMMUNICATION_PERIOD,
     )
-    revision = snapshot.revision
     declared_surfaces = frozenset(str(link.surface) for link in revision.application_links)
     forbidden = tuple(sorted(declared_surfaces & _FORBIDDEN_SURFACES))
     if forbidden:

@@ -53,8 +53,14 @@ BUCKET_ID = "7390a6bb-5577-4e08-8518-16e6292f690f"
 PERIOD_2025_1T = Period.from_year_and_code(2025, "1T")
 FILED_JUSTIFICANTE_STORAGE_REF = "secure-object:financial:" + "d" * 64
 OBSERVED_CASILLA: CasillaId = validated_casilla_id("01", surface="overview calendar observed casilla")
+#: Naming the revision an observation is stamped with is revision SELECTION, resolved
+#: from the filing scope by law. It is not a filing operation, so it is read through
+#: the non-filing inspection: a filing-grade snapshot would additionally demand
+#: operator review of a revision no calendar test ever files.
 OBSERVED_REVISION_ID = str(
-    resources().modelos.authority.snapshot("303", filing_year=2025, period=PERIOD_2025_1T.registry_token).revision.id,
+    resources()
+    .modelos.authority.inspect_revision("303", filing_year=2025, period=PERIOD_2025_1T.registry_token)
+    .revision_id,
 )
 
 

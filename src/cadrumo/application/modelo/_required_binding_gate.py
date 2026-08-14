@@ -30,7 +30,7 @@ from decimal import Decimal
 
 from ...core import ActionEvidenceProvenance, Modelo
 from ...core.resources import resources
-from ...domain.calculations.registry import BindingId, ModeloRevision
+from ...domain.calculations.registry import BindingId, ModeloRevision, select_revision
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, load_user_profile_schema
 from ..user_profile import ProfileRecordRepository
@@ -82,14 +82,14 @@ def require_persisted_revision_required_bindings_resolved(
     """
     if str(work_unit.modelo) != Modelo.M202.value:
         return
-    snapshot = resources().modelos.authority.snapshot(
-        str(work_unit.modelo),
+    revision = select_revision(
+        resources().modelos.authority.modelo(str(work_unit.modelo)),
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
     )
     require_modelo_required_bindings_resolved(
         work_unit=work_unit,
-        registry_revision=snapshot.revision,
+        registry_revision=revision,
         resolved_binding_ids=_persisted_binding_ids(revision.binding_overrides),
         action=action,
     )

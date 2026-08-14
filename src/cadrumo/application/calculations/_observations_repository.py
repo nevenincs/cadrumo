@@ -68,6 +68,7 @@ from ...domain.calculations.registry import (
     RegistryModeloObservation,
     RegistrySnapshotError,
     RevisionId,
+    select_revision,
     undeclared_casilla_ids,
 )
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
@@ -439,8 +440,8 @@ def _validate_observation_casilla_ids(observation: RegistryModeloObservation) ->
     )
     referenced_casilla_ids = observed_casilla_ids | operand_casilla_refs
     try:
-        snapshot = resources().modelos.authority.snapshot(
-            observation.modelo,
+        revision = select_revision(
+            resources().modelos.authority.modelo(observation.modelo),
             filing_year=observation.filing_year,
             period=observation.period,
         )
@@ -454,19 +455,19 @@ def _validate_observation_casilla_ids(observation: RegistryModeloObservation) ->
             },
         ) from exc
 
-    invalid = undeclared_casilla_ids(snapshot.revision, referenced_casilla_ids) if referenced_casilla_ids else ()
+    invalid = undeclared_casilla_ids(revision, referenced_casilla_ids) if referenced_casilla_ids else ()
     if not invalid:
-        return str(snapshot.revision.id)
+        return str(revision.id)
     raise ObservationCasillaReferenceError(
         translated_message="application.calculations.observations.errors.casilla_ids_noncanonical",
         context={
             "modelo": observation.modelo,
             "filing_year": observation.filing_year,
             "period": observation.period,
-            "revision_id": snapshot.revision.id,
+            "revision_id": revision.id,
             "casilla_ids": invalid,
-            "observation_casilla_ids": undeclared_casilla_ids(snapshot.revision, observed_casilla_ids),
-            "operand_casilla_refs": undeclared_casilla_ids(snapshot.revision, operand_casilla_refs),
+            "observation_casilla_ids": undeclared_casilla_ids(revision, observed_casilla_ids),
+            "operand_casilla_refs": undeclared_casilla_ids(revision, operand_casilla_refs),
         },
     )
 

@@ -58,10 +58,12 @@ from ...domain.calculations.registry import (
     RegistryFoldRequirement,
     RegistryModeloObservation,
     RegistrySnapshot,
+    RevisionId,
     binding_source_casilla_ids,
     expression_casilla_refs,
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
+    select_revision,
 )
 from ...domain.iva_compensation import IvaCompensationCasillaReferenceError, IvaCompensationPeriodState
 from ._errors import BindingPrefillTypeError
@@ -403,7 +405,11 @@ def _gather_observations(
     must be gathered (:func:`_gather_grouped_member_observations`), so the resolver
     can sum across members.
     """
-    grouped_keys = per_grupo_member_requirement_keys(snapshot)
+    grouped_keys = per_grupo_member_requirement_keys(
+        snapshot.revision,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    )
     excluded = excluded_binding_ids or frozenset()
     needed: dict[tuple[str, int, str, int], _GatheredObservation] = {}
     seen_member: dict[tuple[str, int, str], int] = {}
@@ -444,13 +450,14 @@ def _observation_from_iva_compensation_history(
     state: IvaCompensationPeriodState,
 ) -> RegistryModeloObservation:
     """Project secure IVA compensation history into the registry resolver contract."""
-    snapshot = resources().modelos.authority.snapshot(
-        Modelo.M303.value,
+    authority = resources().modelos.authority
+    revision = select_revision(
+        authority.modelo(Modelo.M303.value),
         filing_year=state.filing_year,
         period=state.period.registry_token,
     )
-    casillas = {item.id: item for item in snapshot.revision.casillas}
-    formulas = {item.target_casilla_id: item for item in snapshot.revision.formulas}
+    casillas = {item.id: item for item in revision.casillas}
+    formulas = {item.target_casilla_id: item for item in revision.formulas}
 
     def observed(casilla_id: CasillaId, value: Decimal | None) -> tuple[CasillaObservation, ...]:
         if value is None:
@@ -469,7 +476,8 @@ def _observation_from_iva_compensation_history(
             operand_refs = (_M303_POSTERIOR_CASILLA, _M303_GENERADA_CASILLA)
             operand_values = (state.pending_for_later_amount, state.generated_amount)
         return _iva_compensation_history_observation(
-            snapshot=snapshot,
+            modelo_id=Modelo.M303.value,
+            revision_id=revision.id,
             casillas=casillas,
             formulas=formulas,
             casilla_id=casilla_id,
@@ -496,7 +504,8 @@ def _observation_from_iva_compensation_history(
 
 def _iva_compensation_history_observation(
     *,
-    snapshot: RegistrySnapshot,
+    modelo_id: str,
+    revision_id: RevisionId,
     casillas: Mapping[CasillaId, CasillaDefinition],
     formulas: Mapping[CasillaId, FormulaDefinition],
     casilla_id: CasillaId,
@@ -510,8 +519,8 @@ def _iva_compensation_history_observation(
         raise IvaCompensationCasillaReferenceError(
             translated_message="application.calculations.iva_compensation.errors.history_casilla_undeclared",
             context={
-                "modelo": snapshot.modelo.id,
-                "revision_id": snapshot.revision.id,
+                "modelo": modelo_id,
+                "revision_id": revision_id,
                 "casilla_id": casilla_id,
             },
         )
@@ -521,8 +530,8 @@ def _iva_compensation_history_observation(
         raise IvaCompensationCasillaReferenceError(
             translated_message="application.calculations.iva_compensation.errors.history_operand_ref_value_arity",
             context={
-                "modelo": snapshot.modelo.id,
-                "revision_id": snapshot.revision.id,
+                "modelo": modelo_id,
+                "revision_id": revision_id,
                 "casilla_id": casilla_id,
                 "operand_ref_count": len(operand_refs),
                 "operand_value_count": len(operand_values),
@@ -532,8 +541,8 @@ def _iva_compensation_history_observation(
         raise IvaCompensationCasillaReferenceError(
             translated_message="application.calculations.iva_compensation.errors.history_operand_refs_without_formula",
             context={
-                "modelo": snapshot.modelo.id,
-                "revision_id": snapshot.revision.id,
+                "modelo": modelo_id,
+                "revision_id": revision_id,
                 "casilla_id": casilla_id,
             },
         )
@@ -546,8 +555,8 @@ def _iva_compensation_history_observation(
                         "application.calculations.iva_compensation.errors.history_operand_refs_diverge_from_formula"
                     ),
                     context={
-                        "modelo": snapshot.modelo.id,
-                        "revision_id": snapshot.revision.id,
+                        "modelo": modelo_id,
+                        "revision_id": revision_id,
                         "casilla_id": casilla_id,
                         "formula_id": formula.id,
                         "supplied_operand_refs": operand_refs,

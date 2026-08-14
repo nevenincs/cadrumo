@@ -23,7 +23,7 @@ See Also:
     :mod:`cadrumo.application.modelo._calculation_resolution`:
         Merges caller, backend, profile, relation, and borrador channels before
         registry-engine execution.
-    :func:`cadrumo.application.modelo._semantic_role_resolution.casilla_id_for_unique_semantic_role`:
+    :func:`cadrumo.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`:
         Resolves shortcut inputs onto the unique casilla declared by a revision.
 """
 
@@ -62,6 +62,7 @@ from ...domain.calculations.registry import (
     enum_consumed_binding_ids,
     registry_scalar_value_type,
     revision_date_binding_ids,
+    select_revision,
     validate_registry_text_scalar,
 )
 from ...domain.contribuyente import descendant_list_from_facts
@@ -91,7 +92,7 @@ from ._profile_binding import MaternidadMesesResolution
 from ._registry_helpers import validate_casilla_input_ids
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
-    casilla_id_for_unique_semantic_role,
+    casilla_id_for_unique_revision_semantic_role,
 )
 
 _AUTOCONSUMO_PROMOTOR_BINDING: BindingId = "modelo-303-autoconsumo-promotor-base"
@@ -1252,7 +1253,7 @@ def apply_calculation_shortcut_inputs(
         pension rescate was supplied).
 
     See Also:
-        :func:`cadrumo.application.modelo._semantic_role_resolution.casilla_id_for_unique_semantic_role`:
+        :func:`cadrumo.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`:
             Selects the unique semantic-role casilla for shortcut values.
     """
     resolved_casilla_values = dict(casilla_inputs)
@@ -1396,13 +1397,15 @@ def _semantic_role_casilla_id(work_unit_id: str, semantic_role: str) -> CasillaI
     work_unit = catalogue.get(work_unit_id)
     if work_unit is None:
         raise LookupError(f"work unit {work_unit_id!r} not found")
-    snapshot = resources().modelos.authority.snapshot(
-        str(work_unit.modelo),
+    authority = resources().modelos.authority
+    modelo_id = str(work_unit.modelo)
+    revision = select_revision(
+        authority.modelo(modelo_id),
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
     )
     try:
-        casilla_id = casilla_id_for_unique_semantic_role(snapshot, semantic_role)
+        casilla_id = casilla_id_for_unique_revision_semantic_role(revision, semantic_role, modelo_id=modelo_id)
     except AmbiguousSemanticRoleCasillaError as exc:
         raise ModeloCalculateSemanticRoleError(
             str(exc),
@@ -1413,8 +1416,8 @@ def _semantic_role_casilla_id(work_unit_id: str, semantic_role: str) -> CasillaI
         return casilla_id
     raise ModeloCalculateSemanticRoleError(
         context={
-            "modelo": snapshot.modelo.id,
-            "revision": snapshot.revision.id,
+            "modelo": modelo_id,
+            "revision": revision.id,
             "semantic_role": semantic_role,
         },
         translated_message="application.modelo.errors.calculate_semantic_role_missing",

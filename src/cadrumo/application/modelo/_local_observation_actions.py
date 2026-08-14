@@ -8,7 +8,9 @@ operator-supplied scratch/local inputs that can feed relation and
 filing-grade clean-state proof that requires AEAT-backed evidence.
 
 Each persisted observation is grounded against the law-determined
-:class:`RegistrySnapshot` and stored as provenance-bearing
+:class:`ModeloRevision` -- resolved structurally via ``select_revision``,
+never a filing-grade snapshot, since recording a non-official local
+observation is not itself a filing act -- and stored as provenance-bearing
 :class:`CasillaObservation` rows, while the source kind stays explicitly
 non-official.
 
@@ -34,14 +36,15 @@ from ...core.resources import resources
 from ...core.time import now as _utc_now
 from ...domain.calculations.registry import (
     CasillaObservation,
+    ModeloRevision,
     RegistryModeloObservation,
-    RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
     RevisionId,
     casilla_noncanonical_reference_targets,
     casillas_by_id,
     format_noncanonical_casilla_reference,
+    select_revision,
     undeclared_casilla_ids,
 )
 from ..calculations import CalculationObservationRepository, ObservationSourceKind, observation_key
@@ -86,13 +89,13 @@ def record_operator_local_observation[CasillaKey](
     """Persist an operator-supplied local observation for later calculation prefill.
 
     The observation is grounded against the law-determined
-    :class:`RegistrySnapshot` for ``modelo`` / ``filing_year`` /
+    :class:`ModeloRevision` for ``modelo`` / ``filing_year`` /
     ``period``. Every supplied casilla id must be a canonical numeric
-    casilla declared by that snapshot; printed-number aliases and
+    casilla declared by that revision; printed-number aliases and
     unknown ids are refused before the observation store is touched.
 
     The persisted row uses ``source_kind="operator_manual"`` and carries the
-    snapshot revision id as its stamp. Calculation prefill can then resolve the
+    revision id as its stamp. Calculation prefill can then resolve the
     :class:`CasillaObservation` values, while cross-period clean-state
     verification still treats it as non-official local evidence.
 
@@ -100,9 +103,9 @@ def record_operator_local_observation[CasillaKey](
         A :class:`ModeloLocalObservationResult` describing the persisted local
         observation stamp.
     """
-    snapshot = _load_snapshot(modelo=modelo, filing_year=filing_year, period=period)
-    canonical_values = _canonical_casilla_values(snapshot=snapshot, casilla_values=casilla_values)
-    observations = _observation_rows(snapshot=snapshot, casilla_values=canonical_values)
+    revision = _load_revision(modelo=modelo, filing_year=filing_year, period=period)
+    canonical_values = _canonical_casilla_values(revision=revision, casilla_values=casilla_values)
+    observations = _observation_rows(revision=revision, casilla_values=canonical_values)
     observation = RegistryModeloObservation(
         modelo=modelo,
         filing_year=filing_year,
@@ -118,7 +121,7 @@ def record_operator_local_observation[CasillaKey](
             observation,
             source_kind=OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND,
             captured_at=captured_at,
-            stamped_revision_id=snapshot.revision.id,
+            stamped_revision_id=revision.id,
             source_metadata={
                 "local_observation_kind": "operator_supplied",
                 "captured_by": captured_by,
@@ -133,7 +136,7 @@ def record_operator_local_observation[CasillaKey](
         modelo=modelo,
         filing_year=filing_year,
         period=period,
-        revision_id=snapshot.revision.id,
+        revision_id=revision.id,
         observation_key=key,
         source_kind=OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND,
         casilla_values=dict(canonical_values),
@@ -142,13 +145,17 @@ def record_operator_local_observation[CasillaKey](
     )
 
 
-def _load_snapshot(*, modelo: str, filing_year: int, period: Period) -> RegistrySnapshot:
+def _load_revision(*, modelo: str, filing_year: int, period: Period) -> ModeloRevision:
     try:
-        return resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
+        return select_revision(
+            resources().modelos.authority.modelo(modelo),
+            filing_year=filing_year,
+            period=period.registry_token,
+        )
     except RegistrySnapshotError as exc:
         raise ModeloLocalObservationError(
             (
-                f"local observation cannot be recorded because the registry snapshot is missing for "
+                f"local observation cannot be recorded because the registry revision is missing for "
                 f"modelo={modelo!r} filing_year={filing_year} period={period.registry_token!r}"
             ),
             context={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token},
@@ -157,7 +164,7 @@ def _load_snapshot(*, modelo: str, filing_year: int, period: Period) -> Registry
 
 def _canonical_casilla_values[CasillaKey](
     *,
-    snapshot: RegistrySnapshot,
+    revision: ModeloRevision,
     casilla_values: Mapping[CasillaKey, object],
 ) -> dict[CasillaId, Decimal]:
     if not casilla_values:
@@ -183,20 +190,20 @@ def _canonical_casilla_values[CasillaKey](
     if malformed:
         raise ModeloLocalObservationError(
             translated_message="errors.error.error_modelos",
-            context={"casillas": ",".join(sorted(malformed)), "revision_id": snapshot.revision.id},
+            context={"casillas": ",".join(sorted(malformed)), "revision_id": revision.id},
         )
     if non_decimal:
         raise ModeloLocalObservationError(
             translated_message="errors.error.error_modelos",
-            context={"casillas": ",".join(sorted(non_decimal)), "revision_id": snapshot.revision.id},
+            context={"casillas": ",".join(sorted(non_decimal)), "revision_id": revision.id},
         )
 
-    unknown = undeclared_casilla_ids(snapshot.revision, canonical)
+    unknown = undeclared_casilla_ids(revision, canonical)
     if unknown:
         noncanonical = {
             casilla_id: targets
             for casilla_id in unknown
-            if (targets := casilla_noncanonical_reference_targets(snapshot.revision, casilla_id))
+            if (targets := casilla_noncanonical_reference_targets(revision, casilla_id))
         }
         if noncanonical:
             details = "; ".join(
@@ -207,33 +214,33 @@ def _canonical_casilla_values[CasillaKey](
                 translated_message="errors.error.error_modelos",
                 context={
                     "casillas": ",".join(sorted(noncanonical)),
-                    "revision_id": snapshot.revision.id,
+                    "revision_id": revision.id,
                     "noncanonical_reference_targets": details,
                 },
             )
         raise ModeloLocalObservationError(
             translated_message="errors.error.error_modelos",
-            context={"casillas": ",".join(unknown), "revision_id": snapshot.revision.id},
+            context={"casillas": ",".join(unknown), "revision_id": revision.id},
         )
 
-    declared = casillas_by_id(snapshot.revision)
+    declared = casillas_by_id(revision)
     non_numeric = sorted(
         casilla_id for casilla_id in canonical if declared[casilla_id].data_type not in _NUMERIC_CASILLA_DATA_TYPES
     )
     if non_numeric:
         raise ModeloLocalObservationError(
             translated_message="errors.error.error_modelos",
-            context={"casillas": ",".join(non_numeric), "revision_id": snapshot.revision.id},
+            context={"casillas": ",".join(non_numeric), "revision_id": revision.id},
         )
     return canonical
 
 
 def _observation_rows(
     *,
-    snapshot: RegistrySnapshot,
+    revision: ModeloRevision,
     casilla_values: Mapping[CasillaId, Decimal],
 ) -> tuple[CasillaObservation, ...]:
-    declared = casillas_by_id(snapshot.revision)
+    declared = casillas_by_id(revision)
     rows: list[CasillaObservation] = []
     for casilla_id, value in casilla_values.items():
         casilla = declared[casilla_id]
@@ -249,7 +256,7 @@ def _observation_rows(
         except (RegistryValidationError, ValidationError, TypeError, ValueError) as exc:
             raise ModeloLocalObservationError(
                 translated_message="errors.error.error_modelos",
-                context={"casilla": casilla_id, "revision_id": snapshot.revision.id},
+                context={"casilla": casilla_id, "revision_id": revision.id},
             ) from exc
     return tuple(rows)
 

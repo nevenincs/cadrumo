@@ -21,6 +21,7 @@ from ...domain.calculations.registry import (
     ModeloRevision,
     casillas_by_id,
     expression_casilla_refs,
+    select_revision,
 )
 from ...domain.iva_compensation import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
@@ -330,13 +331,13 @@ def _normalize_carry_observation(
         available_was_calculated=available_was_calculated,
     )
 
-    snapshot = resources().modelos.authority.snapshot(
-        Modelo.M303.value,
+    revision = select_revision(
+        resources().modelos.authority.modelo(Modelo.M303.value),
         filing_year=observation.filing_year,
         period=observation.period,
     )
-    casillas = casillas_by_id(snapshot.revision)
-    formula_id = _resolve_available_compensation_formula_id(snapshot.revision, derivation)
+    casillas = casillas_by_id(revision)
+    formula_id = _resolve_available_compensation_formula_id(revision, derivation)
 
     available = CasillaObservation(
         casilla_id=M303_COMPENSATION_AVAILABLE_CASILLA,

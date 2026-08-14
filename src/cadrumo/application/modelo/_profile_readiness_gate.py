@@ -38,6 +38,7 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     build_profile_grounding_index,
     derive_modelo_applicability,
+    select_revision,
 )
 from ...domain.deadlines import EntityType, IrpfIncomeCategory
 from ...domain.modelos import WorkUnit
@@ -291,12 +292,12 @@ def _report_for_target(
     authority: ValidatedRegistryAuthority | None = None,
 ) -> ProfilePreflightReport:
     try:
-        snapshot = resources().modelos.authority.snapshot(
-            modelo,
+        selected = select_revision(
+            resources().modelos.authority.modelo(modelo),
             filing_year=filing_year,
             period=period.registry_token,
         )
-        revision = snapshot.revision if snapshot.revision.id == revision_id else None
+        revision = selected if selected.id == revision_id else None
     except (FileNotFoundError, RegistrySnapshotError):
         revision = None
     return ProfilePreflightService(schema=resources().user_profile_schema.singleton).report(
