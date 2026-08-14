@@ -46,6 +46,7 @@ if TYPE_CHECKING:
     from ..user_profile._custody_ports import (
         ProfileBucketSessionPort,
         ProfileCustodyEnvelopePort,
+        ProfileCustodyPasswordMaterialPort,
         ProfileCustodySentinelPort,
     )
 
@@ -115,28 +116,6 @@ class ProfileCustodyRecordSessionMaterial:
 
     envelope: ProfileCustodyEnvelopePort
     dek: bytes
-
-
-class ProfileCustodyPasswordMaterialPort(Protocol):
-    """Normal-password material exposed by the custody read boundary.
-
-    Every record-shaped port here declares its fields read-only.  The custody
-    records these narrow are frozen, and a mutable protocol member is invariant,
-    so a read-write declaration would make the real record unassignable to the
-    very port that exists to narrow it.  Read-only is also the truthful shape:
-    the application observes committed custody state, it never writes back
-    through the narrowed view.
-    """
-
-    @property
-    def envelope(self) -> ProfileCustodyEnvelopePort:
-        """The committed password envelope for this profile."""
-        ...
-
-    @property
-    def sentinel(self) -> ProfileCustodySentinelPort:
-        """The committed DEK sentinel proving an unwrap succeeded."""
-        ...
 
 
 class ProfileCustodyUnlockPort(Protocol):
@@ -1090,7 +1069,6 @@ __all__ = [
     "ProfileCustodyBucketEventHistoryPort",
     "ProfileCustodyBucketSessionPort",
     "ProfileCustodyLocalRecordStore",
-    "ProfileCustodyPasswordMaterialPort",
     "ProfileCustodyRecordSessionMaterial",
     "ProfileCustodyRegistrationMaterial",
     "ProfileCustodySecureObjectNamespace",
