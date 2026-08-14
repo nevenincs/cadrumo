@@ -8,8 +8,17 @@ because two encoders disagreeing on one record is not a style difference: the
 same record hashes to two values, and a byte ceiling measured under one
 spelling is wrong under the other.
 
-The detected shape is a ``json.dumps(...)`` whose result is immediately encoded
-to bytes, excluding indented emits. Both narrowings are load-bearing.
+The detected shape is a JSON serialisation whose result is immediately encoded
+to bytes, excluding indented emits. The serialisation is matched on the called
+NAME, so the module-level ``json.dumps``, an aliased module, a bare ``dumps``
+from ``from json import dumps``, ``JSONEncoder(...).encode(...)`` and a
+dynamically imported ``import_module("json").dumps`` all trip it alike. Reading
+the name rather than resolving the module is deliberate: a dynamic import
+builds its target from a string the AST cannot follow, so a scanner that
+insisted on proving the module is ``json`` would be blind to precisely the
+escape the next author reaches for.
+
+The two remaining narrowings are load-bearing.
 
 Requiring *bytes* is deliberately narrower than "any compact ``json.dumps``":
 rendering JSON *text* -- an NDJSON log line, a CLI envelope on stdout, a
@@ -34,6 +43,7 @@ The companion behavioural contract for the encoding itself lives in
 from __future__ import annotations
 
 import ast
+from typing import cast
 
 import pytest
 
@@ -71,8 +81,41 @@ def _enclosing_functions(tree: ast.AST) -> dict[int, str]:
     return owners
 
 
+def _callee_name(func: ast.expr) -> str:
+    """Return the called name, however the callable was reached.
+
+    Deliberately reads the trailing name rather than resolving the module, so
+    ``json.dumps``, ``j.dumps`` under an alias, a bare ``dumps`` pulled in by
+    ``from json import dumps``, and ``import_module("json").dumps`` all answer
+    the same. A dynamic import builds its target from a string the AST cannot
+    follow, so a scanner that insisted on proving the module is ``json`` would
+    be blind to exactly the escape an author reaches for next.
+    """
+    if isinstance(func, ast.Attribute):
+        return func.attr
+    if isinstance(func, ast.Name):
+        return func.id
+    return ""
+
+
+def _serialises_to_str(node: ast.expr) -> bool:
+    """Report whether ``node`` is a JSON serialisation producing ``str``."""
+    if not isinstance(node, ast.Call):
+        return False
+    if _callee_name(node.func) == "dumps":
+        # An indented payload has already opted out of byte identity.
+        return not any(keyword.arg == "indent" for keyword in node.keywords)
+    # ``JSONEncoder(...).encode(payload)`` is the same serialiser reached
+    # through its class rather than the module-level convenience wrapper.
+    return _callee_name(node.func) == "encode" and (
+        isinstance(node.func, ast.Attribute)
+        and isinstance(node.func.value, ast.Call)
+        and _callee_name(node.func.value.func) == "JSONEncoder"
+    )
+
+
 def _byte_producing_dumps(tree: ast.AST) -> list[tuple[int, str]]:
-    """Return ``(lineno, enclosing function)`` for each compact ``json.dumps(...).encode(...)``."""
+    """Return ``(lineno, enclosing function)`` for each JSON serialisation encoded to bytes."""
     owners = _enclosing_functions(tree)
     found: list[tuple[int, str]] = []
     for node in ast.walk(tree):
@@ -81,12 +124,9 @@ def _byte_producing_dumps(tree: ast.AST) -> list[tuple[int, str]]:
         func = node.func
         if not (isinstance(func, ast.Attribute) and func.attr == "encode"):
             continue
-        inner = func.value
-        if not (isinstance(inner, ast.Call) and isinstance(inner.func, ast.Attribute) and inner.func.attr == "dumps"):
+        if not _serialises_to_str(func.value):
             continue
-        if any(keyword.arg == "indent" for keyword in inner.keywords):
-            continue
-        found.append((inner.lineno, owners.get(id(node), "<module>")))
+        found.append((cast(ast.Call, func.value).lineno, owners.get(id(node), "<module>")))
     return found
 
 
@@ -117,6 +157,50 @@ def test_canonical_record_allowlist_has_no_stale_entries() -> None:
     stale = sorted(set(_ALLOWLIST) - live)
     assert not stale, "Stale _ALLOWLIST entries no longer present in the source; remove them:\n" + "\n".join(
         f"  {path}: {function}" for path, function in stale
+    )
+
+
+#: How a ninth encoder could be spelled. Each must trip the detector.
+_EVASIONS: dict[str, str] = {
+    "module attribute": 'import json\ndef f(p): return json.dumps(p, sort_keys=True).encode("utf-8")',
+    "aliased module": 'import json as j\ndef f(p): return j.dumps(p).encode("utf-8")',
+    "dynamic import": (
+        'from importlib import import_module\ndef f(p): return import_module("json").dumps(p).encode("utf-8")'
+    ),
+    "bare from-import": 'from json import dumps\ndef f(p): return dumps(p, sort_keys=True).encode("utf-8")',
+    "encoder class": (
+        'from json import JSONEncoder\ndef f(p): return JSONEncoder(sort_keys=True).encode(p).encode("utf-8")'
+    ),
+}
+
+#: Shapes the detector must leave alone, or it stops describing the rule.
+_PERMITTED: dict[str, str] = {
+    "indented sidecar": 'import json\ndef f(p): return json.dumps(p, indent=2).encode("utf-8")',
+    "text renderer": 'import json\ndef f(p): return json.dumps(p, sort_keys=True) + "\\n"',
+    "delegating caller": (
+        "from cadrumo.core.hashing import canonical_json_bytes\ndef f(p): return canonical_json_bytes(p)"
+    ),
+}
+
+
+@pytest.mark.parametrize("spelling", sorted(_EVASIONS))
+def test_the_detector_catches_every_spelling_of_a_ninth_encoder(spelling: str) -> None:
+    """Assume the next author reaches for the escape, not the obvious form.
+
+    A dynamic import is the one that matters most: its module target is a
+    string the AST cannot follow, so it defeats any scanner that insists on
+    proving the callable came from ``json``.
+    """
+    assert _byte_producing_dumps(ast.parse(_EVASIONS[spelling])) != [], (
+        f"the {spelling} spelling of a canonical-record encoder evaded the gate"
+    )
+
+
+@pytest.mark.parametrize("spelling", sorted(_PERMITTED))
+def test_the_detector_leaves_the_permitted_shapes_alone(spelling: str) -> None:
+    """A gate that fires on correct code trains everyone to route around it."""
+    assert _byte_producing_dumps(ast.parse(_PERMITTED[spelling])) == [], (
+        f"the {spelling} shape is not a canonical-record encoder but tripped the gate"
     )
 
 
