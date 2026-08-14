@@ -26,7 +26,7 @@ from uuid import UUID
 import pytest
 from click.testing import Result
 
-from ....application.workflow import workflow_state_repository
+from ....application.workflow import WorkflowState
 from ....core import Period
 from ....core.resources import resources
 from ....tests.cli_runner import invoke_cached_cli
@@ -51,14 +51,7 @@ def _seed_active_profile(name: str = "operator", *, overrides: Mapping[str, str]
     digest[8] = (digest[8] & 0x3F) | 0x80
     profile_id = str(UUID(bytes=bytes(digest)))
     with open_test_profile_session(profile_id):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id=profile_id,
-                display_name=name,
-                overrides=overrides,
-            ),
-        )
+        register_minimal_profile(WorkflowState(), profile_id=profile_id, display_name=name, overrides=overrides)
 
 
 def _json_payload(result: Result) -> dict[str, object]:
