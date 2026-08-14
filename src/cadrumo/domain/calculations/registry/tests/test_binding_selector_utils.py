@@ -33,6 +33,16 @@ def _binding(
     )
 
 
+def test_binding_row_set_selector_returns_none_for_an_eligible_binding_with_no_claim() -> None:
+    """A row-set-eligible binding that declares none of the row-set keys is ``None``, not refused."""
+    binding = _binding(
+        {"foo_bar": "unrelated"},
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+    )
+
+    assert binding_row_set_selector(binding) is None
+
+
 def test_binding_row_set_selector_accepts_row_field_projection() -> None:
     binding = _binding(
         {
@@ -53,7 +63,15 @@ def test_binding_row_set_selector_accepts_row_field_projection() -> None:
     assert selector.record == "perceptor"
 
 
-def test_binding_row_set_selector_ignores_export_row_field_without_grouping() -> None:
+def test_binding_row_set_selector_rejects_a_non_row_set_eligible_binding() -> None:
+    """A binding whose aggregation op is not ``rows`` is refused by name.
+
+    This binding declares export-shaped keys (``field``/``offset``/``length``/
+    ``data_type``), not a row-set claim -- exactly the shape that used to be
+    silently accepted as "no row-set projection" before the precondition moved
+    into the callee. It is now refused for the real reason (not row-set
+    eligible) rather than answering a question it was never asked.
+    """
     binding = _binding(
         {
             "record": "operador",
@@ -65,7 +83,8 @@ def test_binding_row_set_selector_ignores_export_row_field_without_grouping() ->
         source=BindingSourceKind.MANUAL_INPUT,
     )
 
-    assert binding_row_set_selector(binding) is None
+    with pytest.raises(RegistryValidationError, match="is not row-set-eligible"):
+        binding_row_set_selector(binding)
 
 
 def test_binding_row_set_selector_rejects_row_fact_without_grouping() -> None:
