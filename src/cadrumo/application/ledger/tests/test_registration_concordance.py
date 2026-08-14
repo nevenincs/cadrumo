@@ -29,16 +29,17 @@ bundled registry rather than comparing a literal.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
+from ._ledger_value_fixtures import repository
+
+__all__ = ["repository"]
+
 from ....core import ClassifierInputSource
 from ....domain.iva import EUMemberState, IvaTerritorialScope
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._counterparty_establishment import ConfirmedCounterpartyFactsRepository
 from .._establishment_ladder import (
     CounterpartyEstablishment,
@@ -67,17 +68,6 @@ _REVERSE_CHARGE = "inversión del sujeto pasivo"
 #: with it rather than leaving a stale literal behind.
 _SPANISH_GENERAL_RATE = Decimal("21")
 _ON_DATE = date(2026, 3, 10)
-
-
-@pytest.fixture
-def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
-
-
-@pytest.fixture
-def repository(runtime_profile: TestRuntimeProfile) -> ConfirmedCounterpartyFactsRepository:
-    return ConfirmedCounterpartyFactsRepository(objects=runtime_profile.repository)
 
 
 def _resolve(

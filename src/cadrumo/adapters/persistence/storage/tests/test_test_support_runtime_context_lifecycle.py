@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from pathlib import Path
+from uuid import UUID
 
+import keyring
 import pytest
 
 from .....core import StorageCategory, storage_location
+from .....core.time import now as _now
 from .....tests.secure_sql import (
     isolated_cli_runtime_profile,
     isolated_ephemeral_secure_sql,
@@ -14,9 +17,9 @@ from .....tests.secure_sql import (
     isolated_runtime_profile,
 )
 from ..master_key import (
+    PROFILE_SESSION_KEYCHAIN_SERVICE,
     has_active_bucket_session,
-    load_profile_session_key,
-    store_profile_session_key,
+    mint_profile_session,
 )
 from ..sql.engine import get_engine
 
@@ -53,10 +56,19 @@ def test_isolated_cli_runtime_profile_releases_its_bucket_session(tmp_path: Path
 
 @pytest.mark.os_keychain
 def test_isolated_profile_storage_root_reaps_a_discovered_bucket_key(tmp_path: Path) -> None:
-    bucket_id = "11111111-1111-4111-8111-111111111111"
+    profile_id = UUID("11111111-1111-4111-8111-111111111111")
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        (storage_root / "buckets" / bucket_id).mkdir(parents=True)
-        store_profile_session_key(bucket_id=bucket_id, session_key=b"s" * 32)
-        assert load_profile_session_key(bucket_id=bucket_id) == b"s" * 32
+        record = mint_profile_session(
+            storage_root=storage_root,
+            profile_id=profile_id,
+            custody_generation=1,
+            dek_epoch="test-epoch",
+            dek=b"d" * 32,
+            now=_now(),
+            idle_minutes=15,
+            absolute_minutes=240,
+        )
+        account = f"{profile_id}:{record.session_id}"
+        assert keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account) is not None
 
-    assert load_profile_session_key(bucket_id=bucket_id) is None
+    assert keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account) is None

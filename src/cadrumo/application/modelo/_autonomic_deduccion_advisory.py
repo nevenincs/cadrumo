@@ -56,6 +56,7 @@ from ...domain.modelos import (
 from ...domain.user_profile import ProfileNotFoundError, UserProfileFactValue, load_user_profile_schema
 from ..user_profile import ProfileRecordRepository
 from ._profile_binding import (
+    MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR,
     is_indeterminate_unidad_familiar,
     is_madrid_resident,
     madrid_nacimiento_adopcion_candidate_weighted_count,
@@ -67,7 +68,6 @@ from ._semantic_role_resolution import (
 )
 
 _MADRID_NACIMIENTO_ADOPCION_SEMANTIC_ROLE = "irpf_deduccion_madrid_nacimiento_adopcion"
-_MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR = 2025
 _ADVISORY_LEGAL_REFS = (
     "ley-35-2006:art-77",
     "madrid-dl-1-2010:art-4",
@@ -104,7 +104,7 @@ def _madrid_nacimiento_adopcion_eligibility_advisory_finding(
     does not declare the casilla-1039 semantic role, or any of the firing
     conditions above is not met.
     """
-    if snapshot.filing_year != _MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR:
+    if snapshot.filing_year != MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR:
         return None
 
     try:

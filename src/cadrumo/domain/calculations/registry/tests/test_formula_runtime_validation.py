@@ -7,11 +7,10 @@ from decimal import Decimal
 
 import pytest
 
-from .._authority import ValidatedRegistryAuthority
 from .._errors import RegistryValidationError
 from .._formula_runtime import calculate_registry_snapshot
 from .._formula_text_inputs import validated_text_input_casilla_ids
-from .._schema import RegistrySnapshot
+from .._schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from ._formula_runtime_support import (
     _M130_AGRARIAN_VOLUME_CASILLA,
     _M130_AGRARIAN_WITHHELD_CASILLA,
@@ -127,9 +126,9 @@ def test_registry_formula_runtime_rejects_unknown_relation_values(
 
 
 def test_registry_formula_runtime_rejects_relation_values_inactive_for_snapshot_period(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
-    snapshot = _modelo_180_snapshot_with_inactive_relation_period(registry_authority)
+    snapshot = _modelo_180_snapshot_with_inactive_relation_period(registry_tree)
 
     with pytest.raises(RegistryValidationError, match="unknown registry relation ids"):
         calculate_registry_snapshot(

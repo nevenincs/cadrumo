@@ -16,6 +16,7 @@ Subpackages
    cadrumo.adapters.persistence.storage.blob_store
    cadrumo.adapters.persistence.storage.bucket
    cadrumo.adapters.persistence.storage.crypto
+   cadrumo.adapters.persistence.storage.custody
    cadrumo.adapters.persistence.storage.envelope
    cadrumo.adapters.persistence.storage.master_key
    cadrumo.adapters.persistence.storage.secret_store

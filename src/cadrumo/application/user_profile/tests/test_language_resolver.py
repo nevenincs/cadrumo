@@ -21,6 +21,7 @@ from .. import login_profile, register_profile_with_credentials
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+
 @pytest.fixture
 def isolated_language_state(tmp_path: Path) -> Iterator[str]:
     """Pin unset language state while bootstrapping a real storage span.

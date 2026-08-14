@@ -14,6 +14,7 @@ from ...core import BindingSourceKind, CasillaId, Modelo, Period
 from ...core.resources import resources
 from ...domain.calculations.registry import (
     RegistrySnapshot,
+    RevisionId,
     m303_regimen_simplificado_annual_summary_requirement,
 )
 from ...domain.filing_evidence import FilingEvidenceReference
@@ -271,12 +272,12 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             )
         m303 = evidence.m303
         result = m303.regimen_simplificado.calculation_result
-        source_snapshot = resources().modelos.authority.snapshot(
+        source_inspection = resources().modelos.authority.inspect_revision(
             Modelo.M303.value,
             filing_year=source.filing_year,
             period=source.period.registry_token,
         )
-        self._require_source_evidence_coordinate(source, source_revision, m303, result, source_snapshot)
+        self._require_source_evidence_coordinate(source, source_revision, m303, result, source_inspection.revision_id)
         self._require_non_agricultural_rows(m303)
         evidence_references = tuple(
             reference for activity in result.activities for reference in activity.evidence_references
@@ -289,14 +290,14 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         source_revision: CalculationRevision,
         m303: M303FilingInstanceEvidence,
         result: M303RegimenSimplificadoCalculationResult,
-        source_snapshot: RegistrySnapshot,
+        source_revision_id: RevisionId,
     ) -> None:
         if (
             m303.period,
             result.period,
             result.ejercicio,
             result.registry_revision_id,
-            source_snapshot.revision.id,
+            source_revision_id,
             source_revision.work_unit_id,
         ) != (
             source.period,

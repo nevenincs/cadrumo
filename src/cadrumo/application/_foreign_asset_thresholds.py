@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -52,16 +52,23 @@ def foreign_asset_declaration_thresholds(
     modelo: str,
     filing_year: int,
 ) -> Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold]:
-    """Resolve foreign-asset thresholds from the selected bundled registry revision."""
-    snapshot = resources().modelos.authority.snapshot(
+    """Resolve foreign-asset thresholds from the selected bundled registry revision.
+
+    Read through the non-filing revision inspection. Deciding whether a taxpayer is
+    OBLIGED to declare happens before, and independently of, filing: a filing-grade
+    snapshot would additionally require operator review, so an unreviewed revision
+    would make the obligation unanswerable rather than merely unfilable. The filing
+    path builds its own filing-grade snapshot when it files.
+    """
+    inspection = resources().modelos.authority.inspect_revision(
         modelo,
         filing_year=filing_year,
         period=_ANNUAL_PERIOD,
         on=date(filing_year, 12, 31),
     )
-    return foreign_asset_declaration_thresholds_for_revision(
+    return foreign_asset_declaration_thresholds_for_parameters(
         modelo=modelo,
-        revision=snapshot.revision,
+        parameters=inspection.parameters,
         filing_date=date(filing_year, 12, 31),
     )
 
@@ -81,6 +88,30 @@ def foreign_asset_declaration_thresholds_for_revision(
             threshold values.
         filing_date: The date used to resolve a date-scoped parameter value.
     """
+    return foreign_asset_declaration_thresholds_for_parameters(
+        modelo=modelo,
+        parameters=revision.parameters,
+        filing_date=filing_date,
+    )
+
+
+def foreign_asset_declaration_thresholds_for_parameters(
+    *,
+    modelo: str,
+    parameters: Sequence[ParameterDefinition],
+    filing_date: date,
+) -> Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold]:
+    """Resolve the thresholds from a already-selected revision's parameter declarations.
+
+    The parameters are the whole input, so a caller holding a non-filing revision
+    projection can resolve an obligation threshold without constructing a
+    filing-grade snapshot it has no use for.
+
+    Args:
+        modelo: The Modelo 720/721 code the thresholds are declared under.
+        parameters: The selected revision's parameter declarations.
+        filing_date: The date used to resolve a date-scoped parameter value.
+    """
     try:
         modelo_member = Modelo(modelo)
     except ValueError as exc:
@@ -91,9 +122,9 @@ def foreign_asset_declaration_thresholds_for_revision(
     if groups is None or initial_parameter_id is None or redeclaration_parameter_id is None:
         raise RegistryValidationError(f"modelo {modelo!r} has no foreign-asset threshold parameter contract")
 
-    parameters = {parameter.id: parameter for parameter in revision.parameters}
-    initial = _required_parameter(parameters, initial_parameter_id, modelo)
-    redeclaration = _required_parameter(parameters, redeclaration_parameter_id, modelo)
+    by_id = {parameter.id: parameter for parameter in parameters}
+    initial = _required_parameter(by_id, initial_parameter_id, modelo)
+    redeclaration = _required_parameter(by_id, redeclaration_parameter_id, modelo)
     date_context = {"filing_period": filing_date}
     initial_value = resolve_parameter(initial, date_context)
     redeclaration_value = resolve_parameter(redeclaration, date_context)
@@ -128,5 +159,6 @@ def _required_parameter(
 __all__ = [
     "ForeignAssetDeclarationThreshold",
     "foreign_asset_declaration_thresholds",
+    "foreign_asset_declaration_thresholds_for_parameters",
     "foreign_asset_declaration_thresholds_for_revision",
 ]

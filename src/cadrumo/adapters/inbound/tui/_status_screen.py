@@ -1,9 +1,9 @@
-"""Read-only full-screen status page: profile, buckets, auth, recovery.
+"""Read-only full-screen status page: profile, buckets, and auth.
 
 This adapter is a pure projection surface. It renders a
 :class:`StatusPageData` view-model — assembled by the entry-point layer
 from the application authorities (the active profile record, the profile
-bucket scan, the workflow auth state, the recovery-wrapper status, and any
+bucket scan, the workflow auth state, and any
 operator-facing :class:`~cadrumo.core.json_contract.Notice` advisories) —
 into five bordered zones and mutates nothing. It owns no data access: the
 adapter tier may name Textual but must not reach the application layer, so
@@ -43,19 +43,6 @@ from ._theme import (
     NoticeBand,
     install_cadrumo_themes,
     toggle_appearance,
-)
-
-# Copyable custody / recovery next-step lines. These are literal CLI
-# invocations (command tokens, not operator prose), rendered verbatim so an
-# operator can copy them into a terminal. The surrounding labels resolve
-# through ``tr``; the command tokens do not.
-_RECOVERY_COMMANDS: tuple[str, ...] = (
-    "aeat config recovery create",
-    "aeat config recovery rotate",
-    "aeat config recovery verify",
-    "aeat config recover",
-    "aeat config passphrase change",
-    "aeat config login NAME",
 )
 
 
@@ -105,14 +92,6 @@ class StatusAuthView:
 
 
 @dataclass(frozen=True, slots=True)
-class StatusRecoveryView:
-    """Recovery-wrapper enrollment state (no secret, never a mnemonic)."""
-
-    enrolled: bool = False
-    fingerprint: str | None = None
-
-
-@dataclass(frozen=True, slots=True)
 class StatusPageData:
     """The full read-only view-model rendered by :class:`StatusApp`.
 
@@ -127,7 +106,6 @@ class StatusPageData:
     facts: tuple[StatusFactRow, ...] = ()
     profiles: tuple[StatusProfileRow, ...] = ()
     auth: StatusAuthView = field(default_factory=StatusAuthView)
-    recovery: StatusRecoveryView = field(default_factory=StatusRecoveryView)
     notices: tuple[Notice, ...] = ()
     """Operator-facing advisories, off the same typed channel a CLI envelope
     carries. Empty on a healthy profile; the panel that renders these is
@@ -177,7 +155,6 @@ class StatusApp(App[None]):
             yield Static(id="panel-profile", classes="status-panel cadrumo-panel")
             yield Static(id="panel-profiles", classes="status-panel cadrumo-panel")
             yield Static(id="panel-auth", classes="status-panel cadrumo-panel")
-            yield Static(id="panel-recovery", classes="status-panel cadrumo-panel")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -188,7 +165,6 @@ class StatusApp(App[None]):
         self._mount_profile_panel()
         self._mount_profiles_panel()
         self._mount_auth_panel()
-        self._mount_recovery_panel()
 
     def action_toggle_appearance(self) -> None:
         """Flip between the light and dark appearance; the projection is read-only."""
@@ -299,25 +275,6 @@ class StatusApp(App[None]):
             )
         panel.mount(Static("\n".join(lines), id="auth-lines"))
 
-    # ── zone (d): recovery / custody pointers ───────────────────────────
-
-    def _mount_recovery_panel(self) -> None:
-        panel = self.query_one("#panel-recovery", Static)
-        panel.border_title = tr("flows.status.section.recovery")
-        recovery = self._data.recovery
-        state = tr("flows.status.recovery.enrolled") if recovery.enrolled else tr("flows.status.recovery.not_enrolled")
-        lines = [f"{tr('flows.status.recovery.state')}\t{state}"]
-        if recovery.fingerprint:
-            lines.append(f"{tr('flows.status.recovery.fingerprint')}\t{recovery.fingerprint}")
-        panel.mount(Static("\n".join(lines), id="recovery-lines"))
-        panel.mount(
-            Static(
-                tr("flows.status.recovery.commands_title") + "\n" + "\n".join(_RECOVERY_COMMANDS),
-                id="recovery-commands",
-                classes="status-commands",
-            ),
-        )
-
 
 __all__ = [
     "StatusApp",
@@ -325,5 +282,4 @@ __all__ = [
     "StatusFactRow",
     "StatusPageData",
     "StatusProfileRow",
-    "StatusRecoveryView",
 ]

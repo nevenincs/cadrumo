@@ -27,10 +27,8 @@ from ....domain.transactions import (
 )
 from .. import merge_transactions
 from ._merge_test_support import _BUCKET_ID, _repositories, _split_setup
-from ._merge_test_support import secure_objects as secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-__all__ = ["secure_objects"]
 
 
 def test_merge_archives_parent_and_children_and_persists_fresh_merged(secure_objects: SecureObjectRepository) -> None:

@@ -23,6 +23,7 @@ Production code outside those owners must not dispose engines directly.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from threading import Lock
 
@@ -42,6 +43,7 @@ from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.logging import get_logger
 from .....core.paths import resolve_project_path
+from .._storage_path_definitions import BUCKETS_DIRNAME
 from ..errors import StorageError
 
 _log = get_logger(__name__)
@@ -94,8 +96,38 @@ def _normalize_sqlite_url(url: str) -> str:
     return normalized.render_as_string(hide_password=False)
 
 
+def _refuse_absent_bucket_root(parent: Path) -> None:
+    """Refuse to bring a bucket root into existence while opening an engine.
+
+    A bucket root under ``buckets/`` is created exactly once, by the
+    no-replace rename that publishes its profile capsule. Creating one here
+    as a side effect of resolving a database path would be a second bucket
+    creator: it enrols an empty directory that carries no capsule, and the
+    real publication then finds its destination occupied and refuses.
+
+    Args:
+        parent: The directory that would hold the SQLite database file.
+
+    Raises:
+        StorageError: When the bucket root the database sits under is absent.
+    """
+    for ancestor in (parent, *parent.parents):
+        if ancestor.parent.name != BUCKETS_DIRNAME or os.path.lexists(ancestor):
+            continue
+        raise StorageError(
+            "refusing to create a bucket directory while opening a database engine; "
+            "a bucket exists only once its profile capsule is published.",
+            context={"bucket_directory": str(ancestor)},
+            translated_message="errors.storage.engine.create_failed",
+        )
+
+
 def _ensure_sqlite_parent(url: str) -> None:
     """Create the parent directory of a SQLite database file if needed.
+
+    Directories are created only within an already-published bucket; see
+    :func:`_refuse_absent_bucket_root` for why the bucket root itself is
+    never created here.
 
     Args:
         url: A SQLAlchemy URL. No-op for non-SQLite URLs and ``:memory:``.
@@ -103,7 +135,9 @@ def _ensure_sqlite_parent(url: str) -> None:
     parsed = make_url(_normalize_sqlite_url(url))
     database = parsed.database
     if database and database != ":memory:":
-        Path(database).parent.mkdir(parents=True, exist_ok=True)
+        parent = Path(database).parent
+        _refuse_absent_bucket_root(parent)
+        parent.mkdir(parents=True, exist_ok=True)
 
 
 def _refuse_former_product_database_target(url: str) -> None:

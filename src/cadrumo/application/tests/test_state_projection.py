@@ -43,11 +43,12 @@ from ...core import Period
 from ...core.config import SecretStoreBackend, Settings, override_settings
 from ...domain.categories import SpendingCategory
 from ...domain.transactions import BusinessClassification, TransactionDirection
+from ...tests.registry_revision import active_registry_revision_id
 from ...tests.user_profile import register_minimal_profile
 from ..auth import inspect_operator_auth
 from ..auth import test_operator_auth as probe_operator_auth
 from ..ledger import ManualLedgerTransactionCommand, create_manual_transaction
-from ..modelo import create_work_unit, discard_work_unit, resolve_registry_revision_for_work_target
+from ..modelo import create_work_unit, discard_work_unit
 from ..overview import build_overview_status_report
 from ..profile_custody import (
     profile_bind_bucket_session,
@@ -99,25 +100,6 @@ def isolated_storage(tmp_path: Path) -> Iterator[None]:
             _ACTIVE_PROFILE_ID = None
             _PROFILE_SPAN_OPEN = False
             _ACTIVE_STORAGE_STACK = None
-
-
-def _active_registry_revision_id(*, modelo: str, filing_year: int, period: str) -> str:
-    """Return the law-determined registry revision for a filing target.
-
-    AEAT binds every ``(modelo, filing_year, period)`` triple to exactly one
-    revision by publishing orden, so "which revision applies" is a derived
-    fact and never an input. Resolving it here keeps these fixtures on the
-    same authority the production paths use, instead of pinning a literal
-    that goes stale the moment AEAT publishes a new design — which is what
-    happened when the former M303 post-2022 selector was capped at 2025
-    and every 2026 target silently moved to ``2026-y-siguientes``.
-    """
-    return resolve_registry_revision_for_work_target(
-        modelo=modelo,
-        filing_year=filing_year,
-        period=Period.from_year_and_code(filing_year, period),
-        registry_revision_id=None,
-    )
 
 
 def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> str:
@@ -227,7 +209,7 @@ def test_overview_status_reports_modelo_work_units(tmp_path: Path) -> None:
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
-        revision_id=_active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
+        revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
     )
 
     report = build_overview_status_report()
@@ -247,7 +229,7 @@ def test_overview_status_distinguishes_drafts_from_work_units() -> None:
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, period_token),
-            revision_id=_active_registry_revision_id(modelo="303", filing_year=2026, period=period_token),
+            revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period=period_token),
         )
 
     projection = build_operator_state_projection()
@@ -270,14 +252,14 @@ def test_work_units_counter_excludes_discarded_units() -> None:
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, period_token),
-            revision_id=_active_registry_revision_id(modelo="303", filing_year=2026, period=period_token),
+            revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period=period_token),
         )
     discarded = create_work_unit(
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "4T"),
-        revision_id=_active_registry_revision_id(modelo="303", filing_year=2026, period="4T"),
+        revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="4T"),
     )
     discard_work_unit(discarded.work_unit_id, actor="operator", reason="superseded")
 
@@ -310,14 +292,14 @@ def test_surfaces_agree_on_one_projection() -> None:
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, period_token),
-            revision_id=_active_registry_revision_id(modelo="303", filing_year=2026, period=period_token),
+            revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period=period_token),
         )
 
     projection = build_operator_state_projection(
         modelo_readiness_requests=(
             ModeloReadinessRequest(
                 modelo="303",
-                revision_id=_active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
+                revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
             ),
@@ -373,7 +355,7 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
         modelo_readiness_requests=(
             ModeloReadinessRequest(
                 modelo="303",
-                revision_id=_active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
+                revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
             ),
@@ -397,7 +379,7 @@ def test_modelo_303_readiness_reports_pre_activity_period_refusal() -> None:
         modelo_readiness_requests=(
             ModeloReadinessRequest(
                 modelo="303",
-                revision_id=_active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
+                revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
             ),
@@ -440,7 +422,7 @@ def test_modelo_349_readiness_uses_applicability_for_attribution_entity() -> Non
         modelo_readiness_requests=(
             ModeloReadinessRequest(
                 modelo="349",
-                revision_id=_active_registry_revision_id(modelo="349", filing_year=2026, period="1T"),
+                revision_id=active_registry_revision_id(modelo="349", filing_year=2026, period="1T"),
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
             ),
@@ -494,7 +476,7 @@ def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clea
         modelo_readiness_requests=(
             ModeloReadinessRequest(
                 modelo="303",
-                revision_id=_active_registry_revision_id(modelo="303", filing_year=2026, period="2T"),
+                revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="2T"),
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "2T"),
             ),
@@ -515,7 +497,7 @@ def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period() -
         modelo_readiness_requests=(
             ModeloReadinessRequest(
                 modelo="309",
-                revision_id=_active_registry_revision_id(modelo="309", filing_year=2026, period="AD-HOC"),
+                revision_id=active_registry_revision_id(modelo="309", filing_year=2026, period="AD-HOC"),
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "AD-HOC"),
             ),
@@ -538,7 +520,7 @@ def test_modelo_readiness_without_period_uses_annual_period() -> None:
 
     The subject here is the ``0A`` fallback alone. ``revision_id`` is
     deliberately NOT resolved through
-    :func:`_active_registry_revision_id`: no M303 revision declares the
+    :func:`active_registry_revision_id`: no M303 revision declares the
     annual ``0A`` token in its period selector, so there is no
     law-determined revision to resolve for this target and the resolver
     would refuse. The literal below is inert — the snapshot never
@@ -594,7 +576,7 @@ def test_projection_is_pure_read() -> None:
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
-        revision_id=_active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
+        revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
     )
 
     first = build_operator_state_projection()

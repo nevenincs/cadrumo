@@ -9,8 +9,10 @@ prior filed under the wrong revision injects that revision's norms into every
 later filing that folds it in. The carry read therefore re-confirms each
 carried observation's ``stamped_revision_id`` against the law-determined
 revision for its source context
-(:meth:`~domain.calculations.registry.ValidatedRegistryAuthority.snapshot`,
-which delegates to law-determined revision selection) before trusting the value.
+(:meth:`~domain.calculations.registry.ValidatedRegistryAuthority.inspect_revision`,
+which resolves the same law-determined revision selection without demanding
+filing-grade admission -- this gate answers "which revision does the law
+select", never "may this be filed") before trusting the value.
 
 This module is the single implementation of that gate: one law-determined
 re-confirmation, not three parallel copies that can drift across the carry
@@ -52,7 +54,7 @@ def revision_carry_outcome(
     """Return the single law-determined decision for a carried revision stamp.
 
     Uses
-    :meth:`~domain.calculations.registry.ValidatedRegistryAuthority.snapshot`
+    :meth:`~domain.calculations.registry.ValidatedRegistryAuthority.inspect_revision`
     to resolve the current law-determined revision for the source context.
 
     - Indeterminate (source context fails to resolve) → carry refused. Current
@@ -74,7 +76,7 @@ def revision_carry_outcome(
         plus the refusal reason when the stamp diverges or cannot be re-confirmed.
     """
     try:
-        snapshot = resources().modelos.authority.snapshot(
+        inspection = resources().modelos.authority.inspect_revision(
             source_modelo,
             filing_year=source_filing_year,
             period=source_period,
@@ -85,7 +87,7 @@ def revision_carry_outcome(
             selected_revision_id=None,
             detail=f"revision selection failed: {type(exc).__name__}",
         )
-    selected_revision_id = snapshot.revision.id
+    selected_revision_id = inspection.revision_id
     if stamped_revision_id != selected_revision_id:
         return RevisionCarryOutcome(
             refused=True,

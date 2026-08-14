@@ -27,6 +27,7 @@ Submodules
    cadrumo.application.aggregation._invoice_retencion
    cadrumo.application.aggregation._irnr_income_ledger
    cadrumo.application.aggregation._iva_ledger
+   cadrumo.application.aggregation._iva_transaction
    cadrumo.application.aggregation._ledger_filing_snapshot
    cadrumo.application.aggregation._m303_arrivals
    cadrumo.application.aggregation._modelo_bindings

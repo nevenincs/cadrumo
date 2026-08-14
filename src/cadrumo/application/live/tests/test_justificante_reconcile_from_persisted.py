@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 from typing import NamedTuple
 
 import pytest
+
+from ...tests._profile_backend_fixtures import _isolated_backend
+
+__all__ = ["_isolated_backend"]
 
 from ....core import Modelo
 from ...modelo import ModeloReconciliationVerdict, ReconciliationEvidenceInvalidError, list_modelo_reconciliations
@@ -16,16 +19,9 @@ from ._justificante_reconcile_support import (
     _active_bucket_id,
     _persist_capture,
     _seed_work_unit,
-    isolated_justificante_backend,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_justificante_backend(tmp_path):
-        yield
 
 
 def test_reconcile_from_persisted_capture_matches() -> None:

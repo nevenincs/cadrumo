@@ -35,7 +35,6 @@ resolver that feeds Modelo 303. No mocks, stubs, skips or xfail.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from hashlib import sha256
@@ -45,6 +44,7 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.attachment import AttachmentStore
+from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....application.aggregation import CalculationSourceContext
 from ....application.invoices import (
     InvoiceCatalogueSourceResolver,
@@ -66,7 +66,7 @@ from ....domain.calculations.registry import (
 )
 from ....domain.invoices import Invoice
 from ....domain.iva import InvoiceKind
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile
 from .._closure_findings import closure_findings
 from .._evidence_draft import _extract_invoice_fields_from_structured_record
 from .._evidence_input import EvidenceInput, resolve_attachment_evidence_input
@@ -115,10 +115,7 @@ def _amount(key: str) -> Decimal:
 _STORED_TAX_ID = "B12345674"
 
 
-@pytest.fixture
-def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 
 
 def _evidence() -> EvidenceInput:

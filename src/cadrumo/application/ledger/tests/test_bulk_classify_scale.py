@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -23,6 +22,7 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -32,7 +32,7 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile
 from .. import bulk_classify_from_csv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -74,10 +74,7 @@ def _unclassified(idx: int) -> Transaction:
     )
 
 
-@pytest.fixture
-def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="profile")
 
 
 def test_bulk_classify_270_rows_persists_catalogue_once(

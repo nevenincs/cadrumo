@@ -21,6 +21,10 @@ from pathlib import Path
 
 import pytest
 
+from ._ledger_value_fixtures import pdf_file
+
+__all__ = ["pdf_file"]
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....domain.transactions import TransactionDirection, TransactionValidationError
@@ -43,13 +47,6 @@ _BUCKET = "31313131-3131-4131-8131-313131313131"
 def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as runtime:
         yield runtime
-
-
-@pytest.fixture
-def pdf_file(tmp_path: Path) -> Path:
-    p = tmp_path / "receipt.pdf"
-    p.write_bytes(b"%PDF-1.4 test")
-    return p
 
 
 def _mint_evidence_id(profile: TestRuntimeProfile, pdf_file: Path) -> str:

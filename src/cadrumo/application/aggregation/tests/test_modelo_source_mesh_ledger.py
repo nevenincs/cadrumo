@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
@@ -63,7 +62,6 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     AggregationValidationError,
     CalculationSourceContext,
@@ -106,12 +104,6 @@ class LedgerIvaAggregationSourceResolver(_LedgerIvaAggregationSourceResolver):
                 transaction_repository.bucket_id if transaction_repository is not None else _BUCKET_ID
             ),
         )
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 @cache

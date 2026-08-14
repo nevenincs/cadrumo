@@ -29,9 +29,8 @@ from ....domain.invoices import InvoiceDecompositionDefect, decompose_invoice
 from ....domain.iva import InvoiceKind
 from .._evidence_draft import confirm_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
-from ._evidence_test_support import isolated_settings as isolated_settings
 from ._evidence_test_support import runtime_profile as runtime_profile
-from ._evidence_test_support import secure_objects as secure_objects
+from ._ledger_value_fixtures import isolated_settings, secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

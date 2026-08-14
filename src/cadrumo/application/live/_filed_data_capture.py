@@ -76,6 +76,7 @@ from ...domain.calculations.registry import (
     ModeloRevision,
     RegistryModeloObservation,
     ValidatedRegistryAuthority,
+    select_revision,
     verification_tolerance_or_exact,
 )
 from ..storage.sync_runs import (
@@ -1012,8 +1013,8 @@ async def capture_source_filed_data(
             registry_root or bundled_path("registry", "aeat"),
             source_root=source_root or bundled_path(),
         )
-    snapshot = authority.snapshot(
-        modelo,
+    revision = select_revision(
+        authority.modelo(modelo),
         filing_year=year,
         period=period.registry_token,
     )
@@ -1026,7 +1027,7 @@ async def capture_source_filed_data(
         observations = (
             await capture_previous_filing_observations(
                 session,
-                snapshot.revision,
+                revision,
                 filing_year=year,
                 period=period,
                 settings=settings,
@@ -1036,7 +1037,7 @@ async def capture_source_filed_data(
         ) + (
             await capture_relation_source_observations(
                 session,
-                snapshot.revision,
+                revision,
                 filing_year=year,
                 period=period,
                 settings=settings,

@@ -2,18 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
-
-import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.transactions import TransactionDirection
-from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     ManualLedgerTransactionCommand,
     SplitChildCommand,
@@ -22,12 +17,6 @@ from .. import (
 )
 
 _BUCKET_ID = "25252525-2525-4525-8525-252525252525"
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def _repositories(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_ID):

@@ -46,9 +46,16 @@ _BIRTH_ORDER_SUFFIXES = (
 
 
 def _parameter(filing_year: int, suffix: str) -> Decimal:
-    """Resolve one ``minimo-descendientes`` parameter for *filing_year*."""
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=filing_year, period="0A")
-    by_id = {parameter.id: parameter for parameter in snapshot.revision.parameters}
+    """Resolve one ``minimo-descendientes`` parameter for *filing_year*.
+
+    Read through the non-filing revision inspection, not a filing-grade snapshot.
+    A regulatory ceiling is a declaration of the selected revision, and reading it
+    is not a filing operation: requesting a snapshot would demand operator review
+    of a revision these tests never file, so the lookup would refuse on an
+    attestation that has nothing to do with the ceilings it is fetching.
+    """
+    inspection = resources().modelos.authority.inspect_revision("100", filing_year=filing_year, period="0A")
+    by_id = {parameter.id: parameter for parameter in inspection.parameters}
     return resolve_parameter(
         by_id[f"renta-{filing_year}-minimo-descendientes-{suffix}-{filing_year}"],
         {"filing_period": date(filing_year, 12, 31)},

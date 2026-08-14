@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -12,6 +11,7 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ....adapters.persistence.storage.errors import StorageValidationError
+from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....domain.buckets import BucketEventType
 from ....domain.contribuyente.inventory import InventoryLedgerError, MovementKind, ValuationMethod
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -30,11 +30,7 @@ _BUCKET_A_ID = "b319db66-5926-4885-80db-2d3c9137b2e6"
 _BUCKET_B_ID = "f054bdb7-870f-40e6-b7c8-99d9a9c9d265"
 _OTHER_BUCKET_ID = "7add327e-476e-4abe-b306-a25d88026213"
 
-
-@pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+secure_engine = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="secure_engine")
 
 
 def _make_svc(profile: TestRuntimeProfile) -> InventoryService:

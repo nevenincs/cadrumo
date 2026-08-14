@@ -68,8 +68,8 @@ def test_wizard_prose_localizes_and_resolves_under_both_overrides() -> None:
     assert prompt_en != prompt_es
 
 
-
 __all__ = ["_clean_install"]
+
 
 @pytest.mark.usefixtures("_clean_install")
 def test_wizard_prose_defaults_to_spanish() -> None:

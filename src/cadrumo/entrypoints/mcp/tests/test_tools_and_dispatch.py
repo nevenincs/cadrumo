@@ -150,17 +150,19 @@ _RETIRED_COMMAND_KEYS: tuple[str, ...] = (
     "config.lock",
     "config.rekey",
     "config.recovery",
+    "config.recover",
+    "config.passphrase.change",
+    "config.recovery.create",
+    "config.recovery.rotate",
+    "config.recovery.status",
+    "config.recovery.verify",
     "config.sandbox.use",
     "modelo.audit.replay",
 )
 
 #: The accepted successors that must be present. They are the positive control
 #: for the retirement assertions below.
-_ACCEPTED_SUCCESSOR_KEYS: tuple[str, ...] = (
-    "config.passphrase.change",
-    "config.recovery.status",
-    "config.reset.resume",
-)
+_ACCEPTED_SUCCESSOR_KEYS: tuple[str, ...] = ("config.reset.resume",)
 
 
 def test_retired_command_keys_are_neither_described_nor_dispatchable() -> None:

@@ -10,10 +10,8 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.transactions import TransactionValidationError
 from .. import SplitChildCommand, archive_manual_transaction, split_transaction
 from ._split_test_support import _BUCKET_ID, _create_parent, _repositories
-from ._split_test_support import secure_objects as secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-__all__ = ["secure_objects"]
 
 
 def test_split_refuses_non_active_parent(secure_objects: SecureObjectRepository) -> None:

@@ -22,15 +22,17 @@ from __future__ import annotations
 import ast
 import inspect
 import textwrap
-from collections.abc import Iterator
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
+from ._confirmation_profile_fixture import profile
+
+__all__ = ["profile"]
+
 from ....core import LOCAL_TRANSPORT_LABEL
 from ....domain.transactions import TransactionNotFoundError
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile
 from .._evidence_draft import InvoiceDraft
 from .._extraction_draft_store import load_extraction_drafts, read_extraction_draft
 from .._llm_review_workflow import (
@@ -43,15 +45,7 @@ from .._llm_review_workflow import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 _STAMP = "llm:local-text-extract:qwen2.5:3b:rates-2026A-abc"
-
-
-@pytest.fixture
-def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    """A real isolated runtime profile -- real key provider, real SQLite engine."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as resolved:
-        yield resolved
 
 
 def _subject(reference: str = "ev-draft-1") -> ReviewedInvoiceDraft:

@@ -24,10 +24,8 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -43,7 +41,7 @@ from .....domain.modelos import (
     derive_calculation_revision_id,
     derive_work_unit_id,
 )
-from .....tests.secure_sql import isolated_runtime_profile
+from .....tests.secure_objects_fixture import secure_objects
 from ...storage.sql import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 
@@ -57,6 +55,13 @@ _SOURCE_REFS = ("boe-modelo-303-2025-form",)
 
 
 _CASILLA: CasillaId = validated_casilla_id("00501")
+
+__all__ = ["secure_objects"]
+
+
+@pytest.fixture
+def secure_objects_bucket_id() -> str:
+    return _BUCKET_ID
 
 
 def _source_provenance() -> tuple[CalculationSourceRef, ...]:
@@ -125,19 +130,13 @@ def _revision(source_provenance: tuple[CalculationSourceRef, ...]) -> Calculatio
     )
 
 
-@pytest.fixture
-def objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
-
-
-def test_source_provenance_roundtrips_through_encrypted_revision(objects: SecureObjectRepository) -> None:
+def test_source_provenance_roundtrips_through_encrypted_revision(secure_objects: SecureObjectRepository) -> None:
     provenance = _source_provenance()
     original = _revision(provenance)
-    repository = CalculationRevisionCatalogueRepository(objects=objects)
+    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
 
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
-    loaded = CalculationRevisionCatalogueRepository(objects=objects).load().get(original.calculation_revision_id)
+    loaded = CalculationRevisionCatalogueRepository(objects=secure_objects).load().get(original.calculation_revision_id)
 
     assert loaded is not None
     assert loaded == original
@@ -158,7 +157,7 @@ def test_source_provenance_roundtrips_through_encrypted_revision(objects: Secure
     assert stripped.calculation_revision_id == original.calculation_revision_id
 
 
-def test_source_provenance_blank_source_ref_payload_rejected_at_load(objects: SecureObjectRepository) -> None:
+def test_source_provenance_blank_source_ref_payload_rejected_at_load(secure_objects: SecureObjectRepository) -> None:
     """Anti-tautology proof: a persisted provenance row with a blank ``source_ref`` is refused.
 
     Persist a valid revision, then surgically blank the on-disk ``source_ref`` of
@@ -179,10 +178,10 @@ def test_source_provenance_blank_source_ref_payload_rejected_at_load(objects: Se
     )
 
     original = _revision(_source_provenance())
-    repository = CalculationRevisionCatalogueRepository(objects=objects)
+    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 
-    record = objects.load(
+    record = secure_objects.load(
         _CALCULATION_NAMESPACE,
         _CALCULATION_OBJECT_KEY,
         expected_class=SensitivityClass.FINANCIAL,
@@ -196,7 +195,7 @@ def test_source_provenance_blank_source_ref_payload_rejected_at_load(objects: Se
         "fixture must serialise the source_ref for this proof to be meaningful"
     )
     row["source_ref"] = ""
-    objects.save(
+    secure_objects.save(
         namespace=_CALCULATION_NAMESPACE,
         object_key=_CALCULATION_OBJECT_KEY,
         classification=record.classification,
@@ -206,11 +205,11 @@ def test_source_provenance_blank_source_ref_payload_rejected_at_load(objects: Se
     )
 
     with pytest.raises(ValidationError):
-        CalculationRevisionCatalogueRepository(objects=objects).load()
+        CalculationRevisionCatalogueRepository(objects=secure_objects).load()
 
 
 def test_source_provenance_dropped_dependency_treatment_is_detected_not_masked(
-    objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository,
 ) -> None:
     """Anti-tautology proof: a silently dropped ``dependency_treatment`` is detectable.
 
@@ -233,10 +232,10 @@ def test_source_provenance_dropped_dependency_treatment_is_detected_not_masked(
     )
 
     original = _revision(_source_provenance())
-    repository = CalculationRevisionCatalogueRepository(objects=objects)
+    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 
-    record = objects.load(
+    record = secure_objects.load(
         _CALCULATION_NAMESPACE,
         _CALCULATION_OBJECT_KEY,
         expected_class=SensitivityClass.FINANCIAL,
@@ -250,7 +249,7 @@ def test_source_provenance_dropped_dependency_treatment_is_detected_not_masked(
         "fixture must serialise a non-default dependency_treatment for this proof to be meaningful"
     )
     del row["dependency_treatment"]
-    objects.save(
+    secure_objects.save(
         namespace=_CALCULATION_NAMESPACE,
         object_key=_CALCULATION_OBJECT_KEY,
         classification=record.classification,
@@ -259,7 +258,7 @@ def test_source_provenance_dropped_dependency_treatment_is_detected_not_masked(
         payload=_json.dumps(envelope).encode("utf-8"),
     )
 
-    reloaded = CalculationRevisionCatalogueRepository(objects=objects).load().get(original.calculation_revision_id)
+    reloaded = CalculationRevisionCatalogueRepository(objects=secure_objects).load().get(original.calculation_revision_id)
     assert reloaded is not None
     assert reloaded.source_provenance[0].dependency_treatment != original.source_provenance[0].dependency_treatment
     assert reloaded.source_provenance[0].dependency_treatment == ""

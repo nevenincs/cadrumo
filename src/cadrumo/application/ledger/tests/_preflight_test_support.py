@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
-import pytest
-
-from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import BindingSourceKind, Period
 from ....domain.categories import SpendingCategory
 from ....domain.iva import EUMemberState, IvaCategory
@@ -24,7 +20,6 @@ from ....domain.transactions import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import CensoSyncService
 
 _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
@@ -38,12 +33,6 @@ def _period(year: int, code: str) -> Period:
 
 _Q2_2026 = _period(2026, "2T")
 _AD_HOC_2026 = _period(2026, "AD-HOC")
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def _raw_transaction(

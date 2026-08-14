@@ -40,6 +40,7 @@ Submodules
    cadrumo.application.modelo._dt12_advisory
    cadrumo.application.modelo._dt12_antiquity_advisory
    cadrumo.application.modelo._export
+   cadrumo.application.modelo._export_amendment_evidence
    cadrumo.application.modelo._external_import_actions
    cadrumo.application.modelo._filed_revision_observation
    cadrumo.application.modelo._filing_actions
@@ -115,4 +116,5 @@ Submodules
    cadrumo.application.modelo._work_lifecycle
    cadrumo.application.modelo._work_plazo
    cadrumo.application.modelo._work_review
+   cadrumo.application.modelo._work_review_projection
    cadrumo.application.modelo._workflow_gate

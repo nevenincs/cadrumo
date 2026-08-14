@@ -7,8 +7,8 @@ and any non-interactive (piped / dumb-terminal / CI) host fall straight
 through to the existing envelope path. The adapter tier may name Textual
 but must not reach the application layer, so this entry-point module
 gathers the view-model from the application authorities — the active
-profile record (:class:`UserProfileRecord`), the profile bucket scan, the
-workflow auth state, and the recovery-wrapper status — masking each fact
+profile record (:class:`UserProfileRecord`), the profile bucket scan, and the
+workflow auth state — masking each fact
 by its declared :class:`SensitivityClass` — and injects the assembled
 :class:`~cadrumo.adapters.inbound.tui.StatusPageData` into the adapter,
 mirroring the setup-wizard frontend seam.
@@ -34,7 +34,6 @@ if TYPE_CHECKING:
         StatusFactRow,
         StatusPageData,
         StatusProfileRow,
-        StatusRecoveryView,
     )
     from ....application.user_profile import ProfileFieldView
     from ....application.workflow import WorkflowState
@@ -85,7 +84,6 @@ def build_status_page_data() -> StatusPageData:
         facts=_build_fact_rows(record),
         profiles=_build_profile_rows(active_uuid, record=record),
         auth=_build_auth_view(state, active_uuid=active_uuid),
-        recovery=_build_recovery_view(),
         notices=build_active_profile_notices(record) if active_uuid is not None else (),
     )
 
@@ -231,21 +229,6 @@ def _active_profile_session_deadlines(active_uuid: str | None) -> tuple[datetime
     if session is None:
         return None, None
     return session.idle_deadline, session.absolute_deadline
-
-
-def _build_recovery_view() -> StatusRecoveryView:
-    """Project the recovery-wrapper status, degrading to not-enrolled on failure."""
-    from ....adapters.inbound.tui import StatusRecoveryView
-    from ....application.user_profile import inspect_recovery_status
-
-    try:
-        recovery = inspect_recovery_status()
-    except _guarded_read_errors():
-        return StatusRecoveryView()
-    return StatusRecoveryView(
-        enrolled=recovery.recovery_enrolled,
-        fingerprint=recovery.recovery_fingerprint,
-    )
 
 
 def build_active_profile_notices(record: UserProfileRecord | None) -> tuple[Notice, ...]:

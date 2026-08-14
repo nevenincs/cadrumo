@@ -27,10 +27,8 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -45,7 +43,6 @@ from ....domain.calculations.registry import BindingId, RegistryModeloObservatio
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
 from .. import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics, create_work_unit
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
@@ -87,12 +84,6 @@ _EXPECTED_M131_PAGOS_TOTAL = Decimal("108.00")
 _M131_RENDIMIENTO_BINDING: BindingId = "renta-2024-modelo-131-rendimiento-neto-modulos"
 _M131_RENDIMIENTO_RELATION = "renta-2024-rel-131-rendimiento-neto-modulos"
 _M131_PAGOS_RELATION = "renta-2024-rel-131-pagos-fraccionados"
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def _seed_taxpayer_profile(objects: SecureObjectRepository, *, estimation_regime: str) -> None:

@@ -17,12 +17,12 @@ document's ``.provenance.json`` sidecar).
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....application.provisioning import (
     AcceleratorDevice,
     AcceleratorReading,
@@ -34,7 +34,7 @@ from ....application.provisioning import (
 from ....core import LOCAL_TRANSPORT_LABEL, AcceleratorKind
 from ....core.config import load_settings, override_settings
 from ....domain.iva import InvoiceKind
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile
 from .._batch_ingest import BatchRunResult, run_evidence_batch
 from .._evidence import PurchaseInvoiceEvidenceService
 from .._extraction_draft_store import load_extraction_drafts
@@ -44,12 +44,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "2b2b2b2b-2b2b-4b2b-8b2b-2b2b2b2b2b2b"
 
-
-@pytest.fixture
-def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    """A real encrypted bucket runtime: real key provider, real SQLite, no mocks."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 
 
 _CORPUS = Path(__file__).parent / "_evidence_corpus"

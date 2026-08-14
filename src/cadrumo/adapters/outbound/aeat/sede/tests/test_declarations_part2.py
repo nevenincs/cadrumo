@@ -42,7 +42,7 @@ from ._declarations_support import (
     _assert_read_http,
     _declaration_pdf_payload,
     _filed_observation,
-    _isolate_secure_object_backend,
+    _isolate_secure_object_backend,  # noqa: F401
     _modelo_130_snapshot,
     _modelo_snapshot,
     _observed_casillas_from_declaration_pdf,
@@ -60,7 +60,7 @@ from ._declarations_support import (
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.hex_outbound_adapter,
-    pytest.mark.usefixtures(_isolate_secure_object_backend.__name__),
+    pytest.mark.usefixtures("_isolate_secure_object_backend"),
 ]
 _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id(
     "0224",

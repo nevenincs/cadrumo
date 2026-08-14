@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from pathlib import Path
 
 import pytest
 
-from .secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ..adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from .secure_sql import TestRuntimeProfile
 
 _BUCKET_ID = "llm-test-runtime"
 
@@ -22,7 +22,8 @@ def _secure_object_test_backend(
     yield
 
 
-@pytest.fixture
-def secure_object_test_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+secure_object_test_profile = bucket_scoped_runtime_profile_fixture(
+    _BUCKET_ID,
+    autouse=False,
+    name="secure_object_test_profile",
+)

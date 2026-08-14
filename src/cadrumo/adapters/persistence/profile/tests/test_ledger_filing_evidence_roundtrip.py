@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -23,7 +21,7 @@ from .....domain.modelos import (
     derive_work_unit_id,
 )
 from .....tests import general_m303_filing_evidence
-from .....tests.secure_sql import isolated_runtime_profile
+from .....tests.secure_objects_fixture import secure_objects
 from ...storage.sql import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 
@@ -38,11 +36,12 @@ _EVIDENCE_CASILLA: CasillaId = validated_casilla_id("00501")
 _LEGAL_REFS = ("ley-37-1992:art-99",)
 _SOURCE_REFS = ("boe-modelo-303-2025-form",)
 
+__all__ = ["secure_objects"]
+
 
 @pytest.fixture
-def objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
+def secure_objects_bucket_id() -> str:
+    return _BUCKET_ID
 
 
 def _evidence() -> LedgerFilingEvidence:
@@ -136,13 +135,13 @@ def _revision(evidence: LedgerFilingEvidence | None) -> CalculationRevision:
     )
 
 
-def test_ledger_filing_evidence_roundtrips_through_encrypted_revision(objects: SecureObjectRepository) -> None:
+def test_ledger_filing_evidence_roundtrips_through_encrypted_revision(secure_objects: SecureObjectRepository) -> None:
     evidence = _evidence()
     original = _revision(evidence)
-    repository = CalculationRevisionCatalogueRepository(objects=objects)
+    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
 
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
-    loaded = CalculationRevisionCatalogueRepository(objects=objects).load().get(original.calculation_revision_id)
+    loaded = CalculationRevisionCatalogueRepository(objects=secure_objects).load().get(original.calculation_revision_id)
 
     assert loaded is not None
     assert loaded == original
@@ -156,7 +155,7 @@ def test_ledger_filing_evidence_roundtrips_through_encrypted_revision(objects: S
     assert stripped != original
 
 
-def test_ledger_evidence_negative_amount_payload_rejected_at_load(objects: SecureObjectRepository) -> None:
+def test_ledger_evidence_negative_amount_payload_rejected_at_load(secure_objects: SecureObjectRepository) -> None:
     """Anti-tautology proof: a persisted evidence row with a negative amount is refused.
 
     Persist a valid non-negative-magnitude evidence row, then surgically rewrite
@@ -177,10 +176,10 @@ def test_ledger_evidence_negative_amount_payload_rejected_at_load(objects: Secur
     )
 
     original = _revision(_evidence())
-    repository = CalculationRevisionCatalogueRepository(objects=objects)
+    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 
-    record = objects.load(
+    record = secure_objects.load(
         _CALCULATION_NAMESPACE,
         _CALCULATION_OBJECT_KEY,
         expected_class=SensitivityClass.FINANCIAL,
@@ -192,7 +191,7 @@ def test_ledger_evidence_negative_amount_payload_rejected_at_load(objects: Secur
     row = revision_dict["ledger_filing_evidence"]["rows"][0]
     assert row["amount"] == "121.00", "fixture must serialise the magnitude for this proof to be meaningful"
     row["amount"] = "-121.00"
-    objects.save(
+    secure_objects.save(
         namespace=_CALCULATION_NAMESPACE,
         object_key=_CALCULATION_OBJECT_KEY,
         classification=record.classification,
@@ -202,10 +201,10 @@ def test_ledger_evidence_negative_amount_payload_rejected_at_load(objects: Secur
     )
 
     with pytest.raises(ValidationError):
-        CalculationRevisionCatalogueRepository(objects=objects).load()
+        CalculationRevisionCatalogueRepository(objects=secure_objects).load()
 
 
-def test_ledger_evidence_malformed_identity_payload_rejected_at_load(objects: SecureObjectRepository) -> None:
+def test_ledger_evidence_malformed_identity_payload_rejected_at_load(secure_objects: SecureObjectRepository) -> None:
     """Persisted evidence cannot rehydrate a non-canonical contributor identity."""
     import json as _json
 
@@ -217,9 +216,9 @@ def test_ledger_evidence_malformed_identity_payload_rejected_at_load(objects: Se
     )
 
     original = _revision(_evidence())
-    repository = CalculationRevisionCatalogueRepository(objects=objects)
+    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
-    record = objects.load(
+    record = secure_objects.load(
         _CALCULATION_NAMESPACE,
         _CALCULATION_OBJECT_KEY,
         expected_class=SensitivityClass.FINANCIAL,
@@ -229,7 +228,7 @@ def test_ledger_evidence_malformed_identity_payload_rejected_at_load(objects: Se
     envelope = _json.loads(record.payload.decode("utf-8"))
     row = envelope["payload"]["revisions"][original.calculation_revision_id]["ledger_filing_evidence"]["rows"][0]
     row["transaction_id"] = "not-a-content-address"
-    objects.save(
+    secure_objects.save(
         namespace=_CALCULATION_NAMESPACE,
         object_key=_CALCULATION_OBJECT_KEY,
         classification=record.classification,
@@ -239,4 +238,4 @@ def test_ledger_evidence_malformed_identity_payload_rejected_at_load(objects: Se
     )
 
     with pytest.raises(ValidationError, match="transaction_id"):
-        CalculationRevisionCatalogueRepository(objects=objects).load()
+        CalculationRevisionCatalogueRepository(objects=secure_objects).load()

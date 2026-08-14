@@ -31,13 +31,8 @@ from ._preflight_test_support import (
     _Q2_2026,
     _transaction,
 )
-from ._preflight_test_support import (
-    secure_objects as secure_objects,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-__all__ = ["secure_objects"]
 
 
 def test_preflight_refuses_non_span_period_even_with_empty_catalogue() -> None:

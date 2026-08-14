@@ -17,11 +17,13 @@ engine, real serializer throughout.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
+
+from ._ledger_value_fixtures import secure_objects
+
+__all__ = ["secure_objects"]
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage import (
@@ -31,7 +33,6 @@ from ....adapters.persistence.storage import (
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import ClassifierInputSource
 from ....domain.iva import EUMemberState, IvaTerritorialScope
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._counterparty_establishment import (
     ConfirmedCounterpartyFacts,
     ConfirmedCounterpartyFactsRepository,
@@ -39,19 +40,7 @@ from .._counterparty_establishment import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "35353535-3535-4535-8535-353535353535"
 _ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
-
-
-@pytest.fixture
-def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
-
-
-@pytest.fixture
-def secure_objects(runtime_profile: TestRuntimeProfile) -> SecureObjectRepository:
-    return runtime_profile.repository
 
 
 def _fully_populated_fact() -> ConfirmedCounterpartyFacts:

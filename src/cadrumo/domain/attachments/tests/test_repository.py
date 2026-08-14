@@ -4,15 +4,15 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
+from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....core import StorageCategory, storage_path
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile
 from .._enums import AttachmentKind, AttachmentSource
 from .._errors import AttachmentNotFoundError, AttachmentValidationError
 from .._models import Attachment
@@ -21,11 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "8b159522-c2d5-490f-95f8-f1e936f45f7d"
 
-
-@pytest.fixture(autouse=True)
-def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=True, name="runtime_profile")
 
 
 def _attachment(body: bytes, *, tx_id: str = "tx-001", bucket_id: str | None = _BUCKET_ID) -> Attachment:

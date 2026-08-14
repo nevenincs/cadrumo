@@ -7,13 +7,16 @@ read-side ports declared in :mod:`cadrumo.domain.fincas._repository_ports`.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from sqlalchemy.engine import Engine
+
+from ._fincas_engine_fixture import engine
+
+__all__ = ["engine"]
 
 from .....domain.fincas import (
     Arrendamiento,
@@ -24,12 +27,10 @@ from .....domain.fincas import (
     FincaRendimientoRecord,
     UseType,
 )
-from .....tests.secure_sql import isolated_runtime_profile
 from ...storage import (
     RepositoryError,
     session_scope,
 )
-from ...storage.sql.engine import get_engine
 from ..fincas import (
     ArrendamientoRepository,
     FincaAmortizacionLedgerRepository,
@@ -39,14 +40,6 @@ from ..fincas import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-@pytest.fixture(autouse=True)
-def engine(tmp_path: Path) -> Iterator[Engine]:
-    """Provide a real encrypted SQL engine through the profile runtime."""
-
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        yield get_engine(profile.settings)
 
 
 def _sample_finca(identifier: str = "calle-mayor-12-3a") -> Finca:

@@ -34,7 +34,7 @@ here reaches a browser, and none reaches an AEAT write or submission path.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -52,7 +52,7 @@ from ......tests.aeat_literal_fixtures import (
     OTHERAPP_LANDING_PATH_CANARY,
     WLPL_INWINVOC_TWO_SEGMENT_PATH_CANARY,
 )
-from ......tests.secure_sql import isolated_runtime_profile
+from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from .. import _session_store
 from .._clave_movil import ClaveMovilAuthProvider
 from .._clave_movil_metadata import ClaveMovilSessionMetadata
@@ -151,11 +151,8 @@ def _profiles() -> pytest.MarkDecorator:
     return pytest.mark.parametrize("profile", _PROFILES, ids=[p.name for p in _PROFILES])
 
 
-@pytest.fixture
-def bucket(tmp_path: Path) -> Iterator[None]:
-    """Provision the real active-profile bucket the storage paths resolve against."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        yield
+# Provisions the real active-profile bucket the storage paths resolve against.
+bucket = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="bucket")
 
 
 def _metadata_for(profile: _ProviderProfile, storage_state: Mapping[str, object]) -> Any:

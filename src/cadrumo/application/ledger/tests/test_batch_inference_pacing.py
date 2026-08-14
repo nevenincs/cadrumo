@@ -13,12 +13,12 @@ measurement.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....application.provisioning import (
     AcceleratorDevice,
     AcceleratorReading,
@@ -28,7 +28,7 @@ from ....application.provisioning import (
 )
 from ....core import AcceleratorKind
 from ....domain.iva import InvoiceKind
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile
 from .._batch_ingest import COMPLETED_BATCH_ITEM_STATUSES, BatchRunResult, run_evidence_batch
 from ._loopback_reader import serving_a_loopback_reader
 
@@ -47,11 +47,7 @@ _SCAN = "scanned_invoice_from_commons_1.pdf"
 _GIB = 1024**3
 
 
-@pytest.fixture
-def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    """A real encrypted bucket runtime: real key provider, real SQLite, no mocks."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 
 
 @pytest.fixture

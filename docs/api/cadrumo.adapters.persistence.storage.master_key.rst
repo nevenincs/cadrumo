@@ -31,6 +31,5 @@ Submodules
    cadrumo.adapters.persistence.storage.master_key._persisted_session
    cadrumo.adapters.persistence.storage.master_key._provider_session
    cadrumo.adapters.persistence.storage.master_key._recovery
-   cadrumo.adapters.persistence.storage.master_key._recovery_facade
    cadrumo.adapters.persistence.storage.master_key._recovery_record
    cadrumo.adapters.persistence.storage.master_key._zeroise

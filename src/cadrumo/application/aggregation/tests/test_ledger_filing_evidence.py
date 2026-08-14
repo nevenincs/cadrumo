@@ -11,7 +11,6 @@ Asserts the bundled fact basis for modelo export evidence parity:
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -44,7 +43,6 @@ from ....domain.transactions import (
 )
 from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_runtime_profile
 from .. import assert_evidence_covers_snapshot
 from .._ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
@@ -140,12 +138,6 @@ def test_capture_projects_tax_facts_and_binds_fingerprint() -> None:
     assert evidence.manual_entries[0].casilla_id == _MANUAL_FACT_CASILLA
 
 
-@pytest.fixture
-def _objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
-
-
 def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> CalculationRevision:
     period = Period.from_year_and_code(2025, "1T")
     work_unit_id = derive_work_unit_id(
@@ -187,7 +179,7 @@ def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> Ca
     )
 
 
-def test_evidence_roundtrips_through_encrypted_revision(_objects: SecureObjectRepository) -> None:
+def test_evidence_roundtrips_through_encrypted_revision(secure_objects: SecureObjectRepository) -> None:
     txn = _txn()
     catalogue = TransactionCatalogue.from_transactions((txn,))
     snapshot = compute_ledger_filing_snapshot(
@@ -213,10 +205,10 @@ def test_evidence_roundtrips_through_encrypted_revision(_objects: SecureObjectRe
         ),
     )
     original = _revision_with_evidence(evidence=evidence, tx_id=txn.transaction_id)
-    repo = CalculationRevisionCatalogueRepository(objects=_objects)
+    repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     repo.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 
-    loaded = CalculationRevisionCatalogueRepository(objects=_objects).load()
+    loaded = CalculationRevisionCatalogueRepository(objects=secure_objects).load()
     loaded_revision = loaded.revisions[original.calculation_revision_id]
     # Strict equality across the encrypted boundary: the bundled evidence survives.
     assert loaded_revision == original

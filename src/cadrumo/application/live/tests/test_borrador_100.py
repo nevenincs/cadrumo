@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -20,7 +18,6 @@ from ....adapters.persistence.storage import (
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
-from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
     Borrador100Snapshot,
@@ -39,12 +36,6 @@ _SOURCE = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_aj
 _CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
 _WRITTEN_AT = datetime(2026, 4, 3, 10, 5, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2025, "0A")
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def test_borrador_100_snapshot_repository_round_trips_active_snapshot(

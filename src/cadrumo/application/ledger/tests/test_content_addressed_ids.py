@@ -30,10 +30,8 @@ from ....core.config import Settings
 from ....core.time import frozen_clock
 from .._evidence import derive_purchase_invoice_evidence_id
 from ._evidence_test_support import _BUCKET_ID, _make_svc
-from ._evidence_test_support import isolated_settings as isolated_settings
-from ._evidence_test_support import pdf_file as pdf_file
 from ._evidence_test_support import runtime_profile as runtime_profile
-from ._evidence_test_support import secure_objects as secure_objects
+from ._ledger_value_fixtures import isolated_settings, pdf_file, secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "pdf_file", "runtime_profile", "secure_objects"]

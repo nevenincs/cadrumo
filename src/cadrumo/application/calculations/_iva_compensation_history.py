@@ -48,6 +48,7 @@ from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
 from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import (
+    select_revision,
     undeclared_casilla_ids,
 )
 from ...domain.iva_compensation import (
@@ -582,18 +583,18 @@ def _iva_compensation_decimal_refusal(
 
 
 def _validate_observed_casilla_ids(observation: FiledDeclaracionObservationProtocol) -> None:
-    snapshot = resources().modelos.authority.snapshot(
-        observation.modelo,
+    revision = select_revision(
+        resources().modelos.authority.modelo(observation.modelo),
         filing_year=observation.ejercicio,
         period=observation.period.registry_token,
     )
-    invalid = undeclared_casilla_ids(snapshot.revision, (casilla.casilla_id for casilla in observation.casillas))
+    invalid = undeclared_casilla_ids(revision, (casilla.casilla_id for casilla in observation.casillas))
     if not invalid:
         return
     raise IvaCompensationCasillaReferenceError(
         context={
             "modelo": observation.modelo,
-            "revision": snapshot.revision.id,
+            "revision": revision.id,
             "period": observation.period.registry_token,
             "casilla_ids": invalid,
         },

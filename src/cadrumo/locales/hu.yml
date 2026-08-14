@@ -3399,8 +3399,7 @@ cli:
       support_matrix:
         help: 'Megjeleníti a regisztráció szintű, modellenkénti támogatási mátrixot:
           számítási szint, teljességi jegyzék, exportformátumok, kinyerő lefedettség,
-          deklarált casilla-átnevezések, támogatás-visszavonási döntések és AEAT-portál
-          kereszthivatkozások.'
+          deklarált casilla-átnevezések és AEAT-portál kereszthivatkozások.'
       verification_report:
         app_help: Rögzített ellenőrzési jelentések vizsgálata.
         list_help: Ellenőrzési jelentések listázása, opcionálisan egy számítási revízióra
@@ -4240,24 +4239,13 @@ cli:
           a bejelentkezés előtt.
         session_not_persisted: Nincs használható rendszerkulcstár, ezért a munkamenet
           nem menthető; ez a bejelentkezés csak a jelenlegi parancsra érvényes.
+      passphrase_prompt: 'Profil jelszava: '
       refusal:
         abandoned: A bejelentkezés megszakadt; egyetlen profil sem nyílt meg.
     logout:
       help: A profil munkamenetének lezárása és helyi mutatójának törlése
       notices:
         already_logged_out: Egyetlen profil sem volt bejelentkezve; nincs mit lezárni.
-    passphrase:
-      change:
-        help: A titoktár jelszavának cseréje a jelenlegi ellenőrzése után.
-      confirm_new_passphrase_prompt: 'Erősítsd meg a Cadrumo titoktár új jelmondatát: '
-      current_passphrase_prompt: 'A Cadrumo titoktár jelenlegi jelmondata: '
-      errors:
-        current_passphrase_incorrect: A jelenlegi jelszó helytelen; a titoktár nem
-          módosult.
-        store_unprovisioned: A fájl-alapú titoktár nincs előkészítve; nincs cserélhető
-          jelszó.
-      help: A fájl-alapú titoktár jelszavának kezelése.
-      new_passphrase_prompt: 'A Cadrumo titoktár új jelmondata: '
     profile:
       already_exists: A(z) %{name} profil már létezik. Válasszon másik célazonosítót.
       archive:
@@ -4625,34 +4613,6 @@ cli:
           egy egyszerű kérésre.
         model_help: Az ellenőrizendő modell futtatókörnyezeti azonosítója. Alapértelmezés
           a szerepkörhöz választott modell.
-    recover:
-      errors:
-        recovery_code_rejected: A helyreállítási kód nem nyitotta meg a helyreállítási
-          borítékot; a titoktár nem változott.
-      help: A fájlalapú titoktár helyreállítása a 24 szavas helyreállítási kóddal,
-        és új jelmondathoz kötése.
-    recovery:
-      candidate_intro: 'Az új helyreállítási kódod. Írd le most ezt a 24 szót, sorrendben:'
-      create:
-        help: Helyreállítási kód bejegyzése; a szavak egyszer jelennek meg a terminálon,
-          és újra be kell gépelni őket.
-      errors:
-        interactive_terminal_required: 'A helyreállítási kód bejegyzéséhez interaktív
-          terminál kell: a kód egyszer jelenik meg, és újra be kell gépelni.'
-        retype_mismatch: Az újra begépelt helyreállítási kód nem egyezik a megjelenítettel;
-          semmi sem változott.
-      help: A fájlalapú titoktár 24 szavas helyreállítási kódjának kezelése.
-      recovery_code_prompt: '24 szavas helyreállítási kód: '
-      retype_prompt: 'A megerősítéshez gépeld be újra a 24 szavas helyreállítási kódot
-        (rejtett bevitel): '
-      rotate:
-        help: A bejegyzett helyreállítási kód cseréje; az új szavak egyszer jelennek
-          meg, és újra be kell gépelni őket.
-      status:
-        help: Megmutatja, hogy van-e bejegyzett helyreállítási kód, anélkül hogy felfedné.
-      verify:
-        help: Ellenőrzi, hogy egy helyreállítási kód megnyitja-e a mentett helyreállítási
-          borítékot.
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolhatóság ellenőrzése.
       connectivity_target_help: A vizsgálandó kapcsolódási cél.
@@ -5674,7 +5634,6 @@ cli:
           az env változókat; CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file,
           CADRUMO_SECRET_STORE_DIR és CADRUMO_SECRET_PASSPHRASE; a naplók alapértelmezés
           szerint ezen tárhelygyökér alatt vannak.
-        passphrase_change: Módosítja a helyi adatokat védő jelszót.
         profile_delete: Profil törlése explicit megerősítés után.
         profile_duplicate: Profil másolása új azonosítóra.
         profile_export: Hordozható profilcsomagot exportál.
@@ -5686,18 +5645,12 @@ cli:
         profile_sar: Érintetti hozzáférési adatcsomagot exportál.
         profile_show: Egy profil adatainak megjelenítése.
         profile_status: Az aktív profil készültségének megjelenítése.
-        recover: Helyreállítja a helyi hozzáférést egy helyreállítási kifejezéssel.
-        recovery_create: Helyreállítási kifejezést regisztrál.
-        recovery_rotate: Lecseréli a helyreállítási kifejezést.
-        recovery_status: Megjeleníti a helyreállítási kifejezés regisztrációs állapotát.
-        recovery_verify: Ellenőriz egy helyreállítási kifejezést anélkül, hogy felhasználná.
         reset_resume: Folytat egy befejezetlen visszaállítási műveletet.
         reset_start: Visszafordíthatatlan visszaállítást indít minden helyben tárolt
           profilra.
         reset_status: Megjeleníti a visszaállítás állapotát a helyi adatok módosítása
           nélkül.
         section_authentication: Hitelesítés
-        section_custody: Jelszó és helyreállítás őrzése
         section_diagnostics: Diagnosztika
         section_first_run: Első futtatás
         section_profile_inspection: Profiladatok vizsgálata
@@ -5737,8 +5690,6 @@ cli:
           vagy exporttal.
         recovery_login: Hiányzó, lezárt vagy lejárt profilmunkamenet indítása vagy
           megújítása.
-        recovery_passphrase: A fájlos titoktár helyreállítása a regisztrált helyreállítási
-          kóddal.
         recovery_profile: Jelzett aktívprofil-mutató hiba vizsgálata.
         recovery_repair: Adatmódosítás előtt futtasd ezt a csak olvasható állapotjelentést.
         section_command_families: Parancscsaládok
@@ -7524,8 +7475,6 @@ errors:
       Használjon FIFO-t, súlyozott átlagárat vagy átlagköltséget.
     refused_profile_login_throttled: Túl sok sikertelen bejelentkezési kísérlet. Várj
       %{seconds} másodpercet, mielőtt újra próbálkoznál.
-    refused_profile_logout_override: A kijelentkezés nem módosíthat --profile használatával
-      kiválasztott aktív profilt. Hagyja el a --profile kapcsolót, majd próbálja újra.
     refused_profile_not_configured: A RENTA-ellenőrzéshez adóügyi illetőségi profil
       szükséges. A folytatás előtt töltse ki a profilt.
     refused_profile_not_found: Nem létezik profil a megadott azonosítóval.
@@ -7756,15 +7705,6 @@ flows:
       google_export_year_invalid: Adjon meg egy 2000 és 2099 közötti évet.
       logout: Kijelentkezés
       logout_done: Kijelentkezve.
-      passphrase: Jelmondat módosítása
-      passphrase_confirm: Új jelmondat megerősítése
-      passphrase_current: Jelenlegi jelmondat
-      passphrase_done: Jelmondat módosítva.
-      passphrase_failed: A jelszót nem sikerült módosítani. Ellenőrizd a helyi tárhely
-        állapotát, majd próbáld újra.
-      passphrase_mismatch: Az új jelmondat és a megerősítése nem egyezik.
-      passphrase_new: Új jelmondat
-      passphrase_wrong_current: Ez nem a jelenlegi jelmondat.
       provider:
         certificate: Elektronikus tanúsítvány
         clave_movil: Cl@ve Móvil
@@ -8045,18 +7985,11 @@ flows:
         setup_incomplete: beállítás befejezetlen
         tombstoned: törölve
         unknown: ismeretlen
-    recovery:
-      commands_title: Műveletek (másold és futtasd)
-      enrolled: aktiválva
-      fingerprint: Ujjlenyomat
-      not_enrolled: nincs aktiválva
-      state: Helyreállítási kód
     section:
       auth: Hitelesítés
       notices: Figyelmeztetések
       profile: Aktív profil
       profiles: Profilok
-      recovery: Helyreállítás
     title: Állapot
   tui:
     binding_back: Vissza
@@ -66294,7 +66227,7 @@ modelo:
             help: null
             label: Összes keletkezett ÁFA összeg
           iva-cuota-repercutida-general:
-            help: null
+            help: A 21%-os általános kulccsal számított felszámított ÁFA teljes összege.
             label: Felszámított ÁFA összeg általános kulccsal (21%)
           iva-cuota-repercutida-reducido:
             help: null
@@ -69468,13 +69401,7 @@ modelo:
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
               label: null
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: null
-              label: null
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
               help: null
               label: null
             x-d5r62bjiclpnar3kc5i6u:
@@ -70210,20 +70137,10 @@ modelo:
               help: A 10%-os csökkentett kulccsal kiszámított teljes felszámított
                 ÁFA.
               label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: A 4/2024. sz. spanyol királyi törvényerejű rendelet átmeneti tétele
-                a csökkentett kulcshoz, amely a rendes 10%-os csökkentett kulccsal
-                együtt létezik.
-              label: Felszámított ÁFA összeg átmeneti csökkentett kulccsal (5%/7,5%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: A 4%-os szupercsökkentett kulccsal kiszámított teljes felszámított
                 ÁFA.
               label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
-              help: A 4/2024. sz. spanyol királyi törvényerejű rendelet átmeneti tétele
-                a szupercsökkentett kulcshoz, amely a rendes 4%-os szupercsökkentett
-                kulccsal együtt létezik.
-              label: Felszámított ÁFA összeg átmeneti szupercsökkentett kulccsal (2%)
             x-d5r62bjiclpnar3kc5i6u:
               help: null
               label: null
@@ -70956,6 +70873,33 @@ modelo:
           iva-anual-reconciliacion-resultado-303:
             help: null
             label: Éves egyeztetés - a 303-as bevallásokban bevallott eredmény
+          iva-anual-regimen-simplificado-aic-bienes-cuota-devengada:
+            help: null
+            label: null
+          iva-anual-regimen-simplificado-cuota-resultante-agricola:
+            help: null
+            label: null
+          iva-anual-regimen-simplificado-cuota-resultante-no-agricola:
+            help: null
+            label: null
+          iva-anual-regimen-simplificado-entrega-activos-fijos:
+            help: null
+            label: null
+          iva-anual-regimen-simplificado-inversion-sujeto-pasivo:
+            help: null
+            label: null
+          iva-anual-regimen-simplificado-iva-soportado-activos-fijos:
+            help: null
+            label: null
+          iva-anual-regimen-simplificado-regularizacion-bienes-inversion:
+            help: null
+            label: null
+          iva-anual-regimen-simplificado-resultado:
+            help: null
+            label: null
+          iva-anual-regimen-simplificado-suma-deducciones:
+            help: null
+            label: null
           iva-anual-regularizacion-bienes-inversion:
             help: null
             label: Beruházási javak korrekciója
@@ -71121,423 +71065,1196 @@ modelo:
         official_name: null
         title: null
       revision:
-        2010-y-siguientes:
+        '2022':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: Az éves összesítő bevallás adóéve
+              label: null
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
-              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
-              help: Adja össze a Közösségen belüli, általános adókulcsú termékbeszerzések
-                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
-              label: Közösségen belüli termékbeszerzések adóalapja általános kulcson,
-                kulcsbontás nélkül - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
-              help: Adja össze a Közösségen belüli, kedvezményes adókulcsú termékbeszerzések
-                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
-              label: Közösségen belüli termékbeszerzések adóalapja kedvezményes kulcson,
-                kulcsbontás nélkül - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
-              help: Adja össze a Közösségen belüli, szupercsökkentett adókulcsú termékbeszerzések
-                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
-              label: Közösségen belüli termékbeszerzések adóalapja szupercsökkentett
-                kulcson, kulcsbontás nélkül - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
-              help: Adja össze a Közösségen belüli, 0 %-os adókulccsal adózó termékbeszerzések
-                adóalapját.
-              label: Közösségen belüli termékbeszerzések adóalapja 0%-os kulcson -
-                éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
-              help: Vallja be a Közösségen belüli, 0 %-os adókulccsal adózó termékbeszerzések
-                áfaösszegét.
-              label: Közösségen belüli termékbeszerzések ÁFA összege 0%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
-              help: Adja össze a Közösségen belüli, 10 %-os adókulccsal adózó termékbeszerzések
-                adóalapját.
-              label: Közösségen belüli termékbeszerzések adóalapja 10%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
-              help: Vallja be a Közösségen belüli, 10 %-os adókulccsal adózó termékbeszerzések
-                áfaösszegét.
-              label: Közösségen belüli termékbeszerzések ÁFA összege 10%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
-              help: Adja össze a Közösségen belüli, 2 %-os adókulccsal adózó termékbeszerzések
-                adóalapját.
-              label: Közösségen belüli termékbeszerzések adóalapja 2%-os kulcson -
-                éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
-              help: Vallja be a Közösségen belüli, 2 %-os adókulccsal adózó termékbeszerzések
-                áfaösszegét.
-              label: Közösségen belüli termékbeszerzések ÁFA összege 2%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
-              help: Adja össze a Közösségen belüli, 21 %-os adókulccsal adózó termékbeszerzések
-                adóalapját.
-              label: Közösségen belüli termékbeszerzések adóalapja 21%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
-              help: Vallja be a Közösségen belüli, 21 %-os adókulccsal adózó termékbeszerzések
-                áfaösszegét.
-              label: Közösségen belüli termékbeszerzések ÁFA összege 21%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
-              help: Adja össze a Közösségen belüli, 4 %-os adókulccsal adózó termékbeszerzések
-                adóalapját.
-              label: Közösségen belüli termékbeszerzések adóalapja 4%-os kulcson -
-                éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
-              help: Vallja be a Közösségen belüli, 4 %-os adókulccsal adózó termékbeszerzések
-                áfaösszegét.
-              label: Közösségen belüli termékbeszerzések ÁFA összege 4%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
-              help: Adja össze a Közösségen belüli, 5 %-os adókulccsal adózó termékbeszerzések
-                adóalapját.
-              label: Közösségen belüli termékbeszerzések adóalapja 5%-os kulcson -
-                éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
-              help: Vallja be a Közösségen belüli, 5 %-os adókulccsal adózó termékbeszerzések
-                áfaösszegét.
-              label: Közösségen belüli termékbeszerzések ÁFA összege 5%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
-              help: Adja össze a Közösségen belüli, 7.5 %-os adókulccsal adózó termékbeszerzések
-                adóalapját.
-              label: Közösségen belüli termékbeszerzések adóalapja 7,5%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
-              help: Vallja be a Közösségen belüli, 7.5 %-os adókulccsal adózó termékbeszerzések
-                áfaösszegét.
-              label: Közösségen belüli termékbeszerzések ÁFA összege 7,5%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
-              help: Adja össze a Közösségen belüli, nulla adókulcsú termékbeszerzések
-                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
-              label: Közösségen belüli termékbeszerzések adóalapja nulla kulcson,
-                kulcsbontás nélkül - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
-              help: Adja össze a Közösségen belüli, általános adókulcsú szolgáltatásbeszerzések
-                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
-              label: Közösségen belüli szolgáltatásbeszerzések adóalapja általános
-                kulcson, kulcsbontás nélkül - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
-              help: Adja össze a Közösségen belüli, kedvezményes adókulcsú szolgáltatásbeszerzések
-                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
-              label: Közösségen belüli szolgáltatásbeszerzések adóalapja kedvezményes
-                kulcson, kulcsbontás nélkül - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
-              help: Adja össze a Közösségen belüli, szupercsökkentett adókulcsú szolgáltatásbeszerzések
-                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
-              label: Közösségen belüli szolgáltatásbeszerzések adóalapja szupercsökkentett
-                kulcson, kulcsbontás nélkül - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
-              help: Adja össze a Közösségen belüli, 0 %-os adókulccsal adózó szolgáltatásbeszerzések
-                adóalapját.
-              label: Közösségen belüli szolgáltatásbeszerzések adóalapja 0%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
-              help: Vallja be a Közösségen belüli, 0 %-os adókulccsal adózó szolgáltatásbeszerzések
-                áfaösszegét.
-              label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 0%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
-              help: Adja össze a Közösségen belüli, 10 %-os adókulccsal adózó szolgáltatásbeszerzések
-                adóalapját.
-              label: Közösségen belüli szolgáltatásbeszerzések adóalapja 10%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
-              help: Vallja be a Közösségen belüli, 10 %-os adókulccsal adózó szolgáltatásbeszerzések
-                áfaösszegét.
-              label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 10%-os
-                kulcson - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
-              help: Adja össze a Közösségen belüli, 2 %-os adókulccsal adózó szolgáltatásbeszerzések
-                adóalapját.
-              label: Közösségen belüli szolgáltatásbeszerzések adóalapja 2%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
-              help: Vallja be a Közösségen belüli, 2 %-os adókulccsal adózó szolgáltatásbeszerzések
-                áfaösszegét.
-              label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 2%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
-              help: Adja össze a Közösségen belüli, 21 %-os adókulccsal adózó szolgáltatásbeszerzések
-                adóalapját.
-              label: Közösségen belüli szolgáltatásbeszerzések adóalapja 21%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
-              help: Vallja be a Közösségen belüli, 21 %-os adókulccsal adózó szolgáltatásbeszerzések
-                áfaösszegét.
-              label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 21%-os
-                kulcson - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
-              help: Adja össze a Közösségen belüli, 4 %-os adókulccsal adózó szolgáltatásbeszerzések
-                adóalapját.
-              label: Közösségen belüli szolgáltatásbeszerzések adóalapja 4%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
-              help: Vallja be a Közösségen belüli, 4 %-os adókulccsal adózó szolgáltatásbeszerzések
-                áfaösszegét.
-              label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 4%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
-              help: Adja össze a Közösségen belüli, 5 %-os adókulccsal adózó szolgáltatásbeszerzések
-                adóalapját.
-              label: Közösségen belüli szolgáltatásbeszerzések adóalapja 5%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
-              help: Vallja be a Közösségen belüli, 5 %-os adókulccsal adózó szolgáltatásbeszerzések
-                áfaösszegét.
-              label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 5%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
-              help: Adja össze a Közösségen belüli, 7.5 %-os adókulccsal adózó szolgáltatásbeszerzések
-                adóalapját.
-              label: Közösségen belüli szolgáltatásbeszerzések adóalapja 7,5%-os kulcson
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
-              help: Vallja be a Közösségen belüli, 7.5 %-os adókulccsal adózó szolgáltatásbeszerzések
-                áfaösszegét.
-              label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 7,5%-os
-                kulcson - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
-              help: Adja össze a Közösségen belüli, nulla adókulcsú szolgáltatásbeszerzések
-                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
-              label: Közösségen belüli szolgáltatásbeszerzések adóalapja nulla kulcson,
-                kulcsbontás nélkül - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
-              help: Adja össze az adóévben belföldi ügyletek után önszámlázással megállapított
-                adóalapot.
-              label: Belföldi fordított adózású ügyletek adóalapja - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: Vallja be az adóévben belföldi ügyletek után önszámlázással megállapított
-                áfaösszeget.
-              label: Belföldi fordított adózású ügyletek ÁFA összege - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: null
-              label: Közösségen belüli beszerzések után önmagára terhelt ÁFA - éves
+              label: null
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
               help: null
-              label: Az évben keletkezett, a 97. rovatban nem szereplő, továbbvitelre
-                váró összegek
+              label: null
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
               help: null
-              label: Az utolsó időszaki bevallás eredménye - Továbbvitelre
+              label: null
             x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
               help: null
-              label: Éves levonható ÁFA összesen (viselt + önmagára terhelt)
+              label: null
             x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
               help: null
-              label: Éves keletkezett ÁFA összesen (felszámított + önmagára terhelt)
+              label: null
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechim8tb3d5h6op9d6co36:
               help: null
-              label: A négy negyedéves 303-as bevallásból egyeztetett éves levonható
-                összeg
+              label: null
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9d6co36:
               help: null
-              label: A négy negyedéves 303-as bevallásból egyeztetett éves keletkezett
-                ÁFA
+              label: null
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9dedkmqs3cd5j6ior1chniqcpg6c:
               help: null
-              label: Egyszerűsített rendszer szerint keletkezett ÁFA - eredő összeg
-                (éves, a 303-as 4. negyedévéből)
+              label: null
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
               help: null
-              label: A négy negyedéves 303-as bevallásból egyeztetett éves eredmény
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
               help: null
-              label: Beruházási javak korrekciója - éves
+              label: null
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
               help: null
-              label: Korrekció a végleges arányosítási százalék alkalmazása miatt
-                - éves
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
               help: null
-              label: Általános kulcs (21%) szerint felszámított ÁFA - éves
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
-              help: Adja össze az általános adókulcsú belföldi értékesítések adóalapját,
-                függetlenül az egyes ügyletekre alkalmazott százaléktól.
-              label: Fizetendő áfa adóalapja - általános szabályozás - 21%-os kulcs
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
               help: null
-              label: 5,2%-os egyenértékűségi pótlék - éves keletkezett ÁFA
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpee9im8tb3d5i6u:
               help: null
-              label: 1,4%-os egyenértékűségi pótlék - éves keletkezett ÁFA
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
               help: null
-              label: 0,5%-os egyenértékűségi pótlék - éves keletkezett ÁFA
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
-              help: A felár hatálya alá tartozó kiskereskedőknek történő, 2 %-os áfakulccsal
-                adózó értékesítésekre felszámított 0.26 %-os egyenértékűségi felár
-                összege (RDL 4/2024 art. 1). A(z) 692. rovatban kell bevallani.
-              label: Egyenértékűségi felár, 0.26 %-os kulcs - éves fizetendő összeg
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
-              help: A felár hatálya alá tartozó kiskereskedőknek történő, 4 %-os áfakulccsal
-                adózó értékesítésekre felszámított 0.5 %-os egyenértékűségi felár
-                összege (LIVA art. 161.3). A(z) 36. rovatban kell bevallani.
-              label: Egyenértékűségi felár, 0.5 %-os kulcs - éves fizetendő összeg
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
-              help: A felár hatálya alá tartozó kiskereskedőknek történő, 5 %-os áfakulccsal
-                adózó értékesítésekre felszámított 0.62 %-os egyenértékűségi felár
-                összege (RDL 4/2024 art. 1). A(z) 666. rovatban kell bevallani.
-              label: Egyenértékűségi felár, 0.62 %-os kulcs - éves fizetendő összeg
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
-              help: A felár hatálya alá tartozó kiskereskedőknek történő, 10 %-os
-                áfakulccsal adózó értékesítésekre felszámított 1.4 %-os egyenértékűségi
-                felár összege (LIVA art. 161.2). A(z) 600. rovatban kell bevallani.
-              label: Egyenértékűségi felár, 1.4 %-os kulcs - éves fizetendő összeg
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
-              help: A felár hatálya alá tartozó kiskereskedőknek történő, 7.5 %-os
-                áfakulccsal adózó értékesítésekre felszámított 1 %-os egyenértékűségi
-                felár összege (RDL 4/2024 art. 1). A(z) 694. rovatban kell bevallani.
-              label: Egyenértékűségi felár, 1 %-os kulcs - éves fizetendő összeg
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
-              help: A felár hatálya alá tartozó kiskereskedőknek történő, 21 %-os
-                áfakulccsal adózó értékesítésekre felszámított 5.2 %-os egyenértékűségi
-                felár összege (LIVA art. 161.1). A(z) 602. rovatban kell bevallani.
-              label: Egyenértékűségi felár, 5.2 %-os kulcs - éves fizetendő összeg
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: null
-              label: Csökkentett kulcs (10%) szerint felszámított ÁFA - éves
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
-              help: Adja össze a kedvezményes adókulcsú belföldi értékesítések adóalapját,
-                függetlenül az egyes ügyletekre alkalmazott százaléktól.
-              label: Fizetendő áfa adóalapja - általános szabályozás - 10%-os kulcs
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
               help: null
-              label: Szuperkedvezményes kulcs (4%) szerint felszámított ÁFA - éves
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
-              help: Adja össze a szuperkedvezményes adókulcsú belföldi értékesítések
-                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
-              label: Fizetendő áfa adóalapja - általános szabályozás - 4%-os kulcs
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
-              help: Vallja be a belföldi általános szabályozás szerinti, 0 %-os adókulccsal
-                adózó ügyletek adóalapját. A 4/2024. sz. királyi törvényerejű rendelet
-                1. cikke ezt az adókulcsot az alapvető élelmiszerekre 2024. július
-                1-jétől 2024. szeptember 30-ig alkalmazta.
-              label: Fizetendő áfa adóalapja - általános szabályozás - 0%-os kulcs
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
-              help: Vallja be a 700. rovat adóalapjára 0 %-os adókulccsal felszámított
-                áfát. A 0 %-os adókulcs nem keletkeztet áfát, ezért ez az összeg nulla.
-              label: Fizetendő áfa összege - általános szabályozás - 0%-os kulcs -
-                éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
-              help: Vallja be a belföldi általános szabályozás szerinti, 10 %-os kedvezményes
-                adókulccsal adózó ügyletek adóalapját.
-              label: Fizetendő áfa adóalapja - általános szabályozás - 10%-os kulcs
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
-              help: Vallja be a 03. rovat adóalapjára 10 %-os kedvezményes adókulccsal
-                felszámított áfát.
-              label: Fizetendő áfa összege - általános szabályozás - 10%-os kulcs
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
-              help: 'Vallja be a 2 %-os adókulccsal adózó alapvető élelmiszerek adóalapját:
-                közönséges kenyér, kenyérliszt, tej, sajt, tojás, gyümölcs, zöldség,
-                hüvelyesek, gumós növények, természetes gabonafélék és olívaolajok.
-                A 4/2024. sz. királyi törvényerejű rendelet 1. cikke ezt az adókulcsot
-                2024. október 1-jétől 2024. december 31-ig állapította meg.'
-              label: Fizetendő áfa adóalapja - általános szabályozás - 2%-os kulcs
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
-              help: Vallja be a 667. rovat adóalapjára 2 %-os adókulccsal felszámított
-                áfát. A 4/2024. sz. királyi törvényerejű rendelet 1. cikke ezt az
-                adókulcsot 2024. október 1-jétől 2024. december 31-ig állapította
-                meg.
-              label: Fizetendő áfa összege - általános szabályozás - 2%-os kulcs -
-                éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
-              help: Vallja be a belföldi általános szabályozás szerinti, 21 %-os általános
-                adókulccsal adózó ügyletek adóalapját.
-              label: Fizetendő áfa adóalapja - általános szabályozás - 21%-os kulcs
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
-              help: Vallja be a 05. rovat adóalapjára 21 %-os általános adókulccsal
-                felszámított áfát.
-              label: Fizetendő áfa összege - általános szabályozás - 21%-os kulcs
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
-              help: Vallja be a belföldi általános szabályozás szerinti, 4 %-os szuperkedvezményes
-                adókulccsal adózó ügyletek adóalapját.
-              label: Fizetendő áfa adóalapja - általános szabályozás - 4%-os kulcs
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
-              help: Vallja be a 01. rovat adóalapjára 4 %-os szuperkedvezményes adókulccsal
-                felszámított áfát.
-              label: Fizetendő áfa összege - általános szabályozás - 4%-os kulcs -
-                éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
-              help: Vallja be az 5 %-os adókulccsal adózó magolajok és tésztafélék
-                adóalapját. A 4/2024. sz. királyi törvényerejű rendelet 1. cikke ezt
-                az adókulcsot 2024. július 1-jétől 2024. szeptember 30-ig állapította
-                meg.
-              label: Fizetendő áfa adóalapja - általános szabályozás - 5%-os kulcs
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
-              help: Vallja be a 702. rovat adóalapjára 5 %-os adókulccsal felszámított
-                áfát. A 4/2024. sz. királyi törvényerejű rendelet 1. cikke ezt az
-                adókulcsot 2024. július 1-jétől 2024. szeptember 30-ig állapította
-                meg.
-              label: Fizetendő áfa összege - általános szabályozás - 5%-os kulcs -
-                éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
-              help: Vallja be a 7,5 %-os adókulccsal adózó magolajok és tésztafélék
-                adóalapját. A 4/2024. sz. királyi törvényerejű rendelet 1. cikke ezt
-                az adókulcsot 2024. október 1-jétől 2024. december 31-ig állapította
-                meg.
-              label: Fizetendő áfa adóalapja - általános szabályozás - 7,5%-os kulcs
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
-              help: Vallja be a 669. rovat adóalapjára 7,5 %-os adókulccsal felszámított
-                áfát. A 4/2024. sz. királyi törvényerejű rendelet 1. cikke ezt az
-                adókulcsot 2024. október 1-jétől 2024. december 31-ig állapította
-                meg.
-              label: Fizetendő áfa összege - általános szabályozás - 7,5%-os kulcs
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
-              help: Adja össze a nulla adókulcsú belföldi értékesítések adóalapját,
-                függetlenül az egyes ügyletekre alkalmazott százaléktól.
-              label: Fizetendő áfa, általános szabályozás, nulla adókulcs - Adóalap
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
-              label: Az általános rendszer éves eredménye (keletkezett ÁFA mínusz
-                levonható ÁFA)
+              label: null
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
               help: null
-              label: Folyó termékimport után viselt levonható ÁFA - éves
+              label: null
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: null
-              label: Folyó belföldi ügyletek után viselt ÁFA - éves
+              label: null
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
-              help: Adja össze az áfát tartalmazó belföldi folyó termék- és szolgáltatásbeszerzések
-                adóalapját, a három belföldi adókulcs összesítésével.
-              label: Levonható áfa adóalapja - belföldi folyó termék- és szolgáltatásbeszerzések
-                összesen - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
-              help: Összegzi az általános, kedvezményes és szuperkedvezményes kulcsok
-                szerinti fizetendő áfát, valamint a Közösségen belüli beszerzésekre
-                önszámlázott áfát, a felár nélkül (47. rovat).
-              label: Áfa alapok és összegek összesen - Fizetendő adó (Reg. ordinario)
-                - éves
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
-              help: A masik tagallamba torteno termekertekesites osszege, amely a
-                spanyol afatorveny 25. cikke alapjan adomentes. Ne tuntesse fel az
-                unios vallalkozasoknak nyujtott szolgaltatasokat.
-              label: Közösségen belüli termékértékesítés
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
-              help: A spanyol áfatörvény 21. cikke alapján adómentes termékexport,
-                valamint a 22. cikk alapján adómentes, exporttal egy tekintet alá
-                eső ügyletek összege.
-              label: Export és egyéb, levonási joggal járó adómentes ügyletek
+              help: null
+              label: null
+          construct:
+            modelo-390-iva-resumen-anual:
+              field:
+                title: null
+          field:
+            label: null
+        '2023':
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechim8tb3d5h6op9d6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9d6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9dedkmqs3cd5j6ior1chniqcpg6c:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpee9im8tb3d5i6u:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
+              help: null
+              label: null
+          construct:
+            modelo-390-iva-resumen-anual:
+              field:
+                title: null
+          field:
+            label: null
+        '2024':
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechim8tb3d5h6op9d6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9d6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9dedkmqs3cd5j6ior1chniqcpg6c:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpee9im8tb3d5i6u:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
+              help: null
+              label: null
+          construct:
+            modelo-390-iva-resumen-anual:
+              field:
+                title: null
+          field:
+            label: null
+        '2025':
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechim8tb3d5h6op9d6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9d6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9dedkmqs3cd5j6ior1chniqcpg6c:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpee9im8tb3d5i6u:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
+              help: null
+              label: null
           construct:
             modelo-390-iva-resumen-anual:
               field:

@@ -50,6 +50,7 @@ from ....domain.deadlines import (
     LegalEntityForm,
     TaxpayerProfile,
 )
+from .calendar_test_support import profile as _autonomo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -91,18 +92,6 @@ def _pensioner() -> TaxpayerProfile:
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.PENSION}),
         iva_regime=IVARegime.EXENTO,
-    )
-
-
-def _autonomo() -> TaxpayerProfile:
-    """An autónomo en estimación directa: actividad económica."""
-
-    return TaxpayerProfile(
-        tax_id="A4567890A",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
     )
 
 

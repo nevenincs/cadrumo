@@ -14,14 +14,8 @@ from typing import TypedDict
 
 import pytest
 
-from ....domain.deadlines import (
-    EntityType,
-    IrpfEstimationRegime,
-    IrpfIncomeCategory,
-    IVARegime,
-    TaxpayerProfile,
-)
 from .._backlog import OverviewBacklog, build_overview_backlog
+from .calendar_test_support import profile as _profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -30,18 +24,6 @@ class _WindowArgs(TypedDict):
     from_date: date
     to_date: date
     as_of: date
-
-
-def _profile() -> TaxpayerProfile:
-    """A declared autónomo en estimación directa (unchanged persona)."""
-
-    return TaxpayerProfile(
-        tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
-    )
 
 
 def _window_args() -> _WindowArgs:

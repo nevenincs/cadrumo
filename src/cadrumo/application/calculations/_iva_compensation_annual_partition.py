@@ -25,6 +25,7 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     RegistryValidationError,
     iva_compensation_annual_partition_requirement,
+    select_revision,
     undeclared_casilla_ids,
 )
 from ...domain.iva_compensation import (
@@ -70,12 +71,13 @@ def _observed_value(values: Mapping[CasillaId, Decimal], casilla_id: CasillaId) 
 def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation) -> None:
     from ...core.resources import resources
 
-    snapshot = resources().modelos.authority.snapshot(
-        observation.modelo,
+    authority = resources().modelos.authority
+    revision = select_revision(
+        authority.modelo(observation.modelo),
         filing_year=observation.filing_year,
         period=observation.period,
     )
-    invalid = undeclared_casilla_ids(snapshot.revision, observation.casilla_values)
+    invalid = undeclared_casilla_ids(revision, observation.casilla_values)
     if invalid:
         raise RegistryValidationError(
             translated_message=(
@@ -83,7 +85,7 @@ def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation
             ),
             context={
                 "modelo": observation.modelo,
-                "revision_id": snapshot.revision.id,
+                "revision_id": revision.id,
                 "casilla_ids": invalid,
             },
         )
@@ -171,18 +173,19 @@ def resolve_iva_compensation_annual_partition_binding_values(
 
 
 def _load_303_observations_for_partition(
-    snapshot: RegistrySnapshot,
+    revision: ModeloRevision,
     *,
+    filing_year: int,
     repository: CalculationObservationRepository,
 ) -> tuple[ObservationEnvelopePayload, ...]:
-    requirement = iva_compensation_annual_partition_requirement(snapshot.revision)
+    requirement = iva_compensation_annual_partition_requirement(revision)
     if requirement is None:
         return ()
     envelopes: list[ObservationEnvelopePayload] = []
     for period_code in requirement.source_periods:
         payload = repository.load_observation(
             Modelo.M303.value,
-            Period.from_year_and_code(snapshot.filing_year, period_code),
+            Period.from_year_and_code(filing_year, period_code),
         )
         if payload is None:
             continue
@@ -246,21 +249,25 @@ class IvaCompensationAnnualPartitionSourceResolver:
         self._registry_snapshot = registry_snapshot
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        snapshot = self._registry_snapshot
-        if snapshot is None:
+        revision = self._registry_snapshot.revision if self._registry_snapshot is not None else None
+        if revision is None:
             from ...core.resources import resources
 
-            snapshot = resources().modelos.authority.snapshot(
-                context.modelo,
+            revision = select_revision(
+                resources().modelos.authority.modelo(context.modelo),
                 filing_year=context.filing_year,
                 period=context.period.registry_token,
             )
-        requirement = iva_compensation_annual_partition_requirement(snapshot.revision)
+        requirement = iva_compensation_annual_partition_requirement(revision)
         if requirement is None:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
         repo = self._repository if self._repository is not None else CalculationObservationRepository()
         try:
-            envelopes = _load_303_observations_for_partition(snapshot, repository=repo)
+            envelopes = _load_303_observations_for_partition(
+                revision,
+                filing_year=context.filing_year,
+                repository=repo,
+            )
         except _STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
@@ -269,9 +276,9 @@ class IvaCompensationAnnualPartitionSourceResolver:
                 error=exc,
             )
         binding_values = resolve_iva_compensation_annual_partition_binding_values(
-            snapshot.revision,
+            revision,
             envelopes,
-            filing_year=snapshot.filing_year,
+            filing_year=context.filing_year,
         )
         unresolved = tuple(binding_id for binding_id in requirement.binding_ids if binding_id not in binding_values)
         return CalculationSourceResolution(

@@ -24,6 +24,7 @@ Submodules
    cadrumo.application.live._iva_remote_state
    cadrumo.application.live._justificante
    cadrumo.application.live._notification_documents
+   cadrumo.application.live._notification_ports
    cadrumo.application.live._notifications
    cadrumo.application.live._remote_state_models
    cadrumo.application.live._remote_state_outcomes
