@@ -36,6 +36,13 @@ Three ratcheting/pinned checks, backed by the checked-in
   being a shim also fails, forcing the baseline to be updated deliberately
   rather than silently drifting. When the baseline is empty, this is the
   canonical zero-shim gate without a mirrored count in test prose.
+- **Family 2b (forwarding wrappers).** The same rule in the syntax the
+  zero-definitions test cannot see. A forwarding layer written as
+  ``def foo(a, *, b): return _real_foo(a, b=b)``, repeated over a package's
+  surface, has plenty of real definitions and so passes Family 2 by
+  construction. The gate asserts the production set of such callables equals
+  the baseline's named ``exemptions`` exactly -- currently empty -- with each
+  exemption keyed by ``(path, function)`` and required to state a reason.
 - **Family 3 (genuine multi-sourced/duplicate symbols).** The gate asserts (a)
   none of the 7 symbols retired from the app-layer umbrella facades have
   reappeared as multi-facade symbols, and (b) every OTHER
@@ -95,6 +102,7 @@ from dev.quality.import_hygiene_scan import (
     REGISTRY_LOADER_PACKAGE,
     TuiBoundaryViolationKind,
     discover_facades,
+    find_delegate_wrapper_shims,
     find_dev_tooling_import_violations,
     find_multi_sourced_symbols,
     find_private_import_violations,
@@ -167,6 +175,23 @@ class _Family2Section(TypedDict):
     paths: list[str]
 
 
+class _DelegateWrapperExemption(TypedDict):
+    """One named, reasoned forwarding wrapper the gate tolerates.
+
+    Keyed by ``(path, function)``. A line number would rot on the first edit
+    that moved the callable, and the enclosing function is what the exemption
+    is actually about.
+    """
+
+    path: str
+    function: str
+    reason: str
+
+
+class _Family2DelegateSection(TypedDict):
+    exemptions: list[_DelegateWrapperExemption]
+
+
 class _ToleratedSymbolEntry(TypedDict):
     symbol: str
     confidence: str
@@ -183,6 +208,7 @@ class _BaselineDocument(TypedDict):
 
     production_family1_cross_package_private_imports: _Family1Section
     family2_shim_modules: _Family2Section
+    family2_delegate_wrapper_shims: _Family2DelegateSection
     family3_pinned_duplicate_symbols: _Family3Section
 
 
@@ -236,6 +262,7 @@ def test_baseline_file_is_well_formed() -> None:
 
     assert "production_family1_cross_package_private_imports" in baseline
     assert "family2_shim_modules" in baseline
+    assert "family2_delegate_wrapper_shims" in baseline
     assert "family3_pinned_duplicate_symbols" in baseline
 
 
@@ -547,6 +574,59 @@ def test_family2_test_tree_shims_are_reported_not_silent() -> None:
     misclassified_as_prod = [s.path for s in non_test_shims if _looks_like_test_module(s.path)]
     assert misclassified_as_prod == [], (
         f"is_test=False but looks like a test module by name/path: {misclassified_as_prod}"
+    )
+
+
+def _current_production_delegate_wrappers() -> tuple[tuple[str, str], ...]:
+    """Re-run the real scanner and return each production wrapper's ``(path, function)``."""
+    py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
+    return tuple(
+        (wrapper.path, wrapper.function) for wrapper in find_delegate_wrapper_shims(py_files) if not wrapper.is_test
+    )
+
+
+def test_family2_delegate_wrapper_shims_are_exactly_the_documented_exemptions() -> None:
+    """No public callable may exist only to re-call another package's symbol.
+
+    The syntax half of the no-standing-bridge rule that a def-counting check
+    cannot see: a module written as ``def foo(a, *, b): return _real_foo(a,
+    b=b)`` repeated over a package's surface has plenty of real definitions and
+    passes the Family-2 zero-definitions test by construction, while being the
+    same forwarding layer with the same cost -- a second name for a symbol that
+    already has a canonical home, and a second import path to it.
+
+    Equality, not a ceiling, and no tally anywhere: a new wrapper fails, and an
+    exemption whose callable stopped being a wrapper fails too, so a dead entry
+    can never become a spare slot that hides a live one.
+    """
+    exemptions = _load_baseline()["family2_delegate_wrapper_shims"]["exemptions"]
+    documented = frozenset((entry["path"], entry["function"]) for entry in exemptions)
+    current = frozenset(_current_production_delegate_wrappers())
+
+    undocumented = sorted(f"{path}::{function}" for path, function in current - documented)
+    stale = sorted(f"{path}::{function}" for path, function in documented - current)
+    assert undocumented == [], (
+        "forwarding wrapper(s) found: each of these is a public callable whose whole body re-calls "
+        "another package's symbol with its own arguments unchanged, so it owns no decision and only "
+        "adds a second import path to a symbol that already has a canonical home. Point the consumers "
+        "at the owning package's facade and delete the wrapper:\n  " + "\n  ".join(undocumented)
+    )
+    assert stale == [], (
+        f"exemption(s) in {repo_relative(_BASELINE_PATH)} name a callable that is no longer a "
+        "forwarding wrapper; drop the entry in the same commit that fixed it:\n  " + "\n  ".join(stale)
+    )
+
+
+def test_family2_delegate_wrapper_exemptions_each_state_a_reason() -> None:
+    """An exemption without a stated reason is a mute button, not a judgement."""
+    unreasoned = sorted(
+        f"{entry['path']}::{entry['function']}"
+        for entry in _load_baseline()["family2_delegate_wrapper_shims"]["exemptions"]
+        if not entry["reason"].strip()
+    )
+    assert unreasoned == [], (
+        f"every exemption in {repo_relative(_BASELINE_PATH)} must state why the wrapper stands:\n  "
+        + "\n  ".join(unreasoned)
     )
 
 
