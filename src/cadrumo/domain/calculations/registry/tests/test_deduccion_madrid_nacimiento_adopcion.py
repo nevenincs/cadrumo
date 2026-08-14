@@ -116,79 +116,72 @@ def _run(scenario: RegistryCalculationScenario) -> None:
     assert_registry_scenario_matches(report)
 
 
-def test_1039_single_eligible_child_yields_721_70() -> None:
-    """One in-window cohabiting child, individual filer under the límite → 721,70 €.
-
-    Oracle: DL 1/2010 art. 4 — 721,70 € por cada hijo nacido o adoptado.
-    """
-    _run(
-        _scenario(
+@pytest.mark.parametrize(
+    ("scenario_id", "eligible_count", "unidad_familiar_otros_miembros_base", "expected_1039"),
+    [
+        pytest.param(
             "m100-2025-1039-single-child-721-70",
-            declaration_type=Decimal("1"),
-            eligible_count=Decimal("1"),
-            unidad_familiar_otros_miembros_base=Decimal("0"),
-            expected_1039=Decimal("721.70"),
+            Decimal("1"),
+            Decimal("0"),
+            Decimal("721.70"),
+            # Oracle: DL 1/2010 art. 4 — 721,70 € por cada hijo nacido o adoptado.
+            id="1039_single_eligible_child_yields_721_70",
         ),
-    )
-
-
-def test_1039_two_eligible_children_yields_1443_40() -> None:
-    """Two eligible children → 2 × 721,70 € = 1.443,40 € (anti-tautology: doubles)."""
-    _run(
-        _scenario(
+        pytest.param(
             "m100-2025-1039-two-children-1443-40",
-            declaration_type=Decimal("1"),
-            eligible_count=Decimal("2"),
-            unidad_familiar_otros_miembros_base=Decimal("0"),
-            expected_1039=Decimal("1443.40"),
+            Decimal("2"),
+            Decimal("0"),
+            Decimal("1443.40"),
+            # DL 1/2010 art. 4 — anti-tautology: two eligible children doubles the amount.
+            id="1039_two_eligible_children_yields_1443_40",
         ),
-    )
-
-
-def test_1039_shared_custody_prorrateo_half_yields_360_85() -> None:
-    """Prorrateo ÷2 (custodia compartida) weighted count 0,5 → 360,85 €.
-
-    Oracle: DL 1/2010 art. 4 — prorrateo por partes iguales cuando el hijo
-    convive con ambos padres que tributan de forma individual.
-    """
-    _run(
-        _scenario(
+        pytest.param(
             "m100-2025-1039-prorrateo-360-85",
-            declaration_type=Decimal("1"),
-            eligible_count=Decimal("0.5"),
-            unidad_familiar_otros_miembros_base=Decimal("0"),
-            expected_1039=Decimal("360.85"),
+            Decimal("0.5"),
+            Decimal("0"),
+            Decimal("360.85"),
+            # DL 1/2010 art. 4 — prorrateo por partes iguales cuando el hijo convive
+            # con ambos padres que tributan de forma individual (custodia compartida).
+            id="1039_shared_custody_prorrateo_half_yields_360_85",
         ),
-    )
-
-
-def test_1039_no_eligible_children_yields_zero() -> None:
-    """No in-window cohabiting descendants → 0 (deducción does not apply)."""
-    _run(
-        _scenario(
+        pytest.param(
             "m100-2025-1039-no-children-zero",
-            declaration_type=Decimal("1"),
-            eligible_count=Decimal("0"),
-            unidad_familiar_otros_miembros_base=Decimal("0"),
-            expected_1039=Decimal("0"),
+            Decimal("0"),
+            Decimal("0"),
+            Decimal("0"),
+            # No in-window cohabiting descendants -> deducción does not apply.
+            id="1039_no_eligible_children_yields_zero",
         ),
-    )
+        pytest.param(
+            "m100-2025-1039-uf-over-limit-zero",
+            Decimal("1"),
+            Decimal("62000"),
+            Decimal("0"),
+            # DL 1/2010 art. 18.1 — límite de la unidad familiar 61.860 € blocks the
+            # deducción. Anti-tautology: identical to the eligible scenario except the
+            # unidad-familiar base term crosses 61.860 €, driving 1039 from 721,70 € to 0.
+            id="1039_unidad_familiar_base_over_limit_blocks_deduccion",
+        ),
+    ],
+)
+def test_1039_deduccion_madrid_nacimiento_adopcion(
+    scenario_id: str,
+    eligible_count: Decimal,
+    unidad_familiar_otros_miembros_base: Decimal,
+    expected_1039: Decimal,
+) -> None:
+    """1039 casilla amounts across cuantía, prorrateo, and límite scenarios.
 
-
-def test_1039_unidad_familiar_base_over_limit_blocks_deduccion() -> None:
-    """Unidad-familiar base above 61.860 € blocks the deducción → 0.
-
-    Oracle: DL 1/2010 art. 18.1 — límite de la unidad familiar 61.860 €.
-    Anti-tautology: identical to the eligible scenario except the unidad-familiar
-    base term crosses 61.860 €, driving 1039 from 721,70 € to 0.
+    Oracle: DL 1/2010 arts. 4 y 18.1 (bundled AEAT Renta 2025 manual figures —
+    see module docstring). Each param's inline comment carries its own citation.
     """
     _run(
         _scenario(
-            "m100-2025-1039-uf-over-limit-zero",
+            scenario_id,
             declaration_type=Decimal("1"),
-            eligible_count=Decimal("1"),
-            unidad_familiar_otros_miembros_base=Decimal("62000"),
-            expected_1039=Decimal("0"),
+            eligible_count=eligible_count,
+            unidad_familiar_otros_miembros_base=unidad_familiar_otros_miembros_base,
+            expected_1039=expected_1039,
         ),
     )
 

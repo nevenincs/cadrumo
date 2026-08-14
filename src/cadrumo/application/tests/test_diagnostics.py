@@ -614,9 +614,14 @@ def test_a_sessionless_quarantine_moves_nothing(tmp_path: Path) -> None:
     """The mutating verb is where a keyless probe would do real damage.
 
     ``quarantine`` moves exactly the rows the probe calls unreadable, so a
-    keyless run would archive every row of a sound bucket.  The proof is the
-    read taken afterwards under the real session: the row is still live and
-    still decrypts, so nothing was moved out from under it.
+    keyless run would archive every row of a sound bucket.  It refuses instead
+    of reporting an empty result, which is the right shape for a verb that
+    mutates: the preview may answer "nothing to show", but the commit must not
+    silently do nothing when the operator asked it to act.
+
+    The read taken afterwards under the real session is the safety proof: the
+    row is still live and still decrypts, so nothing was moved out from under
+    it.
     """
     namespace = "cadrumo.workflow"
     with isolated_runtime_profile(tmp_path=tmp_path):
@@ -630,10 +635,11 @@ def test_a_sessionless_quarantine_moves_nothing(tmp_path: Path) -> None:
         )
         with suspend_active_session():
             assert not has_active_bucket_session()
-            sessionless = quarantine_unreadable_secure_objects()
+            with pytest.raises(StorageValidationError) as refusal:
+                quarantine_unreadable_secure_objects()
         survived = preview_quarantine_unreadable_secure_objects()
 
-    assert sessionless.namespaces == ()
+    assert refusal.value.translated_message == "errors.storage.runtime.not_ready"
     assert any(item.namespace == namespace for item in survived.namespaces)
     assert survived.unreadable_total == 0
 
