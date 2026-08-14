@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:1a1a380393267b097b2ae250a0aed46ce77709f5a91897e88e9152a4f9b0b5e8'
+body_hash: 'sha256:1f4b64200a06bde0c3abaed0d664842d1dcd2c1237d4f7e47d1151d276d2bbf6'
 step_id: 'S01'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -77,10 +77,25 @@ refuses while the identical text in the manifest loads, which separates placemen
 from content. Because a proof over synthetic input cannot catch a refusal that
 never reaches real shapes, a copy of a real bundled fragmented modelo is also
 planted with the grade in a real section fragment, observed refusing, and restored
-to loading. The untouched bundled corpus loads green with every revision resolving
-a reach — asserted as a property over whatever the corpus holds rather than
-against a revision tally, which would encode today's corpus and detect nothing
-tomorrow.
+to loading. That second proof was additionally run by hand against the committed
+corpus outside the working tree, on Modelo 036 revision `2025-02-03-y-siguientes`,
+planting the grade in a real administrative fragment: the copy loads ungraded,
+the planted copy refuses with the instruction naming `revision.toml`, and the
+copy with the plant removed loads ungraded again. Nothing under the source tree
+was mutated to obtain it, so no peer sweep could capture the plant and a crashed
+run would leave no residue.
+
+The committed corpus loads green at 73 modelos and 97 revisions, none of them
+graded, every one reading the fail-closed floor. Those figures are recorded here
+as measurement; the shipped test asserts the property instead — that every
+revision resolves a reach, declared where declared and the floor where not —
+because a revision tally as a pass condition would encode today's corpus and
+stop detecting anything the moment the transcription step populates it.
+
+The refusal wording for this branch was corrected in passing. It read "it is
+legally load-bearing for the whole revision", which was true of the three legal
+scalars that were previously its only members and is not true of a grade; it now
+reads "it is a claim about the whole revision", which is true of all four.
 
 ## Notes
 
@@ -100,8 +115,29 @@ a fragment-declared grade, and shipping a marker whose refusal cannot execute
 would have landed a gate that reports clean because nothing reaches it. It was
 reported to the campaign lead as a finding in the same message as this record.
 
+The broader owned-section refusal the reorder moved behind is itself covered, and
+an earlier claim in this campaign's reporting that it shipped untested was wrong.
+It carries eighteen tests in the loader topology suite, one of which plants a
+section name in the wrong section folder. That test matches on the folder and key
+names rather than on the refusal sentence, which is why a search for the sentence
+missed it; the search was the defective instrument, not the peer's change. The
+reorder leaves that suite green, because the key it plants is a section name and
+never a manifest-only field, so the two refusals do not compete for it.
+
 The registry test suite carries substantial redness at the head of this shared
-tree that predates this Step and belongs to concurrent peer work; the pre-change
-and post-change failure sets were captured sequentially and compared rather than
-read as an absolute result. The type checker reports two pre-existing diagnostics
-in the loader's fingerprint-collector binding, untouched here.
+tree that predates this Step, is a separately recorded condition with its own
+decision and plan, and belongs to concurrent peer work. The pre-change and
+post-change failure sets were therefore captured sequentially and compared as a
+delta rather than read as an absolute result: fifteen fixed, two new, and both new
+ones traced to peer edits that landed between the two runs. The type checker
+reports two pre-existing diagnostics in the loader's fingerprint-collector
+binding, untouched here.
+
+While this record was being finalised the bundled corpus stopped loading
+altogether, on a malformed administrative fragment filename and then a duplicate
+fragment prefix inside a campaign-owned authoring tree being written concurrently.
+Three tests that assert the shipped corpus loads go red on it, only one of which
+is this Step's; the other two predate it. The corpus measurements above were
+therefore taken against the committed tree exported read-only outside the working
+copy, which is the honest subject of the claim in any case — an assertion about
+the shipped corpus should not be answered by a peer's half-written edit.

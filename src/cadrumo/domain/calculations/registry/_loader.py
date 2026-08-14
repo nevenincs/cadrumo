@@ -635,8 +635,8 @@ def _reject_revision_fragment_field(path: Path, key: str) -> None:
     if key in REVISION_MANIFEST_ONLY_FIELDS:
         raise RegistryLoadError(
             f"{path}: revision field {key!r} must be declared in the revision's revision.toml manifest, "
-            f"not in a per-section fragment; it is legally load-bearing for the whole revision and must be "
-            f"readable in one place",
+            f"not in a per-section fragment; it is a claim about the whole revision and must be readable "
+            f"in one place",
         )
 
 
