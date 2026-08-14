@@ -165,7 +165,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         IrpfSpecialRegime,
         LegalEntityForm,
     )
-    from cadrumo.domain.user_profile import UserProfileStatus
+    from cadrumo.domain.user_profile import ProfileSetupState
 
     return (
         *_wizard_choice_label_registrations(
@@ -185,7 +185,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             fiscal_residency=FiscalResidency,
         ),
         *_wizard_question_registrations(wizard_flows=WIZARD_FLOWS),
-        *_surface_registrations(user_profile_status=UserProfileStatus),
+        *_surface_registrations(profile_setup_state=ProfileSetupState),
         *_storage_registrations(
             storage_area=StorageArea,
             storage_area_disposition=StorageAreaDisposition,
@@ -397,7 +397,7 @@ def _wizard_question_registrations(*, wizard_flows: Iterable[_FlowLike]) -> tupl
     )
 
 
-def _surface_registrations(*, user_profile_status: type[Enum]) -> tuple[FStringKeyRegistration, ...]:
+def _surface_registrations(*, profile_setup_state: type[Enum]) -> tuple[FStringKeyRegistration, ...]:
     """Registrations for operator-surface copy built outside the wizard.
 
     The Google refusal frames, the status-page lifecycle labels, and the
@@ -411,9 +411,9 @@ def _surface_registrations(*, user_profile_status: type[Enum]) -> tuple[FStringK
             values=_GOOGLE_ERROR_SUFFIXES,
         ),
         FStringKeyRegistration(
-            description="flows.status.profiles.status.* (status-page profile lifecycle labels)",
+            description="flows.status.profiles.status.* (status-page profile setup-state labels)",
             key_factory=lambda v: f"flows.status.profiles.status.{v}",
-            values=tuple(m.value for m in user_profile_status),
+            values=tuple(m.value for m in profile_setup_state),
         ),
         FStringKeyRegistration(
             description="cli.config.profile.bundle_flow.* (profile bundle interactive-flow CopyRef copy)",
