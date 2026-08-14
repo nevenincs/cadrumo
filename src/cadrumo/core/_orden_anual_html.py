@@ -12,10 +12,19 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
-from typing import ClassVar, Literal
+from typing import TYPE_CHECKING, ClassVar, Literal
 from unicodedata import normalize
 
-from bs4 import BeautifulSoup, Tag
+if TYPE_CHECKING:
+    from bs4 import BeautifulSoup, Tag
+
+# BeautifulSoup and its lxml backend cost roughly 100 ms to import and are
+# reached only when an orden anual HTML document is actually parsed. Binding
+# them here put that cost on every importer of the core facade, including the
+# supervised key-derivation child process, which parses no HTML at all. Every
+# other reference in this module is an annotation, and annotations are strings
+# under ``from __future__ import annotations``, so only the two runtime uses
+# below need the real objects.
 
 _ACTIVITY_MARKER = "cuota devengada anual por unidad"
 _AGRICULTURAL_INDEX_MARKER = "índice de cuota devengada por operaciones corrientes"
@@ -162,6 +171,8 @@ class OrdenAnualIvaAuthorityUnit:
 
 def extract_orden_anual_iva_authority(markup: bytes, *, source_label: str) -> OrdenAnualIvaAuthority:
     """Extract the complete IVA simplified-regime authority from one Orden source."""
+    from bs4 import BeautifulSoup
+
     from ._orden_anual_sections import (
         extract_agricultural_indexes,
         extract_difficult_justification,
@@ -481,9 +492,11 @@ def annex_heading_for(tag: Tag) -> str:
 
 
 def _activity_heading_from_preceding_siblings(table: Tag) -> tuple[str | None, str | None]:
+    from bs4 import Tag as _Tag
+
     preceding_text = ""
     for sibling in table.previous_siblings:
-        if not isinstance(sibling, Tag):
+        if not isinstance(sibling, _Tag):
             continue
         if sibling.name == "table":
             break
