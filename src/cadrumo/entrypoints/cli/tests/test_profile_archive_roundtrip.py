@@ -27,7 +27,7 @@ from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage, isolated_profile_storage_root
 
 __all__ = ["isolated_profile_storage"]
-from .envelope_helpers import unwrap_envelope_notices, unwrap_schema_envelope
+from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 from .privacy_helpers import assert_public_profile_id_not_leaked, assert_public_profile_payload_redacted
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

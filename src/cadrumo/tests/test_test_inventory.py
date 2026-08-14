@@ -140,11 +140,7 @@ def _central_harness_ownership(path: Path) -> tuple[str | None, frozenset[str], 
                 if isinstance(candidate, ast.For)
             )
             if any(name.isupper() for name in iter_names) and any(
-                any(
-                    candidate.id.isupper()
-                    for candidate in ast.walk(nested.iter)
-                    if isinstance(candidate, ast.Name)
-                )
+                any(candidate.id.isupper() for candidate in ast.walk(nested.iter) if isinstance(candidate, ast.Name))
                 for nested in nested_iters
             ):
                 structural_evidence.add("nested-declared-inventory-iteration")
@@ -302,9 +298,7 @@ def _central_harness_owner_violation(path: Path) -> str | None:
                 continue
             if candidate.level:
                 try:
-                    base = importlib.util.resolve_name(
-                        f"{'.' * candidate.level}{candidate.module or ''}", package
-                    )
+                    base = importlib.util.resolve_name(f"{'.' * candidate.level}{candidate.module or ''}", package)
                 except ImportError:
                     continue
             else:
@@ -335,9 +329,7 @@ def _central_harness_owner_violation(path: Path) -> str | None:
             elif isinstance(candidate, ast.ImportFrom):
                 if candidate.level:
                     try:
-                        base = importlib.util.resolve_name(
-                            f"{'.' * candidate.level}{candidate.module or ''}", package
-                        )
+                        base = importlib.util.resolve_name(f"{'.' * candidate.level}{candidate.module or ''}", package)
                     except ImportError:
                         base = ""
                 else:
@@ -560,18 +552,12 @@ def _central_harness_owner_violation(path: Path) -> str | None:
                     owners.add(owner)
             return frozenset(owners)
 
-        function_parents = {
-            child: parent
-            for parent in ast.walk(node)
-            for child in ast.iter_child_nodes(parent)
-        }
+        function_parents = {child: parent for parent in ast.walk(node) for child in ast.iter_child_nodes(parent)}
 
         def uncovered_expression_owners(expression: ast.AST) -> frozenset[str]:
             """Return owners whose values lack structural ancestry in this expression."""
             expression_parents = {
-                child: parent
-                for parent in ast.walk(expression)
-                for child in ast.iter_child_nodes(parent)
+                child: parent for parent in ast.walk(expression) for child in ast.iter_child_nodes(parent)
             }
             structural_calls = {
                 candidate
@@ -579,9 +565,7 @@ def _central_harness_owner_violation(path: Path) -> str | None:
                 if isinstance(candidate, ast.Call)
                 and (
                     (qualified_name(candidate.func) or "").rsplit(".", 1)[-1] in structural_leaves
-                    or (qualified_name(candidate.func) or "")
-                    .rsplit(".", 1)[-1]
-                    .startswith(("discover_", "scan_"))
+                    or (qualified_name(candidate.func) or "").rsplit(".", 1)[-1].startswith(("discover_", "scan_"))
                 )
             }
             central_support_calls = {
@@ -615,10 +599,7 @@ def _central_harness_owner_violation(path: Path) -> str | None:
                 else:
                     results = (comprehension.elt,)
                 result_names = {
-                    item.id
-                    for result in results
-                    for item in ast.walk(result)
-                    if isinstance(item, ast.Name)
+                    item.id for result in results for item in ast.walk(result) if isinstance(item, ast.Name)
                 }
                 for generator in comprehension.generators:
                     if result_names.intersection(target_names(generator.target)):
@@ -653,9 +634,8 @@ def _central_harness_owner_violation(path: Path) -> str | None:
                     if current in development_inventory_calls:
                         covered = True
                         break
-                    if (
-                        current in central_support_calls
-                        and candidate_owners.intersection(support_expression_owners(current))
+                    if current in central_support_calls and candidate_owners.intersection(
+                        support_expression_owners(current)
                     ):
                         covered = True
                         break
@@ -719,8 +699,7 @@ def _central_harness_owner_violation(path: Path) -> str | None:
                     summary = expression_summary(candidate.value)
                     if isinstance(candidate.value, ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp):
                         inventory_comprehension = any(
-                            isinstance(item, ast.Name) and item.id.isupper()
-                            for item in ast.walk(candidate.value)
+                            isinstance(item, ast.Name) and item.id.isupper() for item in ast.walk(candidate.value)
                         )
                         summary = (
                             summary[0] | raw_expression_owners(candidate.value),
@@ -740,8 +719,7 @@ def _central_harness_owner_violation(path: Path) -> str | None:
                         summary = (summary[0], summary[1] | {"runtime-direct-binding"})
                     uncovered_owners = (
                         uncovered_expression_owners(candidate.value)
-                        if summary[1]
-                        & {"central-test-support", "development-inventory", "structural-traversal"}
+                        if summary[1] & {"central-test-support", "development-inventory", "structural-traversal"}
                         else frozenset()
                     )
                     for target in candidate.targets:
@@ -771,35 +749,38 @@ def _central_harness_owner_violation(path: Path) -> str | None:
                     current_owners, current_evidence = bindings[binding]
                     argument_evidence = frozenset(
                         evidence
-                        for argument in (*candidate.value.args, *(keyword.value for keyword in candidate.value.keywords))
+                        for argument in (
+                            *candidate.value.args,
+                            *(keyword.value for keyword in candidate.value.keywords),
+                        )
                         for evidence in expression_summary(argument)[1]
                     )
                     argument_owners = frozenset(
                         owner
-                        for argument in (*candidate.value.args, *(keyword.value for keyword in candidate.value.keywords))
+                        for argument in (
+                            *candidate.value.args,
+                            *(keyword.value for keyword in candidate.value.keywords),
+                        )
                         for owner in raw_expression_owners(argument)
                     )
                     bindings[binding] = (
                         current_owners | argument_owners,
-                        current_evidence
-                        | argument_evidence
-                        | {"relational-data"},
+                        current_evidence | argument_evidence | {"relational-data"},
                     )
                     if (current_evidence | argument_evidence) & {
                         "central-test-support",
                         "development-inventory",
                         "structural-traversal",
                     }:
-                        binding_uncovered_owners[binding] = (
-                            binding_uncovered_owners.get(binding, frozenset())
-                            | frozenset(
-                                owner
-                                for argument in (
-                                    *candidate.value.args,
-                                    *(keyword.value for keyword in candidate.value.keywords),
-                                )
-                                for owner in uncovered_expression_owners(argument)
+                        binding_uncovered_owners[binding] = binding_uncovered_owners.get(
+                            binding, frozenset()
+                        ) | frozenset(
+                            owner
+                            for argument in (
+                                *candidate.value.args,
+                                *(keyword.value for keyword in candidate.value.keywords),
                             )
+                            for owner in uncovered_expression_owners(argument)
                         )
                 if (
                     isinstance(candidate, ast.Assign)
@@ -825,20 +806,14 @@ def _central_harness_owner_violation(path: Path) -> str | None:
                     loop_owners = raw_expression_owners(ancestor.iter)
                     for target_name in target_names(ancestor.target):
                         active_loop_owners[target_name] = loop_owners
-            parents = {
-                child: parent
-                for parent in ast.walk(assertion.test)
-                for child in ast.iter_child_nodes(parent)
-            }
+            parents = {child: parent for parent in ast.walk(assertion.test) for child in ast.iter_child_nodes(parent)}
             structural_calls = {
                 candidate
                 for candidate in ast.walk(assertion.test)
                 if isinstance(candidate, ast.Call)
                 and (
                     (qualified_name(candidate.func) or "").rsplit(".", 1)[-1] in structural_leaves
-                    or (qualified_name(candidate.func) or "").rsplit(".", 1)[-1].startswith(
-                        ("discover_", "scan_")
-                    )
+                    or (qualified_name(candidate.func) or "").rsplit(".", 1)[-1].startswith(("discover_", "scan_"))
                 )
             }
             assertion_owners: set[str] = set()
@@ -869,9 +844,8 @@ def _central_harness_owner_violation(path: Path) -> str | None:
                     if current in structural_calls:
                         covered = True
                         break
-                    if (
-                        isinstance(current, ast.Call)
-                        and candidate_owners.intersection(support_expression_owners(current))
+                    if isinstance(current, ast.Call) and candidate_owners.intersection(
+                        support_expression_owners(current)
                     ):
                         covered = True
                         support_covered = True
@@ -910,23 +884,22 @@ def _central_harness_owner_violation(path: Path) -> str | None:
                 assertion_owners.update(helper_owners)
                 if not helper_evidence:
                     assertion_runtime.update(helper_owners)
-            relational = isinstance(assertion.test, ast.Compare) or (
-                isinstance(assertion.test, ast.Call)
-                and (qualified_name(assertion.test.func) or "").rsplit(".", 1)[-1] in {"isinstance", "issubclass"}
-            ) or (
-                isinstance(assertion.test, ast.UnaryOp)
-                and isinstance(assertion.test.operand, ast.BinOp | ast.BoolOp | ast.Compare)
+            relational = (
+                isinstance(assertion.test, ast.Compare)
+                or (
+                    isinstance(assertion.test, ast.Call)
+                    and (qualified_name(assertion.test.func) or "").rsplit(".", 1)[-1] in {"isinstance", "issubclass"}
+                )
+                or (
+                    isinstance(assertion.test, ast.UnaryOp)
+                    and isinstance(assertion.test.operand, ast.BinOp | ast.BoolOp | ast.Compare)
+                )
             )
             if relational:
                 for candidate in ast.walk(assertion.test):
                     if isinstance(candidate, ast.Name) and candidate.id in bindings:
                         assertion_owners.update(bindings[candidate.id][0])
-            if (
-                relational
-                and not structural_calls
-                and declared_owner in assertion_owners
-                and len(assertion_owners) > 1
-            ):
+            if relational and not structural_calls and declared_owner in assertion_owners and len(assertion_owners) > 1:
                 assertion_runtime.clear()
             if relational and "central-test-support" in expression_summary(assertion.test)[1]:
                 assertion_runtime.clear()
@@ -1056,9 +1029,7 @@ def test_central_harness_ownership_gate_rejects_marker_import_mismatch(tmp_path:
     ("body", "expected"),
     [
         (
-            "class TestBehavior:\n"
-            "    def test_method(self) -> None:\n"
-            "        assert config.__dict__\n",
+            "class TestBehavior:\n    def test_method(self) -> None:\n        assert config.__dict__\n",
             "TestBehavior.test_method",
         ),
         (
@@ -1084,9 +1055,7 @@ def test_central_harness_ownership_gate_fails_closed_over_nested_and_unknown_own
     module = tmp_path / "cadrumo" / "tests" / f"test_{expected.replace('.', '_')}.py"
     module.parent.mkdir(parents=True)
     module.write_text(
-        "import pytest\nfrom ..core import config\n\n"
-        "pytestmark = [pytest.mark.unit, pytest.mark.hex_core]\n\n"
-        f"{body}",
+        f"import pytest\nfrom ..core import config\n\npytestmark = [pytest.mark.unit, pytest.mark.hex_core]\n\n{body}",
         encoding="utf-8",
     )
 

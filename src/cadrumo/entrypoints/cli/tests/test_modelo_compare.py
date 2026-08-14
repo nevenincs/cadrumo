@@ -44,12 +44,12 @@ from ....domain.calculations.registry import (
     calculate_registry_snapshot,
 )
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
-from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

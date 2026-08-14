@@ -309,13 +309,14 @@ def test_modelo_200_liquidacion_014_014b_formulas_use_segment_identities() -> No
         & liquida_refs
     )
 
-    # The fichero-BOE half of this assertion is deliberately absent. The
-    # `modelo-200-fichero-boe` layout was withdrawn from filing grade because its
-    # official record design carries producer fields with no canonical typed
-    # producer authority, and a partial layout would permit silent
-    # under-declaration. That withdrawal is asserted in
-    # `test_withdrawn_export_layouts.py`, which owns it for every withdrawn
-    # modelo; the segment-identity contract above stands on its own.
+    # The fichero-BOE half of this assertion is absent because the
+    # `modelo-200-fichero-boe` layout has never been built: its official record
+    # design carries producer fields with no canonical typed producer authority,
+    # and a partial layout would permit silent under-declaration. Nothing asserts
+    # that absence is correct -- it is a capability gap, reported by the filing
+    # capability worklist, which derives the list from the registry and clears a
+    # modelo the moment its layout is authored. The segment-identity contract
+    # above stands on its own.
 
 
 def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> None:

@@ -5,45 +5,30 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import date
-from pathlib import Path
 
 import pytest
 
 from .....core import CasillaId, validated_casilla_id
-from .....tests.locales_root_fixture import locales_root_scope
 from .._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
 from .._validate_label_artifacts import collect_label_artifact_findings, validate_no_label_artifacts
 from .._validate_registry_scope import validate_registry_scope
 from ._registry_schema_support import _committed_registry_tree
+from ._synthetic_locale_fixtures import _synthetic_locale_scope, synthetic_locale_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SAMPLE_UNRESOLVED_PLACEHOLDER = "{" + "0" + "}"
 _TEST_CASILLA_ID: CasillaId = validated_casilla_id("0001", surface="_TEST_CASILLA_ID")
-_TEST_LOCALES_ROOT: Path | None = None
+
+__all__ = ["_synthetic_locale_scope"]
 
 
 def _write_test_label(label: str) -> str:
     key = f"test.schema.casilla.{hashlib.sha256(label.encode('utf-8')).hexdigest()}.label"
-    if _TEST_LOCALES_ROOT is not None:
-        with (_TEST_LOCALES_ROOT / "es.yml").open("a", encoding="utf-8") as handle:
+    if synthetic_locale_state.root is not None:
+        with (synthetic_locale_state.root / "es.yml").open("a", encoding="utf-8") as handle:
             handle.write(f"{json.dumps(key)}: {json.dumps(label, ensure_ascii=False)}\n")
     return key
-
-
-@pytest.fixture(autouse=True)
-def _synthetic_locale_scope(tmp_path: Path, request):  # type: ignore[no-untyped-def]
-    global _TEST_LOCALES_ROOT
-    if "committed" in request.node.nodeid:
-        yield
-        return
-    (tmp_path / "es.yml").write_text("", encoding="utf-8")
-    with locales_root_scope(tmp_path):
-        _TEST_LOCALES_ROOT = tmp_path
-        try:
-            yield
-        finally:
-            _TEST_LOCALES_ROOT = None
 
 
 def _modelo_with_label(label: str) -> ModeloDefinition:

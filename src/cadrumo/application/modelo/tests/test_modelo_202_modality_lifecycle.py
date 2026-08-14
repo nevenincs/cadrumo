@@ -14,6 +14,10 @@ from pathlib import Path
 
 import pytest
 
+from ...tests._wizard_catalogue_fixtures import _register_wizard_catalogue
+
+__all__ = ["_register_wizard_catalogue"]
+
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
@@ -59,11 +63,6 @@ from .. import (
 from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@pytest.fixture(autouse=True, scope="session")
-def _register_wizard_catalogue() -> None:
-    from ...wizard import _catalogue  # noqa: F401  (import for registration side effect)
 
 
 _CLOCK = datetime(2026, 6, 5, 10, 0, tzinfo=UTC)

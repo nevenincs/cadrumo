@@ -16,10 +16,10 @@ from ....domain.modelos import (
     derive_work_unit_id,
     upsert_work_unit,
 )
+from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.profile_capsule import open_test_profile_session
 from ._modelo_work_ux_support import _create_profile, _invoke
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
-from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

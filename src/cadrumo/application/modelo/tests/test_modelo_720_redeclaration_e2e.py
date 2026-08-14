@@ -45,6 +45,10 @@ from pathlib import Path
 
 import pytest
 
+from ...tests._wizard_catalogue_fixtures import _register_wizard_catalogue
+
+__all__ = ["_register_wizard_catalogue"]
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -69,12 +73,6 @@ from .._verification_actions import verify_modelo_revision
 from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@pytest.fixture(autouse=True, scope="session")
-def _register_wizard_catalogue() -> None:
-    """Register the wizard SETUP_FLOW catalogue the work-unit applicability gate projects through."""
-    from ...wizard import _catalogue  # noqa: F401  (import for registration side effect)
 
 
 _BUCKET_ID = "9a1c0e5e-2b1c-4f0e-8f7c-9d2f5b6a7c31"

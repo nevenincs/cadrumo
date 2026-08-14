@@ -744,16 +744,6 @@ ignore_imports =
     # and master-key facades. Classify this exact shared-helper edge so tests
     # can exercise real session lifecycle without weakening production layers.
     cadrumo.tests.master_key -> cadrumo.adapters.**
-    # The manual-ledger action support centralises its concrete adapter
-    # constructors here so split application tests keep one test-support edge.
-    cadrumo.tests.ledger_action_adapters -> cadrumo.adapters.**
-    # Review-package roundtrip tests centralise raw storage/sql probes here so
-    # application tests do not each own direct adapter pins.
-    cadrumo.tests.review_package_adapters -> cadrumo.adapters.**
-    # The custody-store recovery matrix centralises its real concrete adapter
-    # constructors here so the application test owns one test-support edge
-    # instead of eleven direct adapter pins.
-    cadrumo.tests.custody_store_matrix_adapters -> cadrumo.adapters.**
     # The shared justificante parse-cache test helper imports the inbound
     # justificante adapter for roundtrip-discipline fixtures; same rationale.
     cadrumo.tests._justificante_parse_cache -> cadrumo.adapters.**

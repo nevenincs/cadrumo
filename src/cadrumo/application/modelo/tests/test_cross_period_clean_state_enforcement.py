@@ -9,6 +9,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from ...tests._wizard_catalogue_fixtures import _register_wizard_catalogue
+
+__all__ = ["_register_wizard_catalogue"]
+
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
@@ -102,11 +106,6 @@ _DECLARED_CROSS_PERIOD_PROFILE_IDS = {
     ("202", "2P"): "20200000-0000-4000-8000-000000000202",
     ("200", "0A"): "20000000-0000-4000-8000-000000000200",
 }
-
-
-@pytest.fixture(autouse=True, scope="session")
-def _register_wizard_catalogue() -> None:
-    from ...wizard import _catalogue  # noqa: F401  (import for registration side effect)
 
 
 def _workflow_profile() -> TaxpayerProfile:

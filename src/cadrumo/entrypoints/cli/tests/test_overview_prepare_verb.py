@@ -20,11 +20,11 @@ import pytest
 from pydantic import ValidationError
 
 from ....application.overview import DataPrepStepId, DataPrepStepState
+from ....tests.cli_envelope import unwrap_envelope_notices as _notices
+from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .._overview_payloads import OverviewPrepareStepPayload
 from ._modelo_work_ux_support import _create_profile, _invoke
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
-from .envelope_helpers import unwrap_envelope_notices as _notices
-from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -6,7 +6,7 @@ from functools import lru_cache
 
 import pytest
 
-from ._modelo_100_legal_refs_support import (
+from ._modelo_100_registry_support import (
     _ANUALIDADES_ALIMENTOS_TOTAL_CASILLA,
     _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
     _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,

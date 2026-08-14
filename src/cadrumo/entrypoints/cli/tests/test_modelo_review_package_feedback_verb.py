@@ -50,18 +50,17 @@ from ....application.modelo import (
     RecipientFingerprintRegistryRepository,
     ensure_recipient_encryption_keypair,
     recipient_encryption_public_key,
-    resolve_registry_revision_for_work_target,
 )
 from ....application.workflow import workflow_state_repository
-from ....core import STR_KEYED_MAPPING_ADAPTER, CasillaId, Period, validated_casilla_id
+from ....core import STR_KEYED_MAPPING_ADAPTER, CasillaId, validated_casilla_id
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import UserProfileFact
+from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ._modelo_review_package_support import seed_exportable_modelo_revision
-from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -76,15 +75,6 @@ def _payload_string(output: str, key: str) -> str:
     value = STR_KEYED_MAPPING_ADAPTER.validate_python(_payload(output))[key]
     assert isinstance(value, str)
     return value
-
-
-def _active_registry_revision_id(*, modelo: str, filing_year: int, period: str) -> str:
-    return resolve_registry_revision_for_work_target(
-        modelo=modelo,
-        filing_year=filing_year,
-        period=Period.from_year_and_code(filing_year, period),
-        registry_revision_id=None,
-    )
 
 
 @pytest.fixture(autouse=True)

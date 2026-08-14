@@ -17,11 +17,11 @@ from ....application.workflow import workflow_state_repository
 from ....core import require_active_bucket_id
 from ....core.config import override_settings
 from ....core.hashing import sha256_hex
+from ....tests.cli_envelope import unwrap_cli_result, unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from .envelope_helpers import unwrap_cli_result, unwrap_envelope_notices
 
 # INTENTIONAL: integration because it exercises the notifications CLI surface against
 # isolated local storage without contacting AEAT.

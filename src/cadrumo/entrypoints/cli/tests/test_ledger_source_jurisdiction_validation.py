@@ -3,20 +3,17 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ._ledger_validation_support import _invoke, _set_profile_axis, open_bucket_session
+from ._ledger_validation_fixtures import _open_bucket_session
+from ._ledger_validation_support import _invoke, _set_profile_axis
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-@pytest.fixture(autouse=True)
-def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
-    with open_bucket_session(tmp_path):
-        yield
+__all__ = ["_open_bucket_session"]
 
 
 def test_ledger_add_defaults_source_jurisdiction_to_es_for_resident_general(

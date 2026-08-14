@@ -86,7 +86,6 @@ def _m349_snapshot(*, period: str) -> RegistrySnapshot:
         application_links={item.id: item for item in revision.application_links},
         deadline_windows={item.id: item for item in revision.deadline_windows},
         filing_schedules={item.id: item for item in revision.filing_schedules},
-        support_removal_decisions={item.id: item for item in revision.support_removal_decisions},
         constructs={item.id: item for item in revision.constructs},
         dependency_classifications={item.id: item for item in revision.dependency_classifications},
     )

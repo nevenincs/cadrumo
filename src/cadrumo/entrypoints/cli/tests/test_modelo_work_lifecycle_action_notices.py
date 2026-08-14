@@ -11,10 +11,10 @@ from click.testing import Result
 
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.errors import ErrorCategory, get_error_exit_code
+from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_runner import semantic_cli_output
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_profile, _invoke
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
-from .envelope_helpers import unwrap_envelope_notices as _notices
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

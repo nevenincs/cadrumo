@@ -21,7 +21,6 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
-from .....tests.locales_root_fixture import locales_root_scope
 from .. import LegalRefId, load_modelo_directory
 from .._errors import RegistryValidationError
 from .._modelo_localization import casilla_occurrence_locale_key
@@ -41,35 +40,21 @@ from .._validate_cross_revision import (
 )
 from .._validate_registry_scope import validate_registry_scope
 from ._registry_schema_support import _committed_registry_tree
+from ._synthetic_locale_fixtures import _synthetic_locale_scope, synthetic_locale_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_TEST_LOCALES_ROOT: Path | None = None
+
+__all__ = ["_synthetic_locale_scope"]
 
 
 def _write_test_label(label: str) -> str:
     """Enroll one synthetic Spanish value in the test-only catalogue."""
     key = f"test.schema.casilla.{hashlib.sha256(label.encode('utf-8')).hexdigest()}.label"
-    if _TEST_LOCALES_ROOT is not None:
-        with (_TEST_LOCALES_ROOT / "es.yml").open("a", encoding="utf-8") as handle:
+    if synthetic_locale_state.root is not None:
+        with (synthetic_locale_state.root / "es.yml").open("a", encoding="utf-8") as handle:
             handle.write(f"{json.dumps(key)}: {json.dumps(label, ensure_ascii=False)}\n")
     return key
-
-
-@pytest.fixture(autouse=True)
-def _synthetic_locale_scope(tmp_path: Path, request):  # type: ignore[no-untyped-def]
-    """Give synthetic schema fixtures a real shared Spanish catalogue."""
-    global _TEST_LOCALES_ROOT
-    if "committed" in request.node.nodeid:
-        yield
-        return
-    (tmp_path / "es.yml").write_text("", encoding="utf-8")
-    with locales_root_scope(tmp_path):
-        _TEST_LOCALES_ROOT = tmp_path
-        try:
-            yield
-        finally:
-            _TEST_LOCALES_ROOT = None
 
 
 def _casilla(
@@ -325,8 +310,8 @@ source_refs = ["aeat-manual"]
     _write_test_label("New")
     for revision_id, label in (("2024", "Old"), ("2025", "New")):
         key = casilla_occurrence_locale_key("999", revision_id, "0700", "label")
-        if _TEST_LOCALES_ROOT is not None:
-            with (_TEST_LOCALES_ROOT / "es.yml").open("a", encoding="utf-8") as handle:
+        if synthetic_locale_state.root is not None:
+            with (synthetic_locale_state.root / "es.yml").open("a", encoding="utf-8") as handle:
                 handle.write(f"{json.dumps(key)}: {json.dumps(label)}\n")
     return target
 

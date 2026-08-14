@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -15,16 +14,11 @@ from ._ledger_ux_support import (
     _FOUR_ROW_OFX,
     _N26_HEADER,
     _invoke,
-    _open_ledger_ux_session,
+    _open_bucket_session,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
-    with _open_ledger_ux_session(tmp_path):
-        yield
+__all__ = ["_open_bucket_session"]
 
 
 def _json_document(output: str) -> dict[str, object]:

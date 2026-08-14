@@ -42,6 +42,11 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from pydantic import ValidationError
 
+from ....adapters.persistence.storage import (
+    MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _ENCRYPTION_KEY_NAMESPACE,
+)
+from ....adapters.persistence.storage.sql import SecureObjectRow
+from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import Period, validated_casilla_id
 from ....domain.calculations.registry import CasillaObservation
 from ....domain.modelos import (
@@ -52,13 +57,6 @@ from ....domain.modelos import (
     WorkUnitState,
     derive_calculation_revision_id,
     derive_work_unit_id,
-)
-from ....tests.review_package_adapters import (
-    MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _ENCRYPTION_KEY_NAMESPACE,
-)
-from ....tests.review_package_adapters import (
-    SecureObjectRow,
-    session_scope,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._review_package import build_review_package

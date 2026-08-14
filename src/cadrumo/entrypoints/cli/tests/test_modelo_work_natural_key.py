@@ -8,12 +8,12 @@ from pathlib import Path
 import pytest
 
 from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....tests.cli_envelope import unwrap_envelope_notices as _notices
+from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from ._modelo_work_ux_support import _seed_m111_retencion_observation
-from .envelope_helpers import unwrap_envelope_notices as _notices
-from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

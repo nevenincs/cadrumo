@@ -113,8 +113,16 @@ def _headroom_revision() -> ModeloRevision:
     tests measure message length, not grounding -- so any committed M100
     revision serves; the resident registry authority is real rather than a
     hand-built stub.
+
+    The revision is reached by resolving its id from the filing scope and then
+    reading the declaration, rather than by building a filing-grade snapshot.
+    Measuring an advisory's rendered length is not a filing operation, and a
+    snapshot would additionally demand operator review of a revision these tests
+    never file.
     """
-    return resources().modelos.authority.snapshot("100", filing_year=2024, period="0A").revision
+    authority = resources().modelos.authority
+    revision_id = authority.inspect_revision("100", filing_year=2024, period="0A").revision_id
+    return authority.modelo("100").revisions[revision_id]
 
 
 def _advisory_builders() -> list[tuple[str, Callable[[], CalculationSourceDiagnostic]]]:

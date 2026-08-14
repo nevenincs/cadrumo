@@ -130,4 +130,3 @@ def test_application_owned_journal_name_agrees_with_the_registry() -> None:
         storage_location(StorageCategory.CONFIG_RESET_JOURNAL).subpath
         == _config_reset_repository.CONFIG_RESET_JOURNAL_DIRNAME
     )
-

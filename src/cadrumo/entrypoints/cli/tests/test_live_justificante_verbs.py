@@ -25,6 +25,7 @@ __all__ = ["_isolated_backend"]
 # registration wiring without contacting AEAT.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+
 def _invoke_justificante(args: Sequence[str]) -> Result:
     return invoke_cached_cli(["app", "live", "justificante", *args])
 

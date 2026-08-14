@@ -20,6 +20,7 @@ from ....domain.modelos import Modelo210AgrupacionRentaRow, ModeloError
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
+from ...tests._wizard_catalogue_fixtures import _register_wizard_catalogue
 from .._calculation_actions import calculate_modelo_revision
 from .._work_lifecycle import create_work_unit
 
@@ -30,10 +31,7 @@ _CLOCK = datetime(2026, 7, 10, 9, 0, 0, tzinfo=UTC)
 _FILING_YEAR = 2025
 
 
-@pytest.fixture(autouse=True, scope="session")
-def _register_wizard_catalogue() -> None:
-    """Match the production profile-readiness registration used by work creation."""
-    from ...wizard import _catalogue  # noqa: F401
+__all__ = ["_register_wizard_catalogue"]
 
 
 @contextmanager

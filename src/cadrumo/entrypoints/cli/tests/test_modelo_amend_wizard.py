@@ -44,6 +44,7 @@ from ....core.flows import FlowMode
 from ....core.resources import resources
 from ....domain.justificante import Justificante
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
+from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.profile_capsule import open_test_profile_session
@@ -63,7 +64,6 @@ from .._modelo_amend_wizard_cli import (
 )
 from .._modelo_cli_support import load_calculation_revision
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_m303_work_unit
-from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

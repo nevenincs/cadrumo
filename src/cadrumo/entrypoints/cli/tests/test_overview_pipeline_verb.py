@@ -32,12 +32,12 @@ from ....domain.modelos import (
     derive_verification_report_id,
     upsert_verification_report,
 )
+from ....tests.cli_envelope import unwrap_envelope_notices as _notices
+from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.profile_capsule import open_test_profile_session
 from .._overview_payloads import OverviewPipelineModeloPayload
 from ._modelo_work_ux_support import _create_profile, _invoke
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
-from .envelope_helpers import unwrap_envelope_notices as _notices
-from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

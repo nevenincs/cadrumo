@@ -13,8 +13,7 @@ no field to name and must survive verbatim.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
-from pathlib import Path
+from collections.abc import Sequence
 
 import pytest
 from click.testing import Result
@@ -32,7 +31,9 @@ from .._overview import (
     _IRPF_INCOME_CATEGORIES_SELECTOR,
     _undeclared_taxpayer_model_refusal,
 )
-from ._overview_calendar_support import isolated_calendar_backend
+from ._overview_calendar_support import _isolated_backend
+
+__all__ = ["_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -47,12 +48,6 @@ _NON_PROFILE_WARNING_CODE = "censo.enrolment_unverified"
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_calendar_backend(tmp_path):
-        yield
 
 
 def _grounding_index():

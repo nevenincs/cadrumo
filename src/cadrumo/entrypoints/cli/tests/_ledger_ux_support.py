@@ -7,6 +7,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 
+import pytest
 from click.testing import Result
 
 from ....tests.cli_runner import invoke_cached_cli
@@ -59,6 +60,12 @@ def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Res
 @contextmanager
 def _open_ledger_ux_session(tmp_path: Path) -> Iterator[None]:
     with open_bucket_session(tmp_path):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
+    with _open_ledger_ux_session(tmp_path):
         yield
 
 

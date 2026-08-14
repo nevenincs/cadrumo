@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 
 from ....core.resources import resources
+from ....tests.cli_envelope import unwrap_envelope_notices as _notices
+from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
-from .envelope_helpers import unwrap_envelope_notices as _notices
-from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

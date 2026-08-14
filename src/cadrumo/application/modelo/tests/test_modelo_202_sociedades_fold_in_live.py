@@ -85,6 +85,10 @@ from pathlib import Path
 
 import pytest
 
+from ...tests._wizard_catalogue_fixtures import _register_wizard_catalogue
+
+__all__ = ["_register_wizard_catalogue"]
+
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -109,11 +113,6 @@ from .. import (
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@pytest.fixture(autouse=True, scope="session")
-def _register_wizard_catalogue() -> None:
-    from ...wizard import _catalogue  # noqa: F401  (import for registration side effect)
 
 
 _BUCKET_ID = "7a432b52-bcc2-4e8c-a150-93a0f33812f3"

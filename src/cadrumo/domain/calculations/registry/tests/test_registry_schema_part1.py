@@ -33,7 +33,6 @@ from ._registry_schema_support import (
     RegistryLoadError,
     RegistryValidationError,
     RegistryValidator,
-    SupportRemovalDecisionDefinition,
     ValidationError,
     _committed_modelo,
     _committed_registry,
@@ -141,11 +140,6 @@ def test_committed_snapshot_exposes_expected_metadata(
         "modelo-130-calculation-verification",
         "modelo-130-2019-y-siguientes-reconcile-when-present",
     )
-    removal = modelo_130_snapshot.support_removal_decisions["modelo-130-fichero-boe-support-removal"]
-    assert removal.subject_type == "export_layout"
-    assert removal.subject_id == "modelo-130-fichero-boe"
-    assert removal.decision == "remove_from_filing_grade"
-    assert removal.legal_refs and removal.source_refs and removal.evidence_note
     assert tuple(modelo_130_snapshot.deadline_windows) == _EXPECTED_DEADLINE_WINDOWS
     assert set(modelo_130_snapshot.application_links) >= _REQUIRED_APPLICATION_LINKS
 
@@ -375,50 +369,6 @@ def test_validator_requires_workbook_parity_coverage() -> None:
 
     with pytest.raises(RegistryValidationError, match="must declare official workbook parity coverage"):
         _validate_revision(modelo, catalogues, revision)
-
-
-def test_modelo_file_rejects_unknown_support_removal_decision(tmp_path: Path) -> None:
-    path = tmp_path / "130.toml"
-    _copy_committed_modelo(path)
-    path.write_text(
-        path.read_text(encoding="utf-8")
-        + """
-
-[[revisions."2019-y-siguientes".support_removal_decisions]]
-id = "modelo-130-invalid-removal-decision"
-subject_type = "filing_path"
-subject_id = "cadrumo.entrypoints.cli.modelo"
-decision = "not_a_supported_removal_decision"
-reason = "out_of_scope"
-evidence_note = "Invalid support-removal decision value."
-legal_refs = ["rd-439-2007:art-110"]
-source_refs = ["aeat-dr-130-2019-v12"]
-""",
-        encoding="utf-8",
-    )
-
-    with pytest.raises(RegistryLoadError, match="remove_from_filing_grade"):
-        load_modelo_file(path)
-
-
-def test_validator_rejects_removal_decision_for_active_registry_surface() -> None:
-    modelo, catalogues = _committed_modelo("131")
-    revision = modelo.revisions["2026"]
-    layout = revision.export_layouts[0]
-    decision = SupportRemovalDecisionDefinition(
-        id="modelo-131-remove-active-export",
-        subject_type="export_layout",
-        subject_id=layout.id,
-        decision="remove_from_filing_grade",
-        reason="out_of_scope",
-        evidence_note="The active export layout cannot also be recorded as removed.",
-        legal_refs=layout.legal_refs,
-        source_refs=layout.source_refs,
-    )
-    mutated = revision.model_copy(update={"support_removal_decisions": (decision,)})
-
-    with pytest.raises(RegistryValidationError, match="but it is still present"):
-        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_modelo_file_rejects_formula_workbook_without_runner(tmp_path: Path) -> None:
@@ -822,10 +772,6 @@ def test_validator_rejects_the_modelo_200_envelope_open_tag_collapsed_onto_one_d
     modelo, _catalogues = _committed_modelo("200")
     revision = modelo.revisions["2024-y-siguientes"]
     assert revision.export_layouts == ()
-    assert any(
-        decision.subject_type == "export_layout" and decision.decision == "remove_from_filing_grade"
-        for decision in revision.support_removal_decisions
-    )
 
 
 def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_declarant() -> None:
@@ -845,11 +791,6 @@ def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_de
     modelo, _catalogues = _committed_modelo("200")
     revision = modelo.revisions["2024-y-siguientes"]
     assert revision.export_layouts == ()
-    decisions = tuple(
-        decision for decision in revision.support_removal_decisions if decision.subject_type == "export_layout"
-    )
-    assert decisions
-    assert all(decision.legal_refs and decision.source_refs and decision.evidence_note for decision in decisions)
 
 
 def test_validator_rejects_parameter_without_official_source_guidance() -> None:

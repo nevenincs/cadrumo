@@ -57,6 +57,7 @@ from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations import CalculationObservationRepository
+from ...tests._wizard_catalogue_fixtures import _register_wizard_catalogue
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -67,20 +68,7 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.fixture(autouse=True, scope="session")
-def _register_wizard_catalogue() -> None:
-    """Register the wizard SETUP_FLOW catalogue for the session.
-
-    The live first-year flag (:func:`_first_year_modalidad_cuota_no_m202`) calls
-    ``taxpayer_profile_from_mapping``, which reads ``get_setup_flow()`` and
-    fail-closes (flag -> False) on :class:`WizardCatalogueNotRegisteredError`. The
-    production CLI registers the catalogue at startup; importing
-    ``cadrumo.application.wizard._catalogue`` triggers the same registration as an
-    import-time side effect. Without it the first-year zero-resolution silently
-    never fires - precisely the live plumbing this E2E must exercise.
-    """
-    from ...wizard import _catalogue  # noqa: F401  (import for registration side effect)
-
+__all__ = ["_register_wizard_catalogue"]
 
 _BUCKET_ID = "234af0d3-5002-452b-9eff-80bbc1de0c84"
 _T0 = datetime(2026, 1, 12, 10, 0, tzinfo=UTC)

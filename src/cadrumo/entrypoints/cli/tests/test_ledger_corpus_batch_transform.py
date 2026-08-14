@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from ._isolated_profile_storage_fixtures import live_fx_isolated_backend
 from ._ledger_corpus_support import (
     _import_corpus,
     _invoke,
@@ -14,7 +15,8 @@ from ._ledger_corpus_support import (
     _oracle_rules,
     _set_group,
 )
-from ._ledger_corpus_support import _isolated_backend as _isolated_backend
+
+__all__ = ["live_fx_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -130,26 +130,6 @@ def test_modelo_100_latest_revision_carries_declared_portal_compatibility_refs()
     assert actual == expected
 
 
-def test_no_modelo_currently_declares_a_deprecation() -> None:
-    """Honest negative: the bundled registry declares zero support-removal decisions today.
-
-    ``is_deprecated`` must therefore be ``False`` for every entry; this is a
-    real absence on disk, not a gap in the projection (``no-silent-under-
-    declaration`` cuts both ways: a claim of "no deprecations" must itself be
-    verified against the source, not assumed).
-    """
-    authority = bundled_authority()
-    entries = _entries()
-
-    for modelo in authority.modelos:
-        for revision in modelo.revisions.values():
-            assert not revision.support_removal_decisions, (
-                f"modelo {modelo.id!r} revision {revision.id!r} declares a support-removal decision; "
-                "update this test's honest-negative assumption"
-            )
-        assert not entries[modelo.id].is_deprecated
-
-
 def test_build_support_matrix_is_never_a_fabricated_positive() -> None:
     """Anti-tautology proof: every capability flag is re-derived directly from the loaded revision.
 
@@ -174,5 +154,4 @@ def test_build_support_matrix_is_never_a_fabricated_positive() -> None:
         assert entry.extraction_profile_count == len(revision.extraction_profiles)
         assert entry.has_completeness_manifest == (revision.completeness_manifest is not None)
         assert len(entry.renames) == len(revision.casilla_continuidad_evolutions)
-        assert len(entry.deprecations) == len(revision.support_removal_decisions)
         assert len(entry.portal_compatibility_refs) == len(revision.live_cross_references)

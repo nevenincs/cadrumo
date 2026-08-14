@@ -15,19 +15,18 @@ flags and therefore have no ValidationError path to exercise here.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
+from ._ledger_validation_fixtures import _open_bucket_session
 from ._ledger_validation_support import (
     _add_eligible_mixed_expense,
     _assert_pipeline_managed_state_refusal,
     _create_profile_and_import,
     _flatten_box,
     _invoke,
-    open_bucket_session,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -40,19 +39,7 @@ def _assert_negative_amount_refusal(result: Result) -> None:
     assert "--direction" in combined, combined
 
 
-@pytest.fixture(autouse=True)
-def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
-    """Hold an active bucket session open across this module's in-process invokes.
-
-    The active bucket session is a per-process/per-context ContextVar opened by
-    the storage master-key provider. The profile id is now an immutable bucket
-    id distinct from the display label, so these tests seed the real profile
-    record under the same id as the held storage span rather than creating a
-    UUID-backed profile via a separate in-process CLI invoke.
-    """
-    with open_bucket_session(tmp_path):
-        yield
-
+__all__ = ["_open_bucket_session"]
 
 # ---------------------------------------------------------------------------
 # contract.1  ledger add — business_pct set without MIXED classification

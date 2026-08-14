@@ -24,11 +24,13 @@ with no inference.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
-from pathlib import Path
 from typing import Any
 
 import pytest
+
+from ....tests._consent_profile_fixture import consent_profile
+
+__all__ = ["consent_profile"]
 
 from ....application.ledger import (
     DocumentTranscription,
@@ -39,11 +41,10 @@ from ....application.ledger import (
 )
 from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _DIGEST = "c" * 64
 _REFERENCE = "ev-consent-cli"
 _CLOUD_STAMP = "llm:openai-text-extract:gpt-4.1:rates-2026A-abcdef"
@@ -54,13 +55,6 @@ _TEXT_LAYER = TranscriberIdentity(
     name="pdfplumber-text-layer",
     revision="0.11.4",
 )
-
-
-@pytest.fixture
-def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    """A real isolated runtime profile; both verbs open a bucket."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as resolved:
-        yield resolved
 
 
 def _seed_cloud_artefact(profile: TestRuntimeProfile, *, reference: str = _REFERENCE) -> None:

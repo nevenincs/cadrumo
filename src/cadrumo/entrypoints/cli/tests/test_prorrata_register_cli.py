@@ -10,7 +10,6 @@ fix through the real encrypted repository under an in-process bucket session.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
 
@@ -30,21 +29,15 @@ from ....domain.prorrata_register import (
     SectorDefinition,
 )
 from ....tests.secure_sql import isolated_runtime_profile
+from ._cli_surface_profile_fixture import _isolated_backend
 from ._cli_surface_support import (
     _invoke,
     _json,
-    create_cli_surface_profile,
-    isolated_cli_surface_backend,
 )
 
+__all__ = ["_isolated_backend"]
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_cli_surface_backend(tmp_path):
-        create_cli_surface_profile()
-        yield
 
 
 def _prorrata_list() -> dict[str, object]:

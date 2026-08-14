@@ -9,6 +9,7 @@ import pytest
 
 from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
+from ._isolated_profile_storage_fixtures import live_fx_isolated_backend
 from ._ledger_corpus_support import (
     _REVISION_CASILLA,
     _active_repo,
@@ -18,7 +19,8 @@ from ._ledger_corpus_support import (
     _invoke,
     _list_rows,
 )
-from ._ledger_corpus_support import _isolated_backend as _isolated_backend
+
+__all__ = ["live_fx_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

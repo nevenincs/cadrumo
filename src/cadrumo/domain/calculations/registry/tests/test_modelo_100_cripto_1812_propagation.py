@@ -54,16 +54,6 @@ _M100_CRIPTO_GANANCIA_SUMA_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
-
-
-@pytest.fixture
-def m100_2025_snapshot(registry_authority: ValidatedRegistryAuthority):
-    return registry_authority.snapshot("100", filing_year=2025, period="0A")
-
-
 def _binding_values_2024() -> dict[BindingId, Decimal]:
     return {
         "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),

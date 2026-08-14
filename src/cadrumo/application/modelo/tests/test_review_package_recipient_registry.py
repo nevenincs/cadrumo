@@ -31,15 +31,12 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from pydantic import ValidationError
 
-from ....tests.review_package_adapters import (
+from ....adapters.persistence.storage import DecryptionError, SensitivityClass
+from ....adapters.persistence.storage import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
 )
-from ....tests.review_package_adapters import (
-    DecryptionError,
-    SecureObjectRow,
-    SensitivityClass,
-    session_scope,
-)
+from ....adapters.persistence.storage.sql import SecureObjectRow
+from ....adapters.persistence.storage.sql.session import session_scope
 from ....tests.secure_sql import isolated_runtime_profile
 from .._review_package_recipient_registry import (
     RecipientAlreadyRegisteredError,

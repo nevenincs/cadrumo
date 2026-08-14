@@ -12,8 +12,6 @@ hand-enumerated, so the gate fails if the manifest drops or distorts any family.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -24,17 +22,10 @@ from ....application.operator_surface import (
     build_operator_surface_contract,
 )
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_sessionless_storage_root
+from ._isolated_profile_storage_fixtures import _isolated_state
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_state(tmp_path: Path) -> Iterator[None]:
-    # The command is read-only and session-free, but storage isolation
-    # keeps the run off any shared local-state root.
-    with isolated_sessionless_storage_root(tmp_path=tmp_path):
-        yield
+__all__ = ["_isolated_state"]
 
 
 def _manifest() -> dict[str, Any]:

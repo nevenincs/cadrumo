@@ -19,9 +19,10 @@ from decimal import Decimal
 import pytest
 import typer
 
-from ....core.config import override_settings
-from ....core.i18n import clear_output_language_cache
 from .._common import parse_decimal_amount, parse_optional_decimal_amount
+from ._strict_cli_fixture_support import english_locale_fixture
+
+__all__ = ["english_locale_fixture"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -39,15 +40,6 @@ _ACCEPTED_NONNEGATIVE = (
     ("0.5", Decimal("0.5")),
     ("21.00", Decimal("21.00")),
 )
-
-
-@pytest.fixture(autouse=True)
-def _english_locale() -> object:
-    """Pin output language to English so refusal rendering is deterministic."""
-    with override_settings(cadrumo_output_language="en"):
-        clear_output_language_cache()
-        yield
-    clear_output_language_cache()
 
 
 def test_parse_decimal_amount_refuses_non_canonical() -> None:

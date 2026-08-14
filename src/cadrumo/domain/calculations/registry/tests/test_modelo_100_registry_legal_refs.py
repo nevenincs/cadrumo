@@ -6,7 +6,7 @@ import pytest
 
 from .....core import validated_casilla_id
 from .. import expression_casilla_refs
-from ._modelo_100_legal_refs_support import (
+from ._modelo_100_registry_support import (
     _AUTONOMIC_DEDUCTION_ART_77_REF,
     _BASE_IMPONIBLE_AHORRO_CASILLA,
     _BROAD_DEDUCTION_ART_68_REF,

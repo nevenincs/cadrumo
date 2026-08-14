@@ -32,7 +32,6 @@ from ._referential_integrity_support import (
     RegistryCatalogues,
     RegistryValidationError,
     RelationDefinition,
-    SupportRemovalDecisionDefinition,
     build_minimal_snapshot,
     build_snapshot_with_missing_legal,
     check_all_id_references,
@@ -142,16 +141,6 @@ def test_snapshot_integrity_rejects_dangling_legal_refs_on_revision_surfaces() -
         legal_refs=(REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
-    decision = SupportRemovalDecisionDefinition(
-        id="srd.test",
-        subject_type="application_link",
-        subject_id="al.removed",
-        decision="remove_from_filing_grade",
-        reason="out_of_scope",
-        evidence_note="test",
-        legal_refs=(REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID),
-        source_refs=(REFERENCE_SOURCE_ID,),
-    )
     layout = ExportLayoutDefinition(
         id="el.test",
         source_refs=(REFERENCE_SOURCE_ID,),
@@ -160,7 +149,6 @@ def test_snapshot_integrity_rejects_dangling_legal_refs_on_revision_surfaces() -
     cases = (
         (minimal_revision(application_links=(minimal_application_link("filing"), link)), r"application_link al.test2"),
         (minimal_revision(deadline_windows=(window,)), r"deadline_window dw.test"),
-        (minimal_revision(support_removal_decisions=(decision,)), r"support_removal_decision srd.test"),
         (minimal_revision(export_layouts=(layout,)), r"export_layout el.test"),
         (
             minimal_revision().model_copy(update={"legal_refs": (REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID)}),
@@ -169,29 +157,6 @@ def test_snapshot_integrity_rejects_dangling_legal_refs_on_revision_surfaces() -
     )
     for revision, surface_match in cases:
         _assert_missing_legal_ref_rejected(revision, rf"{surface_match}.legal_refs")
-
-
-def test_modelo_validation_rejects_support_removal_sourced_only_by_executable_parity() -> None:
-    decision = SupportRemovalDecisionDefinition(
-        id="srd.test",
-        subject_type="application_link",
-        subject_id="al.removed",
-        decision="remove_from_filing_grade",
-        reason="out_of_scope",
-        evidence_note="Removed filing-grade support must be grounded in official source evidence.",
-        legal_refs=(REFERENCE_LEGAL_ID,),
-        source_refs=(_PARITY_SOURCE_ID,),
-    )
-    revision = minimal_revision(support_removal_decisions=(decision,))
-
-    with pytest.raises(
-        RegistryValidationError,
-        match=(
-            r"support removal decision srd\.test "
-            r"requires one of official_source_guidance, layout_authority source evidence"
-        ),
-    ):
-        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
 
 
 def test_dangling_construct_casilla_ref() -> None:

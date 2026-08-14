@@ -58,14 +58,14 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ._ledger_ux_support import _invoke, _open_ledger_ux_session
+from ._ledger_ux_support import _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["_open_bucket_session"]
 
 
 def _redacted(tax_id: str) -> str:
@@ -95,12 +95,6 @@ _ISSUE_DATE = "2024-11-20"
 _TAXABLE_BASE = "100.00"
 #: Base plus the 21% cuota plus the 5.2% recargo de equivalencia the document charges.
 _GRAND_TOTAL = "126.20"
-
-
-@pytest.fixture(autouse=True)
-def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
-    with _open_ledger_ux_session(tmp_path):
-        yield
 
 
 def _add_evidence(tmp_path: Path, *, filename: str = "factura.xml") -> str:

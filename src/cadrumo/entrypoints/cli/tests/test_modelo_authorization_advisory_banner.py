@@ -10,7 +10,7 @@ See Also:
     :class:`~core.access_gate.ModeloAuthorization`
         Derived authorization capability queried by the test before driving
         the real Modelo 117 work-calculate flow.
-    :func:`~entrypoints.cli.tests.envelope_helpers.unwrap_envelope_notices`
+    :func:`~tests.cli_envelope.unwrap_envelope_notices`
         Envelope helper used to assert the advisory travels on the uniform
         notices channel.
 """
@@ -25,10 +25,10 @@ import pytest
 from ....core.access_gate import AuthorizationState
 from ....core.resources import resources
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from .envelope_helpers import unwrap_envelope_notices, unwrap_schema_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

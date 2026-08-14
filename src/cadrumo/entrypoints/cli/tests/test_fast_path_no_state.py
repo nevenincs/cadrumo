@@ -23,7 +23,6 @@ interpreter and import startup, which an operator pays once.
 from __future__ import annotations
 
 import time
-from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -31,7 +30,7 @@ import pytest
 
 from ....core import PRODUCT_IDENTITY, StorageCategory, pointer_path, storage_location
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_sessionless_storage_root
+from ._sessionless_root_fixtures import _sessionless_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -45,12 +44,7 @@ if TYPE_CHECKING:
 _FAST_PATH_BUDGET_MS = 200.0
 
 
-@pytest.fixture
-def _clean_storage_root(tmp_path: Path) -> Iterator[Path]:
-    """A pristine storage root: no pointer, no database, no buckets."""
-
-    with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:
-        yield storage_root
+__all__ = ["_sessionless_root"]
 
 
 def _warm() -> None:
@@ -74,7 +68,7 @@ def _fastest_ms(args: list[str], *, runs: int = 5) -> tuple[float, Result]:
     return best, result
 
 
-def test_version_completes_under_budget_on_clean_root(_clean_storage_root: Path) -> None:
+def test_version_completes_under_budget_on_clean_root(_sessionless_root: Path) -> None:
     """``aeat --version`` returns inside the fast-path budget."""
 
     _warm()
@@ -84,7 +78,7 @@ def test_version_completes_under_budget_on_clean_root(_clean_storage_root: Path)
     assert elapsed_ms < _FAST_PATH_BUDGET_MS, f"--version took {elapsed_ms:.1f}ms (budget {_FAST_PATH_BUDGET_MS}ms)"
 
 
-def test_help_completes_under_budget_on_clean_root(_clean_storage_root: Path) -> None:
+def test_help_completes_under_budget_on_clean_root(_sessionless_root: Path) -> None:
     """``aeat --help`` returns inside the fast-path budget."""
 
     _warm()
@@ -93,7 +87,7 @@ def test_help_completes_under_budget_on_clean_root(_clean_storage_root: Path) ->
     assert elapsed_ms < _FAST_PATH_BUDGET_MS, f"--help took {elapsed_ms:.1f}ms (budget {_FAST_PATH_BUDGET_MS}ms)"
 
 
-def test_version_does_not_provision_storage(_clean_storage_root: Path) -> None:
+def test_version_does_not_provision_storage(_sessionless_root: Path) -> None:
     """``aeat --version`` writes nothing under the storage root.
 
     A registry parse or a state read would create a database file, a
@@ -104,17 +98,17 @@ def test_version_does_not_provision_storage(_clean_storage_root: Path) -> None:
     _warm()
     result = invoke_cached_cli(["--version"])
     assert result.exit_code == 0, result.output
-    assert not (_clean_storage_root / storage_location(StorageCategory.BUCKETS).relative_path()).exists()
-    assert not pointer_path(_clean_storage_root).exists()
-    assert not any(_clean_storage_root.glob("**/*.db"))
+    assert not (_sessionless_root / storage_location(StorageCategory.BUCKETS).relative_path()).exists()
+    assert not pointer_path(_sessionless_root).exists()
+    assert not any(_sessionless_root.glob("**/*.db"))
 
 
-def test_help_does_not_provision_storage(_clean_storage_root: Path) -> None:
+def test_help_does_not_provision_storage(_sessionless_root: Path) -> None:
     """``aeat --help`` writes nothing under the storage root."""
 
     _warm()
     result = invoke_cached_cli(["--help"])
     assert result.exit_code == 0, result.output
-    assert not (_clean_storage_root / storage_location(StorageCategory.BUCKETS).relative_path()).exists()
-    assert not pointer_path(_clean_storage_root).exists()
-    assert not any(_clean_storage_root.glob("**/*.db"))
+    assert not (_sessionless_root / storage_location(StorageCategory.BUCKETS).relative_path()).exists()
+    assert not pointer_path(_sessionless_root).exists()
+    assert not any(_sessionless_root.glob("**/*.db"))

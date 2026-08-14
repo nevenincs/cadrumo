@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -18,16 +17,12 @@ from ._cli_surface_support import (
     _invoke,
     _json,
     create_cli_surface_profile,
-    isolated_cli_surface_backend,
 )
+from ._strict_cli_fixture_support import cli_surface_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_cli_surface_backend(tmp_path):
-        yield
+__all__ = ["cli_surface_isolated_backend"]
 
 
 def _json_object(value: object) -> dict[str, object]:

@@ -106,7 +106,6 @@ def test_registry_tree_result_round_trips_a_populated_revision_detail_row() -> N
                             "output_cell_count": 12,
                         },
                     ],
-                    "support_removal_decision_count": 0,
                 },
             ],
         ),

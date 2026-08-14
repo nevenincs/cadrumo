@@ -9,12 +9,15 @@ build through a typer invocation.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+
+from ._export_test_support import isolated_backend
+
+__all__ = ["isolated_backend"]
 from pydantic import ValidationError
 
 from ....core import Period
@@ -47,16 +50,9 @@ from ._export_test_support import (
     _profile,
     _seed_profile,
     _seed_revision,
-    isolated_backend_context,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@pytest.fixture
-def isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_backend_context(tmp_path):
-        yield
 
 
 def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:

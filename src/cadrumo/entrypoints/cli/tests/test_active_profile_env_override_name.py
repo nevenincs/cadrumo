@@ -17,16 +17,16 @@ resolver after normalizing the operator-facing display label.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ._modelo_empty_profile_fixture import _isolated_backend
+
+__all__ = ["_isolated_backend"]
+
 from ....core.config import override_settings
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
 from .._common import cli_policy_refusal_projection
 from .._errors import CliRefusedBoundaryError, error_boundary_under_test
 
@@ -35,17 +35,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 #: The display label the operator chooses at create — the only id they know.
 _LABEL = "operator"
 _DUPLICATE_MANIFEST_CREATED_AT = datetime(2026, 5, 28, 15, 5, tzinfo=UTC)
-
-
-@pytest.fixture(autouse=True)
-def _isolated_root(tmp_path: Path) -> Iterator[None]:
-    """Isolated storage root; no pre-opened span (each invoke is its own process surface)."""
-    dispose_engine()
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        try:
-            yield
-        finally:
-            dispose_engine()
 
 
 def _create_profile_and_resolve_uuid() -> str:

@@ -95,6 +95,7 @@ from .. import (
 )
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 from .._revision_persistence import persist_filed_revision
+from ._fold_in_assertions_support import _assert_distinct_positive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -270,20 +271,6 @@ def _calculate_periodic(
         invoice_repository=invoice_repo,
         clock=_T1,
     )
-
-
-def _assert_distinct_positive(values: dict[str, Decimal]) -> Decimal:
-    """Return the sum of ``values`` after asserting they are distinct and positive.
-
-    Distinct non-equal positive values make the downstream fold assertion
-    non-tautological: a silent blank (0), a single-quarter copy, or an
-    off-by-quarter wiring cannot reproduce the strictly-positive sum of four
-    distinct quarters.
-    """
-    assert len(set(values.values())) == len(values), f"seeded quarters must be distinct; got {values}"
-    total = sum(values.values(), Decimal("0"))
-    assert total > Decimal("0")
-    return total
 
 
 def _assert_empty_withholding_store_source_issue(result: BucketAggregationCalculationResult, *, modelo: str) -> None:

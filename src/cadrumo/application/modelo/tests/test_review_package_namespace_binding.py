@@ -22,11 +22,9 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
-from ....tests.review_package_adapters import (
-    MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE,
-    SecureObjectRow,
-    session_scope,
-)
+from ....adapters.persistence.storage import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE
+from ....adapters.persistence.storage.sql import SecureObjectRow
+from ....adapters.persistence.storage.sql.session import session_scope
 from ....tests.secure_sql import isolated_runtime_profile
 from .._review_package_signing import ensure_review_package_signing_keypair
 

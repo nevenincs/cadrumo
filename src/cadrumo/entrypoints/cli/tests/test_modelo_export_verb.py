@@ -13,7 +13,6 @@ from click.testing import Result
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....application.modelo import resolve_registry_revision_for_work_target
 from ....application.workflow import workflow_state_repository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.modelos import (
@@ -27,13 +26,14 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....domain.user_profile import UserProfileFact
+from ....tests.cli_envelope import unwrap_envelope_notices as _notices
+from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import set_active_test_profile_facts
 from ....tests.registry_observations import registry_grounded_observations
 from ._modelo_review_package_support import seed_exportable_modelo_revision
+from ._registry_cli_support import _active_registry_revision_id
 from ._strict_cli_fixture_support import binding_isolated_backend
-from .envelope_helpers import unwrap_envelope_notices as _notices
-from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -42,15 +42,6 @@ __all__ = ["binding_isolated_backend"]
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-def _active_registry_revision_id(*, modelo: str, filing_year: int, period: str) -> str:
-    return resolve_registry_revision_for_work_target(
-        modelo=modelo,
-        filing_year=filing_year,
-        period=Period.from_year_and_code(filing_year, period),
-        registry_revision_id=None,
-    )
 
 
 def _seed_work_unit_only(*, modelo: str = "130", filing_year: int = 2026, period: str = "1T") -> str:

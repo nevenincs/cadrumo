@@ -9,6 +9,7 @@ import pytest
 from ....core import Modelo
 from ....core.config import override_settings
 from ....core.resources import resources
+from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.profile_capsule import open_test_profile_session
 from ._modelo_work_ux_support import (
     _PROFILE_ID,
@@ -20,7 +21,6 @@ from ._modelo_work_ux_support import (
     _invoke,
 )
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
-from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

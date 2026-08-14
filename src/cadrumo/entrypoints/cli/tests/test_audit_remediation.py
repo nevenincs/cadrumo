@@ -4,16 +4,21 @@ from __future__ import annotations
 
 import ast
 import json
-from collections.abc import Iterator
 from pathlib import Path
 
 import click
 import pytest
+
+from ._profile_storage_fixtures import isolated_profile_storage
+
+__all__ = ["isolated_profile_storage"]
 from click.testing import Result
 
 from ....tests import REPO_ROOT, leaf_name
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
+from ._runtime_profile_cli_fixture import _isolated_cli_state
+
+__all__ = ["_isolated_cli_state"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -30,12 +35,6 @@ _LEAK_FRAGMENTS = (
     "Pydantic",
     "pydantic",
 )
-
-
-@pytest.fixture(autouse=True)
-def _isolated_cli_state(tmp_path: Path) -> Iterator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        yield
 
 
 def _invoke(args: list[str]) -> Result:
@@ -81,6 +80,7 @@ def test_modelo_bindings_help_uses_accepted_period_examples() -> None:
         assert "2026Q1" not in flat, surface
 
 
+@pytest.mark.usefixtures("isolated_profile_storage")
 class TestOverviewCalendarRequiresProfileCreate:
     """Overview calendar tests that exercise the profile create path.
 
@@ -88,14 +88,6 @@ class TestOverviewCalendarRequiresProfileCreate:
     fixture because these tests call ``profile create`` and need an empty
     storage root — not one pre-populated with a runtime bucket.
     """
-
-    @pytest.fixture(autouse=True)
-    def _isolated_cli_state(self, tmp_path: Path) -> Iterator[None]:
-        # Overrides the module-level _isolated_cli_state autouse fixture.
-        # Profile create tests need an empty root; isolated_runtime_profile
-        # pre-provisions a bucket that breaks NIF uniqueness checks.
-        with isolated_profile_storage_root(tmp_path=tmp_path):
-            yield
 
     def test_overview_calendar_for_general_iva_includes_modelo_303(self) -> None:
         init = _invoke(

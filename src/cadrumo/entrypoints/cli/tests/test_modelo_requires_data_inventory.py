@@ -21,11 +21,11 @@ import pytest
 
 from ....application.workflow import workflow_state_repository
 from ....domain.user_profile import UserProfileFact
+from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.user_profile import register_minimal_profile
 from ._modelo_empty_profile_fixture import _isolated_backend
-from .envelope_helpers import unwrap_envelope_notices, unwrap_schema_envelope
 
 __all__ = ["_isolated_backend"]
 

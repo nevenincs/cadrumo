@@ -8,23 +8,17 @@ active profile or secret store (it is profile-independent).
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_sessionless_storage_root
 from .._app_agent_workspace_payloads import AgentWorkspaceResult
+from ._isolated_profile_storage_fixtures import _isolated_state
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_state(tmp_path: Path) -> Iterator[None]:
-    with isolated_sessionless_storage_root(tmp_path=tmp_path):
-        yield
+__all__ = ["_isolated_state"]
 
 
 def test_materialise_emits_agent_envelope_and_writes_files(tmp_path: Path) -> None:
