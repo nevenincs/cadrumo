@@ -1021,9 +1021,7 @@ def calculation_revision_identity_inputs(
         "detail_rows": detail_rows,
         "source_issues": source_issues,
         "filing_instance_evidence": filing_instance_evidence,
-        "m303_regimen_simplificado_annual_summary_handoff": (
-            m303_regimen_simplificado_annual_summary_handoff
-        ),
+        "m303_regimen_simplificado_annual_summary_handoff": (m303_regimen_simplificado_annual_summary_handoff),
     }
 
 
@@ -1062,9 +1060,7 @@ def derive_calculation_revision_id(
             detail_rows=detail_rows,
             source_issues=source_issues,
             filing_instance_evidence=filing_instance_evidence,
-            m303_regimen_simplificado_annual_summary_handoff=(
-                m303_regimen_simplificado_annual_summary_handoff
-            ),
+            m303_regimen_simplificado_annual_summary_handoff=(m303_regimen_simplificado_annual_summary_handoff),
         ),
     )
 
@@ -1707,9 +1703,7 @@ def calculation_revision_identity_inputs_from_revision(
         detail_rows=revision.detail_rows,
         source_issues=revision.source_issues,
         filing_instance_evidence=revision.filing_instance_evidence,
-        m303_regimen_simplificado_annual_summary_handoff=(
-            revision.m303_regimen_simplificado_annual_summary_handoff
-        ),
+        m303_regimen_simplificado_annual_summary_handoff=(revision.m303_regimen_simplificado_annual_summary_handoff),
     )
 
 

@@ -99,7 +99,10 @@ from ._calculation_revision import (
     M303RegimenSimplificadoFilingEvidence,
     M303RegimenSimplificadoModuleCalculationResult,
     assert_revision_snapshot_evidence_coverage,
+    calculation_revision_identity_inputs,
+    calculation_revision_identity_inputs_from_revision,
     derive_calculation_revision_id,
+    derive_calculation_revision_id_from_revision,
 )
 from ._codes import ModeloCode
 from ._dt12_reduccion import (
@@ -272,9 +275,12 @@ __all__ = (
     "WorkUnitState",
     "assert_revision_snapshot_evidence_coverage",
     "assess_modelo_840_iae_cifra_negocios_exemption",
+    "calculation_revision_identity_inputs",
+    "calculation_revision_identity_inputs_from_revision",
     "compute_dt12_reduccion_plan_pensiones",
     "compute_sal_reserva_especial_dotacion",
     "derive_calculation_revision_id",
+    "derive_calculation_revision_id_from_revision",
     "derive_filing_record_id",
     "derive_participation_index_id",
     "derive_verification_report_id",
