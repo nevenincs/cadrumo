@@ -1,4 +1,4 @@
-"""Coverage ledger for registry authority and verification tiers.
+"""Coverage ledgers for registry authority, verification tiers and schema families.
 
 Audits every :class:`ModeloDefinition` and :class:`ModeloRevision` in the
 registry for the four mandatory evidence tiers (legal authority, official
@@ -7,6 +7,39 @@ examined through the typed authority projection appropriate to its canonical
 review state: filing-grade revisions use a :class:`RegistrySnapshot`, while
 review-ineligible revisions use :class:`RegistryRevisionInspection` so
 static/audit evidence remains available without claiming filing authority.
+
+Three axes, deliberately not one
+-------------------------------
+
+This module now answers three different questions about a revision, and they
+are easy to mistake for each other because all three sound like "is it
+complete".
+
+* **Evidence tier** — what BACKS the content. Is there a legal authority, an
+  official source, a parity artefact, a layout authority. Governed by
+  :data:`REQUIRED_COVERAGE_TIERS` and reported per tier.
+* **Authority scope** — which PROJECTION the ledger was built from, filing or
+  inspection-only. A property of how the audit reached the revision, not of the
+  revision's content.
+* **Schema family disposition** — whether the CONTENT ITSELF is there, and if
+  not, whether anybody said why. Reported per family by
+  :class:`RevisionCoverageManifest`.
+
+A revision can hold a full casilla family with no legal authority backing it,
+and it can carry impeccable legal authority over an empty formula family. The
+first is an evidence-tier gap; the second is a family disposition. Collapsing
+them would let either mask the other, which is the specific failure the family
+axis exists to remove — a revision reads complete because nothing distinguishes
+"this modelo computes nothing" from "nobody built the formulas yet".
+
+The family manifest is deliberately narrower than the tier audit in what it
+touches: it projects one :class:`ModeloRevision` and nothing else. It does not
+build a snapshot, does not consult review state, and does not reduce a revision
+to a representative filing year. That independence is why it reports on every
+revision in the corpus rather than on the empty set of review-eligible ones, and
+it is why the manifest lives in its own module: this one builds validated
+snapshots and so sits ABOVE registry-build validation, while the manifest is
+consumed BY that validation. Housing both here inverted the dependency.
 """
 
 from __future__ import annotations
@@ -15,9 +48,12 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field, PrivateAttr, computed_field, model_validator
+from pydantic import Field, PrivateAttr, computed_field, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, LegalReviewStatus, RevisionReviewStatus
+from ....core import (
+    LegalReviewStatus,
+    RevisionReviewStatus,
+)
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CrossReferenceId, LegalRefId, SourceRefId, WorkbookParityRefId
 from ._schema import (
@@ -34,6 +70,9 @@ from ._schema import (
     RelationDefinition,
     SourceReference,
     WorkbookParityReference,
+)
+from ._schema_family_coverage import (
+    CoverageModel,
 )
 from ._snapshot import build_validated_snapshot
 from ._static_inspection import RegistryRevisionInspection
@@ -55,12 +94,6 @@ one of these is a failure, while a gap on ``executable_parity_evidence`` is a
 reported absence, and a consumer that cannot tell them apart reports an expected
 absence as a defect.
 """
-
-
-class CoverageModel(BaseModel):
-    """Strict frozen base for coverage reports."""
-
-    model_config = STRICT_FROZEN_CONFIG
 
 
 class EvidenceTierCoverageGate(CoverageModel):

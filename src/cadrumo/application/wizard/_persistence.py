@@ -62,13 +62,16 @@ def apply_wizard_fact_changes(
     retained deliberately: it is the explicit current-record representation
     of clearing an answer.
 
-    This is the ONE door onto profile facts, so it is also where the schema
-    judges them.  An engine-derived path, an unknown path and a value of the
-    wrong shape are all refused here rather than at the surface that happened
-    to collect the answer: a check living only in the manager's edit dialog
-    binds nobody who writes through the wizard, the CLI or a later surface,
-    and a stored value at a derived path silently displaces the computation
-    that owns it.
+    This is not the only door onto profile facts -- registration opens the
+    initial record and the cotejo censal adopts certificate values -- so what
+    is shared is not the door but the JUDGE: every one of them refuses through
+    :func:`~cadrumo.application.user_profile.reject_invalid_profile_facts`
+    before publishing.  An engine-derived path, an unknown path and a value of
+    the wrong shape are refused at whichever write reaches them rather than at
+    the surface that happened to collect the answer: a check living only in
+    the manager's edit dialog binds nobody who writes through the wizard, the
+    CLI or a later surface, and a stored value at a derived path silently
+    displaces the computation that owns it.
     """
     from ..user_profile import ProfileRecordRepository, reject_invalid_profile_facts
 

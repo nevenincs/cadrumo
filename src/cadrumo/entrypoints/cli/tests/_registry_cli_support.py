@@ -9,8 +9,6 @@ import typer
 from click.testing import Result
 from typer.core import TyperGroup
 
-from ....application.modelo import resolve_registry_revision_for_work_target
-from ....core import Period
 from ....core.resources import bundled_path, resources
 from ....tests.cli_runner import cadrumo_click_command
 from ....tests.cli_runner import invoke_cached_cli as _invoke_cached_cli
@@ -64,25 +62,6 @@ def _clear_cli_env() -> None:
 def invoke_cached_cli(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Result:
     merged_env = {**_CLI_ENV, **dict(env or {})}
     return _invoke_cached_cli(args, env=merged_env)
-
-
-def _active_registry_revision_id(*, modelo: str, filing_year: int, period: str) -> str:
-    """Return the law-determined registry revision for a filing target.
-
-    AEAT binds every ``(modelo, filing_year, period)`` triple to exactly one
-    revision by publishing orden, so "which revision applies" is a derived
-    fact and never an input. Resolving it here keeps these fixtures on the
-    same authority the production paths use, instead of pinning a literal
-    that goes stale the moment AEAT publishes a new design -- which is what
-    happened when the former M303 post-2022 selector was capped at 2025
-    and every 2026 target silently moved to ``2026-y-siguientes``.
-    """
-    return resolve_registry_revision_for_work_target(
-        modelo=modelo,
-        filing_year=filing_year,
-        period=Period.from_year_and_code(filing_year, period),
-        registry_revision_id=None,
-    )
 
 
 def _child(group: object, name: str):

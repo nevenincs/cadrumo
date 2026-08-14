@@ -171,6 +171,7 @@ from ._filing_projection_ref import (
     M303RegimenSimplificadoModuleValue,
     compile_filing_projection_ref,
     filing_projection_ref_casilla_id,
+    hydrate_filing_projection_ref,
 )
 from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
@@ -330,6 +331,10 @@ from ._result_disposition import (
     result_disposition_requires_bank_account,
 )
 from ._revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
+from ._schema_family_disposition import (
+    UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS,
+    RegistrySchemaFamilyDisposition,
+)
 from ._spanish_stemming import (
     SpanishStemmer,
     spanish_stemmer,
@@ -534,6 +539,7 @@ __all__: list[str] = [
     "STR_KEYED_MAPPING_ADAPTER",
     "UNDECLARED_REGISTRY_AUTHORITY_GRADE",
     "UNMODELED_OBLIGATIONS",
+    "UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS",
     "AcceleratorKind",
     "ActionArgumentResolution",
     "ActionArgumentSource",
@@ -680,6 +686,7 @@ __all__: list[str] = [
     "RegisterScopingSignal",
     "RegistryAuthorityGrade",
     "RegistryPeriodCode",
+    "RegistrySchemaFamilyDisposition",
     "RegistrySelectorPeriodCode",
     "RentaDeclaracionType",
     "RescateType",
@@ -742,6 +749,7 @@ __all__: list[str] = [
     "fsync_parent_dir",
     "fts_or_group",
     "hardware_tier_for_free_bytes",
+    "hydrate_filing_projection_ref",
     "iban_mod_97",
     "is_administrative_period_token",
     "is_aeat_csv",

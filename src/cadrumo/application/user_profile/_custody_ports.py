@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import datetime
 from typing import TYPE_CHECKING, Protocol
 from uuid import UUID
 
 if TYPE_CHECKING:
-    from ...core import ProfileSessionRefusalReason
+    from ...core import ProfileSessionRefusalReason, SecureObjectWrite
+    from ...core.classification import SensitivityClass
 
 
 class ProfileBucketSessionPort(Protocol):
@@ -199,6 +201,29 @@ class ProfileCustodySecureObjectRecordPort(Protocol):
         ...
 
 
+class ProfileCustodySecureObjectRepositoryPort(Protocol):
+    """The small encrypted-object surface needed by a profile capsule."""
+
+    def iter_all_records_raw(self) -> Iterator[ProfileCustodySecureObjectRawRowPort]:
+        """Iterate rows without bypassing the repository's integrity checks."""
+        ...
+
+    def load(
+        self,
+        namespace: str,
+        object_key: str,
+        *,
+        expected_class: SensitivityClass,
+        max_supported_version: int,
+    ) -> ProfileCustodySecureObjectRecordPort | None:
+        """Load and decrypt one object under its registered namespace contract."""
+        ...
+
+    def apply_batch(self, writes: tuple[SecureObjectWrite, ...]) -> None:
+        """Commit an atomic set of encrypted-object writes."""
+        ...
+
+
 class ProfileCustodyEnvelopePort(Protocol):
     """Opaque password-envelope contract accepted by custody transactions."""
 
@@ -225,6 +250,7 @@ __all__ = [
     "ProfileCustodyRecoveryEnvelopePort",
     "ProfileCustodySecureObjectRawRowPort",
     "ProfileCustodySecureObjectRecordPort",
+    "ProfileCustodySecureObjectRepositoryPort",
     "ProfileCustodySentinelPort",
     "ProfilePersistedSessionPort",
     "ProfileSessionResumeOutcomePort",

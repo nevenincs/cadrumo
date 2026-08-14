@@ -41,10 +41,10 @@ from ....domain.calculations.registry import bundled_authority as load_bundled_a
 from .. import (
     RegistryApplicationInputError,
     RegistryConformanceProfile,
-    audit_bundled_registry_conformance,
     build_registry_conformance_profile,
 )
 from .._conformance import AnnualCasillaPopulationComparison, compare_annual_casilla_population
+from ._conformance_profile_fixtures import degraded_profile, validated_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -96,18 +96,6 @@ def tree_modelos() -> tuple[ModeloDefinition, ...]:
     """Every compiled modelo in the bundled tree, read without validation."""
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return modelos
-
-
-@pytest.fixture(scope="module")
-def degraded_profile() -> RegistryConformanceProfile:
-    """The bundled profile composed through the non-validating tree loader."""
-    return audit_bundled_registry_conformance(validate=False)
-
-
-@pytest.fixture(scope="module")
-def validated_profile() -> RegistryConformanceProfile:
-    """The bundled profile composed through the validating registry authority."""
-    return audit_bundled_registry_conformance()
 
 
 @pytest.fixture(scope="module")
@@ -609,3 +597,6 @@ def test_a_modelo_absent_from_the_classification_audit_is_refused(
             scope_diagnostics=(),
             registry_validated=False,
         )
+
+
+__all__ = ["degraded_profile", "validated_profile"]

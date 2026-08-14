@@ -42,7 +42,6 @@ _RECORD_ID_KINDS: tuple[tuple[str, str], ...] = (
     ("application link", "application_links"),
     ("deadline window", "deadline_windows"),
     ("filing schedule", "filing_schedules"),
-    ("support removal decision", "support_removal_decisions"),
     ("construct", "constructs"),
     ("dependency classification", "dependency_classifications"),
 )

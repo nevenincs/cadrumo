@@ -25,9 +25,9 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Literal, NamedTuple, Protocol
+from typing import Annotated, Literal, NamedTuple, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG, CasillaId, IvaDeductionFactKind, Modelo, validated_casilla_id
 from ....core.aggregation import (
@@ -67,6 +67,7 @@ from ._ledger_binding_resolution import (
     unsupported_ledger_family_observations,
 )
 from ._schema import DataBindingDefinition, ModeloRevision
+from ._schema_base import coerce_decimal_tuple, coerce_enum_member, coerce_enum_tuple
 
 # Ledger-aggregation binding source kinds. Re-exported from
 # :data:`cadrumo.core.aggregation.LEDGER_BINDING_SOURCE_KINDS`, which derives the
@@ -187,13 +188,16 @@ class _OssIossLedgerSelector(BaseModel):
     downstream consumers see typed values.
     """
 
-    model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    regime: OssIossRegime
-    destination_member_state: EUMemberState
-    rate_kind: IvaRateKind
-    invoice_direction: InvoiceKind
-    transaction_kinds: tuple[TransactionKind, ...] = Field(min_length=1)
+    regime: Annotated[OssIossRegime, BeforeValidator(coerce_enum_member(OssIossRegime))]
+    destination_member_state: Annotated[EUMemberState, BeforeValidator(coerce_enum_member(EUMemberState))]
+    rate_kind: Annotated[IvaRateKind, BeforeValidator(coerce_enum_member(IvaRateKind))]
+    invoice_direction: Annotated[InvoiceKind, BeforeValidator(coerce_enum_member(InvoiceKind))]
+    transaction_kinds: Annotated[
+        tuple[TransactionKind, ...],
+        BeforeValidator(coerce_enum_tuple(TransactionKind)),
+    ] = Field(min_length=1)
     fact: Literal["iva_amount_sum", "base_amount_sum"] = "iva_amount_sum"
 
     @field_validator("transaction_kinds", mode="after")
@@ -513,15 +517,30 @@ _IVA_SUPPORTED_FACTS: frozenset[str] = frozenset(
 class _IvaLedgerSelector(BaseModel):
     """Validated form of a ledger_iva_aggregation binding selector."""
 
-    model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    categories: tuple[IvaCategory, ...] = Field(min_length=1)
-    exemption_articles: tuple[IvaExemptionArticle, ...] | None = Field(default=None, min_length=1)
-    rate_kinds: tuple[IvaRateKind, ...] = Field(min_length=1)
-    flow_direction: IvaFlowDirection
-    observation_roles: tuple[IvaLedgerObservationRole, ...] = Field(min_length=1)
-    cash_accounting_treatments: tuple[IvaCashAccountingTreatment, ...] = Field(min_length=1)
-    applied_rates: tuple[Decimal, ...] | None = Field(default=None, min_length=1)
+    categories: Annotated[tuple[IvaCategory, ...], BeforeValidator(coerce_enum_tuple(IvaCategory))] = Field(
+        min_length=1,
+    )
+    exemption_articles: (
+        Annotated[tuple[IvaExemptionArticle, ...], BeforeValidator(coerce_enum_tuple(IvaExemptionArticle))] | None
+    ) = Field(default=None, min_length=1)
+    rate_kinds: Annotated[tuple[IvaRateKind, ...], BeforeValidator(coerce_enum_tuple(IvaRateKind))] = Field(
+        min_length=1,
+    )
+    flow_direction: Annotated[IvaFlowDirection, BeforeValidator(coerce_enum_member(IvaFlowDirection))]
+    observation_roles: Annotated[
+        tuple[IvaLedgerObservationRole, ...],
+        BeforeValidator(coerce_enum_tuple(IvaLedgerObservationRole)),
+    ] = Field(min_length=1)
+    cash_accounting_treatments: Annotated[
+        tuple[IvaCashAccountingTreatment, ...],
+        BeforeValidator(coerce_enum_tuple(IvaCashAccountingTreatment)),
+    ] = Field(min_length=1)
+    applied_rates: Annotated[tuple[Decimal, ...], BeforeValidator(coerce_decimal_tuple)] | None = Field(
+        default=None,
+        min_length=1,
+    )
     """Numeric rates this binding accepts, when the box is rate-specific.
 
     ``None`` -- the default and the shape every quarterly binding uses -- means
@@ -1149,7 +1168,7 @@ class RentaGastosEstimacionDirectaObservationProtocol(Protocol):
 class _RentaLedgerGastosEstimacionDirectaSelector(BaseModel):
     """Validated form of a ledger_renta_gastos_estimacion_directa_aggregation binding selector."""
 
-    model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: Literal[Modelo.M100] = Modelo.M100
     period: Literal["0A"] = "0A"
@@ -1356,7 +1375,7 @@ class _RentaLedgerIncomeSelector(BaseModel):
       net-paid professional receipts.
     """
 
-    model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: Literal[Modelo.M130, Modelo.M100, Modelo.M131] = Modelo.M130
     target_casilla_id: CasillaId
@@ -1808,7 +1827,7 @@ class _RentaLedgerGastosPagoFraccionadoSelector(BaseModel):
     application aggregator, exactly as for the income sibling.
     """
 
-    model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: Literal[Modelo.M130] = Modelo.M130
     target_casilla_id: CasillaId

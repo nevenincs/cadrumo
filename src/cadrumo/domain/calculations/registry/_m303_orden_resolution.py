@@ -17,6 +17,7 @@ from ._m303_orden_projection_models import (
     M303RegimenSimplificadoSnapshot,
 )
 from ._schema_references import SourceReference
+from ._supplementary_orden import supplementary_orden_authority
 
 if TYPE_CHECKING:
     from ._schema import RegistrySnapshot
@@ -78,7 +79,10 @@ def _select_m303_annual_orden_projection(registry_snapshot: RegistrySnapshot) ->
     """Select the internal projection consumed only by the canonical resolver."""
     if registry_snapshot.modelo.id != Modelo.M303:
         raise RegistryValidationError("annual Orden projection selector requires a Modelo 303 registry snapshot")
-    return registry_snapshot.m303_annual_orden.require_projection(
+    return supplementary_orden_authority(
+        registry_snapshot.supplementary_ordenes,
+        Modelo.M303,
+    ).require_projection(
         ejercicio=registry_snapshot.filing_year,
         registry_revision_id=registry_snapshot.revision.id,
     )

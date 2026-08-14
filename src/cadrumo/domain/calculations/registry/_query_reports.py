@@ -37,7 +37,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....core import BindingSourceKind, CasillaId, Period
+from ....core import BindingSourceKind, CasillaId, Period, RegistrySelectorPeriodCode
 from ....core.identity import AeatBoxNumber
 from ._binding_selector_utils import BooleanBindingEncodedValue
 from ._ids import BindingId, FormulaId, LegalRefId, ParameterId, RelationId, RevisionId, SourceRefId
@@ -48,7 +48,7 @@ from ._support_matrix import ModeloEntry
 class ModeloListRow(BaseModel):
     """One entry in a modelo catalogue listing."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     code: str
     title: str
@@ -60,7 +60,7 @@ class ModeloListRow(BaseModel):
 class ModeloListReport(BaseModel):
     """Complete result set for a modelo catalogue query."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelos: tuple[ModeloListRow, ...]
 
@@ -75,7 +75,7 @@ class ModeloDescribeReport(BaseModel):
     reaching that surface is a defect in the projection, not a legitimate value.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     code: str
     title: str
@@ -87,7 +87,7 @@ class ModeloDescribeReport(BaseModel):
     revision_ids: tuple[str, ...]
     filing_year: Annotated[int, Field(ge=1980, le=2200)] | None
     filing_period: Period | None = None
-    period: str | None
+    period: RegistrySelectorPeriodCode | None
     valid_from: date
     valid_to: date | None
     periods: tuple[str, ...]
@@ -122,7 +122,7 @@ class CasillaGroundingReport(BaseModel):
     expression for a detail view.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     casilla_id: CasillaId
     number: str
@@ -151,13 +151,13 @@ class ModeloCasillaRow(CasillaGroundingReport):
 class ModeloCasillasReport(BaseModel):
     """Full casilla listing for a resolved modelo revision."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     code: str
     revision: str
     filing_year: int | None
     filing_period: Period | None = None
-    period: str | None
+    period: RegistrySelectorPeriodCode | None
     rows: tuple[ModeloCasillaRow, ...]
 
 
@@ -173,7 +173,7 @@ class ModeloCasillaDetailReport(CasillaGroundingReport):
     revision: str
     filing_year: int | None
     filing_period: Period | None = None
-    period: str | None
+    period: RegistrySelectorPeriodCode | None
     formula_id: FormulaId | None
     formula_expression: Mapping[str, object] | None
 
@@ -184,7 +184,7 @@ BindingSelectorQueryValue = str | int | bool | tuple[str, ...]
 class BindingSelectorQueryEntry(BaseModel):
     """One normalized binding-selector entry on the public query surface."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     key: str = Field(min_length=1)
     value: BindingSelectorQueryValue
@@ -193,7 +193,7 @@ class BindingSelectorQueryEntry(BaseModel):
 class BindingSelectorQueryProjection(BaseModel):
     """Typed public projection of a binding selector."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     source: str
     keys: tuple[str, ...]
@@ -203,7 +203,7 @@ class BindingSelectorQueryProjection(BaseModel):
 class ModeloBindingQueryRow(BaseModel):
     """One row in a binding listing for a resolved modelo revision."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     binding_id: BindingId
     source: str
@@ -222,20 +222,20 @@ class ModeloBindingQueryRow(BaseModel):
 class ModeloBindingsReport(BaseModel):
     """Full binding listing for a single resolved modelo revision."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     code: str
     revision: str
     filing_year: int | None
     filing_period: Period | None = None
-    period: str | None
+    period: RegistrySelectorPeriodCode | None
     rows: tuple[ModeloBindingQueryRow, ...]
 
 
 class ModeloFormulaRow(BaseModel):
     """One row in a formula listing for a resolved modelo revision."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     formula_id: FormulaId
     target_casilla_id: CasillaId
@@ -251,20 +251,20 @@ class ModeloFormulaRow(BaseModel):
 class ModeloFormulasReport(BaseModel):
     """Full formula listing for a single resolved modelo revision."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     code: str
     revision: str
     filing_year: int | None
     filing_period: Period | None = None
-    period: str | None
+    period: RegistrySelectorPeriodCode | None
     rows: tuple[ModeloFormulaRow, ...]
 
 
 class RegistrySourceSite(BaseModel):
     """One committed modelo revision that declares a binding source kind."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: str
     revision_id: RevisionId
@@ -274,7 +274,7 @@ class RegistrySourceSite(BaseModel):
 class RegistrySourceInventoryRow(BaseModel):
     """Every committed revision that declares one binding source kind."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     source_kind: BindingSourceKind
     sites: tuple[RegistrySourceSite, ...]
@@ -284,7 +284,7 @@ class RegistrySourceInventoryRow(BaseModel):
 class RegistrySourceInventoryReport(BaseModel):
     """Registry-wide inventory of every declared binding source kind."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     rows: tuple[RegistrySourceInventoryRow, ...]
 
@@ -297,7 +297,7 @@ class RegistrySourceInventoryReport(BaseModel):
 class ModeloSupportMatrixReport(BaseModel):
     """Registry-wide support/capability matrix."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     entries: tuple[ModeloEntry, ...]
 

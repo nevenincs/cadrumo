@@ -11,6 +11,8 @@ from pydantic import Field, field_validator, model_validator
 
 from ....core import (
     CasillaId,
+    FilingPeriodCode,
+    RegistrySelectorPeriodCode,
 )
 from ....core.aggregation import RelationAggregation
 from ....core.identity import AeatBoxNumber
@@ -590,8 +592,8 @@ class RelationPeriodAlignment(RegistryModel):
     mode: Literal["previous_quarter", "prior_pagos_cumulative"] | None = None
     source_periods: Literal["quarters", "months", "annual_summary"] | None = None
     source_period_kind: Literal["quarterly"] | None = None
-    source_period: str | None = Field(default=None, min_length=1, max_length=8)
-    target_period: str | None = Field(default=None, min_length=1, max_length=8)
+    source_period: FilingPeriodCode | None = None
+    target_period: FilingPeriodCode | None = None
     filing_year_delta: int | None = None
 
     @model_validator(mode="after")
@@ -666,8 +668,8 @@ class RelationDefinition(RegistryModel):
     source_casilla_id: CasillaId
     target_binding: BindingId
     period_alignment: RelationPeriodAlignment
-    source_periods: tuple[str, ...] = ()
-    target_periods: tuple[str, ...] = ()
+    source_periods: tuple[RegistrySelectorPeriodCode, ...] = ()
+    target_periods: tuple[RegistrySelectorPeriodCode, ...] = ()
     source_period_offset_from_target: int | None = None
     aggregation: RelationAggregation | None = None
     legal_refs: LegalRefs

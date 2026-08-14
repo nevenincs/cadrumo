@@ -90,6 +90,7 @@ input_kind = "bound"
 binding = "modelo-390-m303-simplificado-79-total-cuota-resultante"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2023"]
+export_refs = ["modelo-390-page-05-casilla-reconciliacion-devengada-simplificado-303"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.regimen-simplificado.iva-soportado-activos-fijos"

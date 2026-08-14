@@ -1,0 +1,8 @@
+[[revisions."2025-y-siguientes".applicability]]
+id = "m202-seed"
+applicable_entity_types = ["legal_entity"]
+applicable_fiscal_residencies = ["resident_irpf"]
+applicable_reason = "Modelo 202 (pago fraccionado del IS): una entidad jurídica contribuyente del Impuesto sobre Sociedades presenta los pagos fraccionados de abril, octubre y diciembre."
+not_applicable_reason = "Modelo 202 no aplica: el pago fraccionado del Impuesto sobre Sociedades local solo corresponde a entidades jurídicas en la ruta residente IS. Un perfil NON_RESIDENT_IRNR sin eje modelado de establecimiento permanente en España no puede tratarse como listo para pagos fraccionados del IS."
+cuota_bearing = true
+legal_refs = ["ley-27-2014:art-40", "trlirnr-rdleg-5-2004:art-2"]

@@ -29,6 +29,7 @@ input_kind = "bound"
 binding = "modelo-390-iva-autorepercutido-interior-base"
 legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+export_refs = ["modelo-390-page-02-casilla-autorepercutido-interior-base"]
 
 # Box [28] - "IVA deveng. invers. sujeto pasivo - Cuota". Design-year validity: 2016-2025 (epoch-invariant).
 [[revisions."2022".casillas]]
@@ -45,3 +46,4 @@ input_kind = "bound"
 binding = "modelo-390-iva-autorepercutido-interior-cuota"
 legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+export_refs = ["modelo-390-page-02-casilla-autorepercutido-interior-cuota"]

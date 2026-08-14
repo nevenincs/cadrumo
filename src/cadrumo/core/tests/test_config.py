@@ -374,10 +374,13 @@ class TestRepoRelativePathNormalisationCoverage:
         """
         isolated_app_data = tmp_path / "app-data"
         env_name, env_value, inputs = _isolated_live_platform_anchor(isolated_app_data)
-        with scoped_env_var(env_name, env_value), _isolated_aeat_env(
-            CADRUMO_INVOICES_DIR="var/probe-category/invoices",
-            CADRUMO_ATTACHMENTS_DIR="var/probe-category/attachments",
-            CADRUMO_RUNS_DIR="var/probe-runs",
+        with (
+            scoped_env_var(env_name, env_value),
+            _isolated_aeat_env(
+                CADRUMO_INVOICES_DIR="var/probe-category/invoices",
+                CADRUMO_ATTACHMENTS_DIR="var/probe-category/attachments",
+                CADRUMO_RUNS_DIR="var/probe-runs",
+            ),
         ):
             settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
         app_root = platform_user_data_root(inputs)

@@ -1,0 +1,8 @@
+[[revisions."2019-y-siguientes".applicability]]
+id = "m115-seed"
+applicable_entity_types = ["attribution_entity", "legal_entity", "natural_person"]
+required_payer_fact = "pays_rent_with_retencion"
+applicable_reason = "Modelo 115 (retenciones por arrendamiento de inmuebles urbanos): el contribuyente paga alquiler de inmueble urbano sujeto a retención y autoliquida las retenciones practicadas."
+not_applicable_reason = "Modelo 115 no aplica: la autoliquidación de retenciones por arrendamiento solo corresponde a quien paga alquileres sujetos a retención."
+cuota_bearing = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-108"]

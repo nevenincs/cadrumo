@@ -1,0 +1,8 @@
+[[revisions."2013-y-siguientes".applicability]]
+id = "m720-seed"
+applicable_entity_types = ["legal_entity", "natural_person"]
+required_payer_fact = "bienes_extranjero_above_threshold"
+applicable_reason = "Modelo 720 (declaración informativa sobre bienes y derechos en el extranjero): el contribuyente posee bienes o derechos situados en el extranjero con valor agregado superior al umbral declarable y está obligado a presentar esta declaración informativa anual. La obligación se estableció por la Ley 7/2012 DA 1ª."
+not_applicable_reason = "Modelo 720 no aplica: la declaración informativa sobre bienes en el extranjero solo corresponde a personas físicas o entidades jurídicas. El tipo de contribuyente declarado no está incluido en el ámbito subjetivo de la DA 18ª Ley 58/2003 LGT."
+cuota_bearing = false
+legal_refs = ["ley-7-2012:da-1", "orden-hap-72-2013:art-1"]

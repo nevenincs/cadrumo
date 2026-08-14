@@ -1,26 +1,24 @@
-"""Construct closure and support-removal validation helpers.
+"""Construct closure validation helpers.
 
-Validates that every construct and support-removal decision declared on
-a :class:`~cadrumo.domain.calculations.registry.ModeloRevision` has coherent member
+Validates that every construct declared on a
+:class:`~cadrumo.domain.calculations.registry.ModeloRevision` has coherent member
 references and legal grounding.
 
 Construct member closure compares each member's
 :class:`~cadrumo.domain.calculations.registry.LegalReference` and
 :class:`~cadrumo.domain.calculations.registry.SourceReference` requirements with the
-refs declared by the owning construct. Support-removal decisions are separately
-gated through the
-:class:`~cadrumo.domain.calculations.registry._validate_evidence.EvidenceValidator`.
+refs declared by the owning construct.
 
 See Also:
     :func:`cadrumo.domain.calculations.registry._validate_revision_closure._validate_revision_closure_sections`
-        Revision-level runner that invokes both validators in this module.
+        Revision-level runner that invokes the validator in this module.
     :func:`cadrumo.domain.calculations.registry.resolve_revision_constructs`
         Runtime projection of validated construct declarations.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 
 from ._schema import LegalReference, ModeloRevision, SourceReference
 from ._validate_evidence import EvidenceValidator
@@ -42,10 +40,8 @@ _CONSTRUCT_MEMBER_ATTRS = {
     "application link": "application_links",
     "deadline window": "deadline_windows",
     "filing schedule": "filing_schedules",
-    "support removal decision": "support_removal_decisions",
     "dependency classification": "dependency_classifications",
 }
-_SUPPORT_REMOVAL_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 
 
 def validate_construct_closure(
@@ -95,71 +91,4 @@ def validate_construct_closure(
                         f"{scope}: construct {construct.id!r} does not include source refs "
                         f"{missing_sources!r} required by {kind} {member_id!r}",
                     )
-    return failures
-
-
-def validate_support_removal_decisions(
-    scope: str,
-    revision: ModeloRevision,
-    *,
-    export_layout_ids: Iterable[str],
-    extraction_profile_ids: Iterable[str],
-    cross_reference_ids: Iterable[str],
-    workbook_parity_ids: Iterable[str],
-    verification_expectation_ids: Iterable[str],
-    application_link_ids: Iterable[str],
-    deadline_window_ids: Iterable[str],
-    legal_refs: Mapping[str, LegalReference],
-    source_refs: Mapping[str, SourceReference],
-    evidence: EvidenceValidator,
-    filing_schedule_ids: Iterable[str] = (),
-) -> list[str]:
-    """Return support-removal decision failures for one revision.
-
-    Each
-    :class:`~cadrumo.domain.calculations.registry.SupportRemovalDecisionDefinition`
-    declared by the
-    :class:`~cadrumo.domain.calculations.registry.ModeloRevision` must cite known
-    legal/source refs and one accepted source tier. A decision also fails when it
-    claims to remove a subject id that remains active in the supplied subject-id
-    indexes.
-    """
-    failures: list[str] = []
-    active_subjects = {
-        "export_layout": set(export_layout_ids),
-        "extraction_profile": set(extraction_profile_ids),
-        "live_cross_reference": set(cross_reference_ids),
-        "workbook_parity_ref": set(workbook_parity_ids),
-        "verification_expectation": set(verification_expectation_ids),
-        "application_link": set(application_link_ids),
-        "deadline_window": set(deadline_window_ids),
-        "filing_schedule": set(filing_schedule_ids),
-    }
-    for decision in revision.support_removal_decisions:
-        failures.extend(
-            _missing_refs(scope, f"support removal decision {decision.id}", decision.legal_refs, legal_refs, "legal"),
-        )
-        failures.extend(
-            _missing_refs(
-                scope,
-                f"support removal decision {decision.id}",
-                decision.source_refs,
-                source_refs,
-                "source",
-            ),
-        )
-        failures.extend(
-            evidence.require_any_source_tier(
-                scope,
-                f"support removal decision {decision.id}",
-                decision.source_refs,
-                _SUPPORT_REMOVAL_SOURCE_TIERS,
-            ),
-        )
-        active_ids = active_subjects.get(decision.subject_type)
-        if active_ids is not None and decision.subject_id in active_ids:
-            failures.append(
-                f"{scope}: support removal decision {decision.id!r} removes "
-                f"{decision.subject_type} {decision.subject_id!r} but it is still present",
-            )
     return failures

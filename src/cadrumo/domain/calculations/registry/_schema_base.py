@@ -9,8 +9,10 @@ per-revision ``authority_grade`` token.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Annotated, Literal
+from decimal import Decimal
+from typing import Annotated, Literal, get_args, get_origin
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
@@ -22,6 +24,7 @@ from ._ids import LegalRefId, SourceRefId
 __all__ = [
     "GOVERNANCE_STAMP",
     "MANIFEST_ONLY",
+    "SCHEMA_FAMILY",
     "CalculationClass",
     "ContinuidadId",
     "DateAxis",
@@ -36,12 +39,19 @@ __all__ = [
     "RegistryModel",
     "ReviewStatus",
     "RevisionReviewStatusField",
+    "SchemaFamilyMarker",
     "SensitivityClassField",
     "SourceCitation",
     "SourceCitationText",
     "SourceRefs",
+    "coerce_decimal_tuple",
+    "coerce_enum_member",
+    "coerce_enum_tuple",
+    "collection_shaped_fields",
     "governance_stamp_fields",
     "manifest_only_fields",
+    "schema_family_enrollment_failures",
+    "schema_family_fields",
 ]
 
 
@@ -101,6 +111,73 @@ reaches.
 """
 
 
+def coerce_enum_member(enum_cls: type) -> Callable[[object], object]:
+    """Return a scalar coercion hop for one enum-typed field.
+
+    The generated function is the identical shape as :func:`_coerce_sensitivity_class`
+    and its siblings above -- registry schema models validate under
+    ``strict=True``, which refuses a bare TOML string for an enum-typed field, so
+    the loader boundary hydrates the typed member here. An unknown token still
+    raises out of the enum constructor and surfaces as a registry load failure
+    naming the offending value.
+
+    Factored out because the ledger binding-selector families (IVA, OSS/IOSS,
+    retenciones) need this same coercion for several enum types each; hand-
+    duplicating the four-line function per type is the drift risk this project's
+    architecture rules warn against, not the discipline they ask for.
+    """
+
+    def _coerce(value: object) -> object:
+        if isinstance(value, enum_cls):
+            return value
+        if isinstance(value, str):
+            return enum_cls(value)
+        return value
+
+    return _coerce
+
+
+def coerce_enum_tuple(enum_cls: type) -> Callable[[object], object]:
+    """Return a ``tuple[enum_cls, ...]`` coercion hop, element-wise.
+
+    Same rationale and mechanism as :func:`coerce_enum_member`, applied to each
+    element of an enum-typed tuple field rather than to a scalar field: strict
+    mode refuses a bare string for an enum-typed tuple ELEMENT exactly as it
+    refuses one for a scalar enum field, so each element is coerced
+    independently and an unknown token still raises out of the enum
+    constructor unchanged.
+    """
+
+    def _coerce(value: object) -> object:
+        if not isinstance(value, (tuple, list)):
+            return value
+        return tuple(
+            item if isinstance(item, enum_cls) else enum_cls(item) if isinstance(item, str) else item
+            for item in value
+        )
+
+    return _coerce
+
+
+def coerce_decimal_tuple(value: object) -> object:
+    """Coerce a ``tuple[Decimal, ...]`` field's elements from TOML string/int tokens.
+
+    TOML has no native ``Decimal`` type; committed registry TOML stores a rate
+    tuple as quoted decimal strings (e.g. ``["0.21"]``) to avoid float
+    imprecision. Strict mode refuses that bare string for a ``Decimal``-typed
+    tuple element exactly as it refuses one for any other strict-typed element,
+    so this is the same coercion-hop mechanism as :func:`coerce_enum_tuple`,
+    targeting ``Decimal`` instead of an enum. An unparseable token still raises
+    out of the ``Decimal`` constructor and surfaces as a registry load failure.
+    """
+    if not isinstance(value, (tuple, list)):
+        return value
+    return tuple(
+        item if isinstance(item, Decimal) else Decimal(item) if isinstance(item, (str, int)) else item
+        for item in value
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class ManifestOnlyMarker:
     """``Annotated`` metadata pinning one field to the revision's own manifest.
@@ -147,6 +224,37 @@ GOVERNANCE_STAMP = GovernanceStampMarker()
 """The singleton marker attached to every governance-stamp field declaration."""
 
 
+@dataclass(frozen=True, slots=True)
+class SchemaFamilyMarker:
+    """``Annotated`` metadata enrolling one field as a revision schema family.
+
+    A family is one of the revision's declared content collections - its
+    casillas, its formulas, its bindings, its export layouts. Coverage asks one
+    question of each: is it populated, is it honestly not applicable, or is it
+    empty for a reason nobody has recorded. The marker is what makes a field
+    subject to that question.
+
+    Unrelated to :class:`ManifestOnlyMarker`, and deliberately not a subclass of
+    it. Placement asks WHERE a field may be written; enrolment asks WHETHER a
+    field's emptiness is a coverage claim. The two sets barely intersect: the
+    manifest-only fields are scalars, and the families are collections. A marker
+    hierarchy between them would assert a relationship that does not exist.
+
+    Family-ness IS derivable from the annotation - a family is exactly a
+    ``tuple`` of a schema model - which is why the marker carries a completeness
+    check rather than standing alone: :func:`schema_family_fields` reads the
+    declarations, the check compares that against the shape-derived set, and a
+    collection added without the marker reds. Marking alone would catch a rename
+    and never an addition; deriving alone would enrol collections nobody meant
+    as families. Requiring both is what makes the enrolment exhaustive AND
+    deliberate.
+    """
+
+
+SCHEMA_FAMILY = SchemaFamilyMarker()
+"""The singleton marker attached to every revision schema-family declaration."""
+
+
 def manifest_only_fields(model: type[BaseModel]) -> frozenset[str]:
     """Return the names of ``model``'s fields marked :data:`MANIFEST_ONLY`.
 
@@ -161,6 +269,78 @@ def manifest_only_fields(model: type[BaseModel]) -> frozenset[str]:
         for name, field in model.model_fields.items()
         if any(isinstance(meta, ManifestOnlyMarker) for meta in field.metadata)
     )
+
+
+def schema_family_fields(model: type[BaseModel]) -> frozenset[str]:
+    """Return the names of ``model``'s fields marked :data:`SCHEMA_FAMILY`.
+
+    The declared enrolment. :func:`collection_shaped_fields` computes the set
+    this one is meant to equal; the gate that compares them is what stops a new
+    collection shipping outside coverage.
+    """
+    return frozenset[str](
+        name
+        for name, field in model.model_fields.items()
+        if any(isinstance(meta, SchemaFamilyMarker) for meta in field.metadata)
+    )
+
+
+def collection_shaped_fields(model: type[BaseModel]) -> frozenset[str]:
+    """Return ``model``'s fields annotated as a ``tuple`` of a schema model.
+
+    The shape-derived counterpart to :func:`schema_family_fields`, computed from
+    the annotation and nothing else, so it cannot be forgotten when a field is
+    added.
+
+    A singleton sub-model and a required value object are deliberately outside
+    this set even though both hold schema content. The coverage question is
+    about an EMPTY collection, and neither shape can be empty in the sense the
+    question means: a singleton is present or absent, and a required value
+    object is always present. Folding them in would need a second disposition
+    vocabulary for a different question wearing the same words.
+    """
+    families: set[str] = set()
+    for name, field in model.model_fields.items():
+        if get_origin(field.annotation) is not tuple:
+            continue
+        args = get_args(field.annotation)
+        element = args[0] if args else None
+        if isinstance(element, type) and issubclass(element, BaseModel):
+            families.add(name)
+    return frozenset(families)
+
+
+def schema_family_enrollment_failures(model: type[BaseModel]) -> tuple[str, ...]:
+    """Return why ``model``'s declared families disagree with its shape-derived ones.
+
+    The completeness rule of the marker mechanism, expressed as a function rather
+    than inline in a test so the thing proven to bite is the thing that runs.
+
+    Accumulating rather than raising, and reporting both directions separately,
+    because the two failures have opposite fixes: an unmarked collection needs
+    the marker, while a marked non-collection needs the marker removed or the
+    field's shape reconsidered. A single combined message would leave the author
+    to work out which.
+
+    Args:
+        model: The schema model whose family enrolment to check.
+
+    Returns:
+        One message per disagreement, empty when the enrolment is complete.
+    """
+    declared = schema_family_fields(model)
+    shaped = collection_shaped_fields(model)
+    failures = [
+        f"field {name!r} is a collection of schema models but is not marked SCHEMA_FAMILY, so its emptiness "
+        f"would never be reported as a coverage disposition"
+        for name in sorted(shaped - declared)
+    ]
+    failures.extend(
+        f"field {name!r} is marked SCHEMA_FAMILY but is not a collection of schema models, so it has no "
+        f"emptiness for a disposition to describe"
+        for name in sorted(declared - shaped)
+    )
+    return tuple(failures)
 
 
 def governance_stamp_fields(model: type[BaseModel]) -> frozenset[str]:

@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority
 
 from ..casilla_reference import CasillaReferenceResult, render_casilla_reference
 from ..terminology._casilla_anchor import casilla_page_anchor, casilla_reference_target
@@ -38,11 +38,9 @@ _M130_CASILLA_15_SOURCE = (
 )
 
 
-@pytest.fixture(scope="module")
-def authority() -> ValidatedRegistryAuthority:
-    """Use the same validated bundled authority as the product projection."""
-    return bundled_authority()
+from ._authority_fixtures import authority
 
+__all__ = ["authority"]
 
 @pytest.fixture(scope="module")
 def projected(

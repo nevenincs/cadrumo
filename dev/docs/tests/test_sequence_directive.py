@@ -21,14 +21,11 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Iterator
 from io import StringIO
 from pathlib import Path
 
 import pytest
 from sphinx.application import Sphinx
-
-from cadrumo.tests.env_scope import scoped_env_var
 
 from ..sequence_directive import (
     build_sequence_payload,
@@ -290,24 +287,16 @@ def _build(root: Path, *, warningiserror: bool) -> tuple[str, str]:
     return html, warning.getvalue()
 
 
-@pytest.fixture
-def _isolated_storage(tmp_path: Path) -> Iterator[None]:
-    """Pin an isolated Cadrumo storage root and English output for the CLI-tree walk."""
-    root = tmp_path / "cadrumo-store"
-    root.mkdir()
-    with (
-        scoped_env_var("CADRUMO_LOCAL_STORAGE_ROOT", str(root)),
-        scoped_env_var("CADRUMO_OUTPUT_LANGUAGE", "en"),
-    ):
-        yield
+from ._sequence_storage_fixtures import _isolated_sequence_storage
 
+__all__ = ["_isolated_sequence_storage"]
 
 _INDEX_WITH_DIRECTIVE = (
     f"# Modelo 303\n\n```{{cli-sequence}} {_SEQUENCE_ID}\n:verify: Verify the calculation before exporting.\n```\n"
 )
 
 
-def test_directive_build_renders_frames_and_payload(tmp_path: Path, _isolated_storage: None) -> None:
+def test_directive_build_renders_frames_and_payload(tmp_path: Path, _isolated_sequence_storage: None) -> None:
     """A real Sphinx build renders the static frames plus one inline payload, no-JS complete."""
     site = tmp_path / "site"
     site.mkdir()
@@ -352,7 +341,7 @@ def test_directive_build_renders_frames_and_payload(tmp_path: Path, _isolated_st
     assert "wrapped" in payload["frames"][0]
 
 
-def test_directive_missing_golden_is_instructive_build_error(tmp_path: Path, _isolated_storage: None) -> None:
+def test_directive_missing_golden_is_instructive_build_error(tmp_path: Path, _isolated_sequence_storage: None) -> None:
     """A directive with no committed golden fails the build naming the refresh command."""
     site = tmp_path / "site"
     site.mkdir()
@@ -378,7 +367,7 @@ _INDEX_LIVE_AEAT = "# Pull\n\n```{cli-sequence} live-pull-demo\n:verify: Confirm
 _CONTRACT_LIVE_AEAT = "@result aeat app live justificante pull\n@expect exit_code == 0"
 
 
-def test_directive_refuses_live_aeat_in_an_executed_frame(tmp_path: Path, _isolated_storage: None) -> None:
+def test_directive_refuses_live_aeat_in_an_executed_frame(tmp_path: Path, _isolated_sequence_storage: None) -> None:
     """A live-AEAT command in an EXECUTED frame is refused at build time.
 
     The refusal fires statically, before any golden is read, so an ``app live``
@@ -559,7 +548,7 @@ _INDEX_UNKNOWN_SHELL = "# Bad shell\n\n```{cli-sequence} bad-shell-demo\n:verify
 _CONTRACT_UNKNOWN_SHELL = ":shells: fish\n@result aeat app modelo work verify wu\n@expect exit_code == 0"
 
 
-def test_directive_refuses_unknown_shell(tmp_path: Path, _isolated_storage: None) -> None:
+def test_directive_refuses_unknown_shell(tmp_path: Path, _isolated_sequence_storage: None) -> None:
     """An unknown :shells: value fails the build with the accepted set named."""
     site = tmp_path / "site"
     site.mkdir()
@@ -648,7 +637,7 @@ _CONTRACT_ALL_STATIC = (
 )
 
 
-def test_all_static_sequence_builds_without_a_golden(tmp_path: Path, _isolated_storage: None) -> None:
+def test_all_static_sequence_builds_without_a_golden(tmp_path: Path, _isolated_sequence_storage: None) -> None:
     """An all-@static sequence renders from the parse alone: no golden, no verify caption.
 
     A live-AEAT page shows its commands as @static frames (execution is

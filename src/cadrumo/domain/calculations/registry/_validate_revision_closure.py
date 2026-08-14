@@ -26,7 +26,7 @@ from collections.abc import Mapping
 
 from ._schema import LegalReference, ModeloRevision, SourceReference
 from ._validate_application_links import validate_application_link_closure
-from ._validate_constructs import validate_construct_closure, validate_support_removal_decisions
+from ._validate_constructs import validate_construct_closure
 from ._validate_evidence import EvidenceValidator
 from ._validate_formulas import validate_formula_dag
 from ._validate_helpers import missing_refs as _missing_refs
@@ -59,23 +59,6 @@ def _validate_revision_closure_sections(
     so member ids, application links, constructs, formula dependencies, and
     revision rules share one closure view.
     """
-    failures.extend(
-        validate_support_removal_decisions(
-            prefix,
-            revision,
-            export_layout_ids=context.export_layout_ids,
-            extraction_profile_ids=context.extraction_profile_ids,
-            cross_reference_ids=context.cross_reference_ids,
-            workbook_parity_ids=context.workbook_parity_ids,
-            verification_expectation_ids=context.verification_expectation_ids,
-            application_link_ids=context.application_link_ids,
-            deadline_window_ids=context.deadline_window_ids,
-            filing_schedule_ids=context.filing_schedule_ids,
-            legal_refs=legal_refs,
-            source_refs=source_refs,
-            evidence=evidence,
-        ),
-    )
     failures.extend(validate_application_link_closure(prefix, revision, modelo_id=modelo_id))
     failures.extend(validate_reconciliation_total_closure(prefix, revision))
     failures.extend(validate_bracket_table_temporal_coverage(prefix, revision))

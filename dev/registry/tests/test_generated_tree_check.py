@@ -61,6 +61,21 @@ def _check_inputs(tmp_path: Path, snapshot):
     return context, joined, semantic_map, target_export_root
 
 
+#: Substring of the registry's filing-grade review refusal. ``check_generated_export_tree``
+#: selects a filing-grade snapshot partway through, so an unreviewed target revision raises
+#: the same exception type these cases expect, before the comparison under test ever runs.
+_REVIEW_GATE_REFUSAL = "filing-grade snapshot requires operator_reviewed"
+
+
+def _require_the_defect_was_reached(refusal: BaseException, defect: str) -> None:
+    """Refuse a pass earned by the review gate rather than by the injected defect."""
+    assert _REVIEW_GATE_REFUSAL not in str(refusal), (
+        f"defect {defect!r} was not detected on its own terms: the check refused on the "
+        f"registry's filing-grade review gate before reaching the comparison this case "
+        f"exercises, so a green result here would prove nothing about the injected drift"
+    )
+
+
 def _profile() -> ExportTreeTransportProfile:
     return ExportTreeTransportProfile(
         modelo="200",
@@ -75,9 +90,9 @@ def _profile() -> ExportTreeTransportProfile:
     )
 
 
-def test_check_regenerates_in_isolation_and_preserves_published_hashes(m200_snapshot, tmp_path) -> None:
+def test_check_regenerates_in_isolation_and_preserves_published_hashes(m200_inspection_snapshot, tmp_path) -> None:
     """A real candidate must match every current target member without target mutation."""
-    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m200_snapshot)
+    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m200_inspection_snapshot)
     before = _tree_hashes(target_export_root)
 
     checked = check_generated_export_tree(
@@ -115,9 +130,9 @@ def test_check_regenerates_in_isolation_and_preserves_published_hashes(m200_snap
         "obsolete-direct-modelo",
     ),
 )
-def test_check_refuses_drift_without_changing_published_hashes(m200_snapshot, tmp_path, defect: str) -> None:
+def test_check_refuses_drift_without_changing_published_hashes(m200_inspection_snapshot, tmp_path, defect: str) -> None:
     """Every authority or membership defect fails while target bytes remain exactly as supplied."""
-    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m200_snapshot)
+    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m200_inspection_snapshot)
     profile = _profile()
     render_profile = _wire_profile()
     if defect == "semantic-map":
@@ -138,7 +153,7 @@ def test_check_refuses_drift_without_changing_published_hashes(m200_snapshot, tm
     elif defect == "render-profile":
         render_profile = render_profile.model_copy(update={"fragment_ids": ("digest-drift",)})
     elif defect == "output-byte":
-        output = target_export_root / "0001-record-generated-registro-tipo-1-part-001.toml"
+        output = target_export_root / "0001-record-generated-registro-tipo-1.toml"
         output.write_bytes(output.read_bytes() + b"# drift\n")
     elif defect == "manifest-authority":
         manifest_path = target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME
@@ -157,7 +172,7 @@ def test_check_refuses_drift_without_changing_published_hashes(m200_snapshot, tm
             ),
         )
     elif defect == "missing-output":
-        (target_export_root / "0002-record-generated-registro-tipo-2-part-001.toml").unlink()
+        (target_export_root / "0002-record-generated-registro-tipo-2.toml").unlink()
     elif defect == "extra-output":
         (target_export_root / "0003-unreviewed.toml").write_text("unreviewed = true\n", encoding="utf-8")
     elif defect == "obsolete-sibling":
@@ -171,7 +186,7 @@ def test_check_refuses_drift_without_changing_published_hashes(m200_snapshot, tm
         raise AssertionError(f"unknown test defect: {defect}")
     before = _tree_hashes(target_export_root)
 
-    with pytest.raises(RegistryValidationError):
+    with pytest.raises(RegistryValidationError) as refusal:
         check_generated_export_tree(
             context=context,
             joined=joined,
@@ -181,12 +196,13 @@ def test_check_refuses_drift_without_changing_published_hashes(m200_snapshot, tm
             render_profile_source_evidence=_wire_evidence(),
         )
 
+    _require_the_defect_was_reached(refusal.value, defect)
     assert _tree_hashes(target_export_root) == before
 
 
-def test_check_refuses_candidate_reuse_without_changing_published_hashes(m200_snapshot, tmp_path) -> None:
+def test_check_refuses_candidate_reuse_without_changing_published_hashes(m200_inspection_snapshot, tmp_path) -> None:
     """A prior candidate output cannot become a check input or a silent green path."""
-    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m200_snapshot)
+    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m200_inspection_snapshot)
     candidate_export_root = context.validation.registry_root / "modelos" / "200" / "revisions" / "2025" / "export"
     candidate_export_root.mkdir()
     before = _tree_hashes(target_export_root)
@@ -204,9 +220,9 @@ def test_check_refuses_candidate_reuse_without_changing_published_hashes(m200_sn
     assert _tree_hashes(target_export_root) == before
 
 
-def test_check_refuses_linked_candidate_ancestor_before_rendering(m200_snapshot, tmp_path) -> None:
+def test_check_refuses_linked_candidate_ancestor_before_rendering(m200_inspection_snapshot, tmp_path) -> None:
     """A directory link cannot redirect candidate rendering before the S10 boundary."""
-    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m200_snapshot)
+    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m200_inspection_snapshot)
     candidate_modelos_root = context.validation.registry_root / "modelos"
     redirected_modelos_root = tmp_path / "redirected-modelos"
     candidate_modelos_root.rename(redirected_modelos_root)

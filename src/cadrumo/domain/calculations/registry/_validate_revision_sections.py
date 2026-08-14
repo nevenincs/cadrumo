@@ -27,6 +27,8 @@ from pathlib import Path
 
 from ._schema import LegalReference, ModeloDefinition, ModeloRevision, SourceReference
 from ._validate_algorithms import validate_algorithm_binding_section, validate_algorithm_provider_section
+from ._validate_applicability_section import validate_applicability_section
+from ._validate_authority_grade import validate_authority_grade_section
 from ._validate_completeness import emit_completeness_gate_failures as _emit_completeness_gate_failures
 from ._validate_dependency_sections import (
     validate_dependency_classification_section,
@@ -143,6 +145,13 @@ def _validate_revision_surface_sections(
         legal_refs=legal_refs,
         source_refs=source_refs,
         evidence=evidence,
+    )
+    validate_applicability_section(
+        failures,
+        prefix=prefix,
+        modelo=modelo_id,
+        revision=revision,
+        legal_refs=legal_refs,
     )
     validate_filing_schedule_section(
         failures,
@@ -296,4 +305,5 @@ def validate_revision_definition(
         source_refs=source_refs,
         evidence=evidence,
     )
+    failures.extend(validate_authority_grade_section(prefix, modelo_id=modelo.id, revision=revision))
     return failures

@@ -5,21 +5,10 @@ from __future__ import annotations
 import pytest
 
 from ....domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
-from .. import RegistryConformanceProfile, audit_bundled_registry_conformance
+from .. import RegistryConformanceProfile
+from ._conformance_profile_fixtures import degraded_profile, validated_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@pytest.fixture(scope="module")
-def validated_profile() -> RegistryConformanceProfile:
-    """Compose the shipped profile through the validating authority."""
-    return audit_bundled_registry_conformance()
-
-
-@pytest.fixture(scope="module")
-def degraded_profile() -> RegistryConformanceProfile:
-    """Compose the shipped profile through the non-validating loader."""
-    return audit_bundled_registry_conformance(validate=False)
 
 
 @pytest.fixture(scope="module")
@@ -151,3 +140,6 @@ def test_scope_keeps_inspection_ledgers_visible_without_filing_grade_gap_counts(
     assert rows_with_inspection_law_gaps, "inspection evidence must retain visible law gaps where declared"
     assert rows_with_inspection_construct_gaps, "inspection evidence must retain visible construct gaps where declared"
     assert set(rows_with_inspection_construct_gaps) <= set(validated_profile.construct_evidence_inspection_gap_rows)
+
+
+__all__ = ["degraded_profile", "validated_profile"]

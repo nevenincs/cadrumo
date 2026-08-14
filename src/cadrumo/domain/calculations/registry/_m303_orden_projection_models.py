@@ -360,23 +360,23 @@ class M303RegimenSimplificadoSnapshot(RegistryModel):
     record_design: SourceReference
 
     @model_validator(mode="after")
-    def _requires_complete_s59_coordinates(self) -> M303RegimenSimplificadoSnapshot:
-        _validate_s59_record_design(self)
-        _validate_s59_coordinate(self)
-        _validate_s59_agricultural_authority(self)
+    def _coordinates_are_complete_and_source_pinned(self) -> M303RegimenSimplificadoSnapshot:
+        _validate_regimen_simplificado_record_design(self)
+        _validate_regimen_simplificado_coordinate(self)
+        _validate_regimen_simplificado_agricultural_authority(self)
         if self.filing_year == 2022:
-            _validate_s59_2022_coordinate(self)
+            _validate_regimen_simplificado_2022_coordinate(self)
         return self
 
 
-def _validate_s59_record_design(snapshot: M303RegimenSimplificadoSnapshot) -> None:
+def _validate_regimen_simplificado_record_design(snapshot: M303RegimenSimplificadoSnapshot) -> None:
     _require_invariant(
         snapshot.record_design.kind == "record_design" and snapshot.record_design.record_design_epoch is not None,
         "M303 regimen simplificado snapshot requires an epoch-pinned record design",
     )
 
 
-def _validate_s59_coordinate(snapshot: M303RegimenSimplificadoSnapshot) -> None:
+def _validate_regimen_simplificado_coordinate(snapshot: M303RegimenSimplificadoSnapshot) -> None:
     _require_invariant(
         snapshot.filing_year == snapshot.orden.ejercicio
         and snapshot.registry_revision_id == snapshot.orden.registry_revision_id,
@@ -384,7 +384,7 @@ def _validate_s59_coordinate(snapshot: M303RegimenSimplificadoSnapshot) -> None:
     )
 
 
-def _validate_s59_agricultural_authority(snapshot: M303RegimenSimplificadoSnapshot) -> None:
+def _validate_regimen_simplificado_agricultural_authority(snapshot: M303RegimenSimplificadoSnapshot) -> None:
     agricultural = snapshot.orden.agricultural_authority
     _require_invariant(
         agricultural.record_design_source_ref == snapshot.record_design.id
@@ -393,7 +393,7 @@ def _validate_s59_agricultural_authority(snapshot: M303RegimenSimplificadoSnapsh
     )
 
 
-def _validate_s59_2022_coordinate(snapshot: M303RegimenSimplificadoSnapshot) -> None:
+def _validate_regimen_simplificado_2022_coordinate(snapshot: M303RegimenSimplificadoSnapshot) -> None:
     _validate_2022_annual_orden_coordinate(
         ejercicio=snapshot.orden.ejercicio,
         registry_revision_id=snapshot.orden.registry_revision_id,

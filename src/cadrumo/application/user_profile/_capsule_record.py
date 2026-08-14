@@ -31,13 +31,16 @@ from ...domain.buckets import (
 from ...domain.user_profile import UserProfileRecord
 from ..profile_custody import (
     ProfileCustodySecureObjectNamespace,
-    ProfileCustodySecureObjectRepositoryPort,
     default_profile_bucket_event_history_repository,
     profile_custody_secure_object_key_digest,
     profile_custody_secure_object_namespace,
     profile_custody_secure_object_repository,
 )
-from ._custody_ports import ProfileCustodySecureObjectRawRowPort, ProfileCustodySecureObjectRecordPort
+from ._custody_ports import (
+    ProfileCustodySecureObjectRawRowPort,
+    ProfileCustodySecureObjectRecordPort,
+    ProfileCustodySecureObjectRepositoryPort,
+)
 
 if TYPE_CHECKING:
     from ._custody_ports import ProfileCustodyEnvelopePort

@@ -17,7 +17,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
-from ....core import OBJECT_TUPLE_ADAPTER, BindingSourceKind, Modelo, Period, TaxDomain
+from ....core import OBJECT_TUPLE_ADAPTER, BindingSourceKind, Modelo, Period, RegistrySelectorPeriodCode, TaxDomain
 from ....core.i18n import output_language
 from ._authority import ValidatedRegistryAuthority
 from ._binding_selector_utils import boolean_binding_encoded_values
@@ -89,12 +89,12 @@ class ResolvedRegistryQueryContext(BaseModel):
     needs to answer a read-only introspection request.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     definition: ModeloDefinition
     revision: ModeloRevision
     filing_year: int | None = None
-    registry_period: str | None = None
+    registry_period: RegistrySelectorPeriodCode | None = None
 
 
 class RegistryQueryService:

@@ -1,7 +1,26 @@
 """Recoverable hard-cutover publication for one validated generated export tree.
 
-Only ``revisions/<id>/export/`` is generator-owned.  The revision's casillas,
-formulae, bindings, parity and application records remain outside this boundary.
+Generator-owned: ``revisions/<id>/export/`` in full, PLUS the ``export_refs``
+field of exactly those casillas the generated layout addresses.  Everything else
+in the revision -- casilla labels, legal and source refs, constraints, ordering,
+formulae, bindings, parity and application records -- remains outside this
+boundary, as do casillas the layout does not address.
+
+``export_refs`` is inside the boundary because it is DERIVED, not authored: the
+generator has just computed which casilla each export field addresses, and the
+back-reference is that one fact written the other way.  Registry validation
+requires both directions, so a generated layout cannot validate while the
+casillas it addresses stay silent about it.  Hand-authoring it would mean
+copying generated field ids into casilla files by hand -- dual maintenance of a
+single fact, which rots on the next regeneration.  The write is textual and
+touches only that line, so every other byte of a casilla file survives
+unchanged.
+
+The requirement is scoped to fixed-width layouts, and deliberately so: Modelo
+100 documents that its revisions carry no per-casilla ``export_refs`` because
+they export through an ``xml_dictionary`` layout.  That is correct and must not
+be "fixed" by adding refs it should not have.
+
 The internal JSON provenance member moves with the generated TOML tree, while
 the production registry loader continues to consume only its TOML fragments.
 """

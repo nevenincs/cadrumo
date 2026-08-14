@@ -38,7 +38,6 @@ _CONSTRUCT_MEMBER_AXES: tuple[tuple[str, str], ...] = (
     ("application_links", "application_link_ids"),
     ("deadline_windows", "deadline_window_ids"),
     ("filing_schedules", "filing_schedule_ids"),
-    ("support_removal_decisions", "support_removal_decision_ids"),
     ("dependency_classifications", "dependency_classification_ids"),
 )
 

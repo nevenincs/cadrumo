@@ -123,7 +123,8 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from itertools import pairwise
+from datetime import date
+from itertools import combinations, pairwise
 from pathlib import Path
 
 import pytest
@@ -131,6 +132,7 @@ import pytest
 from .....core.resources import bundled_path
 from .. import ModeloDefinition
 from .._authority import ValidatedRegistryAuthority
+from .._loader import load_registry_tree
 from .._record_design import (
     extract_record_design_pdf,
     extract_record_design_workbook,
@@ -579,6 +581,30 @@ def _exporting_revisions() -> list[tuple[ModeloDefinition, str, object]]:
         for revision_id, revision in modelo.revisions.items()
         if revision.export_layouts
     ]
+
+
+def _all_declared_revisions() -> list[tuple[ModeloDefinition, str, object]]:
+    """Every modelo's every declared revision, regardless of export capability.
+
+    Distinct from :func:`_exporting_revisions`, which every other test in this
+    module uses to calibrate the relayout-detection signal against a known,
+    already-exporting subject set. This iterator serves the coverage-
+    completeness gate below, which asks the operator's actual question --
+    does EVERY modelo's declared span have corpus-proven grounding -- not a
+    signal-quality question scoped to the modelos that happen to export today.
+
+    Reads through the raw loader (:func:`load_registry_tree`), never
+    :func:`_authority`: the coverage-completeness question is structural
+    (declared revisions, period selectors, bundled corpus) and needs no
+    business-rule or filing-grade validation to answer. Coupling it to
+    :class:`ValidatedRegistryAuthority` would make this gate's own
+    reliability hostage to an unrelated validation defect anywhere else in
+    the tree -- the exact silent-failure shape this campaign exists to
+    remove, now reproduced as "the coverage gate didn't even run" instead of
+    "the coverage gate reported clean".
+    """
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    return [(modelo, revision_id, revision) for modelo in modelos for revision_id, revision in modelo.revisions.items()]
 
 
 def _claimed_years(revision, design_years: set[int]) -> set[int]:
@@ -1493,3 +1519,275 @@ def test_the_plural_and_range_naming_variants_are_read() -> None:
     assert _design_years("06-111-ejercicios-2016-hasta-2018.pdf") == (2016, 2017, 2018)
     # the orden year is still never coverage
     assert _design_years("01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes.xlsx") == (2019,)
+
+
+def test_every_modelo_revision_span_is_corpus_proven_never_undecidable() -> None:
+    """HARD FAIL: every declared revision span must be corpus-PROVEN clean, tree-wide.
+
+    Operator directive, verbatim in substance: no modelo schema may be missing
+    supported time-range grounding, and no schema gap of this kind is allowed
+    to pass any test. This is the property that answers it, over every
+    modelo's every revision, not the exporting subset the sibling tests in
+    this module calibrate the detection signal against.
+
+    PASS requires BOTH, per revision:
+
+    1. ``_boundaries_for(modelo.id, revision) == {}`` -- the SAME corpus-diffing
+       instrument the sibling tests in this module already prove trustworthy
+       (page-length, box-displacement, box-SET-change, reserved-space
+       retire/revive, and unnumbered-slot signals, unioned into one verdict)
+       finds no re-layout the declared span crosses.
+    2. At least TWO comparable bundled design years fall inside the revision's
+       claimed span (``_claimed_years`` against ``_designs_for``'s output).
+
+    Both are required because they answer different questions and collapsing
+    them into one hides which is missing. A revision with zero boundaries but
+    fewer than two comparable years is UNDECIDABLE, not clean: an open-ended
+    or multi-year span is a CLAIM that one layout serves every year in it, and
+    a claim nobody has checked is not thereby true. Passing it here would mean
+    this gate reports "clean" for exactly the modelos it looked hardest at and
+    found nothing to compare -- the same shape as the sweep that withdrew nine
+    modelos' export layouts behind real-looking legal citations while the
+    validator checked only that a citation RESOLVED, never that it PROHIBITED
+    anything: the larger the evidence gap, the quieter it was. This gate is
+    built to make that shape impossible to reproduce by omission.
+
+    NO ALLOWLIST. NO PER-MODELO EXEMPTION. NO SKIP, XFAIL, OR CONDITIONAL
+    GUARD. A modelo that cannot be proven fails, by name, and stays failing
+    until real coverage is built -- either the missing bundled design
+    evidence is acquired, or the revision is split at its corpus-proven
+    boundaries. The two failure classes are named separately in the assertion
+    because they have different fixes: a fix-owner who reads "split this
+    revision" when the real need is "acquire more corpus evidence" wastes a
+    day and then invents a split with no basis.
+
+    Measured at authoring time, PER REVISION, which is the precision this
+    property needs -- a modelo-level tally (design-year COUNT anywhere against
+    boundary COUNT anywhere) was tried first and was wrong: it does not check
+    whether the comparable years fall INSIDE the specific revision being
+    judged. Modelo 100 makes the gap concrete -- its bundled designs run
+    2009-2019 while all six of its revisions run 2020-2025, zero overlap --
+    and the modelo-level tally called that "11 designs, 0 boundaries, clean"
+    by counting the absence of a comparison as the success of one. The
+    per-revision check this test runs does not make that mistake.
+
+    97 total revisions. 3 PASS (131 revision 2019-2023; 202 revisions
+    2019-2022 and 2023-2024). 7 modelos carry at least one PROVEN GAP
+    revision (200, 220, 303, 322, 353, 604, 714). 67 modelos carry at least
+    one UNDECIDABLE revision. 0 of 73 modelos have EVERY revision proven
+    clean -- even 131 and 202, each with a passing revision, have other
+    revisions (131's 2024/2025/2026; 202's 2025-y-siguientes) that fail
+    because no bundled design exists for those specific years. This is the
+    honest, expected result of a real coverage gap this campaign exists to
+    surface -- it is not a signal this gate needs tuning.
+    """
+    proven_gap: list[str] = []
+    undecidable: list[str] = []
+    for modelo, revision_id, revision in _all_declared_revisions():
+        boundaries = _boundaries_for(modelo.id, revision)
+        if boundaries:
+            detail = "; ".join(
+                f"{f'{earlier} mid-year' if earlier == later else f'{earlier}/{later}'} ({' + '.join(evidence)})"
+                for (earlier, later), evidence in sorted(boundaries.items())
+            )
+            proven_gap.append(
+                f"modelo {modelo.id} revision {revision_id!r}: PROVEN GAP -- spans {len(boundaries)} "
+                f"corpus-evidenced re-layout(s), needs {len(boundaries) + 1} revisions -- {detail}",
+            )
+            continue
+        design_years, _unreadable = _designs_for(modelo.id)
+        claimed = _claimed_years(revision, set(design_years))
+        if len(claimed) < 2:
+            undecidable.append(
+                f"modelo {modelo.id} revision {revision_id!r}: UNDECIDABLE -- only {len(claimed)} comparable "
+                "bundled design year(s) fall inside its claimed span; acquire more per-year corpus evidence "
+                "before this revision's span can be trusted -- it must not be split on today's evidence, "
+                "and it must not be reported clean either",
+            )
+
+    assert not proven_gap and not undecidable, (
+        "every modelo's declared revision span must be corpus-proven clean before it may pass: zero "
+        "corpus-evidenced re-layout boundaries AND at least two comparable bundled design years checked "
+        "inside the span. An open-ended or multi-year span is a CLAIM the layout serves every year in it; "
+        "an unchecked claim is not thereby true.\n"
+        "PROVEN GAP -- split the revision at the named boundaries:\n  " + "\n  ".join(sorted(proven_gap)) + "\n"
+        "UNDECIDABLE -- acquire bundled corpus evidence; do not attempt a split with no basis:\n  "
+        + "\n  ".join(sorted(undecidable))
+    )
+
+
+def _current_filing_year() -> int:
+    """Today's calendar year, the rolling upper bound a coverage sweep must reach.
+
+    Computed at call time rather than pinned as a literal: a coverage hole at the
+    tail of a modelo's declared revisions is dated by the CALENDAR, not by when
+    this module was last edited. A hardcoded year would itself become a silent
+    hole the moment it goes stale -- the exact failure shape this check exists
+    to catch, reproduced in the checker.
+    """
+    return date.today().year
+
+
+def _covers_year(revision, year: int) -> bool:
+    """Whether one revision's period selector resolves for a given filing year.
+
+    Deliberately NOT :func:`_claimed_years` or :func:`_span_years`. Those both
+    bound an open-ended (``year_to is None``) span at ``year_from`` alone, on
+    purpose, because the relayout-crossing gate above can only ever speak about
+    years the bundled CORPUS covers. This function answers a different
+    question -- does the revision's own LAW-DETERMINED selector resolve this
+    year -- so an open upper bound must extend all the way to the year asked
+    about, corpus or no corpus. Collapsing the two meanings into one helper
+    would make an open-ended revision that legitimately still covers today read
+    as covering only its opening year, inventing a hole that is not there.
+    """
+    selector = revision.period_selector
+    if selector.years:
+        return year in selector.years
+    if selector.year_from is None:
+        return False
+    if year < selector.year_from:
+        return False
+    return selector.year_to is None or year <= selector.year_to
+
+
+def _period_overlap(id_a: str, periods_a: tuple[str, ...], id_b: str, periods_b: tuple[str, ...]) -> str | None:
+    """Evidence that two same-year revisions genuinely collide, or ``None``.
+
+    NOT "more than one revision claims this year" -- that naive check produces
+    two confirmed false positives in the bundled corpus. Modelo 303 splits
+    2024 mid-course by PERIOD (``2024-hasta-08-y-2t`` declares periods
+    ``1T, 2T, 01..08``; ``2024-desde-09-y-3t`` declares ``3T, 4T, 09..12``) --
+    two revisions, one year, disjoint periods, zero ambiguity. Modelo 369
+    declares three simultaneous 'esquema' revisions from 2021 onward, each
+    using its OWN period-token vocabulary (``EXT-1T..EXT-4T`` for the exterior
+    scheme, plain ``01..12`` for the import scheme, plain ``1T..4T`` for the
+    union scheme) -- a parallel regime axis, not a date collision.
+
+    The revision-selector's own ``periods`` field is therefore the finer-grained
+    signal a year-only check cannot see, matching how the production resolver
+    actually disambiguates a candidate: two revisions genuinely overlap only
+    when their period-token sets share a member, or when either declares NO
+    period restriction at all (an empty ``periods`` tuple matches every token,
+    so it collides with anything the other side claims for that year).
+    """
+    if not periods_a or not periods_b:
+        return (
+            f"revisions {id_a!r} and {id_b!r} both resolve, and at least one declares no "
+            "period-level restriction, so nothing distinguishes them"
+        )
+    shared = sorted(set(periods_a) & set(periods_b))
+    if shared:
+        return f"revisions {id_a!r} and {id_b!r} both resolve for period token(s) {shared!r}"
+    return None
+
+
+def _earliest_declared_year(revisions: list[tuple[str, object]]) -> int | None:
+    """The earliest filing year any of a modelo's revisions declares, or ``None``.
+
+    ``None`` for a modelo whose every revision declares no dateable start at
+    all -- there is nothing to sweep a coverage window from, and reporting a
+    hole for a modelo with no stated coverage would be inventing a claim the
+    registry never made.
+    """
+    starts = [
+        min(revision.period_selector.years) if revision.period_selector.years else revision.period_selector.year_from
+        for _revision_id, revision in revisions
+        if revision.period_selector.years or revision.period_selector.year_from is not None
+    ]
+    return min(starts) if starts else None
+
+
+def test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_through_today() -> None:
+    """HARD FAIL: a coverage HOLE or OVERLAP in filing-year resolution, tree-wide.
+
+    Complements, and does not replace, the relayout-crossing gate above. That
+    gate asks whether a declared span is too WIDE -- crossing a design boundary
+    inside years it already claims. This one asks the orthogonal question: is a
+    span too NARROW, does a gap sit BETWEEN two declared spans, or is the most
+    recent span CLOSED past the point it should still be open? None of those
+    three shapes is visible to boundary-diffing, because boundary-diffing only
+    ever compares years a span already claims -- it cannot see a year no span
+    claims at all.
+
+    Modelo 390 is the confirmed live case, measured 2026-08-14 via the raw
+    loader (``bundled_authority()`` itself now refuses to build, over an
+    unrelated export-layout-completeness gate, so this reads the same tier the
+    relayout gate does): every revision is closed-ended --
+
+        2022 | valid_from 2022-01-01 | valid_to 2022-12-31
+        2023 | valid_from 2023-01-01 | valid_to 2023-12-31
+        2024 | valid_from 2024-01-01 | valid_to 2024-12-31
+        2025 | valid_from 2025-01-01 | valid_to 2025-12-31
+
+    The revisions abut each other with no gap BETWEEN them, so a PAIRWISE
+    abutment check -- does each revision's start equal the previous revision's
+    end plus one day -- would call this clean. It is not: nothing resolves
+    filing year 2026, the CURRENT filing year, and nothing resolves any year
+    before 2022 either, because the earlier open-ended revision that used to
+    reach back to 2010 was replaced by these per-year epochs without carrying
+    that earlier span forward. The annual IVA summary has no revision that
+    resolves TODAY. The hole is at the TAIL, past the last revision, which
+    pairwise abutment cannot see because it only ever compares consecutive
+    revisions to EACH OTHER, never the last one to the calendar.
+
+    PASS requires, per modelo, for every filing year from its earliest declared
+    coverage (:func:`_earliest_declared_year`) through today's calendar year
+    (:func:`_current_filing_year`): at least one revision resolves
+    (:func:`_covers_year`), and no two resolving revisions genuinely COLLIDE.
+    Zero resolving revisions is a HOLE -- this application cannot even attempt
+    the calculation for that year. A collision is an OVERLAP -- two revisions
+    both claim the SAME period token (or one restricts nothing at all) inside
+    that year, so which applies is undefined.
+
+    OVERLAP IS PERIOD-TOKEN AWARE, NOT A BARE "MORE THAN ONE REVISION" COUNT
+    (:func:`_period_overlap`), because more than one revision legitimately
+    resolving a single year is a real, correct shape here -- AEAT splits some
+    modelos mid-year by PERIOD (Modelo 303's 2024) and runs others as parallel
+    REGIME tracks that share no period vocabulary at all (Modelo 369's three
+    'esquema' revisions). A bare per-year count flags both as false positives;
+    checking whether the resolving revisions' period tokens actually intersect
+    does not.
+
+    Checked against TODAY, never against the bundled corpus's own design years.
+    There does not need to be a published AEAT record design for 2026 for a
+    2026 coverage hole to be real -- resolving a revision at all is a
+    law-determined prerequisite to attempting the calculation, per
+    ``aeat-registry-authority-flow``'s revision-resolution mandate, and is
+    upstream of whether a design exists to export it against.
+
+    NO ALLOWLIST. NO PER-MODELO EXEMPTION. A closed-ended tail reads as tidy,
+    deliberate structure right up until the calendar passes it, which is
+    exactly why a static snapshot of this check would rot: it would go green
+    the day it is authored and silently start lying every January after.
+    """
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    today_year = _current_filing_year()
+
+    holes: list[str] = []
+    overlaps: list[str] = []
+    for modelo in modelos:
+        revisions = list(modelo.revisions.items())
+        earliest = _earliest_declared_year(revisions)
+        if earliest is None:
+            continue
+        for year in range(earliest, today_year + 1):
+            covering = [(rid, rev) for rid, rev in revisions if _covers_year(rev, year)]
+            if not covering:
+                holes.append(f"modelo {modelo.id}: no revision resolves filing year {year}")
+                continue
+            for (id_a, rev_a), (id_b, rev_b) in combinations(covering, 2):
+                collision = _period_overlap(id_a, rev_a.period_selector.periods, id_b, rev_b.period_selector.periods)
+                if collision:
+                    overlaps.append(f"modelo {modelo.id} filing year {year}: {collision}")
+
+    assert not holes and not overlaps, (
+        "every modelo must resolve EXACTLY ONE revision for every filing year from its earliest "
+        "declared coverage through today -- a hole means this application cannot even attempt the "
+        "calculation for that year at all; an overlap means two revisions both claim it with no "
+        "tie-break. Neither shape is visible to the relayout-crossing gate above, which only "
+        "compares years a span already claims.\n"
+        "HOLES -- no revision covers this year, most often a closed-ended tail the calendar has now "
+        "passed:\n  " + "\n  ".join(sorted(holes)) + "\n"
+        "OVERLAPS -- two or more revisions both claim this year:\n  " + "\n  ".join(sorted(overlaps))
+    )

@@ -1,0 +1,8 @@
+[[revisions."2019-y-siguientes".applicability]]
+id = "m128-seed"
+applicable_entity_types = ["attribution_entity", "legal_entity", "natural_person"]
+required_payer_fact = "pays_capital_income_with_retencion"
+applicable_reason = "Modelo 128 (retenciones sobre rentas de capitalizacion y seguros de vida): el contribuyente satisface rentas de operaciones de capitalizacion o seguros sujetas a retencion y autoliquida las retenciones."
+not_applicable_reason = "Modelo 128 no aplica: solo corresponde a quien satisface rentas de capitalizacion o seguros de vida o invalidez sujetas a retencion."
+cuota_bearing = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]

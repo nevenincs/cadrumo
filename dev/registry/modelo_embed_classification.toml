@@ -63,19 +63,6 @@ destination = "registry applicability fragment family; Spanish modality prose to
 tree_ownership = "unowned"
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_authority.py"
-classification = "machinery"
-justification = """
-Generic validated-authority construction: revision selection, snapshot assembly
-and the validation verdict. It carries no regulatory value. Its one
-Modelo.M303 branch is per-modelo SCHEMA divergence -- a generic type reaching
-for one modelo's private authority -- which is a separate defect class from a
-data embed and is tracked as such; classifying the module as an embed here
-would misdescribe the defect and put a generic authority module on a deletion
-list.
-"""
-
-[[classification]]
 path = "src/cadrumo/domain/calculations/registry/_bindings.py"
 classification = "machinery"
 justification = """
@@ -710,6 +697,17 @@ enclosing_symbol = "_semantic_payload_failure"
 kind = "regulatory_prose_literal"
 symbol = "declared_description"
 reason = "The name matches the prose-suffix detector but the values are a ',' join separator and the literal 'none' placeholder inside a diagnostic message; neither is authored prose."
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/_supplementary_orden.py"
+classification = "machinery"
+justification = """
+Dispatch tables keyed by modelo, plus the generic fold that compiles each
+registered entry onto the shared catalogues. The Modelo.M303 key names which
+compiler and fingerprint collector serve that modelo -- a routing coordinate,
+not a regulatory value. Every rate, coefficient and ejercicio the Orden fixes
+lives behind the compiler the table points at.
+"""
 
 [[classification]]
 path = "src/cadrumo/domain/calculations/registry/_validate_application_links.py"

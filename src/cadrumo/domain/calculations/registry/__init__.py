@@ -76,6 +76,7 @@ from ._fixed_width_codec import (
     validate_fixed_width_shape,
 )
 from ._ids import (
+    ApplicabilityRuleId,
     ApplicationLinkId,
     BindingId,
     ConstructId,
@@ -94,7 +95,6 @@ from ._ids import (
     RelationId,
     RevisionId,
     SourceRefId,
-    SupportRemovalDecisionId,
     VerificationExpectationId,
     WorkbookFixtureId,
     WorkbookOutputId,
@@ -119,9 +119,12 @@ from ._applicability import (
     derive_not_applicable_source_modelos,
     derive_tax_route,
     derive_taxpayer_files_economic_activity,
+    REGISTRY_RESOLVED_APPLICABILITY_MODELOS,
     has_applicability_rule,
+    hydrate_applicability_rule,
     iter_modelo_applicability_rules,
     modelo_202_modality_from_inputs,
+    resolve_applicability_rule_from_authority,
     taxpayer_model_is_declared,
 )
 from ._authority import (
@@ -393,20 +396,37 @@ from ._legal import (
     assert_legal_ref_ids_resolve,
     legal_reference_quotes_corpus,
     verify_legal_catalogue,
+    verify_legal_catalogue_grounding,
     verify_legal_reference,
+    verify_legal_reference_grounding,
 )
+
+# ModeloRevisionSource, ModeloSource, discover_modelo_sources and
+# load_modelo_source stay imported here (no external caller needs the
+# demotion to break) but are not in __all__ below: the raw-loader facade is
+# demoted per W01.P04.S10, and dev.quality.import_hygiene_scan reds a new
+# production import of these four (each had zero cross-package production OR
+# test consumers, confirmed by an AST scan, not a grep). The remaining raw
+# loaders below (load_registry_tree, load_legal_parameters_only,
+# load_catalogue_file, load_modelo_directory, load_modelo_file, load_modelo_path,
+# clear_fingerprint_cache, collect_registry_tree_fingerprints) keep their facade
+# export: each has a documented, per-caller architectural need a narrower or
+# authority-routed replacement cannot serve today (import-time cycle avoidance
+# for legal/IRPF/IVA parameter readers, a deliberate unvalidated-tree read for
+# conformance auditing, or the runtime schema loader's own TTL cache layered
+# atop the canonical fingerprint collector).
+from ._loader import ModeloRevisionSource as ModeloRevisionSource
+from ._loader import ModeloSource as ModeloSource
+from ._loader import discover_modelo_sources as discover_modelo_sources
+from ._loader import load_modelo_source as load_modelo_source
 from ._loader import (
-    ModeloRevisionSource,
-    ModeloSource,
     clear_fingerprint_cache,
     collect_registry_tree_fingerprints,
-    discover_modelo_sources,
     load_catalogue_file,
     load_legal_parameters_only,
     load_modelo_directory,
     load_modelo_file,
     load_modelo_path,
-    load_modelo_source,
     load_registry_tree,
 )
 from ._modelo_localization import modelo_locale_key, revision_locale_key
@@ -439,7 +459,6 @@ from ._support_matrix import (
     ModeloEntry,
     ModeloPortalCompatibilityRef,
     ModeloRenameRecord,
-    ModeloSupportRemovalRecord,
     RevisionCapabilityProbe,
     build_support_matrix,
     revision_capability_probe,
@@ -535,6 +554,7 @@ from ._schedules import applicable_filing_schedules, evaluate_profile_conditions
 from ._schema import (
     REVISION_GOVERNANCE_FIELDS,
     REVISION_MANIFEST_ONLY_FIELDS,
+    ApplicabilityRuleDefinition,
     ApplicationLinkDefinition,
     BboxAnchorSpec,
     BracketEntry,
@@ -585,7 +605,6 @@ from ._schema import (
     RelationDefinition,
     SourceReference,
     SourceRefs,
-    SupportRemovalDecisionDefinition,
     export_semantic_payload_axis,
     WorkbookParityReference,
 )
@@ -609,7 +628,16 @@ from ._schema_verification import (
     parse_verification_predicate_expression,
     verification_predicate_operator_name,
 )
-from ._snapshot import build_snapshot
+
+# build_snapshot stays imported here but is not in __all__: demoted per
+# W01.P04.S34, the same unguarded-entry-point class as the raw-loader family
+# S10 already demoted -- it has zero production callers outside this package,
+# confirmed by an AST scan, and dev.quality.import_hygiene_scan reds a new
+# production import. Cross-package TEST callers resolve it through the
+# tests-support facade (domain.calculations.registry.tests.build_snapshot)
+# instead of reaching into this demoted attribute directly, so it stays a
+# single resolution point rather than N direct imports of a non-__all__ name.
+from ._snapshot import build_snapshot as build_snapshot
 from ._snapshot_coordinate import registry_snapshot_id, registry_snapshot_id_for
 from ._temporal import select_revision, select_revision_for_year
 from ._validate import RegistryValidator
@@ -803,6 +831,7 @@ __all__ = [
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
     "LEDGER_BINDING_SOURCE_KINDS",
     "MODELO_303_IVA_COMPENSATION_BINDING_ID",
+    "REGISTRY_RESOLVED_APPLICABILITY_MODELOS",
     "REMOTE_READ_SCHEME",
     "REQUIRED_COVERAGE_TIERS",
     "REVISION_GOVERNANCE_FIELDS",
@@ -811,6 +840,8 @@ __all__ = [
     "ActividadOrdenAnualRef",
     "AeatNifIvaCheckerOracle",
     "AmbiguousRevisionSelectionError",
+    "ApplicabilityRuleDefinition",
+    "ApplicabilityRuleId",
     "ApplicabilityVerdict",
     "ApplicationLinkDefinition",
     "ApplicationLinkId",
@@ -967,11 +998,8 @@ __all__ = [
     "ModeloPortalCompatibilityRef",
     "ModeloRenameRecord",
     "ModeloRevision",
-    "ModeloRevisionSource",
     "ModeloScheduleDefinition",
-    "ModeloSource",
     "ModeloSupportMatrixReport",
-    "ModeloSupportRemovalRecord",
     "NoRevisionForPeriodError",
     "OneBasedExportOffset",
     "OracleAttributionGap",
@@ -1071,8 +1099,6 @@ __all__ = [
     "SourceRefId",
     "SourceReference",
     "SourceRefs",
-    "SupportRemovalDecisionDefinition",
-    "SupportRemovalDecisionId",
     "TaxRoute",
     "UnattributedOraclePayload",
     "UngroundedRentaIncome",
@@ -1119,7 +1145,6 @@ __all__ = [
     "build_external_grounding_audit",
     "build_model_law_coverage_ledger",
     "build_profile_grounding_index",
-    "build_snapshot",
     "build_support_matrix",
     "bundled_authority",
     "bundled_revision_inspection",
@@ -1157,7 +1182,6 @@ __all__ = [
     "derive_rate_box_partitions",
     "derive_tax_route",
     "derive_taxpayer_files_economic_activity",
-    "discover_modelo_sources",
     "enum_consumed_binding_ids",
     "equivalent_renta_web_open_value",
     "evaluate_cross_reference_applicability",
@@ -1185,6 +1209,7 @@ __all__ = [
     "gather_observed_requirement_values",
     "get_censo_modelo_foundation_contract",
     "has_applicability_rule",
+    "hydrate_applicability_rule",
     "initial_value_casilla_ids",
     "input_casilla_id_map",
     "invoice_binding_requirements",
@@ -1204,7 +1229,6 @@ __all__ = [
     "load_modelo_directory",
     "load_modelo_file",
     "load_modelo_path",
-    "load_modelo_source",
     "load_registry_tree",
     "m303_annual_orden_activity_anchor",
     "m303_annual_orden_snapshot_from_projection",
@@ -1247,6 +1271,7 @@ __all__ = [
     "render_fixed_width_export_record_payload",
     "render_m303_annual_orden_manifest",
     "renta_first_slice_binding_target_casillas",
+    "resolve_applicability_rule_from_authority",
     "resolve_atribucion_binding_row_values",
     "resolve_available_bound_inputs_by_casilla_id",
     "resolve_bound_casilla_binding_value",
@@ -1331,7 +1356,9 @@ __all__ = [
     "verification_predicate_operator_name",
     "verification_tolerance_or_exact",
     "verify_legal_catalogue",
+    "verify_legal_catalogue_grounding",
     "verify_legal_reference",
+    "verify_legal_reference_grounding",
     "verify_source_catalogue",
     "verify_source_file",
     "withholding_binding_requirements",

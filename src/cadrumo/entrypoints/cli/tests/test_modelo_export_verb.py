@@ -31,8 +31,8 @@ from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import set_active_test_profile_facts
 from ....tests.registry_observations import registry_grounded_observations
+from ....tests.registry_revision import active_registry_revision_id
 from ._modelo_review_package_support import seed_exportable_modelo_revision
-from ._registry_cli_support import _active_registry_revision_id
 from ._strict_cli_fixture_support import binding_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -48,7 +48,7 @@ def _seed_work_unit_only(*, modelo: str = "130", filing_year: int = 2026, period
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    revision_id = _active_registry_revision_id(modelo=modelo, filing_year=filing_year, period=period)
+    revision_id = active_registry_revision_id(modelo=modelo, filing_year=filing_year, period=period)
     filing_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -101,7 +101,7 @@ def _seed_verified_revision_without_inputs(*, modelo: str, filing_year: int, per
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    revision_id = _active_registry_revision_id(modelo=modelo, filing_year=filing_year, period=period)
+    revision_id = active_registry_revision_id(modelo=modelo, filing_year=filing_year, period=period)
     filing_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -228,7 +228,7 @@ def _seed_modelo_111_revisions(
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    registry_revision_id = _active_registry_revision_id(modelo="111", filing_year=filing_year, period=period)
+    registry_revision_id = active_registry_revision_id(modelo="111", filing_year=filing_year, period=period)
     filing_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -299,7 +299,7 @@ def _seed_exportable_modelo_202_2024_revision() -> tuple[str, str]:
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    revision_id = _active_registry_revision_id(modelo="202", filing_year=2024, period="1P")
+    revision_id = active_registry_revision_id(modelo="202", filing_year=2024, period="1P")
     filing_period = Period.from_year_and_code(2024, "1P")
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,

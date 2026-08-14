@@ -69,18 +69,39 @@ _MIN_STEM_SEGMENTS: Final = 3
 #: cannot hide inside a known-bad population, and so that fixing one forces a
 #: visible edit here rather than passing silently.
 #:
-#: All of them sit in the one revision under active partition, so they are
-#: expected to be resolved by that split rather than in place.
+#: The W04.P07.S87 split (temporal, not this defect) replaced the single
+#: ``2010-y-siguientes`` revision with four exact-year revisions (2022, 2023,
+#: 2024, 2025). Verified rather than assumed: this module's own detector, run
+#: against each of the four, reports all five pairings under EVERY new revision
+#: id -- the split changed nothing about export-field ownership, so the entries
+#: below are the same five defects MOVED to four ids each, not five defects
+#: resolved. Do not delete an entry on the strength of a temporal split alone;
+#: confirm the detector against the new revision first, the way this list was.
 _KNOWN_PAIRINGS: Final[frozenset[tuple[str, str, str]]] = frozenset(
     {
         # row #137 -- merged tier sums occupy [36]/[600]/[602]; six rate-split
         # rungs compute and reach no byte.
-        ("390", "2010-y-siguientes", "iva.anual.repercutido.recargo.general"),
-        ("390", "2010-y-siguientes", "iva.anual.repercutido.recargo.reducido"),
-        ("390", "2010-y-siguientes", "iva.anual.repercutido.recargo.super-reducido"),
+        ("390", "2022", "iva.anual.repercutido.recargo.general"),
+        ("390", "2022", "iva.anual.repercutido.recargo.reducido"),
+        ("390", "2022", "iva.anual.repercutido.recargo.super-reducido"),
+        ("390", "2023", "iva.anual.repercutido.recargo.general"),
+        ("390", "2023", "iva.anual.repercutido.recargo.reducido"),
+        ("390", "2023", "iva.anual.repercutido.recargo.super-reducido"),
+        ("390", "2024", "iva.anual.repercutido.recargo.general"),
+        ("390", "2024", "iva.anual.repercutido.recargo.reducido"),
+        ("390", "2024", "iva.anual.repercutido.recargo.super-reducido"),
+        ("390", "2025", "iva.anual.repercutido.recargo.general"),
+        ("390", "2025", "iva.anual.repercutido.recargo.reducido"),
+        ("390", "2025", "iva.anual.repercutido.recargo.super-reducido"),
         # row #135 / #134 -- the soportado split beside a starved [48].
-        ("390", "2010-y-siguientes", "iva.anual.soportado.interiores"),
-        ("390", "2010-y-siguientes", "iva.anual.soportado.importaciones"),
+        ("390", "2022", "iva.anual.soportado.interiores"),
+        ("390", "2022", "iva.anual.soportado.importaciones"),
+        ("390", "2023", "iva.anual.soportado.interiores"),
+        ("390", "2023", "iva.anual.soportado.importaciones"),
+        ("390", "2024", "iva.anual.soportado.interiores"),
+        ("390", "2024", "iva.anual.soportado.importaciones"),
+        ("390", "2025", "iva.anual.soportado.interiores"),
+        ("390", "2025", "iva.anual.soportado.importaciones"),
     },
 )
 

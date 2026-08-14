@@ -12,7 +12,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
-from cadrumo.core import CasillaId, FilingProducerKey, FilingProjectionRef
+from cadrumo.core import CasillaId, FilingProducerKey, FilingProjectionRef, hydrate_filing_projection_ref
 from cadrumo.domain.calculations.registry import (
     BindingId,
     CasillaFieldKindValue,
@@ -162,11 +162,17 @@ class SemanticMapEntry(_StrictModel):
 
     @field_validator("projection_ref", mode="before")
     @classmethod
-    def _require_loader_hydrated_projection_ref(cls, value: object) -> object:
-        """Refuse raw reference payloads outside the sole TOML compiler boundary."""
-        if value is not None and not isinstance(value, BaseModel):
-            raise ValueError("projection_ref must be a typed FilingProjectionRef hydrated by load_semantic_map")
-        return value
+    def _compile_projection_ref_through_the_canonical_compiler(cls, value: object) -> object:
+        """Compile a still-raw reference, so every persisted boundary round-trips.
+
+        This entry is embedded in the export provenance manifest, which is
+        written as JSON and read back by design.  Demanding an already-typed
+        reference made that impossible: from JSON a reference can only arrive as
+        a mapping.  Delegating to the one canonical compiler keeps the real
+        invariant -- every reference was compiled by it -- while giving TOML and
+        JSON the same single path.  A malformed payload still refuses there.
+        """
+        return value if value is None else hydrate_filing_projection_ref(value)
 
     @model_validator(mode="after")
     def _validate_exact_kind_semantics(self) -> SemanticMapEntry:

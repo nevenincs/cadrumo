@@ -6,8 +6,9 @@
 #
 # Atomic completeness remains deliberately open: the DP30301 exoneration
 # flag and DP30304 nonnumbered activity-code, IAE-epigrafe, and Modelo 347
-# marker fields have no typed producer. The withdrawn M303 export therefore
-# stays refused before target creation; these endpoints do not reactivate it.
+# marker fields have no typed producer. The M303 export is UNBUILT, not withdrawn:
+# the registry refuses any revision that cannot emit, and these endpoints do not
+# change that. Nothing excuses the absence; only building the export closes it.
 [[revisions.2025.casillas]]
 id = "79"
 number = "79"

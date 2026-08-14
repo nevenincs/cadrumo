@@ -253,6 +253,5 @@ application_links = [
     "modelo-232-2016-reconciliation",
     "modelo-232-2016-workflow",
 ]
-support_removal_decisions = ["modelo-232-2016-fichero-aeat-support-removal"]
 filing_schedules = ["modelo-232-2016-anual"]
 deadline_windows = ["modelo-232-2016-0a", "modelo-232-2017-0a"]

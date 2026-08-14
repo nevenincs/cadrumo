@@ -118,6 +118,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "_schema_base",
             "_schema_references",
             "_source_evidence_fingerprint",
+            "_supplementary_orden",
             "_toml_helpers",
             "_validate",
             "_validate_evidence",

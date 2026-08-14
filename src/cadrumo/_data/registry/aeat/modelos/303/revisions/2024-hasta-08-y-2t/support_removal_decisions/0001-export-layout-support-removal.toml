@@ -1,9 +1,0 @@
-[[revisions."2024-hasta-08-y-2t".support_removal_decisions]]
-id = "modelo-303-2024-early-fichero-boe-support-removal"
-subject_type = "export_layout"
-subject_id = "modelo-303-fichero-boe"
-decision = "remove_from_filing_grade"
-reason = "unsupported_official_format"
-evidence_note = "This filing-grade fixed-width layout is withdrawn atomically because its official record design contains producer fields that do not yet have canonical typed producer authority; retaining a partial layout would permit silent under-declaration."
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2024-early"]

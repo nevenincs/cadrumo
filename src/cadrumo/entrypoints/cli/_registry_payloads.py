@@ -61,7 +61,6 @@ class RegistryRevisionDetailPayload(OutputSchema):
     filing_schedule_count: int = Field(ge=0)
     portal_guard_policy_ids: list[str] = []
     workbook_parity: list[RegistryWorkbookParityDetailPayload] = []
-    support_removal_decision_count: int = Field(ge=0)
 
 
 @register_schema("registry.inspect")

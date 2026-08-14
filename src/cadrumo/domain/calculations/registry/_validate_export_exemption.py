@@ -246,13 +246,23 @@ def validate_export_exemption_declarations(
     modelo_id: str,
     revision: ModeloRevision,
 ) -> None:
-    """Append a failure for every load-bearing export exemption lacking a reason.
+    """Refuse a revision that cannot emit, and every export exemption lacking a reason.
 
     Resolves the revision's export layouts the way snapshot build does — through
     :func:`derive_export_layouts_from_bindings`, so binding-derived record fields
-    are present — and scans every fixed-width layout. A revision declaring no
-    fixed-width layout, or no completeness manifest, is a no-op: neither has a
-    completeness gate to be exempt from.
+    are present — and scans every fixed-width layout.
+
+    A revision declaring no fixed-width layout is refused HERE, at registry build.
+    That is deliberate and it is the whole point: the registry must fail until the
+    filing capability exists. The mechanism this replaces returned early on exactly
+    that condition, which made the completeness gate a no-op for the revisions
+    furthest from being filable — the larger the gap, the quieter it was. There is
+    no allowance, no allowlist and no per-modelo exemption; a modelo the
+    application cannot file is a capability still to build, never a settled state.
+
+    Failures accumulate rather than raising, so one load reports every revision
+    that cannot emit instead of the first. That enumeration is the capability
+    worklist, and it shrinks only when a layout is authored.
 
     Args:
         failures: Accumulator the registry validator drains; never raises.
@@ -261,11 +271,30 @@ def validate_export_exemption_declarations(
             edges whose source casilla ids name a foreign modelo.
         revision: The :class:`ModeloRevision` under validation.
     """
+    # Refused on emitting NOTHING, not on lacking a fixed-width layout specifically.
+    # Modelo 100 files through an XML dictionary and declares no fichero BOE at all;
+    # refusing it for the missing fixed-width layout would report a modelo that CAN
+    # emit as incapable, and would put a second, larger number into circulation
+    # beside the capability worklist's. One question, one count.
+    if not derive_export_layouts_from_bindings(revision):
+        failures.append(
+            f"{prefix}: declares no export layout, so this application cannot file it. A missing "
+            "layout is not an exemption and there is no declaration that excuses it: it is the "
+            "filing capability being absent. Author the revision's export layout from its official "
+            "record design.",
+        )
+        return
+    # Checked BEFORE the manifest, deliberately. A revision carrying neither a
+    # layout nor a completeness manifest is the least capable state there is, and
+    # ordering the manifest test first would let it return clean.
     manifest = revision.completeness_manifest
     if manifest is None:
         return
     addressed = _fixed_width_addressed_casillas(revision)
     if addressed is None:
+        # An XML-dictionary revision emits, but has no fichero-BOE completeness
+        # gate for a casilla to be exempt FROM, so the per-casilla scan below
+        # does not apply to it.
         return
     consumers = _consumption_edges(revision, modelo_id)
 

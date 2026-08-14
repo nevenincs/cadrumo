@@ -41,12 +41,6 @@ carries one row per tracked axis, always — exercised or not — each with the
 population of candidate declaration sites behind it, because "0 of 43 extraction
 profiles" and "0 of 0" are very different claims about the same zero.
 
-One such dead axis has a structural consequence worth naming: with zero
-:class:`~cadrumo.domain.calculations.registry.SupportRemovalDecisionDefinition`
-declarations anywhere in the tree,
-:attr:`~cadrumo.domain.calculations.registry.ModeloEntry.is_deprecated`
-is always :data:`False` by construction, so no consumer of it is exercised.
-
 Fixture-sidecar provenance (``real_corpus`` versus ``synthetic_generated``) is a
 sibling dead-axis question but is deliberately OUT of this module's scope: those
 sidecars are test fixtures with no registry schema model, validated by a gate
@@ -116,7 +110,6 @@ ClassificationFindingKind = Literal[
 
 DeclaredAxis = Literal[
     "calculation_class.summary",
-    "revision.support_removal_decisions",
     "extraction_profile.confidence.review_required",
     "extraction_profile.verification_source.real_aeat_corpus_pdf",
     "completeness_manifest.manual_extraction",
@@ -518,11 +511,6 @@ def _census_declared_axes(modelos: tuple[ModeloDefinition, ...]) -> tuple[Declar
             axis="calculation_class.summary",
             declaration_count=sum(1 for modelo in modelos if modelo.calculation_class == "summary"),
             population=len(modelos),
-        ),
-        DeclaredAxisUsage(
-            axis="revision.support_removal_decisions",
-            declaration_count=sum(len(revision.support_removal_decisions) for revision in revisions),
-            population=len(revisions),
         ),
         DeclaredAxisUsage(
             axis="extraction_profile.confidence.review_required",
