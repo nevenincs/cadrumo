@@ -45,12 +45,18 @@ def _child(proportion: str) -> LLMSplitChild:
     return LLMSplitChild(proportion=Decimal(proportion), iva_category=IvaCategory.DOMESTIC_GENERAL)
 
 
-def _assert_validation_error(case_id: str, build: Callable[[], object]) -> None:
-    try:
+def _assert_validation_error(case_id: str, build: Callable[[], object], match: str) -> None:
+    """Assert ``build()`` raises a ``ValidationError`` naming the expected failure.
+
+    A bare ``except ValidationError: return`` cannot distinguish the intended
+    failure (a specific field, a specific reason) from an unrelated field
+    failing for an unrelated reason — exactly the false pass this helper must
+    not produce. ``match`` pins the reason and is checked against ``str(exc)``;
+    ``case_id`` documents the call site for the reader, matching the shape of
+    the other case-driven loops in this module.
+    """
+    with pytest.raises(ValidationError, match=match):
         build()
-    except ValidationError:
-        return
-    pytest.fail(f"{case_id} unexpectedly validated")
 
 
 def test_split_response_verdicts_build() -> None:
@@ -66,30 +72,50 @@ def test_split_response_verdicts_build() -> None:
 
 
 def test_invalid_split_schema_payloads_are_rejected() -> None:
-    invalid_builders: tuple[tuple[str, Callable[[], object]], ...] = (
-        ("empty-children", lambda: LLMSplitResponse(children=(), reason="no children")),
-        ("oversum", lambda: LLMSplitResponse(children=(_child("0.6"), _child("0.6")), reason="oversum")),
-        ("zero-proportion", lambda: LLMSplitChild(proportion=Decimal("0"))),
-        ("above-one-proportion", lambda: LLMSplitChild(proportion=Decimal("1.5"))),
+    invalid_builders: tuple[tuple[str, Callable[[], object], str], ...] = (
+        (
+            "empty-children",
+            lambda: LLMSplitResponse(children=(), reason="no children"),
+            "must carry at least one child",
+        ),
+        (
+            "oversum",
+            lambda: LLMSplitResponse(children=(_child("0.6"), _child("0.6")), reason="oversum"),
+            "must sum to approximately 1.0",
+        ),
+        (
+            "zero-proportion",
+            lambda: LLMSplitChild(proportion=Decimal("0")),
+            r"proportion must be within \(0, 1\]",
+        ),
+        (
+            "above-one-proportion",
+            lambda: LLMSplitChild(proportion=Decimal("1.5")),
+            r"proportion must be within \(0, 1\]",
+        ),
         (
             "numeric-amount",
             lambda: LLMSplitChild.model_validate({"proportion": "0.5", "amount": "100.00"}),
+            r"amount\s+Extra inputs are not permitted",
         ),
         (
             "numeric-iva-amount",
             lambda: LLMSplitChild.model_validate({"proportion": "0.5", "iva_amount": "100.00"}),
+            r"iva_amount\s+Extra inputs are not permitted",
         ),
         (
             "numeric-taxable-base",
             lambda: LLMSplitChild.model_validate({"proportion": "0.5", "taxable_base": "100.00"}),
+            r"taxable_base\s+Extra inputs are not permitted",
         ),
         (
             "numeric-iva-rate",
             lambda: LLMSplitChild.model_validate({"proportion": "0.5", "iva_rate": "100.00"}),
+            r"iva_rate\s+Extra inputs are not permitted",
         ),
     )
-    for case_id, build in invalid_builders:
-        _assert_validation_error(case_id, build)
+    for case_id, build, match in invalid_builders:
+        _assert_validation_error(case_id, build, match)
 
 
 def test_parse_split_extracts_nested_json_amid_prose() -> None:

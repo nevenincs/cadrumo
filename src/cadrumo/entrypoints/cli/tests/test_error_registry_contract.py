@@ -27,6 +27,7 @@ from ....core.json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus, Reso
 from ....core.observability import RunContextMissingError
 from ....domain.portals import PortalIntegrityError
 from ....entrypoints.mcp import build_verb_input_schemas, cli_argv_for
+from ....tests.cli_envelope import require_error_document
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 
@@ -73,17 +74,6 @@ def test_every_error_category_has_a_cli_prefix_probe() -> None:
     assert probed == set(ErrorCategory) - {ErrorCategory.ERROR}
 
 
-def _error_document(output: str) -> dict[str, object]:
-    """Return the machine error document emitted by a real CLI invocation."""
-    for line in output.splitlines():
-        candidate = line.strip()
-        if candidate.startswith("{"):
-            parsed = json.loads(candidate)
-            assert isinstance(parsed, dict)
-            return {str(key): value for key, value in parsed.items()}
-    raise AssertionError(f"no JSON error document found in output:\n{output}")
-
-
 def _object_member(document: dict[str, object], key: str) -> dict[str, object]:
     value = document[key]
     assert isinstance(value, dict), f"{key!r} is not a JSON object: {value!r}"
@@ -97,7 +87,7 @@ def test_registered_refusal_action_resolves_to_its_live_input_surface(tmp_path: 
         result = invoke_cached_cli(cli_argv_for(source_schema, {}), catch_exceptions=False)
 
     assert result.exit_code != 0, result.output
-    document = _error_document(result.stderr)
+    document = require_error_document(result.stderr)
     assert set(document) == {"schema_version", "command", "active_profile", "status", "error", "notices"}
     assert document["schema_version"] == ENVELOPE_SCHEMA_VERSION
     assert document["command"] == source_schema.command_key

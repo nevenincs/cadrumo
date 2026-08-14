@@ -57,12 +57,20 @@ _BUNDLE_VERIFICATION_KEY = "errors.integrity.integrity_storage_corpus_bundle_ver
 _BUNDLE_MANIFEST_MEMBER = "corpus.manifest.json"
 
 
-def _assert_key_only(error: CadrumoError, expected_key: str) -> None:
-    """Assert the refusal renders as its key and carries no authored sentence."""
+def _assert_key_only(error: CadrumoError, expected_key: str, expected_context: dict[str, object]) -> None:
+    """Assert the refusal renders as its key and carries exactly the given machine facts.
+
+    The registered error code is derived from the key rather than passed
+    separately: the registry (``core/errors/registry/_core.py``) names every
+    ``INTEGRITY_*`` code as the uppercased final segment of its
+    ``errors.integrity.integrity_*`` message key, so a divergent code for a
+    given key is itself a registry defect this assertion catches.
+    """
     assert error.translated_message == expected_key
     assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
     assert str(error) == expected_key
-    assert error.context, "a key-only refusal must carry machine facts on its context"
+    assert error.context == expected_context
+    assert get_registered_error_code(error).code == expected_key.rsplit(".", maxsplit=1)[-1].upper()
 
 
 def _validator_refusal(excinfo: pytest.ExceptionInfo[ValidationError]) -> CorpusManifestError:
@@ -99,18 +107,16 @@ def _zip_with(target: Path, members: dict[str, str]) -> Path:
 def test_corpus_entry_path_refusals_are_key_only() -> None:
     """Each of the four path-traversal branches refuses through the key alone."""
     cases = (
-        ("dot-token", "..", {"relative_path": "..", "dot_token": True}),
-        ("backslash", "a\\..\\b", {"relative_path": "a\\..\\b", "posix_separators_only": False}),
-        ("absolute", "/etc/passwd", {"relative_path": "/etc/passwd", "absolute": True}),
-        ("dot-part", "a/../b", {"relative_path": "a/../b", "contains_dot_tokens": True}),
+        ("..", {"relative_path": "..", "dot_token": True}),
+        ("a\\..\\b", {"relative_path": "a\\..\\b", "posix_separators_only": False}),
+        ("/etc/passwd", {"relative_path": "/etc/passwd", "absolute": True}),
+        ("a/../b", {"relative_path": "a/../b", "contains_dot_tokens": True}),
     )
-    for case_id, relative_path, expected_context in cases:
+    for relative_path, expected_context in cases:
         with pytest.raises(ValidationError) as excinfo:
             CorpusEntry(relative_path=relative_path, sha256="0" * 64, content_length=0)
         error = _validator_refusal(excinfo)
-        _assert_key_only(error, _MANIFEST_KEY)
-        assert error.context == expected_context, case_id
-        assert get_registered_error_code(error).code == "INTEGRITY_STORAGE_CORPUS_MANIFEST"
+        _assert_key_only(error, _MANIFEST_KEY, expected_context)
 
 
 def test_naive_generated_at_refusal_is_key_only() -> None:
@@ -123,12 +129,15 @@ def test_naive_generated_at_refusal_is_key_only() -> None:
             manifest_sha256="0" * 64,
         )
     error = _validator_refusal(excinfo)
-    _assert_key_only(error, _MANIFEST_KEY)
-    assert error.context == {
-        "field": "generated_at",
-        "utc_aware": False,
-        "validation_error_type": "CoreValidationError",
-    }
+    _assert_key_only(
+        error,
+        _MANIFEST_KEY,
+        {
+            "field": "generated_at",
+            "utc_aware": False,
+            "validation_error_type": "CoreValidationError",
+        },
+    )
 
 
 def test_load_manifest_refusals_are_key_only(tmp_path: Path) -> None:
@@ -137,12 +146,15 @@ def test_load_manifest_refusals_are_key_only(tmp_path: Path) -> None:
     malformed.write_text("{not json", encoding="utf-8")
     with pytest.raises(CorpusManifestError) as excinfo:
         load_corpus_manifest(malformed)
-    _assert_key_only(excinfo.value, _MANIFEST_KEY)
-    assert excinfo.value.context == {
-        "manifest_path": str(malformed),
-        "structurally_valid": False,
-        "validation_error_type": "_MalformedManifestPayloadError",
-    }
+    _assert_key_only(
+        excinfo.value,
+        _MANIFEST_KEY,
+        {
+            "manifest_path": str(malformed),
+            "structurally_valid": False,
+            "validation_error_type": "_MalformedManifestPayloadError",
+        },
+    )
 
     future = tmp_path / "future.json"
     future.write_text(
@@ -159,20 +171,22 @@ def test_load_manifest_refusals_are_key_only(tmp_path: Path) -> None:
     )
     with pytest.raises(CorpusManifestError) as excinfo:
         load_corpus_manifest(future)
-    _assert_key_only(excinfo.value, _MANIFEST_KEY)
-    assert excinfo.value.context == {"manifest_path": str(future), "supported_version": "1"}
+    _assert_key_only(excinfo.value, _MANIFEST_KEY, {"manifest_path": str(future), "supported_version": "1"})
 
     root = _corpus_with_one_file(tmp_path / "corpus")
     tampered = manifest_path_for(root)
     save_corpus_manifest(_real_manifest(root).model_copy(update={"manifest_sha256": "1" * 64}), tampered)
     with pytest.raises(CorpusManifestTamperError) as tamper_info:
         load_corpus_manifest(tampered)
-    _assert_key_only(tamper_info.value, _TAMPER_KEY)
-    assert tamper_info.value.context == {
-        "manifest_path": str(tampered),
-        "manifest_sha256_matches_body": False,
-        "digest_field": "manifest_sha256",
-    }
+    _assert_key_only(
+        tamper_info.value,
+        _TAMPER_KEY,
+        {
+            "manifest_path": str(tampered),
+            "manifest_sha256_matches_body": False,
+            "digest_field": "manifest_sha256",
+        },
+    )
 
 
 def test_corpus_drift_refusal_is_key_only(tmp_path: Path) -> None:
@@ -183,13 +197,16 @@ def test_corpus_drift_refusal_is_key_only(tmp_path: Path) -> None:
 
     with pytest.raises(CorpusManifestError) as excinfo:
         assert_corpus_clean(root)
-    _assert_key_only(excinfo.value, _DRIFT_KEY)
-    assert excinfo.value.context == {
-        "corpus_root_name": "manuals",
-        "added": ("intruder.txt",),
-        "removed": (),
-        "changed": (),
-    }
+    _assert_key_only(
+        excinfo.value,
+        _DRIFT_KEY,
+        {
+            "corpus_root_name": "manuals",
+            "added": ("intruder.txt",),
+            "removed": (),
+            "changed": (),
+        },
+    )
 
 
 def test_bundle_refusals_are_key_only(tmp_path: Path) -> None:
@@ -200,30 +217,39 @@ def test_bundle_refusals_are_key_only(tmp_path: Path) -> None:
     not_a_zip.write_bytes(b"plain bytes, not an archive")
     with pytest.raises(CorpusBundleError) as excinfo:
         verify_corpus_bundle(not_a_zip)
-    _assert_key_only(excinfo.value, _BUNDLE_KEY)
-    assert excinfo.value.context == {
-        "bundle_path": str(not_a_zip),
-        "valid_zip_archive": False,
-        "archive_error_type": "BadZipFile",
-    }
+    _assert_key_only(
+        excinfo.value,
+        _BUNDLE_KEY,
+        {
+            "bundle_path": str(not_a_zip),
+            "valid_zip_archive": False,
+            "archive_error_type": "BadZipFile",
+        },
+    )
 
     no_member = _zip_with(tmp_path / "no-member.zip", {"doc.txt": "body"})
     with pytest.raises(CorpusBundleError) as excinfo:
         verify_corpus_bundle(no_member)
-    _assert_key_only(excinfo.value, _BUNDLE_KEY)
-    assert excinfo.value.context == {
-        "manifest_member": _BUNDLE_MANIFEST_MEMBER,
-        "manifest_member_present": False,
-    }
+    _assert_key_only(
+        excinfo.value,
+        _BUNDLE_KEY,
+        {
+            "manifest_member": _BUNDLE_MANIFEST_MEMBER,
+            "manifest_member_present": False,
+        },
+    )
 
     malformed = _zip_with(tmp_path / "malformed.zip", {_BUNDLE_MANIFEST_MEMBER: "{not json"})
     with pytest.raises(CorpusBundleError) as excinfo:
         verify_corpus_bundle(malformed)
-    _assert_key_only(excinfo.value, _BUNDLE_KEY)
-    assert excinfo.value.context == {
-        "embedded_manifest_structurally_valid": False,
-        "validation_error_type": "_MalformedManifestPayloadError",
-    }
+    _assert_key_only(
+        excinfo.value,
+        _BUNDLE_KEY,
+        {
+            "embedded_manifest_structurally_valid": False,
+            "validation_error_type": "_MalformedManifestPayloadError",
+        },
+    )
 
     future_payload = json.dumps(
         {
@@ -237,20 +263,22 @@ def test_bundle_refusals_are_key_only(tmp_path: Path) -> None:
     future = _zip_with(tmp_path / "future.zip", {_BUNDLE_MANIFEST_MEMBER: future_payload})
     with pytest.raises(CorpusBundleError) as excinfo:
         verify_corpus_bundle(future)
-    _assert_key_only(excinfo.value, _BUNDLE_KEY)
-    assert excinfo.value.context == {"embedded_manifest_version": "3", "supported_version": "1"}
+    _assert_key_only(excinfo.value, _BUNDLE_KEY, {"embedded_manifest_version": "3", "supported_version": "1"})
 
     root = _corpus_with_one_file(tmp_path / "corpus")
     tampered_payload = _real_manifest(root).model_copy(update={"manifest_sha256": "2" * 64}).model_dump_json()
     tampered = _zip_with(tmp_path / "tampered.zip", {_BUNDLE_MANIFEST_MEMBER: tampered_payload})
     with pytest.raises(CorpusManifestTamperError) as tamper_info:
         verify_corpus_bundle(tampered)
-    _assert_key_only(tamper_info.value, _TAMPER_KEY)
-    assert tamper_info.value.context == {
-        "manifest_member": _BUNDLE_MANIFEST_MEMBER,
-        "manifest_sha256_matches_body": False,
-        "digest_field": "manifest_sha256",
-    }
+    _assert_key_only(
+        tamper_info.value,
+        _TAMPER_KEY,
+        {
+            "manifest_member": _BUNDLE_MANIFEST_MEMBER,
+            "manifest_sha256_matches_body": False,
+            "digest_field": "manifest_sha256",
+        },
+    )
 
 
 def test_bundle_verification_refusal_is_key_only(tmp_path: Path) -> None:
@@ -263,10 +291,13 @@ def test_bundle_verification_refusal_is_key_only(tmp_path: Path) -> None:
 
     with pytest.raises(CorpusBundleVerificationError) as excinfo:
         assert_corpus_bundle_verifies(bundle)
-    _assert_key_only(excinfo.value, _BUNDLE_VERIFICATION_KEY)
-    assert excinfo.value.context == {
-        "bundle_path": str(bundle),
-        "missing": (),
-        "unexpected": ("stowaway.txt",),
-        "mismatched": (),
-    }
+    _assert_key_only(
+        excinfo.value,
+        _BUNDLE_VERIFICATION_KEY,
+        {
+            "bundle_path": str(bundle),
+            "missing": (),
+            "unexpected": ("stowaway.txt",),
+            "mismatched": (),
+        },
+    )

@@ -2,18 +2,17 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
 
 from ....core.resources import resources
+from ....tests.cli_envelope import require_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_runtime_profile
 from ._iva_wallet_inspector_support import (
     _GUIDANCE_PROFILE,
     _seed_full_autonomo_profile_for_guidance,
-    _unwrap_envelope,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -51,7 +50,7 @@ def test_m303_fresh_profile_binding_override_surfaces_seed_verb_not_mode_flag(
             ],
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output
-        work_unit_payload = _unwrap_envelope(json.loads(work_unit_result.output))
+        work_unit_payload = require_schema_envelope(work_unit_result.output)
         work_unit_id = str(work_unit_payload["work_unit_id"])
 
         result = invoke_cached_cli(
@@ -102,7 +101,7 @@ def test_m303_in_scope_missing_wallet_surfaces_override_verb_not_seed(
             ],
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output
-        work_unit_payload = _unwrap_envelope(json.loads(work_unit_result.output))
+        work_unit_payload = require_schema_envelope(work_unit_result.output)
         work_unit_id = str(work_unit_payload["work_unit_id"])
 
         result = invoke_cached_cli(
@@ -149,7 +148,7 @@ def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wa
             ],
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output
-        work_unit_payload = _unwrap_envelope(json.loads(work_unit_result.output))
+        work_unit_payload = require_schema_envelope(work_unit_result.output)
         work_unit_id = str(work_unit_payload["work_unit_id"])
 
         result = invoke_cached_cli(

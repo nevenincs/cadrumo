@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
@@ -10,9 +9,10 @@ from pathlib import Path
 import pytest
 
 from ....application.calculations import IvaCompensationHistoryRepository, query_iva_wallet_balance
+from ....tests.cli_envelope import require_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_runtime_profile
-from ._iva_wallet_inspector_support import _state, _unwrap_envelope
+from ._iva_wallet_inspector_support import _state
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -107,7 +107,7 @@ def test_cli_balance_verb_emits_expected_keys(
         )
 
     assert result.exit_code == 0, result.output
-    payload = _unwrap_envelope(json.loads(result.output))
+    payload = require_schema_envelope(result.output)
     assert payload["total_balance"] == "300.00"
     assert payload["active_balance"] == "200.00"
     assert payload["expired_balance"] == "100.00"

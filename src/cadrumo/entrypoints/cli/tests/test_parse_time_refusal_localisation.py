@@ -18,8 +18,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.i18n import tr
+from ....tests.cli_envelope import require_error_document
 from ....tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -30,18 +30,9 @@ _PARSE_UNKNOWN_COMMAND_KEY = "cli.common.errors.parse_unknown_command"
 _PARSE_UNKNOWN_OPTION_KEY = "cli.common.errors.parse_unknown_option"
 
 
-def _error_document(output: str) -> dict[str, object]:
-    """Parse the single-line shared-spine error document from CLI output."""
-    for line in output.splitlines():
-        candidate = line.strip()
-        if candidate.startswith("{"):
-            return STR_KEYED_MAPPING_ADAPTER.validate_json(candidate)
-    raise AssertionError(f"no JSON document found in output:\n{output}")
-
-
 def _error_member(output: str) -> dict[str, object]:
     """Return the ``error`` member of the shared-spine document."""
-    document = _error_document(output)
+    document = require_error_document(output)
     assert document["status"] == "error"
     assert document["notices"] == []
     error = document["error"]

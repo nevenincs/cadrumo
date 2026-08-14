@@ -28,27 +28,18 @@ contract only ``NoActiveProfileError`` is caught and the
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from ....core import pointer_path
+from ....tests.cli_envelope import require_error_document
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_sessionless_storage_root
+from ._sessionless_root_fixtures import _sessionless_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-def _error_document(output: str) -> dict[str, object]:
-    """Return the real shared-spine JSON document emitted by the CLI."""
-    for line in output.splitlines():
-        if line.startswith("{"):
-            document = json.loads(line)
-            assert isinstance(document, dict)
-            return {str(key): value for key, value in document.items()}
-    raise AssertionError("the CLI emitted no JSON error document")
 
 
 def _object_member(document: dict[str, object], key: str) -> dict[str, object]:
@@ -57,11 +48,7 @@ def _object_member(document: dict[str, object], key: str) -> dict[str, object]:
     return {str(name): value for name, value in member.items()}
 
 
-@pytest.fixture
-def _no_pointer_root(tmp_path: Path) -> Iterator[Path]:
-    """Storage root with no active-profile pointer — clean cold-start state."""
-    with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:
-        yield storage_root
+__all__ = ["_sessionless_root"]
 
 
 @pytest.fixture
@@ -91,13 +78,13 @@ def _corrupt_pointer_root(tmp_path: Path) -> Iterator[Path]:
 # ---------------------------------------------------------------------------
 
 
-def test_no_pointer_projects_the_canonical_profile_action(_no_pointer_root: Path) -> None:
+def test_no_pointer_projects_the_canonical_profile_action(_sessionless_root: Path) -> None:
     """With no pointer file the expected NoActiveProfileError surfaces as the
     profile-create guidance — the narrow except still catches it correctly."""
     result = invoke_cached_cli(["--format", "json", "app", "ledger", "ratios", "list"])
 
     assert result.exit_code != 0
-    error = _object_member(_error_document(result.output), "error")
+    error = _object_member(require_error_document(result.output), "error")
     action = _object_member(error, "action")
     assert action["failed_condition_id"] == "profile.active.available"
     reference = _object_member(action, "action")
@@ -129,7 +116,7 @@ def test_corrupt_pointer_projects_the_validation_boundary(
     result = invoke_cached_cli(["--format", "json", "app", "ledger", "ratios", "list"])
 
     assert result.exit_code != 0
-    error = _object_member(_error_document(result.output), "error")
+    error = _object_member(require_error_document(result.output), "error")
     assert error["code"] == "REFUSED_CLI_VALIDATION_BOUNDARY"
     action = _object_member(error, "action")
     assert action["failed_condition_id"] == "cli.validation.boundary_clean"
