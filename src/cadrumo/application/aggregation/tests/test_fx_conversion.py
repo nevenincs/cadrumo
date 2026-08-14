@@ -28,12 +28,15 @@ inversion and rounding are computed here.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+
+from ._secure_objects_fixtures import secure_objects
+
+__all__ = ["secure_objects"]
 
 from ....adapters.inbound.financial.providers import ParsedLedgerRow
 from ....adapters.outbound.fx import EcbReferenceRateProvider
@@ -44,7 +47,6 @@ from ....domain.currency import (
 )
 from ....domain.transactions import RawProvenance, RawTransaction, SourceFormat, TransactionDirection
 from ....tests.ecb_stub import ecb_csv_fetch
-from ....tests.secure_sql import isolated_runtime_profile
 from ...ledger import import_ledger_transactions
 from .._currency_predicates import is_non_eur_without_conversion
 
@@ -91,12 +93,6 @@ def _usd_raw(provider_id: str, *, amount: Decimal = _USD_AMOUNT) -> RawTransacti
 def _usd_parsed(provider_id: str, *, amount: Decimal = _USD_AMOUNT) -> ParsedLedgerRow:
     """Wrap a USD magnitude row with an explicit OUTGOING direction."""
     return ParsedLedgerRow(raw=_usd_raw(provider_id, amount=amount), direction=TransactionDirection.OUTGOING)
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="test") as profile:
-        yield profile.repository
 
 
 def test_usd_import_populates_fx_rate_and_value_in_eur(

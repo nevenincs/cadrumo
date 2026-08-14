@@ -8,7 +8,6 @@ casillas from real ledger transactions.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -41,7 +40,6 @@ from ....domain.transactions import (
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
 from .. import (
     BucketAggregationCalculationResult,
@@ -86,10 +84,6 @@ _AUTO_RESOLVED_SOURCES = frozenset(
 )
 
 
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def _seed_sofia_profile(objects: SecureObjectRepository) -> None:

@@ -53,9 +53,8 @@ from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import transcribe_text_layer
 from .._preconditions import LedgerPreconditionCondition
 from ._evidence_test_support import _BUCKET_ID, _make_svc
-from ._evidence_test_support import isolated_settings as isolated_settings
 from ._evidence_test_support import runtime_profile as runtime_profile
-from ._evidence_test_support import secure_objects as secure_objects
+from ._ledger_value_fixtures import isolated_settings, secure_objects
 from ._llm_vision_evidence_support import _json_array, _json_object, _run_against_loopback_ollama
 from ._loopback_reader import serving_a_loopback_reader
 

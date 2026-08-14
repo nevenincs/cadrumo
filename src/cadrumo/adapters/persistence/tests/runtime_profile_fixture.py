@@ -21,16 +21,28 @@ def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 def bucket_scoped_runtime_profile_fixture(
     bucket_id: str,
+    *,
+    autouse: bool = True,
+    name: str = "_runtime_profile",
 ) -> Callable[[Path], Iterator[TestRuntimeProfile]]:
-    """Build an autouse ``_runtime_profile`` fixture pinned to ``bucket_id``.
+    """Build a ``_runtime_profile``-shaped fixture pinned to ``bucket_id``.
 
     A distinct ``bucket_id`` per test module keeps the bucket-scoped
     master-key session from colliding with other modules sharing a bucket in
-    the same run. Assign the return value to ``_runtime_profile`` at module
-    scope so the fixture stays autouse for that module only.
+    the same run. Assign the return value to a module-level name matching
+    ``name`` -- ``_runtime_profile`` by default -- so pytest discovers it
+    under that name; the module keeps declaring its own binding, so reach is
+    never centralised, only the body.
+
+    ``autouse`` and ``name`` default to the shape every existing caller
+    relies on (autouse, bound as ``_runtime_profile``), so those callers are
+    unaffected by this signature. A caller whose test functions REQUEST the
+    fixture explicitly by a name of their own -- rather than relying on
+    autouse -- passes ``autouse=False`` and its own ``name``, matching every
+    request site already written against that name.
     """
 
-    @pytest.fixture(name="_runtime_profile", autouse=True)
+    @pytest.fixture(name=name, autouse=autouse)
     def _bucket_scoped_runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
             yield profile

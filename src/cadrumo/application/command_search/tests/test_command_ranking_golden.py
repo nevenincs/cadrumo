@@ -103,10 +103,10 @@ def test_no_retired_command_key_remains_searchable() -> None:
     )
 
     retired = {
-        "config.lock": "custody lock door, removed in favour of passphrase/recovery",
-        "config.rekey": "removed in favour of config.passphrase.change",
-        "config.show_recovery": "removed in favour of config.recovery.status",
-        "config.verify_recovery": "removed in favour of config.recovery.verify",
+        "config.lock": "retired custody lock door",
+        "config.rekey": "retired key-rotation door",
+        "config.show_recovery": "retired recovery-status door",
+        "config.verify_recovery": "retired recovery-verification door",
         "config.auth.clear": "broad ambiguous door, removed in favour of auth logout/reset",
         "config.profile.sandbox.use": "removed in favour of selecting a sandbox by canonical label",
         "modelo.audit.replay": "removed; audit check is the retained verb",

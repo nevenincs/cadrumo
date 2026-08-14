@@ -29,13 +29,15 @@ been given a question that is not theirs and a remedy that cannot work.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
+
+from ._ledger_value_fixtures import repository
+
+__all__ = ["repository"]
 
 from ....adapters.inbound.einvoice import ParsedEInvoice, parse_einvoice_document
 from ....adapters.persistence.storage import SecureObjectRowIdentityError
@@ -50,7 +52,6 @@ from ....domain.iva import (
     territorial_scope_for_country,
     territorial_scope_for_spanish_postal_code,
 )
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import _establishment_ladder as ladder_module
 from .._counterparty_establishment import (
     ConfirmedCounterpartyFactsRepository,
@@ -98,17 +99,6 @@ _MADRID = "28013"
 _PARIS = "75001"
 _BERLIN = "10115"
 _CEUTA = "51001"
-
-
-@pytest.fixture
-def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
-
-
-@pytest.fixture
-def repository(runtime_profile: TestRuntimeProfile) -> ConfirmedCounterpartyFactsRepository:
-    return ConfirmedCounterpartyFactsRepository(objects=runtime_profile.repository)
 
 
 def _resolve(

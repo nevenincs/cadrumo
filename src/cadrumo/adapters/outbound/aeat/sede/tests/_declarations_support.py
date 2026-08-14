@@ -27,7 +27,7 @@ from ......domain.calculations.registry import (
     resolve_export_layout,
 )
 from ......tests import FIXTURES_DIR
-from ......tests.secure_sql import isolated_runtime_profile
+from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ...browser import Profile, opened_browser_page, shared_playwright_runtime
 from .._declarations import (
     Declaracion,
@@ -127,12 +127,10 @@ if TYPE_CHECKING:
     from ...auth import AeatSession
 
 
-@pytest.fixture(autouse=True)
-def _isolate_secure_object_backend(tmp_path: Path):
-    """Prevent filed-observation store tests from writing into the active profile DB."""
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        yield
+# Prevents filed-observation store tests from writing into the active profile DB.
+_isolate_secure_object_backend = bucket_scoped_runtime_profile_fixture(
+    _BUCKET_ID, autouse=True, name="_isolate_secure_object_backend"
+)
 
 
 _FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"

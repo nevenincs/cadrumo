@@ -36,13 +36,9 @@ def _reflected_hash_lengths(table_name: str) -> dict[str, int | None]:
 
 def test_secure_object_hash_columns_are_reflected_as_fixed_length_varchar() -> None:
     """The live table exposes fixed-width revision/hash metadata."""
-    assert _reflected_hash_lengths("secure_objects") == {
-        name: 64 for name in _SECURE_OBJECT_HASH_COLUMNS
-    }
+    assert _reflected_hash_lengths("secure_objects") == {name: 64 for name in _SECURE_OBJECT_HASH_COLUMNS}
 
 
 def test_secure_object_quarantine_preserves_fixed_length_hash_columns() -> None:
     """The quarantine archive mirrors the fixed-width hash metadata contract."""
-    assert _reflected_hash_lengths("secure_objects_quarantine") == {
-        name: 64 for name in _SECURE_OBJECT_HASH_COLUMNS
-    }
+    assert _reflected_hash_lengths("secure_objects_quarantine") == {name: 64 for name in _SECURE_OBJECT_HASH_COLUMNS}

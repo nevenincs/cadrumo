@@ -3,35 +3,20 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....core.config import Settings
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
 
 _PDF_BYTES = b"%PDF-1.4 evidence-input-roundtrip body"
 _BUCKET_ID = "30303030-3030-4030-8030-303030303030"
 
-
-@pytest.fixture
-def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
-
-
-@pytest.fixture
-def isolated_settings(runtime_profile: TestRuntimeProfile) -> Settings:
-    return runtime_profile.settings
-
-
-@pytest.fixture
-def secure_objects(runtime_profile: TestRuntimeProfile) -> SecureObjectRepository:
-    return runtime_profile.repository
+runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 
 
 @pytest.fixture

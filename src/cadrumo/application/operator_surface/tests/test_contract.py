@@ -31,13 +31,17 @@ from __future__ import annotations
 
 import ast
 import inspect
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from itertools import pairwise
 from pathlib import Path
 
 import pytest
 from dev.locales import LocaleManager
 from pydantic import BaseModel, ValidationError
+
+from ._contract_locale_fixture import pin_english_locale
+
+__all__ = ["pin_english_locale"]
 
 from ....core import BindingSourceKind
 from ....core.aggregation import COUNTERPART_SOURCE_KINDS
@@ -63,20 +67,6 @@ from .. import _help as _help_module
 from .._models import HelpDocument, HelpEntry, HelpSection, LifecycleContract, RootLandingReport, RootSurface
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@pytest.fixture(autouse=True)
-def pin_english_locale() -> Iterator[None]:
-    """Pin the operator-surface contract tests to the English locale.
-
-    The contract surface (help paragraphs, error messages) is rendered
-    through the project locale layer. These tests assert against the
-    canonical English strings, so we pin the locale here rather than
-    coupling the assertions to whatever the default locale happens to be
-    in any given environment.
-    """
-    with override_settings(cadrumo_output_language="en"):
-        yield
 
 
 def test_contract_roots_are_exactly_config_and_app() -> None:

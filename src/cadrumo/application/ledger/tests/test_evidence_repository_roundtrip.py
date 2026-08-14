@@ -18,17 +18,18 @@ key provider, real SQLite engine, real serializer. No mocks.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
+
+from ._ledger_value_fixtures import secure_objects
+
+__all__ = ["secure_objects"]
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage import LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE, SensitivityClass
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._evidence import (
     MediaKind,
     PurchaseInvoiceEvidence,
@@ -42,17 +43,6 @@ _BUCKET_ID = "34343434-3434-4434-8434-343434343434"
 _DIGEST = "b" * 64
 _CREATED_AT = datetime(2026, 2, 5, 9, 30, tzinfo=UTC)
 _UPDATED_AT = datetime(2026, 3, 11, 17, 45, tzinfo=UTC)
-
-
-@pytest.fixture
-def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
-
-
-@pytest.fixture
-def secure_objects(runtime_profile: TestRuntimeProfile) -> SecureObjectRepository:
-    return runtime_profile.repository
 
 
 def _fully_populated_record() -> PurchaseInvoiceEvidence:

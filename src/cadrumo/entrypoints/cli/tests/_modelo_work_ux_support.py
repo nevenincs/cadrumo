@@ -128,7 +128,9 @@ def _create_m303_work_unit() -> str:
         modelo="303",
         filing_year=2025,
         period="1T",
-        revision=str(resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision.id),
+        revision=str(
+            resources().modelos.authority.inspect_revision("303", filing_year=2025, period="1T").revision_id,
+        ),
     )
 
 

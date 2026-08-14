@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
@@ -11,9 +10,10 @@ from typing import Literal
 import pytest
 from pydantic import AnyHttpUrl
 
+from ......adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ......core import CasillaId, CasillaValueKind, Period, validated_casilla_id
 from ......core.config import Settings
-from ......tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ......tests.secure_sql import TestRuntimeProfile
 from .._errors import SedeValidationError
 from .._observation_store import FiledDeclaracionObservationStore
 from .._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
@@ -29,10 +29,7 @@ _M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
-@pytest.fixture
-def active_storage(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+active_storage = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="active_storage")
 
 
 def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_api(

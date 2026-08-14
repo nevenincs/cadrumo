@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -53,7 +52,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
+from ....tests.secure_sql import isolated_two_bucket_runtime
 from ...ledger import OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
 from .. import (
     AggregationValidationError,
@@ -212,12 +211,6 @@ _Q2_2026 = _period(2026, "2T")
 _Q2_1994 = _period(1994, "2T")
 _BUCKET_ID = "14141414-1414-4414-8414-141414141414"
 _OTHER_BUCKET_ID = "15151515-1515-4515-8515-151515151515"
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def _raw_transaction(

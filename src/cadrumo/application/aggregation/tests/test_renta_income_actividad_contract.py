@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
+
+from ._secure_objects_fixtures import secure_objects
+
+__all__ = ["secure_objects"]
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
@@ -34,7 +36,6 @@ from ._renta_income_aggregation_support import (
     _Q1_2024,
     _actividad_transaction,
     _period,
-    isolated_renta_income_objects,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -115,12 +116,6 @@ def _m130_2026_q1_revision() -> ModeloRevision:
             ),
         ),
     )
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_renta_income_objects(tmp_path) as objects:
-        yield objects
 
 
 # contract: irpf_category filter + taxable_base_sum fact

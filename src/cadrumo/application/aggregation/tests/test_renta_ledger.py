@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast
 
 import pytest
+
+from ._secure_objects_fixtures import secure_objects
+
+__all__ = ["secure_objects"]
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
@@ -50,7 +53,7 @@ from ....domain.transactions import (
 from ....domain.usage_ratios import UsageRatioProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import RENTA_REGIMEN_CITATION_URL_FIXTURE
-from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
+from ....tests.secure_sql import isolated_two_bucket_runtime
 from .. import (
     AggregationValidationError,
     CalculationSourceContext,
@@ -110,12 +113,6 @@ _M100_GASTOS_FINANCIEROS_CASILLA: CasillaId = validated_casilla_id(
     surface="_M100_GASTOS_FINANCIEROS_CASILLA",
 )
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="test") as profile:
-        yield profile.repository
 
 
 def _raw_transaction(

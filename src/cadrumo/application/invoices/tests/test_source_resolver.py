@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -13,6 +12,7 @@ import pytest
 from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import StorageValidationError
+from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....core import M347_THRESHOLD_EUR, BindingSourceKind, IntracomOperationType, Period
 from ....core.errors import CadrumoError, get_registered_error_code, resolve_error_message
 from ....core.resources import bundled_path, resources
@@ -20,7 +20,7 @@ from ....domain.calculations.registry import RegistryValidationError, load_model
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....domain.modelos import Modelo349CountryPrefixContextError
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, isolated_two_bucket_runtime
+from ....tests.secure_sql import TestRuntimeProfile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from .. import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
 from .._source_resolver import _OWNED_SOURCES, M349_CLAVE_INFERRED_REASON, _intracommunity_clave
@@ -57,10 +57,7 @@ def _modelo_revision(modelo_id: str, revision_id: str):
     return modelo.revisions[revision_id]
 
 
-@pytest.fixture
-def secure_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+secure_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="secure_profile")
 
 
 def _invoice(

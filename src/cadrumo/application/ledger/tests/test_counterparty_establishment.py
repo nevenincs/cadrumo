@@ -46,7 +46,8 @@ from .._counterparty_establishment import (
     record_confirmed_counterparty_facts,
     resolve_confirmed_counterparty_facts,
 )
-from ._counterparty_fact_fixtures import repository, runtime_profile
+from ._counterparty_fact_fixtures import runtime_profile
+from ._ledger_value_fixtures import repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

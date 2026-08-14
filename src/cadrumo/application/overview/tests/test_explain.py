@@ -17,7 +17,6 @@ from pydantic import ValidationError
 from ....domain.calculations.registry import ApplicabilityVerdict
 from ....domain.deadlines import (
     EntityType,
-    IrpfEstimationRegime,
     IrpfIncomeCategory,
     IVARegime,
     TaxpayerProfile,
@@ -26,20 +25,9 @@ from ....domain.deadlines import (
 from ....domain.retention import TAX_RECORD_RETENTION_FLOOR_YEARS, add_prescription_years
 from .._errors import OverviewExplainError
 from .._explain import OverviewExplain, _out_of_plazo_warning, build_overview_explain
+from .calendar_test_support import profile as _autonomo_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-def _autonomo_profile() -> TaxpayerProfile:
-    """A declared autónomo en estimación directa (unchanged persona)."""
-
-    return TaxpayerProfile(
-        tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
-    )
 
 
 def _undeclared_profile() -> TaxpayerProfile:

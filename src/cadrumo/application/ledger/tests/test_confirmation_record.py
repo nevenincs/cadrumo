@@ -20,13 +20,15 @@ prove only that two objects are equal.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
+
+from ._confirmation_profile_fixture import profile
+
+__all__ = ["profile"]
 
 from ....core import (
     ConfirmationBlockReason,
@@ -34,7 +36,7 @@ from ....core import (
     FieldOrigin,
     FindingResolutionAction,
 )
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile
 from .._confirmation_gate import ConfirmationBlocker, FindingResolution
 from .._confirmation_record import (
     ConfirmationRecordDocument,
@@ -55,13 +57,6 @@ _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 _TRANSCRIPTION_SHA = "a" * 64
 _EVIDENCE_SHA = "b" * 64
 _INVOICE_ID = "c" * 64
-
-
-@pytest.fixture
-def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    """A real isolated runtime profile: real key provider, real SQLite engine."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as resolved:
-        yield resolved
 
 
 def _read_draft() -> InvoiceDraft:

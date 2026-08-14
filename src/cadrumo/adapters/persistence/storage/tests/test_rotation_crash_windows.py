@@ -28,6 +28,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+
+from ._rotation_key_fixtures import RotationKeys, rotation_keys
+
+__all__ = ["rotation_keys"]
 from pydantic import BaseModel, ConfigDict
 
 from .....tests.master_key import EphemeralMasterKeyProvider
@@ -66,18 +70,6 @@ class _Sample(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     taxpayer_nif: str
-
-
-@pytest.fixture
-def old_key() -> EphemeralMasterKeyProvider:
-    """The pre-rotation master key ('old')."""
-    return EphemeralMasterKeyProvider()
-
-
-@pytest.fixture
-def new_key() -> EphemeralMasterKeyProvider:
-    """The post-rotation master key ('new'); distinct bytes from ``old_key``."""
-    return EphemeralMasterKeyProvider()
 
 
 def _seed_envelope(target: Path, *, provider: EphemeralMasterKeyProvider) -> None:
@@ -163,7 +155,7 @@ def _rewrap_keystore_dek_probe_skip(
 @pytest.fixture
 def seeded_three_stores(
     tmp_path: Path,
-    old_key: EphemeralMasterKeyProvider,
+    rotation_keys: RotationKeys,
 ) -> Iterator[tuple[Path, Path, BlobReference, Path, bytes]]:
     """Seed all three rotation stores under the old key and yield their handles.
 
@@ -173,10 +165,10 @@ def seeded_three_stores(
     """
     envelope_store = tmp_path / "tx-store"
     envelope_store.mkdir()
-    _seed_envelope(envelope_store / "rec-001.envelope.json", provider=old_key)
+    _seed_envelope(envelope_store / "rec-001.envelope.json", provider=rotation_keys.old_key)
 
     blob_root = tmp_path / "blob-store"
-    blob_ref = EncryptedBlobStore(root_dir=blob_root, master_key_provider=old_key).put(
+    blob_ref = EncryptedBlobStore(root_dir=blob_root, master_key_provider=rotation_keys.old_key).put(
         _BLOB_PAYLOAD,
         classification=SensitivityClass.FINANCIAL,
         content_type="application/octet-stream",
@@ -186,7 +178,7 @@ def seeded_three_stores(
     keystore_dek = b"D" * 32
     write_wrapped_bucket_dek(
         keystore_path,
-        wrap_dek(kek=old_key.get_master_key(), dek=keystore_dek, bucket_id=_KEYSTORE_BUCKET_ID),
+        wrap_dek(kek=rotation_keys.old_key.get_master_key(), dek=keystore_dek, bucket_id=_KEYSTORE_BUCKET_ID),
     )
     yield envelope_store, blob_root, blob_ref, keystore_path, keystore_dek
 
@@ -195,8 +187,7 @@ class TestMixedKeyRotationCrashWindow:
     def test_crash_after_envelope_rotation_leaves_recoverable_mixed_state(
         self,
         seeded_three_stores: tuple[Path, Path, BlobReference, Path, bytes],
-        old_key: EphemeralMasterKeyProvider,
-        new_key: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         envelope_store, blob_root, blob_ref, keystore_path, keystore_dek = seeded_three_stores
         envelope_path = envelope_store / "rec-001.envelope.json"
@@ -206,8 +197,8 @@ class TestMixedKeyRotationCrashWindow:
         # is the real primitive driven store-by-store, not a patched failure.
         envelope_summary = rotate_master_key(
             (RotationPlanEntry(store_dir=envelope_store, hkdf_context=_HKDF_CONTEXT_TX),),
-            old_master_key_provider=old_key,
-            new_master_key_provider=new_key,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         assert envelope_summary.rotated == 1
         assert envelope_summary.errors == 0
@@ -216,30 +207,30 @@ class TestMixedKeyRotationCrashWindow:
         # The envelope reads under the NEW key only; the blob and keystore
         # read under the OLD key only. A new-key-only view of the whole bucket
         # would silently drop the un-rotated stores if recovery were skipped.
-        assert _envelope_loads_under(envelope_path, new_key) is True
-        assert _envelope_loads_under(envelope_path, old_key) is False
-        assert _blob_loads_under(blob_root, blob_ref, old_key) is True
-        assert _blob_loads_under(blob_root, blob_ref, new_key) is False
-        assert _keystore_unwraps_under(keystore_path, old_key) is True
-        assert _keystore_unwraps_under(keystore_path, new_key) is False
+        assert _envelope_loads_under(envelope_path, rotation_keys.new_key) is True
+        assert _envelope_loads_under(envelope_path, rotation_keys.old_key) is False
+        assert _blob_loads_under(blob_root, blob_ref, rotation_keys.old_key) is True
+        assert _blob_loads_under(blob_root, blob_ref, rotation_keys.new_key) is False
+        assert _keystore_unwraps_under(keystore_path, rotation_keys.old_key) is True
+        assert _keystore_unwraps_under(keystore_path, rotation_keys.new_key) is False
 
         # --- Recovery: re-run the FULL rotation across all three stores. The
         # already-rotated envelope is probe-skipped; the blob and keystore are
         # completed. Every store converges on the new key.
         envelope_rerun = rotate_master_key(
             (RotationPlanEntry(store_dir=envelope_store, hkdf_context=_HKDF_CONTEXT_TX),),
-            old_master_key_provider=old_key,
-            new_master_key_provider=new_key,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         blob_rerun = rotate_blob_stores(
             (blob_root,),
-            old_master_key_provider=old_key,
-            new_master_key_provider=new_key,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         keystore_outcome = _rewrap_keystore_dek_probe_skip(
             keystore_path,
-            old_provider=old_key,
-            new_provider=new_key,
+            old_provider=rotation_keys.old_key,
+            new_provider=rotation_keys.new_key,
         )
 
         assert envelope_rerun.rotated == 0
@@ -249,30 +240,32 @@ class TestMixedKeyRotationCrashWindow:
         assert keystore_outcome == "rotated"
 
         # Every store now reads under the new key, and none under the old.
-        assert _envelope_loads_under(envelope_path, new_key) is True
-        assert _blob_loads_under(blob_root, blob_ref, new_key) is True
-        assert _keystore_unwraps_under(keystore_path, new_key) is True
-        assert _blob_loads_under(blob_root, blob_ref, old_key) is False
-        assert _keystore_unwraps_under(keystore_path, old_key) is False
+        assert _envelope_loads_under(envelope_path, rotation_keys.new_key) is True
+        assert _blob_loads_under(blob_root, blob_ref, rotation_keys.new_key) is True
+        assert _keystore_unwraps_under(keystore_path, rotation_keys.new_key) is True
+        assert _blob_loads_under(blob_root, blob_ref, rotation_keys.old_key) is False
+        assert _keystore_unwraps_under(keystore_path, rotation_keys.old_key) is False
 
         # The keystore DEK VALUE is preserved across the re-wrap (only its
         # wrapping master key changed), so downstream ciphertext stays valid.
         assert (
             unwrap_dek(
-                kek=new_key.get_master_key(),
+                kek=rotation_keys.new_key.get_master_key(),
                 wrapped=read_wrapped_bucket_dek(keystore_path),
                 bucket_id=_KEYSTORE_BUCKET_ID,
             )
             == keystore_dek
         )
         # And the blob payload survives the rotation byte-for-byte.
-        assert EncryptedBlobStore(root_dir=blob_root, master_key_provider=new_key).get(blob_ref) == _BLOB_PAYLOAD
+        assert (
+            EncryptedBlobStore(root_dir=blob_root, master_key_provider=rotation_keys.new_key).get(blob_ref)
+            == _BLOB_PAYLOAD
+        )
 
     def test_full_rerun_after_convergence_is_a_clean_no_op(
         self,
         seeded_three_stores: tuple[Path, Path, BlobReference, Path, bytes],
-        old_key: EphemeralMasterKeyProvider,
-        new_key: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         envelope_store, blob_root, blob_ref, keystore_path, _keystore_dek = seeded_three_stores
         del blob_ref
@@ -280,21 +273,32 @@ class TestMixedKeyRotationCrashWindow:
         # Converge all three stores onto the new key in one full pass.
         rotate_master_key(
             (RotationPlanEntry(store_dir=envelope_store, hkdf_context=_HKDF_CONTEXT_TX),),
-            old_master_key_provider=old_key,
-            new_master_key_provider=new_key,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
-        rotate_blob_stores((blob_root,), old_master_key_provider=old_key, new_master_key_provider=new_key)
-        assert _rewrap_keystore_dek_probe_skip(keystore_path, old_provider=old_key, new_provider=new_key) == "rotated"
+        rotate_blob_stores(
+            (blob_root,), old_master_key_provider=rotation_keys.old_key, new_master_key_provider=rotation_keys.new_key
+        )
+        assert (
+            _rewrap_keystore_dek_probe_skip(
+                keystore_path, old_provider=rotation_keys.old_key, new_provider=rotation_keys.new_key
+            )
+            == "rotated"
+        )
 
         # A second full rotation is a clean no-op: every store already reads
         # under the new key, so every probe-skip fires.
         envelope_noop = rotate_master_key(
             (RotationPlanEntry(store_dir=envelope_store, hkdf_context=_HKDF_CONTEXT_TX),),
-            old_master_key_provider=old_key,
-            new_master_key_provider=new_key,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
-        blob_noop = rotate_blob_stores((blob_root,), old_master_key_provider=old_key, new_master_key_provider=new_key)
-        keystore_noop = _rewrap_keystore_dek_probe_skip(keystore_path, old_provider=old_key, new_provider=new_key)
+        blob_noop = rotate_blob_stores(
+            (blob_root,), old_master_key_provider=rotation_keys.old_key, new_master_key_provider=rotation_keys.new_key
+        )
+        keystore_noop = _rewrap_keystore_dek_probe_skip(
+            keystore_path, old_provider=rotation_keys.old_key, new_provider=rotation_keys.new_key
+        )
 
         assert envelope_noop.rotated == 0
         assert envelope_noop.skipped == 1
@@ -305,8 +309,7 @@ class TestMixedKeyRotationCrashWindow:
     def test_crash_between_blob_and_keystore_recovers_the_keystore_only(
         self,
         seeded_three_stores: tuple[Path, Path, BlobReference, Path, bytes],
-        old_key: EphemeralMasterKeyProvider,
-        new_key: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         envelope_store, blob_root, blob_ref, keystore_path, _keystore_dek = seeded_three_stores
 
@@ -314,28 +317,34 @@ class TestMixedKeyRotationCrashWindow:
         # keystore not yet. Only the keystore is under the old key now.
         rotate_master_key(
             (RotationPlanEntry(store_dir=envelope_store, hkdf_context=_HKDF_CONTEXT_TX),),
-            old_master_key_provider=old_key,
-            new_master_key_provider=new_key,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
-        rotate_blob_stores((blob_root,), old_master_key_provider=old_key, new_master_key_provider=new_key)
+        rotate_blob_stores(
+            (blob_root,), old_master_key_provider=rotation_keys.old_key, new_master_key_provider=rotation_keys.new_key
+        )
 
-        assert _envelope_loads_under(envelope_store / "rec-001.envelope.json", new_key) is True
-        assert _blob_loads_under(blob_root, blob_ref, new_key) is True
+        assert _envelope_loads_under(envelope_store / "rec-001.envelope.json", rotation_keys.new_key) is True
+        assert _blob_loads_under(blob_root, blob_ref, rotation_keys.new_key) is True
         # Anti-tautology: the keystore alone still straddles the old key.
-        assert _keystore_unwraps_under(keystore_path, new_key) is False
-        assert _keystore_unwraps_under(keystore_path, old_key) is True
+        assert _keystore_unwraps_under(keystore_path, rotation_keys.new_key) is False
+        assert _keystore_unwraps_under(keystore_path, rotation_keys.old_key) is True
 
         # Recovery re-run: the two already-rotated stores probe-skip, the
         # keystore is completed.
         envelope_rerun = rotate_master_key(
             (RotationPlanEntry(store_dir=envelope_store, hkdf_context=_HKDF_CONTEXT_TX),),
-            old_master_key_provider=old_key,
-            new_master_key_provider=new_key,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
-        blob_rerun = rotate_blob_stores((blob_root,), old_master_key_provider=old_key, new_master_key_provider=new_key)
-        keystore_outcome = _rewrap_keystore_dek_probe_skip(keystore_path, old_provider=old_key, new_provider=new_key)
+        blob_rerun = rotate_blob_stores(
+            (blob_root,), old_master_key_provider=rotation_keys.old_key, new_master_key_provider=rotation_keys.new_key
+        )
+        keystore_outcome = _rewrap_keystore_dek_probe_skip(
+            keystore_path, old_provider=rotation_keys.old_key, new_provider=rotation_keys.new_key
+        )
 
         assert envelope_rerun.skipped == 1
         assert blob_rerun.skipped == 1
         assert keystore_outcome == "rotated"
-        assert _keystore_unwraps_under(keystore_path, new_key) is True
+        assert _keystore_unwraps_under(keystore_path, rotation_keys.new_key) is True

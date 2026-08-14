@@ -10,10 +10,8 @@ in the suite is tautological.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -23,21 +21,17 @@ from .....domain.fincas import (
     Finca,
     UseType,
 )
-from .....tests.secure_sql import isolated_runtime_profile
+from ._fincas_engine_fixture import engine
+
+__all__ = ["engine"]
+
 from ...storage import (
     session_scope,
 )
 from ...storage.sql import FincaRow
-from ...storage.sql.engine import get_engine
 from ..fincas import FincaRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-@pytest.fixture(autouse=True)
-def engine(tmp_path: Path) -> Iterator[Engine]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        yield get_engine(profile.settings)
 
 
 def _populated_finca() -> Finca:

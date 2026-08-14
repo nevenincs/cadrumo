@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -92,12 +91,6 @@ _IVA_RATE = Decimal("0.21")
 _DEVENGADA_TOTAL: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
 _DEDUCIBLE_TOTAL: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
 _RESULTADO: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 def _store_profile(objects: SecureObjectRepository) -> None:

@@ -25,6 +25,10 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
+from ._rotation_key_fixtures import RotationKeys, rotation_keys
+
+__all__ = ["rotation_keys"]
+
 from .....core.config import override_settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....tests.master_key import EphemeralMasterKeyProvider
@@ -58,26 +62,14 @@ class _Sample(BaseModel):
     amount: str = Field(default="0.00")
 
 
-@pytest.fixture
-def alice() -> EphemeralMasterKeyProvider:
-    """The 'old' master key provider."""
-    return EphemeralMasterKeyProvider()
-
-
-@pytest.fixture
-def bob() -> EphemeralMasterKeyProvider:
-    """The 'new' master key provider — different key bytes from alice."""
-    return EphemeralMasterKeyProvider()
-
-
 @pytest.fixture(autouse=True)
-def _use_alice_master_key(alice: EphemeralMasterKeyProvider) -> Iterator[None]:
-    """Default provider during fixture setup is alice (the old key).
+def _use_alice_master_key(rotation_keys: RotationKeys) -> Iterator[None]:
+    """Default provider during fixture setup is rotation_keys.old_key (the old key).
 
-    Individual tests temporarily swap to bob as needed by entering
+    Individual tests temporarily swap to rotation_keys.new_key as needed by entering
     the provider as a context manager.
     """
-    with alice:
+    with rotation_keys.old_key:
         yield
 
 
@@ -109,18 +101,17 @@ class TestRotationRoundTrip:
     def test_rotate_then_load_under_new_key(
         self,
         tmp_path: Path,
-        alice: EphemeralMasterKeyProvider,
-        bob: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         store = tmp_path / "tx-store"
         store.mkdir()
         target = store / "rec-001.envelope.json"
-        _seed_envelope(target, provider=alice)
+        _seed_envelope(target, provider=rotation_keys.old_key)
 
         summary = rotate_master_key(
             (RotationPlanEntry(store_dir=store, hkdf_context=_HKDF_CONTEXT_TX),),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
 
         assert isinstance(summary, RotationSummary)
@@ -128,12 +119,12 @@ class TestRotationRoundTrip:
         assert summary.skipped == 0
         assert summary.errors == 0
 
-        # Now decryption succeeds under bob, fails under alice.
+        # Now decryption succeeds under rotation_keys.new_key, fails under rotation_keys.old_key.
         loaded = load_encrypted_envelope(
             target,
             Envelope[_Sample],
             expected_class=SensitivityClass.FINANCIAL,
-            master_key_provider=bob,
+            master_key_provider=rotation_keys.new_key,
             hkdf_context=_HKDF_CONTEXT_TX,
             max_supported_version=1,
         )
@@ -144,7 +135,7 @@ class TestRotationRoundTrip:
                 target,
                 Envelope[_Sample],
                 expected_class=SensitivityClass.FINANCIAL,
-                master_key_provider=alice,
+                master_key_provider=rotation_keys.old_key,
                 hkdf_context=_HKDF_CONTEXT_TX,
                 max_supported_version=1,
             )
@@ -152,27 +143,26 @@ class TestRotationRoundTrip:
     def test_payload_bytes_preserved_through_rotation(
         self,
         tmp_path: Path,
-        alice: EphemeralMasterKeyProvider,
-        bob: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         """Rotation must NOT mutate the inner payload — every leaf
         survives unchanged after decryption under the new key."""
         store = tmp_path / "probe-drafts"
         store.mkdir()
         target = store / "draft-001.envelope.json"
-        _seed_envelope(target, provider=alice, hkdf_context=_HKDF_CONTEXT_DRAFT)
+        _seed_envelope(target, provider=rotation_keys.old_key, hkdf_context=_HKDF_CONTEXT_DRAFT)
 
         rotate_master_key(
             (RotationPlanEntry(store_dir=store, hkdf_context=_HKDF_CONTEXT_DRAFT),),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
 
         loaded = load_encrypted_envelope(
             target,
             Envelope[_Sample],
             expected_class=SensitivityClass.FINANCIAL,
-            master_key_provider=bob,
+            master_key_provider=rotation_keys.new_key,
             hkdf_context=_HKDF_CONTEXT_DRAFT,
             max_supported_version=1,
         )
@@ -182,18 +172,17 @@ class TestRotationRoundTrip:
     def test_no_plaintext_leaf_lands_after_rotation(
         self,
         tmp_path: Path,
-        alice: EphemeralMasterKeyProvider,
-        bob: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         store = tmp_path / "tx-store"
         store.mkdir()
         target = store / "leak.envelope.json"
-        _seed_envelope(target, provider=alice)
+        _seed_envelope(target, provider=rotation_keys.old_key)
 
         rotate_master_key(
             (RotationPlanEntry(store_dir=store, hkdf_context=_HKDF_CONTEXT_TX),),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
 
         on_disk = target.read_text(encoding=UTF_8_ENCODING)
@@ -205,26 +194,25 @@ class TestResumeIdempotency:
     def test_rerun_on_already_rotated_set_is_no_op(
         self,
         tmp_path: Path,
-        alice: EphemeralMasterKeyProvider,
-        bob: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         store = tmp_path / "tx-store"
         store.mkdir()
         for i in range(3):
-            _seed_envelope(store / f"rec-{i}.envelope.json", provider=alice)
+            _seed_envelope(store / f"rec-{i}.envelope.json", provider=rotation_keys.old_key)
 
         first = rotate_master_key(
             (RotationPlanEntry(store_dir=store, hkdf_context=_HKDF_CONTEXT_TX),),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         assert first.rotated == 3
         assert first.skipped == 0
 
         second = rotate_master_key(
             (RotationPlanEntry(store_dir=store, hkdf_context=_HKDF_CONTEXT_TX),),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         assert second.rotated == 0
         assert second.skipped == 3
@@ -237,21 +225,20 @@ class TestMixedState:
     def test_partial_rotation_completes_on_rerun(
         self,
         tmp_path: Path,
-        alice: EphemeralMasterKeyProvider,
-        bob: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         store = tmp_path / "tx-store"
         store.mkdir()
-        # Three under alice, two pre-rotated to bob.
+        # Three under rotation_keys.old_key, two pre-rotated to rotation_keys.new_key.
         for i in range(3):
-            _seed_envelope(store / f"old-{i}.envelope.json", provider=alice)
+            _seed_envelope(store / f"old-{i}.envelope.json", provider=rotation_keys.old_key)
         for i in range(2):
-            _seed_envelope(store / f"new-{i}.envelope.json", provider=bob)
+            _seed_envelope(store / f"new-{i}.envelope.json", provider=rotation_keys.new_key)
 
         summary = rotate_master_key(
             (RotationPlanEntry(store_dir=store, hkdf_context=_HKDF_CONTEXT_TX),),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         assert summary.rotated == 3
         assert summary.skipped == 2
@@ -264,18 +251,17 @@ class TestAadBindingSurvivesRotation:
     def test_wrong_hkdf_context_after_rotation_fails(
         self,
         tmp_path: Path,
-        alice: EphemeralMasterKeyProvider,
-        bob: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         store = tmp_path / "probe-drafts"
         store.mkdir()
         target = store / "rec.envelope.json"
-        _seed_envelope(target, provider=alice, hkdf_context=_HKDF_CONTEXT_DRAFT)
+        _seed_envelope(target, provider=rotation_keys.old_key, hkdf_context=_HKDF_CONTEXT_DRAFT)
 
         rotate_master_key(
             (RotationPlanEntry(store_dir=store, hkdf_context=_HKDF_CONTEXT_DRAFT),),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
 
         # Loading under the wrong consumer's HKDF context fails.
@@ -284,7 +270,7 @@ class TestAadBindingSurvivesRotation:
                 target,
                 Envelope[_Sample],
                 expected_class=SensitivityClass.FINANCIAL,
-                master_key_provider=bob,
+                master_key_provider=rotation_keys.new_key,
                 hkdf_context=_HKDF_CONTEXT_TX,
                 max_supported_version=1,
             )
@@ -294,20 +280,19 @@ class TestErrorHandling:
     def test_unrelated_file_in_store_dir_counted_under_errors(
         self,
         tmp_path: Path,
-        alice: EphemeralMasterKeyProvider,
-        bob: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         store = tmp_path / "tx-store"
         store.mkdir()
         # Plant a malformed envelope-suffixed file.
         (store / "bogus.envelope.json").write_text("not json", encoding=UTF_8_ENCODING)
         # Plant a legit envelope alongside.
-        _seed_envelope(store / "rec.envelope.json", provider=alice)
+        _seed_envelope(store / "rec.envelope.json", provider=rotation_keys.old_key)
 
         summary = rotate_master_key(
             (RotationPlanEntry(store_dir=store, hkdf_context=_HKDF_CONTEXT_TX),),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         assert summary.rotated == 1
         assert summary.errors == 1
@@ -317,8 +302,7 @@ class TestErrorHandling:
         self,
         tmp_path: Path,
         caplog: pytest.LogCaptureFixture,
-        alice: EphemeralMasterKeyProvider,
-        bob: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         private_root_segment = "private-profile-root-client-alpha"
         store = tmp_path / private_root_segment / "tx-store"
@@ -329,8 +313,8 @@ class TestErrorHandling:
 
         summary = rotate_master_key(
             (RotationPlanEntry(store_dir=store, hkdf_context=_HKDF_CONTEXT_TX),),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
 
         assert summary.errors == 1
@@ -341,8 +325,7 @@ class TestErrorHandling:
     def test_missing_store_dir_is_a_no_op(
         self,
         tmp_path: Path,
-        alice: EphemeralMasterKeyProvider,
-        bob: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         summary = rotate_master_key(
             (
@@ -351,8 +334,8 @@ class TestErrorHandling:
                     hkdf_context=_HKDF_CONTEXT_TX,
                 ),
             ),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         assert summary.rotated == 0
         assert summary.skipped == 0
@@ -365,17 +348,16 @@ class TestMultiConsumerPlan:
     def test_rotates_across_distinct_hkdf_contexts(
         self,
         tmp_path: Path,
-        alice: EphemeralMasterKeyProvider,
-        bob: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         tx_store = tmp_path / "tx-store"
         tx_store.mkdir()
-        _seed_envelope(tx_store / "a.envelope.json", provider=alice, hkdf_context=_HKDF_CONTEXT_TX)
+        _seed_envelope(tx_store / "a.envelope.json", provider=rotation_keys.old_key, hkdf_context=_HKDF_CONTEXT_TX)
         drafts_store = tmp_path / "probe-drafts"
         drafts_store.mkdir()
         _seed_envelope(
             drafts_store / "b.envelope.json",
-            provider=alice,
+            provider=rotation_keys.old_key,
             hkdf_context=_HKDF_CONTEXT_DRAFT,
         )
 
@@ -384,8 +366,8 @@ class TestMultiConsumerPlan:
                 RotationPlanEntry(store_dir=tx_store, hkdf_context=_HKDF_CONTEXT_TX),
                 RotationPlanEntry(store_dir=drafts_store, hkdf_context=_HKDF_CONTEXT_DRAFT),
             ),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         assert summary.rotated == 2
         assert summary.errors == 0
@@ -397,44 +379,42 @@ class TestBlobStoreRotation:
     def test_blob_dek_is_re_wrapped_under_new_key(
         self,
         tmp_path: Path,
-        alice: EphemeralMasterKeyProvider,
-        bob: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
-        # Seed a FINANCIAL-class blob under alice's master key.
+        # Seed a FINANCIAL-class blob under rotation_keys.old_key's master key.
         store_root = tmp_path / "blob-store"
-        store_a = EncryptedBlobStore(root_dir=store_root, master_key_provider=alice)
+        store_a = EncryptedBlobStore(root_dir=store_root, master_key_provider=rotation_keys.old_key)
         ref = store_a.put(
             b"per-blob payload bytes",
             classification=SensitivityClass.FINANCIAL,
             content_type="application/octet-stream",
         )
-        # Reading under alice succeeds, under bob fails.
+        # Reading under rotation_keys.old_key succeeds, under rotation_keys.new_key fails.
         assert store_a.get(ref) == b"per-blob payload bytes"
-        store_b_pre = EncryptedBlobStore(root_dir=store_root, master_key_provider=bob)
+        store_b_pre = EncryptedBlobStore(root_dir=store_root, master_key_provider=rotation_keys.new_key)
         with pytest.raises(DecryptionError):
             store_b_pre.get(ref)
 
-        # Rotate the wrapped DEK from alice to bob.
+        # Rotate the wrapped DEK from rotation_keys.old_key to rotation_keys.new_key.
         summary = rotate_blob_stores(
             (store_root,),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         assert summary.rotated == 1
         assert summary.errors == 0
 
-        # Reading under bob now succeeds; alice fails.
-        store_b_post = EncryptedBlobStore(root_dir=store_root, master_key_provider=bob)
+        # Reading under rotation_keys.new_key now succeeds; rotation_keys.old_key fails.
+        store_b_post = EncryptedBlobStore(root_dir=store_root, master_key_provider=rotation_keys.new_key)
         assert store_b_post.get(ref) == b"per-blob payload bytes"
 
     def test_already_rotated_blob_is_skipped(
         self,
         tmp_path: Path,
-        alice: EphemeralMasterKeyProvider,
-        bob: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         store_root = tmp_path / "blob-store"
-        store_a = EncryptedBlobStore(root_dir=store_root, master_key_provider=alice)
+        store_a = EncryptedBlobStore(root_dir=store_root, master_key_provider=rotation_keys.old_key)
         store_a.put(
             b"payload",
             classification=SensitivityClass.FINANCIAL,
@@ -442,16 +422,16 @@ class TestBlobStoreRotation:
         )
         first = rotate_blob_stores(
             (store_root,),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         assert first.rotated == 1
         # Re-running with the same providers — every blob now succeeds
         # under the new key first, so they all land in ``skipped``.
         second = rotate_blob_stores(
             (store_root,),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         assert second.rotated == 0
         assert second.skipped == 1
@@ -459,13 +439,12 @@ class TestBlobStoreRotation:
     def test_corpus_class_blob_has_no_dek_to_rotate(
         self,
         tmp_path: Path,
-        alice: EphemeralMasterKeyProvider,
-        bob: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         # CORPUS-class blobs are persisted plaintext (no wrapped DEK);
         # rotation visits the manifest but counts it as ``skipped``.
         store_root = tmp_path / "blob-store"
-        store_a = EncryptedBlobStore(root_dir=store_root, master_key_provider=alice)
+        store_a = EncryptedBlobStore(root_dir=store_root, master_key_provider=rotation_keys.old_key)
         store_a.put(
             b"public corpus payload",
             classification=SensitivityClass.CORPUS,
@@ -473,8 +452,8 @@ class TestBlobStoreRotation:
         )
         summary = rotate_blob_stores(
             (store_root,),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         assert summary.rotated == 0
         assert summary.skipped == 1
@@ -483,13 +462,12 @@ class TestBlobStoreRotation:
     def test_empty_root_returns_zeros(
         self,
         tmp_path: Path,
-        alice: EphemeralMasterKeyProvider,
-        bob: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         summary = rotate_blob_stores(
             (tmp_path / "does-not-exist",),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         assert summary.rotated == 0
         assert summary.skipped == 0
@@ -502,21 +480,20 @@ class TestSingleFileRotationEntry:
     def test_target_filename_visits_only_named_file(
         self,
         tmp_path: Path,
-        alice: EphemeralMasterKeyProvider,
-        bob: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         # Single-file consumer: filename does not end in .envelope.json.
         store = tmp_path / "single-file-store"
         store.mkdir()
         target = store / "usage-ratios.json"
-        _seed_envelope(target, provider=alice, hkdf_context=_HKDF_CONTEXT_TX)
+        _seed_envelope(target, provider=rotation_keys.old_key, hkdf_context=_HKDF_CONTEXT_TX)
 
         # Without target_filename the default-suffix walk would miss
         # this file (it does not end in `.envelope.json`).
         summary_default_suffix = rotate_master_key(
             (RotationPlanEntry(store_dir=store, hkdf_context=_HKDF_CONTEXT_TX),),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         assert summary_default_suffix.rotated == 0
         assert summary_default_suffix.skipped == 0
@@ -530,8 +507,8 @@ class TestSingleFileRotationEntry:
                     target_filename="usage-ratios.json",
                 ),
             ),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         assert summary.rotated == 1
         assert summary.errors == 0
@@ -539,8 +516,7 @@ class TestSingleFileRotationEntry:
     def test_target_filename_missing_file_is_a_clean_no_op(
         self,
         tmp_path: Path,
-        alice: EphemeralMasterKeyProvider,
-        bob: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         # Single-file target does not exist. Rotation must report
         # (0, 0, 0) without raising.
@@ -554,8 +530,8 @@ class TestSingleFileRotationEntry:
                     target_filename="single-file.json",
                 ),
             ),
-            old_master_key_provider=alice,
-            new_master_key_provider=bob,
+            old_master_key_provider=rotation_keys.old_key,
+            new_master_key_provider=rotation_keys.new_key,
         )
         assert summary.rotated == 0
         assert summary.skipped == 0
@@ -688,7 +664,7 @@ class TestRotationLockTargetAlignment:
     def test_rotation_blocks_on_writer_held_lock(
         self,
         tmp_path: Path,
-        alice: EphemeralMasterKeyProvider,
+        rotation_keys: RotationKeys,
     ) -> None:
         # ``ModeloDraftRepository`` locks
         # ``<store>/<draft_id>.lock`` (passed to exclusive_file_lock,
@@ -703,7 +679,7 @@ class TestRotationLockTargetAlignment:
         store.mkdir()
         draft_id = "abc123"
         envelope_path = store / f"{draft_id}.envelope.json"
-        _seed_envelope(envelope_path, provider=alice)
+        _seed_envelope(envelope_path, provider=rotation_keys.old_key)
 
         writer_lock_target = store / f"{draft_id}.lock"
         with exclusive_file_lock(writer_lock_target):
@@ -764,8 +740,7 @@ _NON_DEFAULT_CIPHER_VERSION = 7
 
 def test_rotation_carries_every_cipher_envelope_field_it_does_not_own(
     tmp_path: Path,
-    alice: EphemeralMasterKeyProvider,
-    bob: EphemeralMasterKeyProvider,
+    rotation_keys: RotationKeys,
 ) -> None:
     """Rotation reconstructs the cipher envelope, so an omitted field resets silently.
 
@@ -794,7 +769,7 @@ def test_rotation_carries_every_cipher_envelope_field_it_does_not_own(
     store = tmp_path / "probe-drafts"
     store.mkdir()
     target = store / "draft-carry.envelope.json"
-    _seed_envelope(target, provider=alice, hkdf_context=_HKDF_CONTEXT_DRAFT)
+    _seed_envelope(target, provider=rotation_keys.old_key, hkdf_context=_HKDF_CONTEXT_DRAFT)
 
     carried = set(CipherEnvelope.model_fields) - _ROTATION_OWNED_CIPHER_FIELDS
     assert carried, "rotation claims to own every cipher-envelope field; nothing left to carry"
@@ -812,8 +787,8 @@ def test_rotation_carries_every_cipher_envelope_field_it_does_not_own(
 
     rotate_master_key(
         (RotationPlanEntry(store_dir=store, hkdf_context=_HKDF_CONTEXT_DRAFT),),
-        old_master_key_provider=alice,
-        new_master_key_provider=bob,
+        old_master_key_provider=rotation_keys.old_key,
+        new_master_key_provider=rotation_keys.new_key,
     )
 
     after = CipherEnvelope.model_validate_json(target.read_text(encoding=UTF_8_ENCODING))

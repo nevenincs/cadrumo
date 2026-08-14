@@ -42,11 +42,6 @@ def test_every_exposable_key_has_a_non_bag_schema() -> None:
 #: CLI path click dispatches on. All three families are NESTED two levels under
 #: ``config``, which is the shape the earlier flat keys did not exercise.
 _ACCEPTED_CHANGED_COMMANDS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("config.passphrase.change", ("config", "passphrase", "change")),
-    ("config.recovery.status", ("config", "recovery", "status")),
-    ("config.recovery.create", ("config", "recovery", "create")),
-    ("config.recovery.rotate", ("config", "recovery", "rotate")),
-    ("config.recovery.verify", ("config", "recovery", "verify")),
     ("config.reset.start", ("config", "reset", "start")),
     ("config.reset.status", ("config", "reset", "status")),
     ("config.reset.resume", ("config", "reset", "resume")),

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -22,20 +21,17 @@ from .....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from .....tests.secure_sql import TestRuntimeProfile
 from ...storage.sql import _orm
 from ...storage.sql.session import session_scope
+from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..transactions import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "32323232-3232-4323-8323-323232323232"
 
-
-@pytest.fixture
-def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile
+runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 
 
 def _raw(provider_id: str, filing_date: date, amount: Decimal) -> RawTransaction:

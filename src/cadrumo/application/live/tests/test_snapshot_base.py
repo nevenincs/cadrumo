@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 from typing import Any, override
 
 import pytest
@@ -20,7 +18,6 @@ from ....adapters.persistence.storage.sql import SecureObjectRecord, SecureObjec
 from ....core.errors import CadrumoError
 from ....core.hashing import content_hash_hex
 from ....core.identity import BucketId
-from ....tests.secure_sql import isolated_runtime_profile
 from .._borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
 from .._errors import LiveApplicationInputError
 from .._snapshot_base import (
@@ -227,15 +224,6 @@ class ProbeService(SnapshotService[ProbeSnapshot, _ProbeCaptureRequest]):
                 "superseded_by_snapshot_id": superseded_by,
             },
         )
-
-
-# ---- Fixtures -------------------------------------------------------------
-
-
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
 
 
 _CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)

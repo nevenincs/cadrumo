@@ -26,7 +26,7 @@ from ......core.config import (
     AEAT_CERTIFICATE_PROTECTED_URL,
     Settings,
 )
-from ......tests.secure_sql import isolated_runtime_profile
+from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from .. import (
     AEAT_SESSION_IDLE_TTL,
     AeatAuthenticator,
@@ -75,10 +75,9 @@ _SENSITIVE_HEALTH_PAYLOAD = "C:/Users/operator/private-cert-12345678Z.p12"
 _SEDE_ORIGIN = AEAT_CERTIFICATE_PROTECTED_ORIGIN
 
 
-@pytest.fixture(autouse=True)
-def _isolated_secure_session_backend(tmp_path: Path):
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        yield
+_isolated_secure_session_backend = bucket_scoped_runtime_profile_fixture(
+    _BUCKET_ID, autouse=True, name="_isolated_secure_session_backend"
+)
 
 
 def _serialise_pkcs12(

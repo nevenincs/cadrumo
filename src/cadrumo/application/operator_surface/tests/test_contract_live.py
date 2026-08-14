@@ -16,14 +16,15 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-
 import pytest
 from typer._click.core import Command as ClickCommand
 from typer._click.core import Context as ClickContext
 from typer.main import get_command as typer_get_command
 
-from ....core.config import override_settings
+from ._contract_locale_fixture import pin_english_locale
+
+__all__ = ["pin_english_locale"]
+
 from ....entrypoints.cli import app as cli_app
 from ....entrypoints.cli import command_schema_refs
 from ....entrypoints.mcp import VerbLeafKind, build_tool_descriptors, build_verb_input_schemas
@@ -55,20 +56,6 @@ from .._manifest import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
-
-
-@pytest.fixture(autouse=True)
-def pin_english_locale() -> Iterator[None]:
-    """Pin this module to the English locale.
-
-    Deliberately duplicated from the unit contract suite rather than hoisted to
-    a package ``conftest``: an autouse fixture in ``conftest.py`` would bind
-    every sibling module in this directory, which is a behaviour change none of
-    them asked for. The reconciliation asserts against rendered operator
-    questions, so it needs the pin.
-    """
-    with override_settings(cadrumo_output_language="en"):
-        yield
 
 
 def _raw_live_click_surface() -> tuple[

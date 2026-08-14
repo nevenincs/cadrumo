@@ -32,7 +32,6 @@ never a second source of truth.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -72,9 +71,9 @@ from ..domain.transactions import (
     TransactionLifecycleState,
     TransactionValidationError,
 )
-from ..tests.secure_sql import isolated_runtime_profile
 from .filing_evidence import general_m303_filing_evidence
 from .registry_observations import registry_grounded_observations
+from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -217,14 +216,16 @@ def test_removing_contributing_row_surfaces_staleness() -> None:
 
 
 # --- behavior contract: a finalized modelo blocks destructive edits to its source rows -----
+__all__ = ["secure_objects"]
+
+
 @pytest.fixture
-def _profile(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield profile.repository
+def secure_objects_bucket_id() -> str:
+    return _BUCKET_ID
 
 
-def test_finalized_modelo_blocks_destructive_ledger_edit(_profile: SecureObjectRepository) -> None:
-    objects = _profile
+def test_finalized_modelo_blocks_destructive_ledger_edit(secure_objects: SecureObjectRepository) -> None:
+    objects = secure_objects
     tx = _txn(taxable_base=Decimal("100.00"))
     TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         TransactionCatalogue.from_transactions((tx,)),
