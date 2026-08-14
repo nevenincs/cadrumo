@@ -29,6 +29,7 @@ class ExportComputedKey(StrEnum):
 
     ENVELOPE_CLOSING_TAG = "envelope_closing_tag"
     SEPA_MARCA = "sepa_marca"
+    M303_COMPLEMENTARIA_MARKER = "m303_complementaria_marker"
     M303_COMPLEMENTARIA_PAGE_MARKER = "m303_complementaria_page_marker"
     M303_NO_ACTIVITY_MARKER = "m303_no_activity_marker"
 

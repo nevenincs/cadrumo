@@ -1387,6 +1387,12 @@ def _m303_complementaria_page_marker(draft: ModeloDraft, snapshot: FilingProduce
     return "C" if snapshot.amendment_evidence and snapshot.amendment_evidence.is_complementaria else None
 
 
+def _m303_complementaria_marker(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
+    """Render the official binary amendment marker from immutable amendment evidence."""
+    del draft
+    return "X" if snapshot.amendment_evidence and snapshot.amendment_evidence.is_complementaria else None
+
+
 def _m303_no_activity_marker(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
     """Render ``X`` only for the closed Modelo 303 no-activity disposition."""
     del draft
@@ -1399,6 +1405,7 @@ _COMPUTED_VALUE_PRODUCERS: Mapping[
 ] = {
     ExportComputedKey.ENVELOPE_CLOSING_TAG: _envelope_closing_tag,
     ExportComputedKey.SEPA_MARCA: _sepa_marca,
+    ExportComputedKey.M303_COMPLEMENTARIA_MARKER: _m303_complementaria_marker,
     ExportComputedKey.M303_COMPLEMENTARIA_PAGE_MARKER: _m303_complementaria_page_marker,
     ExportComputedKey.M303_NO_ACTIVITY_MARKER: _m303_no_activity_marker,
 }
