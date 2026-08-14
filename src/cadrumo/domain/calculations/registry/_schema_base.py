@@ -13,7 +13,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
-from ....core import STRICT_FROZEN_CONFIG, RevisionReviewStatus
+from ....core import STRICT_FROZEN_CONFIG, LegalReviewStatus, RevisionReviewStatus
 from ....core.classification import SensitivityClass
 from ._errors import RegistryValidationError
 from ._ids import LegalRefId, SourceRefId
@@ -28,6 +28,7 @@ __all__ = [
     "FormulaOperator",
     "GovernanceStampMarker",
     "LegalRefs",
+    "LegalReviewStatusField",
     "ManifestOnlyMarker",
     "ModeloFilingCapability",
     "RegistryModel",
@@ -164,13 +165,25 @@ ModeloFilingCapability = Literal["borrador", "renta_ledger_default"]
   and may declare cross-model relations but is not a filing modelo.
 """
 
-ReviewStatus = Literal["reviewed"]
-"""The legal catalogue's single-valued human review-stamp vocabulary.
+
+def _coerce_legal_review_status(value: object) -> object:
+    if isinstance(value, LegalReviewStatus):
+        return value
+    if isinstance(value, str):
+        return LegalReviewStatus(value)
+    return value
+
+
+LegalReviewStatusField = Annotated[LegalReviewStatus, BeforeValidator(_coerce_legal_review_status)]
+"""The legal-reference catalogue's typed review-provenance vocabulary.
 
 Distinct from :data:`RevisionReviewStatusField` above, which coerces the
 registry's per-revision governance-stamp token and governs a different
 subject.
 """
+
+ReviewStatus = Literal["reviewed"]
+"""Review token retained for official sources and legal parameters."""
 
 DateAxis = Literal["filing_period", "devengo_date", "transaction_date", "invoice_date", "submission_date"]
 EvidenceTier = Literal[

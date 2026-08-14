@@ -204,7 +204,15 @@ def test_report_json_keeps_the_finite_annual_matrix_separate_from_the_portfolio(
     coordinate = matrix["coordinates"][0]
     assert {
         key: coordinate[key]
-        for key in ("modelo", "filing_year", "period", "law_selected_revision", "classification", "provisional")
+        for key in (
+            "modelo",
+            "filing_year",
+            "period",
+            "law_selected_revision",
+            "classification",
+            "provisional",
+            "authority_scope",
+        )
     } == {
         "modelo": "100",
         "filing_year": 2025,
@@ -212,6 +220,7 @@ def test_report_json_keeps_the_finite_annual_matrix_separate_from_the_portfolio(
         "law_selected_revision": "2025",
         "classification": "not_yet_measured",
         "provisional": True,
+        "authority_scope": "inspection_only",
     }
     comparison = coordinate["schema_comparison"]
     assert {
@@ -221,6 +230,7 @@ def test_report_json_keeps_the_finite_annual_matrix_separate_from_the_portfolio(
             "filing_year",
             "period",
             "law_selected_revision",
+            "authority_scope",
             "identity_measurement",
             "printed_form_membership",
             "xsd_only_attributes",
@@ -231,6 +241,7 @@ def test_report_json_keeps_the_finite_annual_matrix_separate_from_the_portfolio(
         "filing_year": 2025,
         "period": "0A",
         "law_selected_revision": "2025",
+        "authority_scope": "inspection_only",
         "identity_measurement": "measured",
         "printed_form_membership": "unsupported",
         "xsd_only_attributes": "unsupported",
@@ -300,6 +311,31 @@ def test_report_json_preserves_construct_and_casilla_provenance_ledgers() -> Non
     assert rendered["casilla_provenance"] == [trace.model_dump(mode="json") for trace in source.casilla_provenance]
 
 
+def test_report_json_and_text_expose_inspection_scope_without_filing_grade_gaps() -> None:
+    """Inspection evidence remains visible and is never rendered as filing scope."""
+    result = CliRunner().invoke(app, ["report", "--json"])
+
+    assert result.exit_code == 0, result.stdout
+    payload = json.loads(result.stdout)
+    inspection = next(row for row in payload["rows"] if row["model_law_authority_scope"] == "inspection_only")
+
+    assert inspection["construct_evidence_authority_scope"] == "inspection_only"
+    assert inspection["required_coverage_gap_tiers"] == []
+    assert inspection["construct_evidence"]["ledger"]["authority_scope"] == "inspection_only"
+    assert inspection["construct_evidence"]["ledger"]["rows"]
+
+    text = CliRunner().invoke(app, ["report"]).stdout
+    row_line = next(
+        line
+        for line in text.splitlines()
+        if line.startswith(f"row modelo={inspection['modelo']} revision={inspection['revision']} ")
+    )
+    assert "model_law_authority_scope=inspection_only" in row_line
+    assert "construct_evidence_authority_scope=inspection_only" in row_line
+    assert "required_coverage_gap_tiers=-" in row_line
+    assert "construct_evidence_gaps=0" not in row_line
+
+
 def test_report_json_keeps_construct_evidence_unmeasured_on_degraded_read() -> None:
     """A degraded report retains schema traces but does not claim construct proof."""
     result = CliRunner().invoke(app, ["report", "--json", "--no-validate"])
@@ -314,18 +350,24 @@ def test_report_json_keeps_construct_evidence_unmeasured_on_degraded_read() -> N
 
 
 def test_annual_matrix_revision_is_read_from_the_validated_authority() -> None:
-    """The coordinate carries the authority's revision, not a free override."""
+    """The static coordinate uses canonical inspection, not a filing snapshot."""
     report = load_conformance_report(validate=True)
     assert report.annual_matrix is not None
     coordinate = report.annual_matrix.coordinates[0]
-    snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
+    authority = bundled_authority()
+    inspection = authority.inspect_revision("100", filing_year=2025, period="0A")
+    revision = authority.modelo("100").revisions[inspection.revision_id]
 
     assert (coordinate.modelo, coordinate.filing_year, coordinate.period) == ("100", 2025, "0A")
-    assert coordinate.law_selected_revision == snapshot.revision.id
+    assert coordinate.law_selected_revision == inspection.revision_id
     assert coordinate.law_selected_revision == "2025"
+    assert coordinate.authority_scope == "inspection_only"
     assert coordinate.schema_comparison == compare_annual_casilla_population(
-        snapshot,
-        source_root=bundled_authority().source_root,
+        inspection,
+        filing_year=2025,
+        period="0A",
+        revision=revision,
+        source_root=authority.source_root,
     )
 
 
@@ -361,6 +403,7 @@ def test_report_text_projects_schema_layout_and_keeps_statuses_distinct(
 
     assert result.exit_code == 0, result.stdout
     assert "annual_coordinate modelo=100 filing_year=2025 period=0A law_selected_revision=2025" in result.stdout
+    assert "authority_scope=inspection_only" in result.stdout
     assert "schema_identity_measurement=measured" in result.stdout
     assert "schema_printed_form_membership=unsupported" in result.stdout
     assert "schema_xsd_only_attributes=unsupported" in result.stdout

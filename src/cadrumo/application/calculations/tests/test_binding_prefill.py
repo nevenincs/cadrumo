@@ -279,11 +279,6 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             "modelo-390-rel-303-cuota-devengada-total",
             "modelo-390-rel-303-cuota-deducible-total",
             "modelo-390-rel-303-resultado-regimen-general",
-            # Régimen simplificado's annual "cuota devengada" fold-in (M390 box 79)
-            # is an unconditional annual_summary carry of M303 casilla 54 (4T only);
-            # for this régimen-general-only scenario casilla 54 resolves to its
-            # neutral 0 default, which is still a resolved (non-None) value.
-            "modelo-390-rel-303-cuota-devengada-simplificado",
         }
         # Provenance: resolved entries carry local_filing provenance.
         assert all(rv.provenance == "local_filing" for rv in relation_vals.values if rv.value is not None)

@@ -8,7 +8,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-23749#a1"
 published_at = 2022-12-30
 effective_from = 2022-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the fetched BOE-A-2022-23749 art 1; pending operator re-verification)"
 notes = "Orden HFP/1314/2022 art 1: aprueba el modelo 592, autoliquidación del Impuesto especial sobre los envases de plástico no reutilizables."
@@ -27,7 +27,7 @@ article = "2"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-23749#a2"
 published_at = 2022-12-30
 effective_from = 2022-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the fetched BOE-A-2022-23749 art 2; pending operator re-verification)"
 notes = "Orden HFP/1314/2022 art 2: plazo de presentación del modelo 592. Veinte primeros días naturales siguientes a aquel en que finaliza el periodo de liquidación; el periodo (trimestral o mensual) depende del periodo de liquidación del obligado en el IVA, por lo que no se fija una ventana natural única."

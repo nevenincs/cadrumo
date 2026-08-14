@@ -14,7 +14,9 @@ from .._coverage import (
     audit_registry_construct_evidence,
     build_construct_evidence_ledger,
 )
+from .._snapshot import build_snapshot
 from ._catalogue_verification_support import _registry_tree
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -26,24 +28,49 @@ def test_construct_evidence_audit_enumerates_every_declared_construct_and_select
     audit = audit_registry_construct_evidence(modelos, catalogues, source_root=bundled_path())
 
     ledgers_by_coordinate = {(ledger.modelo, ledger.revision): ledger for ledger in audit.ledgers}
-    assert len(audit.ledgers) == sum(len(modelo.revisions) for modelo in modelos)
+    expected_ledger_coordinates = {
+        (modelo.id, revision.id) for modelo in modelos for revision in modelo.revisions.values()
+    }
+    assert set(ledgers_by_coordinate) == expected_ledger_coordinates
+    assert len(audit.ledgers) == len(expected_ledger_coordinates)
     assert audit.ok
-    assert audit.gaps == ()
-    assert all(row.authority_checked for ledger in audit.ledgers for row in ledger.rows)
+    assert audit.filing_gaps == ()
+    assert audit.inspection_gaps
+
+    expected_inspection_gap_coordinates = set()
+    actual_inspection_gap_coordinates = set()
 
     for modelo in modelos:
         for revision in modelo.revisions.values():
             ledger = ledgers_by_coordinate[(modelo.id, revision.id)]
             by_coordinate = {(row.kind, row.construct_id): row for row in ledger.rows}
+            expected_coordinates = {
+                (kind, declaration.id)
+                for kind, declarations in (
+                    ("formula", revision.formulas),
+                    ("parameter", revision.parameters),
+                    ("binding", revision.bindings),
+                    ("relation", revision.relations),
+                )
+                for declaration in declarations
+            }
+            expected_coordinates.update(("selector", binding.id) for binding in revision.bindings)
+            assert set(by_coordinate) == expected_coordinates
             assert Counter(row.kind for row in ledger.rows) == Counter(
-                {
-                    "formula": len(revision.formulas),
-                    "parameter": len(revision.parameters),
-                    "binding": len(revision.bindings),
-                    "relation": len(revision.relations),
-                    "selector": len(revision.bindings),
-                },
+                coordinate[0] for coordinate in expected_coordinates
             )
+
+            inspection_gap_coordinates = {(row.kind, row.construct_id) for row in ledger.gaps}
+            if ledger.filing_eligible:
+                assert not inspection_gap_coordinates
+            else:
+                assert inspection_gap_coordinates == expected_coordinates
+                expected_inspection_gap_coordinates.update(
+                    (ledger.modelo, ledger.revision, *coordinate) for coordinate in expected_coordinates
+                )
+                actual_inspection_gap_coordinates.update(
+                    (ledger.modelo, ledger.revision, *coordinate) for coordinate in inspection_gap_coordinates
+                )
 
             for kind, declarations in (
                 ("formula", revision.formulas),
@@ -53,17 +80,33 @@ def test_construct_evidence_audit_enumerates_every_declared_construct_and_select
             ):
                 for declaration in declarations:
                     row = by_coordinate[(kind, declaration.id)]
-                    assert row.status == "grounded"
+                    expected_status = "grounded" if ledger.filing_eligible else "unvalidated"
+                    assert row.status == expected_status
+                    assert row.authority_checked is ledger.filing_eligible
                     assert row.legal_refs == declaration.legal_refs
                     assert row.source_refs == declaration.source_refs
 
             for binding in revision.bindings:
                 row = by_coordinate[("selector", binding.id)]
                 assert row.binding_id == binding.id
-                assert row.status == "inherited"
+                expected_status = "inherited" if ledger.filing_eligible else "unvalidated"
+                assert row.status == expected_status
+                assert row.authority_checked is ledger.filing_eligible
                 assert row.legal_refs == binding.legal_refs
                 assert row.source_refs == binding.source_refs
-                assert "inherited" in row.reason
+                expected_reason = "inherited" if ledger.filing_eligible else "no validated registry authority"
+                assert expected_reason in row.reason
+
+    assert actual_inspection_gap_coordinates == expected_inspection_gap_coordinates
+
+    m038 = {modelo.id: modelo for modelo in modelos}["038"]
+    assert len(m038.revisions) == 1
+    m038_revision = next(iter(m038.revisions.values()))
+    m038_ledger = ledgers_by_coordinate[(m038.id, m038_revision.id)]
+    assert not (m038_revision.formulas or m038_revision.parameters or m038_revision.bindings or m038_revision.relations)
+    assert m038_ledger.authority_scope == "inspection_only"
+    assert m038_ledger.rows == ()
+    assert m038_ledger.gaps == ()
 
 
 def test_construct_evidence_rows_keep_incomplete_refs_explicit() -> None:
@@ -105,9 +148,14 @@ def test_complete_construct_evidence_requires_the_authority_check_marker() -> No
 
 def test_public_construct_ledger_keeps_reference_presence_unvalidated() -> None:
     """The public snapshot projection cannot manufacture validated authority."""
-    from .._authority import bundled_authority
-
-    snapshot = bundled_authority().snapshot("130", filing_year=2026, period="1T")
+    modelo, catalogues = _committed_modelo("130")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2026,
+        period="1T",
+    )
     ledger = build_construct_evidence_ledger(snapshot)
 
     assert ledger.gaps

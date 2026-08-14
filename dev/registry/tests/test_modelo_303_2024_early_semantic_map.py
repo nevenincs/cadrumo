@@ -99,9 +99,7 @@ def test_s63_membership_two_110_homes_and_marker_encodings_are_exact(_authoritie
     }
 
     assert simplified == {
-        ("DP30302", ordinal)
-        for ordinal in (*range(6, 78), *range(90, 152))
-        if ordinal not in {92, 94, 120, 122}
+        ("DP30302", ordinal) for ordinal in (*range(6, 78), *range(90, 152)) if ordinal not in {92, 94, 120, 122}
     }
     assert all(by_anchor[("DP30302", ordinal)].kind.value == "filler" for ordinal in (92, 94, 120, 122))
     assert by_anchor[("DP30303", 20)].casilla_id == "iva.compensacion-pendiente-periodos-anteriores"

@@ -12,15 +12,10 @@ discrepancy_causes = [
 ]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure"]
-# Grounded against the AEAT Manual practico IVA 2024, Cap. 9 "La declaracion-
-# resumen anual. Modelo 390" (pag. 293-302) worked example, which threads a
-# single "senor 'X'" scenario through all four Modelo 303 quarterly
-# liquidaciones of ejercicio 2024. The annual devengada/deducible/resultado
-# totals are the sum of the manual's own four printed quarterly "TOTAL CUOTA
-# DEVENGADA" / "TOTAL A DEDUCIR" solucion lines (88.416 / 68.202 / 20.214
-# anual). See test_m390_2024_annual_manual_worked_example.py and
-# corpus/manual_oracles/modelo-390-2024-resumen-anual-cuatro-trimestres.json.
-externally_grounded_casilla_ids = ["iva.anual.cuota-devengada-total", "iva.anual.cuota-deducible-total", "iva.anual.resultado-regimen-general"]
+# No externally_grounded_casilla_ids are declared here: the bundled Modelo 390
+# worked-example oracle is filing_year=2024 only and cannot ground revision
+# 2023. The verification contract remains engine-only until same-year evidence
+# is added to the authoritative corpus.
 
 # Ledger IVA aggregation bindings for the annual resumen over the full
 # ejercicio. The IVA classification tuple lets Modelo 390 recompute directly

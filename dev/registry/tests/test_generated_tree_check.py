@@ -10,7 +10,7 @@ from shutil import rmtree
 import pytest
 
 from cadrumo.core.hashing import hash_file
-from cadrumo.domain.calculations.registry import ExportEncoding, RegistryValidationError, bundled_authority
+from cadrumo.domain.calculations.registry import ExportEncoding, RegistryValidationError
 
 from .. import _generated_tree_check
 from .._export_tree import ExportTreeTransportProfile
@@ -31,11 +31,6 @@ from .test_export_tree import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-
-@pytest.fixture
-def m200_snapshot():
-    return bundled_authority().snapshot("200", filing_year=2025, period="0A")
 
 
 def _tree_hashes(root: Path) -> dict[str, str]:

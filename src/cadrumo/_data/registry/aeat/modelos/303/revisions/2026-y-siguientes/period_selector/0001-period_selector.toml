@@ -1,5 +1,0 @@
-[revisions.2026-y-siguientes.period_selector]
-year_from = 2026
-# Quarterly periods for standard autoliquidacion; monthly periods for
-# monthly IVA-liquidation taxpayers (REDEME or large-company status).
-periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]

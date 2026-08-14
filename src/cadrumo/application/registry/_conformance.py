@@ -133,6 +133,7 @@ from ...domain.calculations.registry import RegistryClassificationAudit as _Regi
 from ...domain.calculations.registry import RegistryConstructEvidenceAudit as _RegistryConstructEvidenceAudit
 from ...domain.calculations.registry import RegistryCoverageAudit as _RegistryCoverageAudit
 from ...domain.calculations.registry import RegistryExternalGroundingAudit as _RegistryExternalGroundingAudit
+from ...domain.calculations.registry import RegistryRevisionInspection as _RegistryRevisionInspection
 from ...domain.calculations.registry import RegistrySnapshot as _RegistrySnapshot
 from ...domain.calculations.registry import RegistryValidationError as _RegistryValidationError
 from ...domain.calculations.registry import RelationId as _RelationId
@@ -158,6 +159,7 @@ from ...domain.calculations.registry import (
     build_external_grounding_audit as _build_external_grounding_audit,
 )
 from ...domain.calculations.registry import build_support_matrix as _build_support_matrix
+from ...domain.calculations.registry import derive_export_layouts_from_bindings as _derive_export_layouts_from_bindings
 from ...domain.calculations.registry import (
     load_bundled_external_oracle_inventory as _load_bundled_external_oracle_inventory,
 )
@@ -171,6 +173,7 @@ from ._errors import RegistryApplicationInputError
 
 __all__ = [
     "AnnualCasillaPopulationComparison",
+    "CoverageAuthorityScope",
     "DictionaryLayoutCasillaComparison",
     "LatestRevisionSupportProbe",
     "RegistryConformanceProfile",
@@ -193,6 +196,11 @@ class ConformanceModel(BaseModel):
 
 
 type _MeasurementStatus = Literal["measured", "unsupported", "unmeasured"]
+
+# The coverage audit can inspect every revision without giving every revision
+# filing authority.  Keep that distinction on the application projection so a
+# renderer cannot infer filing-grade scope merely because a ledger is present.
+type CoverageAuthorityScope = Literal["filing", "inspection_only"]
 
 _XML_DICTIONARY_PARSER_ATTRIBUTES = ("field_id", "path", "data_type", "casilla_id")
 _UNMEASURED_DICTIONARY_ATTRIBUTES = ("label", "data_type", "number", "segmento")
@@ -236,12 +244,12 @@ class DictionaryLayoutCasillaComparison(ConformanceModel):
 
 
 class AnnualCasillaPopulationComparison(ConformanceModel):
-    """Year-specific casilla/layout evidence for one authority-selected snapshot.
+    """Year-specific casilla/layout evidence for one authority-selected read.
 
-    The caller supplies one :class:`RegistrySnapshot`, which already carries
-    the law-selected revision for ``filing_year`` and ``period``.  This
-    function never selects a latest or largest revision and never compares
-    two annual revisions to one another.
+    The caller supplies a filing :class:`RegistrySnapshot` or a typed
+    non-filing :class:`RegistryRevisionInspection` for the law-selected
+    ``filing_year`` and ``period``.  This function never selects a latest or
+    largest revision and never compares two annual revisions to one another.
 
     ``printed_form_membership`` is intentionally not derived from dictionary
     identities.  A declared BOE/form source is visible as ``unsupported``
@@ -261,6 +269,7 @@ class AnnualCasillaPopulationComparison(ConformanceModel):
     layout_comparisons: tuple[DictionaryLayoutCasillaComparison, ...]
     printed_form_source_refs: tuple[str, ...] = ()
     xsd_source_refs: tuple[str, ...] = ()
+    authority_scope: CoverageAuthorityScope = "filing"
 
     @property
     def missing_casilla_ids(self) -> tuple[str, ...]:
@@ -286,17 +295,76 @@ class AnnualCasillaPopulationComparison(ConformanceModel):
         return sum(comparison.identity_divergence_count for comparison in self.layout_comparisons)
 
 
+@dataclass(frozen=True)
+class _AnnualPopulationContext:
+    """Selected revision facts shared by filing and inspection comparisons."""
+
+    revision: _ModeloRevision
+    layouts: tuple[_ExportLayoutDefinition, ...]
+    modelo: _ModeloId
+    filing_year: int
+    period: str
+    sources: Mapping[str, _SourceReference]
+    authority_scope: CoverageAuthorityScope
+
+
+def _annual_population_context(
+    authority: _RegistrySnapshot | _RegistryRevisionInspection,
+    *,
+    filing_year: int | None,
+    period: str | None,
+    revision: _ModeloRevision | None,
+) -> _AnnualPopulationContext:
+    """Select one explicit filing or static-inspection comparison context."""
+    if isinstance(authority, _RegistrySnapshot):
+        selected_revision = authority.revision
+        return _AnnualPopulationContext(
+            revision=selected_revision,
+            layouts=selected_revision.export_layouts,
+            modelo=authority.modelo.id,
+            filing_year=authority.filing_year,
+            period=authority.period,
+            sources=authority.sources,
+            authority_scope="filing",
+        )
+    if filing_year is None or period is None:
+        raise RegistryApplicationInputError(
+            "annual casilla comparison requires filing_year and period for a static inspection",
+            context={"modelo": authority.modelo_id, "revision_id": authority.revision_id},
+        )
+    if revision is None or revision.id != authority.revision_id:
+        raise RegistryApplicationInputError(
+            "annual casilla comparison requires the compiled revision selected by the static inspection",
+            context={"modelo": authority.modelo_id, "revision_id": authority.revision_id},
+        )
+    return _AnnualPopulationContext(
+        revision=revision,
+        layouts=_derive_export_layouts_from_bindings(revision),
+        modelo=authority.modelo_id,
+        filing_year=filing_year,
+        period=period,
+        sources=authority.sources,
+        authority_scope="inspection_only",
+    )
+
+
 def compare_annual_casilla_population(
-    snapshot: _RegistrySnapshot,
+    authority: _RegistrySnapshot | _RegistryRevisionInspection,
     *,
     source_root: Path | None = None,
+    filing_year: int | None = None,
+    period: str | None = None,
+    revision: _ModeloRevision | None = None,
 ) -> AnnualCasillaPopulationComparison:
-    """Compare one law-selected annual snapshot to its declared XML dictionaries.
+    """Compare one law-selected registry read to its declared XML dictionaries.
 
-    The snapshot is the temporal boundary: its ``filing_year``, ``period``,
-    and ``revision`` are copied into the result, and only that revision's
-    casillas and layouts participate.  No revision ordering or cross-year
-    baseline is consulted.
+    A filing snapshot carries its temporal boundary and revision directly.  A
+    :class:`RegistryRevisionInspection` intentionally carries neither filing
+    context nor export layouts, so inspection callers provide the exact
+    coordinate and the already-selected compiled revision from the same
+    :class:`ValidatedRegistryAuthority`.  The revision is used only to project
+    its declared layouts and casilla flags; no second selector or snapshot is
+    constructed here.
 
     The identity comparison delegates source reading to the existing
     :func:`xml_dictionary_entries` parser.  It compares unique non-null
@@ -305,15 +373,34 @@ def compare_annual_casilla_population(
     by ``dictionary_entry_count`` but are not fabricated into identities.
 
     Args:
-        snapshot: Validated authority snapshot for one ``modelo``/year/period.
+        authority: Validated filing snapshot or typed non-filing inspection for
+            one ``modelo``/year/period.
         source_root: Repository root containing the bundled official source
             corpus.  Omitting it leaves dictionary measurement explicitly
             ``unmeasured`` because the parser cannot resolve its source.
+        filing_year: Required with an inspection because that projection does
+            not retain filing context. Ignored for a snapshot.
+        period: Required with an inspection because that projection does not
+            retain filing context. Ignored for a snapshot.
+        revision: The compiled revision selected by the same authority,
+            required with an inspection because the inspection projection does
+            not expose export layouts. Its id must match ``revision_id``.
+
+    Raises:
+        RegistryApplicationInputError: If an inspection is supplied without
+            its exact coordinate or matching compiled revision.
     """
-    registry_casillas = tuple(casilla for casilla in snapshot.revision.casillas if not casilla.internal_only)
+    selected = _annual_population_context(
+        authority,
+        filing_year=filing_year,
+        period=period,
+        revision=revision,
+    )
+
+    registry_casillas = tuple(casilla for casilla in selected.revision.casillas if not casilla.internal_only)
     registry_ids = frozenset(str(casilla.id) for casilla in registry_casillas)
-    form_source_refs = _source_refs_of_kind(snapshot.revision.source_refs, snapshot.sources, "form_spec")
-    xsd_source_refs = _source_refs_of_kind(snapshot.revision.source_refs, snapshot.sources, "xsd")
+    form_source_refs = _source_refs_of_kind(selected.revision.source_refs, selected.sources, "form_spec")
+    xsd_source_refs = _source_refs_of_kind(selected.revision.source_refs, selected.sources, "xsd")
     printed_form_status = _source_status(form_source_refs)
     xsd_status = _source_status(xsd_source_refs)
 
@@ -321,19 +408,19 @@ def compare_annual_casilla_population(
         _compare_dictionary_layout(
             layout,
             registry_ids=registry_ids,
-            registry_internal_only_count=len(snapshot.revision.casillas) - len(registry_casillas),
+            registry_internal_only_count=len(selected.revision.casillas) - len(registry_casillas),
             printed_form_status=printed_form_status,
             xsd_status=xsd_status,
-            snapshot=snapshot,
+            sources=selected.sources,
             source_root=source_root,
         )
-        for layout in snapshot.revision.export_layouts
+        for layout in selected.layouts
     )
     return AnnualCasillaPopulationComparison(
-        modelo=snapshot.modelo.id,
-        filing_year=snapshot.filing_year,
-        period=snapshot.period,
-        law_selected_revision=snapshot.revision.id,
+        modelo=selected.modelo,
+        filing_year=selected.filing_year,
+        period=selected.period,
+        law_selected_revision=selected.revision.id,
         identity_measurement=_fold_measurement_status(
             tuple(comparison.identity_measurement for comparison in comparisons),
         ),
@@ -342,6 +429,7 @@ def compare_annual_casilla_population(
         layout_comparisons=comparisons,
         printed_form_source_refs=form_source_refs,
         xsd_source_refs=xsd_source_refs,
+        authority_scope=selected.authority_scope,
     )
 
 
@@ -352,7 +440,7 @@ def _compare_dictionary_layout(
     registry_internal_only_count: int,
     printed_form_status: _MeasurementStatus,
     xsd_status: _MeasurementStatus,
-    snapshot: _RegistrySnapshot,
+    sources: Mapping[str, _SourceReference],
     source_root: Path | None,
 ) -> DictionaryLayoutCasillaComparison:
     """Measure one layout, keeping unsupported and unavailable sources visible."""
@@ -384,7 +472,7 @@ def _compare_dictionary_layout(
         entries = _xml_dictionary_entries(
             layout,
             source_root=source_root,
-            sources=snapshot.sources,
+            sources=sources,
         )
     except (_RegistryValidationError, OSError) as exc:
         return measured(
@@ -557,33 +645,60 @@ class RevisionModelLawCoverage(ConformanceModel):
     """Evidence-tier coverage for one revision, split by whether the tier is mandatory.
 
     Legal authority, official source guidance, and layout authority are
-    mandatory: the registry cannot be filing-grade without them, so a gap on one
-    is a failure. Executable parity is reported rather than required, because no
-    official safe calculator or formula workbook exists for many revisions.
-    Collapsing the two kinds of gap into one count would make an expected
-    absence look like a defect.
+    mandatory for a filing-scope ledger: the registry cannot be filing-grade
+    without them, so a gap on one is a failure. Inspection-only ledgers retain
+    every measured gate and gap for discovery, but their gaps are not filing-
+    grade failures. Executable parity is reported rather than required,
+    because no official safe calculator or formula workbook exists for many
+    revisions. Collapsing the two kinds of gap into one count would make an
+    expected absence look like a defect.
 
     Attributes:
         satisfied_tiers: Evidence tiers backed by at least one registry
             reference.
         gap_tiers: Evidence tiers with no supporting reference at all.
-        required_tier_gaps: The subset of ``gap_tiers`` that is mandatory.
+        required_tier_gaps: Filing-grade mandatory gaps. Empty for an
+            inspection-only ledger even when ``gap_tiers`` remains non-empty.
+        authority_scope: Whether the ledger was built from filing authority or
+            from a non-filing inspection projection.
     """
 
     satisfied_tiers: tuple[_EvidenceTier, ...]
     gap_tiers: tuple[_EvidenceTier, ...]
     required_tier_gaps: tuple[_RequiredCoverageTier, ...]
+    authority_scope: CoverageAuthorityScope = "filing"
+
+    @property
+    def filing_eligible(self) -> bool:
+        """Whether this coverage ledger may contribute filing-grade gaps."""
+        return self.authority_scope == "filing"
 
     @property
     def has_required_gap(self) -> bool:
-        """Whether any mandatory evidence tier is unbacked."""
-        return bool(self.required_tier_gaps)
+        """Whether a filing-scope ledger has an unbacked mandatory tier."""
+        return self.filing_eligible and bool(self.required_tier_gaps)
 
 
 class RevisionConstructEvidence(ConformanceModel):
-    """Construct-level evidence, kept separate from revision evidence floors."""
+    """Construct-level evidence, kept separate from revision evidence floors.
+
+    Inspection-only rows deliberately retain their incomplete construct rows so
+    the ledger remains a real, non-vacuous discovery surface.  Consumers that
+    need filing-grade defects must use :attr:`filing_gaps`; :attr:`gaps` keeps
+    the complete measured population visible.
+    """
 
     ledger: _ConstructEvidenceLedger
+
+    @property
+    def authority_scope(self) -> CoverageAuthorityScope:
+        """Return the authority scope declared by the underlying ledger."""
+        return self.ledger.authority_scope
+
+    @property
+    def filing_eligible(self) -> bool:
+        """Whether this construct ledger may contribute filing-grade gaps."""
+        return self.ledger.filing_eligible
 
     @property
     def rows(self) -> tuple[_ConstructEvidenceRow, ...]:
@@ -592,8 +707,22 @@ class RevisionConstructEvidence(ConformanceModel):
 
     @property
     def gaps(self) -> tuple[_ConstructEvidenceRow, ...]:
-        """Return unresolved or unmeasured construct rows."""
+        """Return every unresolved or unmeasured construct row.
+
+        This intentionally includes inspection-only rows.  Use
+        :attr:`filing_gaps` for the strict filing-grade subset.
+        """
         return self.ledger.gaps
+
+    @property
+    def filing_gaps(self) -> tuple[_ConstructEvidenceRow, ...]:
+        """Return construct gaps from filing-scope ledgers only."""
+        return self.ledger.filing_gaps
+
+    @property
+    def inspection_gaps(self) -> tuple[_ConstructEvidenceRow, ...]:
+        """Return incomplete construct rows retained for inspection only."""
+        return self.ledger.gaps if not self.filing_eligible else ()
 
 
 class RevisionCasillaProducerTrace(ConformanceModel):
@@ -799,8 +928,23 @@ class RegistryConformanceProfile(ConformanceModel):
 
     @property
     def construct_evidence_gap_rows(self) -> tuple[RevisionConformanceRow, ...]:
-        """Rows with measured construct evidence gaps."""
-        return tuple(row for row in self.rows if row.construct_evidence is not None and row.construct_evidence.gaps)
+        """Rows with filing-grade construct evidence gaps.
+
+        Inspection-only gaps stay available through each row's
+        ``construct_evidence.gaps`` and through
+        :attr:`construct_evidence_inspection_gap_rows`; they do not contribute
+        to this filing-grade counter.
+        """
+        return tuple(
+            row for row in self.rows if row.construct_evidence is not None and row.construct_evidence.filing_gaps
+        )
+
+    @property
+    def construct_evidence_inspection_gap_rows(self) -> tuple[RevisionConformanceRow, ...]:
+        """Rows retaining incomplete construct evidence for inspection only."""
+        return tuple(
+            row for row in self.rows if row.construct_evidence is not None and row.construct_evidence.inspection_gaps
+        )
 
     @property
     def construct_evidence_unmeasured_rows(self) -> tuple[RevisionConformanceRow, ...]:
@@ -1199,19 +1343,27 @@ def _casilla_producer_traces(revision: _ModeloRevision) -> tuple[RevisionCasilla
 
 
 def _model_law_coverage(ledger: _ModelLawCoverageLedger) -> RevisionModelLawCoverage:
-    """Split one coverage ledger's gates into satisfied, gap, and mandatory-gap tiers.
+    """Split one coverage ledger's gates into visible and filing-grade tiers.
 
     The three locals are annotated because a generator comprehension widens the
     tier ``Literal`` back to ``str``, and the strict row models would then refuse
     a value the ledger already typed exactly.
+
+    Inspection-only ledgers keep their complete ``gap_tiers`` population, but
+    mandatory gaps are only projected into ``required_tier_gaps`` for a
+    filing-scope ledger.  This leaves discovery evidence visible without turning
+    a non-filing inspection read into a filing-grade defect.
     """
     satisfied: tuple[_EvidenceTier, ...] = tuple(gate.tier for gate in ledger.gates if gate.status == "satisfied")
     gaps: tuple[_EvidenceTier, ...] = tuple(gate.tier for gate in ledger.gates if gate.status == "gap")
-    required_gaps: tuple[_RequiredCoverageTier, ...] = tuple(tier for tier in _REQUIRED_COVERAGE_TIERS if tier in gaps)
+    required_gaps: tuple[_RequiredCoverageTier, ...] = tuple(
+        tier for tier in _REQUIRED_COVERAGE_TIERS if ledger.filing_eligible and tier in gaps
+    )
     return RevisionModelLawCoverage(
         satisfied_tiers=satisfied,
         gap_tiers=gaps,
         required_tier_gaps=required_gaps,
+        authority_scope=ledger.authority_scope,
     )
 
 

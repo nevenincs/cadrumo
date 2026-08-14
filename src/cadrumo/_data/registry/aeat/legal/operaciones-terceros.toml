@@ -8,7 +8,7 @@ article = "31"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a31"
 published_at = 2007-09-05
 effective_from = 2008-01-01
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
 notes = "RGAT art 31: obligacion de informar sobre las operaciones con terceras personas. Base reglamentaria del Modelo 347 (declaracion anual de operaciones con terceras personas, umbral de 3.005,06 EUR / contraparte / ejercicio)."
@@ -28,7 +28,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-16973#a1"
 published_at = 2008-10-22
 effective_from = 2008-10-23
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
 notes = "Aprueba el modelo 347 'Declaracion anual de operaciones con terceras personas', formato electronico, ajustado a los disenos logicos del anexo."
@@ -48,7 +48,7 @@ article = "10"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-16973#a10"
 published_at = 2008-10-22
 effective_from = 2008-10-23
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
 notes = "Plazo de presentacion del Modelo 347: durante el mes de febrero de cada ano en relacion con las operaciones realizadas durante el ano natural anterior."
@@ -69,7 +69,7 @@ section = "Modelo 347"
 permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25390#articulo-1"
 published_at = 2025-12-12
 effective_from = 2025-12-13
-review_status = "reviewed"
+review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
 notes = "Articulo 1 de la Orden HAC/1431/2025: modificacion de la Orden EHA/3012/2008 que aprobo el Modelo 347; ajusta los disenos logicos del anexo aplicables al ejercicio 2025 y siguientes."
@@ -152,7 +152,7 @@ article = "35"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a35"
 published_at = 2007-09-05
 effective_from = 2014-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-08-06
 reviewed_by = "agent-review"
 notes = """RD 1065/2007 art 35: criterios de imputacion temporal del Modelo 347. Es la \

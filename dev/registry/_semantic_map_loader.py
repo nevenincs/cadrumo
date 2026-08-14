@@ -151,8 +151,7 @@ def _load_fragment(path: Path) -> SemanticMapFragment:
                     entry[field_name] = enum_type(raw_value)
                 except ValueError as exc:
                     raise RegistryValidationError(
-                        f"invalid semantic-map fragment {path.name!r}: "
-                        f"{raw_value!r} is not a canonical {field_name}",
+                        f"invalid semantic-map fragment {path.name!r}: {raw_value!r} is not a canonical {field_name}",
                     ) from exc
         compiled_entries.append(entry)
     data["entries"] = tuple(compiled_entries)

@@ -8,7 +8,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-22794#a1"
 published_at = 2000-12-15
 effective_from = 2000-12-16
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2000-22794 art 1; pending operator re-stamp)"
 notes = "Orden de 15 de diciembre de 2000 art 1: aprueba el modelo 341, solicitud de reintegro de compensaciones en el régimen especial de la agricultura, ganadería y pesca del IVA. Orden habilitante del modelo 341."
@@ -27,7 +27,7 @@ article = "2"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-22794#a2"
 published_at = 2000-12-15
 effective_from = 2000-12-16
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2000-22794 art 2; pending operator re-stamp)"
 notes = "Orden de 15 de diciembre de 2000 art 2: plazo de presentación del modelo 341. Durante los veinte primeros días naturales posteriores a cada trimestre natural; la solicitud del último trimestre puede presentarse durante los treinta primeros días naturales del mes de enero inmediatamente posterior."

@@ -99,6 +99,7 @@ from pydantic_core.core_schema import SerializerFunctionWrapHandler
 
 from cadrumo.application.registry import (
     AnnualCasillaPopulationComparison,
+    CoverageAuthorityScope,
     RegistryConformanceProfile,
     RevisionCasillaProducerTrace,
     RevisionConformanceRow,
@@ -278,7 +279,11 @@ class RevisionLocaleCoverage(ConformanceModel):
 
 
 class ConformanceCoordinate(ConformanceModel):
-    """One exact finite annual-matrix coordinate selected by registry law."""
+    """One exact finite annual-matrix coordinate selected by registry law.
+
+    ``authority_scope`` is explicit because the static matrix is allowed to
+    inspect a law-selected revision without granting filing authority.
+    """
 
     modelo: str = Field(min_length=1)
     filing_year: int = Field(ge=2000, le=2099)
@@ -287,13 +292,26 @@ class ConformanceCoordinate(ConformanceModel):
     schema_comparison: AnnualCasillaPopulationComparison
     classification: ConformanceCoordinateClassification
     provisional: bool
+    authority_scope: CoverageAuthorityScope = "filing"
 
     @model_validator(mode="after")
     def _schema_comparison_matches_coordinate(self) -> ConformanceCoordinate:
         """Keep the nested schema evidence on the same exact law coordinate."""
-        enclosing = (self.modelo, self.filing_year, self.period, self.law_selected_revision)
+        enclosing = (
+            self.modelo,
+            self.filing_year,
+            self.period,
+            self.law_selected_revision,
+            self.authority_scope,
+        )
         comparison = self.schema_comparison
-        nested = (comparison.modelo, comparison.filing_year, comparison.period, comparison.law_selected_revision)
+        nested = (
+            comparison.modelo,
+            comparison.filing_year,
+            comparison.period,
+            comparison.law_selected_revision,
+            comparison.authority_scope,
+        )
         if nested != enclosing:
             raise ValueError(
                 "annual schema comparison coordinate does not match enclosing coordinate",
@@ -396,8 +414,12 @@ class RevisionConformancePayload(ConformanceModel):
             correctness score. :data:`None` — not ``0.0`` — when the revision
             reconciles nothing and therefore makes no claim.
         grounding_findings: Breaches of the grounding honesty relation here.
-        required_coverage_gap_tiers: Mandatory evidence tiers left unbacked, or
-            :data:`None` when evidence-tier coverage was not measured at all.
+        required_coverage_gap_tiers: Filing-grade mandatory evidence tiers left
+            unbacked, or :data:`None` when evidence-tier coverage was not
+            measured at all. Inspection-only gaps remain visible in the
+            application row's ``gap_tiers`` but do not enter this field.
+        model_law_authority_scope: Authority scope of the evidence-tier ledger,
+            or :data:`None` when that axis was not measured.
         modelo_authorization: Derived modelo-level authorization state, or
             :data:`None` meaning UNCHECKED — deliberately NOT the
             ``unauthorized`` default-deny verdict.
@@ -418,6 +440,8 @@ class RevisionConformancePayload(ConformanceModel):
             locale manager could not read this modelo.
         construct_evidence: Full construct-level legal/source ledger, or
             :data:`None` when the validating authority was not consulted.
+        construct_evidence_authority_scope: Authority scope of the construct
+            ledger, or :data:`None` when that axis was not measured.
         casilla_provenance: Lossless per-casilla producer traces, including
             relation multiplicity and producer-specific provenance.
     """
@@ -445,6 +469,7 @@ class RevisionConformancePayload(ConformanceModel):
     independent_check_coverage: float | None
     grounding_findings: int = Field(ge=0)
     required_coverage_gap_tiers: tuple[str, ...] | None
+    model_law_authority_scope: CoverageAuthorityScope | None
     modelo_authorization: str | None
     modelo_authorization_evidence_class: str | None
     modelo_calculation_class: str
@@ -455,6 +480,7 @@ class RevisionConformancePayload(ConformanceModel):
     support_probe_describes_this_revision: bool | None
     locale: RevisionLocaleCoverage | None
     construct_evidence: RevisionConstructEvidence | None
+    construct_evidence_authority_scope: CoverageAuthorityScope | None
     casilla_provenance: tuple[RevisionCasillaProducerTrace, ...]
 
 
@@ -1139,13 +1165,15 @@ def load_conformance_report(*, validate: bool = True) -> ConformanceReport:
 
 
 def build_annual_coordinate_matrix() -> ConformanceCoordinateMatrix:
-    """Enumerate the finite annual coordinates through the validated authority.
+    """Enumerate finite annual coordinates through typed inspection authority.
 
     The portfolio conformance rows remain one row per validated modelo revision
     (currently 73 modelos and 90 revisions). This function owns the separate,
     finite behavioral denominator. Its only current coordinate is the
     provisional D2025 interpretation: Modelo 100, ejercicio 2025, period ``0A``,
-    revision selected by the law-determined registry authority.
+    revision selected by the law-determined registry authority.  The matrix is
+    a static schema comparison, so it uses the authority's non-filing
+    inspection projection and never constructs a filing snapshot.
 
     Returns:
         A typed matrix whose classification census names every supported
@@ -1158,17 +1186,25 @@ def build_annual_coordinate_matrix() -> ConformanceCoordinateMatrix:
     authority = bundled_authority()
     coordinate_items: list[ConformanceCoordinate] = []
     for modelo, filing_year, period in _PROVISIONAL_ANNUAL_COORDINATE_SPECS:
-        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
-        schema_comparison = compare_annual_casilla_population(snapshot, source_root=authority.source_root)
+        inspection = authority.inspect_revision(modelo, filing_year=filing_year, period=period)
+        selected_revision = authority.modelo(modelo).revisions[inspection.revision_id]
+        schema_comparison = compare_annual_casilla_population(
+            inspection,
+            filing_year=filing_year,
+            period=period,
+            revision=selected_revision,
+            source_root=authority.source_root,
+        )
         coordinate_items.append(
             ConformanceCoordinate(
                 modelo=modelo,
                 filing_year=filing_year,
                 period=period,
-                law_selected_revision=snapshot.revision.id,
+                law_selected_revision=inspection.revision_id,
                 schema_comparison=schema_comparison,
                 classification="not_yet_measured",
                 provisional=True,
+                authority_scope=schema_comparison.authority_scope,
             ),
         )
     coordinates = tuple(coordinate_items)
@@ -1528,6 +1564,7 @@ def render_report(report: ConformanceReport) -> str:
                 independent_check_coverage=row.independent_check_coverage,
                 grounding_findings=row.grounding_findings,
                 required_coverage_gap_tiers=row.required_coverage_gap_tiers,
+                model_law_authority_scope=row.model_law_authority_scope,
                 modelo_authorization=row.modelo_authorization,
                 modelo_authorization_evidence_class=row.modelo_authorization_evidence_class,
                 modelo_calculation_class=row.modelo_calculation_class,
@@ -1545,6 +1582,13 @@ def render_report(report: ConformanceReport) -> str:
                 locale_stale_keys=None if row.locale is None else row.locale.stale_keys,
                 construct_evidence_rows=(None if row.construct_evidence is None else len(row.construct_evidence.rows)),
                 construct_evidence_gaps=(None if row.construct_evidence is None else len(row.construct_evidence.gaps)),
+                construct_evidence_filing_gaps=(
+                    None if row.construct_evidence is None else len(row.construct_evidence.filing_gaps)
+                ),
+                construct_evidence_inspection_gaps=(
+                    None if row.construct_evidence is None else len(row.construct_evidence.inspection_gaps)
+                ),
+                construct_evidence_authority_scope=row.construct_evidence_authority_scope,
                 casilla_provenance_traces=len(row.casilla_provenance),
             ),
         )
@@ -1564,6 +1608,7 @@ def render_report(report: ConformanceReport) -> str:
                 filing_year=coordinate.filing_year,
                 period=coordinate.period,
                 law_selected_revision=coordinate.law_selected_revision,
+                authority_scope=coordinate.authority_scope,
                 classification=coordinate.classification,
                 provisional=coordinate.provisional,
                 schema_identity_measurement=coordinate.schema_comparison.identity_measurement,
@@ -1580,6 +1625,7 @@ def render_report(report: ConformanceReport) -> str:
                 filing_year=coordinate.filing_year,
                 period=coordinate.period,
                 law_selected_revision=coordinate.law_selected_revision,
+                authority_scope=coordinate.authority_scope,
                 layout_id=layout.layout_id,
                 layout_format=layout.layout_format,
                 identity_measurement=layout.identity_measurement,
@@ -1912,6 +1958,7 @@ def _payload_row(
         independent_check_coverage=row.independent_check_coverage,
         grounding_findings=len(grounding.findings),
         required_coverage_gap_tiers=None if coverage is None else tuple(coverage.required_tier_gaps),
+        model_law_authority_scope=None if coverage is None else coverage.authority_scope,
         modelo_authorization=None if authorization is None else authorization.state.value,
         modelo_authorization_evidence_class=(
             None if authorization is None or authorization.entry is None else authorization.entry.evidence_class.value
@@ -1924,6 +1971,9 @@ def _payload_row(
         support_probe_describes_this_revision=None if support is None else support.describes_this_revision,
         locale=locale,
         construct_evidence=row.construct_evidence,
+        construct_evidence_authority_scope=(
+            None if row.construct_evidence is None else row.construct_evidence.authority_scope
+        ),
         casilla_provenance=row.casilla_provenance,
     )
 

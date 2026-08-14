@@ -8,7 +8,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-8878#a1"
 published_at = 2021-05-27
 effective_from = 2021-05-28
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2021-8878 art 1; pending operator re-stamp)"
 notes = "Orden HAC/510/2021 art 1: aprueba el modelo 604, autoliquidación del Impuesto sobre las Transacciones Financieras. Orden habilitante del modelo 604."
@@ -27,7 +27,7 @@ article = "3"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-8878#a3"
 published_at = 2021-05-27
 effective_from = 2021-05-28
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2021-8878 art 3; pending operator re-stamp)"
 notes = "Orden HAC/510/2021 art 3: plazo de presentación del modelo 604. Se presenta e ingresa entre los días diez y veinte del mes siguiente al correspondiente periodo de liquidación mensual."

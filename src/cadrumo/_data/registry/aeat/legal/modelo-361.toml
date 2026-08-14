@@ -8,7 +8,7 @@ article = "7"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a7"
 published_at = 2010-03-30
 effective_from = 2010-04-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled official BOE-A-2010-5210 HTML"
 notes = "Orden EHA/789/2010 articulo 7: aprueba el Modelo 361 de solicitud de devolucion del IVA a determinados empresarios o profesionales no establecidos en el TAI ni en la Comunidad, Islas Canarias, Ceuta o Melilla."
@@ -28,7 +28,7 @@ article = "8"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a8"
 published_at = 2010-03-30
 effective_from = 2010-04-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled official BOE-A-2010-5210 HTML"
 notes = "Orden EHA/789/2010 articulo 8: forma y condiciones generales para la presentacion telematica por internet del Modelo 361."
@@ -48,7 +48,7 @@ article = "9"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a9"
 published_at = 2010-03-30
 effective_from = 2010-04-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled official BOE-A-2010-5210 HTML"
 notes = "Orden EHA/789/2010 articulo 9: procedimiento para la presentacion telematica por Internet de las solicitudes de devolucion correspondientes al Modelo 361."
@@ -68,7 +68,7 @@ article = "10"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1-2"
 published_at = 2010-03-30
 effective_from = 2010-04-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled official BOE-A-2010-5210 HTML"
 notes = "Orden EHA/789/2010 articulo 10: plazo de presentacion del Modelo 361; comienza el dia siguiente al final de cada trimestre natural o ano natural y concluye el 30 de septiembre siguiente al ano natural de las cuotas soportadas."

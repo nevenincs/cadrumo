@@ -30,7 +30,7 @@ import pytest
 from .....core import corpus_redaction_marks, normalise_corpus_text, resolve_anchored_extracted_unit
 from .....core.resources import bundled_path
 from .._errors import RegistryValidationError
-from .._legal import verify_legal_catalogue, verify_legal_reference
+from .._legal import verify_legal_reference, verify_legal_reference_grounding
 from .._schema import LegalReference
 from ._catalogue_verification_support import _registry_tree
 
@@ -104,9 +104,9 @@ def _reference(corpus_ref: str, *, required_text: tuple[str, ...]) -> LegalRefer
         permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984",
         published_at=date(2007, 9, 5),
         effective_from=date(2008, 1, 1),
-        review_status="reviewed",
+        review_status="operator_reviewed",
         reviewed_at=date(2026, 8, 13),
-        reviewed_by="agent-review",
+        reviewed_by="operator",
         notes="Probe reference driving the fused-redaction refusal.",
         required_text=required_text,
     )
@@ -220,7 +220,8 @@ def test_no_committed_legal_entry_cites_a_fused_redaction_history() -> None:
     for vintaged_id in _DELIBERATELY_VINTAGED_EXCERPT_IDS:
         assert vintaged_id in catalogues.legal, f"{vintaged_id!r} must remain in the committed legal catalogue"
 
-    verify_legal_catalogue(catalogues.legal, source_root=bundled_path())
+    for reference in catalogues.legal.values():
+        verify_legal_reference_grounding(reference, source_root=bundled_path())
 
     root = bundled_path()
     cited = {reference.corpus_ref.partition("#")[0] for reference in catalogues.legal.values()}

@@ -8,7 +8,7 @@ article = "3"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-12399#a3"
 published_at = 2015-11-17
 effective_from = 2016-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2015-12399 consolidated HTML from BOE on 2026-07-01"
 notes = "Real Decreto 1021/2015 articulo 3: regula la identificacion de la residencia fiscal de las personas que ostenten la titularidad o el control de cuentas financieras."
@@ -27,7 +27,7 @@ article = "4"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-12399#a4"
 published_at = 2015-11-17
 effective_from = 2016-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2015-12399 consolidated HTML from BOE on 2026-07-01"
 notes = "Real Decreto 1021/2015 articulo 4: establece la obligacion anual de informacion respecto de las cuentas financieras comunicables."
@@ -46,7 +46,7 @@ article = "5"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-12399#a5"
 published_at = 2015-11-17
 effective_from = 2016-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2015-12399 consolidated HTML from BOE on 2026-07-01"
 notes = "Real Decreto 1021/2015 articulo 5: enumera la informacion financiera que debe suministrarse sobre cada cuenta comunicable."
@@ -65,7 +65,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2016-9834#a1"
 published_at = 2016-10-27
 effective_from = 2016-10-28
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-9834 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HAP/1695/2016 articulo 1: aprueba el Modelo 289 y su anexo de contenido para la declaracion informativa anual de cuentas financieras."
@@ -85,7 +85,7 @@ article = "2"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2016-9834#a2"
 published_at = 2016-10-27
 effective_from = 2016-10-28
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-9834 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HAP/1695/2016 articulo 2: identifica como obligadas a las instituciones financieras obligadas a comunicar informacion conforme al Real Decreto 1021/2015."
@@ -104,7 +104,7 @@ article = "3"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2016-9834#a3"
 published_at = 2016-10-27
 effective_from = 2016-10-28
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-9834 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HAP/1695/2016 articulo 3: delimita el objeto de informacion del Modelo 289 y regula la comunicacion negativa cuando no existan cuentas que comunicar."
@@ -123,7 +123,7 @@ article = "4"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2016-9834#a4"
 published_at = 2016-10-27
 effective_from = 2016-10-28
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-9834 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HAP/1695/2016 articulo 4: fija el plazo anual del Modelo 289 entre el 1 de enero y el 31 de mayo del ano siguiente al de la informacion."
@@ -142,7 +142,7 @@ article = "5"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2016-9834#a5"
 published_at = 2016-10-27
 effective_from = 2016-10-28
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-9834 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HAP/1695/2016 articulo 5: regula las condiciones y procedimiento de presentacion electronica del Modelo 289 mediante servicios web."
@@ -162,7 +162,7 @@ article = "6"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2016-9834#a6"
 published_at = 2016-10-27
 effective_from = 2016-10-28
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-9834 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HAP/1695/2016 articulo 6: remite el formato y diseno de los mensajes informaticos del Modelo 289 a la Sede electronica de la Agencia Tributaria."
@@ -182,7 +182,7 @@ article = "sexto"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2017-15845#a6"
 published_at = 2017-12-29
 effective_from = 2017-12-30
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2017-15845 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1308/2017 articulo sexto: modifica los anexos I y II de la Orden HAP/1695/2016 aplicables al Modelo 289."
@@ -202,7 +202,7 @@ article = "sexto"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-17997#a6"
 published_at = 2018-12-29
 effective_from = 2018-12-30
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2018-17997 HTML from BOE on 2026-07-01"
 notes = "Orden HAC/1417/2018 articulo sexto: modifica los anexos I y II de la Orden HAP/1695/2016 aplicables al Modelo 289."
@@ -222,7 +222,7 @@ article = "septimo"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2019-18752#a7"
 published_at = 2019-12-31
 effective_from = 2019-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2019-18752 HTML from BOE on 2026-07-01"
 notes = "Orden HAC/1276/2019 articulo septimo: modifica los anexos I y II de la Orden HAP/1695/2016 aplicables al Modelo 289."
@@ -242,7 +242,7 @@ article = "sexto"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2020-17271#a6"
 published_at = 2020-12-30
 effective_from = 2020-12-31
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2020-17271 HTML from BOE on 2026-07-01"
 notes = "Orden HAC/1276/2020 articulo sexto: modifica los anexos I, II y III de la Orden HAP/1695/2016 aplicables al Modelo 289."
@@ -262,7 +262,7 @@ article = "octavo"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-20004#a8"
 published_at = 2021-12-03
 effective_from = 2021-12-04
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2021-20004 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1351/2021 articulo octavo: modifica la comunicacion de inexistencia de cuentas que comunicar y los anexos I, II y III del Modelo 289."
@@ -282,7 +282,7 @@ article = "sexto"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20274#a6"
 published_at = 2022-12-03
 effective_from = 2022-12-04
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2022-20274 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1192/2022 articulo sexto: modifica el anexo I de la Orden HAP/1695/2016 aplicable al Modelo 289."
@@ -303,7 +303,7 @@ article = "15"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-24412#a15"
 published_at = 2023-11-30
 effective_from = 2023-12-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-24412 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1284/2023 articulo 15: modifica los anexos I y II de la Orden HAP/1695/2016 aplicables al Modelo 289."
@@ -323,7 +323,7 @@ article = "quinto"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-26632#a5"
 published_at = 2023-12-29
 effective_from = 2023-12-30
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-26632 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1397/2023 articulo quinto: modifica los anexos I y II de la Orden HAP/1695/2016 aplicables al Modelo 289."
@@ -343,7 +343,7 @@ article = "septimo"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-27528#a7"
 published_at = 2024-12-31
 effective_from = 2025-01-01
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2024-27528 HTML from BOE on 2026-07-01"
 notes = "Orden HAC/1504/2024 articulo septimo: modifica los anexos I y II de la Orden HAP/1695/2016 aplicables al Modelo 289."
@@ -363,7 +363,7 @@ article = "sexto"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-25389#a6"
 published_at = 2025-12-16
 effective_from = 2025-12-17
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2025-25389 HTML from BOE on 2026-07-01"
 notes = "Orden HAC/1430/2025 articulo sexto: modifica los anexos I y II de la Orden HAP/1695/2016 para el Modelo 289 aplicable a 2025 y siguientes."
@@ -383,7 +383,7 @@ article = "disposicion final unica"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-25389#dfunica"
 published_at = 2025-12-16
 effective_from = 2025-12-17
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2025-25389 HTML from BOE on 2026-07-01"
 notes = "Orden HAC/1430/2025 disposicion final unica: aplica por primera vez las modificaciones del Modelo 289 a las declaraciones del ejercicio 2025 presentadas desde 2026."

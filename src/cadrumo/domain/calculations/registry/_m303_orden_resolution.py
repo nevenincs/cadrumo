@@ -41,29 +41,36 @@ def resolve_m303_regimen_simplificado_snapshot(
         filing_year=registry_snapshot.filing_year,
         registry_revision_id=registry_snapshot.revision.id,
         scope_decision=scope_decision,
-        orden=M303AnnualOrdenSnapshot(
-            ejercicio=projection.ejercicio,
-            registry_revision_id=projection.registry_revision_id,
-            source_ref=projection.source_ref,
-            source_content_digest=projection.source_content_digest,
-            activities=projection.activities,
-            activity_refs=tuple(
-                ActividadOrdenAnualRef(
-                    orden_id=activity.orden_id,
-                    ejercicio=projection.ejercicio,
-                    registry_revision_id=projection.registry_revision_id,
-                    source_ref=projection.source_ref,
-                    source_content_digest=projection.source_content_digest,
-                )
-                for activity in projection.activities
-            ),
-            agricultural_authority=projection.agricultural_authority,
-            non_agricultural_ingresos_a_cuenta=projection.non_agricultural_ingresos_a_cuenta,
-            seasonal_indexes=projection.seasonal_indexes,
-            difficult_justification=projection.difficult_justification,
-            lorca_2022_reduction=projection.lorca_2022_reduction,
-        ),
+        orden=m303_annual_orden_snapshot_from_projection(projection),
         record_design=record_design,
+    )
+
+
+def m303_annual_orden_snapshot_from_projection(
+    projection: M303AnnualOrdenProjection,
+) -> M303AnnualOrdenSnapshot:
+    """Materialize one exact annual-Orden projection without selecting a filing revision."""
+    return M303AnnualOrdenSnapshot(
+        ejercicio=projection.ejercicio,
+        registry_revision_id=projection.registry_revision_id,
+        source_ref=projection.source_ref,
+        source_content_digest=projection.source_content_digest,
+        activities=projection.activities,
+        activity_refs=tuple(
+            ActividadOrdenAnualRef(
+                orden_id=activity.orden_id,
+                ejercicio=projection.ejercicio,
+                registry_revision_id=projection.registry_revision_id,
+                source_ref=projection.source_ref,
+                source_content_digest=projection.source_content_digest,
+            )
+            for activity in projection.activities
+        ),
+        agricultural_authority=projection.agricultural_authority,
+        non_agricultural_ingresos_a_cuenta=projection.non_agricultural_ingresos_a_cuenta,
+        seasonal_indexes=projection.seasonal_indexes,
+        difficult_justification=projection.difficult_justification,
+        lorca_2022_reduction=projection.lorca_2022_reduction,
     )
 
 
@@ -71,23 +78,10 @@ def _select_m303_annual_orden_projection(registry_snapshot: RegistrySnapshot) ->
     """Select the internal projection consumed only by the canonical resolver."""
     if registry_snapshot.modelo.id != Modelo.M303:
         raise RegistryValidationError("annual Orden projection selector requires a Modelo 303 registry snapshot")
-    candidates = tuple(
-        item
-        for item in registry_snapshot.m303_annual_orden.projections
-        if item.ejercicio == registry_snapshot.filing_year
-        and item.registry_revision_id == registry_snapshot.revision.id
+    return registry_snapshot.m303_annual_orden.require_projection(
+        ejercicio=registry_snapshot.filing_year,
+        registry_revision_id=registry_snapshot.revision.id,
     )
-    if not candidates:
-        raise RegistryValidationError(
-            "modelo 303 annual Orden authority has no projection for "
-            f"ejercicio {registry_snapshot.filing_year} revision {registry_snapshot.revision.id!r}",
-        )
-    if len(candidates) != 1:
-        raise RegistryValidationError(
-            "modelo 303 annual Orden authority is ambiguous for "
-            f"ejercicio {registry_snapshot.filing_year} revision {registry_snapshot.revision.id!r}",
-        )
-    return candidates[0]
 
 
 def _unique_active_record_design(

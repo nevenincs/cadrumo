@@ -561,6 +561,27 @@ def test_annual_casilla_comparison_retains_unmeasured_when_source_root_is_unavai
     assert comparison.xsd_only_attributes == "unsupported"
 
 
+def test_annual_casilla_comparison_accepts_typed_inspection_without_snapshot(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """Static annual schema evidence does not cross the filing snapshot gate."""
+    inspection = registry_authority.inspect_revision("100", filing_year=2025, period="0A")
+    revision = registry_authority.modelo("100").revisions[inspection.revision_id]
+
+    comparison = compare_annual_casilla_population(
+        inspection,
+        filing_year=2025,
+        period="0A",
+        revision=revision,
+        source_root=registry_authority.source_root,
+    )
+
+    assert comparison.authority_scope == "inspection_only"
+    assert comparison.law_selected_revision == inspection.revision_id
+    assert comparison.identity_measurement == "measured"
+    assert comparison.layout_comparisons
+
+
 def test_a_modelo_absent_from_the_classification_audit_is_refused(
     tree_modelos: tuple[ModeloDefinition, ...],
 ) -> None:

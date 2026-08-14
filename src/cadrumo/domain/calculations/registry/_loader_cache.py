@@ -302,10 +302,7 @@ def _validate_revision_fragment_file_suffixes(path: Path) -> None:
 
 def _is_generated_export_provenance(entry: Path, revision_root: Path) -> bool:
     """Recognise the one generator-owned non-TOML revision artefact."""
-    return (
-        entry.name == _GENERATED_EXPORT_PROVENANCE_FILENAME
-        and entry.parent == revision_root / "export"
-    )
+    return entry.name == _GENERATED_EXPORT_PROVENANCE_FILENAME and entry.parent == revision_root / "export"
 
 
 def _revision_fragment_section_directories(path: Path) -> tuple[Path, ...]:

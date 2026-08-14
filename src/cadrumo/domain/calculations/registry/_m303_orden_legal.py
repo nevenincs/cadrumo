@@ -8,6 +8,7 @@ from typing import Literal
 from urllib.parse import parse_qs, urlsplit
 
 from ....core import (
+    LegalReviewStatus,
     OrdenAnualIvaAgriculturalIndex,
     OrdenAnualIvaAgriculturalIngresoACuenta,
     OrdenAnualIvaAuthority,
@@ -359,7 +360,7 @@ def _add_annual_orden_legal_reference(
         published_at=source.published_at,
         effective_from=effective_from,
         effective_to=effective_to,
-        review_status=source.review_status,
+        review_status=LegalReviewStatus.AGENT_REVIEWED,
         reviewed_at=source.retrieved_at,
         reviewed_by=f"compiler:{EXTRACTOR_VERSION}",
         required_text=required_text,

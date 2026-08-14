@@ -199,6 +199,7 @@ from ._iva_category_resolution import IvaCategoryOutcome
 from ._iva_compensation_provenance import IvaCompensationStateProvenance
 from ._iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
+from ._legal_review import REVIEWED_LEGAL_STATUSES, LegalReviewStatus
 from ._model_catalogue import (
     ANTHROPIC_COMMERCIAL_TERMS,
     APACHE_2_0,
@@ -519,6 +520,7 @@ __all__: list[str] = [
     "PROSE_ELISION_MARKER",
     "QWEN_RESEARCH",
     "RELEASED_FORMAT_FLOORS",
+    "REVIEWED_LEGAL_STATUSES",
     "REVIEWED_REVISION_REVIEW_STATUSES",
     "ROOT_DERIVED_STORAGE_FIELDS",
     "STORAGE_FIELD_CATEGORIES",
@@ -595,6 +597,7 @@ __all__: list[str] = [
     "IvaDeductionFactKind",
     "LedgerSortField",
     "LedgerSortOrder",
+    "LegalReviewStatus",
     "LicenceVerification",
     "LinkInconsistencyDirection",
     "M210GrossIncomeSourceMode",

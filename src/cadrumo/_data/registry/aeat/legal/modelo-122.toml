@@ -8,7 +8,7 @@ article = "5"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-1334#a5"
 published_at = 2017-02-10
 effective_from = 2017-02-11
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the fetched BOE-A-2017-1334 art 5; pending operator re-verification)"
 notes = "Orden HFP/105/2017 art 5: aprueba el modelo 122, regularización del derecho a la deducción por familia numerosa o por personas con discapacidad a cargo (IRPF), por contribuyentes no obligados a presentar declaración."
@@ -27,7 +27,7 @@ article = "7"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-1334#a7"
 published_at = 2017-02-10
 effective_from = 2017-02-11
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the fetched BOE-A-2017-1334 art 7; pending operator re-verification)"
 notes = "Orden HFP/105/2017 art 7: plazo de presentación del modelo 122. Se realiza entre la fecha en que los pagos anticipados se hayan percibido de forma indebida hasta que finalice el plazo para la presentación de la declaración del IRPF — plazo por evento remitido a la campaña de Renta, sin ventana natural fija."

@@ -8,7 +8,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2020-2901#a1"
 published_at = 2020-03-04
 effective_from = 2020-03-05
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2020-2901 art 1; pending operator re-stamp)"
 notes = "Orden HAC/177/2020 art 1: aprueba el modelo 140, IRPF deducción por maternidad, solicitud de abono anticipado. Orden habilitante del modelo 140."
@@ -27,7 +27,7 @@ article = "5"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2020-2901#a5"
 published_at = 2020-03-04
 effective_from = 2020-03-05
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2020-2901 art 5; pending operator re-stamp)"
 notes = "Orden HAC/177/2020 art 5: plazo de presentación del modelo 140. La solicitud de abono anticipado se presenta a partir del momento en que el contribuyente opte por la modalidad de abono anticipado, cumpliéndose los requisitos — presentación bajo demanda, sin ventana natural fija."

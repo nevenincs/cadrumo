@@ -8,6 +8,7 @@ from pathlib import Path
 
 from ....core import (
     CorpusAnchorResolutionError,
+    LegalReviewStatus,
     corpus_redaction_marks,
     extracted_unit_count,
     normalise_corpus_text,
@@ -81,10 +82,8 @@ def verify_legal_reference(
     Type-system invariants enforced by the Pydantic schema (and thus
     NOT re-checked here):
 
-      - ``review_status`` is ``Literal["reviewed"]`` — the type makes
-        any other value unrepresentable, so a prior runtime check
-        ``if reference.review_status != "reviewed"`` was structurally
-        unreachable dead code.
+      - ``review_status`` is a closed provenance vocabulary whose companion
+        reviewer fields are kept coherent by the model.
       - ``evidence_tier`` on ``LegalReference`` is
         ``Literal["legal_authority"]`` — same dead-branch reasoning.
       - ``corpus_ref`` matches the ``path#anchor`` shape — the
@@ -98,6 +97,26 @@ def verify_legal_reference(
     text clauses diagnose opposite defects — a missing required phrase and a
     present forbidden phrase — so their failures are raised with distinct
     messages naming which clause fired.
+    """
+    if reference.review_status is not LegalReviewStatus.OPERATOR_REVIEWED:
+        raise RegistryValidationError(
+            f"legal reference {reference.id!r} is {reference.review_status.value!r}; "
+            "filing-grade authority requires operator_reviewed",
+        )
+    verify_legal_reference_grounding(reference, source_root=source_root)
+
+
+def verify_legal_reference_grounding(
+    reference: LegalReference,
+    *,
+    source_root: Path | None = None,
+) -> None:
+    """Verify legal content independently of its production review eligibility.
+
+    Corpus audits need to inspect every authored reference, including references
+    that are honestly marked as awaiting operator review. Production consumers
+    call :func:`verify_legal_reference`, which applies the stricter review-status
+    gate before delegating here.
     """
     if reference.kind == "manual" and source_root is not None:
         _validate_manual_legal_reference(reference, source_root)
@@ -191,6 +210,31 @@ def verify_legal_catalogue(
             failures.append(str(exc))
     if failures:
         raise RegistryValidationError("legal catalogue validation failed:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def verify_legal_catalogue_grounding(
+    legal: Mapping[str, LegalReference],
+    *,
+    source_root: Path | None = None,
+) -> None:
+    """Audit every catalogue entry's identity and corpus grounding.
+
+    Review eligibility is deliberately excluded: it is applied to the exact
+    legal slice selected for a production snapshot, so unfinished references
+    cannot disable unrelated registry consumers before a filing context exists.
+    """
+    failures: list[str] = []
+    for ref_id, reference in legal.items():
+        if ref_id != reference.id:
+            failures.append(f"legal catalogue key {ref_id!r} does not match reference id {reference.id!r}")
+        try:
+            verify_legal_reference_grounding(reference, source_root=source_root)
+        except RegistryValidationError as exc:
+            failures.append(str(exc))
+    if failures:
+        raise RegistryValidationError(
+            "legal catalogue grounding validation failed:\n" + "\n".join(f" - {failure}" for failure in failures),
+        )
 
 
 _LEGAL_CORPUS_CACHE: dict[tuple[str, int, int, str, str, tuple[str, ...]], str] = {}

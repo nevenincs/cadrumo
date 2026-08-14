@@ -58,7 +58,16 @@ def test_validated_rows_keep_construct_floor_and_casilla_provenance_as_separate_
         }
         expected_constructs.update(("selector", binding.id) for binding in revision.bindings)
         assert {(item.kind, item.construct_id) for item in row.construct_evidence.rows} == expected_constructs
-        assert row.construct_evidence.gaps == ()
+        if row.construct_evidence.filing_eligible:
+            assert row.construct_evidence.gaps == ()
+            assert row.construct_evidence.filing_gaps == ()
+            assert row.construct_evidence.inspection_gaps == ()
+        else:
+            # Inspection preserves any incomplete construct rows that exist,
+            # but a revision with no construct declarations is legitimately
+            # empty.  Either way, none can become filing-grade gaps.
+            assert row.construct_evidence.filing_gaps == ()
+            assert row.construct_evidence.inspection_gaps == row.construct_evidence.gaps
 
         inventory = revision.producer_inventory()
         expected_traces = tuple(
@@ -110,3 +119,35 @@ def test_degraded_rows_keep_schema_traces_but_mark_construct_evidence_unmeasured
     for row in degraded_profile.rows:
         assert row.registry_validated is False
         assert row.casilla_provenance == validated_traces[(row.modelo, row.revision)]
+
+
+def test_scope_keeps_inspection_ledgers_visible_without_filing_grade_gap_counts(
+    validated_profile: RegistryConformanceProfile,
+) -> None:
+    """Inspection ledgers remain measured while filing-grade counters stay strict."""
+    scoped_rows = [
+        row
+        for row in validated_profile.rows
+        if row.model_law_coverage is not None and row.model_law_coverage.authority_scope == "inspection_only"
+    ]
+    assert scoped_rows, "the registry must retain an inspection-only revision"
+
+    rows_with_inspection_construct_gaps = []
+    rows_with_inspection_law_gaps = []
+    for row in scoped_rows:
+        assert row.construct_evidence is not None
+        assert row.construct_evidence.authority_scope == "inspection_only"
+        assert row.model_law_coverage is not None
+        assert row.model_law_coverage.required_tier_gaps == ()
+        assert row.has_required_coverage_gap is False
+        assert row.construct_evidence.filing_gaps == ()
+        if row.model_law_coverage.gap_tiers:
+            rows_with_inspection_law_gaps.append(row)
+        if row.construct_evidence.gaps:
+            rows_with_inspection_construct_gaps.append(row)
+
+    assert not set(scoped_rows) & set(validated_profile.required_coverage_gap_rows)
+    assert not set(scoped_rows) & set(validated_profile.construct_evidence_gap_rows)
+    assert rows_with_inspection_law_gaps, "inspection evidence must retain visible law gaps where declared"
+    assert rows_with_inspection_construct_gaps, "inspection evidence must retain visible construct gaps where declared"
+    assert set(rows_with_inspection_construct_gaps) <= set(validated_profile.construct_evidence_inspection_gap_rows)

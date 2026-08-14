@@ -8,7 +8,7 @@ article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-5780#a1"
 published_at = 2021-04-12
 effective_from = 2021-04-13
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2021-5780 art 1; pending operator re-stamp)"
 notes = "Orden HAC/342/2021 art 1: aprueba el modelo 234, declaración de información de determinados mecanismos transfronterizos de planificación fiscal (DAC6). Orden habilitante del modelo 234."
@@ -27,7 +27,7 @@ article = "4"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-5780#a4"
 published_at = 2021-04-12
 effective_from = 2021-04-13
-review_status = "reviewed"
+review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2021-5780 art 4; pending operator re-stamp)"
 notes = "Orden HAC/342/2021 art 4: plazo de presentación del modelo 234. Plazo EVENT-DRIVEN de los treinta días naturales siguientes al nacimiento de la obligación (art. 46.3 del Reglamento General, RD 1065/2007) — no es una ventana de calendario fija. El RGAT art 46 no está incluido en el corpus, por lo que no se autoría ninguna deadline window de calendario (no se fabrica una fecha)."

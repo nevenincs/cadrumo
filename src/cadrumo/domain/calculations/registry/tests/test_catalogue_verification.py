@@ -12,9 +12,10 @@ from pydantic import ValidationError
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
 from .._corpus_catalogue import verify_source_catalogue, verify_source_file
-from .._coverage import EvidenceTierCoverageGate, audit_registry_model_law_coverage
-from .._legal import verify_legal_catalogue
+from .._coverage import EvidenceTierCoverageGate, audit_registry_model_law_coverage, build_model_law_coverage_ledger
+from .._legal import verify_legal_catalogue_grounding
 from .._schema import filing_period_from_scope
+from .._snapshot import build_snapshot
 from .._temporal import select_revision
 from .._validate import RegistryValidator
 from ._catalogue_verification_support import _catalogues, _registry_tree
@@ -37,7 +38,7 @@ def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
     assert len(modelos) >= 5, "committed registry must declare several modelos"
     assert len(catalogues.legal) > 0, "shared legal catalogue must be non-empty"
     assert len(catalogues.sources) > 0, "shared sources catalogue must be non-empty"
-    verify_legal_catalogue(catalogues.legal, source_root=bundled_path())
+    verify_legal_catalogue_grounding(catalogues.legal, source_root=bundled_path())
     verify_source_catalogue(REPO_ROOT, catalogues.sources)
     validator = RegistryValidator(catalogues, source_root=bundled_path())
     validator.validate_registry(modelos)
@@ -76,7 +77,7 @@ def test_forbidden_text_clause_is_additive_over_the_full_committed_legal_catalog
             f"{vintaged_id!r} is a deliberately historical excerpt; this control authors no forbidden_text for it"
         )
 
-    verify_legal_catalogue(catalogues.legal, source_root=bundled_path())
+    verify_legal_catalogue_grounding(catalogues.legal, source_root=bundled_path())
 
 
 def test_no_legal_reference_grounds_a_normatives_citation_in_a_derived_artefact() -> None:
@@ -232,6 +233,23 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
 
     audit = audit_registry_model_law_coverage(modelos, catalogues, source_root=bundled_path())
 
+    modelo_038 = next(ledger for ledger in audit.ledgers if ledger.modelo == "038")
+    assert modelo_038.revision == "2002-y-siguientes"
+    assert modelo_038.authority_scope == "inspection_only"
+    assert not modelo_038.filing_eligible
+    gates = {gate.tier: gate for gate in modelo_038.gates}
+    assert gates["legal_authority"].legal_refs == (
+        "ley-58-2003:art-93",
+        "orden-hac-66-2002:art-1",
+        "orden-hac-66-2002:art-6",
+    )
+    assert gates["official_source_guidance"].source_refs == ("enrolled-modelo-038-procedure",)
+    assert gates["layout_authority"].source_refs == ("enrolled-modelo-038-layout",)
+    assert gates["layout_authority"].workbook_refs == ("modelo-038-orden-static-layout",)
+
+    # Keep the finite denominator and every mandatory tier visible across the
+    # complete revision population. The M038 inspection projection above is
+    # deliberately non-filing, but its evidence still belongs in this audit.
     assert audit.ok
     assert audit.required_gate_failures == ()
     assert len(audit.ledgers) == sum(len(modelo.revisions) for modelo in modelos)
@@ -249,6 +267,24 @@ def test_coverage_gate_rejects_satisfied_without_evidence_refs() -> None:
             status="satisfied",
             detail="missing evidence",
         )
+
+
+def test_public_model_law_ledger_keeps_unproven_snapshot_inspection_only() -> None:
+    """A snapshot-shaped value cannot self-attest filing authority."""
+    modelos, catalogues = _registry_tree()
+    modelo = next(modelo for modelo in modelos if modelo.id == "182")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2025,
+        period="0A",
+    )
+
+    ledger = build_model_law_coverage_ledger(snapshot)
+
+    assert ledger.authority_scope == "inspection_only"
+    assert not ledger.filing_eligible
 
 
 def test_coverage_gate_rejects_gap_with_evidence_refs() -> None:
@@ -481,7 +517,7 @@ def test_renta_economic_activity_legal_basis_links_to_corpus() -> None:
         "ley-35-2006:art-31",
         "ley-35-2006:art-32",
     }.issubset(catalogues.legal)
-    verify_legal_catalogue(catalogues.legal, source_root=bundled_path())
+    verify_legal_catalogue_grounding(catalogues.legal, source_root=bundled_path())
 
 
 def _assert_lirpf_reference_links_to_full_boe_corpus(
@@ -496,7 +532,7 @@ def _assert_lirpf_reference_links_to_full_boe_corpus(
     assert reference.corpus_ref == f"corpus/normatives/html/ley-35-2006.html#a{article}", ref_id
     assert reference.effective_from == effective_from, ref_id
     assert reference.required_text == required_text, ref_id
-    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+    verify_legal_catalogue_grounding({reference.id: reference}, source_root=bundled_path())
     return reference
 
 

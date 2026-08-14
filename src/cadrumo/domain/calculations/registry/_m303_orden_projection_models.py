@@ -234,6 +234,20 @@ class M303AnnualOrdenAuthority(RegistryModel):
         )
         return self
 
+    def require_projection(self, *, ejercicio: int, registry_revision_id: RevisionId) -> M303AnnualOrdenProjection:
+        """Resolve the sole projection for an exact filing-year/revision coordinate."""
+        candidates = tuple(
+            item
+            for item in self.projections
+            if item.ejercicio == ejercicio and item.registry_revision_id == registry_revision_id
+        )
+        if len(candidates) != 1:
+            raise RegistryValidationError(
+                "modelo 303 annual Orden authority requires exactly one projection for "
+                f"ejercicio {ejercicio} revision {registry_revision_id!r}; found {len(candidates)}",
+            )
+        return candidates[0]
+
 
 class M303AnnualOrdenSnapshot(RegistryModel):
     """The source-bound annual Orden resolved for one filing snapshot."""

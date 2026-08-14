@@ -387,7 +387,6 @@ def _calculate(
         "modelo-390-prev-303-cuota-devengada-total": Decimal("0"),
         "modelo-390-prev-303-cuota-deducible-total": Decimal("0"),
         "modelo-390-prev-303-resultado-regimen-general": Decimal("0"),
-        "modelo-390-prev-303-cuota-devengada-simplificado": Decimal("0"),
         "modelo-390-prev-303-compensacion-ultimo-periodo": Decimal("0"),
         "modelo-390-prev-303-compensacion-generada-ejercicio-no-97": Decimal("0"),
         **resolve_ledger_iva_aggregation_binding_values(
@@ -558,7 +557,6 @@ def _calculate_with_super_reducido_recargo(*, include_super_reducido_recargo: bo
         "modelo-390-prev-303-cuota-devengada-total": Decimal("0"),
         "modelo-390-prev-303-cuota-deducible-total": Decimal("0"),
         "modelo-390-prev-303-resultado-regimen-general": Decimal("0"),
-        "modelo-390-prev-303-cuota-devengada-simplificado": Decimal("0"),
         "modelo-390-prev-303-compensacion-ultimo-periodo": Decimal("0"),
         "modelo-390-prev-303-compensacion-generada-ejercicio-no-97": Decimal("0"),
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),

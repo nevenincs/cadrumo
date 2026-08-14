@@ -15,7 +15,6 @@ from typing import Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-from cadrumo.core import AeatProductSoftwareIdentity, sha256_hex
 from cadrumo.core.atomic_write import atomic_write_publish_once_bytes
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex, hash_file
 from cadrumo.domain.calculations.registry import (
@@ -27,7 +26,7 @@ from cadrumo.domain.calculations.registry import (
     SourceRefId,
 )
 
-from ._m303_variable_envelope import M303EnvelopeBytes, M303EnvelopeMemberDigest, M303EnvelopeProvenance
+from ._m303_variable_envelope import M303EnvelopeProvenance
 from ._record_design_ir import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
     RecordDesignIntermediateField,
@@ -65,16 +64,16 @@ __all__ = [
 ]
 
 
-EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION: Final[int] = 4
+EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION: Final[int] = 5
 """Current wire schema for the internal non-loader provenance manifest."""
 
-EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 5
+EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 6
 """Current generator contract recorded by every provenance manifest."""
 
 EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION: Final[int] = 2
 """Reviewed parser-to-wire normalization contract recorded for every field."""
 
-_LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 4
+_LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 5
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "_generation.provenance.json"
 """Internal JSON member ignored by the TOML-only registry loader."""
@@ -128,6 +127,7 @@ _LAYOUT_KEYS: Final[frozenset[str]] = frozenset(
         "source_refs",
         "legal_refs",
         "records",
+        "m303_filing_envelope",
         "dictionary_path_overrides",
         "aux_idioma",
         "aux_version",
@@ -404,6 +404,7 @@ def normalised_loader_semantics(loaded_layout: ExportLayoutDefinition) -> dict[s
         "source_refs": _sorted_strings(payload["source_refs"], subject="loader layout source_refs"),
         "legal_refs": _sorted_strings(payload["legal_refs"], subject="loader layout legal_refs"),
         "records": records,
+        "m303_filing_envelope": payload["m303_filing_envelope"],
         "dictionary_path_overrides": overrides,
         "aux_idioma": payload["aux_idioma"],
         "aux_version": payload["aux_version"],
@@ -466,8 +467,6 @@ def build_export_fragment_provenance_manifest(
     field_derivations: tuple[ExportFieldDerivation, ...],
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
-    product_software_identity: AeatProductSoftwareIdentity | None = None,
-    m303_variable_envelope: M303EnvelopeBytes | None = None,
 ) -> ExportFragmentProvenanceManifest:
     """Assemble provenance only from the exact joined and rendered authorities."""
     _validate_generation_scope(
@@ -496,8 +495,7 @@ def build_export_fragment_provenance_manifest(
         ),
         m303_variable_envelope=_m303_envelope_provenance(
             joined,
-            product_software_identity=product_software_identity,
-            rendered_envelope=m303_variable_envelope,
+            loaded_layout=loaded_layout,
         ),
     )
     _require_field_derivations_match_layout(manifest.field_derivations, loaded_layout)
@@ -514,8 +512,6 @@ def emit_export_fragment_provenance_manifest(
     field_derivations: tuple[ExportFieldDerivation, ...],
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
-    product_software_identity: AeatProductSoftwareIdentity | None = None,
-    m303_variable_envelope: M303EnvelopeBytes | None = None,
 ) -> ExportFragmentProvenanceManifest:
     """Write one complete canonical sibling manifest after a fresh tree renders.
 
@@ -531,8 +527,6 @@ def emit_export_fragment_provenance_manifest(
         field_derivations=field_derivations,
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
-        product_software_identity=product_software_identity,
-        m303_variable_envelope=m303_variable_envelope,
     )
     manifest_path = export_fragment_provenance_path(export_root)
     if manifest_path.is_symlink() or manifest_path.is_junction():
@@ -553,8 +547,6 @@ def verify_export_fragment_provenance_manifest(
     field_derivations: tuple[ExportFieldDerivation, ...],
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
-    product_software_identity: AeatProductSoftwareIdentity | None = None,
-    m303_variable_envelope: M303EnvelopeBytes | None = None,
 ) -> ExportFragmentProvenanceManifest:
     """Refuse current-authority, file, loader-semantic, or derivation drift."""
     manifest_path = export_fragment_provenance_path(export_root)
@@ -570,8 +562,7 @@ def verify_export_fragment_provenance_manifest(
         target=target,
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
-        product_software_identity=product_software_identity,
-        m303_variable_envelope=m303_variable_envelope,
+        loaded_layout=loaded_layout,
     )
     actual_outputs = collect_export_fragment_output_digests(export_root)
     if manifest.output_files != actual_outputs:
@@ -707,56 +698,43 @@ def _validate_generation_scope(
 def _m303_envelope_provenance(
     joined: JoinedRecordDesign,
     *,
-    product_software_identity: AeatProductSoftwareIdentity | None,
-    rendered_envelope: M303EnvelopeBytes | None,
+    loaded_layout: ExportLayoutDefinition,
 ) -> M303EnvelopeProvenance | None:
-    """Require explicit product authority exactly when DP30300 is generated."""
+    """Attest only the static DP30300 declaration generated into the layout."""
     joined_envelope = joined.m303_variable_envelope
     if joined_envelope is None:
-        if product_software_identity is not None or rendered_envelope is not None:
+        if loaded_layout.m303_filing_envelope is not None:
             raise RegistryValidationError(
-                "product/software identity and rendered envelope are only admitted for a typed Modelo 303 "
-                "DP30300 envelope",
+                "a generated M303 filing-envelope declaration requires the typed DP30300 semantic contract",
             )
         return None
-    if product_software_identity is None:
+    declaration = loaded_layout.m303_filing_envelope
+    if declaration is None:
         raise RegistryValidationError(
-            "typed Modelo 303 DP30300 generation requires explicit product/software identity authority",
+            "typed Modelo 303 DP30300 generation requires one static filing-envelope declaration in the layout",
         )
-    if rendered_envelope is None:
-        raise RegistryValidationError("typed Modelo 303 DP30300 generation requires one measured rendered envelope")
-    if joined.revision_id is None or joined.filing_period is None:
+    if joined.revision_id is None:
         raise RegistryValidationError(
-            "typed Modelo 303 DP30300 generation requires the exact selected snapshot revision and filing period",
+            "typed Modelo 303 DP30300 generation requires the exact selected snapshot revision",
         )
-    if rendered_envelope.filing_period != joined.filing_period:
+    if (
+        declaration.source_ref != joined_envelope.semantic.source_ref
+        or declaration.source_sha256 != joined_envelope.semantic.source_sha256
+    ):
         raise RegistryValidationError(
-            "typed Modelo 303 DP30300 rendered period does not match the exact selected snapshot period",
+            "typed Modelo 303 DP30300 filing-envelope declaration does not retain the reviewed source identity",
         )
-    body_record_ids = tuple(member.record_id for member in rendered_envelope.body_members)
-    if body_record_ids != joined_envelope.semantic.body_record_ids:
+    if declaration.body_record_ids != joined_envelope.semantic.body_record_ids:
         raise RegistryValidationError(
-            "typed Modelo 303 DP30300 generation body records do not match its reviewed source order",
+            "typed Modelo 303 DP30300 declaration does not retain the reviewed body-record order",
         )
     return M303EnvelopeProvenance(
-        semantic=joined_envelope.semantic,
-        schema_version=1,
+        schema_version=2,
         revision_id=joined.revision_id,
-        filing_period=joined.filing_period,
+        layout_id=loaded_layout.id,
         semantic_sha256=content_hash_hex(joined_envelope.semantic.model_dump(mode="json")),
-        prefix_derivations=tuple(field.role for field in joined_envelope.semantic.prefix_fields),
-        body_member_digests=tuple(
-            M303EnvelopeMemberDigest(
-                record_id=member.record_id,
-                sha256=sha256_hex(member.payload),
-            )
-            for member in rendered_envelope.body_members
-        ),
-        payload_sha256=rendered_envelope.payload_sha256,
-        total_length=rendered_envelope.total_length,
-        product_software_identity=product_software_identity,
-        closer_derivation="m303-relative-closer-v1",
-        total_derivation="m303-emitted-byte-total-v1",
+        envelope=declaration,
+        envelope_sha256=content_hash_hex(declaration.model_dump(mode="json")),
     )
 
 
@@ -768,8 +746,7 @@ def _require_manifest_matches_current_authorities(
     target: ExportFragmentTarget,
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
-    product_software_identity: AeatProductSoftwareIdentity | None,
-    m303_variable_envelope: M303EnvelopeBytes | None,
+    loaded_layout: ExportLayoutDefinition,
 ) -> None:
     _validate_generation_scope(
         joined=joined,
@@ -801,8 +778,7 @@ def _require_manifest_matches_current_authorities(
         )
     expected_envelope = _m303_envelope_provenance(
         joined,
-        product_software_identity=product_software_identity,
-        rendered_envelope=m303_variable_envelope,
+        loaded_layout=loaded_layout,
     )
     if manifest.m303_variable_envelope != expected_envelope:
         raise RegistryValidationError("export provenance M303 variable-envelope authority does not match generation")

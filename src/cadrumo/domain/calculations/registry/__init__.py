@@ -368,7 +368,10 @@ from ._m303_orden_projection_models import (
     M303RegimenSimplificadoSnapshot,
 )
 from ._m303_orden_raw_models import M303AnnualOrdenRawActivity, M303AnnualOrdenRawModule, M303AnnualOrdenSourceCensus
-from ._m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ._m303_orden_resolution import (
+    m303_annual_orden_snapshot_from_projection,
+    resolve_m303_regimen_simplificado_snapshot,
+)
 from ._m303_orden_source import (
     extract_m303_annual_orden_source,
     extract_m303_annual_orden_tables,
@@ -1204,6 +1207,7 @@ __all__ = [
     "load_modelo_source",
     "load_registry_tree",
     "m303_annual_orden_activity_anchor",
+    "m303_annual_orden_snapshot_from_projection",
     "m303_annual_orden_table_text",
     "m303_regimen_simplificado_annual_summary_requirement",
     "materialize_relation_binding_values",

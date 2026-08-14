@@ -871,7 +871,7 @@ def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> No
         permalink=f"{Settings.external_constants().aeat.domains.sede}/",
         published_at=date(2020, 3, 31),
         effective_from=date(2020, 4, 1),
-        review_status="reviewed",
+        review_status="operator_reviewed",
         reviewed_at=date(2026, 5, 6),
         reviewed_by="operator",
         notes="Notes",

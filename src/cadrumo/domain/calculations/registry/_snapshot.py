@@ -19,9 +19,11 @@ from datetime import date
 from pathlib import Path
 from typing import Protocol
 
+from ....core import RevisionReviewStatus
 from ._errors import RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
 from ._ids import RevisionId
+from ._legal import verify_legal_reference
 from ._period_selector_match import registry_period_for_request
 from ._schema import (
     CasillaDefinition,
@@ -257,10 +259,13 @@ def _build_validated_snapshot(
     period: str,
     on: date | None = None,
     revision_id: RevisionId | None = None,
+    require_operator_review: bool = False,
 ) -> RegistrySnapshot:
     """Return a selected snapshot after the caller has validated ``modelo``."""
     _install_cross_domain_snapshot_checks()
     revision = select_revision(modelo, filing_year=filing_year, period=period, on=on, revision_id=revision_id)
+    if require_operator_review:
+        _check_snapshot_revision_review_status(modelo, revision)
     legal_applicability_failures = validate_orden_aplicabilidad(
         f"snapshot modelo {modelo.id} revision {revision.id}",
         modelo.id,
@@ -295,6 +300,8 @@ def _build_validated_snapshot(
     revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
     _validate_materialized_export_record_families(revision)
     legal_ids, source_ids = _collect_snapshot_ref_ids(modelo, revision)
+    if require_operator_review:
+        _check_snapshot_legal_review_status(modelo, revision, catalogues, legal_ids)
     _check_revision_scoped_legal_windows(modelo, revision, catalogues)
     _check_revision_scoped_source_windows(modelo, revision, catalogues)
     snapshot = RegistrySnapshot(
@@ -322,6 +329,43 @@ def _build_validated_snapshot(
     return snapshot
 
 
+def _check_snapshot_revision_review_status(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+) -> None:
+    """Require human sign-off on the selected revision before legal checks."""
+    if revision.review_status is RevisionReviewStatus.OPERATOR_REVIEWED:
+        return
+    status = getattr(revision.review_status, "value", revision.review_status)
+    raise RegistryValidationError(
+        f"modelo {modelo.id} revision {revision.id} is {status!r}; "
+        "filing-grade snapshot requires operator_reviewed revision",
+    )
+
+
+def _check_snapshot_legal_review_status(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    catalogues: RegistryCatalogues,
+    legal_ids: set[str],
+) -> None:
+    """Require operator review only for the legal slice a snapshot consumes."""
+    failures: list[str] = []
+    for legal_id in sorted(legal_ids):
+        reference = catalogues.legal.get(legal_id)
+        if reference is None:
+            continue
+        try:
+            verify_legal_reference(reference)
+        except RegistryValidationError as exc:
+            failures.append(str(exc))
+    if failures:
+        raise RegistryValidationError(
+            f"modelo {modelo.id} revision {revision.id} is not filing-grade:\n"
+            + "\n".join(f" - {failure}" for failure in failures),
+        )
+
+
 def build_validated_snapshot(
     modelo: ModeloDefinition,
     catalogues: RegistryCatalogues,
@@ -331,11 +375,12 @@ def build_validated_snapshot(
     on: date | None = None,
     revision_id: RevisionId | None = None,
 ) -> RegistrySnapshot:
-    """Return a selected :class:`RegistrySnapshot` for an already validated modelo.
+    """Return a filing-grade snapshot for an already validated modelo.
 
-    The precondition is model-local. Callers that need cross-model relation
-    closure must validate the full registry tree first, normally by using
-    :class:`ValidatedRegistryAuthority`.
+    The selected revision and the complete legal-reference slice must both be
+    operator-reviewed. The model-local precondition remains separate from the
+    cross-model relation closure, which callers must validate through the full
+    registry tree, normally by using :class:`ValidatedRegistryAuthority`.
 
     Args:
         modelo: The validated :class:`ModeloDefinition` whose revision is selected.
@@ -355,6 +400,7 @@ def build_validated_snapshot(
         period=period,
         on=on,
         revision_id=revision_id,
+        require_operator_review=True,
     )
 
 
