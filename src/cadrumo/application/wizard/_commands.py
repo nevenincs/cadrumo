@@ -70,7 +70,7 @@ from ..flows import (
 from ._catalogue import SETUP_FLOW
 from ._checkpoint_store import ProfileFactsCheckpointStore
 from ._descendant_group import attach_descendant_group
-from ._errors import WizardMissingFlagError
+from ._errors import WizardMissingFlagError, WizardValidationError
 from ._format_hints import attach_format_hints
 from ._models import WizardFlow, WizardQuestion, WizardWidget
 from ._persistence import WizardPersistMode
@@ -1162,20 +1162,28 @@ def _require_profile_name(flow: WizardFlow, raw_profile_name: object) -> str:
 def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, profile_name: str) -> str:
     """Resolve or mint the immutable profile id for the requested wizard mode.
 
-    A ``create`` always addresses a fresh capsule. Existing labels are
-    refused by the canonical label owner; setup-state resume is granted only
-    after the capsule record has been authenticated by the checkpoint store.
-    A genuinely new label mints a fresh id.
+    A ``create`` always addresses a fresh capsule, so a label already bound to
+    a committed capsule is refused here rather than minting an id that could
+    never be published. The refusal is an early, operator-facing one over the
+    same committed-label projection the resolver below reads; the race-free
+    authority remains the custody service's check under the custody-root lock,
+    which still backstops this one. A genuinely new label mints a fresh id.
+
+    Any other mode addresses an existing capsule, and the resolution below is
+    itself the registration check: an unresolvable label falls through to the
+    missing-flag refusal.
     """
     from ...domain.user_profile import new_profile_id
-    from ..user_profile import refuse_duplicate_label, require_registered_label
     from ..workflow import read_profile_bucket
 
     if mode == "create":
-        refuse_duplicate_label(profile_name)
+        if read_profile_bucket(profile_name) is not None:
+            raise WizardValidationError(
+                translated_message="application.wizard.errors.profile_label_taken",
+                context={"flow_id": flow.id, "label": profile_name},
+            )
         return new_profile_id()
 
-    require_registered_label(profile_name)
     pointer = read_profile_bucket(profile_name)
     if pointer is not None:
         return pointer.bucket_id

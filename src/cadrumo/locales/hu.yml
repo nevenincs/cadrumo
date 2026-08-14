@@ -1953,6 +1953,8 @@ application:
         hivatkozik.
       profile_flag_required: A varázslóhoz --profile NÉV szükséges (nincs implicit
         "default" tartalék).
+      profile_label_taken: Már létezik %{label} nevű profil. Válasszon másik nevet,
+        vagy a szerkesztési folyamattal módosítsa azt a profilt.
       quiet_missing_flags: 'Ennek a --quiet futtatásnak hiányoznak a kötelező adatok.
         Adja hozzá ezeket a kapcsolókat, és futtassa újra a parancsot: %{missing_flags}'
     next_hint:

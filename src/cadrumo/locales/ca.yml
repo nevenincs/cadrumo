@@ -2051,6 +2051,8 @@ application:
         de pregunta desconegut.
       profile_flag_required: L'assistent requereix --profile NAME (sense valor per
         defecte 'default' implícit).
+      profile_label_taken: Ja existeix un perfil anomenat %{label}. Trieu un altre
+        nom o executeu el flux d'edició per modificar aquest perfil.
       quiet_missing_flags: 'A aquesta execució amb --quiet li falten dades obligatòries.
         Afegeix aquests flags i torna a executar l''ordre: %{missing_flags}. O executa-la
         sense --quiet des d''un terminal interactiu per fer servir l''assistent guiat.'

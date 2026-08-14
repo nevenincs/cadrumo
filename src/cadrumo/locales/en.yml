@@ -1880,6 +1880,8 @@ application:
         id.
       profile_flag_required: Wizard requires --profile NAME (no implicit 'default'
         fallback).
+      profile_label_taken: A profile named %{label} already exists. Pick a different
+        name, or run the edit flow to change that profile.
       quiet_missing_flags: 'This --quiet run is missing required details. Add these
         flags and run the command again: %{missing_flags}. Or run it without --quiet
         from an interactive terminal to use the guided setup.'
