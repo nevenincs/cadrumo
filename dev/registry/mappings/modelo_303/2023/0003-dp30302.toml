@@ -1,0 +1,2581 @@
+schema_version = 1
+fragment_id = "dp30302"
+modelo = "303"
+design_epoch = "2023"
+source_ref = "aeat-dr-303-2023"
+source_sha256 = "72e463cb29984f535c9f56917d788ff0641965f116aeab47da5f76a59eecfbe4"
+[[entries]]
+export_field_id = "m303-2023.dp30302.f001"
+kind = "literal"
+literal = "<T"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 6
+source_cell = "A6"
+ordinal = 1
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f002"
+kind = "literal"
+literal = "303"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 7
+source_cell = "A7"
+ordinal = 2
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f003"
+kind = "literal"
+literal = "02000"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 8
+source_cell = "A8"
+ordinal = 3
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f004"
+kind = "literal"
+literal = ">"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 9
+source_cell = "A9"
+ordinal = 4
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f005"
+kind = "computed"
+computed_key = "m303_complementaria_page_marker"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 10
+source_cell = "A10"
+ordinal = 5
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f006"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_activity"
+cohort = "agricola"
+slot = 1
+field = "activity_code"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 11
+source_cell = "A11"
+ordinal = 6
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f007"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 1
+fact = "volumen_ingresos"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 12
+source_cell = "A12"
+ordinal = 7
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f008"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 1
+fact = "indice_cuota"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 13
+source_cell = "A13"
+ordinal = 8
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f009"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 1
+fact = "cuota_devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 14
+source_cell = "A14"
+ordinal = 9
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f010"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 1
+fact = "porcentaje_ingreso_cuenta"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 15
+source_cell = "A15"
+ordinal = 10
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f011"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 1
+fact = "ingreso_cuenta"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 16
+source_cell = "A16"
+ordinal = 11
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f012"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 1
+fact = "cuota_soportada_operaciones_corrientes"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 17
+source_cell = "A17"
+ordinal = 12
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f013"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 1
+fact = "cuota_anual_derivada_regimen_simplificado"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 18
+source_cell = "A18"
+ordinal = 13
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f014"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_activity"
+cohort = "agricola"
+slot = 2
+field = "activity_code"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 19
+source_cell = "A19"
+ordinal = 14
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f015"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 2
+fact = "volumen_ingresos"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 20
+source_cell = "A20"
+ordinal = 15
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f016"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 2
+fact = "indice_cuota"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 21
+source_cell = "A21"
+ordinal = 16
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f017"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 2
+fact = "cuota_devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 22
+source_cell = "A22"
+ordinal = 17
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f018"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 2
+fact = "porcentaje_ingreso_cuenta"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 23
+source_cell = "A23"
+ordinal = 18
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f019"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 2
+fact = "ingreso_cuenta"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 24
+source_cell = "A24"
+ordinal = 19
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f020"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 2
+fact = "cuota_soportada_operaciones_corrientes"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 25
+source_cell = "A25"
+ordinal = 20
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f021"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 2
+fact = "cuota_anual_derivada_regimen_simplificado"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 26
+source_cell = "A26"
+ordinal = 21
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f022"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_activity"
+cohort = "no_agricola"
+slot = 1
+field = "iae_epigrafe"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 27
+source_cell = "A27"
+ordinal = 22
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f023"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_activity"
+cohort = "no_agricola"
+slot = 1
+field = "auxiliary_activity_indicator"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 28
+source_cell = "A28"
+ordinal = 23
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f024"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 1
+module_order = 1
+value = "declared_quantity"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 29
+source_cell = "A29"
+ordinal = 24
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f025"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 1
+module_order = 1
+value = "cuota_devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 30
+source_cell = "A30"
+ordinal = 25
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f026"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 1
+module_order = 2
+value = "declared_quantity"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 31
+source_cell = "A31"
+ordinal = 26
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f027"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 1
+module_order = 2
+value = "cuota_devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 32
+source_cell = "A32"
+ordinal = 27
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f028"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 1
+module_order = 3
+value = "declared_quantity"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 33
+source_cell = "A33"
+ordinal = 28
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f029"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 1
+module_order = 3
+value = "cuota_devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 34
+source_cell = "A34"
+ordinal = 29
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f030"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 1
+module_order = 4
+value = "declared_quantity"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 35
+source_cell = "A35"
+ordinal = 30
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f031"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 1
+module_order = 4
+value = "cuota_devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 36
+source_cell = "A36"
+ordinal = 31
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f032"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 1
+module_order = 5
+value = "declared_quantity"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 37
+source_cell = "A37"
+ordinal = 32
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f033"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 1
+module_order = 5
+value = "cuota_devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 38
+source_cell = "A38"
+ordinal = 33
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f034"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 1
+module_order = 6
+value = "declared_quantity"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 39
+source_cell = "A39"
+ordinal = 34
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f035"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 1
+module_order = 6
+value = "cuota_devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 40
+source_cell = "A40"
+ordinal = 35
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f036"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 1
+module_order = 7
+value = "declared_quantity"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 41
+source_cell = "A41"
+ordinal = 36
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f037"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 1
+module_order = 7
+value = "cuota_devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 42
+source_cell = "A42"
+ordinal = 37
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f038"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "cuota_devengada_operaciones_corrientes"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 43
+source_cell = "A43"
+ordinal = 38
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f039"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "reducciones"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 44
+source_cell = "A44"
+ordinal = 39
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f040"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "indice_corrector_actividad_temporada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 45
+source_cell = "A45"
+ordinal = 40
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f041"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "porcentaje_ingreso_cuenta"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 46
+source_cell = "A46"
+ordinal = 41
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f042"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "ingreso_cuenta"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 47
+source_cell = "A47"
+ordinal = 42
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f043"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "cuotas_soportadas_operaciones_corrientes"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 48
+source_cell = "A48"
+ordinal = 43
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f044"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "indice_corrector_actividades_temporada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 49
+source_cell = "A49"
+ordinal = 44
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f045"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "resultado_cuarto_trimestre"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 50
+source_cell = "A50"
+ordinal = 45
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f046"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "porcentaje_cuota_minima"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 51
+source_cell = "A51"
+ordinal = 46
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f047"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "devolucion_cuotas_soportadas_otros_paises"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 52
+source_cell = "A52"
+ordinal = 47
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f048"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "cuota_minima"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 53
+source_cell = "A53"
+ordinal = 48
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f049"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "cuota_anual_derivada_regimen_simplificado"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 54
+source_cell = "A54"
+ordinal = 49
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f050"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_activity"
+cohort = "no_agricola"
+slot = 2
+field = "iae_epigrafe"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 55
+source_cell = "A55"
+ordinal = 50
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f051"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_activity"
+cohort = "no_agricola"
+slot = 2
+field = "auxiliary_activity_indicator"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 56
+source_cell = "A56"
+ordinal = 51
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f052"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 2
+module_order = 1
+value = "declared_quantity"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 57
+source_cell = "A57"
+ordinal = 52
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f053"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 2
+module_order = 1
+value = "cuota_devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 58
+source_cell = "A58"
+ordinal = 53
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f054"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 2
+module_order = 2
+value = "declared_quantity"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 59
+source_cell = "A59"
+ordinal = 54
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f055"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 2
+module_order = 2
+value = "cuota_devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 60
+source_cell = "A60"
+ordinal = 55
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f056"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 2
+module_order = 3
+value = "declared_quantity"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 61
+source_cell = "A61"
+ordinal = 56
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f057"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 2
+module_order = 3
+value = "cuota_devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 62
+source_cell = "A62"
+ordinal = 57
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f058"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 2
+module_order = 4
+value = "declared_quantity"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 63
+source_cell = "A63"
+ordinal = 58
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f059"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 2
+module_order = 4
+value = "cuota_devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 64
+source_cell = "A64"
+ordinal = 59
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f060"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 2
+module_order = 5
+value = "declared_quantity"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 65
+source_cell = "A65"
+ordinal = 60
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f061"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 2
+module_order = 5
+value = "cuota_devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 66
+source_cell = "A66"
+ordinal = 61
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f062"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 2
+module_order = 6
+value = "declared_quantity"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 67
+source_cell = "A67"
+ordinal = 62
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f063"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 2
+module_order = 6
+value = "cuota_devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 68
+source_cell = "A68"
+ordinal = 63
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f064"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 2
+module_order = 7
+value = "declared_quantity"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 69
+source_cell = "A69"
+ordinal = 64
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f065"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_module"
+cohort = "no_agricola"
+slot = 2
+module_order = 7
+value = "cuota_devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 70
+source_cell = "A70"
+ordinal = 65
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f066"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "cuota_devengada_operaciones_corrientes"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 71
+source_cell = "A71"
+ordinal = 66
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f067"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "reducciones"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 72
+source_cell = "A72"
+ordinal = 67
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f068"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "indice_corrector_actividad_temporada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 73
+source_cell = "A73"
+ordinal = 68
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f069"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "porcentaje_ingreso_cuenta"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 74
+source_cell = "A74"
+ordinal = 69
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f070"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "ingreso_cuenta"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 75
+source_cell = "A75"
+ordinal = 70
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f071"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "cuotas_soportadas_operaciones_corrientes"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 76
+source_cell = "A76"
+ordinal = 71
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f072"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "indice_corrector_actividades_temporada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 77
+source_cell = "A77"
+ordinal = 72
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f073"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "resultado_cuarto_trimestre"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 78
+source_cell = "A78"
+ordinal = 73
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f074"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "porcentaje_cuota_minima"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 79
+source_cell = "A79"
+ordinal = 74
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f075"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "devolucion_cuotas_soportadas_otros_paises"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 80
+source_cell = "A80"
+ordinal = 75
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f076"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "cuota_minima"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 81
+source_cell = "A81"
+ordinal = 76
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f077"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "cuota_anual_derivada_regimen_simplificado"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 82
+source_cell = "A82"
+ordinal = 77
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f078"
+kind = "casilla"
+casilla_id = "47"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 83
+source_cell = "A83"
+ordinal = 78
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f079"
+kind = "casilla"
+casilla_id = "48"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 84
+source_cell = "A84"
+ordinal = 79
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f080"
+kind = "casilla"
+casilla_id = "49"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 85
+source_cell = "A85"
+ordinal = 80
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f081"
+kind = "casilla"
+casilla_id = "50"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 86
+source_cell = "A86"
+ordinal = 81
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f082"
+kind = "casilla"
+casilla_id = "51"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 87
+source_cell = "A87"
+ordinal = 82
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f083"
+kind = "casilla"
+casilla_id = "52"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 88
+source_cell = "A88"
+ordinal = 83
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f084"
+kind = "casilla"
+casilla_id = "53"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 89
+source_cell = "A89"
+ordinal = 84
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f085"
+kind = "casilla"
+casilla_id = "54"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 90
+source_cell = "A90"
+ordinal = 85
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f086"
+kind = "casilla"
+casilla_id = "55"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 91
+source_cell = "A91"
+ordinal = 86
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f087"
+kind = "casilla"
+casilla_id = "56"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 92
+source_cell = "A92"
+ordinal = 87
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f088"
+kind = "casilla"
+casilla_id = "57"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 93
+source_cell = "A93"
+ordinal = 88
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f089"
+kind = "casilla"
+casilla_id = "58"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 94
+source_cell = "A94"
+ordinal = 89
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f090"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "actividad_temporada_dias_ejercicio_anio_anterior"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 95
+source_cell = "A95"
+ordinal = 90
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f091"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "dias_ejercicio_trimestre"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 96
+source_cell = "A96"
+ordinal = 91
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f092"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "empleados_inicio_ejercicio"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 97
+source_cell = "A97"
+ordinal = 92
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f093"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "actividad_temporada_dias_ejercicio_cuarto_trimestre"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 98
+source_cell = "A98"
+ordinal = 93
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f094"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "max_asalariados_simultaneos"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 99
+source_cell = "A99"
+ordinal = 94
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f095"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "lorca_elegible"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 100
+source_cell = "A100"
+ordinal = 95
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f096"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "cuotas_soportadas_cuarto_trimestre"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 101
+source_cell = "A101"
+ordinal = 96
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f097"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "compensaciones_reagp_cuarto_trimestre"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 102
+source_cell = "A102"
+ordinal = 97
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f098"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "personal_asalariado_horas_mayores_19"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 103
+source_cell = "A103"
+ordinal = 98
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f099"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "personal_asalariado_horas_menores_19_o_formacion"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 104
+source_cell = "A104"
+ordinal = 99
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f100"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "personal_asalariado_horas_discapacidad_33"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 105
+source_cell = "A105"
+ordinal = 100
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f101"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "personal_asalariado_horas_convenio_colectivo"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 106
+source_cell = "A106"
+ordinal = 101
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f102"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "personal_no_asalariado_horas_titular"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 107
+source_cell = "A107"
+ordinal = 102
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f103"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "personal_no_asalariado_titular_discapacidad_33"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 108
+source_cell = "A108"
+ordinal = 103
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f104"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "personal_no_asalariado_horas_conyuge"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 109
+source_cell = "A109"
+ordinal = 104
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f105"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "personal_no_asalariado_horas_hijos_menores_18"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 110
+source_cell = "A110"
+ordinal = 105
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f106"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "mesas_capacidad"
+sub_index = 1
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 111
+source_cell = "A111"
+ordinal = 106
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f107"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "mesas_numero"
+sub_index = 1
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 112
+source_cell = "A112"
+ordinal = 107
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f108"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "mesas_dias_cuarto_trimestre"
+sub_index = 1
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 113
+source_cell = "A113"
+ordinal = 108
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f109"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "mesas_capacidad"
+sub_index = 2
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 114
+source_cell = "A114"
+ordinal = 109
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f110"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "mesas_numero"
+sub_index = 2
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 115
+source_cell = "A115"
+ordinal = 110
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f111"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "mesas_dias_cuarto_trimestre"
+sub_index = 2
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 116
+source_cell = "A116"
+ordinal = 111
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f112"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "mesas_capacidad"
+sub_index = 3
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 117
+source_cell = "A117"
+ordinal = 112
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f113"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "mesas_numero"
+sub_index = 3
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 118
+source_cell = "A118"
+ordinal = 113
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f114"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "mesas_dias_cuarto_trimestre"
+sub_index = 3
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 119
+source_cell = "A119"
+ordinal = 114
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f115"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "mesas_capacidad"
+sub_index = 4
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 120
+source_cell = "A120"
+ordinal = 115
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f116"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "mesas_numero"
+sub_index = 4
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 121
+source_cell = "A121"
+ordinal = 116
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f117"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "mesas_dias_cuarto_trimestre"
+sub_index = 4
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 122
+source_cell = "A122"
+ordinal = 117
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f118"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "actividad_temporada_dias_ejercicio_anio_anterior"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 123
+source_cell = "A123"
+ordinal = 118
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f119"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "dias_ejercicio_trimestre"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 124
+source_cell = "A124"
+ordinal = 119
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f120"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "empleados_inicio_ejercicio_actual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 125
+source_cell = "A125"
+ordinal = 120
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f121"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "actividad_temporada_dias_ejercicio_cuarto_trimestre"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 126
+source_cell = "A126"
+ordinal = 121
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f122"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "max_asalariados_simultaneos"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 127
+source_cell = "A127"
+ordinal = 122
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f123"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "lorca_elegible"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 128
+source_cell = "A128"
+ordinal = 123
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f124"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "cuotas_soportadas_cuarto_trimestre"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 129
+source_cell = "A129"
+ordinal = 124
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f125"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "compensaciones_reagp_cuarto_trimestre"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 130
+source_cell = "A130"
+ordinal = 125
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f126"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "personal_asalariado_horas_mayores_19"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 131
+source_cell = "A131"
+ordinal = 126
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f127"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "personal_asalariado_horas_menores_19_o_formacion"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 132
+source_cell = "A132"
+ordinal = 127
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f128"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "personal_asalariado_horas_discapacidad_33"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 133
+source_cell = "A133"
+ordinal = 128
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f129"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "personal_asalariado_horas_convenio_colectivo"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 134
+source_cell = "A134"
+ordinal = 129
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f130"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "personal_no_asalariado_horas_titular"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 135
+source_cell = "A135"
+ordinal = 130
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f131"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "personal_no_asalariado_titular_discapacidad_33"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 136
+source_cell = "A136"
+ordinal = 131
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f132"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "personal_no_asalariado_horas_conyuge"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 137
+source_cell = "A137"
+ordinal = 132
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f133"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "personal_no_asalariado_horas_hijos_menores_18"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 138
+source_cell = "A138"
+ordinal = 133
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f134"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "mesas_capacidad"
+sub_index = 1
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 139
+source_cell = "A139"
+ordinal = 134
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f135"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "mesas_numero"
+sub_index = 1
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 140
+source_cell = "A140"
+ordinal = 135
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f136"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "mesas_dias_cuarto_trimestre"
+sub_index = 1
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 141
+source_cell = "A141"
+ordinal = 136
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f137"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "mesas_capacidad"
+sub_index = 2
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 142
+source_cell = "A142"
+ordinal = 137
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f138"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "mesas_numero"
+sub_index = 2
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 143
+source_cell = "A143"
+ordinal = 138
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f139"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "mesas_dias_cuarto_trimestre"
+sub_index = 2
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 144
+source_cell = "A144"
+ordinal = 139
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f140"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "mesas_capacidad"
+sub_index = 3
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 145
+source_cell = "A145"
+ordinal = 140
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f141"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "mesas_numero"
+sub_index = 3
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 146
+source_cell = "A146"
+ordinal = 141
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f142"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "mesas_dias_cuarto_trimestre"
+sub_index = 3
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 147
+source_cell = "A147"
+ordinal = 142
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f143"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "mesas_capacidad"
+sub_index = 4
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 148
+source_cell = "A148"
+ordinal = 143
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f144"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "mesas_numero"
+sub_index = 4
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 149
+source_cell = "A149"
+ordinal = 144
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f145"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "mesas_dias_cuarto_trimestre"
+sub_index = 4
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 150
+source_cell = "A150"
+ordinal = 145
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f146"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 1
+fact = "cuotas_soportadas_cuarto_trimestre"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 151
+source_cell = "A151"
+ordinal = 146
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f147"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 1
+fact = "compensaciones_reagp_cuarto_trimestre"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 152
+source_cell = "A152"
+ordinal = 147
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f148"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 2
+fact = "cuotas_soportadas_cuarto_trimestre"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 153
+source_cell = "A153"
+ordinal = 148
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f149"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "agricola"
+slot = 2
+fact = "compensaciones_reagp_cuarto_trimestre"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 154
+source_cell = "A154"
+ordinal = 149
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f150"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 1
+fact = "superficie_horno_dias_cuarto_trimestre"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 155
+source_cell = "A155"
+ordinal = 150
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f151"
+kind = "projection"
+[entries.projection_ref]
+projection_kind = "m303_regimen_simplificado_fact"
+cohort = "no_agricola"
+slot = 2
+fact = "superficie_horno_dias_cuarto_trimestre"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 156
+source_cell = "A156"
+ordinal = 151
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f152"
+kind = "filler"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 157
+source_cell = "A157"
+ordinal = 152
+record_identity = "DP30302"
+
+[[entries]]
+export_field_id = "m303-2023.dp30302.f153"
+kind = "literal"
+literal = "</T30302000>"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[entries.anchor]
+sheet = "DP30302"
+source_row = 158
+source_cell = "A158"
+ordinal = 153
+record_identity = "DP30302"
