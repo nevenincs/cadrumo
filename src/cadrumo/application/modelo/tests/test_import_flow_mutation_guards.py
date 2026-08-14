@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
 
@@ -62,11 +61,13 @@ from ._import_flow_support import (
     _T4,
     _import_external_filing,
     _Repos,
-    _repos,
     _seed_local_filing_record,
     _seed_ready_profile,
     _seed_work_unit,
+    repos,
 )
+
+__all__ = ["repos"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -77,10 +78,6 @@ def _casilla_id(value: object):
     except ValueError as exc:
         raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
 
-
-@pytest.fixture
-def repos(tmp_path: Path) -> Iterator[_Repos]:
-    yield from _repos(tmp_path)
 
 
 def test_import_refuses_discarded_work_unit(repos: _Repos) -> None:

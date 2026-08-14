@@ -25,12 +25,6 @@ from .._reference_points import SONNET_4_6_REC_DOM_IMG_008, reference_points_wit
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 
-@pytest.fixture(scope="module")
-def key() -> CorpusKey:
-    """The real pinned key. Read-only; nothing here writes to the corpus."""
-    return load_corpus_key()
-
-
 def test_the_pinned_key_is_the_one_every_figure_is_quoted_against(key: CorpusKey) -> None:
     """Hash and length together, so a truncated read fails as a length mismatch."""
     assert key.sha256 == EXPECTED_KEY_SHA256

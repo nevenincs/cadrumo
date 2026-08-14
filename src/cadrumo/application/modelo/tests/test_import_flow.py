@@ -11,9 +11,7 @@ consumes these records as its baseline.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -44,16 +42,13 @@ from ._import_flow_support import (
     _import_external_filing,
     _persist_matching_justificante,
     _Repos,
-    _repos,
     _seed_work_unit,
+    repos,
 )
 
+__all__ = ["repos"]
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@pytest.fixture
-def repos(tmp_path: Path) -> Iterator[_Repos]:
-    yield from _repos(tmp_path)
 
 
 def test_import_filing_is_current_and_accepted(repos: _Repos) -> None:

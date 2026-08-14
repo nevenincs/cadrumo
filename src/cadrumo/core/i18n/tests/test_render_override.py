@@ -14,7 +14,7 @@ import pytest
 
 from ...config import override_settings
 from ...external_constants import SUPPORTED_OUTPUT_LANGUAGES
-from .. import _render
+from .. import DEFAULT_OUTPUT_LANGUAGE, _render
 from .._render import output_language
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -48,22 +48,22 @@ def test_output_language_ignores_invalid_override_then_falls_back() -> None:
 
 
 def test_default_output_language_equals_es() -> None:
-    """DEFAULT_OUTPUT_LANGUAGE is the canonical Spanish fallback constant.
+    """The public i18n facade exports the canonical Spanish fallback constant.
 
     After contract every ``"es"`` fallback string in _cached_output_language is
     replaced by this constant. Locking its value here ensures accidental
-    changes fail loudly and that the module exports it.
+    changes fail loudly and that the public facade resolves the renderer's
+    authority rather than defining a second value.
     """
-    from .._render import DEFAULT_OUTPUT_LANGUAGE
-
     assert DEFAULT_OUTPUT_LANGUAGE == "es"
+    assert DEFAULT_OUTPUT_LANGUAGE == _render.DEFAULT_OUTPUT_LANGUAGE
 
 
 def test_default_output_language_exported_in_all() -> None:
-    """DEFAULT_OUTPUT_LANGUAGE is part of the module's public surface (__all__)."""
-    from .. import _render
+    """DEFAULT_OUTPUT_LANGUAGE is part of the i18n facade's public surface."""
+    from .. import __all__ as public_exports
 
-    assert "DEFAULT_OUTPUT_LANGUAGE" in _render.__all__
+    assert "DEFAULT_OUTPUT_LANGUAGE" in public_exports
 
 
 def test_fallback_language_is_default_output_language() -> None:
@@ -73,8 +73,6 @@ def test_fallback_language_is_default_output_language() -> None:
     still produce a result equal to DEFAULT_OUTPUT_LANGUAGE so the
     constant is the single source of truth for the fallback code.
     """
-    from .._render import DEFAULT_OUTPUT_LANGUAGE
-
     with override_settings(cadrumo_output_language="zz"):
         result = output_language()
     assert result == DEFAULT_OUTPUT_LANGUAGE
