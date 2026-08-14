@@ -37,8 +37,9 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.user_profile import UserProfileFact
+from ...domain.user_profile import ProfileSetupState, UserProfileFact
 from ._profile_record_repository import ProfileRecordRepository
+from ._validation import reject_invalid_profile_facts
 
 if TYPE_CHECKING:
     from ...domain.censo import CertificadoSituacionCensal
@@ -266,6 +267,26 @@ def apply_cotejo(
     apply-commit — never one per fact. Returns the updated
     :class:`~cadrumo.application.workflow.WorkflowState`; the caller persists
     it through the workflow repository like every other fact mutation.
+
+    The resulting sequence is judged by the same schema authority the
+    registration and wizard doors use, because a certificate is authoritative
+    about the TAXPAYER, not about this application's fact vocabulary. AEAT
+    certifies what the censal situation is; it does not certify that a value
+    belongs at a path this schema declares, or that it arrives in the shape
+    the schema types. Those are the profile's own contract, and an official
+    origin is not evidence about them — which is why the axis adopting
+    certificate values must satisfy them exactly as an operator edit does.
+    Provenance is carried separately and is not weakened by this: each adopted
+    fact keeps its ``censo_artefact_g313`` source token, a value the schema
+    itself declares, so a reader can still tell a certified value from a typed
+    one. Adopting unjudged is how a fact at an undeclared ``censo`` path was
+    once written with no complaint.
+
+    ``require_complete`` follows the record's own setup state rather than
+    being asserted here. The cotejo runs DURING setup, so a profile that is
+    still incomplete is legitimately missing the fields filing depends on, and
+    demanding them would refuse the very reconciliation that helps supply
+    them; a profile already past setup is held to the complete contract.
     """
     from ...core import require_active_bucket_id
 
@@ -277,9 +298,15 @@ def apply_cotejo(
     clearing = tuple(
         UserProfileFact(path=path, value=None) for path in _existing_divergence_paths(record) if path not in fresh_paths
     )
+    next_facts = (*record.facts, *clearing, *tuple(adopted), *fresh)
+    reject_invalid_profile_facts(
+        profile_id,
+        next_facts,
+        require_complete=record.setup_state is not ProfileSetupState.INCOMPLETE,
+    )
     replacement = repository.apply_fact_changes(
         profile_id,
-        facts=(*record.facts, *clearing, *tuple(adopted), *fresh),
+        facts=next_facts,
         expected_revision=record.record_revision,
         expected_content_digest=record.content_digest,
         event_type="profile.censo.applied",

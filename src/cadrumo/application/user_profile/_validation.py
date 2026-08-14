@@ -496,10 +496,11 @@ def reject_invalid_profile_facts(
 ) -> None:
     """Refuse a fact set on blocking schema issues, or return silently.
 
-    Every door that writes profile facts -- registration's initial record and
-    the record repository's fact patch alike -- judges through here, so an
-    engine-derived path, an unknown path or a mis-shaped value is refused at
-    the write rather than at whichever surface happened to collect it. A check
+    Every door that writes profile facts -- registration's initial record, the
+    wizard's fact patch, and the cotejo censal's adoption of certificate
+    values alike -- judges through here, so an engine-derived path, an unknown
+    path or a mis-shaped value is refused at the write rather than at
+    whichever surface happened to collect it. A check
     living only in an edit dialog binds nobody who writes through another
     surface, and a stored value at a derived path silently displaces the
     computation that owns it.
