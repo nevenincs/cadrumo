@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:016cc04e9f53c0a811f119b16aa74d22e0faf7c200885ae54f825dc7eaa309ef'
+body_hash: 'sha256:294bb9822989e5aeea5929bcc143f8e780708ec14b69b41436ed0a9d6de1bb57'
 step_id: 'S22'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -75,6 +75,15 @@ naming the module, its modelo and the signal that caught it. A second plant
 naming no modelo in its file name, carrying only a modelo-scoped defined symbol,
 reddened the same way -- the case a file-name glob cannot see. The tool returned
 to a clean 36-module reconciliation after each removal.
+
+The new gate is ten tests, all green. A sequential run of the whole registry
+test directory finished at 581 failed, 3805 passed, 122 errors; the gate's own
+file appears in no failure or error line, so the delta this Step contributes is
+ten added passes and nothing else. The directory was already broadly red for
+reasons recorded elsewhere in the campaign and untouched here; peers were
+committing to the shared tree during the 33-minute run, so the absolute figures
+are a snapshot rather than a stable baseline. No production module was modified
+by this Step, so no other test could change behaviour.
 
 ## Notes
 
