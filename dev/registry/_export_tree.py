@@ -72,7 +72,10 @@ _DECIMAL_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
     r"(?:,\s*menor\s+o\s+igual\s+que\s+\d+\.)?$",
     re.IGNORECASE,
 )
-_INTEGER_CONTENT_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<whole>\d+)\s*enteros?$", re.IGNORECASE)
+_INTEGER_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
+    r"^(?P<whole>\d+)\s*enteros?(?:\.\s*Nota\s+6)?$",
+    re.IGNORECASE,
+)
 _NOTE_REFERENCE_CONTENT_RE: Final[re.Pattern[str]] = re.compile(r"^Nota\s+\d+(?:\.\s*Nota\s+\d+)*$", re.IGNORECASE)
 _QUOTED_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
     r'^"\d+"(?:,\s*"\d+")*(?:\s+Nota\s+\d+)?$',
