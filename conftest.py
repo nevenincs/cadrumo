@@ -96,6 +96,7 @@ from cadrumo.tests._deselection_hook import apply as _report_deselection  # noqa
 from cadrumo.tests._host_load_hook import arm_pre_timeout_stamp as _arm_host_load_stamp  # noqa: E402
 from cadrumo.tests._host_load_hook import disarm_pre_timeout_stamp as _disarm_host_load_stamp  # noqa: E402
 from cadrumo.tests._marker_hook import apply as _apply_marker_contract  # noqa: E402
+from cadrumo.tests._marker_hook import apply_banned_live_import_policy as _apply_banned_live_import_policy  # noqa: E402
 from cadrumo.tests._worker_count_hook import resolve_auto_num_workers as _resolve_auto_num_workers  # noqa: E402
 
 if TYPE_CHECKING:
@@ -104,9 +105,11 @@ if TYPE_CHECKING:
 register_collection_storage_root_cleanup(collection_storage_root())
 
 
+@pytest.hookimpl(tryfirst=True)
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Delegate to the shared marker-contract enforcer."""
+    """Apply the repository-wide collection-policy contracts."""
     _apply_marker_contract(config, items)
+    _apply_banned_live_import_policy(items)
 
 
 def pytest_xdist_auto_num_workers(config: pytest.Config) -> int | None:
