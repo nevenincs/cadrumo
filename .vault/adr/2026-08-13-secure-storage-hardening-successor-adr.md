@@ -44,4 +44,3 @@ These controls remain valid for every encrypted storage format and do not depend
 ## Consequences
 
 Hardening remains centralized while shared-master, AUTO, fallback, and legacy-read rules disappear.
-

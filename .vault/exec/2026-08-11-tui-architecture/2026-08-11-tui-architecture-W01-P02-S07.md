@@ -86,4 +86,3 @@ Standing final status: request payload custody is fail-closed for borrowed read-
 Mechanical closeout verification:
 
 - `uvx vaultspec-core vault check all` - exit 0 in 28.4 seconds with 1,318 warnings and no errors. The warning inventory was one S07 audit-template annotation warning, five Markdown warnings, eight feature warnings, 54 execution-mapping warnings, 1,220 body-section warnings, 29 schema warnings, and one unrelated modified-stamp warning. The two generated comment blocks identified in the S07 audit were stripped afterward through the sanctioned vault edit path; all remaining warnings are outside this Step.
-

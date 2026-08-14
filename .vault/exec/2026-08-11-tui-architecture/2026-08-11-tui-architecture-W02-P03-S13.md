@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#tui-architecture'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:7366a154a38dff2455b7b1e772ec73d33a4f504c7a5e9f4572fb5cf28ac3456a'
+body_hash: 'sha256:14d3e2b364e0e388e32a8e05309ac2461d0b92c411d462bb7426ceba8dd66835'
 step_id: 'S13'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S13 and 2026-08-11-tui-architecture-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Define executor context, cancellation scope, deadline access, event emission, secure operand lookup, and cleanup ownership and ## Scope
-
-- `src/cadrumo/application/operations/_executor.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Define executor context, cancellation scope, deadline access, event emission, secure operand lookup, and cleanup ownership
 

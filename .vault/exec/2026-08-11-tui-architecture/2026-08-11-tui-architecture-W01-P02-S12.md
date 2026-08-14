@@ -34,6 +34,3 @@ related:
 
 - Live semantic searches succeeded; targeted inspection confirmed the tests consume the public facade and do not redeclare production business logic.
 - Final review passed and the binding row was CLI-closed. `vault check all` exited zero with `1338 warnings`, including 6 annotation, 22 markdown, 29 schema, 3 modified-stamp, and pre-existing body-schema corpus warnings.
-
-
-

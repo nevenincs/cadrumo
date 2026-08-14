@@ -43,4 +43,3 @@ related:
 
 - One intermediate whole-package rerun briefly failed during shared registry edits with `NameError: _collect_registry_tree_fingerprints is not defined` from `domain/calculations/registry/_loader.py`. No S21 source was altered. A clean fresh S21 rerun and a sequential 21-test persistence package run subsequently passed.
 - Leave `W02.P04.S21` unchecked and all S21 changes uncommitted for independent review.
-

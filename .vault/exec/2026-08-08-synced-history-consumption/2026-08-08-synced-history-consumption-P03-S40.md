@@ -37,4 +37,3 @@ Focused real child-interpreter evidence passed: 35 CLI tests passed, including s
 ## Notes
 
 The progress receipt stays outside transcripts and goldens. No product runtime, frame schema, sequence contract, or golden changed. The public test derives page, sequence, frame, locator, and argv from production discovery; only the supervisor bound is the test's selected deadline.
-

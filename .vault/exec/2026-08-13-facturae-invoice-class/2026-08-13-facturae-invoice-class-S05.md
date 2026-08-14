@@ -11,9 +11,6 @@ related:
   - "[[2026-08-13-facturae-invoice-class-plan]]"
 ---
 
-
-
-
 # Gate the whole path against the corpus fixtures that already carry OO and OR rather than synthetic XML, and prove the fallback still classifies a record declaring no code. Include the mutation proof that the declared code is what decides - a record whose corrective reference and declared class disagree must not silently take the inference's answer
 
 ## Scope

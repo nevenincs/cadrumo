@@ -10,8 +10,6 @@ related:
   - "[[2026-08-08-synced-history-consumption-plan]]"
 ---
 
-
-
 # `synced-history-consumption` audit: `S40 progress diagnostics remediation`
 
 ## Scope
@@ -59,4 +57,3 @@ The docstring now describes a bounded public check over the discovered lifecycle
 2. `progress-receipt-atomicity` is resolved by canonical atomic receipt publication. Keep the receipt outside golden data and retain the strict parsing boundary.
 
 3. `timeout-proof-description` is resolved. Keep the prose duration-neutral and derive runtime coordinates from production discovery.
-

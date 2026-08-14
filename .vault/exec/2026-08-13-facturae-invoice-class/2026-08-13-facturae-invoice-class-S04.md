@@ -11,9 +11,6 @@ related:
   - "[[2026-08-13-facturae-invoice-class-plan]]"
 ---
 
-
-
-
 # Surface the two cases the mapping refuses to resolve: a record declaring a recapitulativa code, and a record whose declared code disagrees with its own corrective reference in either direction. Both are findings about the document rather than states to be picked between
 
 ## Scope

@@ -11,9 +11,6 @@ related:
   - "[[2026-08-13-facturae-invoice-class-plan]]"
 ---
 
-
-
-
 # Declare the six Facturae InvoiceClass codes as a closed enum and gate it against the bundled vocabulary, so the enum and the schema extraction cannot drift. The gate reads the committed corpus artefact rather than restating the codes, which is what makes it able to fail
 
 ## Scope

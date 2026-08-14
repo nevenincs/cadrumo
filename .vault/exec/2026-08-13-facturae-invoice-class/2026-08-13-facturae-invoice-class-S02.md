@@ -11,9 +11,6 @@ related:
   - "[[2026-08-13-facturae-invoice-class-plan]]"
 ---
 
-
-
-
 # Read InvoiceClass from the Facturae header into a typed field on the parsed record, scoped to the header's own children like its siblings. An absent or unrecognised code leaves the field None and must never refuse the document
 
 ## Scope

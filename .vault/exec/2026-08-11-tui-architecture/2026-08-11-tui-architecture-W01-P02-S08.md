@@ -41,4 +41,3 @@ related:
 - Concurrent shared-worktree activity captured the production module and test in reachable commit `56972648206dd16e788ede009b655104cd427b6f` and an earlier exec version in reachable commit `4a0fff1926e904078720631d71ff411d5c958803`; history was not rewritten.
 - The previously preserved relative-import WIP is now authorized and retained unchanged. The failure was package topology, not import syntax; `--import-mode=importlib` reproduced the same pre-fix collection error.
 - Final independent review closed all critical, high, and medium findings. The binding plan row was closed through `vault plan step check`. `uvx vaultspec-core vault check all` exited zero with `1398 warnings`; current global residuals include 19 annotation warnings, 17 markdown warnings, 10 feature warnings, 29 schema warnings, 3 modified-stamp warnings, and the pre-existing body-schema corpus findings reported by the command.
-

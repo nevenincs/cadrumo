@@ -35,5 +35,3 @@ related:
 - Live code and vault semantic searches succeeded on port 8766. The code index reported `2862` missing sections, so targeted `rg` and whole governing epicenters were used rather than treating absence as evidence.
 - Live remediation grounding found no canonical actor type whose constraints were a superset, so `OperationActorReference` is a narrow stable machine-reference alias rather than a domain actor redeclaration. Mutation, exact-correlation tuple, discriminated-union round-trip, and reject-separation tests cover the D4 evidence boundary.\n- Single-use consumption is enforced later by the supervisor/registry transaction; this Step defines the unforgeable token identity and exact response binding without pretending a frozen model can own persistence state.
 - Final independent review closed all critical, high, and medium findings. The binding plan row was closed through `vault plan step check`. `uvx vaultspec-core vault check all` exited zero with `1357 warnings`; global residuals include 4 annotation warnings, 40 markdown warnings, 29 schema warnings, 2 modified-stamp warnings, and pre-existing body-schema corpus findings.
-
-

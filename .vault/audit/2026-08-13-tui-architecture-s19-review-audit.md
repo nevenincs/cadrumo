@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:53efe3cd9d64b335b9ce1f317fb22975e305d13f5ffe4df18fd490721ed4831b'
+body_hash: 'sha256:1ef21769969ddb528323818e3ef9115e089cf2fd3348df714d98a5aa30a7ce0d'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -14,25 +14,6 @@ related:
   - "[[2026-08-13-tui-architecture-s17-lease-contract-review-audit]]"
   - "[[2026-08-13-tui-architecture-s18-review-audit]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `tui-architecture` audit: `S19 review`
 
@@ -48,15 +29,6 @@ preservation. Plan state, execution records, production code, tests, and
 peer-owned changes were not modified.
 
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### S19 review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. S19 review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### journal-pre-acquisition-authorization | high | A future lease can authorize a snapshot from before ownership began
 
@@ -118,10 +90,6 @@ scope.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
-
 - Completed: the journal lease check enforces the complete active interval
   `acquired_at <= snapshot.updated_at < expires_at` while retaining exact
   current-lease equality under the same `JournalRepositoryBase` lock.
@@ -136,4 +104,3 @@ was open.
 
 Re-review verdict on 2026-08-14: PASS. The prior HIGH is closed and no finding
 remains open in the authorized S19 re-review scope.
-

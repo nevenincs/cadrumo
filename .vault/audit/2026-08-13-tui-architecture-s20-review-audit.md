@@ -3,32 +3,14 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:5b15d940be189ecf56fd7fe8b2d9e47ddfd559651accf4ab43ee781bba434891'
+body_hash: 'sha256:f0dc6bfd9d6d60ccce5b68bdff55caa47fc82cd9f1fc87fedcb7f6a7ff868577'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-architecture-W02-P04-S20]]"
 ---
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `tui-architecture` audit: `S20 persistence adapter facade review`
 
@@ -44,15 +26,6 @@ and behavioral gates. Production code, tests, plan state, and peer-owned work
 were not modified.
 
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### S20 persistence adapter facade review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. S20 persistence adapter facade review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### exact-public-surface | low | The facade exports exactly the two concrete persistence adapters
 
@@ -95,10 +68,6 @@ Those current-tree failures are not evidence against S20 and were preserved.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
-
 - Keep the two-name package facade as the sole cross-package construction
   surface for the journal and lease adapters.
 - Keep `OperationLeaseStorage` and all typed persisted-record machinery below
@@ -108,4 +77,3 @@ Those current-tree failures are not evidence against S20 and were preserved.
 
 Final verdict: PASS. No CRITICAL, HIGH, MEDIUM, or LOW defect remains open in
 the authorized S20 review scope.
-

@@ -11,9 +11,6 @@ related:
   - "[[2026-08-08-synced-history-consumption-plan]]"
 ---
 
-
-
-
 # Close P02.S18, P03, and the plan only after every current-tree gate and matching execution record passes, then scaffold the required phase summary through VaultSpec.
 
 ## Scope

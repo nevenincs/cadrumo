@@ -10,8 +10,6 @@ related:
   - '[[2026-08-13-facturae-invoice-class-plan]]'
 ---
 
-
-
 # `facturae-invoice-class` audit: `implementation closeout`
 
 ## Scope

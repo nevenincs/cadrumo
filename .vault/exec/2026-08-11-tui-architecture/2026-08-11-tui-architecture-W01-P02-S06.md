@@ -51,4 +51,3 @@ Standing status: focused unit, lint, and type gates are green. The repository im
 Mechanical closeout verification:
 
 - `uvx vaultspec-core vault check all` - exit 0 in 25.4 seconds with 1,315 warnings and no errors. The warning inventory was one S06 audit-template annotation warning, two Markdown warnings, eight feature-index or missing-ADR warnings, 54 execution-mapping warnings, 1,220 body-section warnings, 29 schema warnings, and one unrelated modified-stamp warning. The two generated comment blocks identified in the S06 audit were stripped afterward through the sanctioned vault edit path; all other warnings are outside this Step.
-

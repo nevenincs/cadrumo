@@ -150,4 +150,3 @@ and review record confirmed by exact-symbol `rg` inspection.
 
 Final verdict: PASS. The prior MEDIUM finding is closed; no CRITICAL, HIGH, or
 MEDIUM finding remains.
-

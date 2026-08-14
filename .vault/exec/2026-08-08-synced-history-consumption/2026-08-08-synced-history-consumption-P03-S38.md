@@ -11,9 +11,6 @@ related:
   - "[[2026-08-08-synced-history-consumption-plan]]"
 ---
 
-
-
-
 # Implement invocation-scoped operator-surface reconciliation reuse at the canonical CLI action-resolution boundary without process-global caching or weaker typed actions and notices.
 
 ## Scope

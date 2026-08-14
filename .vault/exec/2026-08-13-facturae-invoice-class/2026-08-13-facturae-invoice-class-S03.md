@@ -11,9 +11,6 @@ related:
   - "[[2026-08-13-facturae-invoice-class-plan]]"
 ---
 
-
-
-
 # Ground the draft's invoice class on the declared code where one is present - OO and CO are ordinaria, OR and CR are rectificativa - keeping the corrective-presence inference as the fallback for a record declaring nothing. Do NOT map OC or CC onto ordinaria: they declare recapitulativa, which the domain taxonomy cannot express, so they keep the operator-stated class
 
 ## Scope

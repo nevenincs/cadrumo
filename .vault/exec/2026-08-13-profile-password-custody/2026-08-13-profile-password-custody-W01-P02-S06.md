@@ -11,9 +11,6 @@ related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
 
-
-
-
 # Have Sol Medium jointly review KDF calibration and supervision, envelope and artifact AAD, capsule publication, journal recovery, and application-owned local deletion safety
 
 ## Scope

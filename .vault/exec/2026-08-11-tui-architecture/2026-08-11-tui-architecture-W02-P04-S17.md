@@ -44,4 +44,3 @@ The application contract can now report targetable absent, active, and expired l
 ## Notes
 
 Grounded against ADR D5 and the reopened S17 audit. Semantic search confirmed the profile custody pointer and auth acquisition lock as related exact-observation/CAS patterns, while the operation contract remains independent and does not import their storage mechanisms. The Step state was left untouched for the supervising executor.
-

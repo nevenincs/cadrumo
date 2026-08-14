@@ -56,4 +56,3 @@ Standing verification status: the exact S05 focused pytest and Ruff gates are gr
 Mechanical closeout verification:
 
 - `uvx vaultspec-core vault check all` - exit 1 in 23.2 seconds with 10 errors and 1,313 warnings. All errors are unrelated to S05: eight missing-frontmatter errors and two invalid-UTF-8 errors belong exclusively to `2026-08-07-canonical-identifiers-W08-P13-S56.md` and `2026-08-07-canonical-identifiers-W08-P13-S57.md`. The warnings comprise one Markdown-hygiene warning, five feature warnings, 54 execution-mapping warnings, 1,221 body-section warnings, 29 schema warnings, and three modified-stamp warnings. S05's structure, links, mapping, and attested body introduced no reported violation.
-

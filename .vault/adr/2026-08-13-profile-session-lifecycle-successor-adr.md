@@ -42,4 +42,3 @@ One lifecycle owner gives every CLI and TUI surface the same active-profile trut
 ## Consequences
 
 Operator surfaces remain consistent. The service depends on, but does not restate, the custody session contract.
-

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:95154b614e069b08ca1533e752901d7982c2798270976912ddece84d93792608'
+body_hash: 'sha256:8a60a2a2e561c320610d821f29a09df424654da18d7e1aefbc74be4161f3b78d'
 step_id: 'S73'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"

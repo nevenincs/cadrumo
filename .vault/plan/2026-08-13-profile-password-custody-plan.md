@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#profile-password-custody'
 date: '2026-08-13'
-modified: '2026-08-13'
-body_hash: 'sha256:215d93aa00f8c9aedd9c879b0ea6771b44d20cb94e201b9ad91be6275895a8d3'
+modified: '2026-08-14'
+body_hash: 'sha256:f793d816738b51d55e86ff2cb05501f595e1b1d44200d488a4cc39e3b1650c30'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -53,9 +53,9 @@ Move profile discovery, activation, session state, and handover onto the custody
 
 Make committed UUID capsules the sole source for discovery, profile projection, and local lifecycle transitions.
 
-- [ ] `W02.P03.S07` - Have Terra XHigh make the profile repository and aggregate project only committed UUID capsules through sole lifecycle writers; `src/cadrumo/application/user_profile/`.
-- [ ] `W02.P03.S08` - Have Terra XHigh consolidate committed-marker discovery and the existence-only retired-path detector/refusal without legacy reads or keyring probes; `src/cadrumo/application/workflow/_profile_bucket_scan.py`.
-- [ ] `W02.P03.S09` - Have Sol Medium review lifecycle discovery, projection provenance, selection, and local-delete authority before login integration; `src/cadrumo/application/user_profile/`.
+- [x] `W02.P03.S07` - Have Terra XHigh make the profile repository and aggregate project only committed UUID capsules through sole lifecycle writers; `src/cadrumo/application/user_profile/`.
+- [x] `W02.P03.S08` - Have Terra XHigh consolidate committed-marker discovery and the existence-only retired-path detector/refusal without legacy reads or keyring probes; `src/cadrumo/application/workflow/_profile_bucket_scan.py`.
+- [x] `W02.P03.S09` - Have Sol Medium review lifecycle discovery, projection provenance, selection, and local-delete authority before login integration; `src/cadrumo/application/user_profile/`.
 
 ### Phase `W02.P04` - login and session handover
 

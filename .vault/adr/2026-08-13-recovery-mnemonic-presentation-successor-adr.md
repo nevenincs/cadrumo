@@ -42,4 +42,3 @@ This keeps human handling stable without making presentation state part of login
 ## Consequences
 
 Lost mnemonic words cannot be redisplayed. Password login remains unaffected, and a new recovery enrollment requires current-password authentication.
-

@@ -42,4 +42,3 @@ Logical portability remains understandable and host-independent without becoming
 ## Consequences
 
 Transfer cannot restore the original cryptographic identity or serve as disaster recovery.
-

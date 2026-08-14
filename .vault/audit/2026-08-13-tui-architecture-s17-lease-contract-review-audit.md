@@ -104,4 +104,3 @@ The reported normal pytest, Ruff, format, basedpyright, and VaultSpec gates are
 green; the 1,372 VaultSpec warnings are unrelated shared-corpus advisories.
 
 Final verdict: PASS. No CRITICAL, HIGH, or MEDIUM finding remains open.
-

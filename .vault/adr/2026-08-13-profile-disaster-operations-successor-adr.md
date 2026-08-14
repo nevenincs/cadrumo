@@ -42,4 +42,3 @@ Separate authority preserves consent and makes partial disaster handling auditab
 ## Consequences
 
 Operators may need several explicit operations, but no local cleanup silently changes an external system.
-

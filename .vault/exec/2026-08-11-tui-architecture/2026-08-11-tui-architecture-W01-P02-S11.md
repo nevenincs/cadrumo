@@ -35,4 +35,3 @@ related:
 - Live code/vault semantic searches succeeded on port 8766. Whole public-facade epicenters and import-hygiene authority were read and confirmed with targeted `rg`.
 - The facade does not export a supervisor, executor, registry, persistence adapter, or frontend projection before their owning Steps.
 - Final review passed. The binding row was CLI-closed. `vault check all` exited zero with `1358 warnings`, including 5 annotation, 40 markdown, 29 schema, 2 modified-stamp, and pre-existing body-schema corpus warnings.
-

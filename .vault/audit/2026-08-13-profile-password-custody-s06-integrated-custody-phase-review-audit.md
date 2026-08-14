@@ -11,8 +11,6 @@ related:
   - "[[2026-08-13-profile-password-custody-rollup-adr]]"
 ---
 
-
-
 # `profile-password-custody` audit: `S06 integrated custody phase review`
 
 ## Scope
