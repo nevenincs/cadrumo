@@ -31,7 +31,6 @@ import pytest
 
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import bundled_path, resources
-from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from .._calculation_source_staging import (
     _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS,
@@ -120,10 +119,6 @@ def test_prorrata_regularizacion_source_values_are_materialised_by_registry_engi
         backend_casilla_inputs=None,
         binding_values={"modelo-303-compensacion-pendiente-anteriores": Decimal("0.00")},
         filing_period_date=snapshot.filing_period.end_date,
-        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-        ),
-        m303_annual_orden=None,
     ).select(_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS)
 
     assert tuple(materialised.values) == _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS

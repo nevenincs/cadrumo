@@ -78,6 +78,7 @@ from ...domain.modelos import (
     CalculationSourceRef,
     FilingInstanceEvidence,
     LedgerFilingSnapshot,
+    M303RegimenSimplificadoAnnualSummaryHandoff,
     ModeloDetailRow,
     ModeloRecord,
     ModeloRecordCatalogue,
@@ -249,6 +250,7 @@ def persist_calculation_revision(
     source_provenance: tuple[CalculationSourceRef, ...] = (),
     source_issues: tuple[CalculationSourceIssue, ...] = (),
     filing_instance_evidence: FilingInstanceEvidence | None = None,
+    m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
     detail_rows: tuple[ModeloDetailRow, ...],
     formula_count: int,
     actor: str,
@@ -310,6 +312,12 @@ def persist_calculation_revision(
         detail_rows=detail_rows,
         source_issues=source_issues,
         filing_instance_evidence=filing_instance_evidence,
+        m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
+    )
+    stamped_annual_summary_handoff = (
+        m303_regimen_simplificado_annual_summary_handoff.stamped_for_target_calculation_revision(revision_id)
+        if m303_regimen_simplificado_annual_summary_handoff is not None
+        else None
     )
     revisions = calculation_repository.load()
     existing = revisions.get(revision_id)
@@ -352,6 +360,7 @@ def persist_calculation_revision(
         detail_rows=detail_rows,
         ledger_filing_snapshot=ledger_filing_snapshot,
         filing_instance_evidence=filing_instance_evidence,
+        m303_regimen_simplificado_annual_summary_handoff=stamped_annual_summary_handoff,
         created_at=now,
         updated_at=now,
     )

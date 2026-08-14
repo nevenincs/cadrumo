@@ -214,44 +214,64 @@ def resolve_export_identity(
         the export path's own refusal states that far better than a half-built
         identity would.
     """
-    record = profile_record
+    record = _load_profile_record(bucket_id=bucket_id, profile_record=profile_record)
     if record is None:
-        from ..user_profile import UserProfileLifecycleRepository
-
-        try:
-            record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
-        except ProfileNotFoundError:
-            return None
+        return None
     resolved_schema = schema if schema is not None else load_user_profile_schema()
-    facts = _profile_fact_index(record, resolved_schema)
+    return _identity_from_profile_facts(_profile_fact_index(record, resolved_schema))
 
+
+def _load_profile_record(*, bucket_id: str, profile_record: object | None) -> object | None:
+    """Load the active profile only when the caller did not provide it."""
+    if profile_record is not None:
+        return profile_record
+    from ..user_profile import ProfileRecordRepository
+
+    try:
+        return ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
+
+
+def _identity_from_profile_facts(
+    facts: Mapping[str, UserProfileFactValue],
+) -> tuple[PresenterIdentity, TaxpayerIdentityFacts] | None:
+    """Build the explicit presenter/taxpayer pair from indexed profile facts."""
     tax_id = str(facts.get(_IDENTITY_TAX_ID_KEY) or "").strip()
     if not tax_id:
         return None
+
     name = str(facts.get(_IDENTITY_NAME_KEY) or "").strip()
     surnames = str(facts.get(_IDENTITY_SURNAMES_KEY) or "").strip()
     entity_type = str(facts.get(_ENTITY_TYPE_KEY) or "").strip().casefold()
+    identity = _taxpayer_identity_facts(name=name, surnames=surnames, entity_type=entity_type)
+    if identity.full_name is None:
+        return None
+    return PresenterIdentity(tax_id=tax_id, full_name=identity.full_name), identity
 
+
+def _taxpayer_identity_facts(
+    *,
+    name: str,
+    surnames: str,
+    entity_type: str,
+) -> TaxpayerIdentityFacts:
+    """Shape natural-person and entity names into the producer's four facts."""
     if entity_type == _NATURAL_PERSON_ENTITY_TYPE:
         full_name = compose_legal_full_name(surnames=surnames, name=name)
-        identity = TaxpayerIdentityFacts(
+        return TaxpayerIdentityFacts(
             legal_name=None,
             given_name=name or None,
             surnames=surnames or None,
             full_name=full_name or None,
         )
-    else:
-        registered = compose_legal_full_name(surnames=surnames, name=name)
-        identity = TaxpayerIdentityFacts(
-            legal_name=registered or None,
-            given_name=None,
-            surnames=None,
-            full_name=registered or None,
-        )
-
-    if identity.full_name is None:
-        return None
-    return PresenterIdentity(tax_id=tax_id, full_name=identity.full_name), identity
+    registered = compose_legal_full_name(surnames=surnames, name=name)
+    return TaxpayerIdentityFacts(
+        legal_name=registered or None,
+        given_name=None,
+        surnames=None,
+        full_name=registered or None,
+    )
 
 
 def _resolve_profile_export_values(
@@ -269,10 +289,10 @@ def _resolve_profile_export_values(
         return {}
     record = profile_record
     if record is None:
-        from ..user_profile import UserProfileLifecycleRepository
+        from ..user_profile import ProfileRecordRepository
 
         try:
-            record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+            record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
         except ProfileNotFoundError:
             return {}
     resolved_schema = schema if schema is not None else load_user_profile_schema()

@@ -140,8 +140,6 @@ def test_calculate_registry_snapshot_accepts_enum_binding_via_enum_channel() -> 
             "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
             "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
         },
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
 
     # SL at 23 % bracket: cuota integra = 100000 * 0.23 = 23000
@@ -191,8 +189,6 @@ def test_calculate_registry_snapshot_applies_non_zero_bin_pendiente_compensation
             "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
             "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
         },
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
 
     cuota = result.values[_M200_CUOTA_INTEGRA_CASILLA]

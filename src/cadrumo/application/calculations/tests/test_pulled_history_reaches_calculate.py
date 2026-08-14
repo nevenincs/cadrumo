@@ -68,7 +68,7 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...live import persist_filed_calculation_observation
 from ...modelo import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics, create_work_unit
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._observations_repository import CalculationObservationRepository, ObservationSourceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -196,7 +196,7 @@ def _seed_taxpayer_profile(secure_objects: SecureObjectRepository, *, bucket_id:
         created_at=_T0,
         updated_at=_T0,
     )
-    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=secure_objects).save(record)
+    ProfileRecordRepository(bucket_id=bucket_id, objects=secure_objects).save(record)
 
 
 def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> None:

@@ -19,7 +19,7 @@ import pytest
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import CensoSyncError, CensoSyncService, UserProfileLifecycleRepository
+from .. import CensoSyncError, CensoSyncService, ProfileRecordRepository
 from .._censo_sync import _raw_afectacion_ratio
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -44,7 +44,7 @@ def _declare_vivienda_office(facts: Mapping[str, str]) -> None:
         display_name="Censo sync test profile",
         facts=tuple(UserProfileFact(path=path, value=Decimal(value)) for path, value in facts.items()),
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(record)
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(record)
 
 
 def test_service_refuses_blank_bucket_id_with_translated_error() -> None:

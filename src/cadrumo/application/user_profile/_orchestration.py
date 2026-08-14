@@ -1,7 +1,7 @@
 """WorkflowState-aware orchestration for profile lifecycle services.
 
 The lifecycle service handles secure-DB persistence via a
-:class:`~cadrumo.application.user_profile.ProfileLifecycleService`, which wraps a
+:class:`~cadrumo.application.user_profile.ProfileCapsuleLifecycle`, which wraps a
 :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
 and emits bucket events to
 :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository` per profile.
@@ -18,7 +18,7 @@ fully decoupled mutable label carried in the
 :class:`~cadrumo.adapters.persistence.storage.bucket.BucketManifest`.
 
 See Also:
-    :class:`~cadrumo.application.user_profile.ProfileRepository`
+    :class:`~cadrumo.application.user_profile.CommittedProfileRepository`
         Sole writer for the cross-store profile aggregate.
     :func:`~cadrumo.application.user_profile.profile_create_storage_span`
         Create-time bucket session used before the encrypted record exists.
@@ -57,14 +57,14 @@ from ...domain.user_profile import (
 )
 from . import (
     EditProfileFieldCommand,
+    ProfileRecordRepository,
     ProfileValidationService,
-    UserProfileLifecycleRepository,
 )
-from ._lifecycle import ProfileLifecycleService
 from ._login_session import close_profile_session_artefacts
 from ._profile_pointer_transaction import active_profile_pointer_transaction
-from ._profile_repository import ProfileRepository
 from ._projections import record_to_path_values
+from ._record_aggregate_repository import ProfileRecordAggregateRepository
+from ._record_lifecycle import ProfileRecordLifecycle
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -90,11 +90,11 @@ def build_lifecycle_service(
     bucket_id: str,
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
-) -> ProfileLifecycleService:
+) -> ProfileRecordLifecycle:
     """Construct a lifecycle service for one bucket.
 
     Returns a
-    :class:`~cadrumo.application.user_profile.ProfileLifecycleService`.
+    :class:`~cadrumo.application.user_profile.ProfileCapsuleLifecycle`.
 
     ``secure_objects`` is an optional
     :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
@@ -104,7 +104,7 @@ def build_lifecycle_service(
     belong to the named bucket's own database. When no repository is
     injected, a single per-bucket secure-object store is resolved and
     handed to both the
-    :class:`~cadrumo.application.user_profile.UserProfileLifecycleRepository`
+    :class:`~cadrumo.application.user_profile.ProfileRecordRepository`
     and the
     :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`, so the
     audit trail can never split from the records it describes. The
@@ -117,8 +117,8 @@ def build_lifecycle_service(
 
     schema = schema or _shared_schema()
     objects = secure_objects or secure_objects_for_bucket(bucket_id)
-    return ProfileLifecycleService(
-        repository=UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects),
+    return ProfileRecordLifecycle(
+        repository=ProfileRecordRepository(bucket_id=bucket_id, objects=objects),
         validator=ProfileValidationService(schema=schema),
         events=BucketEventHistoryRepository(objects=objects),
     )
@@ -376,7 +376,7 @@ def register_active_profile(
     record, AND the active-profile pointer — plus the duplicate-label
     refusal and the all-or-nothing rollback are a single unit of work
     owned by
-    :meth:`~cadrumo.application.user_profile.ProfileRepository.create`.
+    :meth:`~cadrumo.application.user_profile.CommittedProfileRepository.create`.
     This function delegates that create and threads the workflow-level
     event audit stream onto the supplied
     :class:`~cadrumo.application.workflow.WorkflowState`.
@@ -388,7 +388,7 @@ def register_active_profile(
     repository creation, and byte-exact failed-create rollback.
     """
     with active_profile_pointer_transaction():
-        repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
+        repository = ProfileRecordAggregateRepository(secure_objects=secure_objects, schema=schema)
         repository.create(
             label=display_name,
             facts=facts,
@@ -482,14 +482,14 @@ def delete_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
     """Tombstone ``profile_id`` inside an application-owned bucket session.
 
     Returns the deleted :class:`~cadrumo.domain.user_profile.UserProfileRecord`
-    from :meth:`~cadrumo.application.user_profile.ProfileRepository.delete`.
+    from :meth:`~cadrumo.application.user_profile.CommittedProfileRepository.delete`.
     """
     with (
         active_profile_pointer_transaction(),
         _profile_mutation_span(profile_id),
         profile_storage_session(profile_id),
     ):
-        aggregate = ProfileRepository().delete(profile_id)
+        aggregate = ProfileRecordAggregateRepository().delete(profile_id)
     # A tombstoned profile can never be logged into again, so its session
     # artefacts are dead the moment the record flips — and the keychain entry
     # is the one that does NOT disappear with the bucket. Reaped AFTER the
@@ -527,10 +527,10 @@ def reactivate_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord
 
     Symmetric inverse of :func:`delete_profile_with_lifecycle_span`.
     Returns the reactivated :class:`~cadrumo.domain.user_profile.UserProfileRecord`
-    from :meth:`~cadrumo.application.user_profile.ProfileRepository.reactivate`.
+    from :meth:`~cadrumo.application.user_profile.CommittedProfileRepository.reactivate`.
     """
     with _profile_mutation_span(profile_id), profile_storage_session(profile_id):
-        aggregate = ProfileRepository().reactivate(profile_id)
+        aggregate = ProfileRecordAggregateRepository().reactivate(profile_id)
     return aggregate.record
 
 
@@ -541,7 +541,7 @@ def complete_setup_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
     profile's storage session and delegates the atomic cross-store flip
     (encrypted record → ``ACTIVE`` with the ``PROFILE_SETUP_COMPLETED``
     event, then the plaintext manifest mirror) to
-    :meth:`~cadrumo.application.user_profile.ProfileRepository.complete_setup`.
+    :meth:`~cadrumo.application.user_profile.CommittedProfileRepository.complete_setup`.
     Reuses that single-writer arm rather than re-implementing the
     transition, so the two stores never drift.
 
@@ -549,7 +549,7 @@ def complete_setup_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
     :class:`~cadrumo.domain.user_profile.UserProfileRecord`.
     """
     with _profile_mutation_span(profile_id), profile_storage_session(profile_id):
-        aggregate = ProfileRepository().complete_setup(profile_id)
+        aggregate = ProfileRecordAggregateRepository().complete_setup(profile_id)
     return aggregate.record
 
 
@@ -759,10 +759,10 @@ def select_profile(
     :class:`~cadrumo.application.workflow.WorkflowState` coordinator: the
     profile load + integrity check + active-profile pointer write live
     solely in
-    :meth:`~cadrumo.application.user_profile.ProfileRepository.select`.
+    :meth:`~cadrumo.application.user_profile.CommittedProfileRepository.select`.
     """
     with active_profile_pointer_transaction(), _profile_mutation_span(profile_id):
-        repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
+        repository = ProfileRecordAggregateRepository(secure_objects=secure_objects, schema=schema)
         repository.select(profile_id)  # raises ProfileNotFoundError if missing
         from ..workflow import utc_now
 
@@ -930,12 +930,12 @@ def remove_active_profile(
     :class:`~cadrumo.application.workflow.WorkflowState` coordinator: the
     cross-store tombstone (encrypted-record tombstone + active-profile
     pointer clear) lives solely in
-    :meth:`~cadrumo.application.user_profile.ProfileRepository.delete`.
+    :meth:`~cadrumo.application.user_profile.CommittedProfileRepository.delete`.
     """
     with active_profile_pointer_transaction():
         profile_id = _require_active(state)
         with _profile_mutation_span(profile_id):
-            repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
+            repository = ProfileRecordAggregateRepository(secure_objects=secure_objects, schema=schema)
             repository.delete(profile_id)
             from ..workflow import utc_now
 
@@ -1021,7 +1021,7 @@ def rename_profile(
 
     This function is a thin coordinator: the cross-store label write -
     record AND manifest - lives solely in
-    :meth:`~cadrumo.application.user_profile.ProfileRepository.rename`.
+    :meth:`~cadrumo.application.user_profile.CommittedProfileRepository.rename`.
     Refuses if ``new_label`` is already carried by another live profile.
 
     Returns the updated
@@ -1029,7 +1029,7 @@ def rename_profile(
     change is persisted.
     """
     with _profile_mutation_span(profile_id):
-        repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
+        repository = ProfileRecordAggregateRepository(secure_objects=secure_objects, schema=schema)
         aggregate = repository.rename(profile_id, new_label=new_label, extra_events=extra_events)
     return aggregate.record
 

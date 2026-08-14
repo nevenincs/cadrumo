@@ -45,8 +45,11 @@ class JournalOperation(Protocol):
     serializes itself to JSON.
     """
 
-    operation_id: str
-    started_at: datetime
+    @property
+    def operation_id(self) -> str: ...
+
+    @property
+    def started_at(self) -> datetime: ...
 
     def model_dump_json(self, *, indent: int) -> str: ...
 

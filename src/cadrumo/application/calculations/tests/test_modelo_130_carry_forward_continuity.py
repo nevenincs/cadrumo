@@ -61,7 +61,7 @@ from ...modelo import (
     verify_modelo_revision,
 )
 from ...modelo.tests.justificante_metadata import persist_justificante_metadata
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._observations_repository import CalculationObservationRepository
 
@@ -160,7 +160,7 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         _seed_ready_profile(
-            UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects),
+            ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects),
             profile_id=_PROFILE_ID,
         )
         yield (
@@ -173,7 +173,7 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         )
 
 
-def _seed_ready_profile(repository: UserProfileLifecycleRepository, *, profile_id: str) -> None:
+def _seed_ready_profile(repository: ProfileRecordRepository, *, profile_id: str) -> None:
     repository.save(
         UserProfileRecord(
             profile_id=profile_id,

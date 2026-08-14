@@ -102,14 +102,13 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Final, NoReturn, Self
+from typing import TYPE_CHECKING, Final, NamedTuple, NoReturn, Self
 
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
 from ...adapters.inbound.einvoice import (
     EInvoiceXmlParseError,
     FacturaeInvoiceClass,
-    ParsedEInvoice,
     parse_einvoice_document,
 )
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -119,7 +118,6 @@ from ...core import (
     PDF_CONTAINER_SHAPES,
     STRICT_FROZEN_CONFIG,
     STRUCTURED_DOCUMENT_SHAPES,
-    DocumentShape,
     DraftDiscrepancyKind,
     FieldGroundingOutcome,
     FieldOrigin,
@@ -151,7 +149,6 @@ from ...domain.iva import (
     IvaCategory,
     IvaRateKind,
     SupplyNature,
-    country_code_for_stated_country_code,
     rate_kinds_for_declared_rate,
 )
 from ...llm import (
@@ -768,6 +765,15 @@ class InvoiceDraft(BaseModel):
     raw_text_length: int = 0
     _facturae_invoice_class: FacturaeInvoiceClass | None = PrivateAttr(default=None)
 
+    @property
+    def facturae_invoice_class(self) -> FacturaeInvoiceClass | None:
+        """Return the structured reader's document-class fact, when present."""
+        return self._facturae_invoice_class
+
+    def set_facturae_invoice_class(self, value: FacturaeInvoiceClass | None) -> None:
+        """Attach the structured reader's document-class fact to this draft."""
+        self._facturae_invoice_class = value
+
     @model_validator(mode="after")
     def _provenance_names_real_fields(self) -> Self:
         """Refuse an envelope naming a field this draft does not have.
@@ -1213,210 +1219,6 @@ def _refuse_an_unrecognised_xml_document(evidence: EvidenceInput) -> None:
     )
 
 
-# Draft field -> the attribute the parsed record carries it under. Every entry
-# is a value copied straight out of the document's own record, so every entry
-# earns an envelope; a derived or assembled value would not belong here.
-_STRUCTURED_ENVELOPE_FIELDS: Final = (
-    "supplier_tax_id",
-    "supplier_name",
-    "supplier_postal_code",
-    "customer_tax_id",
-    "customer_name",
-    "customer_postal_code",
-    "invoice_number",
-    "invoice_series",
-    "invoice_date",
-    "currency",
-    "taxable_base",
-    "iva_amount",
-    "grand_total",
-    "recargo_amount",
-    "regime_legend",
-)
-
-# The element a field is read from, per document shape, for the operator's note.
-# Populated only where the path has been confirmed against a real specimen of
-# that format: a path stated from memory would be a navigation instruction that
-# sends an operator to an element the document does not have, and a wrong
-# location is worse than none because it reads as authoritative. Fields absent
-# here fall back to naming the shape and the field, which is always true.
-_STRUCTURED_ELEMENT_PATHS: Final[dict[str, dict[DocumentShape, str]]] = {
-    "supplier_postal_code": {
-        DocumentShape.XML_FACTURAE: "SellerParty/AddressInSpain/PostCode",
-        DocumentShape.XML_UBL: "cac:AccountingSupplierParty/cac:PostalAddress/cbc:PostalZone",
-        DocumentShape.XML_CII: "ram:SellerTradeParty/ram:PostalTradeAddress/ram:PostcodeCode",
-    },
-    "supplier_country_code": {
-        DocumentShape.XML_FACTURAE: "SellerParty/AddressInSpain/CountryCode",
-        DocumentShape.XML_UBL: ("cac:AccountingSupplierParty/cac:PostalAddress/cac:Country/cbc:IdentificationCode"),
-        DocumentShape.XML_CII: "ram:SellerTradeParty/ram:PostalTradeAddress/ram:CountryID",
-    },
-    "customer_country_code": {
-        DocumentShape.XML_FACTURAE: "BuyerParty/AddressInSpain/CountryCode",
-        DocumentShape.XML_UBL: ("cac:AccountingCustomerParty/cac:PostalAddress/cac:Country/cbc:IdentificationCode"),
-        DocumentShape.XML_CII: "ram:BuyerTradeParty/ram:PostalTradeAddress/ram:CountryID",
-    },
-    "customer_postal_code": {
-        DocumentShape.XML_FACTURAE: "BuyerParty/AddressInSpain/PostCode",
-        DocumentShape.XML_UBL: "cac:AccountingCustomerParty/cac:PostalAddress/cbc:PostalZone",
-        DocumentShape.XML_CII: "ram:BuyerTradeParty/ram:PostalTradeAddress/ram:PostcodeCode",
-    },
-}
-
-
-#: The draft field carrying a party's verbatim stated country token, paired with
-#: the resolved field it sits beside. The second name doubles as the parsed
-#: record's own attribute and as the element-path key, so a syntax whose country
-#: element is added to the path table above serves both fields at once and the
-#: two cannot drift into naming different elements.
-_STATED_COUNTRY_FIELDS: Final[tuple[tuple[str, str], ...]] = (
-    ("supplier_stated_country_code", "supplier_country_code"),
-    ("customer_stated_country_code", "customer_country_code"),
-)
-
-
-def _structured_element_path(field: str, *, shape: DocumentShape) -> str:
-    """Return where in the record *field* was read from, for the operator's note."""
-    known = _STRUCTURED_ELEMENT_PATHS.get(field, {}).get(shape)
-    return known if known is not None else f"the {shape.value} record's {field}"
-
-
-def _structured_provenance(
-    *,
-    parsed: ParsedEInvoice,
-    evidence: EvidenceInput,
-    derived: Mapping[str, tuple[str, str] | None],
-) -> tuple[FieldProvenance, ...]:
-    """Return one provenance envelope per value the record actually stated.
-
-    Built for the same reason the reading lanes build theirs: provenance travels
-    every boundary to the operator, and this path carried none at all -- so the
-    values with the strongest claim in the system, read exactly with no model
-    anywhere near them, were the only ones arriving with no origin.
-
-    Only fields the record STATED get an envelope. An absent field has nothing to
-    describe, and an envelope asserting an origin for a value that was never
-    there would be provenance about nothing.
-
-    The anchor check runs against the record's own decoded text rather than a
-    transcription, because a machine-readable document has none -- see
-    :func:`~application.ledger._grounding_anchor.ground_structured_value` for why that is a
-    separate entry point rather than a synthesised transcription.
-    """
-    # Function-local for the same cycle-break reason the semantic path's
-    # grounding import is: the anchor module reaches back into this one for
-    # the envelope types. Read it exactly as if it were at module scope.
-    from ._grounding_anchor import ground_structured_value
-
-    # The record's TEXT NODES, never the raw file. Searching the whole decoded
-    # document lets a short value match a TAG name -- `ID` occurs in `<cbc:ID>`
-    # -- so a record carrying no country element at all grounded one, and the
-    # anchor check certified markup while claiming to catch a reader pointing at
-    # an element the document does not have. Every structured field is read from
-    # a text node, so this narrows the haystack without weakening any case.
-    source_text = parsed.record_text
-    envelopes: list[FieldProvenance] = []
-    for field in _STRUCTURED_ENVELOPE_FIELDS:
-        value = getattr(parsed, field, None)
-        if value is None:
-            continue
-        envelopes.append(
-            ground_structured_value(
-                field=field,
-                value=value,
-                element_path=_structured_element_path(field, shape=parsed.shape),
-                source_text=source_text,
-            ),
-        )
-    # The stated token itself, whether or not the vocabulary could place it. It
-    # is a value copied straight out of the record, so it earns an envelope on
-    # the same terms every other copied field does -- and it is the one envelope
-    # a document stating `THA` produces at all, because the resolved field below
-    # has no value to describe. Without it an unplaceable country reaches the
-    # operator as an absence, indistinguishable from a record that stated none.
-    for stated_field, resolved_field in _STATED_COUNTRY_FIELDS:
-        stated = getattr(parsed, resolved_field, None)
-        if stated is None or not stated.strip():
-            continue
-        envelopes.append(
-            ground_structured_value(
-                field=stated_field,
-                value=stated,
-                element_path=_structured_element_path(resolved_field, shape=parsed.shape),
-                source_text=source_text,
-            ),
-        )
-    # A derived value is grounded against the form the RECORD states, not against
-    # itself. Facturae states `ESP` and the draft carries `ES`, so looking for the
-    # carried form would search for a string the document never states. It used to
-    # find it anyway -- the anchor search was boundary-aware only at NUMERIC edges,
-    # so `ES` matched inside `ESP` -- and that accidental hit is what this pairing
-    # was built to route around. The search is boundary-aware for word-shaped
-    # anchors too now, so the hit is impossible rather than merely avoided; the
-    # pairing stays because it never depended on it, and because it is what points
-    # the operator at the element the value actually came from and records that a
-    # lookup happened.
-    for field, pair in derived.items():
-        if pair is None:
-            continue
-        value, stated = pair
-        envelopes.append(
-            ground_structured_value(
-                field=field,
-                value=value,
-                anchor=stated,
-                # The derivation that produced the value, handed back so the
-                # envelope re-derives rather than trusting the pair. Without it
-                # `the anchor occurs` is a fact about the anchor alone and the
-                # value could be anything.
-                derive=country_code_for_stated_country_code,
-                element_path=_structured_element_path(field, shape=parsed.shape),
-                source_text=source_text,
-            ),
-        )
-    return tuple(envelopes)
-
-
-def _resolved_country_code(stated: str | None) -> tuple[str, str] | None:
-    """Return a record's country code as (resolved alpha-2, the form it stated).
-
-    Both halves travel together because both are needed and they are not the same
-    string: the draft carries the resolved code, and its provenance envelope has
-    to point at the form the document actually states. Returns ``None`` where the
-    record stated nothing, or stated a code the bundled vocabulary does not
-    carry -- which never degrades to a country, and above all never to Spain.
-
-    **Both of those return ``None`` and they are not the same event**, so this
-    function is deliberately not the only thing the reader records. The stated
-    token is carried verbatim on
-    :attr:`InvoiceDraft.supplier_stated_country_code` and its sibling whatever
-    this returns, because a caller handed only the resolved half cannot tell a
-    Thai supplier's ``THA`` from an invoice with no address block at all.
-    """
-    resolved = country_code_for_stated_country_code(stated)
-    if resolved is None or stated is None:
-        return None
-    return resolved, stated
-
-
-def _country_code_value(pair: tuple[str, str] | None) -> str | None:
-    """Return the resolved half of a country-code pair, or nothing."""
-    return None if pair is None else pair[0]
-
-
-def _stated_country_code(stated: str | None) -> str | None:
-    """Return the record's country token verbatim, or nothing where it stated none.
-
-    A blank element is an absence rather than a statement, so it collapses to
-    ``None`` here: carrying an empty string would make "the element is present
-    and empty" report as a stated country nothing can place, which is a document
-    defect the record did not commit. Anything else is returned untouched --
-    unstripped, uncased, untranslated -- because the point of this field is to
-    say what the document says.
-    """
-    return None if stated is None or not stated.strip() else stated
-
-
 def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> InvoiceDraft:
     """Read a structured e-invoice exactly into the line-carrying draft.
 
@@ -1430,13 +1232,19 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
     # draft and finding types. Read it exactly as if it were written at module
     # scope.
     from ._deterministic_findings import deterministic_findings
+    from ._grounding_anchor import (
+        country_code_value,
+        resolved_country_code,
+        stated_country_code,
+        structured_provenance,
+    )
 
     parsed = parse_einvoice_document(evidence.data)
     # Resolved once and used twice: the draft carries these values and their
     # provenance envelopes describe them, so grounding the parser's verbatim
     # string instead would attach an envelope to a value the draft does not hold.
     country_codes: dict[str, tuple[str, str] | None] = {
-        f"{side}_country_code": _resolved_country_code(getattr(parsed, f"{side}_country_code"))
+        f"{side}_country_code": resolved_country_code(getattr(parsed, f"{side}_country_code"))
         for side in ("supplier", "customer")
     }
     draft = InvoiceDraft(
@@ -1459,8 +1267,8 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
         # that shape-checks for two letters and returns nothing -- the country
         # element present, read, and establishing nothing, with the postal rung
         # it gates staying shut for the entire Spanish national format.
-        supplier_country_code=_country_code_value(country_codes["supplier_country_code"]),
-        customer_country_code=_country_code_value(country_codes["customer_country_code"]),
+        supplier_country_code=country_code_value(country_codes["supplier_country_code"]),
+        customer_country_code=country_code_value(country_codes["customer_country_code"]),
         # The record's own token, carried whether or not the line above could
         # place it. This is what keeps an unplaceable country visible: the
         # resolved field goes empty for `THA` exactly as it does for a document
@@ -1468,8 +1276,8 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
         # the provenance envelope, the country advisory -- read that emptiness
         # and said nothing. A Thai export is an ordinary document, not a
         # malformed one, and it must not arrive looking like a silent absence.
-        supplier_stated_country_code=_stated_country_code(parsed.supplier_country_code),
-        customer_stated_country_code=_stated_country_code(parsed.customer_country_code),
+        supplier_stated_country_code=stated_country_code(parsed.supplier_country_code),
+        customer_stated_country_code=stated_country_code(parsed.customer_country_code),
         invoice_number=parsed.invoice_number,
         invoice_series=parsed.invoice_series,
         # Read and DISCARDED until now. A rectificativa is a different class
@@ -1513,9 +1321,9 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
             for rate, base, cuota in parsed.iva_breakdown
         ),
         raw_text_length=len(evidence.data),
-        provenance=_structured_provenance(parsed=parsed, evidence=evidence, derived=country_codes),
+        provenance=structured_provenance(parsed=parsed, evidence=evidence, derived=country_codes),
     )
-    draft._facturae_invoice_class = parsed.facturae_invoice_class
+    draft.set_facturae_invoice_class(parsed.facturae_invoice_class)
 
     # Exactness is not correctness, and conflating the two is what left this path
     # unchecked. Reaching no model makes prompt injection categorically
@@ -2468,6 +2276,329 @@ def _refuse_a_divergent_reconfirm(
     )
 
 
+class _InvoiceConfirmationPreparation(NamedTuple):
+    """Validated draft state carried from extraction to catalogue persistence."""
+
+    settings: Settings
+    draft: InvoiceDraft
+    blockers: tuple[ConfirmationBlocker, ...]
+    attachment_id: str
+    establishment: ConfirmedEstablishment
+    operator_overrides: dict[str, object | None]
+    operator_restated_amounts: bool
+
+
+def _prepare_invoice_confirmation(
+    *,
+    bucket_id: str,
+    kind: InvoiceKind,
+    evidence_id: str | None,
+    attachment_id: str | None,
+    counterparty_country: str,
+    taxable_base: Decimal | None,
+    iva_rate: Decimal | None,
+    iva_amount: Decimal | None,
+    supply_nature: SupplyNature | None,
+    settings: Settings | None,
+    resolutions: Sequence[FindingResolution],
+    counterparty_tax_id: str | None,
+    counterparty_name: str | None,
+    invoice_number: str | None,
+    invoice_date: date | None,
+    currency: str | None,
+    retention_rate: Decimal | None,
+    retention_amount: Decimal | None,
+    recargo_amount: Decimal | None,
+) -> _InvoiceConfirmationPreparation:
+    """Extract, gate, and resolve the document-side confirmation authorities."""
+    from ._confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
+    from ._confirmation_gate import resolved_blockers
+
+    # The result's establishment annotation is a forward reference because the
+    # review gate imports this module. Rebuild it at the same deferred boundary.
+    InvoiceConfirmationResult.model_rebuild(_types_namespace={"ConfirmedEstablishment": ConfirmedEstablishment})
+    resolved_settings = settings or _load_settings()
+    draft = extract_invoice_draft_from_evidence(
+        bucket_id=bucket_id,
+        evidence_id=evidence_id,
+        attachment_id=attachment_id,
+        settings=resolved_settings,
+    )
+    # A contradiction is a normal blocker, so it must be stamped before the gate.
+    draft = _with_direction_contradiction(draft, kind=kind)
+    blockers = resolved_blockers(draft=draft, resolutions=resolutions)
+    resolved_attachment_id = _resolve_evidence_attachment_id(
+        bucket_id=bucket_id,
+        evidence_id=evidence_id,
+        attachment_id=attachment_id,
+        settings=resolved_settings,
+    )
+    counterparty_side = counterparty_draft_side(draft, kind=kind)
+    operator_restated_amounts = _operator_restated_the_amounts(
+        taxable_base=taxable_base,
+        iva_rate=iva_rate,
+        iva_amount=iva_amount,
+    )
+    classification_date = invoice_date if invoice_date is not None else parse_iso8601_date(draft.invoice_date)
+    establishment = resolve_confirmed_establishment(
+        bucket_id=bucket_id,
+        draft=draft,
+        kind=kind,
+        invoice_date=classification_date,
+        rate_tier=_rate_tier_the_document_charged(
+            draft,
+            invoice_date=classification_date,
+            operator_restated_amounts=operator_restated_amounts,
+        ),
+        supply_nature=supply_nature,
+    )
+    operator_overrides: dict[str, object | None] = {
+        counterparty_side.tax_id_field: counterparty_tax_id,
+        counterparty_side.name_field: counterparty_name,
+        "invoice_number": invoice_number,
+        "invoice_date": invoice_date,
+        "taxable_base": taxable_base,
+        "iva_rate": iva_rate,
+        "iva_amount": iva_amount,
+        "currency": currency,
+        "recargo_amount": recargo_amount,
+        "retencion_rate": retention_rate,
+        "retencion_amount": retention_amount,
+    }
+    return _InvoiceConfirmationPreparation(
+        settings=resolved_settings,
+        draft=draft,
+        blockers=blockers,
+        attachment_id=resolved_attachment_id,
+        establishment=establishment,
+        operator_overrides=operator_overrides,
+        operator_restated_amounts=operator_restated_amounts,
+    )
+
+
+def _resolved_invoice_class(
+    draft: InvoiceDraft,
+    *,
+    invoice_class: InvoiceClass | None,
+    rectifies_invoice_number: str | None,
+) -> InvoiceClass:
+    """Resolve Facturae class, preserving explicit operator and rectification facts."""
+    declared_class = draft.facturae_invoice_class
+    if declared_class in {FacturaeInvoiceClass.ORIGINAL, FacturaeInvoiceClass.COPY}:
+        return InvoiceClass.ORDINARIA
+    if declared_class in {
+        FacturaeInvoiceClass.ORIGINAL_CORRECTIVE,
+        FacturaeInvoiceClass.COPY_CORRECTIVE,
+    }:
+        return InvoiceClass.RECTIFICATIVA
+    if invoice_class is not None:
+        # Recapitulativa has no domain member; preserve the operator's statement.
+        return invoice_class
+    return InvoiceClass.RECTIFICATIVA if rectifies_invoice_number is not None else InvoiceClass.ORDINARIA
+
+
+def _build_confirmed_invoice_candidate(
+    *,
+    bucket_id: str,
+    kind: InvoiceKind,
+    counterparty_country: str,
+    counterparty_tax_id: str | None,
+    counterparty_name: str | None,
+    invoice_number: str | None,
+    invoice_date: date | None,
+    taxable_base: Decimal | None,
+    iva_rate: Decimal | None,
+    iva_amount: Decimal | None,
+    currency: str | None,
+    iva_category: IvaCategory | None,
+    operation_type: IntracomOperationType | None,
+    operation_date: date | None,
+    retention_rate: Decimal | None,
+    retention_amount: Decimal | None,
+    recargo_amount: Decimal | None,
+    invoice_class: InvoiceClass | None,
+    supply_nature: SupplyNature | None,
+    series: str | None,
+    rectifies_invoice_number: str | None,
+    notes: str,
+    rate_provider: ExchangeRateProvider | None,
+    preparation: _InvoiceConfirmationPreparation,
+) -> Invoice:
+    """Resolve operator/document fields and build the exact catalogue candidate."""
+    draft = preparation.draft
+    counterparty_side = counterparty_draft_side(draft, kind=kind)
+    resolved_counterparty_tax_id = _require_confirmed_field(
+        _agreed_counterparty_tax_id(
+            supplied=counterparty_tax_id,
+            extracted=counterparty_side.tax_id,
+            counterparty_country=counterparty_country,
+        ),
+        field="counterparty_tax_id",
+    )
+    assert isinstance(resolved_counterparty_tax_id, str)
+    _refuse_an_issued_document_the_filer_did_not_issue(
+        kind=kind,
+        extracted_supplier_tax_id=draft.supplier_tax_id,
+    )
+    _refuse_a_counterparty_that_is_the_filer(resolved_counterparty_tax_id)
+    resolved_invoice_number = _require_confirmed_field(
+        _operator_value_or_reading(invoice_number, draft.invoice_number),
+        field="invoice_number",
+    )
+    assert isinstance(resolved_invoice_number, str)
+    resolved_invoice_date = _resolve_confirmed_invoice_date(invoice_date, draft)
+    resolved_taxable_base = _require_confirmed_field(
+        _operator_value_or_reading(taxable_base, draft.taxable_base),
+        field="taxable_base",
+    )
+    assert isinstance(resolved_taxable_base, Decimal)
+    resolved_iva_rate = _operator_value_or_reading(iva_rate, draft.iva_rate)
+    resolved_currency = _confirmed_currency(currency, draft.currency)
+    resolved_counterparty_name = _confirmed_counterparty_name(counterparty_name, counterparty_side.name)
+    confirmed_lines = _confirmed_lines_from_the_document(
+        draft=draft,
+        invoice_number=resolved_invoice_number,
+        taxable_base=resolved_taxable_base,
+        iva_rate=resolved_iva_rate,
+        iva_amount=iva_amount,
+        operator_overrode_the_amounts=preparation.operator_restated_amounts,
+    )
+    resolved_recargo_amount = (
+        recargo_amount
+        if preparation.operator_restated_amounts
+        else _operator_value_or_reading(recargo_amount, draft.recargo_amount)
+    )
+    resolved_iva_category = _operator_value_or_reading(iva_category, preparation.establishment.category.category)
+    resolved_rectifies = _operator_value_or_reading(rectifies_invoice_number, draft.rectifies_invoice_number)
+    resolved_series = _operator_value_or_reading(series, draft.invoice_series)
+    resolved_invoice_class = _resolved_invoice_class(
+        draft,
+        invoice_class=invoice_class,
+        rectifies_invoice_number=resolved_rectifies,
+    )
+    return build_catalogue_invoice(
+        bucket_id=bucket_id,
+        kind=kind,
+        counterparty_name=resolved_counterparty_name,
+        counterparty_tax_id=resolved_counterparty_tax_id,
+        counterparty_country=counterparty_country,
+        invoice_number=resolved_invoice_number,
+        issued_at=resolved_invoice_date,
+        taxable_base=resolved_taxable_base,
+        iva_rate=resolved_iva_rate,
+        currency=resolved_currency,
+        notes=notes,
+        iva_category=resolved_iva_category,
+        operation_type=operation_type,
+        operation_date=operation_date,
+        retention_rate=retention_rate,
+        retention_amount=retention_amount,
+        invoice_class=resolved_invoice_class,
+        series=resolved_series,
+        rectifies_invoice_number=resolved_rectifies,
+        recargo_amount=resolved_recargo_amount,
+        lines=confirmed_lines,
+        rate_provider=rate_provider,
+    )
+
+
+def _persist_confirmed_invoice(
+    *,
+    candidate: Invoice,
+    preparation: _InvoiceConfirmationPreparation,
+    bucket_id: str,
+    evidence_id: str | None,
+    confirmed_by: str,
+    resolutions: Sequence[FindingResolution],
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
+) -> InvoiceConfirmationResult:
+    """Apply idempotency, link evidence, and persist the confirmation record."""
+    from ._confirmation_record import re_stamped_provenance
+
+    repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
+    attachment_store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, preparation.settings))
+    catalogue = repository.load()
+    already_minted = _prior_invoices_this_document_minted(
+        attachment_store,
+        attachment_id=preparation.attachment_id,
+        catalogue=catalogue,
+        candidate_invoice_id=candidate.invoice_id,
+    )
+    if already_minted:
+        _refuse_a_divergent_reconfirm(
+            candidate=candidate,
+            prior=already_minted[0],
+            attachment_id=preparation.attachment_id,
+        )
+    existing = catalogue.get(candidate.invoice_id)
+    if existing is not None:
+        if _fields_a_reconfirm_would_change(candidate, existing):
+            _refuse_a_divergent_reconfirm(
+                candidate=candidate,
+                prior=existing,
+                attachment_id=preparation.attachment_id,
+            )
+        link_attachment_invoice(
+            attachment_store,
+            attachment_id=preparation.attachment_id,
+            invoice_id=existing.invoice_id,
+        )
+        existing_record = _written_confirmation_record(
+            bucket_id=bucket_id,
+            invoice_id=existing.invoice_id,
+            evidence_id=evidence_id,
+            attachment_id=preparation.attachment_id,
+            draft=preparation.draft,
+            confirmed_by=confirmed_by,
+            overrides=preparation.operator_overrides,
+            blockers=preparation.blockers,
+            resolutions=resolutions,
+            settings=preparation.settings,
+        )
+        return InvoiceConfirmationResult(
+            invoice=existing,
+            draft=preparation.draft,
+            created=False,
+            confirmation_id=existing_record.confirmation_id,
+            confirmed_provenance=re_stamped_provenance(
+                draft=preparation.draft,
+                assertions=existing_record.assertions,
+            ),
+            total_discrepancy=printed_total_discrepancy(draft=preparation.draft, invoice=existing),
+            establishment=preparation.establishment,
+        )
+    result = create_catalogue_invoice(invoice=candidate, repository=repository)
+    link_attachment_invoice(
+        attachment_store,
+        attachment_id=preparation.attachment_id,
+        invoice_id=result.invoice.invoice_id,
+    )
+    confirmation_record = _written_confirmation_record(
+        bucket_id=bucket_id,
+        invoice_id=result.invoice.invoice_id,
+        evidence_id=evidence_id,
+        attachment_id=preparation.attachment_id,
+        draft=preparation.draft,
+        confirmed_by=confirmed_by,
+        overrides=preparation.operator_overrides,
+        blockers=preparation.blockers,
+        resolutions=resolutions,
+        settings=preparation.settings,
+    )
+    return InvoiceConfirmationResult(
+        invoice=result.invoice,
+        draft=preparation.draft,
+        created=True,
+        total_discrepancy=printed_total_discrepancy(draft=preparation.draft, invoice=result.invoice),
+        confirmation_id=confirmation_record.confirmation_id,
+        confirmed_provenance=re_stamped_provenance(
+            draft=preparation.draft,
+            assertions=confirmation_record.assertions,
+        ),
+        establishment=preparation.establishment,
+    )
+
+
 def confirm_invoice_draft_from_evidence(
     *,
     bucket_id: str,
@@ -2611,349 +2742,61 @@ def confirm_invoice_draft_from_evidence(
         ConfirmationBlockedError: When the document raises a blocking finding
             that carries no explicit per-finding resolution.
     """
-    # Imported inside the call, not at module scope: the review gate and the
-    # confirmation record are both built ON the draft models declared here, so a
-    # module-level import would close a cycle. The direction is one-way at
-    # import time and the runtime edge is deliberate.
-    from ._confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
-    from ._confirmation_gate import resolved_blockers
-    from ._confirmation_record import re_stamped_provenance
-
-    # The result's `establishment` annotation is a forward reference: the module
-    # that owns the type reaches the review gate, which imports this one, so it
-    # cannot be imported at module scope. Completing the model here -- inside the
-    # block that already defers the same cycle -- is what lets the field be
-    # typed rather than widened to a bare object. A no-op after the first call.
-    InvoiceConfirmationResult.model_rebuild(_types_namespace={"ConfirmedEstablishment": ConfirmedEstablishment})
-
-    resolved_settings = settings or _load_settings()
-    draft = extract_invoice_draft_from_evidence(
+    preparation = _prepare_invoice_confirmation(
         bucket_id=bucket_id,
+        kind=kind,
         evidence_id=evidence_id,
         attachment_id=attachment_id,
-        settings=resolved_settings,
-    )
-    # Stamped BEFORE the gate, so a document whose layout contradicts the
-    # operator's stated direction becomes an ordinary resolvable blocker rather
-    # than a separate refusal path. The reading stage could not run this: it
-    # holds the document's suggestion and not the operator's answer.
-    draft = _with_direction_contradiction(draft, kind=kind)
-    # The gate runs BEFORE any resolution work and before the writer is
-    # reached: a draft whose findings are unanswered must not have produced a
-    # partially-resolved identity, an attachment link, or a catalogue lookup.
-    blockers = resolved_blockers(draft=draft, resolutions=resolutions)
-    resolved_attachment_id = _resolve_evidence_attachment_id(
-        bucket_id=bucket_id,
-        evidence_id=evidence_id,
-        attachment_id=attachment_id,
-        settings=resolved_settings,
-    )
-
-    # WHICH party is the counterparty depends on the direction of the document,
-    # so the side is selected by `kind` through the one authority that makes that
-    # selection -- the same one the establishment ladder is routed through, so a
-    # document cannot be read as having one counterparty here and another there.
-    counterparty_side = counterparty_draft_side(draft, kind=kind)
-    # Both parties' IVA territories, resolved through the authorities that own
-    # them: the ladder for the counterparty, the profile for the filer. This is
-    # the confirm path's only reach into that apparatus, and before it the whole
-    # of it -- every rung, the fact split, the country vocabulary and the postal
-    # derivation -- was reachable from nothing a person could run.
-    #
-    # Placed AFTER the blocking gate and before any resolution work, so a draft
-    # whose findings are unanswered never reaches the ladder or the fact store.
-    #
-    # Gates both the rate tier the ladder is handed and the per-rate split
-    # below: their figures are the authority, not the reader's.
-    operator_restated_amounts = _operator_restated_the_amounts(
+        counterparty_country=counterparty_country,
         taxable_base=taxable_base,
         iva_rate=iva_rate,
         iva_amount=iva_amount,
-    )
-    # Resolved without the raising variant below, which runs later. An
-    # unresolvable date is reported by the assembly as a missing input beside
-    # the operator's other gaps; raising here would abort before that list is
-    # built, and the confirm refuses on the same missing date a few lines on.
-    classification_date = invoice_date if invoice_date is not None else parse_iso8601_date(draft.invoice_date)
-    establishment = resolve_confirmed_establishment(
-        bucket_id=bucket_id,
-        draft=draft,
-        kind=kind,
-        invoice_date=classification_date,
-        rate_tier=_rate_tier_the_document_charged(
-            draft,
-            invoice_date=classification_date,
-            operator_restated_amounts=operator_restated_amounts,
-        ),
         supply_nature=supply_nature,
+        settings=settings,
+        resolutions=resolutions,
+        counterparty_tax_id=counterparty_tax_id,
+        counterparty_name=counterparty_name,
+        invoice_number=invoice_number,
+        invoice_date=invoice_date,
+        currency=currency,
+        retention_rate=retention_rate,
+        retention_amount=retention_amount,
+        recargo_amount=recargo_amount,
     )
-    extracted_counterparty_tax_id = counterparty_side.tax_id
-    extracted_counterparty_name = counterparty_side.name
-    counterparty_tax_id_field = counterparty_side.tax_id_field
-    counterparty_name_field = counterparty_side.name_field
-    # Keyed by the DRAFT field each option overrides, so the assertion record
-    # pairs the operator's value with the reading it displaced rather than with
-    # whichever field happens to share the option's name.
-    operator_overrides: dict[str, object | None] = {
-        counterparty_tax_id_field: counterparty_tax_id,
-        counterparty_name_field: counterparty_name,
-        "invoice_number": invoice_number,
-        "invoice_date": invoice_date,
-        "taxable_base": taxable_base,
-        "iva_rate": iva_rate,
-        "iva_amount": iva_amount,
-        "currency": currency,
-        "recargo_amount": recargo_amount,
-        "retencion_rate": retention_rate,
-        "retencion_amount": retention_amount,
-    }
-    resolved_counterparty_tax_id = _require_confirmed_field(
-        _agreed_counterparty_tax_id(
-            supplied=counterparty_tax_id,
-            extracted=extracted_counterparty_tax_id,
-            counterparty_country=counterparty_country,
-        ),
-        field="counterparty_tax_id",
-    )
-    assert isinstance(resolved_counterparty_tax_id, str)
-    _refuse_an_issued_document_the_filer_did_not_issue(
-        kind=kind,
-        extracted_supplier_tax_id=draft.supplier_tax_id,
-    )
-    _refuse_a_counterparty_that_is_the_filer(resolved_counterparty_tax_id)
-    resolved_invoice_number = _require_confirmed_field(
-        _operator_value_or_reading(invoice_number, draft.invoice_number),
-        field="invoice_number",
-    )
-    assert isinstance(resolved_invoice_number, str)
-    resolved_invoice_date = _resolve_confirmed_invoice_date(invoice_date, draft)
-    resolved_taxable_base = _require_confirmed_field(
-        _operator_value_or_reading(taxable_base, draft.taxable_base),
-        field="taxable_base",
-    )
-    assert isinstance(resolved_taxable_base, Decimal)
-    resolved_iva_rate = _operator_value_or_reading(iva_rate, draft.iva_rate)
-    resolved_currency = _confirmed_currency(currency, draft.currency)
-    resolved_counterparty_name = _confirmed_counterparty_name(counterparty_name, extracted_counterparty_name)
-
-    # A PRINTED cuota is evidence and outranks a recomputed one. When the
-    # operator states it, the line carries that exact figure rather than
-    # base * rate, so a document whose printed cuota differs by a cent from the
-    # arithmetic is recorded as it was issued. The line invariants still apply,
-    # so a cuota the base and rate cannot support refuses rather than being
-    # accepted as an override.
-    #
-    # Resolved BEFORE the idempotency candidate, not just before the write: the
-    # candidate's derived id hashes the totals, so a candidate built without the
-    # lines and the recargo hashes to an id the real record will never carry.
-    # The guarded-retry lookup then misses every time and the re-confirm reaches
-    # the writer's duplicate-identity refusal instead of returning the existing
-    # invoice unchanged (`aeat-cli-contract`).
-    confirmed_lines = _confirmed_lines_from_the_document(
-        draft=draft,
-        invoice_number=resolved_invoice_number,
-        taxable_base=resolved_taxable_base,
-        iva_rate=resolved_iva_rate,
-        iva_amount=iva_amount,
-        operator_overrode_the_amounts=operator_restated_amounts,
-    )
-    # The recargo de equivalencia is a real cuota the issuer owes (LIVA art.
-    # 161) and Modelo 303 sums it in its own devengado tiers. A structured
-    # document states it exactly and the writer already models it as riding
-    # inside the invoice total, so forwarding only the operator's override
-    # dropped the whole figure whenever they did not retype what they were
-    # confirming. An explicit override still wins, as it does on every field.
-    #
-    # When the operator restated the totals their value stands alone, override
-    # or not: keeping a document-read recargo beside operator-restated totals
-    # would leave two disagreeing authorities on the same figures, which is the
-    # reason the per-rate split is skipped on that path too.
-    resolved_recargo_amount = (
-        recargo_amount
-        if operator_restated_amounts
-        else _operator_value_or_reading(recargo_amount, draft.recargo_amount)
-    )
-    # Taken from the classification authority, and from nowhere else on this
-    # path. Two rival surfaces once decided it here -- one reading the
-    # document's declared tax-category code, one re-deriving a domestic
-    # category from the rate -- while the rule table they were meant to feed
-    # was never consulted. Both evidences still reach the decision, as a
-    # declared FACT and as the criteria's rate-tier axis respectively; only the
-    # deciding moved. A contradiction between them resolves to no category and
-    # surfaces as a review item, because a wrong category is worse than an
-    # absent one: an absent category asks the operator and a wrong one does not.
-    #
-    # The operator's explicit value still wins, as it does on every field.
-    resolved_iva_category = _operator_value_or_reading(iva_category, establishment.category.category)
-    # The document's own statement of what it corrects, layered under the
-    # operator exactly as every other read field is. Until this, the parser
-    # read the corrected number and the confirm defaulted the class to
-    # ORDINARIA regardless -- so a rectificativa reached the catalogue as an
-    # ordinary invoice, and the Invoice model's rectificativa invariants
-    # (a specific series per RD 1619/2012 art. 6.1.a.2, and naming the invoice
-    # it corrects per LIVA art. 89) never fired, because nothing ever stated
-    # the class for them to check.
-    resolved_rectifies = _operator_value_or_reading(rectifies_invoice_number, draft.rectifies_invoice_number)
-    # The series the document numbered itself in, layered the same way. It was
-    # read into the draft and never carried across either, which only became
-    # visible once the class above started being stated: RD 1619/2012
-    # art. 6.1.a.2 obliges a rectificativa into its OWN series, so the model
-    # refuses one without a series -- correctly, and it could not refuse
-    # before, because nothing ever told it the invoice was a rectificativa.
-    resolved_series = _operator_value_or_reading(series, draft.invoice_series)
-    declared_class = draft._facturae_invoice_class
-    if declared_class in {FacturaeInvoiceClass.ORIGINAL, FacturaeInvoiceClass.COPY}:
-        resolved_invoice_class = InvoiceClass.ORDINARIA
-    elif declared_class in {
-        FacturaeInvoiceClass.ORIGINAL_CORRECTIVE,
-        FacturaeInvoiceClass.COPY_CORRECTIVE,
-    }:
-        resolved_invoice_class = InvoiceClass.RECTIFICATIVA
-    elif invoice_class is not None:
-        # Recapitulativa has no domain member. Preserve the operator's statement
-        # instead of flattening the document's distinct class onto ordinaria.
-        resolved_invoice_class = invoice_class
-    else:
-        # A document declaring no Facturae class retains the established
-        # corrective-reference inference.
-        resolved_invoice_class = (
-            InvoiceClass.RECTIFICATIVA if resolved_rectifies is not None else InvoiceClass.ORDINARIA
-        )
-
-    repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
-    # Built with the SAME argument set `create_catalogue_invoice` is handed below,
-    # so the candidate is the record that would be written rather than a partial
-    # stand-in for it. That is what lets the guarded-retry match be a whole-record
-    # comparison: a candidate missing the category, the retencion or the class
-    # would compare equal on fields it never carried and absorb a correction to
-    # any of them as a no-op.
-    candidate = build_catalogue_invoice(
+    candidate = _build_confirmed_invoice_candidate(
         bucket_id=bucket_id,
         kind=kind,
-        counterparty_name=resolved_counterparty_name,
-        counterparty_tax_id=resolved_counterparty_tax_id,
         counterparty_country=counterparty_country,
-        invoice_number=resolved_invoice_number,
-        issued_at=resolved_invoice_date,
-        taxable_base=resolved_taxable_base,
-        iva_rate=resolved_iva_rate,
-        currency=resolved_currency,
-        notes=notes,
-        iva_category=resolved_iva_category,
+        counterparty_tax_id=counterparty_tax_id,
+        counterparty_name=counterparty_name,
+        invoice_number=invoice_number,
+        invoice_date=invoice_date,
+        taxable_base=taxable_base,
+        iva_rate=iva_rate,
+        iva_amount=iva_amount,
+        currency=currency,
+        iva_category=iva_category,
         operation_type=operation_type,
         operation_date=operation_date,
         retention_rate=retention_rate,
         retention_amount=retention_amount,
-        invoice_class=resolved_invoice_class,
-        series=resolved_series,
-        rectifies_invoice_number=resolved_rectifies,
-        recargo_amount=resolved_recargo_amount,
-        lines=confirmed_lines,
+        recargo_amount=recargo_amount,
+        invoice_class=invoice_class,
+        supply_nature=supply_nature,
+        series=series,
+        rectifies_invoice_number=rectifies_invoice_number,
+        notes=notes,
         rate_provider=rate_provider,
+        preparation=preparation,
     )
-    attachment_store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, resolved_settings))
-    catalogue = repository.load()
-    already_minted = _prior_invoices_this_document_minted(
-        attachment_store,
-        attachment_id=resolved_attachment_id,
-        catalogue=catalogue,
-        candidate_invoice_id=candidate.invoice_id,
-    )
-    if already_minted:
-        _refuse_a_divergent_reconfirm(
-            candidate=candidate,
-            prior=already_minted[0],
-            attachment_id=resolved_attachment_id,
-        )
-    existing = catalogue.get(candidate.invoice_id)
-    if existing is not None:
-        # Guarded idempotent retry (aeat-cli-contract):
-        # the confirm's resolved identity fields hash to an invoice already in the
-        # catalogue -- return it unchanged rather than raising or re-writing. The
-        # source evidence link is re-asserted (a no-op when already present,
-        # `link_attachment_invoice` dedups) so a re-confirm never regresses the
-        # provenance link even if it was never wired for this evidence before.
-        #
-        # Only when the WHOLE record matches. A retry differing on a field the id
-        # does not fold -- the counterparty's name, the IVA category, a retencion
-        # -- is a correction, and returning the stored record for it would discard
-        # that correction silently, which is worse than the duplicate this guard
-        # prevents because nothing surfaces.
-        divergent = _fields_a_reconfirm_would_change(candidate, existing)
-        if divergent:
-            _refuse_a_divergent_reconfirm(
-                candidate=candidate,
-                prior=existing,
-                attachment_id=resolved_attachment_id,
-            )
-        link_attachment_invoice(attachment_store, attachment_id=resolved_attachment_id, invoice_id=existing.invoice_id)
-        existing_record = _written_confirmation_record(
-            bucket_id=bucket_id,
-            invoice_id=existing.invoice_id,
-            evidence_id=evidence_id,
-            attachment_id=resolved_attachment_id,
-            draft=draft,
-            confirmed_by=confirmed_by,
-            overrides=operator_overrides,
-            blockers=blockers,
-            resolutions=resolutions,
-            settings=resolved_settings,
-        )
-        return InvoiceConfirmationResult(
-            invoice=existing,
-            draft=draft,
-            created=False,
-            confirmation_id=existing_record.confirmation_id,
-            confirmed_provenance=re_stamped_provenance(
-                draft=draft,
-                assertions=existing_record.assertions,
-            ),
-            # Re-asserted on the guarded no-op for the same reason the provenance
-            # link is: a retry must not silently drop a discrepancy the first
-            # confirm surfaced, or the alert becomes something a re-run clears.
-            total_discrepancy=printed_total_discrepancy(draft=draft, invoice=existing),
-            # Carried on the guarded no-op for the same reason the discrepancy
-            # is: a retry must not drop a territorial question the first confirm
-            # surfaced, or re-running becomes the way to clear it.
-            establishment=establishment,
-        )
-
-    result = create_catalogue_invoice(
-        invoice=candidate,
-        repository=repository,
-    )
-    # Auto-link the source evidence/attachment to the newly minted invoice, closing
-    # the provenance loop: the invoice is now discoverable from the evidence
-    # (`Attachment.linked_invoice_ids`) and vice versa (`Invoice.invoice_id` is what
-    # was just recorded). `link_attachment_invoice` re-persists through the same
-    # sanctioned `AttachmentStoreProtocol.write_manifest` path
-    # (`aeat-architecture-boundaries`); it never re-implements the
-    # attachment write.
-    link_attachment_invoice(
-        attachment_store,
-        attachment_id=resolved_attachment_id,
-        invoice_id=result.invoice.invoice_id,
-    )
-    confirmation_record = _written_confirmation_record(
+    return _persist_confirmed_invoice(
+        candidate=candidate,
+        preparation=preparation,
         bucket_id=bucket_id,
-        invoice_id=result.invoice.invoice_id,
         evidence_id=evidence_id,
-        attachment_id=resolved_attachment_id,
-        draft=draft,
         confirmed_by=confirmed_by,
-        overrides=operator_overrides,
-        blockers=blockers,
         resolutions=resolutions,
-        settings=resolved_settings,
-    )
-    return InvoiceConfirmationResult(
-        invoice=result.invoice,
-        draft=draft,
-        created=True,
-        total_discrepancy=printed_total_discrepancy(draft=draft, invoice=result.invoice),
-        confirmation_id=confirmation_record.confirmation_id,
-        confirmed_provenance=re_stamped_provenance(draft=draft, assertions=confirmation_record.assertions),
-        establishment=establishment,
+        invoice_repository=invoice_repository,
     )
 
 

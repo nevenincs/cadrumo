@@ -24,7 +24,7 @@ from ....domain.transactions import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import CensoSyncService, UserProfileLifecycleRepository
+from ...user_profile import CensoSyncService, ProfileRecordRepository
 
 _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _OTHER_BUCKET_ID = "23232323-2323-4323-8323-232323232323"
@@ -133,7 +133,7 @@ def _declare_home_office_m2(bucket_id: str) -> None:
     m2_facts = tuple(
         UserProfileFact(path=path, value=Decimal(value)) for path, value in _home_office_censo_facts().items()
     )
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+    ProfileRecordRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Ledger preflight profile",

@@ -74,8 +74,6 @@ from ....domain.iva import (
     IvaFlowDirection,
     IvaLedgerObservationRole,
     IvaRateKind,
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
@@ -232,10 +230,6 @@ def _calculate_303_quarter(
         binding_values=binding_values,
         relation_values={},
         date_context={"filing_period": date(filing_year, 12, 31)},
-        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-        ),
-        m303_annual_orden=None,
     )
 
 
@@ -313,8 +307,6 @@ def _calculate_390_annual(
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(filing_year, 12, 31)},
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
     return result, len(result.values)
 

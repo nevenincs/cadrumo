@@ -15,7 +15,9 @@ from pydantic import BaseModel
 from ...core import OperationEffect
 from ...core.async_cleanup import AsyncCloseable
 from ...core.identity import ContentDigest
+from ._capabilities import OperationOwnedResource
 from ._events import OperationDiagnosticReference, OperationEventCode, OperationLogSeverity
+from ._interactions import OperationPendingInteraction
 from ._models import OperationIdentity, OperationReference, OperationRequest
 
 
@@ -64,7 +66,7 @@ class OperationEventEmitter(Protocol):
         unit_code: OperationEventCode | None = None,
     ) -> None:
         """Publish bounded unit progress."""
-        ...
+        del unit_code
 
     async def log(
         self,
@@ -99,15 +101,25 @@ class OperationSecureOperandLookup(Protocol):
         operand_type: type[OperandT],
     ) -> OperandT:
         """Return the validated operand of the requested application model type."""
-        ...
+        del operand_type
+        raise NotImplementedError
 
 
 @runtime_checkable
 class OperationCleanupOwner(Protocol):
     """Transfer asynchronous resource ownership to supervisor settlement."""
 
-    def own(self, resource: AsyncCloseable) -> None:
+    def own(self, resource: AsyncCloseable, *, family: OperationOwnedResource) -> None:
         """Register a resource that must close before terminal settlement."""
+        del family
+
+
+@runtime_checkable
+class OperationInteractionAccess(Protocol):
+    """Persist one definition-declared interaction checkpoint before yielding."""
+
+    async def request(self, pending: OperationPendingInteraction) -> None:
+        """Publish a pending checkpoint; continuation arrives through supervisor respond."""
         ...
 
 
@@ -145,6 +157,11 @@ class OperationExecutorContext(Protocol):
         """Resource ownership boundary settled by the supervisor."""
         ...
 
+    @property
+    def interactions(self) -> OperationInteractionAccess:
+        """Supervisor-owned typed interaction checkpoint boundary."""
+        ...
+
 
 @runtime_checkable
 class OperationExecutor[RequestPayloadT: BaseModel](Protocol):
@@ -166,5 +183,6 @@ __all__ = [
     "OperationEventEmitter",
     "OperationExecutor",
     "OperationExecutorContext",
+    "OperationInteractionAccess",
     "OperationSecureOperandLookup",
 ]

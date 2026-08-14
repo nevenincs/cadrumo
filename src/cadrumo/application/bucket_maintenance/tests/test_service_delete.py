@@ -16,13 +16,13 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....core.resources import resources
 from ....domain.buckets import BucketDeleteRefusedError
 from ....domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaDefinition,
     UserProfileFact,
+    UserProfileRecord,
     UserProfileStatus,
 )
 from ....tests.secure_sql import (
@@ -41,7 +41,7 @@ from ..._config_reset_models import (
     ConfigResetTargetPhase,
 )
 from ..._config_reset_repository import ConfigResetJournalRepository
-from ...user_profile import RegisterProfileCommand
+from ...user_profile import ProfileRecordRepository
 from .. import (
     AssessBucketDeletionCommand,
     BucketDeletionAssessment,
@@ -82,24 +82,10 @@ def runtime(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 @pytest.fixture
 def registered_profile(runtime: TestRuntimeProfile) -> None:
     """Register a real profile so the delete chain has something to tombstone."""
-    from ...user_profile import (
-        ProfileLifecycleService,
-        ProfileValidationService,
-        UserProfileLifecycleRepository,
-    )
-
     schema = resources().user_profile_schema.singleton
     assert isinstance(schema, ProfileSchemaDefinition)
-    service = ProfileLifecycleService(
-        repository=UserProfileLifecycleRepository(
-            bucket_id=runtime.bucket_id,
-            objects=runtime.repository,
-        ),
-        validator=ProfileValidationService(schema=schema),
-        events=BucketEventHistoryRepository(objects=runtime.repository),
-    )
-    service.register(
-        RegisterProfileCommand(
+    ProfileRecordRepository(bucket_id=runtime.bucket_id, objects=runtime.repository).save(
+        UserProfileRecord(
             profile_id=runtime.bucket_id,
             display_name=_ORIGINAL_LABEL,
             facts=_all_required_facts(schema),
@@ -152,24 +138,13 @@ def test_delete_refusals_carry_translated_message(
 
 def _register_secondary_profile(runtime: MultiBucketTestRuntime) -> None:
     from ....adapters.persistence.storage.bucket import read_manifest
-    from ...user_profile import (
-        ProfileLifecycleService,
-        ProfileValidationService,
-        UserProfileLifecycleRepository,
-    )
+    from ...user_profile import ProfileRecordRepository
 
     schema = resources().user_profile_schema.singleton
     assert isinstance(schema, ProfileSchemaDefinition)
     with runtime.switch_to_secondary():
-        ProfileLifecycleService(
-            repository=UserProfileLifecycleRepository(
-                bucket_id=runtime.secondary.bucket_id,
-                objects=runtime.secondary.repository,
-            ),
-            validator=ProfileValidationService(schema=schema),
-            events=BucketEventHistoryRepository(objects=runtime.secondary.repository),
-        ).register(
-            RegisterProfileCommand(
+        ProfileRecordRepository(bucket_id=runtime.secondary.bucket_id, objects=runtime.secondary.repository).save(
+            UserProfileRecord(
                 profile_id=runtime.secondary.bucket_id,
                 display_name=read_manifest(runtime.secondary.paths).label,
                 facts=_all_required_facts(schema),

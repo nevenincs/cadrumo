@@ -69,7 +69,7 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord
-from ..user_profile import UserProfileLifecycleRepository, fact_value
+from ..user_profile import ProfileRecordRepository, fact_value
 from . import _shared_issue_reasons
 from ._currency_predicates import effective_eur_amount, is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
@@ -209,7 +209,7 @@ def _resolve_residence_ccaa(
     record = profile_record
     if record is None:
         try:
-            record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+            record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
         except ProfileNotFoundError:
             return None
 
@@ -267,7 +267,7 @@ def _resolve_iva_deduction_ratio(
     record = profile_record
     if record is None:
         try:
-            record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+            record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
         except ProfileNotFoundError:
             record = None
     if record is not None:

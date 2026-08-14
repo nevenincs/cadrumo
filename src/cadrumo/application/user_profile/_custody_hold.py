@@ -1,0 +1,110 @@
+"""Application custody hold-evidence owner orchestration."""
+
+from __future__ import annotations
+
+from datetime import datetime
+from importlib import import_module
+from pathlib import Path
+from typing import Any, Literal
+from uuid import UUID
+
+from ...core import StorageCategory, storage_location
+from ...core.paths import effective_storage_root
+from ...core.time import validate_utc_aware
+from .._profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
+from ._custody_transactions import (
+    ProfileCustodyHoldAssessment,
+    ProfileCustodyHoldEvidence,
+    ProfileCustodyTransactionCorruptError,
+    ProfileCustodyTransactionError,
+    ProfileCustodyTransactionRefusalError,
+    canonical_model_bytes,
+    evidence_from_owner_projection,
+)
+
+
+def _default_custody_adapters() -> Any:
+    """Resolve the public custody adapter facade at the composition boundary."""
+    return import_module("cadrumo.adapters.persistence.storage.custody")
+
+
+def _write_canonical_file(path: Path, payload: bytes, adapters: Any) -> None:
+    try:
+        adapters.write_profile_custody_local_record(path, payload, publish_once=False)
+    except Exception as exc:
+        raise ProfileCustodyTransactionCorruptError(
+            "canonical custody owner record cannot be atomically written"
+        ) from exc
+
+
+class _ProfileCustodyHoldEvidenceOwner:
+    """Read and persist a derived evidence projection from one external owner."""
+
+    def __init__(self, *, root: Path | None = None, owner: Literal["legal", "filing"]) -> None:
+        self._storage_root = effective_storage_root(root)
+        self._owner = owner
+        self._root = (
+            self._storage_root
+            / storage_location(StorageCategory.PROFILE_CUSTODY_HOLD_EVIDENCE).relative_path()
+            / "derived-evidence"
+            / owner
+        )
+
+    def refresh(self, profile_id: UUID, *, now: datetime) -> ProfileCustodyHoldEvidence:
+        adapters = _default_custody_adapters()
+        projection = self._owner_projection(profile_id, now=now)
+        evidence = evidence_from_owner_projection(projection)
+        try:
+            adapters.ensure_profile_custody_local_directory(self._root.parent.parent)
+            adapters.ensure_profile_custody_local_directory(self._root.parent)
+            adapters.ensure_profile_custody_local_directory(self._root)
+            with adapters.profile_custody_local_lock(self._root / ".evidence.lock"):
+                _write_canonical_file(
+                    self.path(profile_id),
+                    canonical_model_bytes(evidence, maximum_bytes=1024, subject=f"{self._owner} hold evidence"),
+                    adapters,
+                )
+        except Exception as exc:
+            raise ProfileCustodyTransactionCorruptError(
+                f"canonical {self._owner} hold evidence cannot be durably refreshed"
+            ) from exc
+        return evidence
+
+    def _owner_projection(self, profile_id: UUID, *, now: datetime) -> ProfileDeletionHoldOwnerProjection:
+        try:
+            if self._owner == "legal":
+                from ..evidence._profile_legal_hold import LegalHoldCaseAuthority
+
+                return LegalHoldCaseAuthority(root=self._storage_root).project(profile_id, now=now)
+            from ..filing._profile_filing_retention import FilingRetentionAuthority
+
+            return FilingRetentionAuthority(root=self._storage_root).project(profile_id, now=now)
+        except FileNotFoundError as exc:
+            raise ProfileCustodyTransactionRefusalError(f"canonical {self._owner} hold owner facts are absent") from exc
+        except ProfileCustodyTransactionError:
+            raise
+        except Exception as exc:
+            raise ProfileCustodyTransactionCorruptError(
+                f"canonical {self._owner} hold owner facts cannot be authenticated"
+            ) from exc
+
+    def path(self, profile_id: UUID) -> Path:
+        return self._root / f"{profile_id}.json"
+
+
+class ProfileCustodyHoldAuthority:
+    """Join independently-owned legal and filing evidence for deletion preflight."""
+
+    def __init__(self, *, root: Path | None = None) -> None:
+        self._legal = _ProfileCustodyHoldEvidenceOwner(root=root, owner="legal")
+        self._filing = _ProfileCustodyHoldEvidenceOwner(root=root, owner="filing")
+
+    def assess(self, profile_id: UUID, *, now: datetime) -> ProfileCustodyHoldAssessment:
+        validate_utc_aware(now)
+        return ProfileCustodyHoldAssessment.from_owner_evidence(
+            legal=self._legal.refresh(profile_id, now=now),
+            filing=self._filing.refresh(profile_id, now=now),
+        )
+
+
+__all__ = ["ProfileCustodyHoldAuthority"]

@@ -9,7 +9,7 @@ when a taxpayer-profile fact that scopes relation resolution changes
 categories), and must not be flagged when the profile is unchanged.
 
 The digest is self-loaded from the bucket's
-:class:`~application.user_profile.ProfileRepository` via the wizard-free
+:class:`~application.user_profile.CommittedProfileRepository` via the wizard-free
 canonical projection (:func:`~application.user_profile.record_to_path_values`),
 the same projection the relation resolver reads, so change-detection is
 reproducible at approve and refresh time with only ``bucket_id`` in scope, without
@@ -66,7 +66,7 @@ def _profile_storage(tmp_path: Path) -> Iterator[None]:
     """Isolate the encrypted profile store and bootstrap profile creation.
 
     The self-load path
-    (:meth:`~application.user_profile.ProfileRepository.load`) needs a
+    (:meth:`~application.user_profile.CommittedProfileRepository.load`) needs a
     genuinely provisioned profile: bucket directory, plaintext manifest, wrapped
     DEK, and encrypted record. The tests mint that profile through the same
     application create span used by the CLI rather than a partial record write.
@@ -115,7 +115,6 @@ def _ready_draft(schema_provider: CasillaSchemaProvider) -> ModeloDraft:
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
         schema_provider=schema_provider,
-        m303_regimen_simplificado_scope=None,
     )
 
 

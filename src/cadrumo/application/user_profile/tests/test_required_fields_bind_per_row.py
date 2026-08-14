@@ -32,7 +32,12 @@ from ....domain.user_profile import UserProfileFact, load_user_profile_schema
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...workflow import workflow_state_repository
-from .. import ProfileRepository, build_lifecycle_service, build_profile_overview, profile_create_storage_span
+from .. import (
+    ProfileRecordAggregateRepository,
+    build_lifecycle_service,
+    build_profile_overview,
+    profile_create_storage_span,
+)
 from .._completeness import missing_required_field_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -54,7 +59,7 @@ def _register_active() -> None:
 
 
 def _append_facts(*facts: UserProfileFact) -> None:
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     aggregate = repository.load(_BUCKET_ID)
     record = aggregate.record
     repository.save(

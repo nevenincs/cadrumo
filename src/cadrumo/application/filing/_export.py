@@ -62,7 +62,7 @@ from ...core import (
     FilingProjectionRef,
     Period,
     PriorDomiciliationElection,
-    ProrrataEspecialTransitionKind,
+    ResultDisposition,
 )
 from ...core.atomic_write import atomic_write_bytes
 from ...core.decimal import coerce_decimal
@@ -85,14 +85,13 @@ from ...domain.calculations.registry import (
     render_fixed_width_export_field,
     xml_dictionary_entries,
 )
-from ...domain.deadlines import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ...domain.filing import (
     FilingExportError,
     FilingExportValidationError,
     ModeloCasillaProvenance,
     ModeloDraft,
 )
-from ...domain.iva import derive_sepa_marca, is_last_filing_period_of_year
+from ...domain.iva import derive_sepa_marca
 from ...domain.submission import ModeloDraftStatus
 from ._export_parity import (
     assert_export_mirrors_manifest,
@@ -100,6 +99,7 @@ from ._export_parity import (
     assert_xml_declaration_aux_declared,
     did_page_suppressed,
 )
+from ._export_producer import filing_producer_values as _filing_producer_values
 from ._export_xml_dictionary import (
     expected_xml_dictionary_root_identity,
     read_xml_dictionary_root_identity,
@@ -109,9 +109,6 @@ from ._m303_export_applicability import validate_m303_export_applicability
 from ._producer_snapshot import (
     ChargeAccountSelection,
     FilingProducerSnapshot,
-    M303FilingFacts,
-    M303InsolvencyFilingSubtype,
-    Modelo111ProfileFacts,
     RefundAccountSelection,
 )
 from ._projection import (
@@ -120,7 +117,7 @@ from ._projection import (
     FilingRecordRenderContext,
     build_m303_filing_projection_plan,
 )
-from .runtime import RegistrySchemaAccessor, build_runtime_schema_provider
+from .runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
 
 _logger = get_logger(__name__)
 
@@ -132,46 +129,6 @@ _SHA256_HEX_LENGTH = 64
 class _RecordRenderRow:
     row_index: int | None
     active_binding_ids: frozenset[BindingId]
-
-
-@dataclass(frozen=True)
-class _SelectedAccountLexicals:
-    iban: str | None = None
-    swift_bic: str | None = None
-    bank_name: str | None = None
-    bank_address: str | None = None
-    bank_city: str | None = None
-    bank_country_code: str | None = None
-
-
-@dataclass(frozen=True)
-class _M303ProfileLexicals:
-    redeme_enrolled: str | None = None
-    exclusively_foral: str | None = None
-    regime_composition_code: str | None = None
-    cash_accounting_regime_enrolled: str | None = None
-    voluntary_sii_enrolled: str | None = None
-    hydrocarbon_deposit_advance_payment_deduction_entitled: str | None = None
-    is_foral: bool = False
-
-
-@dataclass(frozen=True)
-class _M303FilingLexicals:
-    joint_return_elected: str | None = None
-    recipient_of_cash_accounting_operations: str | None = None
-    prorrata_special_option: str | None = None
-    prorrata_special_revocation: str | None = None
-    insolvency_declared: str | None = None
-    insolvency_judicial_order_date: str | None = None
-    insolvency_filing_subtype: str | None = None
-    exonerado_390_applicable: str | None = None
-    prorrata_transition_applicable: bool = False
-
-
-@dataclass(frozen=True)
-class _M303ForalLexicals:
-    prorrata_special_option: str | None
-    prorrata_special_revocation: str | None
 
 
 class DeclaracionExportFormat(StrEnum):
@@ -357,190 +314,6 @@ class DeclaracionVerifyResult(BaseModel):
         if value != value.lower():
             raise FilingExportValidationError("file_sha256 must be lowercase hex")
         return value
-
-
-def _filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
-    """Resolve every canonical producer identity from one immutable snapshot."""
-    identity = snapshot.taxpayer_identity
-    amendment = snapshot.amendment_evidence
-    account = _selected_account_lexicals(snapshot)
-    iva_profile = snapshot.model_profile if isinstance(snapshot.model_profile, ModeloIVAProfile) else None
-    m303_profile = _m303_profile_lexicals(iva_profile, snapshot.m303_filing_facts)
-    m303_filing = _m303_filing_lexicals(snapshot.m303_filing_facts)
-    values: dict[FilingProducerKey, object] = {
-        FilingProducerKey.PRESENTER_TAX_ID: str(snapshot.presenter.tax_id),
-        FilingProducerKey.FILING_RESULT_DISPOSITION: snapshot.elections.result_disposition.value,
-        FilingProducerKey.TAXPAYER_TAX_ID: str(snapshot.taxpayer_tax_id),
-        FilingProducerKey.TAXPAYER_LEGAL_NAME: identity.legal_name,
-        FilingProducerKey.TAXPAYER_GIVEN_NAME: identity.given_name,
-        FilingProducerKey.TAXPAYER_SURNAMES: identity.surnames,
-        FilingProducerKey.TAXPAYER_FULL_NAME: identity.full_name,
-        FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA: amendment.is_rectificativa if amendment else None,
-        FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: amendment.is_complementaria if amendment else None,
-        FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT: amendment.original_aeat_receipt if amendment else None,
-        FilingProducerKey.SELECTED_ACCOUNT_IBAN: account.iban,
-        FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC: account.swift_bic,
-        FilingProducerKey.SELECTED_ACCOUNT_BANK_NAME: account.bank_name,
-        FilingProducerKey.SELECTED_ACCOUNT_BANK_ADDRESS: account.bank_address,
-        FilingProducerKey.SELECTED_ACCOUNT_BANK_CITY: account.bank_city,
-        FilingProducerKey.SELECTED_ACCOUNT_BANK_COUNTRY_CODE: account.bank_country_code,
-        FilingProducerKey.PRIOR_DOMICILIATION_ACTION: (
-            "X" if snapshot.elections.prior_domiciliation is PriorDomiciliationElection.CANCEL_OR_MODIFY else None
-        ),
-        FilingProducerKey.M303_REDEME_ENROLLED: m303_profile.redeme_enrolled,
-        FilingProducerKey.M303_EXCLUSIVELY_FORAL: m303_profile.exclusively_foral,
-        FilingProducerKey.M303_REGIME_COMPOSITION_CODE: m303_profile.regime_composition_code,
-        FilingProducerKey.M303_JOINT_RETURN_ELECTED: m303_filing.joint_return_elected,
-        FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: m303_profile.cash_accounting_regime_enrolled,
-        FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS: (
-            m303_filing.recipient_of_cash_accounting_operations
-        ),
-        FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: m303_filing.prorrata_special_option,
-        FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: m303_filing.prorrata_special_revocation,
-        FilingProducerKey.M303_INSOLVENCY_DECLARED: m303_filing.insolvency_declared,
-        FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE: m303_filing.insolvency_judicial_order_date,
-        FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: m303_filing.insolvency_filing_subtype,
-        FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: m303_profile.voluntary_sii_enrolled,
-        FilingProducerKey.M303_EXONERADO_390_APPLICABLE: m303_filing.exonerado_390_applicable,
-        FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: (
-            m303_profile.hydrocarbon_deposit_advance_payment_deduction_entitled
-        ),
-        FilingProducerKey.M111_COLEGIO_CONCERTADO: (
-            snapshot.model_profile.colegio_concertado
-            if isinstance(snapshot.model_profile, Modelo111ProfileFacts)
-            else None
-        ),
-    }
-    if m303_profile.is_foral:
-        foral = _m303_foral_lexicals(m303_filing)
-        # DP30301 Nota 5 uses a lexical foral branch.  It overrides the normal
-        # profile and filing-instance projections; A22/A23 remain blank until
-        # their Nota 6 final-period applicability is established above.
-        values.update(
-            {
-                FilingProducerKey.M303_REDEME_ENROLLED: "2",
-                FilingProducerKey.M303_EXCLUSIVELY_FORAL: "1",
-                FilingProducerKey.M303_REGIME_COMPOSITION_CODE: "3",
-                FilingProducerKey.M303_JOINT_RETURN_ELECTED: "2",
-                FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: "2",
-                FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS: "2",
-                FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: foral.prorrata_special_option,
-                FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: foral.prorrata_special_revocation,
-                FilingProducerKey.M303_INSOLVENCY_DECLARED: None,
-                FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE: None,
-                FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: None,
-                FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: "2",
-                FilingProducerKey.M303_EXONERADO_390_APPLICABLE: "2",
-                FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: "2",
-            },
-        )
-    if set(values) != set(FilingProducerKey):
-        raise FilingExportValidationError("filing producer resolver is not exhaustive")
-    return values
-
-
-def _selected_account_lexicals(snapshot: FilingProducerSnapshot) -> _SelectedAccountLexicals:
-    selected = snapshot.selected_account
-    if isinstance(selected, RefundAccountSelection):
-        return _SelectedAccountLexicals(
-            iban=selected.account.iban,
-            swift_bic=selected.account.swift_bic,
-            bank_name=selected.account.bank_name,
-            bank_address=selected.account.bank_address,
-            bank_city=selected.account.bank_city,
-            bank_country_code=selected.account.bank_country_code,
-        )
-    if isinstance(selected, ChargeAccountSelection):
-        return _SelectedAccountLexicals(iban=selected.account.iban)
-    return _SelectedAccountLexicals()
-
-
-def _m303_profile_lexicals(
-    iva_profile: ModeloIVAProfile | None,
-    m303_facts: M303FilingFacts | None,
-) -> _M303ProfileLexicals:
-    if iva_profile is None:
-        return _M303ProfileLexicals()
-    period = m303_facts.period if m303_facts is not None else None
-    a30 = (
-        _m303_yes_no(iva_profile.hydrocarbon_deposit_advance_payment_deduction_entitled)
-        if period is not None and _m303_a30_entitlement_applicable(period)
-        else "0"
-        if period is not None
-        else None
-    )
-    return _M303ProfileLexicals(
-        redeme_enrolled=_m303_yes_no(iva_profile.redeme_enrolled),
-        exclusively_foral="1" if iva_profile.tax_territory is M303TaxTerritory.FORAL else "2",
-        regime_composition_code={
-            M303RegimeComposition.SIMPLIFIED: "1",
-            M303RegimeComposition.MIXED: "2",
-            M303RegimeComposition.GENERAL: "3",
-        }[iva_profile.regime_composition],
-        cash_accounting_regime_enrolled=_m303_yes_no(iva_profile.cash_accounting_regime_enrolled),
-        voluntary_sii_enrolled=_m303_yes_no(iva_profile.voluntary_sii_enrolled),
-        hydrocarbon_deposit_advance_payment_deduction_entitled=a30,
-        is_foral=iva_profile.tax_territory is M303TaxTerritory.FORAL,
-    )
-
-
-def _m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> _M303FilingLexicals:
-    if m303_facts is None:
-        return _M303FilingLexicals()
-    transition = m303_facts.prorrata_transition
-    insolvency = m303_facts.insolvency
-    transition_applicable = transition.is_applicable
-    return _M303FilingLexicals(
-        joint_return_elected=_m303_yes_no(m303_facts.joint_return_elected),
-        recipient_of_cash_accounting_operations=_m303_yes_no(
-            m303_facts.supplier_regime.recipient_of_cash_accounting_operations,
-        ),
-        prorrata_special_option=(
-            _m303_yes_no(transition.transition is ProrrataEspecialTransitionKind.OPCION)
-            if transition_applicable
-            else None
-        ),
-        prorrata_special_revocation=(
-            _m303_yes_no(transition.transition is ProrrataEspecialTransitionKind.REVOCACION)
-            if transition_applicable
-            else None
-        ),
-        insolvency_declared="1" if insolvency is not None else "2",
-        insolvency_judicial_order_date=(
-            insolvency.judicial_order_date.strftime("%d%m%Y") if insolvency is not None else None
-        ),
-        insolvency_filing_subtype=(
-            {
-                M303InsolvencyFilingSubtype.PRE_ORDER: "1",
-                M303InsolvencyFilingSubtype.POST_ORDER: "2",
-            }[insolvency.subtype]
-            if insolvency is not None
-            else None
-        ),
-        exonerado_390_applicable=(
-            _m303_yes_no(m303_facts.exonerado_390.applicable)
-            if is_last_filing_period_of_year(m303_facts.period)
-            else "0"
-        ),
-        prorrata_transition_applicable=transition_applicable,
-    )
-
-
-def _m303_foral_lexicals(m303_filing: _M303FilingLexicals) -> _M303ForalLexicals:
-    value = "2" if m303_filing.prorrata_transition_applicable else None
-    return _M303ForalLexicals(
-        prorrata_special_option=value,
-        prorrata_special_revocation=value,
-    )
-
-
-def _m303_yes_no(value: bool) -> str:
-    """Project DP30301's exact Num1 convention: 1 = SI, 2 = NO."""
-    return "1" if value else "2"
-
-
-def _m303_a30_entitlement_applicable(period: Period) -> bool:
-    return period.registry_token.isdigit() and int(period.registry_token) >= 2
 
 
 def export_draft(
@@ -856,6 +629,13 @@ def verify_export(
     """
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
+    _require_current_verify_schema(draft, subview)
+    if not subview.export_layout_ids:
+        return _missing_registry_layout_verification(draft, file_path)
+    return _verify_export_file(draft, file_path=file_path, provider=provider, subview=subview)
+
+
+def _require_current_verify_schema(draft: ModeloDraft, subview: RegistryModeloSubview) -> None:
     if draft.schema_version != subview.schema_version:
         raise FilingExportError(
             translated_message="application.filing.export.errors.verify_draft_snapshot_stale",
@@ -865,37 +645,65 @@ def verify_export(
                 "active_schema_version": subview.schema_version,
             },
         )
-    if not subview.export_layout_ids:
-        try:
-            digest = sha256_file(file_path) if file_path.exists() else None
-        except OSError:
-            _logger.warning("declaration export verification could not read %s", file_path, exc_info=True)
-            digest = None
-        return DeclaracionVerifyResult(
-            draft_id=draft.draft_id,
-            file_path=file_path,
-            verdict=DeclaracionVerifyVerdict.MISSING,
-            file_sha256=digest,
-            verified_at=now(),
-            narrative="filing.export.missing_registry_layout",
-        )
-    if not file_path.exists():
-        return DeclaracionVerifyResult(
-            draft_id=draft.draft_id,
-            file_path=file_path,
-            verdict=DeclaracionVerifyVerdict.MISSING,
-            verified_at=now(),
-            narrative="filing.export.missing_file",
-        )
+
+
+def _missing_verification_result(
+    draft: ModeloDraft,
+    *,
+    file_path: Path,
+    narrative: str,
+    digest: str | None = None,
+) -> DeclaracionVerifyResult:
+    return DeclaracionVerifyResult(
+        draft_id=draft.draft_id,
+        file_path=file_path,
+        verdict=DeclaracionVerifyVerdict.MISSING,
+        file_sha256=digest,
+        verified_at=now(),
+        narrative=narrative,
+    )
+
+
+def _missing_registry_layout_verification(draft: ModeloDraft, file_path: Path) -> DeclaracionVerifyResult:
     try:
-        payload = file_path.read_bytes()
+        digest = sha256_file(file_path) if file_path.exists() else None
     except OSError:
         _logger.warning("declaration export verification could not read %s", file_path, exc_info=True)
-        return DeclaracionVerifyResult(
-            draft_id=draft.draft_id,
+        digest = None
+    return _missing_verification_result(
+        draft,
+        file_path=file_path,
+        narrative="filing.export.missing_registry_layout",
+        digest=digest,
+    )
+
+
+def _read_verification_payload(file_path: Path) -> bytes | None:
+    try:
+        return file_path.read_bytes()
+    except OSError:
+        _logger.warning("declaration export verification could not read %s", file_path, exc_info=True)
+        return None
+
+
+def _verify_export_file(
+    draft: ModeloDraft,
+    *,
+    file_path: Path,
+    provider: RegistrySchemaAccessor,
+    subview: RegistryModeloSubview,
+) -> DeclaracionVerifyResult:
+    if not file_path.exists():
+        return _missing_verification_result(
+            draft,
             file_path=file_path,
-            verdict=DeclaracionVerifyVerdict.MISSING,
-            verified_at=now(),
+            narrative="filing.export.missing_file",
+        )
+    payload = _read_verification_payload(file_path)
+    if payload is None:
+        return _missing_verification_result(
+            draft,
+            file_path=file_path,
             narrative="filing.export.missing_file",
         )
     digest = sha256_hex(payload)
@@ -908,13 +716,11 @@ def verify_export(
         )
     except RegistryValidationError:
         _logger.warning("declaration export verification could not parse %s", file_path, exc_info=True)
-        return DeclaracionVerifyResult(
-            draft_id=draft.draft_id,
+        return _missing_verification_result(
+            draft,
             file_path=file_path,
-            verdict=DeclaracionVerifyVerdict.MISSING,
-            file_sha256=digest,
-            verified_at=now(),
             narrative="filing.export.malformed_file",
+            digest=digest,
         )
     # Draft casillas the export parser never re-read: the wire layout
     # carries them as RESERVED literals or derived fields, so they round-
@@ -937,13 +743,11 @@ def verify_export(
         )
     except FilingExportValidationError:
         _logger.warning("declaration export verification could not read root identity of %s", file_path, exc_info=True)
-        return DeclaracionVerifyResult(
-            draft_id=draft.draft_id,
+        return _missing_verification_result(
+            draft,
             file_path=file_path,
-            verdict=DeclaracionVerifyVerdict.MISSING,
-            file_sha256=digest,
-            verified_at=now(),
             narrative="filing.export.malformed_file",
+            digest=digest,
         )
     return DeclaracionVerifyResult(
         draft_id=draft.draft_id,
@@ -1048,21 +852,62 @@ def _render_layout(
 ) -> bytes:
     if not any(candidate is layout for candidate in registry_snapshot.revision.export_layouts):
         raise FilingExportValidationError("filing renderer layout is not owned by the selected registry snapshot")
-    projection_plan = (
-        build_m303_filing_projection_plan(
-            registry_snapshot=registry_snapshot,
-            layout=layout,
-            producer_snapshot=producer_snapshot,
-        )
-        if draft.modelo == "303"
-        else FilingProjectionPlan(contexts=(), values=())
+    projection_plan = _projection_plan_for_layout(
+        layout,
+        registry_snapshot=registry_snapshot,
+        draft=draft,
+        producer_snapshot=producer_snapshot,
     )
     projection_values = _preflight_projection_plan(projection_plan)
-    chunks: list[bytes] = []
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
     binding_values: dict[tuple[BindingId, int | None], object] = {
         (value.binding_id, value.row_index): value.value for value in draft.binding_values
     }
+    return _render_layout_records(
+        layout,
+        registry_snapshot=registry_snapshot,
+        draft=draft,
+        headers=headers,
+        producer_snapshot=producer_snapshot,
+        prior_domiciliation_election=prior_domiciliation_election,
+        casilla_values=casilla_values,
+        binding_values=binding_values,
+        projection_plan=projection_plan,
+        projection_values=projection_values,
+    )
+
+
+def _projection_plan_for_layout(
+    layout: ExportLayoutDefinition,
+    *,
+    registry_snapshot: RegistrySnapshot,
+    draft: ModeloDraft,
+    producer_snapshot: FilingProducerSnapshot,
+) -> FilingProjectionPlan:
+    if draft.modelo == "303":
+        return build_m303_filing_projection_plan(
+            registry_snapshot=registry_snapshot,
+            layout=layout,
+            producer_snapshot=producer_snapshot,
+        )
+    return FilingProjectionPlan(contexts=(), values=())
+
+
+def _render_layout_records(
+    layout: ExportLayoutDefinition,
+    *,
+    registry_snapshot: RegistrySnapshot,
+    draft: ModeloDraft,
+    headers: Mapping[FilingProducerKey, object],
+    producer_snapshot: FilingProducerSnapshot,
+    prior_domiciliation_election: PriorDomiciliationElection,
+    casilla_values: dict[CasillaId, object],
+    binding_values: dict[tuple[BindingId, int | None], object],
+    projection_plan: FilingProjectionPlan,
+    projection_values: dict[_ProjectionAddress, object],
+) -> bytes:
+    """Render admitted records after projection preflight has passed."""
+    chunks: list[bytes] = []
     for record in sorted(layout.records, key=lambda item: item.order):
         if did_page_suppressed(
             record,
@@ -1071,44 +916,83 @@ def _render_layout(
             prior_domiciliation_election=prior_domiciliation_election,
         ):
             continue
-        if record.repeat == "projection_rows":
-            render_rows = tuple(
-                (_RecordRenderRow(row_index=None, active_binding_ids=frozenset()), context)
-                for context in projection_plan.contexts
-                if context.record is record
-            )
-        else:
-            render_rows = tuple(
-                (
-                    row,
-                    FilingRecordRenderContext(
-                        registry_snapshot=registry_snapshot,
-                        layout=layout,
-                        record=record,
-                        occurrence=occurrence,
-                    ),
-                )
-                for occurrence, row in enumerate(_record_render_rows(record, binding_values), 1)
-            )
-        for row, context in render_rows:
+        for row, context in _render_rows_for_record(
+            record,
+            layout=layout,
+            registry_snapshot=registry_snapshot,
+            binding_values=binding_values,
+            projection_plan=projection_plan,
+        ):
             _guard_record_export(record, casilla_values=casilla_values)
-            text = _render_record(
-                record,
-                draft=draft,
-                producer_values=headers,
-                producer_snapshot=producer_snapshot,
-                casilla_values=casilla_values,
-                binding_values=binding_values,
-                row=row,
-                render_context=context,
-                projection_values=projection_values,
+            chunks.append(
+                _render_record_bytes(
+                    record,
+                    draft=draft,
+                    headers=headers,
+                    producer_snapshot=producer_snapshot,
+                    casilla_values=casilla_values,
+                    binding_values=binding_values,
+                    row=row,
+                    render_context=context,
+                    projection_values=projection_values,
+                ),
             )
-            if record.line_ending == "crlf":
-                text += "\r\n"
-            elif record.line_ending == "lf":
-                text += "\n"
-            chunks.append(text.encode(record.encoding))
     return b"".join(chunks)
+
+
+def _render_rows_for_record(
+    record: ExportRecordDefinition,
+    *,
+    layout: ExportLayoutDefinition,
+    registry_snapshot: RegistrySnapshot,
+    binding_values: dict[tuple[BindingId, int | None], object],
+    projection_plan: FilingProjectionPlan,
+) -> tuple[tuple[_RecordRenderRow, FilingRecordRenderContext], ...]:
+    if record.repeat == "projection_rows":
+        return tuple(
+            (_RecordRenderRow(row_index=None, active_binding_ids=frozenset()), context)
+            for context in projection_plan.contexts
+            if context.record is record
+        )
+    return tuple(
+        (
+            row,
+            FilingRecordRenderContext(
+                registry_snapshot=registry_snapshot,
+                layout=layout,
+                record=record,
+                occurrence=occurrence,
+            ),
+        )
+        for occurrence, row in enumerate(_record_render_rows(record, binding_values), 1)
+    )
+
+
+def _render_record_bytes(
+    record: ExportRecordDefinition,
+    *,
+    draft: ModeloDraft,
+    headers: Mapping[FilingProducerKey, object],
+    producer_snapshot: FilingProducerSnapshot,
+    casilla_values: dict[CasillaId, object],
+    binding_values: dict[tuple[BindingId, int | None], object],
+    row: _RecordRenderRow,
+    render_context: FilingRecordRenderContext,
+    projection_values: dict[_ProjectionAddress, object],
+) -> bytes:
+    text = _render_record(
+        record,
+        draft=draft,
+        producer_values=headers,
+        producer_snapshot=producer_snapshot,
+        casilla_values=casilla_values,
+        binding_values=binding_values,
+        row=row,
+        render_context=render_context,
+        projection_values=projection_values,
+    )
+    line_ending = {"crlf": "\r\n", "lf": "\n"}.get(record.line_ending, "")
+    return f"{text}{line_ending}".encode(record.encoding)
 
 
 def _record_render_rows(
@@ -1184,13 +1068,41 @@ type _ProjectionAddress = tuple[RecordId, int, FilingProjectionRef]
 def _preflight_projection_plan(plan: FilingProjectionPlan) -> dict[_ProjectionAddress, object]:
     """Prove an exact admitted/produced projection bijection before any bytes."""
     context_addresses = tuple((context.record.id, context.occurrence) for context in plan.contexts)
-    duplicate_contexts = tuple(address for address, count in Counter(context_addresses).items() if count > 1)
-    if duplicate_contexts:
-        raise FilingExportValidationError(
-            f"filing projection plan contains duplicate record occurrences: {duplicate_contexts!r}",
-        )
+    _raise_duplicate_projection_addresses(
+        context_addresses,
+        message="filing projection plan contains duplicate record occurrences",
+    )
+    expected_fields = _expected_projection_fields(plan.contexts)
+    produced_addresses = tuple((value.record_id, value.occurrence, value.projection_ref) for value in plan.values)
+    _raise_duplicate_projection_addresses(
+        produced_addresses,
+        message="filing projectors produced duplicate projection addresses",
+    )
+    expected = frozenset(expected_fields)
+    actual = frozenset(produced_addresses)
+    _require_exact_projection_addresses(expected, actual)
+    values: dict[_ProjectionAddress, object] = {
+        address: value.value for address, value in zip(produced_addresses, plan.values, strict=True)
+    }
+    _validate_projection_values(expected_fields, values)
+    return values
+
+
+def _duplicate_projection_addresses(addresses: tuple[object, ...]) -> tuple[object, ...]:
+    return tuple(address for address, count in Counter(addresses).items() if count > 1)
+
+
+def _raise_duplicate_projection_addresses(addresses: tuple[object, ...], *, message: str) -> None:
+    duplicates = _duplicate_projection_addresses(addresses)
+    if duplicates:
+        raise FilingExportValidationError(f"{message}: {duplicates!r}")
+
+
+def _expected_projection_fields(
+    contexts: tuple[FilingRecordRenderContext, ...],
+) -> dict[_ProjectionAddress, ExportFieldDefinition]:
     expected_fields: dict[_ProjectionAddress, ExportFieldDefinition] = {}
-    for context in plan.contexts:
+    for context in contexts:
         for field in context.record.fields:
             if field.kind is not CasillaFieldKind.PROJECTION or field.projection_ref is None:
                 continue
@@ -1198,26 +1110,27 @@ def _preflight_projection_plan(plan: FilingProjectionPlan) -> dict[_ProjectionAd
             if address in expected_fields:
                 raise FilingExportValidationError(f"filing layout admits duplicate projection address {address!r}")
             expected_fields[address] = field
-    produced_addresses = tuple((value.record_id, value.occurrence, value.projection_ref) for value in plan.values)
-    duplicate_values = tuple(address for address, count in Counter(produced_addresses).items() if count > 1)
-    if duplicate_values:
-        raise FilingExportValidationError(
-            f"filing projectors produced duplicate projection addresses: {duplicate_values!r}",
-        )
-    expected = frozenset(expected_fields)
-    actual = frozenset(produced_addresses)
+    return expected_fields
+
+
+def _require_exact_projection_addresses(
+    expected: frozenset[_ProjectionAddress],
+    actual: frozenset[_ProjectionAddress],
+) -> None:
     if actual != expected:
         missing = tuple(sorted(repr(address) for address in expected - actual))
         extraneous = tuple(sorted(repr(address) for address in actual - expected))
         raise FilingExportValidationError(
             f"filing projection plan is not an exact layout bijection; missing={missing!r}, extraneous={extraneous!r}",
         )
-    values: dict[_ProjectionAddress, object] = {
-        address: value.value for address, value in zip(produced_addresses, plan.values, strict=True)
-    }
+
+
+def _validate_projection_values(
+    expected_fields: dict[_ProjectionAddress, ExportFieldDefinition],
+    values: dict[_ProjectionAddress, object],
+) -> None:
     for address, field in expected_fields.items():
         _format_field(field, values[address])
-    return values
 
 
 def _record_binding_fields(record: ExportRecordDefinition) -> tuple[ExportFieldDefinition, ...]:
@@ -1468,12 +1381,26 @@ def _sepa_marca(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | N
     ).value
 
 
+def _m303_complementaria_page_marker(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
+    """Render the official ``C`` page marker from amendment evidence alone."""
+    del draft
+    return "C" if snapshot.amendment_evidence and snapshot.amendment_evidence.is_complementaria else None
+
+
+def _m303_no_activity_marker(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
+    """Render ``X`` only for the closed Modelo 303 no-activity disposition."""
+    del draft
+    return "X" if snapshot.elections.result_disposition is ResultDisposition.NEGATIVA else None
+
+
 _COMPUTED_VALUE_PRODUCERS: Mapping[
     ExportComputedKey,
     Callable[[ModeloDraft, FilingProducerSnapshot], str | None],
 ] = {
     ExportComputedKey.ENVELOPE_CLOSING_TAG: _envelope_closing_tag,
     ExportComputedKey.SEPA_MARCA: _sepa_marca,
+    ExportComputedKey.M303_COMPLEMENTARIA_PAGE_MARKER: _m303_complementaria_page_marker,
+    ExportComputedKey.M303_NO_ACTIVITY_MARKER: _m303_no_activity_marker,
 }
 
 _DRAFT_VALUE_PRODUCERS: Mapping[ExportDraftAttribute, Callable[[ModeloDraft], str]] = {

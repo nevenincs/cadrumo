@@ -31,7 +31,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from decimal import Decimal
 from enum import StrEnum
 
@@ -42,7 +42,11 @@ from ...core import CasillaId, Period
 from ...core.errors import CadrumoError
 from ...core.i18n import output_language
 from ...core.logging import get_logger
-from ...domain.calculations.registry import fold_reconciliation_total_casilla_ids
+from ...domain.calculations.registry import (
+    CasillaDefinition,
+    RegistrySnapshot,
+    fold_reconciliation_total_casilla_ids,
+)
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._work_lifecycle import get_work_unit
@@ -146,44 +150,17 @@ def calculation_result_summary(
         return None
 
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
-    result_roles: dict[CasillaId, ResultSummaryRole] = {}
-    key_figures: list[CasillaId] = []
-    for kind, casilla_id in fold_reconciliation_total_casilla_ids(snapshot.revision.verification_expectations).items():
-        role = ResultSummaryRole.RESULT_INGRESAR if kind == "ingresar" else ResultSummaryRole.RESULT_DEVOLVER
-        result_roles.setdefault(casilla_id, role)
-    for expectation in snapshot.revision.verification_expectations:
-        for casilla_id in expectation.computed_casilla_ids:
-            if casilla_id not in key_figures:
-                key_figures.append(casilla_id)
+    result_roles, key_figures = _summary_candidate_ids(snapshot)
 
     if not result_roles and not key_figures:
         return None
 
-    def _row(casilla_id: CasillaId, *, value: Decimal, role: ResultSummaryRole) -> ResultSummaryRow:
-        casilla = casillas_by_id.get(casilla_id)
-        return ResultSummaryRow(
-            casilla_id=casilla_id,
-            label=casilla.get_label(output_language()) if casilla is not None else casilla_id,
-            value=value,
-            role=role,
-        )
-
-    rows: list[ResultSummaryRow] = []
-    seen: set[CasillaId] = set()
-    # Result-to-pay / result-to-refund totals lead the summary.
-    for casilla_id, role in result_roles.items():
-        value = casilla_values.get(casilla_id)
-        if value is None or casilla_id in seen:
-            continue
-        rows.append(_row(casilla_id, value=value, role=role))
-        seen.add(casilla_id)
-    # The verification expectation's computed casilla ids follow as key figures.
-    for casilla_id in key_figures:
-        value = casilla_values.get(casilla_id)
-        if value is None or casilla_id in seen:
-            continue
-        rows.append(_row(casilla_id, value=value, role=ResultSummaryRole.KEY_FIGURE))
-        seen.add(casilla_id)
+    rows = _summary_rows(
+        casilla_values,
+        casillas_by_id=casillas_by_id,
+        result_roles=result_roles,
+        key_figures=key_figures,
+    )
 
     if not rows:
         return None
@@ -193,6 +170,74 @@ def calculation_result_summary(
         period=work_unit.period,
         rows=tuple(rows),
     )
+
+
+def _summary_candidate_ids(
+    snapshot: RegistrySnapshot,
+) -> tuple[dict[CasillaId, ResultSummaryRole], list[CasillaId]]:
+    result_roles: dict[CasillaId, ResultSummaryRole] = {}
+    key_figures: list[CasillaId] = []
+    for kind, casilla_id in fold_reconciliation_total_casilla_ids(snapshot.revision.verification_expectations).items():
+        role = ResultSummaryRole.RESULT_INGRESAR if kind == "ingresar" else ResultSummaryRole.RESULT_DEVOLVER
+        result_roles.setdefault(casilla_id, role)
+    for expectation in snapshot.revision.verification_expectations:
+        for casilla_id in expectation.computed_casilla_ids:
+            if casilla_id not in key_figures:
+                key_figures.append(casilla_id)
+    return result_roles, key_figures
+
+
+def _summary_rows(
+    casilla_values: Mapping[CasillaId, Decimal],
+    *,
+    casillas_by_id: Mapping[CasillaId, CasillaDefinition],
+    result_roles: Mapping[CasillaId, ResultSummaryRole],
+    key_figures: list[CasillaId],
+) -> list[ResultSummaryRow]:
+    rows: list[ResultSummaryRow] = []
+    seen: set[CasillaId] = set()
+    for casilla_id, role in result_roles.items():
+        _append_summary_row(
+            rows,
+            seen,
+            casilla_id=casilla_id,
+            value=casilla_values.get(casilla_id),
+            role=role,
+            casillas_by_id=casillas_by_id,
+        )
+    for casilla_id in key_figures:
+        _append_summary_row(
+            rows,
+            seen,
+            casilla_id=casilla_id,
+            value=casilla_values.get(casilla_id),
+            role=ResultSummaryRole.KEY_FIGURE,
+            casillas_by_id=casillas_by_id,
+        )
+    return rows
+
+
+def _append_summary_row(
+    rows: list[ResultSummaryRow],
+    seen: set[CasillaId],
+    *,
+    casilla_id: CasillaId,
+    value: Decimal | None,
+    role: ResultSummaryRole,
+    casillas_by_id: Mapping[CasillaId, CasillaDefinition],
+) -> None:
+    if value is None or casilla_id in seen:
+        return
+    casilla = casillas_by_id.get(casilla_id)
+    rows.append(
+        ResultSummaryRow(
+            casilla_id=casilla_id,
+            label=casilla.get_label(output_language()) if casilla is not None else casilla_id,
+            value=value,
+            role=role,
+        ),
+    )
+    seen.add(casilla_id)
 
 
 __all__ = [

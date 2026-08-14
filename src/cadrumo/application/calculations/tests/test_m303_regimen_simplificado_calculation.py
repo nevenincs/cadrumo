@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core import M303RegimenSimplificadoFact, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import M303RegimenSimplificadoSnapshot, resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
@@ -65,7 +65,7 @@ def _annual_snapshot_and_rows(
                 ),
                 facts=tuple(
                     HechoActividadSimplificado(
-                        identity=identity,
+                        fact=M303RegimenSimplificadoFact.CUOTA_DEVENGADA_OPERACIONES_CORRIENTES,
                         value=Decimal("1"),
                         evidence_reference=reference,
                     )

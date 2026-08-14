@@ -260,7 +260,7 @@ class ProfileFactsCheckpointStore:
         """
         del flow_id
         from ...domain.user_profile import ProfileNotFoundError
-        from ..user_profile import ProfileIntegrityError, ProfileRepository
+        from ..user_profile import ProfileIntegrityError, ProfileRecordRepository
         from ..workflow import read_profile_bucket_by_id
 
         # The mirror is still consulted, but only to EXCLUDE: an absent bucket
@@ -272,7 +272,7 @@ class ProfileFactsCheckpointStore:
             return None
         try:
             with self._existing_profile_span():
-                aggregate = ProfileRepository().load(self._profile_id)
+                record = ProfileRecordRepository(bucket_id=self._profile_id).load(self._profile_id)
         except ProfileIntegrityError:
             # Ordered BEFORE the not-found arm on purpose: this subclasses it,
             # so a single ``except ProfileNotFoundError`` would convert "the
@@ -281,9 +281,9 @@ class ProfileFactsCheckpointStore:
             raise
         except ProfileNotFoundError:
             return None
-        if aggregate.status is not UserProfileStatus.SETUP_INCOMPLETE:
+        if record.status is not UserProfileStatus.SETUP_INCOMPLETE:
             return None
-        return checkpoint_answers_from_record(self._flow, aggregate.record)
+        return checkpoint_answers_from_record(self._flow, record)
 
     def discard(self, flow_id: str) -> None:
         """Erase the in-progress profile through the lifecycle authority.

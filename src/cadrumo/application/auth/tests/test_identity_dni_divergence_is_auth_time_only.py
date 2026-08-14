@@ -33,16 +33,13 @@ import pytest
 
 from ....core import AuthProviderKind
 from ....core.config import override_settings
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 from ...user_profile import (
-    ProfileRepository,
+    ProfileRecordRepository,
     profile_create_storage_span,
     record_to_path_values,
-    set_active_field,
 )
-from ...workflow import workflow_state_repository
 from .._sessions import AuthProfileIdentityMismatchError, _prepare_clave_auth
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -60,30 +57,42 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span(_BUCKET_ID),
+        override_settings(cadrumo_active_profile=_BUCKET_ID),
     ):
         yield
 
 
 def _register_with_tax_id() -> None:
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(
-            state,
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
+        UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name=_PROFILE_LABEL,
-            overrides={_TAX_ID_PATH: _TAX_ID},
+            facts=(
+                UserProfileFact(path=_TAX_ID_PATH, value=_TAX_ID),
+                UserProfileFact(path="auth.clave_movil_route", value="qr"),
+            ),
         ),
     )
 
 
 def _write_dni_nie(value: str) -> None:
     """Set ``auth.dni_nie`` through the validated edit door."""
-    workflow_state_repository().update(
-        lambda state: set_active_field(state, UserProfileFact(path=_DNI_NIE_PATH, value=value)),
+    repository = ProfileRecordRepository(bucket_id=_BUCKET_ID)
+    record = repository.load(_BUCKET_ID)
+    repository.save(
+        record.model_copy(
+            update={
+                "facts": (
+                    *(fact for fact in record.facts if fact.path != _DNI_NIE_PATH),
+                    UserProfileFact(path=_DNI_NIE_PATH, value=value),
+                ),
+            },
+        ),
     )
 
 
 def _stored() -> dict[str, str | None]:
-    values = record_to_path_values(ProfileRepository().load(_BUCKET_ID).record)
+    values = record_to_path_values(ProfileRecordRepository(bucket_id=_BUCKET_ID).load(_BUCKET_ID))
     return {path: values.get(path) for path in (_TAX_ID_PATH, _DNI_NIE_PATH)}
 
 

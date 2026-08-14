@@ -46,7 +46,7 @@ from ....domain.user_profile import (
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
 from ....tests.user_profile import schema_valid_placeholder
-from ...user_profile import RegisterProfileCommand, profile_storage_session, validate_bundle_payload
+from ...user_profile import ProfileRecordRepository, profile_storage_session, validate_bundle_payload
 from ...workflow import read_profile_bucket_by_id
 from .._contracts import ExportBucketCommand, ImportBucketCommand, InspectBucketArchiveCommand
 from .._service import BucketMaintenanceService, _archive_associated_data, _recovery_wrap_bytes
@@ -222,20 +222,10 @@ def registered_profile(runtime: TestRuntimeProfile) -> None:
 
 def _register_profile(runtime: TestRuntimeProfile) -> None:
     """Register the complete real profile record an archive transport needs."""
-    from ...user_profile import ProfileLifecycleService, ProfileValidationService, UserProfileLifecycleRepository
-
     schema = resources().user_profile_schema.singleton
     assert isinstance(schema, ProfileSchemaDefinition)
-    service = ProfileLifecycleService(
-        repository=UserProfileLifecycleRepository(
-            bucket_id=runtime.bucket_id,
-            objects=runtime.repository,
-        ),
-        validator=ProfileValidationService(schema=schema),
-        events=BucketEventHistoryRepository(objects=runtime.repository),
-    )
-    service.register(
-        RegisterProfileCommand(
+    ProfileRecordRepository(bucket_id=runtime.bucket_id, objects=runtime.repository).save(
+        UserProfileRecord(
             profile_id=runtime.bucket_id,
             display_name=_LABEL,
             facts=_all_required_facts(schema),

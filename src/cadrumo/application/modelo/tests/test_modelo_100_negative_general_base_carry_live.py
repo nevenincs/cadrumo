@@ -41,7 +41,7 @@ from ....domain.user_profile import (
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -110,7 +110,7 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(record)
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(record)
 
 
 def _save_observation(

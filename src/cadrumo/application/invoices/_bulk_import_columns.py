@@ -143,21 +143,41 @@ def _apply_semantic_column_mapping(
 ) -> bool:
     """Fill unresolved columns from one mapping-lane verdict without displacing exact fields."""
     claimed_fields = {field for field in exact_fields if field is not None}
-    if mapper is None or not required_fields - claimed_fields:
+    if _mapping_lane_not_needed(mapper, required_fields, claimed_fields):
         return False
+    assert mapper is not None
     proposed_roles = mapper(list(headers))
     if proposed_roles is None:
         return False
     for index, role in enumerate(proposed_roles):
-        if index >= len(headers) or exact_fields[index] is not None:
-            continue
-        field = BULK_IMPORT_FIELD_BY_ROLE.get(role)
-        roles[index] = role
-        if field is None or field in claimed_fields:
-            continue
-        exact_fields[index] = field
-        claimed_fields.add(field)
+        _apply_proposed_role(index, role, headers, exact_fields, roles, claimed_fields)
     return True
+
+
+def _mapping_lane_not_needed(
+    mapper: ColumnRoleMapper | None,
+    required_fields: frozenset[str],
+    claimed_fields: set[str],
+) -> bool:
+    return mapper is None or not required_fields - claimed_fields
+
+
+def _apply_proposed_role(
+    index: int,
+    role: FieldRole,
+    headers: Sequence[str],
+    exact_fields: list[str | None],
+    roles: list[FieldRole],
+    claimed_fields: set[str],
+) -> None:
+    if index >= len(headers) or exact_fields[index] is not None:
+        return
+    field = BULK_IMPORT_FIELD_BY_ROLE.get(role)
+    roles[index] = role
+    if field is None or field in claimed_fields:
+        return
+    exact_fields[index] = field
+    claimed_fields.add(field)
 
 
 def resolve_bulk_import_columns(

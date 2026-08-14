@@ -33,7 +33,7 @@ from ...core.resources import resources
 from ...domain.calculations.registry import BindingId, ModeloRevision
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, load_user_profile_schema
-from ..user_profile import UserProfileLifecycleRepository
+from ..user_profile import ProfileRecordRepository
 from ._action_errors import ModeloRequiredBindingsMissingError
 from ._preconditions import build_modelo_precondition_failure
 from ._profile_binding import profile_fact_index, resolve_profile_binding_value
@@ -135,7 +135,7 @@ def resolved_required_profile_binding_values(
     if str(work_unit.modelo) != Modelo.M202.value:
         return {}
     try:
-        record = UserProfileLifecycleRepository(bucket_id=work_unit.bucket_id).load(work_unit.bucket_id)
+        record = ProfileRecordRepository(bucket_id=work_unit.bucket_id).load(work_unit.bucket_id)
     except ProfileNotFoundError:
         return {}
     facts = profile_fact_index(record, load_user_profile_schema())

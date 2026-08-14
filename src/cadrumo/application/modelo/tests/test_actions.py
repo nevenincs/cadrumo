@@ -922,8 +922,6 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         enum_binding_values=enum_binding_values,
         relation_values=relation_values,
         date_binding_values=date_binding_values,
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
     assert result.values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA] == Decimal("10000.00")
     with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied as inputs"):
@@ -935,8 +933,6 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
             enum_binding_values=enum_binding_values,
             relation_values=relation_values,
             date_binding_values=date_binding_values,
-            m303_regimen_simplificado_scope=None,
-            m303_annual_orden=None,
         )
 
     binding_overrides = {

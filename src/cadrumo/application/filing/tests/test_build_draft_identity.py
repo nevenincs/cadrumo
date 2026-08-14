@@ -103,7 +103,6 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
             _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
         schema_provider=build_runtime_schema_provider(),
-        m303_regimen_simplificado_scope=None,
     )
 
     assert draft.subject_tax_id is not None
@@ -132,7 +131,6 @@ def test_build_draft_rejects_whitespace_padded_casilla_input_key() -> None:
                 cast(CasillaId, " 01"): Decimal("10000"),
             },
             schema_provider=build_runtime_schema_provider(modelos=("130",), filing_year=2026, period=period),
-            m303_regimen_simplificado_scope=None,
         )
 
 
@@ -176,7 +174,6 @@ def test_build_draft_rejects_noncanonical_casilla_reference_token(
                 input_key: Decimal("100.00"),
             },
             schema_provider=build_runtime_schema_provider(modelos=("303",), filing_year=2026, period=period),
-            m303_regimen_simplificado_scope=_general_m303_scope(),
         )
 
     assert expected_fragment in str(exc_info.value)
@@ -196,7 +193,6 @@ def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
                 _M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("100.00"),
             },
             schema_provider=build_runtime_schema_provider(modelos=("200",), filing_year=2025, period=period),
-            m303_regimen_simplificado_scope=None,
         )
 
     assert (

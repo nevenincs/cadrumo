@@ -53,7 +53,7 @@ from ...calculations import (
     CrossPeriodDependencyRequirement,
     cross_period_dependency_requirements,
 )
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import create_work_unit, import_external_filing_evidence, verify_modelo_revision
 from .._verification_cross_period import _cross_period_clean_state_findings
 
@@ -72,7 +72,7 @@ def _workflow_profile() -> TaxpayerProfile:
 
 
 def _store_ready_profile_record(*, activity_start_date: str | None = None) -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="Cross-period clean-state profile",

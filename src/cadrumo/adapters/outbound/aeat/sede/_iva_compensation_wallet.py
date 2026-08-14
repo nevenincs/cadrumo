@@ -610,85 +610,107 @@ async def _submit_wallet_execute_gate_if_present(
             failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
             context=_wallet_page_shape_context(html, landing_url=getattr(page, "url", "") or ""),
         )
-    if result == "wallet-execute-submit-present":
-        # Same landed-origin question as the observation source_url, and the
-        # same answer: the host that answered decides, and an origin that
-        # cannot be established is refused rather than guessed. The retired
-        # shape fell back to ``expected_url`` and then urlsplit it, so an
-        # ``about:blank`` landing built a malformed ``about://<path>`` and
-        # submitted to it.
-        # Kept for diagnostics only: naming the landing in a shape-context
-        # report is not the same claim as recording it as an origin.
-        current_url = getattr(page, "url", "") or expected_url
-        current_origin = landed_origin(getattr(page, "url", "") or "")
-        if current_origin is None:
-            raise SedeNavigationError(
-                "AEAT IVA wallet execute gate landed on no usable origin; "
-                "the host that answered cannot be established, so no "
-                "submission URL can be built for this read",
-                failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            )
-        submission_url = f"{current_origin}{expected_path}"
-        method = _wallet_execute_form_method(html)
-        _assert_read_http(method, submission_url)
-        _assert_read_browser_action(_WALLET_EXECUTE_READ_ACTION)
-        await _fill_wallet_query_form(
-            page,
-            target_year=target_period.filing_year,
-            target_period_token=target_period.registry_token,
+    if result != "wallet-execute-submit-present":
+        return False
+    await _run_wallet_execute_query(
+        page,
+        content=content,
+        html=html,
+        expected_path=expected_path,
+        expected_url=expected_url,
+        settings=settings,
+        target_period=target_period,
+    )
+    return True
+
+
+async def _run_wallet_execute_query(
+    page: Page,
+    *,
+    content: Callable[[], Awaitable[object]],
+    html: str,
+    expected_path: str,
+    expected_url: str,
+    settings: Settings,
+    target_period: Period,
+) -> None:
+    """Submit an executable wallet query and verify its terminal page shape."""
+    # Same landed-origin question as the observation source_url, and the same
+    # answer: the host that answered decides, and an origin that cannot be
+    # established is refused rather than guessed.
+    current_url = getattr(page, "url", "") or expected_url
+    current_origin = landed_origin(getattr(page, "url", "") or "")
+    if current_origin is None:
+        raise SedeNavigationError(
+            "AEAT IVA wallet execute gate landed on no usable origin; "
+            "the host that answered cannot be established, so no "
+            "submission URL can be built for this read",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
         )
-        _diag_dump_dir = settings.cadrumo_wallet_diagnostic_dump_dir
-        if _diag_dump_dir is not None:
-            await _dump_wallet_diagnostic(page, label="pre-execute", dump_dir=_diag_dump_dir)
+    submission_url = f"{current_origin}{expected_path}"
+    method = _wallet_execute_form_method(html)
+    _assert_read_http(method, submission_url)
+    _assert_read_browser_action(_WALLET_EXECUTE_READ_ACTION)
+    await _fill_wallet_query_form(
+        page,
+        target_year=target_period.filing_year,
+        target_period_token=target_period.registry_token,
+    )
+    diagnostic_dir = settings.cadrumo_wallet_diagnostic_dump_dir
+    if diagnostic_dir is not None:
+        await _dump_wallet_diagnostic(page, label="pre-execute", dump_dir=diagnostic_dir)
+    try:
+        await page.click(_PRE303.wallet_execute_submit_selector)
+        nav_timeout_ms = settings.cadrumo_browser_navigation_timeout_ms
+        await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=nav_timeout_ms)
         try:
-            await page.click(_PRE303.wallet_execute_submit_selector)
-            nav_timeout_ms = settings.cadrumo_browser_navigation_timeout_ms
-            await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=nav_timeout_ms)
-            try:
-                await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=nav_timeout_ms)
-            except PlaywrightError:
-                log.debug(
-                    "IVA wallet execute read query did not reach networkidle current_url=%s",
-                    getattr(page, "url", None),
-                    exc_info=True,
-                )
-            # The ``ejecutar`` click above issued a browser form POST. This
-            # is the only wall that sees where AEAT served it: the shape
-            # check below reads the returned HTML's own form action, which
-            # is a DOM AEAT controls and is not evidence of the URL served.
-            _assert_read_landing(page)
-            post_execute_html = await _wait_for_wallet_execute_terminal_shape(
-                page,
-                content=content,
-                expected_path=expected_path,
-                timeout_ms=settings.cadrumo_browser_navigation_timeout_ms,
+            await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=nav_timeout_ms)
+        except PlaywrightError:
+            log.debug(
+                "IVA wallet execute read query did not reach networkidle current_url=%s",
+                getattr(page, "url", None),
+                exc_info=True,
             )
-            if _diag_dump_dir is not None:
-                await _dump_wallet_diagnostic(page, label="post-execute", dump_dir=_diag_dump_dir)
-            if _wallet_execute_gate_status(
-                post_execute_html,
-                expected_path=expected_path,
-            ) == "wallet-execute-submit-present" and not _has_wallet_table(post_execute_html):
-                raise SedeNavigationError(
-                    "AEAT IVA wallet read query left the executable wallet shell without a wallet table",
-                    failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-                    context=_wallet_page_shape_context(
-                        post_execute_html,
-                        landing_url=getattr(page, "url", "") or current_url,
-                    ),
-                )
-        except PlaywrightError as exc:
-            raise SedeNavigationError(
-                "AEAT IVA wallet read query could not be completed",
-                failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-                context={
-                    **_wallet_page_shape_context(html, landing_url=current_url),
-                    "expected_url": redacted_url(expected_url),
-                    "blocked_operation": "wallet_execute_read_query",
-                },
-            ) from exc
-        return True
-    return False
+        _assert_read_landing(page)
+        post_execute_html = await _wait_for_wallet_execute_terminal_shape(
+            page,
+            content=content,
+            expected_path=expected_path,
+            timeout_ms=settings.cadrumo_browser_navigation_timeout_ms,
+        )
+        if diagnostic_dir is not None:
+            await _dump_wallet_diagnostic(page, label="post-execute", dump_dir=diagnostic_dir)
+        _raise_if_wallet_terminal_shape_invalid(
+            post_execute_html,
+            expected_path=expected_path,
+            landing_url=getattr(page, "url", "") or current_url,
+        )
+    except PlaywrightError as exc:
+        raise SedeNavigationError(
+            "AEAT IVA wallet read query could not be completed",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            context={
+                **_wallet_page_shape_context(html, landing_url=current_url),
+                "expected_url": redacted_url(expected_url),
+                "blocked_operation": "wallet_execute_read_query",
+            },
+        ) from exc
+
+
+def _raise_if_wallet_terminal_shape_invalid(
+    html: str,
+    *,
+    expected_path: str,
+    landing_url: str,
+) -> None:
+    if _wallet_execute_gate_status(
+        html, expected_path=expected_path
+    ) == "wallet-execute-submit-present" and not _has_wallet_table(html):
+        raise SedeNavigationError(
+            "AEAT IVA wallet read query left the executable wallet shell without a wallet table",
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+            context=_wallet_page_shape_context(html, landing_url=landing_url),
+        )
 
 
 async def _wait_for_wallet_execute_initial_shape(

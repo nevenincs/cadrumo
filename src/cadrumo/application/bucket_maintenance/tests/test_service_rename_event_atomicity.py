@@ -38,7 +38,7 @@ from ....domain.buckets import (
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...user_profile import (
-    ProfileRepository,
+    ProfileRecordRepository,
     profile_create_storage_span,
     profile_storage_session,
 )
@@ -75,7 +75,7 @@ def _events_of(event_type: BucketEventType) -> tuple[BucketEvent, ...]:
 
 def _current_label() -> str:
     with profile_storage_session(_BUCKET_ID):
-        return ProfileRepository().load(_BUCKET_ID).record.display_name
+        return ProfileRecordRepository(bucket_id=_BUCKET_ID).load(_BUCKET_ID).display_name
 
 
 def _poison_the_maintenance_event() -> None:

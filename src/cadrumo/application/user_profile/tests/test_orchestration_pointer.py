@@ -38,7 +38,7 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ... import wizard as _wizard  # noqa: F401
 from ...workflow import WorkflowState, repair_active_profile_pointer
-from .. import ProfileRepository, active_profile_pointer_transaction
+from .. import ProfileRecordAggregateRepository, active_profile_pointer_transaction
 from .._orchestration import (
     profile_create_storage_span,
     profile_storage_session,
@@ -140,7 +140,7 @@ def test_repository_failed_create_restores_exact_pointer_bytes_under_outer_owner
     with active_profile_pointer_transaction(root) as pointer_transaction, profile_storage_session(victim_id):
         manifest_path(victim_paths).unlink()
         with pytest.raises(ProfileSchemaValidationError):
-            ProfileRepository(root=root).create(
+            ProfileRecordAggregateRepository(root=root).create(
                 label="Rejected victim",
                 facts=(),
                 profile_id=victim_id,
@@ -153,7 +153,7 @@ def test_repository_failed_create_restores_exact_pointer_bytes_under_outer_owner
     assert manifest_path(victim_paths).exists() is False
     assert victim_paths.bucket_dir.exists() is False
     with profile_storage_session(survivor_id):
-        survivor = ProfileRepository(root=root).load(survivor_id)
+        survivor = ProfileRecordAggregateRepository(root=root).load(survivor_id)
     assert survivor.profile_id == survivor_id
 
 

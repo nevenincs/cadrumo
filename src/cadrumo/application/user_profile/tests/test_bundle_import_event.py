@@ -22,10 +22,10 @@ from ....domain.buckets import BucketEvent, BucketEventObjectType, BucketEventTy
 from ....domain.user_profile import UserProfileStatus
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
-    ProfileLifecycleService,
+    ProfileRecordLifecycle,
+    ProfileRecordRepository,
     ProfileValidationService,
     RegisterProfileCommand,
-    UserProfileLifecycleRepository,
     register_imported_profile_bundle,
     serialize_profile_bundle,
 )
@@ -45,8 +45,8 @@ def _imported_events() -> tuple[BucketEvent, ...]:
 
 def _register_source_profile() -> None:
     """Register a real profile record so the bucket has a serialisable bundle."""
-    service = ProfileLifecycleService(
-        repository=UserProfileLifecycleRepository(bucket_id=_BUCKET_ID),
+    service = ProfileRecordLifecycle(
+        repository=ProfileRecordRepository(bucket_id=_BUCKET_ID),
         validator=ProfileValidationService(schema=resources().user_profile_schema.singleton),
     )
     service.register(

@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
 from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from .. import (
+    OperationConflictScopeReference,
     OperationEventStream,
     OperationId,
     OperationIdentity,
@@ -30,9 +31,12 @@ from .. import (
     OperationSnapshot,
     OperationTerminalEvent,
     OperationTerminalReceipt,
+    operation_conflict_scope_reference,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_SCOPE_REF = operation_conflict_scope_reference(definition_id="test.operation", subject_ref="subject")
 
 
 class Operand(BaseModel):
@@ -128,7 +132,7 @@ def test_persisted_snapshot_is_versioned_and_excludes_the_runtime_request() -> N
     with pytest.raises(ValidationError, match="frozen_instance"):
         restored.revision = 1
     payload = persisted.model_dump()
-    payload["schema_version"] = 2
+    payload["schema_version"] = 1
     with pytest.raises(ValidationError):
         OperationPersistedSnapshot.model_validate(payload)
     payload = persisted.model_dump()
@@ -277,6 +281,7 @@ def test_public_port_signatures_pin_explicit_lease_evidence_inputs() -> None:
     )
     assert tuple(inspect.signature(OperationLeaseRepository.inspect).parameters) == (
         "self",
+        "scope_ref",
         "operation_id",
         "observed_at",
     )
@@ -305,6 +310,7 @@ def test_public_port_signatures_pin_explicit_lease_evidence_inputs() -> None:
         assert inspect.signature(method).parameters["observed_at"].kind is inspect.Parameter.KEYWORD_ONLY
     expected_annotations = {
         OperationLeaseRepository.inspect: {
+            "scope_ref": OperationConflictScopeReference,
             "operation_id": OperationId,
             "observed_at": datetime,
             "return": OperationLeaseObservation,
@@ -339,7 +345,12 @@ def test_owner_lease_requires_a_positive_utc_window() -> None:
     acquired = datetime(2026, 8, 13, 20, tzinfo=UTC)
     with pytest.raises(ValidationError):
         OperationOwnerLease(
-            operation_id="a" * 64, owner_id="b" * 64, token="c" * 64, acquired_at=acquired, expires_at=acquired
+            operation_id="a" * 64,
+            scope_ref=operation_conflict_scope_reference(definition_id="test.operation", subject_ref="subject"),
+            owner_id="b" * 64,
+            token="c" * 64,
+            acquired_at=acquired,
+            expires_at=acquired,
         )
 
 
@@ -353,6 +364,7 @@ def _owner_lease(
 ) -> OperationOwnerLease:
     return OperationOwnerLease(
         operation_id=operation_id,
+        scope_ref=operation_conflict_scope_reference(definition_id="test.operation", subject_ref="subject"),
         owner_id=owner_id,
         token=token,
         acquired_at=acquired_at,
@@ -364,13 +376,23 @@ def test_lease_and_replay_results_are_fail_closed() -> None:
     observed = datetime(2026, 8, 13, 20, tzinfo=UTC)
     for disposition in OperationLeaseDisposition:
         with pytest.raises(ValidationError):
-            OperationLeaseResult(operation_id="a" * 64, disposition=disposition, observed_at=observed)
+            OperationLeaseResult(
+                scope_ref=_SCOPE_REF,
+                operation_id="a" * 64,
+                disposition=disposition,
+                observed_at=observed,
+            )
     for disposition in {
         OperationLeaseObservationDisposition.ACTIVE,
         OperationLeaseObservationDisposition.EXPIRED,
     }:
         with pytest.raises(ValidationError):
-            OperationLeaseObservation(operation_id="a" * 64, disposition=disposition, observed_at=observed)
+            OperationLeaseObservation(
+                scope_ref=_SCOPE_REF,
+                operation_id="a" * 64,
+                disposition=disposition,
+                observed_at=observed,
+            )
     with pytest.raises(ValidationError, match="at least one event"):
         OperationReplayPage(status=OperationReplayStatus.PAGE, requested_cursor=0, events=(), next_cursor=0)
     with pytest.raises(ValidationError):
@@ -387,17 +409,20 @@ def test_lease_observation_binds_target_state_and_deterministic_evidence() -> No
     expired = _owner_lease(expires_at=datetime(2026, 8, 13, 20, 1, tzinfo=UTC))
 
     absent = OperationLeaseObservation(
+        scope_ref=_SCOPE_REF,
         operation_id="a" * 64,
         disposition=OperationLeaseObservationDisposition.ABSENT,
         observed_at=observed,
     )
     active_observation = OperationLeaseObservation(
+        scope_ref=_SCOPE_REF,
         operation_id="a" * 64,
         disposition=OperationLeaseObservationDisposition.ACTIVE,
         observed_at=observed,
         current=active,
     )
     expired_observation = OperationLeaseObservation(
+        scope_ref=_SCOPE_REF,
         operation_id="a" * 64,
         disposition=OperationLeaseObservationDisposition.EXPIRED,
         observed_at=observed,
@@ -420,9 +445,9 @@ def test_lease_observation_binds_target_state_and_deterministic_evidence() -> No
         (
             {
                 "disposition": OperationLeaseObservationDisposition.ACTIVE,
-                "current": active.model_copy(update={"operation_id": "9" * 64}),
+                "current": active.model_copy(update={"scope_ref": "9" * 64}),
             },
-            "does not match the operation identity",
+            "does not match the conflict scope",
         ),
     ):
         payload = absent.model_dump()
@@ -451,12 +476,14 @@ def test_lease_transition_contracts_bind_exact_predecessors_and_derived_evidence
 
     results = (
         OperationLeaseResult(
+            scope_ref=_SCOPE_REF,
             operation_id="a" * 64,
             disposition=OperationLeaseDisposition.ACQUIRED,
             observed_at=observed,
             current=acquired,
         ),
         OperationLeaseResult(
+            scope_ref=_SCOPE_REF,
             operation_id="a" * 64,
             disposition=OperationLeaseDisposition.RENEWED,
             observed_at=observed,
@@ -464,18 +491,21 @@ def test_lease_transition_contracts_bind_exact_predecessors_and_derived_evidence
             current=renewed,
         ),
         OperationLeaseResult(
+            scope_ref=_SCOPE_REF,
             operation_id="a" * 64,
             disposition=OperationLeaseDisposition.CONFLICT,
             observed_at=observed,
             current=predecessor,
         ),
         OperationLeaseResult(
+            scope_ref=_SCOPE_REF,
             operation_id="a" * 64,
             disposition=OperationLeaseDisposition.EXPIRED,
             observed_at=observed,
             predecessor=expired_predecessor,
         ),
         OperationLeaseResult(
+            scope_ref=_SCOPE_REF,
             operation_id="a" * 64,
             disposition=OperationLeaseDisposition.TAKEN_OVER,
             observed_at=observed,
@@ -483,12 +513,14 @@ def test_lease_transition_contracts_bind_exact_predecessors_and_derived_evidence
             current=takeover,
         ),
         OperationLeaseResult(
+            scope_ref=_SCOPE_REF,
             operation_id="a" * 64,
             disposition=OperationLeaseDisposition.RELEASED,
             observed_at=observed,
             predecessor=predecessor,
         ),
         OperationLeaseResult(
+            scope_ref=_SCOPE_REF,
             operation_id="a" * 64,
             disposition=OperationLeaseDisposition.OWNER_LOST,
             observed_at=observed,
@@ -535,6 +567,7 @@ def test_lease_transition_correlations_refuse_planted_identity_and_time_mutation
     observed = datetime(2026, 8, 13, 20, 2, tzinfo=UTC)
     predecessor = OperationOwnerLease(
         operation_id="a" * 64,
+        scope_ref=operation_conflict_scope_reference(definition_id="test.operation", subject_ref="subject"),
         owner_id="b" * 64,
         token="c" * 64,
         acquired_at=datetime(2026, 8, 13, 20, tzinfo=UTC),
@@ -542,12 +575,14 @@ def test_lease_transition_correlations_refuse_planted_identity_and_time_mutation
     )
     current = OperationOwnerLease(
         operation_id="a" * 64,
+        scope_ref=operation_conflict_scope_reference(definition_id="test.operation", subject_ref="subject"),
         owner_id="e" * 64,
         token="f" * 64,
         acquired_at=observed,
         expires_at=datetime(2026, 8, 13, 20, 3, tzinfo=UTC),
     )
     accepted = OperationLeaseResult(
+        scope_ref=_SCOPE_REF,
         operation_id="a" * 64,
         disposition=OperationLeaseDisposition.TAKEN_OVER,
         observed_at=observed,
@@ -556,7 +591,7 @@ def test_lease_transition_correlations_refuse_planted_identity_and_time_mutation
     )
     assert accepted.current == current
     for mutation, message in (
-        ({"current": current.model_copy(update={"operation_id": "9" * 64})}, "witness does not match"),
+        ({"current": current.model_copy(update={"operation_id": "9" * 64})}, "successor must match"),
         ({"current": current.model_copy(update={"owner_id": predecessor.owner_id})}, "new owner and token"),
         ({"current": current.model_copy(update={"token": predecessor.token})}, "new owner and token"),
         (
@@ -567,6 +602,7 @@ def test_lease_transition_correlations_refuse_planted_identity_and_time_mutation
         with pytest.raises(ValidationError, match=message):
             OperationLeaseResult.model_validate(
                 {
+                    "scope_ref": _SCOPE_REF,
                     "operation_id": "a" * 64,
                     "disposition": OperationLeaseDisposition.TAKEN_OVER,
                     "observed_at": observed,

@@ -98,42 +98,61 @@ class M303ProrrataTransitionArrival(BaseModel):
     @model_validator(mode="after")
     def _transition_matches_register_evidence(self) -> M303ProrrataTransitionArrival:
         if not self.is_applicable:
-            if self.transition is not None or self.register_evidence:
-                raise AggregationValidationError(
-                    t("aggregation.m303_arrivals.errors.prorrata_transition_not_applicable_for_period"),
-                    context={"period": self.period.registry_token},
-                )
+            _require_non_applicable_transition(self)
             return self
         if self.transition is None:
-            if self.register_evidence:
-                raise AggregationValidationError(
-                    t("aggregation.m303_arrivals.errors.prorrata_transition_evidence_without_declared_transition")
-                )
+            _require_no_undeclared_transition_evidence(self)
             return self
-        if not self.register_evidence:
-            raise AggregationValidationError(
-                t("aggregation.m303_arrivals.errors.prorrata_transition_missing_register_evidence")
-            )
-        for entry in self.register_evidence:
-            if entry.ejercicio != self.period.filing_year:
-                raise AggregationValidationError(
-                    t("aggregation.m303_arrivals.errors.prorrata_transition_evidence_wrong_filing_year"),
-                    context={"entry_ejercicio": entry.ejercicio, "filing_year": self.period.filing_year},
-                )
-            if entry.especial_transition is None:
-                raise AggregationValidationError(
-                    t("aggregation.m303_arrivals.errors.prorrata_transition_entry_without_evidence"),
-                    context={"sector_id": entry.sector_id or ""},
-                )
-            if entry.especial_transition.kind != self.transition:
-                raise AggregationValidationError(
-                    t("aggregation.m303_arrivals.errors.prorrata_transition_contradictory_evidence"),
-                    context={
-                        "declared_transition": self.transition.value,
-                        "entry_transition": entry.especial_transition.kind.value,
-                    },
-                )
+        _require_declared_transition_evidence(self)
         return self
+
+
+def _require_non_applicable_transition(arrival: M303ProrrataTransitionArrival) -> None:
+    if arrival.transition is not None or arrival.register_evidence:
+        raise AggregationValidationError(
+            t("aggregation.m303_arrivals.errors.prorrata_transition_not_applicable_for_period"),
+            context={"period": arrival.period.registry_token},
+        )
+
+
+def _require_no_undeclared_transition_evidence(arrival: M303ProrrataTransitionArrival) -> None:
+    if arrival.register_evidence:
+        raise AggregationValidationError(
+            t("aggregation.m303_arrivals.errors.prorrata_transition_evidence_without_declared_transition")
+        )
+
+
+def _require_declared_transition_evidence(arrival: M303ProrrataTransitionArrival) -> None:
+    if not arrival.register_evidence:
+        raise AggregationValidationError(
+            t("aggregation.m303_arrivals.errors.prorrata_transition_missing_register_evidence")
+        )
+    for entry in arrival.register_evidence:
+        _validate_transition_entry(arrival, entry)
+
+
+def _validate_transition_entry(
+    arrival: M303ProrrataTransitionArrival,
+    entry: ProrrataRegisterEntry,
+) -> None:
+    if entry.ejercicio != arrival.period.filing_year:
+        raise AggregationValidationError(
+            t("aggregation.m303_arrivals.errors.prorrata_transition_evidence_wrong_filing_year"),
+            context={"entry_ejercicio": entry.ejercicio, "filing_year": arrival.period.filing_year},
+        )
+    if entry.especial_transition is None:
+        raise AggregationValidationError(
+            t("aggregation.m303_arrivals.errors.prorrata_transition_entry_without_evidence"),
+            context={"sector_id": entry.sector_id or ""},
+        )
+    if entry.especial_transition.kind != arrival.transition:
+        raise AggregationValidationError(
+            t("aggregation.m303_arrivals.errors.prorrata_transition_contradictory_evidence"),
+            context={
+                "declared_transition": arrival.transition.value if arrival.transition is not None else "",
+                "entry_transition": entry.especial_transition.kind.value,
+            },
+        )
 
 
 def resolve_m303_supplier_regime_arrival(

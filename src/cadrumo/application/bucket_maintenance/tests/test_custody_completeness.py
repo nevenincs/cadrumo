@@ -28,7 +28,7 @@ from ....domain.buckets import (
     BucketEventType,
     derive_bucket_event_id,
 )
-from ....domain.user_profile import ProfileExportError, ProfileSchemaDefinition, UserProfileFact
+from ....domain.user_profile import ProfileExportError, ProfileSchemaDefinition, UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
 from ....tests.user_profile import schema_valid_placeholder
 from ...modelo import (
@@ -36,7 +36,7 @@ from ...modelo import (
     create_m145_communication_record,
     read_m145_communication_record,
 )
-from ...user_profile import RegisterProfileCommand, profile_storage_session
+from ...user_profile import ProfileRecordRepository, profile_storage_session
 from ...workflow import read_profile_bucket_by_id
 from .._contracts import ExportBucketCommand, ImportBucketCommand
 from .._service import BucketMaintenanceService
@@ -79,16 +79,10 @@ def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, .
 @pytest.fixture
 def seeded_bucket(runtime: TestRuntimeProfile) -> str:
     """Register a profile and seed the previously-dropped stores."""
-    from ...user_profile import ProfileLifecycleService, ProfileValidationService, UserProfileLifecycleRepository
-
     schema = resources().user_profile_schema.singleton
     assert isinstance(schema, ProfileSchemaDefinition)
-    ProfileLifecycleService(
-        repository=UserProfileLifecycleRepository(bucket_id=runtime.bucket_id, objects=runtime.repository),
-        validator=ProfileValidationService(schema=schema),
-        events=BucketEventHistoryRepository(objects=runtime.repository),
-    ).register(
-        RegisterProfileCommand(
+    ProfileRecordRepository(bucket_id=runtime.bucket_id, objects=runtime.repository).save(
+        UserProfileRecord(
             profile_id=runtime.bucket_id,
             display_name=_LABEL,
             facts=_required_facts(schema),

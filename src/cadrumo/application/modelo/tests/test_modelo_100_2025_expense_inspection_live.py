@@ -42,7 +42,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -126,7 +126,7 @@ def _seed_sofia_profile(objects: SecureObjectRepository) -> None:
         created_at=_T0,
         updated_at=_T0,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(record)
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(record)
 
 
 def _raw_transaction(provider_id: str, *, value_date: date, amount: Decimal) -> RawTransaction:

@@ -71,7 +71,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, ResultDispositionProjection
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
@@ -215,7 +215,7 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
 
 
 def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="M390 fold test",

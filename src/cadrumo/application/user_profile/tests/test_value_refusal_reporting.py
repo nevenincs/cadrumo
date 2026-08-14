@@ -25,7 +25,7 @@ from ....domain.user_profile import (
     UserProfileFact,
     load_user_profile_schema,
 )
-from .._lifecycle import _schema_validation_message
+from .._record_lifecycle import _schema_validation_message
 from .._validation import (
     _ISSUE_CODE_BY_REFUSAL_KIND,
     BOOLEAN_VALUE_ISSUE_CODE,

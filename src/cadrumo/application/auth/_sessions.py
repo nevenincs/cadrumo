@@ -1037,7 +1037,7 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
     from ...core import resolve_active_bucket_id
     from ...domain.user_profile import ProfileNotFoundError
     from ..user_profile import (
-        build_lifecycle_service,
+        ProfileRecordRepository,
         record_to_path_values,
         record_to_values,
     )
@@ -1050,14 +1050,18 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
         # session bound to another profile would decrypt this record under the
         # wrong key rather than fall through to the provider branch below.
         if active_bucket_session_serves(bucket_id):
-            record = build_lifecycle_service(bucket_id=bucket_id).read(bucket_id)
+            record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
         else:
             from ...core.config import override_settings
 
-            with override_settings(cadrumo_active_profile=bucket_id):
-                service = build_lifecycle_service(bucket_id=bucket_id)
-                with activate_master_key_provider(get_master_key_provider(), fallback_bucket_id=bucket_id):
-                    record = service.read(bucket_id)
+            with (
+                override_settings(cadrumo_active_profile=bucket_id),
+                activate_master_key_provider(
+                    get_master_key_provider(),
+                    fallback_bucket_id=bucket_id,
+                ),
+            ):
+                record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return ClaveAuthFacts()
 

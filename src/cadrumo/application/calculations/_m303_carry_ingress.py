@@ -11,9 +11,10 @@ must read this persisted contract rather than recover an election themselves.
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...core import Modelo, ResultDisposition, result_disposition_is_refund
-from ...core.errors import CoreValidationError
+from ...core.errors import CoreValidationError, TerminalPreconditionErrorMixin
 from ...core.resources import resources
 from ...domain.calculations.registry import (
     CasillaObservation,
@@ -29,8 +30,14 @@ from ...domain.iva_compensation import (
     M303CompensationAvailableDerivation,
     derive_m303_compensation_available_from_casillas,
 )
+
+if TYPE_CHECKING:
+    from ..operator_actions import PreconditionVerdict
+
+    _M303CarryIngressErrorMixin = TerminalPreconditionErrorMixin[PreconditionVerdict]
+else:
+    _M303CarryIngressErrorMixin = TerminalPreconditionErrorMixin
 from ._errors import (
-    CalculationPreconditionErrorMixin,
     CalculationRefusalPrecondition,
     calculation_no_recovery_verdict,
 )
@@ -73,7 +80,7 @@ _POSITIVE_DISPOSITIONS = frozenset(
 _ZERO = Decimal("0")
 
 
-class M303CarryIngressError(CalculationPreconditionErrorMixin, CoreValidationError):
+class M303CarryIngressError(_M303CarryIngressErrorMixin, CoreValidationError):
     """Modelo 303 carry evidence was insufficient or internally contradictory.
 
     A refusal reporting two sources of the same declared amount that disagree

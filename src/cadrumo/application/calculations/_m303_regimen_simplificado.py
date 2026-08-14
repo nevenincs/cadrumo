@@ -7,7 +7,7 @@ from decimal import Decimal, InvalidOperation
 
 from ...core import Period
 from ...core.money import round_to_cents
-from ...domain.calculations.registry import M303RegimenSimplificadoSnapshot, RegistryCatalogues
+from ...domain.calculations.registry import LegalParameter, M303RegimenSimplificadoSnapshot, RegistryCatalogues
 from ...domain.iva import (
     ActividadNoAgricolaSimplificado,
     ActividadOrdenAnual,
@@ -157,42 +157,25 @@ def _calculate_no_agricultural_activity(
         raise M303RegimenSimplificadoCalculationError(
             "M303 simplified calculation requires a non-agricultural annual Orden row",
         )
-    modules = tuple(
-        M303RegimenSimplificadoModuleCalculationResult(
-            module_identity=declared.module_identity,
-            declared_quantity=declared.declared_quantity,
-            coefficient=published.coefficient,
-            cuota_devengada=round_to_cents(declared.declared_quantity * published.coefficient),
-            evidence_reference=declared.evidence_reference,
-            legal_refs=published.legal_refs,
-            source_refs=published.source_refs,
-        )
-        for declared, published in zip(row.modulos, annual.modulos, strict=True)
-    )
-    cuota_devengada = round_to_cents(sum((item.cuota_devengada for item in modules), start=Decimal("0")))
+    modules = _calculate_activity_modules(row=row, annual=annual)
+    cuota_devengada = _sum_module_cuotas(modules)
     dana_reduction = _calculate_dana_2024_reduction(
         cuota_devengada=cuota_devengada,
         eligibility=dana_eligibility,
         authority=dana_authority,
     )
-    cuota_tras_dana = cuota_devengada - (dana_reduction.amount if dana_reduction is not None else Decimal("0"))
-    difficult = round_to_cents(cuota_tras_dana * difficult_justification_pct / _HUNDRED)
-    minimum = round_to_cents(cuota_tras_dana * annual.cuota_minima_pct / _HUNDRED)
-    activity_legal_refs = _ordered_unique(
-        (
-            annual.legal_refs,
-            *(item.legal_refs for item in modules),
-            difficult_justification_legal_refs,
-            dana_reduction.legal_refs if dana_reduction is not None else (),
-        ),
+    cuota_tras_dana = _cuota_after_dana(cuota_devengada, dana_reduction)
+    difficult, minimum = _calculate_activity_adjustments(
+        cuota_tras_dana=cuota_tras_dana,
+        difficult_justification_pct=difficult_justification_pct,
+        minimum_pct=annual.cuota_minima_pct,
     )
-    activity_source_refs = _ordered_unique(
-        (
-            annual.source_refs,
-            *(item.source_refs for item in modules),
-            difficult_justification_source_refs,
-            dana_reduction.source_refs if dana_reduction is not None else (),
-        ),
+    activity_legal_refs, activity_source_refs = _activity_provenance(
+        annual=annual,
+        modules=modules,
+        difficult_justification_legal_refs=difficult_justification_legal_refs,
+        difficult_justification_source_refs=difficult_justification_source_refs,
+        dana_reduction=dana_reduction,
     )
     return M303RegimenSimplificadoActivityCalculationResult(
         activity_id=row.activity_id,
@@ -214,6 +197,77 @@ def _calculate_no_agricultural_activity(
     )
 
 
+def _calculate_activity_modules(
+    *,
+    row: ActividadNoAgricolaSimplificado,
+    annual: ActividadOrdenAnual,
+) -> tuple[M303RegimenSimplificadoModuleCalculationResult, ...]:
+    return tuple(
+        M303RegimenSimplificadoModuleCalculationResult(
+            module_identity=declared.module_identity,
+            declared_quantity=declared.declared_quantity,
+            coefficient=published.coefficient,
+            cuota_devengada=round_to_cents(declared.declared_quantity * published.coefficient),
+            evidence_reference=declared.evidence_reference,
+            legal_refs=published.legal_refs,
+            source_refs=published.source_refs,
+        )
+        for declared, published in zip(row.modulos, annual.modulos, strict=True)
+    )
+
+
+def _sum_module_cuotas(modules: tuple[M303RegimenSimplificadoModuleCalculationResult, ...]) -> Decimal:
+    return round_to_cents(sum((item.cuota_devengada for item in modules), start=Decimal("0")))
+
+
+def _cuota_after_dana(
+    cuota_devengada: Decimal,
+    dana_reduction: M303DANA2024ReductionResult | None,
+) -> Decimal:
+    reduction = dana_reduction.amount if dana_reduction is not None else Decimal("0")
+    return cuota_devengada - reduction
+
+
+def _calculate_activity_adjustments(
+    *,
+    cuota_tras_dana: Decimal,
+    difficult_justification_pct: Decimal,
+    minimum_pct: Decimal,
+) -> tuple[Decimal, Decimal]:
+    difficult = round_to_cents(cuota_tras_dana * difficult_justification_pct / _HUNDRED)
+    minimum = round_to_cents(cuota_tras_dana * minimum_pct / _HUNDRED)
+    return difficult, minimum
+
+
+def _activity_provenance(
+    *,
+    annual: ActividadOrdenAnual,
+    modules: tuple[M303RegimenSimplificadoModuleCalculationResult, ...],
+    difficult_justification_legal_refs: tuple[str, ...],
+    difficult_justification_source_refs: tuple[str, ...],
+    dana_reduction: M303DANA2024ReductionResult | None,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    reduction_legal_refs = dana_reduction.legal_refs if dana_reduction is not None else ()
+    reduction_source_refs = dana_reduction.source_refs if dana_reduction is not None else ()
+    legal_refs = _ordered_unique(
+        (
+            annual.legal_refs,
+            *(item.legal_refs for item in modules),
+            difficult_justification_legal_refs,
+            reduction_legal_refs,
+        ),
+    )
+    source_refs = _ordered_unique(
+        (
+            annual.source_refs,
+            *(item.source_refs for item in modules),
+            difficult_justification_source_refs,
+            reduction_source_refs,
+        ),
+    )
+    return legal_refs, source_refs
+
+
 class _DANA2024Authority:
     """Resolved DANA parameter with all legal/source provenance retained."""
 
@@ -225,6 +279,12 @@ def _resolve_dana_2024_authority(catalogues: RegistryCatalogues) -> _DANA2024Aut
     parameter = catalogues.parameters.get(_DANA_2024_PARAMETER_ID)
     if parameter is None:
         raise M303RegimenSimplificadoCalculationError("DANA 2024 IVA simplified-regime authority is unavailable")
+    _validate_dana_parameter_shape(parameter)
+    _validate_dana_provenance(catalogues)
+    return _DANA2024Authority(rate=_dana_rate(parameter.value))
+
+
+def _validate_dana_parameter_shape(parameter: LegalParameter) -> None:
     if (
         parameter.unit != "fraction"
         or parameter.applies_to != "iva-regimen-simplificado"
@@ -233,19 +293,25 @@ def _resolve_dana_2024_authority(catalogues: RegistryCatalogues) -> _DANA2024Aut
         raise M303RegimenSimplificadoCalculationError(
             "DANA 2024 IVA simplified-regime authority is not the exact legal parameter",
         )
+
+
+def _validate_dana_provenance(catalogues: RegistryCatalogues) -> None:
     if any(reference not in catalogues.legal for reference in _DANA_2024_LEGAL_REFS):
         raise M303RegimenSimplificadoCalculationError("DANA 2024 legal provenance is incomplete")
     if any(reference not in catalogues.sources for reference in _DANA_2024_SOURCE_REFS):
         raise M303RegimenSimplificadoCalculationError("DANA 2024 source provenance is incomplete")
+
+
+def _dana_rate(value: str) -> Decimal:
     try:
-        rate = Decimal(parameter.value)
+        rate = Decimal(value)
     except InvalidOperation as exc:
         raise M303RegimenSimplificadoCalculationError("DANA 2024 reduction rate is not a decimal") from exc
     if not Decimal("0") < rate < Decimal("1"):
         raise M303RegimenSimplificadoCalculationError(
             "DANA 2024 reduction rate must be a fraction between zero and one",
         )
-    return _DANA2024Authority(rate=rate)
+    return rate
 
 
 def _calculate_dana_2024_reduction(

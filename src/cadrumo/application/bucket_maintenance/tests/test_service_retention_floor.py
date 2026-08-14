@@ -20,7 +20,6 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
@@ -31,10 +30,10 @@ from ....domain.modelos import (
     derive_filing_record_id,
 )
 from ....domain.retention import RetentionBlockingRecord, RetentionFloorAssessment, RetentionFloorError
-from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
+from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....tests.user_profile import schema_valid_placeholder
-from ...user_profile import RegisterProfileCommand
+from ...user_profile import ProfileRecordRepository
 from .. import AssessBucketDeletionCommand, BucketMaintenanceService, DeleteBucketCommand
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -67,20 +66,10 @@ def runtime(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 @pytest.fixture
 def registered_profile(runtime: TestRuntimeProfile) -> None:
-    from ...user_profile import (
-        ProfileLifecycleService,
-        ProfileValidationService,
-        UserProfileLifecycleRepository,
-    )
-
     schema = resources().user_profile_schema.singleton
     assert isinstance(schema, ProfileSchemaDefinition)
-    ProfileLifecycleService(
-        repository=UserProfileLifecycleRepository(bucket_id=runtime.bucket_id, objects=runtime.repository),
-        validator=ProfileValidationService(schema=schema),
-        events=BucketEventHistoryRepository(objects=runtime.repository),
-    ).register(
-        RegisterProfileCommand(
+    ProfileRecordRepository(bucket_id=runtime.bucket_id, objects=runtime.repository).save(
+        UserProfileRecord(
             profile_id=runtime.bucket_id,
             display_name=_LABEL,
             facts=_all_required_facts(schema),

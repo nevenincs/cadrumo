@@ -23,7 +23,7 @@ from ....domain.modelos import (
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import create_work_unit
 from .._projection import ModeloCompareDeltaRow, ModeloProjectionCasillaObservation, compare_modelo_years
 
@@ -112,7 +112,7 @@ def _seed_revision(
 def test_compare_uses_revision_observation_rows_from_registry_snapshot(tmp_path: Path) -> None:
     """Comparison rows must not lose registry-grounded provenance."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        UserProfileLifecycleRepository(bucket_id=profile.bucket_id, objects=profile.repository).save(
+        ProfileRecordRepository(bucket_id=profile.bucket_id, objects=profile.repository).save(
             UserProfileRecord(
                 profile_id=profile.bucket_id,
                 display_name="Modelo compare profile",
@@ -203,7 +203,7 @@ def test_compare_reports_a_one_cent_delta_exactly_with_no_tolerance_absorption(t
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        UserProfileLifecycleRepository(bucket_id=profile.bucket_id, objects=profile.repository).save(
+        ProfileRecordRepository(bucket_id=profile.bucket_id, objects=profile.repository).save(
             UserProfileRecord(
                 profile_id=profile.bucket_id,
                 display_name="Modelo compare profile",

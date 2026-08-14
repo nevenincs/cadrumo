@@ -27,6 +27,7 @@ from ._events import (
     OperationEvent,
     OperationEventCode,
     OperationEventSequence,
+    OperationInteractionEvent,
     OperationLogRecord,
     OperationLogSeverity,
     OperationNoticeEvent,
@@ -41,14 +42,17 @@ from ._executor import (
     OperationEventEmitter,
     OperationExecutor,
     OperationExecutorContext,
+    OperationInteractionAccess,
     OperationSecureOperandLookup,
 )
 from ._interactions import (
     OperationActorReference,
     OperationApplyResponse,
+    OperationConsumedInteraction,
     OperationInteractionId,
     OperationInteractionRequest,
     OperationInteractionResponse,
+    OperationPendingInteraction,
     OperationRejectResponse,
     OperationResponseIntent,
     OperationResponseToken,
@@ -61,16 +65,19 @@ from ._journal import (
     OperationSecureReferenceStore,
 )
 from ._leases import (
+    OperationConflictScopeReference,
     OperationLeaseDisposition,
     OperationLeaseObservation,
     OperationLeaseObservationDisposition,
     OperationLeaseResult,
     OperationLeaseToken,
     OperationOwnerLease,
+    operation_conflict_scope_reference,
 )
 from ._models import (
     OperationDefinitionId,
     OperationId,
+    OperationIdempotencyClaim,
     OperationIdentity,
     OperationReference,
     OperationRequest,
@@ -87,6 +94,7 @@ from ._registry import (
     OperationRegistry,
 )
 from ._replay import OperationEventCursor, OperationReplayLimit, OperationReplayPage, OperationReplayStatus
+from ._supervisor import OperationSupervisor
 
 __all__ = [
     "JournalRepositoryBase",
@@ -99,6 +107,8 @@ __all__ = [
     "OperationCleanupOwner",
     "OperationClosePolicy",
     "OperationConflictScope",
+    "OperationConflictScopeReference",
+    "OperationConsumedInteraction",
     "OperationDeadline",
     "OperationDeadlineAccess",
     "OperationDefinition",
@@ -120,7 +130,10 @@ __all__ = [
     "OperationExecutorFactory",
     "OperationFrontendProjection",
     "OperationId",
+    "OperationIdempotencyClaim",
     "OperationIdentity",
+    "OperationInteractionAccess",
+    "OperationInteractionEvent",
     "OperationInteractionId",
     "OperationInteractionKind",
     "OperationInteractionRequest",
@@ -138,6 +151,7 @@ __all__ = [
     "OperationNoticeEvent",
     "OperationOwnedResource",
     "OperationOwnerLease",
+    "OperationPendingInteraction",
     "OperationPersistedSnapshot",
     "OperationPhaseEvent",
     "OperationProgressEvent",
@@ -157,8 +171,10 @@ __all__ = [
     "OperationSecureReferenceStore",
     "OperationSensitiveInputPolicy",
     "OperationSnapshot",
+    "OperationSupervisor",
     "OperationTerminalCondition",
     "OperationTerminalEvent",
     "OperationTerminalReceipt",
     "new_operation_id",
+    "operation_conflict_scope_reference",
 ]

@@ -1080,6 +1080,25 @@ def _profile_not_ready_check(
     names what is wrong rather than reporting an empty warning. Enrolment
     keys already named by a required finding are not repeated.
     """
+    findings = _profile_not_ready_findings(report, unset_findings)
+    return DiagnosticCheck(
+        name="profile.readiness",
+        status="warn",
+        summary=tr(
+            "cli.diagnostics.summary.profile_missing_fields",
+            default="Profile is missing %{count} required field(s): %{fields}",
+            count=len(findings),
+            fields=", ".join(finding.summary for finding in findings),
+        ),
+        precondition_verdict=_profile_not_ready_verdict(report, finding_count=len(findings)),
+        findings=findings,
+    )
+
+
+def _profile_not_ready_findings(
+    report: WizardStatusReport,
+    unset_findings: tuple[DiagnosticFinding, ...],
+) -> tuple[DiagnosticFinding, ...]:
     missing_required = tuple(f for f in unset_findings if f.requirement == "required")
     if not missing_required:
         missing_required = tuple(
@@ -1092,32 +1111,28 @@ def _profile_not_ready_check(
         for key in report.missing_enrolment
         if key not in already_named
     )
-    findings = missing_required + enrolment_findings
-    return DiagnosticCheck(
-        name="profile.readiness",
-        status="warn",
-        summary=tr(
-            "cli.diagnostics.summary.profile_missing_fields",
-            default="Profile is missing %{count} required field(s): %{fields}",
-            count=len(findings),
-            fields=", ".join(finding.summary for finding in findings),
-        ),
-        precondition_verdict=_diagnostic_action_verdict(
-            condition_id="diagnostics.profile.required_fields.complete",
-            evidence_id="diagnostics.profile.required_fields.observation",
-            values={
-                "missing_required_count": len(findings),
-                "profile_name": report.active_profile or CLI_PROFILE_ID_PLACEHOLDER,
-            },
-            action_id="operator.profile.edit",
-            argument_bindings=(
-                _resolved_verdict_binding(
-                    "profile_name",
-                    report.active_profile or CLI_PROFILE_ID_PLACEHOLDER,
-                ),
+    return missing_required + enrolment_findings
+
+
+def _profile_not_ready_verdict(
+    report: WizardStatusReport,
+    *,
+    finding_count: int,
+) -> PreconditionVerdict:
+    return _diagnostic_action_verdict(
+        condition_id="diagnostics.profile.required_fields.complete",
+        evidence_id="diagnostics.profile.required_fields.observation",
+        values={
+            "missing_required_count": finding_count,
+            "profile_name": report.active_profile or CLI_PROFILE_ID_PLACEHOLDER,
+        },
+        action_id="operator.profile.edit",
+        argument_bindings=(
+            _resolved_verdict_binding(
+                "profile_name",
+                report.active_profile or CLI_PROFILE_ID_PLACEHOLDER,
             ),
         ),
-        findings=findings,
     )
 
 

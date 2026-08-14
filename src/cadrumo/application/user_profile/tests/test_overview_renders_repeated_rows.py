@@ -47,7 +47,7 @@ from ....tests.user_profile import register_minimal_profile
 from ...workflow import workflow_state_repository
 from .. import (
     MASKED_PLACEHOLDER,
-    ProfileRepository,
+    ProfileRecordAggregateRepository,
     build_lifecycle_service,
     build_profile_overview,
     profile_create_storage_span,
@@ -77,7 +77,7 @@ def _register_active() -> None:
 
 
 def _append_facts(*facts: UserProfileFact) -> None:
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     aggregate = repository.load(_BUCKET_ID)
     record = aggregate.record
     repository.save(

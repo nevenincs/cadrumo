@@ -78,15 +78,21 @@ See Also:
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from decimal import Decimal
+from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG, FieldGroundingOutcome, FieldOrigin, unicode_compose
+from ...core import STRICT_FROZEN_CONFIG, DocumentShape, FieldGroundingOutcome, FieldOrigin, unicode_compose
 from ...core.decimal import coerce_finite_european_decimal
+from ...domain.iva import country_code_for_stated_country_code
 from ._document_transcription import DocumentTranscription
 from ._evidence_draft import FieldAmbiguityCandidate, FieldProvenance
+
+if TYPE_CHECKING:
+    from ...adapters.inbound.einvoice import ParsedEInvoice
+    from ._evidence_input import EvidenceInput
 
 __all__ = [
     "AnchorEvaluation",
@@ -736,3 +742,128 @@ def ground_ambiguous_candidates(
         candidates=candidates,
         note=note,
     )
+
+
+# Draft fields copied directly from a structured record. The table lives beside
+# the structured anchor constructor so a newly recovered field cannot bypass
+# the same provenance boundary as every other structured value.
+_STRUCTURED_ENVELOPE_FIELDS: Final = (
+    "supplier_tax_id",
+    "supplier_name",
+    "supplier_postal_code",
+    "customer_tax_id",
+    "customer_name",
+    "customer_postal_code",
+    "invoice_number",
+    "invoice_series",
+    "invoice_date",
+    "currency",
+    "taxable_base",
+    "iva_amount",
+    "grand_total",
+    "recargo_amount",
+    "regime_legend",
+)
+
+_STRUCTURED_ELEMENT_PATHS: Final[dict[str, dict[DocumentShape, str]]] = {
+    "supplier_postal_code": {
+        DocumentShape.XML_FACTURAE: "SellerParty/AddressInSpain/PostCode",
+        DocumentShape.XML_UBL: "cac:AccountingSupplierParty/cac:PostalAddress/cbc:PostalZone",
+        DocumentShape.XML_CII: "ram:SellerTradeParty/ram:PostalTradeAddress/ram:PostcodeCode",
+    },
+    "supplier_country_code": {
+        DocumentShape.XML_FACTURAE: "SellerParty/AddressInSpain/CountryCode",
+        DocumentShape.XML_UBL: ("cac:AccountingSupplierParty/cac:PostalAddress/cac:Country/cbc:IdentificationCode"),
+        DocumentShape.XML_CII: "ram:SellerTradeParty/ram:PostalTradeAddress/ram:CountryID",
+    },
+    "customer_country_code": {
+        DocumentShape.XML_FACTURAE: "BuyerParty/AddressInSpain/CountryCode",
+        DocumentShape.XML_UBL: ("cac:AccountingCustomerParty/cac:PostalAddress/cac:Country/cbc:IdentificationCode"),
+        DocumentShape.XML_CII: "ram:BuyerTradeParty/ram:PostalTradeAddress/ram:CountryID",
+    },
+    "customer_postal_code": {
+        DocumentShape.XML_FACTURAE: "BuyerParty/AddressInSpain/PostCode",
+        DocumentShape.XML_UBL: "cac:AccountingCustomerParty/cac:PostalAddress/cbc:PostalZone",
+        DocumentShape.XML_CII: "ram:BuyerTradeParty/ram:PostalTradeAddress/ram:PostcodeCode",
+    },
+}
+
+_STATED_COUNTRY_FIELDS: Final[tuple[tuple[str, str], ...]] = (
+    ("supplier_stated_country_code", "supplier_country_code"),
+    ("customer_stated_country_code", "customer_country_code"),
+)
+
+
+def _structured_element_path(field: str, *, shape: DocumentShape) -> str:
+    """Return where in the record *field* was read from, for the operator's note."""
+    known = _STRUCTURED_ELEMENT_PATHS.get(field, {}).get(shape)
+    return known if known is not None else f"the {shape.value} record's {field}"
+
+
+def structured_provenance(
+    *,
+    parsed: ParsedEInvoice,
+    evidence: EvidenceInput,
+    derived: Mapping[str, tuple[str, str] | None],
+) -> tuple[FieldProvenance, ...]:
+    """Return one provenance envelope per value the structured record stated."""
+    del evidence
+    source_text = parsed.record_text
+    envelopes: list[FieldProvenance] = []
+    for field in _STRUCTURED_ENVELOPE_FIELDS:
+        value = getattr(parsed, field, None)
+        if value is None:
+            continue
+        envelopes.append(
+            ground_structured_value(
+                field=field,
+                value=value,
+                element_path=_structured_element_path(field, shape=parsed.shape),
+                source_text=source_text,
+            ),
+        )
+    for stated_field, resolved_field in _STATED_COUNTRY_FIELDS:
+        stated = getattr(parsed, resolved_field, None)
+        if stated is None or not stated.strip():
+            continue
+        envelopes.append(
+            ground_structured_value(
+                field=stated_field,
+                value=stated,
+                element_path=_structured_element_path(resolved_field, shape=parsed.shape),
+                source_text=source_text,
+            ),
+        )
+    for field, pair in derived.items():
+        if pair is None:
+            continue
+        value, stated = pair
+        envelopes.append(
+            ground_structured_value(
+                field=field,
+                value=value,
+                anchor=stated,
+                derive=country_code_for_stated_country_code,
+                element_path=_structured_element_path(field, shape=parsed.shape),
+                source_text=source_text,
+            ),
+        )
+    return tuple(envelopes)
+
+
+def resolved_country_code(stated: str | None) -> tuple[str, str] | None:
+    """Return a record country as ``(resolved alpha-2, stated form)``."""
+    resolved = country_code_for_stated_country_code(stated)
+    if resolved is None or stated is None:
+        return None
+    return resolved, stated
+
+
+def country_code_value(pair: tuple[str, str] | None) -> str | None:
+    """Return the resolved half of a country-code pair, or nothing."""
+    return None if pair is None else pair[0]
+
+
+def stated_country_code(stated: str | None) -> str | None:
+    """Return the record's non-blank country token verbatim."""
+    return None if stated is None or not stated.strip() else stated

@@ -36,7 +36,7 @@ from ....core import Modelo
 from ....core.resources import resources
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._relation_prefill import (
     _economic_activity_conditional_source_modelos,
     _not_applicable_source_modelos_for_bucket,
@@ -73,7 +73,7 @@ def _save_profile(bucket_id: str, extra_facts: tuple[UserProfileFact, ...]) -> N
         created_at=_T0,
         updated_at=_T0,
     )
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(record)
+    ProfileRecordRepository(bucket_id=bucket_id).save(record)
 
 
 class TestCandidateSetIsRegistryGrounded:

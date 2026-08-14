@@ -22,7 +22,7 @@ from ...aggregation import (
     RetencionObservationRepository,
     RetencionScheme,
 )
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics, create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -74,7 +74,7 @@ def _administrador_wrong_rate_observation() -> RetencionObservation:
 
 
 def _seed_ready_profile(objects: SecureObjectRepository) -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="M111 retenciones",

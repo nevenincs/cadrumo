@@ -188,12 +188,18 @@ def _m303_filing_facts_payload(
     return payload
 
 
-def _m303_filing_facts(*, filing_year: int = 2026, period_code: str = "4T") -> M303FilingFacts:
+def _m303_filing_facts(
+    *,
+    filing_year: int = 2026,
+    period_code: str = "4T",
+    annual_volume_nonzero: bool = False,
+) -> M303FilingFacts:
     period = Period.from_year_and_code(filing_year, period_code)
     register, bienes_register, regularisation = _empty_m303_export_arrivals(period.filing_year)
     evidence = _m303_instance_evidence(period)
     return M303FilingFacts(
         joint_return_elected=False,
+        annual_volume_nonzero=annual_volume_nonzero,
         insolvency=None,
         exonerado_390=_m303_exonerado_evidence(applicable=False),
         regimen_simplificado=evidence.regimen_simplificado,
@@ -262,6 +268,7 @@ def _m303_instance_evidence(period: Period) -> M303FilingInstanceEvidence:
     return M303FilingInstanceEvidence(
         period=period,
         joint_return_elected=False,
+        annual_volume_nonzero=False,
         insolvency=None,
         exonerado_390=_m303_exonerado_evidence(applicable=False),
         regimen_simplificado=regimen_simplificado_filing_evidence(
@@ -317,6 +324,7 @@ def _m303_foral_snapshot(
     evidence = _m303_instance_evidence(period)
     facts = M303FilingFacts(
         joint_return_elected=True,
+        annual_volume_nonzero=False,
         insolvency=M303InsolvencyFilingFact(
             judicial_order_date=date(2026, 8, 11),
             subtype=M303InsolvencyFilingSubtype.POST_ORDER,
@@ -495,6 +503,7 @@ def test_modelo_303_uses_the_canonical_iva_profile_type() -> None:
     values = _filing_producer_values(snapshot)
     assert values[FilingProducerKey.M303_EXCLUSIVELY_FORAL] == "2"
     assert values[FilingProducerKey.M303_REDEME_ENROLLED] == "2"
+    assert values[FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO] is None
     assert values[FilingProducerKey.M303_JOINT_RETURN_ELECTED] == "2"
     assert values[FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED] == "2"
     assert values[FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS] == "2"
@@ -506,6 +515,29 @@ def test_modelo_303_uses_the_canonical_iva_profile_type() -> None:
     assert values[FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED] == "2"
     assert values[FilingProducerKey.M303_EXONERADO_390_APPLICABLE] == "2"
     assert values[FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED] == "0"
+
+
+def test_modelo_303_annual_volume_marker_requires_explicit_evidence() -> None:
+    """The art. 121 marker is not silently inferred from rows or the profile."""
+    facts = _m303_filing_facts(annual_volume_nonzero=True)
+    payload = facts.model_dump(mode="python")
+    del payload["annual_volume_nonzero"]
+    with pytest.raises(ValidationError, match="annual_volume_nonzero"):
+        M303FilingFacts.model_validate(payload)
+
+    snapshot = build_filing_producer_snapshot(
+        modelo=Modelo.M303,
+        taxpayer_tax_id=_TAXPAYER_TAX_ID,
+        taxpayer_identity=_taxpayer_identity(),
+        presenter=_presenter(),
+        model_profile=_m303_profile(),
+        elections=_elections(ResultDisposition.NEGATIVA),
+        amendment_evidence=None,
+        refund_account=None,
+        charge_account=None,
+        m303_filing_facts=facts,
+    )
+    assert _filing_producer_values(snapshot)[FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO] == "1"
 
 
 def test_modelo_303_foral_territory_projects_true_without_a_constant_fallback() -> None:
@@ -664,6 +696,7 @@ def test_m303_filing_facts_refuse_annual_and_non_official_filing_periods(period_
     with pytest.raises(ValidationError, match="official quarterly or monthly period"):
         M303FilingFacts(
             joint_return_elected=False,
+            annual_volume_nonzero=False,
             insolvency=None,
             exonerado_390=_m303_exonerado_evidence(applicable=False),
             regimen_simplificado=evidence.regimen_simplificado,

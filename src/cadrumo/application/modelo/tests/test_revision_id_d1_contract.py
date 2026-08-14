@@ -41,7 +41,7 @@ from ....domain.modelos import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._action_errors import WorkUnitRevisionDivergenceError
 from .._work_addressing import (
     ModeloWorkRegistryYearMismatchError,
@@ -442,7 +442,7 @@ def door_reconfirmation_repo(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCata
 
 
 def _seed_m303_ready_profile(bucket_id: str) -> None:
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+    ProfileRecordRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Test Operator",

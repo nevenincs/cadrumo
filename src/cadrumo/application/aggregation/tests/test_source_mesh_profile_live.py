@@ -23,7 +23,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionSourceResolver, reconcile_iva_compensation_wallet
 from ...modelo import resolve_profile_sourced_bindings
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import CalculationSourceContext, ProfileSourceResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -160,7 +160,7 @@ def test_profile_source_resolver_fingerprints_storage_loaded_profile(
     secure_profile_backend: None,
 ) -> None:
     snapshot = _modelo_100_snapshot()
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(_profile_with_ccaa("madrid"))
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(_profile_with_ccaa("madrid"))
 
     resolution = ProfileSourceResolver(registry_snapshot=snapshot).resolve(
         CalculationSourceContext(

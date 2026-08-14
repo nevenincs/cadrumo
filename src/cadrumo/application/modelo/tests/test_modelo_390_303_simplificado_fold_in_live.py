@@ -1,121 +1,82 @@
-"""M390 annual carries the régimen simplificado cuota devengada from the 4T M303.
+"""Live 303/4T -> 390/0A immutable annual-summary handoff behaviour.
 
-Estimación-objetiva (EO) autónomos under the IVA régimen simplificado settle the
-régimen annually in the fourth-quarter Modelo 303: casilla 54
-("RS - Total cuota resultante") holds the year's cuota devengada del régimen
-simplificado. The official Modelo 390 surfaces that figure in the régimen
-simplificado apartado as box 79 ("IVA devengado - Total cuota resultante",
-AEAT Diseño de Registros 2025, campo 89 ``[79]``). Before this wiring the M390
-modelled only the régimen general totals, so the simplificado cuota devengada
-never reached the annual resumen.
-
-The fold is the canonical annual_summary relation
-``modelo-390-rel-303-cuota-devengada-simplificado`` whose ``target_binding``
-``modelo-390-prev-303-cuota-devengada-simplificado`` (``source = relation_prefill``)
-materialises the value onto the bound casilla
-``iva.anual.reconciliacion.devengada-simplificado-303`` (box 79). Régimen
-simplificado is declared only in the 4T autoliquidación (1T-3T are ingresos a
-cuenta), so the relation sources the single 4T quarter and carries (``copy``) it
-onto the 0A annual target — it does NOT sum across quarters like the régimen
-general totals.
-
-Real-behaviour, real-adapter (real encrypted-SQLite observation store via
-:class:`SecureObjectRepository` + :class:`EphemeralMasterKeyProvider`, real
-registry authority, real calculation engine, real enrolled relation resolver,
-real source mesh — no mocks, stubs, skips, or xfail).
-
-Non-tautological value parity:
-- Casilla 54 is seeded with a DISTINCT value in every quarter, so a wrong
-  aggregation (summing the four quarters, or carrying the wrong quarter) yields a
-  number that fails the assertion. Only the 4T value carried by ``copy`` matches.
-- The expected box-79 value is the seeded 4T casilla-54 observation, NOT a value
-  re-derived from a registry formula.
+The annual simplificado values are a single frozen calculation input.  This
+module uses the encrypted production catalogues, official registry snapshots,
+and the live calculation mesh: no observation-backed scalar relation, mock, or
+hand-authored calculation result is involved.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import BindingSourceKind, CasillaId, Period, ResultDisposition, validated_casilla_id
+from ....application.calculations import M303RegimenSimplificadoAnnualSummaryHandoffError
+from ....core import BindingSourceKind, CasillaId, M303RegimenSimplificadoFact, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    RegistryModeloObservation,
+    m303_regimen_simplificado_annual_summary_requirement,
+    resolve_m303_regimen_simplificado_snapshot,
 )
-from ....domain.iva_compensation import M303_COMPENSATION_RESULTADO_CASILLA
+from ....domain.calculations.registry._binding_selector_utils import selector_as_dict
+from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.filing_evidence import FilingEvidenceReference
+from ....domain.iva import (
+    ActividadAgricolaSimplificado,
+    ActividadNoAgricolaSimplificado,
+    EntradaModuloSimplificado,
+    HechoActividadSimplificado,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
+from ....domain.modelos import (
+    M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
+    CalculationRevision,
+    CalculationRevisionState,
+    FilingInstanceEvidence,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordStatus,
+    derive_calculation_revision_id,
+    derive_filing_record_id,
+    upsert_calculation_revision,
+    upsert_work_unit,
+)
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.filing_evidence import general_m303_filing_evidence, regimen_simplificado_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import (
-    CalculationObservationRepository,
-    RelationPrefillSourceResolver,
-    ResultDispositionProjection,
-)
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
+    ModeloExportCommand,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
+    export_modelo_revision,
+    file_modelo_revision,
+    verify_modelo_revision,
 )
-from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "39000000-0000-4000-8000-000000000391"
-_T0 = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 20, 11, 0, tzinfo=UTC)
 _YEAR = 2025
+_T0 = datetime(2026, 8, 14, 9, 0, tzinfo=UTC)
+_T1 = datetime(2026, 8, 14, 10, 0, tzinfo=UTC)
+_T2 = datetime(2026, 8, 14, 11, 0, tzinfo=UTC)
 _TAX_ID = "12345678Z"
-
-_M303_SIMPLIFICADO_CUOTA_DEVENGADA: CasillaId = validated_casilla_id("54", surface="M303 RS total cuota resultante")
-_M390_DEVENGADA_SIMPLIFICADO_CASILLA: CasillaId = validated_casilla_id(
-    "iva.anual.reconciliacion.devengada-simplificado-303",
-    surface="M390 box 79 simplificado",
-)
-
-# The three régimen-general relation_prefill casillas this test does not
-# exercise. A régimen simplificado profile can still carry zero général-regime
-# activity, but the three general relations are enrolled unconditionally on
-# every M390 filing, not scoped by the profile's declared IVA regime, so they
-# must resolve too (to zero) or the live calculate reports them unresolved.
-_M303_CUOTA_DEVENGADA_TOTAL: CasillaId = validated_casilla_id(
-    "iva.cuota-devengada-total",
-    surface="M303 cuota devengada total",
-)
-_M303_CUOTA_DEDUCIBLE_TOTAL: CasillaId = validated_casilla_id(
-    "iva.cuota-deducible-total",
-    surface="M303 cuota deducible total",
-)
-_M303_RESULTADO_REGIMEN_GENERAL: CasillaId = validated_casilla_id(
-    "iva.resultado-regimen-general",
-    surface="M303 resultado regimen general",
-)
-
-_RELATION_ID = "modelo-390-rel-303-cuota-devengada-simplificado"
-_TARGET_BINDING_ID = "modelo-390-prev-303-cuota-devengada-simplificado"
-_RELATION_PREFILL_SOURCE = "relation_prefill"
-
-# DISTINCT per-quarter casilla-54 values. Régimen simplificado is realistically
-# declared only in the 4T autoliquidación, but seeding every quarter with a
-# distinct value proves the fold reads the 4T quarter and CARRIES it (copy),
-# rather than summing the four quarters or carrying the wrong one.
-_CUOTA_BY_PERIOD: dict[str, Decimal] = {
-    "1T": Decimal("111.11"),
-    "2T": Decimal("222.22"),
-    "3T": Decimal("333.33"),
-    "4T": Decimal("444.44"),
-}
-# Expected: the 4T value carried by copy. A sum would be 1111.10; a wrong quarter
-# would be 111.11 / 222.22 / 333.33.
-_EXPECTED_BOX_79 = _CUOTA_BY_PERIOD["4T"]
+_SOURCE_CASILLA_IDS: tuple[CasillaId, ...] = ("51", "53", "52", "54", "55", "56", "57", "58")
 
 
 @pytest.fixture
@@ -125,54 +86,11 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
         yield profile.repository
 
 
-def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
-    """Persist one M303/2025 simplificado filing per quarter carrying casilla 54.
-
-    Written through the production observation-persistence API the local-file
-    carry flow uses, stamped with the non-official ``app_filing`` source_kind.
-    """
-    for period, cuota in _CUOTA_BY_PERIOD.items():
-        obs_repo.save(
-            obs_repo.prepare_observation_envelope(
-                RegistryModeloObservation(
-                    modelo="303",
-                    filing_year=_YEAR,
-                    period=period,
-                    observations=registry_grounded_observations(
-                        modelo="303",
-                        filing_year=_YEAR,
-                        period=period,
-                        casilla_values={
-                            _M303_SIMPLIFICADO_CUOTA_DEVENGADA: cuota,
-                            M303_COMPENSATION_RESULTADO_CASILLA: Decimal("0"),
-                            # Zero-filled: this test's scope is the simplificado
-                            # relation alone, but the three régimen-general
-                            # relations are enrolled unconditionally and must
-                            # still resolve for the live calculate to report no
-                            # unresolved relation_prefill diagnostics.
-                            _M303_CUOTA_DEVENGADA_TOTAL: Decimal("0"),
-                            _M303_CUOTA_DEDUCIBLE_TOTAL: Decimal("0"),
-                            _M303_RESULTADO_REGIMEN_GENERAL: Decimal("0"),
-                        },
-                    ),
-                ),
-                source_kind=APP_FILING_SOURCE_KIND,
-                captured_at=_T0,
-                result_disposition=ResultDispositionProjection(
-                    disposition=ResultDisposition.NEGATIVA,
-                    provenance_kind="app_filing",
-                    provenance_locator=f"test-local-filing:{_YEAR}:{period}",
-                ),
-                normalize_m303_carry=True,
-            )
-        )
-
-
 def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="M390 simplificado fold test",
+            display_name="M390 annual-summary handoff test",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),
                 UserProfileFact(path="identity.name", value="Test"),
@@ -193,15 +111,186 @@ def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
             ),
             created_at=_T0,
             updated_at=_T0,
-        ),
+        )
     )
 
 
-def _calculate_m390_annual(secure_objects: SecureObjectRepository):
+def _non_agricultural_source_evidence(*, declared_quantity: Decimal = Decimal("1")) -> FilingInstanceEvidence:
+    period = Period.from_year_and_code(_YEAR, "4T")
+    registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period="4T")
+    scope = M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+    )
+    regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=registry_snapshot,
+        scope_decision=scope,
+    )
+    annual_activity = regimen_snapshot.orden.activities[0]
+    assert annual_activity.kind == "no_agricola"
+    assert annual_activity.iae_epigrafe is not None
+    reference = FilingEvidenceReference(reference=regimen_snapshot.orden.source_ref)
+    rows = RegimenSimplificadoFilingRows(
+        ejercicio=_YEAR,
+        activities=(
+            ActividadNoAgricolaSimplificado(
+                orden_id=annual_activity.orden_id,
+                ejercicio=_YEAR,
+                activity_id=annual_activity.orden_id,
+                iae_epigrafe=annual_activity.iae_epigrafe,
+                auxiliary_activity_indicator=annual_activity.auxiliary_activity_indicator,
+                modulos=tuple(
+                    EntradaModuloSimplificado(
+                        module_identity=module.identity,
+                        declared_quantity=declared_quantity,
+                        evidence_reference=reference,
+                    )
+                    for module in annual_activity.modulos
+                ),
+                facts=tuple(
+                    HechoActividadSimplificado(
+                        fact=M303RegimenSimplificadoFact.CUOTA_DEVENGADA_OPERACIONES_CORRIENTES,
+                        value=Decimal("1"),
+                        evidence_reference=reference,
+                    )
+                    for _identity in annual_activity.applicable_fact_identities
+                ),
+                evidence_reference=reference,
+            ),
+        ),
+    )
+    regimen_evidence = regimen_simplificado_filing_evidence(
+        period=period,
+        scope_decision=scope,
+        rows=rows,
+        regimen_snapshot=regimen_snapshot,
+        dana_2024_eligibility=None,
+    )
+    baseline = general_m303_filing_evidence(period, reference="test:s84:source")
+    return baseline.model_copy(
+        update={
+            "m303": baseline.m303.model_copy(
+                update={"regimen_simplificado": regimen_evidence},
+            ),
+        },
+    )
+
+
+def _source_values(evidence: FilingInstanceEvidence) -> Mapping[CasillaId, Decimal]:
+    result = evidence.m303.regimen_simplificado.calculation_result
+    assert len(result.activities) == 1
+    cuota_resultante = result.activities[0].cuota_resultante
+    return {
+        "51": Decimal("11"),
+        "53": Decimal("7"),
+        "52": Decimal("5"),
+        "54": cuota_resultante + Decimal("23"),
+        "55": Decimal("4"),
+        "56": Decimal("2"),
+        "57": Decimal("6"),
+        "58": cuota_resultante + Decimal("17"),
+    }
+
+
+def _workflow_profile() -> TaxpayerProfile:
+    return TaxpayerProfile(
+        tax_id=_TAX_ID,
+        iva_regime=IVARegime.SIMPLIFICADO,
+        has_employees=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=False,
+        bienes_extranjero_above_threshold=False,
+        activity_start_date=date(_YEAR, 1, 1),
+    )
+
+
+def _persist_presentado_source(
+    secure_objects: SecureObjectRepository,
+) -> tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    ModeloRecordCatalogueRepository,
+    CalculationRevision,
+]:
+    """Persist the exact one 303/4T source with its current filed pointer."""
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
-    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
+    filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period="4T")
+    source_work_unit = create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo="303",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "4T"),
+        revision_id=snapshot.revision.id,
+        repository=wu_repo,
+        clock=_T0,
+    )
+    evidence = _non_agricultural_source_evidence()
+    casilla_values = _source_values(evidence)
+    calculation_revision_id = derive_calculation_revision_id(
+        work_unit_id=source_work_unit.work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values=casilla_values,
+        filing_instance_evidence=evidence,
+    )
+    source_revision = CalculationRevision(
+        calculation_revision_id=calculation_revision_id,
+        work_unit_id=source_work_unit.work_unit_id,
+        state=CalculationRevisionState.PRESENTADO,
+        casilla_values=casilla_values,
+        observations=registry_grounded_observations(
+            modelo="303",
+            filing_year=_YEAR,
+            period="4T",
+            casilla_values=casilla_values,
+        ),
+        filing_instance_evidence=evidence,
+        created_at=_T0,
+        updated_at=_T2,
+        verified_at=_T1,
+        verified_by="operator",
+        filed_at=_T2,
+        filed_by="operator",
+    )
+    filing_record_id = derive_filing_record_id(
+        work_unit_id=source_work_unit.work_unit_id,
+        calculation_revision_id=source_revision.calculation_revision_id,
+        filed_by="operator",
+    )
+    filing = ModeloRecord(
+        filing_record_id=filing_record_id,
+        work_unit_id=source_work_unit.work_unit_id,
+        calculation_revision_id=source_revision.calculation_revision_id,
+        bucket_id=_BUCKET_ID,
+        modelo="303",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "4T"),
+        filed_at=_T2,
+        filed_by="operator",
+        status=ModeloRecordStatus.VIGENTE,
+    )
+    cr_repo.save(upsert_calculation_revision(cr_repo.load(), source_revision))
+    filing_repo.save(ModeloRecordCatalogue(records={filing.filing_record_id: filing}))
+    source_work_unit = source_work_unit.model_copy(
+        update={
+            "current_calculation_revision_id": source_revision.calculation_revision_id,
+            "filed_calculation_revision_id": source_revision.calculation_revision_id,
+            "current_filing_record_id": filing.filing_record_id,
+            "updated_at": _T2,
+        },
+    )
+    wu_repo.save(upsert_work_unit(wu_repo.load(), source_work_unit))
+    return wu_repo, cr_repo, filing_repo, source_revision
+
+
+def _calculate_m390_annual(
+    secure_objects: SecureObjectRepository,
+    *,
+    work_units: WorkUnitCatalogueRepository,
+    calculations: CalculationRevisionCatalogueRepository,
+    filings: ModeloRecordCatalogueRepository,
+):
     snapshot = resources().modelos.authority.snapshot("390", filing_year=_YEAR, period="0A")
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
@@ -209,89 +298,219 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository):
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, "0A"),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        repository=work_units,
         clock=_T0,
     )
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         binding_values={},
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
-        clock=_T1,
+        work_unit_repository=work_units,
+        calculation_repository=calculations,
+        filing_repository=filings,
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
+        clock=_T2,
     )
 
 
-def test_m390_carries_simplificado_cuota_devengada_from_4t_m303_on_live_calculate(
+def test_m390_persists_exact_ten_value_handoff_from_one_filed_current_m303_4t_revision(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """The 4T M303 régimen-simplificado cuota devengada folds into M390 box 79.
-
-    With four M303/2025 quarterly filings seeded (each carrying casilla 54 with a
-    DISTINCT value), a live calculate of the M390/2025 annual draws the
-    ``modelo-390-rel-303-cuota-devengada-simplificado`` relation through the
-    enrolled :class:`RelationPrefillSourceResolver` and materialises the 4T value
-    onto box 79. The asserted value is the seeded 4T observation, never a registry
-    formula re-evaluation (non-tautological).
-    """
+    """A real PRESENTADO M303/4T source arrives as boxes 74--83, once only."""
     _store_ready_profile(secure_objects)
-    obs_repo = CalculationObservationRepository()
-    _seed_m303_quarters(obs_repo=obs_repo)
+    work_units, calculations, filings, source = _persist_presentado_source(secure_objects)
 
-    # Sanity: the seeded values are distinct so a sum or wrong-quarter carry cannot
-    # coincidentally satisfy the assertion.
-    assert len(set(_CUOTA_BY_PERIOD.values())) == 4, "test requires DISTINCT per-quarter casilla-54 values"
-    four_quarter_sum = sum(_CUOTA_BY_PERIOD.values(), Decimal("0"))
-    assert four_quarter_sum != _EXPECTED_BOX_79, (
-        "expected 4T value must differ from the four-quarter sum to discriminate copy from sum"
+    result = _calculate_m390_annual(
+        secure_objects,
+        work_units=work_units,
+        calculations=calculations,
+        filings=filings,
+    )
+    handoff = result.revision.m303_regimen_simplificado_annual_summary_handoff
+    assert handoff is not None
+    assert handoff.source_calculation_revision_id == source.calculation_revision_id
+    assert handoff.target_calculation_revision_id == result.revision.calculation_revision_id
+    assert CalculationRevision.model_validate_json(result.revision.model_dump_json()) == result.revision
+    assert calculations.load().get(result.revision.calculation_revision_id) == result.revision
+
+    source_values = source.casilla_values
+    source_evidence = source.filing_instance_evidence
+    assert source_evidence is not None
+    source_result = source_evidence.m303.regimen_simplificado.calculation_result
+    expected = {
+        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[0]: source_result.activities[0].cuota_resultante,
+        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[1]: Decimal("0"),
+        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[2]: source_values["51"],
+        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[3]: source_values["53"],
+        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[4]: source_values["52"],
+        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[5]: source_values["54"],
+        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[6]: source_values["55"],
+        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[7]: source_values["56"],
+        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[8]: source_values["57"],
+        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[9]: source_values["58"],
+    }
+    assert dict(handoff.values) == expected
+    assert {casilla_id: result.revision.casilla_values[casilla_id] for casilla_id in expected} == expected
+    assert not result.revision.relation_overrides
+    target_snapshot = resources().modelos.authority.snapshot("390", filing_year=_YEAR, period="0A")
+    requirement = m303_regimen_simplificado_annual_summary_requirement(target_snapshot.revision)
+    assert requirement is not None
+    assert {
+        binding_id: Decimal(result.revision.binding_overrides[binding_id])
+        for binding_id in requirement.binding_ids_by_summary_casilla_id.values()
+    } == {
+        binding_id: expected[casilla_id]
+        for casilla_id, binding_id in requirement.binding_ids_by_summary_casilla_id.items()
+    }
+    provenance = tuple(
+        item
+        for item in result.revision.source_provenance
+        if item.binding_source is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY
+    )
+    assert len(provenance) == 1
+    assert provenance[0].fingerprint == handoff.digest
+
+
+def test_m390_refuses_a_source_when_current_calculation_pointer_diverges_from_filed(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A filed source is invalid as soon as the live pointer no longer names it."""
+    _store_ready_profile(secure_objects)
+    work_units, calculations, filings, source = _persist_presentado_source(secure_objects)
+    source_work_unit = work_units.load().get(source.work_unit_id)
+    assert source_work_unit is not None
+    work_units.save(
+        upsert_work_unit(
+            work_units.load(),
+            source_work_unit.model_copy(
+                update={"current_calculation_revision_id": "d" * 64, "updated_at": _T2},
+            ),
+        )
     )
 
-    result = _calculate_m390_annual(secure_objects)
-    casilla_values = result.revision.casilla_values
+    with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="current calculation pointer"):
+        _calculate_m390_annual(secure_objects, work_units=work_units, calculations=calculations, filings=filings)
 
-    assert Decimal(casilla_values[_M390_DEVENGADA_SIMPLIFICADO_CASILLA]) == _EXPECTED_BOX_79, (
-        f"M390 box 79 must carry the 4T M303 régimen-simplificado cuota devengada (casilla 54)={_EXPECTED_BOX_79!r}; "
-        f"got {casilla_values[_M390_DEVENGADA_SIMPLIFICADO_CASILLA]!r}"
+
+def test_m390_refuses_a_non_presentado_source_calculation_revision(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """VERIFICADO_COMPLETO is not a substitute for the filed PRESENTADO source."""
+    _store_ready_profile(secure_objects)
+    work_units, calculations, filings, source = _persist_presentado_source(secure_objects)
+    non_presentado = source.model_copy(
+        update={
+            "state": CalculationRevisionState.VERIFICADO_COMPLETO,
+            "updated_at": _T1,
+            "filed_at": None,
+            "filed_by": None,
+        },
     )
+    calculations.save(upsert_calculation_revision(calculations.load(), non_presentado))
 
-    # The relation_prefill source is CLAIMED (resolver enrolled): the simplificado
-    # relation resolved, so no unhandled-source advisory names it.
-    relation_prefill_diags = tuple(
-        diag for diag in result.source_diagnostics if diag.source_kind == _RELATION_PREFILL_SOURCE
-    )
-    assert relation_prefill_diags == (), (
-        f"relation_prefill must be a claimed source with no diagnostics; got {relation_prefill_diags}"
-    )
+    with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="PRESENTADO"):
+        _calculate_m390_annual(secure_objects, work_units=work_units, calculations=calculations, filings=filings)
 
 
-def test_simplificado_relation_is_enrolled_not_dormant() -> None:
-    """Structural: the simplificado relation is enrolled in the live mesh, not dormant.
-
-    Three enrollment facts (aeat-calculation-aggregation): the relation exists on
-    the M390 revision, its ``target_binding`` is a DECLARED ``relation_prefill``
-    binding the engine materialises, and the live calculate mesh's
-    :class:`RelationPrefillSourceResolver` owns the ``relation_prefill`` source
-    kind — so the relation feeds the engine's relation channel rather than blanking
-    silently.
-    """
+def test_m390_registry_requires_all_ten_endpoints_and_rejects_the_retired_scalar_path() -> None:
+    """The registry has one typed value-arrival family, never a box-79 bridge."""
     snapshot = resources().modelos.authority.snapshot("390", filing_year=_YEAR, period="0A")
-    relations = {relation.id: relation for relation in snapshot.revision.relations}
-    bindings = {binding.id: binding for binding in snapshot.revision.bindings}
-
-    assert _RELATION_ID in relations, "simplificado relation must be declared on the M390 revision"
-    relation = relations[_RELATION_ID]
-    assert relation.target_binding == _TARGET_BINDING_ID
-    assert relation.source_modelo == "303"
-    assert relation.source_casilla_id == _M303_SIMPLIFICADO_CUOTA_DEVENGADA
-    assert relation.source_periods == ("4T",), "régimen simplificado settles in the 4T autoliquidación only"
-
-    target = bindings.get(_TARGET_BINDING_ID)
-    assert target is not None, "the relation target_binding must be a declared binding (a materialised slot)"
-    assert str(target.source) == _RELATION_PREFILL_SOURCE, (
-        "a relation-targeted slot must declare source 'relation_prefill'"
+    requirement = m303_regimen_simplificado_annual_summary_requirement(snapshot.revision)
+    assert requirement is not None
+    assert set(requirement.binding_ids_by_summary_casilla_id) == set(
+        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
+    )
+    assert requirement.source_casilla_ids == _SOURCE_CASILLA_IDS
+    assert "modelo-390-rel-303-cuota-devengada-simplificado" not in {
+        relation.id for relation in snapshot.revision.relations
+    }
+    assert "modelo-390-prev-303-cuota-devengada-simplificado" not in {
+        binding.id for binding in snapshot.revision.bindings
+    }
+    assert not any(
+        binding.source is BindingSourceKind.RELATION_PREFILL
+        and selector_as_dict(binding).get("source_modelo") == "303"
+        and selector_as_dict(binding).get("source_casilla_id") == "54"
+        for binding in snapshot.revision.bindings
     )
 
-    assert BindingSourceKind.RELATION_PREFILL in RelationPrefillSourceResolver.owned_sources, (
-        "the enrolled mesh resolver must own the relation_prefill source kind"
+
+def test_agricultural_rows_remain_an_evidence_bearing_refusal_while_empty_cohort_is_zero() -> None:
+    """S83's unavailable official crosswalk cannot be turned into a zero default."""
+    period = Period.from_year_and_code(_YEAR, "4T")
+    empty = general_m303_filing_evidence(period, reference="test:s84:proven-empty")
+    assert empty.m303.regimen_simplificado.calculation_result.activities == ()
+
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period="4T")
+    scope = M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
     )
+    regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=snapshot,
+        scope_decision=scope,
+    )
+    agricultural = ActividadAgricolaSimplificado(
+        orden_id="test:s84:agricultural",
+        ejercicio=_YEAR,
+        activity_id="test:s84:agricultural",
+        activity_code=regimen_snapshot.orden.agricultural_authority.quota_indexes[0].activity_name,
+        facts=(
+            HechoActividadSimplificado(
+                fact=M303RegimenSimplificadoFact.CUOTA_DEVENGADA,
+                value=Decimal("1"),
+                evidence_reference=FilingEvidenceReference(reference=regimen_snapshot.orden.source_ref),
+            ),
+        ),
+        evidence_reference=FilingEvidenceReference(reference=regimen_snapshot.orden.source_ref),
+    )
+    from ....application.calculations import M303RegimenSimplificadoCalculationError
+
+    with pytest.raises(M303RegimenSimplificadoCalculationError, match="two_digit_agricultural_crosswalk"):
+        regimen_simplificado_filing_evidence(
+            period=period,
+            scope_decision=scope,
+            rows=RegimenSimplificadoFilingRows(ejercicio=_YEAR, activities=(agricultural,)),
+            regimen_snapshot=regimen_snapshot,
+            dana_2024_eligibility=None,
+        )
+
+
+def test_handoff_digest_and_post_identity_stamp_refuse_tampering() -> None:
+    """Carrier bytes survive a round trip but reject altered values or target id."""
+    evidence = _non_agricultural_source_evidence()
+    values = _source_values(evidence)
+    source_result = evidence.m303.regimen_simplificado.calculation_result
+    from ....domain.modelos import M303RegimenSimplificadoAnnualSummaryHandoff
+
+    handoff = M303RegimenSimplificadoAnnualSummaryHandoff.assembled(
+        source_bucket_id=_BUCKET_ID,
+        source_work_unit_id="a" * 64,
+        source_calculation_revision_id="b" * 64,
+        source_registry_revision_id="2010-y-siguientes",
+        source_filing_year=_YEAR,
+        source_result_digest=source_result.digest,
+        source_evidence_references=tuple(
+            reference for activity in source_result.activities for reference in activity.evidence_references
+        ),
+        target_bucket_id=_BUCKET_ID,
+        target_work_unit_id="c" * 64,
+        target_registry_revision_id="2010-y-siguientes",
+        target_filing_year=_YEAR,
+        values={
+            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[0]: source_result.activities[0].cuota_resultante,
+            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[1]: Decimal("0"),
+            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[2]: values["51"],
+            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[3]: values["53"],
+            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[4]: values["52"],
+            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[5]: values["54"],
+            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[6]: values["55"],
+            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[7]: values["56"],
+            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[8]: values["57"],
+            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[9]: values["58"],
+        },
+    )
+    assert type(handoff).model_validate_json(handoff.model_dump_json()) == handoff
+    tampered = handoff.model_dump(mode="python")
+    tampered["values"][M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[2]] = Decimal("12")
+    with pytest.raises(ValidationError, match="digest"):
+        type(handoff).model_validate(tampered)

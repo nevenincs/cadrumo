@@ -36,6 +36,8 @@ from ...core.i18n import output_language
 from ...core.logging import get_logger
 from ...domain.calculations.registry import (
     BindingId,
+    CasillaDefinition,
+    DataBindingDefinition,
     InputKind,
     LegalRefId,
     RevisionId,
@@ -125,6 +127,19 @@ class DataInventoryChecklist:
     profile_checked: bool
 
 
+@dataclass(slots=True)
+class _DataInventoryBuckets:
+    required_manual: list[DataInventoryCasilla]
+    optional_manual: list[DataInventoryCasilla]
+    ledger_derivable: list[DataInventoryCasilla]
+    profile_derivable: list[DataInventoryCasilla]
+    previous_filing: list[DataInventoryCasilla]
+    relation_prefill: list[DataInventoryCasilla]
+    live_observation: list[DataInventoryCasilla]
+    unbucketed_sources: list[DataInventoryCasilla]
+    profile_binding_ids: list[BindingId]
+
+
 def _profile_keys_for_bindings(
     revision: ModeloRevision,
     binding_ids: tuple[BindingId, ...],
@@ -197,64 +212,11 @@ def data_inventory_checklist(
     snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
     revision = snapshot.revision
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
-
-    required_manual: list[DataInventoryCasilla] = []
-    optional_manual: list[DataInventoryCasilla] = []
-    ledger_derivable: list[DataInventoryCasilla] = []
-    profile_derivable: list[DataInventoryCasilla] = []
-    previous_filing: list[DataInventoryCasilla] = []
-    relation_prefill: list[DataInventoryCasilla] = []
-    live_observation: list[DataInventoryCasilla] = []
-    unbucketed_sources: list[DataInventoryCasilla] = []
-    profile_binding_ids: list[BindingId] = []
-
-    for casilla in revision.casillas:
-        unbound_entry = DataInventoryCasilla(
-            casilla_id=casilla.id,
-            number=casilla.number,
-            label=casilla.get_label(output_language()),
-            legal_refs=tuple(casilla.legal_refs),
-            source_refs=tuple(casilla.source_refs),
-        )
-        if casilla.input_kind == InputKind.MANUAL:
-            if casilla.required:
-                required_manual.append(unbound_entry)
-            else:
-                optional_manual.append(unbound_entry)
-            continue
-        if casilla.input_kind != InputKind.BOUND:
-            continue
-
-        for binding_id in bound_casilla_binding_ids(casilla):
-            binding_source = bindings_by_id[binding_id].source
-            entry = DataInventoryCasilla(
-                casilla_id=casilla.id,
-                number=casilla.number,
-                label=casilla.get_label(output_language()),
-                legal_refs=tuple(casilla.legal_refs),
-                source_refs=tuple(casilla.source_refs),
-                binding_id=binding_id,
-                binding_source=binding_source.value,
-            )
-            if binding_source in LEDGER_BINDING_SOURCE_KINDS:
-                ledger_derivable.append(entry)
-            elif binding_source is BindingSourceKind.PROFILE:
-                profile_derivable.append(entry)
-                if binding_id not in profile_binding_ids:
-                    profile_binding_ids.append(binding_id)
-            elif binding_source is BindingSourceKind.PREVIOUS_FILING:
-                previous_filing.append(entry)
-            elif binding_source is BindingSourceKind.RELATION_PREFILL:
-                relation_prefill.append(entry)
-            elif binding_source in _LIVE_OBSERVATION_SOURCE_KINDS:
-                live_observation.append(entry)
-            else:
-                unbucketed_sources.append(entry)
+    buckets = _collect_inventory_buckets(revision, bindings_by_id)
 
     unresolved_profile_bindings: tuple[BindingId, ...] = ()
     unresolved_profile_keys: tuple[str, ...] = ()
-    profile_checked = False
-    if bucket_id is not None and profile_binding_ids:
+    if bucket_id is not None and buckets.profile_binding_ids:
         resolved = profile_resolvable_binding_ids(
             modelo=modelo,
             bucket_id=bucket_id,
@@ -263,29 +225,99 @@ def data_inventory_checklist(
         )
         profile_checked = True
         unresolved_profile_bindings = tuple(
-            binding_id for binding_id in profile_binding_ids if str(binding_id) not in resolved
+            binding_id for binding_id in buckets.profile_binding_ids if str(binding_id) not in resolved
         )
         unresolved_profile_keys = _profile_keys_for_bindings(revision, unresolved_profile_bindings)
     elif bucket_id is not None:
         profile_checked = True
+    else:
+        profile_checked = False
 
     return DataInventoryChecklist(
         modelo=str(snapshot.modelo.id),
         revision_id=str(revision.id),
         filing_year=filing_year,
         period=period.registry_token,
-        required_manual=tuple(required_manual),
-        optional_manual=tuple(optional_manual),
-        ledger_derivable=tuple(ledger_derivable),
-        profile_derivable=tuple(profile_derivable),
-        previous_filing=tuple(previous_filing),
-        relation_prefill=tuple(relation_prefill),
-        live_observation=tuple(live_observation),
-        unbucketed_sources=tuple(unbucketed_sources),
+        required_manual=tuple(buckets.required_manual),
+        optional_manual=tuple(buckets.optional_manual),
+        ledger_derivable=tuple(buckets.ledger_derivable),
+        profile_derivable=tuple(buckets.profile_derivable),
+        previous_filing=tuple(buckets.previous_filing),
+        relation_prefill=tuple(buckets.relation_prefill),
+        live_observation=tuple(buckets.live_observation),
+        unbucketed_sources=tuple(buckets.unbucketed_sources),
         unresolved_profile_bindings=unresolved_profile_bindings,
         unresolved_profile_keys=unresolved_profile_keys,
         profile_checked=profile_checked,
     )
+
+
+def _inventory_entry(
+    casilla: CasillaDefinition,
+    *,
+    binding_id: BindingId | None = None,
+    binding_source: BindingSourceKind | None = None,
+) -> DataInventoryCasilla:
+    return DataInventoryCasilla(
+        casilla_id=casilla.id,
+        number=casilla.number,
+        label=casilla.get_label(output_language()),
+        legal_refs=tuple(casilla.legal_refs),
+        source_refs=tuple(casilla.source_refs),
+        binding_id=binding_id,
+        binding_source=binding_source.value if binding_source is not None else None,
+    )
+
+
+def _collect_inventory_buckets(
+    revision: ModeloRevision,
+    bindings_by_id: dict[BindingId, DataBindingDefinition],
+) -> _DataInventoryBuckets:
+    buckets = _DataInventoryBuckets(
+        required_manual=[],
+        optional_manual=[],
+        ledger_derivable=[],
+        profile_derivable=[],
+        previous_filing=[],
+        relation_prefill=[],
+        live_observation=[],
+        unbucketed_sources=[],
+        profile_binding_ids=[],
+    )
+    for casilla in revision.casillas:
+        if casilla.input_kind == InputKind.MANUAL:
+            target = buckets.required_manual if casilla.required else buckets.optional_manual
+            target.append(_inventory_entry(casilla))
+            continue
+        if casilla.input_kind != InputKind.BOUND:
+            continue
+        for binding_id in bound_casilla_binding_ids(casilla):
+            binding_source = bindings_by_id[binding_id].source
+            entry = _inventory_entry(casilla, binding_id=binding_id, binding_source=binding_source)
+            _append_binding_inventory_entry(buckets, binding_id, binding_source, entry)
+    return buckets
+
+
+def _append_binding_inventory_entry(
+    buckets: _DataInventoryBuckets,
+    binding_id: BindingId,
+    binding_source: BindingSourceKind,
+    entry: DataInventoryCasilla,
+) -> None:
+    if binding_source in LEDGER_BINDING_SOURCE_KINDS:
+        buckets.ledger_derivable.append(entry)
+    elif binding_source is BindingSourceKind.PROFILE:
+        buckets.profile_derivable.append(entry)
+        if binding_id not in buckets.profile_binding_ids:
+            buckets.profile_binding_ids.append(binding_id)
+    elif binding_source is BindingSourceKind.PREVIOUS_FILING:
+        buckets.previous_filing.append(entry)
+    elif binding_source is BindingSourceKind.RELATION_PREFILL:
+        buckets.relation_prefill.append(entry)
+    elif binding_source in _LIVE_OBSERVATION_SOURCE_KINDS:
+        buckets.live_observation.append(entry)
+    else:
+        buckets.unbucketed_sources.append(entry)
 
 
 def profile_requirements_for_binding(

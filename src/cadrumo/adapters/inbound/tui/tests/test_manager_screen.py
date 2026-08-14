@@ -20,7 +20,7 @@ from textual.widget import Widget
 from textual.widgets import DataTable, Input, Static
 
 from .....application.user_profile import (
-    ProfileRepository,
+    ProfileRecordAggregateRepository,
     build_profile_overview,
     register_profile_with_credentials,
 )
@@ -43,7 +43,7 @@ _EDITED_PATH = "identity.name"
 
 def _live_overview(label: str = "Manager Subject"):
     """Build the overview from whatever the store currently holds."""
-    aggregate = ProfileRepository().load(require_active_bucket_id())
+    aggregate = ProfileRecordAggregateRepository().load(require_active_bucket_id())
     return build_profile_overview(aggregate.record, label=label)
 
 
@@ -206,7 +206,7 @@ async def test_editing_a_row_writes_through_to_the_encrypted_record(tmp_path) ->
             await wait_until_settled(app, pilot)
             app.exit(None)
 
-        reloaded = ProfileRepository().load(require_active_bucket_id()).record
+        reloaded = ProfileRecordAggregateRepository().load(require_active_bucket_id()).record
         stored = {fact.path: fact.value for fact in reloaded.facts}
         assert stored.get(_EDITED_PATH) == "Ada Lovelace"
 
@@ -317,7 +317,7 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
             await wait_until_settled(app, pilot)
             app.exit(None)
 
-        reloaded = ProfileRepository().load(require_active_bucket_id()).record
+        reloaded = ProfileRecordAggregateRepository().load(require_active_bucket_id()).record
         assert {fact.path: fact.value for fact in reloaded.facts}.get(_EDITED_PATH) == "Ada Lovelace", (
             "the gated door must be the real one, or this test proves nothing about production"
         )

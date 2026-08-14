@@ -50,7 +50,7 @@ from ...calculations import (
     cross_period_dependency_requirements,
     is_official_aeat_observation_source,
 )
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     APP_FILING_SOURCE_KIND,
     ModeloCrossPeriodCleanStateError,
@@ -171,7 +171,7 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(record)
+    ProfileRecordRepository(bucket_id=bucket_id, objects=objects).save(record)
 
 
 def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | None) -> None:
@@ -204,7 +204,7 @@ def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | N
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(record)
+    ProfileRecordRepository(bucket_id=bucket_id, objects=objects).save(record)
 
 
 def _seed_verified_revision(

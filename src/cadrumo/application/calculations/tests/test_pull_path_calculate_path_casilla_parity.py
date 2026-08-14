@@ -94,8 +94,6 @@ from ....domain.calculations.registry import (
 )
 from ....domain.iva import (
     IvaDeductionClassificationProvenance,
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
 )
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
@@ -124,7 +122,7 @@ from ...modelo import (
     create_work_unit,
     resolve_declaration_period_inputs,
 )
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import IvaWalletDecisionRepository, RelationPrefillSourceResolver
 from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
@@ -194,7 +192,7 @@ _QUARTERS_115: dict[str, dict[CasillaId, Decimal]] = {
 
 
 def _seed_ready_profile(objects: SecureObjectRepository) -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
             profile_id=_PROFILE_ID,
             display_name="Test runtime profile",
@@ -261,8 +259,6 @@ def _seed_115_observations(obs_repo: CalculationObservationRepository) -> dict[C
             inputs=full_inputs,
             binding_values={},
             date_context={"filing_period": date(_YEAR, 12, 31)},
-            m303_regimen_simplificado_scope=None,
-            m303_annual_orden=None,
         )
         obs_repo.save(
             obs_repo.prepare_observation_envelope(
@@ -496,8 +492,6 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
         binding_values=relay_binding_values,
         date_context={"filing_period": date(_YEAR, 12, 31)},
         relation_values=relay_resolution.relation_values,
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
     relay_casilla_values = relay_engine_result.values
 
@@ -647,10 +641,6 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
         inputs=pull_inputs,
         binding_values=pull_binding_values,
         date_context={"filing_period": date(_PRORRATA_YEAR, 3, 31)},
-        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-        ),
-        m303_annual_orden=None,
     )
 
     assert purchase.iva_amount is not None

@@ -2,7 +2,7 @@
 
 The companion ``test_repository_roundtrip.py`` asserts strict
 pydantic equality across the save / load cycle of
-:class:`UserProfileLifecycleRepository`. The risk that a
+:class:`ProfileRecordRepository`. The risk that a
 save-drops-X / load-re-defaults-X regression silently passes the
 equality check (because the fixture used the default for X) is
 real; this file exercises the negative case explicitly.
@@ -35,7 +35,7 @@ from ....domain.user_profile import (
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._repository import (
     USER_PROFILE_VALUE_NAMESPACE,
-    UserProfileLifecycleRepository,
+    ProfileRecordRepository,
     user_profile_value_object_key,
 )
 
@@ -106,7 +106,7 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
     # Bound to the record's own profile, matching every production
     # construction: this proof is about a dropped field surviving the
     # encrypted boundary, not about addressing a foreign bucket.
-    repo = UserProfileLifecycleRepository(
+    repo = ProfileRecordRepository(
         bucket_id=original.profile_id,
         objects=runtime_profile.repository,
     )

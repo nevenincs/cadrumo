@@ -1,4 +1,4 @@
-"""Tests for the canonical ProfileLifecycleService."""
+"""Tests for the canonical ProfileRecordLifecycle."""
 
 from __future__ import annotations
 
@@ -30,13 +30,13 @@ from ....tests.user_profile import complete_conditional_facts, schema_valid_plac
 from .. import (
     CompleteSetupCommand,
     EditProfileFieldCommand,
-    ProfileLifecycleService,
+    ProfileRecordLifecycle,
+    ProfileRecordRepository,
     ProfileValidationService,
     ReactivateProfileCommand,
     RegisterProfileCommand,
     RemoveProfileCommand,
     RenameProfileCommand,
-    UserProfileLifecycleRepository,
 )
 from .._repository import (
     _USER_PROFILE_VALUE_SENSITIVITY,
@@ -66,9 +66,9 @@ def schema() -> ProfileSchemaDefinition:
     return resources().user_profile_schema.singleton
 
 
-def _service(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition) -> ProfileLifecycleService:
-    return ProfileLifecycleService(
-        repository=UserProfileLifecycleRepository(bucket_id=_PROFILE_BUCKET_ID, objects=secure_objects),
+def _service(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition) -> ProfileRecordLifecycle:
+    return ProfileRecordLifecycle(
+        repository=ProfileRecordRepository(bucket_id=_PROFILE_BUCKET_ID, objects=secure_objects),
         validator=ProfileValidationService(schema=schema),
         events=BucketEventHistoryRepository(objects=secure_objects),
     )
@@ -241,8 +241,8 @@ def test_reactivate_emits_profile_reactivated_event(
 ) -> None:
     """``reactivate`` emits ``PROFILE_REACTIVATED`` — the symmetric inverse of ``PROFILE_TOMBSTONED``."""
     events = BucketEventHistoryRepository(objects=secure_objects)
-    svc = ProfileLifecycleService(
-        repository=UserProfileLifecycleRepository(bucket_id=_PROFILE_BUCKET_ID, objects=secure_objects),
+    svc = ProfileRecordLifecycle(
+        repository=ProfileRecordRepository(bucket_id=_PROFILE_BUCKET_ID, objects=secure_objects),
         validator=ProfileValidationService(schema=schema),
         events=events,
     )
@@ -550,7 +550,7 @@ def test_register_refuses_a_second_foreign_profile_in_one_bucket(
     module documents, each profile is provisioned into its own bucket, and the
     ownership guard refuses the second registration outright -- which is what
     survives here. The listing half went with
-    ``ProfileLifecycleService.list_profiles``, which had no production caller:
+    ``ProfileRecordLifecycle.list_profiles``, which had no production caller:
     the operator's profile listing scans bucket directories instead.
     """
     svc = _service(secure_objects, schema)
@@ -700,7 +700,7 @@ def test_load_refuses_a_stored_record_declaring_no_schema_version(
     the field still resolves it from the default factory; making that
     unconstructable was the wider remedy this row deliberately does not take.
     """
-    repository = UserProfileLifecycleRepository(bucket_id=_PROFILE_BUCKET_ID, objects=secure_objects)
+    repository = ProfileRecordRepository(bucket_id=_PROFILE_BUCKET_ID, objects=secure_objects)
     svc = _service(secure_objects, schema)
     svc.register(
         RegisterProfileCommand(
@@ -750,7 +750,7 @@ def test_iter_records_refuses_a_stored_row_declaring_no_schema_version(
     ``iter_records`` is a generator, so the refusal surfaces on iteration; the
     walk is forced with ``list`` rather than by calling it alone.
     """
-    repository = UserProfileLifecycleRepository(bucket_id=_PROFILE_BUCKET_ID, objects=secure_objects)
+    repository = ProfileRecordRepository(bucket_id=_PROFILE_BUCKET_ID, objects=secure_objects)
     svc = _service(secure_objects, schema)
     svc.register(
         RegisterProfileCommand(

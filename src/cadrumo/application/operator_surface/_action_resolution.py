@@ -93,24 +93,43 @@ def _validate_notice_binding_provenance(
     specifications: tuple[ActionArgumentBindingSpecification, ...],
 ) -> None:
     for argument in bindings:
-        declared = tuple(
-            specification for specification in specifications if specification.argument_name == argument.argument_name
-        )
-        if not declared:
-            raise ValueError(f"notice action argument is not declared by the catalogue: {argument.argument_name}")
-        matching = tuple(
-            specification
-            for specification in declared
-            if argument.source is not None
-            and argument.source_key is not None
-            and argument.source.value == specification.source.value
-            and argument.source_key == specification.source_key
-            and argument.source_evidence_id == specification.source_evidence_id
-        )
-        if len(matching) != 1:
-            raise ValueError(
-                f"notice action argument provenance does not match the catalogue: {argument.argument_name}"
-            )
+        _validate_notice_argument_provenance(argument, specifications)
+
+
+def _validate_notice_argument_provenance(
+    argument: ResolvedActionArgument,
+    specifications: tuple[ActionArgumentBindingSpecification, ...],
+) -> None:
+    declared = _declared_notice_argument_specifications(argument, specifications)
+    if not declared:
+        raise ValueError(f"notice action argument is not declared by the catalogue: {argument.argument_name}")
+    matching = tuple(
+        specification for specification in declared if _notice_argument_matches_specification(argument, specification)
+    )
+    if len(matching) != 1:
+        raise ValueError(f"notice action argument provenance does not match the catalogue: {argument.argument_name}")
+
+
+def _declared_notice_argument_specifications(
+    argument: ResolvedActionArgument,
+    specifications: tuple[ActionArgumentBindingSpecification, ...],
+) -> tuple[ActionArgumentBindingSpecification, ...]:
+    return tuple(
+        specification for specification in specifications if specification.argument_name == argument.argument_name
+    )
+
+
+def _notice_argument_matches_specification(
+    argument: ResolvedActionArgument,
+    specification: ActionArgumentBindingSpecification,
+) -> bool:
+    return (
+        argument.source is not None
+        and argument.source_key is not None
+        and argument.source.value == specification.source.value
+        and argument.source_key == specification.source_key
+        and argument.source_evidence_id == specification.source_evidence_id
+    )
 
 
 def _missing_required_notice_inputs(required: tuple[str, ...], names: tuple[str, ...]) -> list[str]:

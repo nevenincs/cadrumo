@@ -75,7 +75,7 @@ from ...aggregation import (
     RetencionScheme,
 )
 from ...calculations import CalculationObservationRepository
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -271,7 +271,7 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
         created_at=_T0,
         updated_at=_T0,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(record)
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(record)
 
 
 def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:

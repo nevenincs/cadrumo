@@ -70,7 +70,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation,
     create_work_unit,
@@ -234,7 +234,7 @@ def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:
 
 def _store_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed the taxpayer profile the M303 IVA-wallet gate reads (tax_id)."""
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="Test runtime profile",

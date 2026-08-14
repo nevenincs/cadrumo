@@ -39,7 +39,7 @@ from ....domain.user_profile import ProfileNotFoundError, UserProfileFact, UserP
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._integrity import ProfileIntegrityError
 from .._orchestration import ProfileAlreadyRegisteredError, profile_create_storage_span
-from .._profile_repository import ProfileRepository
+from .._record_aggregate_repository import ProfileRecordAggregateRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -64,7 +64,7 @@ def backend(tmp_path: Path) -> Iterator[Path]:
         yield storage_root
 
 
-def _create(repository: ProfileRepository, *, label: str, profile_id: str | None = None) -> str:
+def _create(repository: ProfileRecordAggregateRepository, *, label: str, profile_id: str | None = None) -> str:
     resolved = profile_id if profile_id is not None else new_profile_id()
     with profile_create_storage_span(resolved):
         repository.create(label=label, facts=_FACTS, profile_id=resolved)
@@ -86,7 +86,7 @@ def test_a_healthy_registered_bucket_still_refuses_as_already_registered(backend
     Without this, the change below could be satisfied by reporting a
     divergence for every collision, which would be a different lie.
     """
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     profile_id = _create(repository, label="Alpha")
 
     with pytest.raises(ProfileNotFoundError) as caught, profile_create_storage_span(profile_id):
@@ -97,7 +97,7 @@ def test_a_healthy_registered_bucket_still_refuses_as_already_registered(backend
 
 def test_a_duplicate_label_still_refuses_as_already_registered(backend: Path) -> None:
     """CONTROL: the label collision path is untouched by this change."""
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     _create(repository, label="Alpha")
 
     with pytest.raises(ProfileAlreadyRegisteredError):
@@ -106,7 +106,7 @@ def test_a_duplicate_label_still_refuses_as_already_registered(backend: Path) ->
 
 def test_the_torn_state_is_real(backend: Path) -> None:
     """ANTI-VACUITY: the fixture genuinely diverges the two stores."""
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     profile_id = _create(repository, label="Alpha")
     _tear_manifest(backend, profile_id)
 
@@ -123,7 +123,7 @@ def test_a_torn_bucket_refuses_by_naming_the_divergence(backend: Path) -> None:
     Before this change the same call raised the generic already-registered
     refusal -- typed ``ProfileNotFoundError``, about a profile that exists.
     """
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     profile_id = _create(repository, label="Alpha")
     _tear_manifest(backend, profile_id)
 
@@ -141,7 +141,7 @@ def test_the_divergence_refusal_is_not_masked_by_the_generic_arm(backend: Path) 
     """
     assert issubclass(ProfileIntegrityError, ProfileNotFoundError)
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     profile_id = _create(repository, label="Alpha")
     _tear_manifest(backend, profile_id)
 
@@ -151,7 +151,7 @@ def test_the_divergence_refusal_is_not_masked_by_the_generic_arm(backend: Path) 
 
 def test_the_torn_bucket_is_not_created_over(backend: Path) -> None:
     """The refusal still refuses: no write lands on the live record."""
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     profile_id = _create(repository, label="Alpha")
     _tear_manifest(backend, profile_id)
 

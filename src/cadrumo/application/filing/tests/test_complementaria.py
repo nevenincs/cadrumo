@@ -226,7 +226,6 @@ def _registry_draft(*, inputs: ModeloInputs) -> ModeloDraft:
         ),
         inputs=inputs,
         schema_provider=_schema_provider(),
-        m303_regimen_simplificado_scope=None,
     )
 
 
@@ -265,7 +264,6 @@ class TestBuildComplementaria:
                 "modelo-130-pagos-fraccionados-anteriores": Decimal("400"),
             },
             schema_provider=_schema_provider(),
-            m303_regimen_simplificado_scope=None,
         )
 
         changed = {change.casilla_id: change for change in amendment.delta}
@@ -296,7 +294,6 @@ class TestBuildComplementaria:
                 original,
                 {_M130_INGRESOS_CASILLA: Decimal("11000")},
                 schema_provider=_schema_provider(),
-                m303_regimen_simplificado_scope=None,
             )
         assert _persisted_amendment_ids() == ()
 
@@ -341,7 +338,6 @@ class TestBuildComplementaria:
                 original,
                 {_M130_INGRESOS_CASILLA: Decimal("11000")},
                 schema_provider=_schema_provider(),
-                m303_regimen_simplificado_scope=None,
             )
         assert _persisted_amendment_ids() == ()
 
@@ -363,7 +359,6 @@ class TestBuildComplementaria:
                     _UNREGISTERED_M037_UPDATE_CUOTA_CASILLA: Decimal("200.00"),
                 },
                 schema_provider=_schema_provider(),
-                m303_regimen_simplificado_scope=None,
             )
         assert _persisted_amendment_ids() == ()
 
@@ -389,7 +384,6 @@ class TestBuildComplementaria:
             original,
             {_M130_INGRESOS_CASILLA: Decimal("11000")},
             schema_provider=_schema_provider(),
-            m303_regimen_simplificado_scope=None,
         )
 
         assert original.profile_tax_id == original_draft.profile_tax_id
@@ -425,7 +419,6 @@ class TestBuildComplementaria:
                 original,
                 {_M130_INGRESOS_CASILLA: Decimal("11000")},
                 schema_provider=_schema_provider(),
-                m303_regimen_simplificado_scope=None,
             )
 
         assert str(raised.value) == "application.filing.errors.complementaria_taxpayer_identity_mismatch"
@@ -454,7 +447,6 @@ class TestBuildComplementaria:
                 original,
                 {_M130_INGRESOS_CASILLA: Decimal("11000")},
                 schema_provider=_schema_provider(),
-                m303_regimen_simplificado_scope=None,
             )
         assert _persisted_amendment_ids() == ()
 
@@ -483,7 +475,6 @@ class TestBuildComplementaria:
                 original,
                 {_M130_INGRESOS_CASILLA: Decimal("11000")},
                 schema_provider=_schema_provider(),
-                m303_regimen_simplificado_scope=None,
             )
         assert _persisted_amendment_ids() == ()
 
@@ -502,6 +493,5 @@ class TestBuildComplementaria:
                 original,
                 {_UNREGISTERED_M993_EJERCICIO_CASILLA: 2024},
                 schema_provider=_schema_provider(),
-                m303_regimen_simplificado_scope=None,
             )
         assert _persisted_amendment_ids() == ()

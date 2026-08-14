@@ -19,6 +19,7 @@ from .. import (
     OperationRegistry,
     OperationReplayPage,
     OperationRequest,
+    OperationSupervisor,
 )
 from .. import __all__ as public_names
 
@@ -48,6 +49,7 @@ def test_representative_contracts_resolve_from_public_facade() -> None:
     assert OperationRegistry.__module__.endswith("._registry")
     assert callable(OperationRegistry.resolve_request_json)
     assert callable(OperationRegistry.resolve_snapshot_json)
+    assert OperationSupervisor.__module__.endswith("._supervisor")
 
 
 def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
@@ -66,4 +68,5 @@ def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
         "_models",
         "_replay",
         "_registry",
+        "_supervisor",
     }

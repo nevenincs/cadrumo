@@ -277,12 +277,11 @@ class WorkflowState(BaseModel):
                 )
             return None
         from ...domain.user_profile import ProfileNotFoundError
-        from ..user_profile import build_lifecycle_service
+        from ..user_profile import ProfileRecordRepository
 
         with override_settings(cadrumo_active_profile=bucket_id):
-            service = build_lifecycle_service(bucket_id=bucket_id, secure_objects=secure_objects, schema=schema)
             try:
-                return service.read(bucket_id)
+                return ProfileRecordRepository(bucket_id=bucket_id, objects=secure_objects).load(bucket_id)
             except ProfileNotFoundError as exc:
                 _log.debug("active profile record resolution returned no profile record: %s", type(exc).__name__)
                 return None

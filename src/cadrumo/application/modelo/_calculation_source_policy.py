@@ -51,6 +51,7 @@ _ENROLLED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.LEDGER_OSS_AGGREGATION,
         BindingSourceKind.RETENCIONES_AGGREGATION,
         BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
+        BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
         BindingSourceKind.WITHHOLDING,
         BindingSourceKind.COLLECTIBLE_INVOICE,
         BindingSourceKind.PAYABLE_INVOICE,

@@ -169,6 +169,89 @@ def _verify_action(work_unit: WorkUnit) -> DeclaredNextAction:
     return declare_next_action("operator.modelo.work.verify", work_unit_id=work_unit.work_unit_id)
 
 
+def _finding_counts(latest_report: VerificationReport | None) -> tuple[int, int]:
+    """Count blocking and warning findings from the latest verification report."""
+    if latest_report is None:
+        return 0, 0
+    blocking = sum(finding.severity is ModeloVerificationFindingSeverity.BLOCKING for finding in latest_report.findings)
+    return blocking, len(latest_report.findings) - blocking
+
+
+def _modelo_health_row_for_revision(
+    *,
+    modelo: str,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    latest_report: VerificationReport | None,
+    blocking: int,
+    warning: int,
+) -> ModeloHealthRow:
+    """Project a work unit with a current revision into its readiness state."""
+    if revision.state is CalculationRevisionState.PRESENTADO:
+        return ModeloHealthRow(
+            modelo=modelo,
+            work_unit_id=work_unit.work_unit_id,
+            state=ModeloReadinessState.FILED,
+            warning_finding_count=warning,
+            summary=f"Modelo {modelo}: filed.",
+            next_action=declare_next_action("operator.modelo.filing_record.list", modelo=modelo),
+        )
+    if revision.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO:
+        return ModeloHealthRow(
+            modelo=modelo,
+            work_unit_id=work_unit.work_unit_id,
+            state=ModeloReadinessState.FILED,
+            warning_finding_count=warning,
+            summary=f"Modelo {modelo}: filed (superseded by a later revision).",
+            next_action=declare_next_action(
+                "operator.modelo.work.revisions",
+                work_unit_id=work_unit.work_unit_id,
+            ),
+        )
+    if latest_report is None:
+        return ModeloHealthRow(
+            modelo=modelo,
+            work_unit_id=work_unit.work_unit_id,
+            state=ModeloReadinessState.CALCULATED,
+            summary=f"Modelo {modelo}: calculated, not yet verified.",
+            next_action=_verify_action(work_unit),
+        )
+    if (
+        latest_report.completeness_status is VerificationCompletenessStatus.COMPLETE
+        and latest_report.granted_verificado_completo
+    ):
+        return ModeloHealthRow(
+            modelo=modelo,
+            work_unit_id=work_unit.work_unit_id,
+            state=ModeloReadinessState.VERIFIED,
+            warning_finding_count=warning,
+            summary=f"Modelo {modelo}: verified, not yet filed.",
+            next_action=declare_next_action(
+                "operator.modelo.work.file",
+                work_unit_id=work_unit.work_unit_id,
+            ),
+        )
+    if latest_report.completeness_status is VerificationCompletenessStatus.INCOMPLETE:
+        return ModeloHealthRow(
+            modelo=modelo,
+            work_unit_id=work_unit.work_unit_id,
+            state=ModeloReadinessState.INCOMPLETO,
+            blocking_finding_count=blocking,
+            warning_finding_count=warning,
+            summary=tr("cli.overview.pipeline.summary.incompleto", modelo=modelo),
+            next_action=_verify_action(work_unit),
+        )
+    return ModeloHealthRow(
+        modelo=modelo,
+        work_unit_id=work_unit.work_unit_id,
+        state=ModeloReadinessState.BLOCKED,
+        blocking_finding_count=blocking,
+        warning_finding_count=warning,
+        summary=f"Modelo {modelo}: {blocking} blocking finding(s) on the current revision.",
+        next_action=_verify_action(work_unit),
+    )
+
+
 def _modelo_health_row(
     *,
     modelo: str,
@@ -188,82 +271,14 @@ def _modelo_health_row(
             ),
         )
 
-    blocking = 0
-    warning = 0
-    if latest_report is not None:
-        for finding in latest_report.findings:
-            if finding.severity is ModeloVerificationFindingSeverity.BLOCKING:
-                blocking += 1
-            else:
-                warning += 1
-
-    if revision.state is CalculationRevisionState.PRESENTADO:
-        return ModeloHealthRow(
-            modelo=modelo,
-            work_unit_id=work_unit.work_unit_id,
-            state=ModeloReadinessState.FILED,
-            warning_finding_count=warning,
-            summary=f"Modelo {modelo}: filed.",
-            next_action=declare_next_action("operator.modelo.filing_record.list", modelo=modelo),
-        )
-
-    if revision.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO:
-        return ModeloHealthRow(
-            modelo=modelo,
-            work_unit_id=work_unit.work_unit_id,
-            state=ModeloReadinessState.FILED,
-            warning_finding_count=warning,
-            summary=f"Modelo {modelo}: filed (superseded by a later revision).",
-            next_action=declare_next_action(
-                "operator.modelo.work.revisions",
-                work_unit_id=work_unit.work_unit_id,
-            ),
-        )
-
-    if latest_report is None:
-        return ModeloHealthRow(
-            modelo=modelo,
-            work_unit_id=work_unit.work_unit_id,
-            state=ModeloReadinessState.CALCULATED,
-            summary=f"Modelo {modelo}: calculated, not yet verified.",
-            next_action=_verify_action(work_unit),
-        )
-
-    if (
-        latest_report.completeness_status is VerificationCompletenessStatus.COMPLETE
-        and latest_report.granted_verificado_completo
-    ):
-        return ModeloHealthRow(
-            modelo=modelo,
-            work_unit_id=work_unit.work_unit_id,
-            state=ModeloReadinessState.VERIFIED,
-            warning_finding_count=warning,
-            summary=f"Modelo {modelo}: verified, not yet filed.",
-            next_action=declare_next_action(
-                "operator.modelo.work.file",
-                work_unit_id=work_unit.work_unit_id,
-            ),
-        )
-
-    if latest_report.completeness_status is VerificationCompletenessStatus.INCOMPLETE:
-        return ModeloHealthRow(
-            modelo=modelo,
-            work_unit_id=work_unit.work_unit_id,
-            state=ModeloReadinessState.INCOMPLETO,
-            blocking_finding_count=blocking,
-            warning_finding_count=warning,
-            summary=tr("cli.overview.pipeline.summary.incompleto", modelo=modelo),
-            next_action=_verify_action(work_unit),
-        )
-
-    return ModeloHealthRow(
+    blocking, warning = _finding_counts(latest_report)
+    return _modelo_health_row_for_revision(
         modelo=modelo,
-        work_unit_id=work_unit.work_unit_id,
-        state=ModeloReadinessState.BLOCKED,
-        blocking_finding_count=blocking,
-        warning_finding_count=warning,
-        summary=f"Modelo {modelo}: {blocking} blocking finding(s) on the current revision.",
-        next_action=_verify_action(work_unit),
+        work_unit=work_unit,
+        revision=revision,
+        latest_report=latest_report,
+        blocking=blocking,
+        warning=warning,
     )
 
 

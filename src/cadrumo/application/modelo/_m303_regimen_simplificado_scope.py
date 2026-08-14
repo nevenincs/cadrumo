@@ -9,7 +9,7 @@ from ...domain.deadlines import M303RegimeComposition, TaxpayerProfile
 from ...domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ...domain.modelos import WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, UserProfileStatus
-from ..user_profile import UserProfileLifecycleRepository, projection_for_taxpayer
+from ..user_profile import ProfileRecordRepository, projection_for_taxpayer
 from ._action_errors import ModeloProfileReadinessError
 from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
@@ -31,14 +31,9 @@ def m303_profile_readiness_failure(
     )
 
 
-def resolve_m303_regimen_simplificado_scope(
-    work_unit: WorkUnit,
-) -> M303RegimenSimplificadoScopeDecision | None:
-    """Derive the closed scope from the active secure profile's IVA composition only."""
-    if work_unit.modelo != Modelo.M303:
-        return None
+def active_taxpayer_profile(work_unit: WorkUnit) -> TaxpayerProfile:
     try:
-        record = UserProfileLifecycleRepository(bucket_id=work_unit.bucket_id).load(work_unit.bucket_id)
+        record = ProfileRecordRepository(bucket_id=work_unit.bucket_id).load(work_unit.bucket_id)
     except ProfileNotFoundError as exc:
         raise ModeloProfileReadinessError(
             precondition_failure=m303_profile_readiness_failure("profile_absent", {"profile_present": False}),
@@ -50,7 +45,16 @@ def resolve_m303_regimen_simplificado_scope(
                 {"profile_present": True, "profile_status": str(record.status)},
             ),
         )
-    return m303_regimen_simplificado_scope_for_profile(projection_for_taxpayer(record))
+    return projection_for_taxpayer(record)
+
+
+def resolve_m303_regimen_simplificado_scope(
+    work_unit: WorkUnit,
+) -> M303RegimenSimplificadoScopeDecision | None:
+    """Derive the closed scope from the active secure profile's IVA composition only."""
+    if work_unit.modelo != Modelo.M303:
+        return None
+    return m303_regimen_simplificado_scope_for_profile(active_taxpayer_profile(work_unit))
 
 
 def m303_regimen_simplificado_scope_for_profile(
@@ -89,6 +93,7 @@ def m303_regimen_simplificado_scope_for_composition(
 
 
 __all__ = [
+    "active_taxpayer_profile",
     "m303_regimen_simplificado_scope_for_composition",
     "m303_regimen_simplificado_scope_for_profile",
     "resolve_m303_regimen_simplificado_scope",

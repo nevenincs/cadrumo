@@ -11,6 +11,7 @@ from pydantic import BaseModel, model_validator
 
 from ....application.operations import (
     JournalRepositoryBase,
+    OperationConflictScopeReference,
     OperationId,
     OperationLeaseDisposition,
     OperationLeaseObservation,
@@ -19,7 +20,7 @@ from ....application.operations import (
     OperationLeaseResult,
     OperationOwnerLease,
 )
-from ....core import STRICT_FROZEN_CONFIG, StorageCategory, exclusive_file_lock, storage_location
+from ....core import STRICT_FROZEN_CONFIG, StorageCategory, exclusive_file_lock, is_link_like, storage_location
 from ....core.time import validate_utc_aware
 from ..storage import RepositoryError
 
@@ -29,7 +30,8 @@ class _OperationLeaseRecord(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[2] = 2
+    scope_ref: OperationConflictScopeReference
     operation_id: OperationId
     recorded_at: datetime
     lease: OperationOwnerLease | None
@@ -40,6 +42,8 @@ class _OperationLeaseRecord(BaseModel):
         if self.lease is not None:
             if self.lease.operation_id != self.operation_id:
                 raise ValueError("durable operation lease record identity does not match its lease")
+            if self.lease.scope_ref != self.scope_ref:
+                raise ValueError("durable operation lease record scope does not match its lease")
             if self.lease.acquired_at > self.recorded_at:
                 raise ValueError("durable operation lease record precedes lease acquisition")
         return self
@@ -48,6 +52,28 @@ class _OperationLeaseRecord(BaseModel):
     def started_at(self) -> datetime:
         """Provide the ordering field required by the journal substrate."""
         return self.recorded_at
+
+
+class _OperationLeaseRecordV1(BaseModel):
+    """Explicit pre-scope-path record accepted only for an unambiguous acquisition migration."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    schema_version: Literal[1]
+    operation_id: OperationId
+    recorded_at: datetime
+    lease: OperationOwnerLease | None
+
+    @model_validator(mode="after")
+    def _validate_record(self) -> _OperationLeaseRecordV1:
+        validate_utc_aware(self.recorded_at)
+        if self.lease is None:
+            raise ValueError("scope-less absent operation lease record cannot be migrated")
+        if self.lease.operation_id != self.operation_id:
+            raise ValueError("legacy durable operation lease record identity does not match its lease")
+        if self.lease.acquired_at > self.recorded_at:
+            raise ValueError("legacy durable operation lease record precedes lease acquisition")
+        return self
 
 
 class OperationLeaseStorage(JournalRepositoryBase[_OperationLeaseRecord]):
@@ -72,43 +98,119 @@ class OperationLeaseStorage(JournalRepositoryBase[_OperationLeaseRecord]):
 
     @override
     def path_for(self, operation_id: str) -> Path:
-        """Keep lease records beside, but distinct from, snapshot journals."""
+        """Keep one lease record beside journals, using the supplied conflict-scope key."""
+        return super().path_for(operation_id).with_suffix(".lease.json")
+
+    def _legacy_path_for(self, operation_id: OperationId) -> Path:
+        """Return the retired operation-keyed path for one explicit migration attempt."""
         return super().path_for(operation_id).with_suffix(".lease.json")
 
     def ensure_root(self) -> None:
         """Materialize the canonical secure journal root before locking it."""
         self._ensure_root()
 
-    def current_unlocked(self, operation_id: OperationId) -> OperationOwnerLease | None:
-        """Load the exact lease state while the caller owns :attr:`lock_target`."""
-        path = self.path_for(operation_id)
+    def _record_unlocked(self, scope_ref: OperationConflictScopeReference) -> _OperationLeaseRecord | None:
+        """Load one current-format scope record while the caller owns :attr:`lock_target`."""
+        path = self.path_for(scope_ref)
         if not os.path.lexists(path):
             return None
-        return super().load(operation_id).lease
+        if is_link_like(path):
+            raise RepositoryError(f"operation lease path cannot be a link: {scope_ref}")
+        try:
+            record = _OperationLeaseRecord.model_validate_json(path.read_bytes())
+        except (OSError, ValueError) as exc:
+            raise RepositoryError(f"invalid operation lease {scope_ref}") from exc
+        if record.scope_ref != scope_ref:
+            raise RepositoryError("durable operation lease filename scope does not match payload")
+        return record
+
+    def current_unlocked(self, scope_ref: OperationConflictScopeReference) -> OperationOwnerLease | None:
+        """Load the scope's exact lease state while the caller owns :attr:`lock_target`."""
+        record = self._record_unlocked(scope_ref)
+        return None if record is None else record.lease
 
     def replace_unlocked(
         self,
+        scope_ref: OperationConflictScopeReference,
         operation_id: OperationId,
         lease: OperationOwnerLease | None,
         *,
         observed_at: datetime,
     ) -> None:
         """Atomically replace one lease state while the caller owns the lock."""
-        record = _OperationLeaseRecord(operation_id=operation_id, recorded_at=observed_at, lease=lease)
-        self._write(self.path_for(operation_id), record)
+        if lease is not None and (lease.scope_ref != scope_ref or lease.operation_id != operation_id):
+            raise RepositoryError("durable operation lease replacement does not match its scope and operation identity")
+        record = _OperationLeaseRecord(
+            scope_ref=scope_ref,
+            operation_id=operation_id,
+            recorded_at=observed_at,
+            lease=lease,
+        )
+        self._write(self.path_for(scope_ref), record)
 
-    def require_live_exact_unlocked(self, lease: OperationOwnerLease, *, observed_at: datetime) -> None:
-        """Refuse a journal writer without the exact active durable lease."""
+    def require_live_exact_unlocked(
+        self,
+        *,
+        scope_ref: OperationConflictScopeReference,
+        operation_id: OperationId,
+        lease: OperationOwnerLease,
+        observed_at: datetime,
+    ) -> None:
+        """Refuse a journal writer without the exact live scope-and-operation lease."""
         validate_utc_aware(observed_at)
-        current = self.current_unlocked(lease.operation_id)
-        if current is None:
+        if lease.scope_ref != scope_ref or lease.operation_id != operation_id:
+            raise RepositoryError(
+                "operation journal commit lease does not match its supplied scope and operation identity"
+            )
+        record = self._record_unlocked(scope_ref)
+        if record is None or record.lease is None:
             raise RepositoryError("operation journal commit requires a current durable operation lease")
+        if record.operation_id != operation_id:
+            raise RepositoryError("operation journal commit lease does not match the current scope operation identity")
+        current = record.lease
         if current != lease:
             raise RepositoryError("operation journal commit lease is not the exact current durable operation lease")
         if current.acquired_at > observed_at:
             raise RepositoryError("operation journal commit lease is not yet active at the supplied evidence time")
         if current.expires_at <= observed_at:
             raise RepositoryError("operation journal commit lease is expired at the supplied evidence time")
+
+    def migrate_legacy_before_acquisition(self, candidate: OperationOwnerLease) -> None:
+        """Move one unequivocally scoped v1 record to its canonical scope path.
+
+        The retired record path named only an operation id.  It is therefore
+        never consulted by reads, release, compare-and-swap, or journal commit:
+        acquisition is the one safe point to migrate it, and only when its
+        embedded current lease proves both the candidate operation and scope.
+        """
+        canonical_path = self.path_for(candidate.scope_ref)
+        if os.path.lexists(canonical_path):
+            return
+        legacy_path = self._legacy_path_for(candidate.operation_id)
+        if not os.path.lexists(legacy_path):
+            return
+        if is_link_like(legacy_path):
+            raise RepositoryError(f"operation lease path cannot be a link: {candidate.operation_id}")
+        try:
+            legacy = _OperationLeaseRecordV1.model_validate_json(legacy_path.read_bytes())
+        except (OSError, ValueError) as exc:
+            raise RepositoryError(
+                "operation lease record cannot be unambiguously migrated to a conflict scope"
+            ) from exc
+        assert legacy.lease is not None
+        if legacy.operation_id != candidate.operation_id or legacy.lease.scope_ref != candidate.scope_ref:
+            raise RepositoryError("operation lease record cannot be unambiguously migrated to a conflict scope")
+        migrated = _OperationLeaseRecord(
+            scope_ref=candidate.scope_ref,
+            operation_id=candidate.operation_id,
+            recorded_at=legacy.recorded_at,
+            lease=legacy.lease,
+        )
+        self._write(canonical_path, migrated)
+        try:
+            legacy_path.unlink()
+        except OSError as exc:
+            raise RepositoryError("cannot remove migrated operation-keyed lease record") from exc
 
 
 class OperationLeaseFilesystemRepository(OperationLeaseRepository):
@@ -118,13 +220,20 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
         self._storage = OperationLeaseStorage(storage_root=storage_root)
 
     @override
-    async def inspect(self, operation_id: OperationId, *, observed_at: datetime) -> OperationLeaseObservation:
+    async def inspect(
+        self,
+        scope_ref: OperationConflictScopeReference,
+        operation_id: OperationId,
+        *,
+        observed_at: datetime,
+    ) -> OperationLeaseObservation:
         """Return absent, active, or expired durable lease state at ``observed_at``."""
         self._storage.ensure_root()
         with exclusive_file_lock(self._storage.lock_target):
-            current = self._storage.current_unlocked(operation_id)
+            current = self._storage.current_unlocked(scope_ref)
             if current is None:
                 return OperationLeaseObservation(
+                    scope_ref=scope_ref,
                     operation_id=operation_id,
                     disposition=OperationLeaseObservationDisposition.ABSENT,
                     observed_at=observed_at,
@@ -135,6 +244,7 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
                 else OperationLeaseObservationDisposition.EXPIRED
             )
             return OperationLeaseObservation(
+                scope_ref=scope_ref,
                 operation_id=operation_id,
                 disposition=disposition,
                 observed_at=observed_at,
@@ -146,24 +256,33 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
         """Acquire only an absent lease; live and expired predecessors remain unchanged."""
         self._storage.ensure_root()
         with exclusive_file_lock(self._storage.lock_target):
-            current = self._storage.current_unlocked(candidate.operation_id)
+            self._storage.migrate_legacy_before_acquisition(candidate)
+            current = self._storage.current_unlocked(candidate.scope_ref)
             if current is None:
                 result = OperationLeaseResult(
+                    scope_ref=candidate.scope_ref,
                     operation_id=candidate.operation_id,
                     disposition=OperationLeaseDisposition.ACQUIRED,
                     observed_at=observed_at,
                     current=candidate,
                 )
-                self._storage.replace_unlocked(candidate.operation_id, candidate, observed_at=observed_at)
+                self._storage.replace_unlocked(
+                    candidate.scope_ref,
+                    candidate.operation_id,
+                    candidate,
+                    observed_at=observed_at,
+                )
                 return result
             if current.expires_at > observed_at:
                 return OperationLeaseResult(
+                    scope_ref=candidate.scope_ref,
                     operation_id=candidate.operation_id,
                     disposition=OperationLeaseDisposition.CONFLICT,
                     observed_at=observed_at,
                     current=current,
                 )
             return OperationLeaseResult(
+                scope_ref=candidate.scope_ref,
                 operation_id=candidate.operation_id,
                 disposition=OperationLeaseDisposition.EXPIRED,
                 observed_at=observed_at,
@@ -179,11 +298,14 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
         observed_at: datetime,
     ) -> OperationLeaseResult:
         """Renew an exact live owner or take over an exact expired owner."""
+        if predecessor.scope_ref != successor.scope_ref:
+            raise ValueError("operation lease compare-and-swap cannot change conflict scope")
         self._storage.ensure_root()
         with exclusive_file_lock(self._storage.lock_target):
-            current = self._storage.current_unlocked(predecessor.operation_id)
+            current = self._storage.current_unlocked(predecessor.scope_ref)
             if current != predecessor:
                 return OperationLeaseResult(
+                    scope_ref=predecessor.scope_ref,
                     operation_id=predecessor.operation_id,
                     disposition=OperationLeaseDisposition.OWNER_LOST,
                     observed_at=observed_at,
@@ -197,13 +319,19 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
                 else OperationLeaseDisposition.TAKEN_OVER
             )
             result = OperationLeaseResult(
-                operation_id=predecessor.operation_id,
+                scope_ref=predecessor.scope_ref,
+                operation_id=successor.operation_id,
                 disposition=disposition,
                 observed_at=observed_at,
                 predecessor=predecessor,
                 current=successor,
             )
-            self._storage.replace_unlocked(predecessor.operation_id, successor, observed_at=observed_at)
+            self._storage.replace_unlocked(
+                predecessor.scope_ref,
+                successor.operation_id,
+                successor,
+                observed_at=observed_at,
+            )
             return result
 
     @override
@@ -211,9 +339,10 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
         """Release only the exact current lease and persist its absent successor."""
         self._storage.ensure_root()
         with exclusive_file_lock(self._storage.lock_target):
-            current = self._storage.current_unlocked(predecessor.operation_id)
+            current = self._storage.current_unlocked(predecessor.scope_ref)
             if current != predecessor:
                 return OperationLeaseResult(
+                    scope_ref=predecessor.scope_ref,
                     operation_id=predecessor.operation_id,
                     disposition=OperationLeaseDisposition.OWNER_LOST,
                     observed_at=observed_at,
@@ -221,12 +350,18 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
                     current=current,
                 )
             result = OperationLeaseResult(
+                scope_ref=predecessor.scope_ref,
                 operation_id=predecessor.operation_id,
                 disposition=OperationLeaseDisposition.RELEASED,
                 observed_at=observed_at,
                 predecessor=predecessor,
             )
-            self._storage.replace_unlocked(predecessor.operation_id, None, observed_at=observed_at)
+            self._storage.replace_unlocked(
+                predecessor.scope_ref,
+                predecessor.operation_id,
+                None,
+                observed_at=observed_at,
+            )
             return result
 
 

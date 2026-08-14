@@ -180,16 +180,20 @@ class ModeloWorkLifecycleContinuation(BaseModel):
                 raise ValueError("closed lifecycle continuations cannot carry action arguments")
             return self
 
-        for binding in self.argument_bindings:
-            if binding.source is not ActionArgumentSource.VERDICT_CONTEXT:
-                raise ValueError("lifecycle continuation arguments must derive from continuation evidence")
-            assert binding.source_key is not None
-            evidence_value = self.evidence.values.get(binding.source_key)
-            if evidence_value is None and binding.source_key not in self.evidence.values:
-                raise ValueError("lifecycle continuation arguments must reference an evidence fact")
-            if type(binding.value) is not type(evidence_value) or binding.value != evidence_value:
-                raise ValueError("lifecycle continuation argument value must match its evidence fact")
+        _validate_continuation_argument_bindings(self)
         return self
+
+
+def _validate_continuation_argument_bindings(continuation: ModeloWorkLifecycleContinuation) -> None:
+    for binding in continuation.argument_bindings:
+        if binding.source is not ActionArgumentSource.VERDICT_CONTEXT:
+            raise ValueError("lifecycle continuation arguments must derive from continuation evidence")
+        assert binding.source_key is not None
+        evidence_value = continuation.evidence.values.get(binding.source_key)
+        if evidence_value is None and binding.source_key not in continuation.evidence.values:
+            raise ValueError("lifecycle continuation arguments must reference an evidence fact")
+        if type(binding.value) is not type(evidence_value) or binding.value != evidence_value:
+            raise ValueError("lifecycle continuation argument value must match its evidence fact")
 
 
 def _continuation_evidence(

@@ -32,10 +32,10 @@ def _untranslatable_internal_only_ids(snapshot: RegistrySnapshot) -> set[str]:
     """Return ``internal_only`` computed casillas with no closed-form Sheets formula.
 
     These are app-internal calculation-support figures the AEAT Diseño de
-    Registros omits, whose custom runtime-dispatch formula op cannot be rendered
-    as a live spreadsheet formula (M303 régimen-simplificado módulos), so the
-    export legitimately omits them from the official-structure workbook. A
-    *translatable* internal_only casilla (M200 ceiling) is NOT excluded.
+    Registros omits and whose formula expressions have no closed-form Sheets
+    translation. The exclusion is capability-based; it does not assert any
+    particular runtime operator. A *translatable* internal_only casilla (M200
+    ceiling) is NOT excluded.
     """
     revision = snapshot.revision
     formulas = {formula.id: formula for formula in revision.formulas}
@@ -54,10 +54,10 @@ def _untranslatable_internal_only_ids(snapshot: RegistrySnapshot) -> set[str]:
 # a live-formula workbook can be built and held to official-casilla parity.
 _COVERED = [
     ("130", 2025, "1T", date(2025, 4, 1)),  # pagos fraccionados actividad
-    ("303", 2023, "1T", date(2023, 4, 1)),  # IVA trimestral — 2023 epoch (módulos)
-    ("303", 2024, "1T", date(2024, 4, 1)),  # IVA trimestral — módulos omitted across every year
+    ("303", 2023, "1T", date(2023, 4, 1)),  # IVA trimestral — 2023 epoch
+    ("303", 2024, "1T", date(2024, 4, 1)),  # IVA trimestral
     ("303", 2025, "1T", date(2025, 4, 1)),  # IVA trimestral
-    ("303", 2026, "1T", date(2026, 4, 1)),  # IVA trimestral — módulos omitted for 2026 too
+    ("303", 2026, "1T", date(2026, 4, 1)),  # IVA trimestral
     ("390", 2025, "0A", date(2026, 1, 20)),  # IVA resumen anual
     ("111", 2025, "1T", date(2025, 4, 1)),  # retenciones trabajo
     ("115", 2025, "1T", date(2025, 4, 1)),  # retenciones arrendamientos
@@ -117,13 +117,11 @@ def test_export_plan_mirrors_registry_manifest_formulas_and_formats(
     # Every official-manifest casilla must appear in the exported workbook.
     assert not missing, f"modelo {modelo} export omits official casillas: {missing}"
 
-    # An ``internal_only`` casilla whose formula op has no closed-form Sheets
+    # An ``internal_only`` casilla whose formula has no closed-form Sheets
     # translation is app-internal calculation-support the AEAT Diseño de Registros
-    # omits and the workbook cannot render as a live formula (the M303
-    # régimen-simplificado módulos advisory-support figures resolve through custom
-    # runtime-dispatch ops — the same untranslatable class as the M100/M210 ops
-    # that keep those modelos out of _COVERED). The export omits it by design, so
-    # the gate scopes to casillas the official-structure workbook renders.
+    # omits and the workbook cannot render as a live formula. The export omits it
+    # by design, so the gate scopes to casillas the official-structure workbook
+    # renders.
     excluded = _untranslatable_internal_only_ids(snapshot)
     computed_ids = {c.id for c in revision.casillas if c.formula is not None and c.id not in excluded}
     formula_ids = {fc.casilla_id for fc in plan.formula_cells}

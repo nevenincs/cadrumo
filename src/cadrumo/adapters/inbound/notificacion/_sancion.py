@@ -345,7 +345,32 @@ def parse_sancion_document(
     missing: list[str] = []
     malformed: list[str] = []
     ambiguous: list[str] = []
+    values = _parse_sancion_values(lines, missing=missing, malformed=malformed, ambiguous=ambiguous)
+    payable = _resolve_payable(values, missing)
+    _raise_if_sancion_parse_incomplete(
+        certificado_id=certificado_id,
+        missing=missing,
+        malformed=malformed,
+        ambiguous=ambiguous,
+    )
+    record = _build_sancion_record(
+        values,
+        text=text,
+        payable=payable,
+        certificado_id=certificado_id,
+        document_sha256=document_sha256,
+    )
+    _assert_printed_lines_reconcile(record)
+    return record
 
+
+def _parse_sancion_values(
+    lines: Sequence[str],
+    *,
+    missing: list[str],
+    malformed: list[str],
+    ambiguous: list[str],
+) -> dict[str, object]:
     values: dict[str, object] = {}
     for field, labels in _TEXT_LABELS.items():
         values[field] = _resolve_single(
@@ -374,46 +399,59 @@ def parse_sancion_document(
             malformed=malformed,
             ambiguous=ambiguous,
         )
+    return values
 
+
+def _resolve_payable(values: dict[str, object], missing: list[str]) -> object:
     # ``Importe a ingresar`` and ``Diferencia`` are alternative names for the
-    # same fact across AEAT's two layouts, so neither is individually required
-    # and an absent one is not a gap. What IS required is that ONE of them
-    # resolved: a document stating a sanción but no payable amount has not been
-    # read, and returning it with a zero payable is the silent under-declaration
-    # this parser exists to refuse.
-    # Presence, not truthiness. A printed ``0,00`` payable is a fact AEAT
-    # stated -- a sanción whose reducciones absorb it entirely leaves nothing to
-    # pay -- and ``or`` reads that Decimal as absent. The document printing only
-    # ``Importe a ingresar 0,00`` then refused as unread though it had been read
-    # correctly, and the document printing both lines bound the payable to
-    # ``Diferencia``, inverting the precedence stated on the record.
+    # same fact across AEAT's two layouts. Presence, not truthiness, matters:
+    # a printed ``0,00`` payable is still a stated fact.
     payable = values.get("importe_a_ingresar")
     if payable is None:
         payable = values.get("diferencia")
     if payable is not None:
-        missing = [field for field in missing if field not in {"importe_a_ingresar", "diferencia"}]
+        missing[:] = [field for field in missing if field not in {"importe_a_ingresar", "diferencia"}]
     else:
         missing.append("importe_a_ingresar")
+    return payable
 
+
+def _raise_if_sancion_parse_incomplete(
+    *,
+    certificado_id: str,
+    missing: list[str],
+    malformed: list[str],
+    ambiguous: list[str],
+) -> None:
     required_missing = tuple(f for f in missing if f in _REQUIRED_FIELDS or f == "importe_a_ingresar")
     required_malformed = tuple(f for f in malformed if f in _REQUIRED_FIELDS or f in _MONEY_FIELDS)
-    if required_missing or required_malformed or ambiguous:
-        raise SancionParseError(
-            "AEAT sanción document could not be read completely; refusing to return a partial record. "
-            f"missing={required_missing!r} malformed={required_malformed!r} ambiguous={tuple(ambiguous)!r}",
-            translated_message=tr("adapters.notificacion.errors.sancion_incomplete"),
-            context={
-                "certificado_id": certificado_id,
-                "missing": ",".join(required_missing),
-                "malformed": ",".join(required_malformed),
-                "ambiguous": ",".join(ambiguous),
-            },
-            missing=required_missing,
-            malformed=required_malformed,
-            ambiguous=tuple(ambiguous),
-        )
+    if not (required_missing or required_malformed or ambiguous):
+        return
+    raise SancionParseError(
+        "AEAT sanción document could not be read completely; refusing to return a partial record. "
+        f"missing={required_missing!r} malformed={required_malformed!r} ambiguous={tuple(ambiguous)!r}",
+        translated_message=tr("adapters.notificacion.errors.sancion_incomplete"),
+        context={
+            "certificado_id": certificado_id,
+            "missing": ",".join(required_missing),
+            "malformed": ",".join(required_malformed),
+            "ambiguous": ",".join(ambiguous),
+        },
+        missing=required_missing,
+        malformed=required_malformed,
+        ambiguous=tuple(ambiguous),
+    )
 
-    record = SancionLiquidacion(
+
+def _build_sancion_record(
+    values: dict[str, object],
+    *,
+    text: str,
+    payable: object,
+    certificado_id: str,
+    document_sha256: str,
+) -> SancionLiquidacion:
+    return SancionLiquidacion(
         certificado_id=certificado_id,
         clave_liquidacion=str(values["clave_liquidacion"]),
         referencia=str(values["referencia"]),
@@ -428,8 +466,6 @@ def parse_sancion_document(
         importe_a_ingresar=_as_decimal(payable),
         document_sha256=document_sha256,
     )
-    _assert_printed_lines_reconcile(record)
-    return record
 
 
 def _as_decimal(value: object) -> Decimal:

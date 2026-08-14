@@ -86,7 +86,7 @@ from ...aggregation import (
     RetencionScheme,
 )
 from ...calculations import CalculationObservationRepository
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -140,7 +140,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 def _seed_ready_profile(objects: SecureObjectRepository) -> None:
     """Persist a filing-ready withholding-operator profile for annual summaries."""
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name=_PROFILE_LABEL,
@@ -483,7 +483,7 @@ def _attest_m111_no_retenciones_periods(
     *,
     periods: tuple[str, ...],
 ) -> None:
-    profile_repo = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    profile_repo = ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     record = profile_repo.load(_BUCKET_ID)
     profile_repo.save(
         record.model_copy(

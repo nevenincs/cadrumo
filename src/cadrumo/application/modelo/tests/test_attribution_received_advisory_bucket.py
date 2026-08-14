@@ -3,7 +3,7 @@
 Every unit test in ``test_attribution_received_advisory`` passes ``profile_record=``
 explicitly; this file exercises the PRODUCTION branch that loads the
 :class:`UserProfileRecord` from a real encrypted bucket via
-:class:`UserProfileLifecycleRepository` (the ``profile_record=None`` default),
+:class:`ProfileRecordRepository` (the ``profile_record=None`` default),
 plus the :class:`ProfileNotFoundError` guard. Real secure store, no mocks.
 """
 
@@ -20,7 +20,7 @@ from ....core.resources import resources
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._attribution_received_advisory import _attribution_received_omission_advisory_findings
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -65,7 +65,7 @@ def _received_facts() -> tuple[UserProfileFact, ...]:
 def test_advisory_loads_attribution_facts_from_real_bucket(tmp_path: Path) -> None:
     snapshot = resources().modelos.authority.snapshot("100", filing_year=_FILING_YEAR, period="0A")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label="Socio atribucion") as profile:
-        UserProfileLifecycleRepository(bucket_id=_BUCKET, objects=profile.repository).save(
+        ProfileRecordRepository(bucket_id=_BUCKET, objects=profile.repository).save(
             UserProfileRecord(
                 profile_id=_BUCKET,
                 display_name="Socio atribucion",

@@ -38,7 +38,7 @@ from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime
 from .. import (
     USER_PROFILE_SNAPSHOT_NAMESPACE,
     USER_PROFILE_VALUE_NAMESPACE,
-    UserProfileLifecycleRepository,
+    ProfileRecordRepository,
     UserProfileSnapshotRepository,
     user_profile_snapshot_object_key,
     user_profile_value_object_key,
@@ -82,7 +82,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
             id="snapshot-id",
         ),
         pytest.param(
-            lambda bucket_id: UserProfileLifecycleRepository(bucket_id=bucket_id),
+            lambda bucket_id: ProfileRecordRepository(bucket_id=bucket_id),
             ("  ",),
             "bucket_id",
             id="lifecycle-bucket-id",
@@ -137,7 +137,7 @@ def test_lifecycle_round_trip_carries_record(secure_objects: SecureObjectReposit
         display_name="Operator",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
-    repository = UserProfileLifecycleRepository(bucket_id=profile_id, objects=secure_objects)
+    repository = ProfileRecordRepository(bucket_id=profile_id, objects=secure_objects)
 
     assert repository.exists(profile_id) is False
     repository.save(profile)
@@ -178,14 +178,14 @@ def test_default_lifecycle_repository_binds_named_bucket_database(tmp_path: Path
     )
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         with profile_create_storage_span(profile_a):
-            bucket_a = UserProfileLifecycleRepository(bucket_id=profile_a)
+            bucket_a = ProfileRecordRepository(bucket_id=profile_a)
             bucket_a.save(record_a)
             assert bucket_a.exists(profile_a) is True
             assert bucket_a.load(profile_a).display_name == "Operator A"
             assert [row.profile_id for row in bucket_a.iter_records()] == [profile_a]
 
         with profile_create_storage_span(profile_b):
-            bucket_b = UserProfileLifecycleRepository(bucket_id=profile_b)
+            bucket_b = ProfileRecordRepository(bucket_id=profile_b)
             # B's own profile is absent until B writes it -- on a shared
             # database A's row would already be visible here.
             assert bucket_b.exists(profile_b) is False
@@ -217,7 +217,7 @@ def test_lifecycle_repository_refuses_a_foreign_profile_on_every_surface(tmp_pat
         facts=(UserProfileFact(path="identity.tax_id", value="87654321X"),),
     )
     with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(profile_a):
-        bucket_a = UserProfileLifecycleRepository(bucket_id=profile_a)
+        bucket_a = ProfileRecordRepository(bucket_id=profile_a)
         surfaces: tuple[tuple[str, Callable[[], object]], ...] = (
             ("exists", lambda: bucket_a.exists(profile_b)),
             ("load", lambda: bucket_a.load(profile_b)),
@@ -247,7 +247,7 @@ def test_default_lifecycle_repository_refuses_explicit_database_url(tmp_path: Pa
         ),
         pytest.raises(StorageValidationError, match="not attached to an active profile bucket"),
     ):
-        UserProfileLifecycleRepository(bucket_id=profile_id)
+        ProfileRecordRepository(bucket_id=profile_id)
 
     assert not (tmp_path / "explicit.db").exists()
     assert not (bucket_paths(storage_root, profile_id).database_file).exists()
@@ -260,13 +260,13 @@ def test_default_lifecycle_repository_requires_ready_runtime(tmp_path: Path) -> 
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None),
         pytest.raises(StorageValidationError, match="storage runtime is not ready"),
     ):
-        UserProfileLifecycleRepository(bucket_id=profile_id)
+        ProfileRecordRepository(bucket_id=profile_id)
 
 
 def test_lifecycle_load_missing_raises_profile_not_found(secure_objects: SecureObjectRepository) -> None:
     # Bound to the id it loads, as every production construction is: the
     # absent-record path is only reachable once ownership is satisfied.
-    repo = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    repo = ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     with pytest.raises(ProfileNotFoundError) as excinfo:
         repo.load(_BUCKET_ID)
     assert str(excinfo.value) == "profile record not found in secure storage"
@@ -301,7 +301,7 @@ def test_lifecycle_load_rejects_inner_classification_without_identifier_leak(
     )
 
     with pytest.raises(ClassificationError) as excinfo:
-        UserProfileLifecycleRepository(bucket_id=profile_id, objects=secure_objects).load(profile_id)
+        ProfileRecordRepository(bucket_id=profile_id, objects=secure_objects).load(profile_id)
 
     assert str(excinfo.value) == "secure-object namespace classification does not match the repository contract"
     assert excinfo.value.translated_message == "application.user_profile.errors.repository_classification_mismatch"
@@ -339,7 +339,7 @@ def test_lifecycle_load_rejects_inner_version_without_identifier_leak(
     )
 
     with pytest.raises(EnvelopeVersionError) as excinfo:
-        UserProfileLifecycleRepository(bucket_id=profile_id, objects=secure_objects).load(profile_id)
+        ProfileRecordRepository(bucket_id=profile_id, objects=secure_objects).load(profile_id)
 
     assert str(excinfo.value) == "profile record schema version is not supported"
     assert (
@@ -489,7 +489,7 @@ def test_save_that_cannot_move_the_language_leaves_the_i18n_cache_alone(tmp_path
     """
     profile_id = "4a9b7f8a-8bd0-4f2f-9d18-2a4d0dd4c0c1"
     with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(profile_id):
-        repository = UserProfileLifecycleRepository(bucket_id=profile_id)
+        repository = ProfileRecordRepository(bucket_id=profile_id)
         record = UserProfileRecord(
             profile_id=profile_id,
             display_name="Operator",
@@ -511,7 +511,7 @@ def test_save_that_moves_the_language_still_invalidates_the_i18n_cache(tmp_path:
     """
     profile_id = "4a9b7f8a-8bd0-4f2f-9d18-2a4d0dd4c0c2"
     with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(profile_id):
-        repository = UserProfileLifecycleRepository(bucket_id=profile_id)
+        repository = ProfileRecordRepository(bucket_id=profile_id)
         record = UserProfileRecord(
             profile_id=profile_id,
             display_name="Operator",
@@ -542,7 +542,7 @@ def test_saved_record_is_byte_equivalent_to_a_fresh_load(tmp_path: Path) -> None
     """
     profile_id = "4a9b7f8a-8bd0-4f2f-9d18-2a4d0dd4c0c3"
     with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(profile_id):
-        repository = UserProfileLifecycleRepository(bucket_id=profile_id)
+        repository = ProfileRecordRepository(bucket_id=profile_id)
         in_memory = UserProfileRecord(
             profile_id=profile_id,
             display_name="Operator",
@@ -576,7 +576,7 @@ def test_the_equality_proof_would_catch_a_divergence(tmp_path: Path) -> None:
     """
     profile_id = "4a9b7f8a-8bd0-4f2f-9d18-2a4d0dd4c0c4"
     with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(profile_id):
-        repository = UserProfileLifecycleRepository(bucket_id=profile_id)
+        repository = ProfileRecordRepository(bucket_id=profile_id)
         in_memory = UserProfileRecord(
             profile_id=profile_id,
             display_name="Operator",

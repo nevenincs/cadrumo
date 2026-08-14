@@ -420,6 +420,33 @@ def resolve_modelo_revision_for_operator_target(
     Otherwise the work target is resolved first and the selector/default policy is
     applied under that work unit.
     """
+    address = _revision_target_address(
+        calculation_revision_id=calculation_revision_id,
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        registry_revision_id=registry_revision_id,
+        bucket_id=bucket_id,
+    )
+    return _resolve_revision_with_precondition_translation(
+        address=address,
+        calculation_revision_id=calculation_revision_id,
+        selector=selector,
+        default_for=default_for,
+    )
+
+
+def _revision_target_address(
+    *,
+    calculation_revision_id: CalculationRevisionId | None,
+    work_unit_id: str | None,
+    modelo: str | None,
+    year: int | None,
+    period: Period | None,
+    registry_revision_id: RevisionId | None,
+    bucket_id: str | None,
+) -> ModeloWorkAddress:
     if (
         calculation_revision_id is not None
         and work_unit_id is None
@@ -429,39 +456,30 @@ def resolve_modelo_revision_for_operator_target(
         and registry_revision_id is None
         and bucket_id is None
     ):
-        address = ModeloWorkAddress()
-    else:
-        address = modelo_work_address_from_operator_target(
-            work_unit_id=work_unit_id,
-            modelo=modelo,
-            year=year,
-            period=period,
-            registry_revision_id=registry_revision_id,
-            bucket_id=bucket_id,
-        )
+        return ModeloWorkAddress()
+    return modelo_work_address_from_operator_target(
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        registry_revision_id=registry_revision_id,
+        bucket_id=bucket_id,
+    )
+
+
+def _resolve_revision_with_precondition_translation(
+    *,
+    address: ModeloWorkAddress,
+    calculation_revision_id: CalculationRevisionId | None,
+    selector: ModeloCalculationRevisionSelector,
+    default_for: ModeloCalculationRevisionDefault | None,
+) -> CalculationRevision:
     try:
-        if default_for == "verify":
-            return resolve_verifiable_modelo_calculation_revision_address(
-                address=address,
-                calculation_revision_id=calculation_revision_id,
-                selector=selector,
-            )
-        if default_for == "file":
-            return resolve_fileable_modelo_calculation_revision_address(
-                address=address,
-                calculation_revision_id=calculation_revision_id,
-                selector=selector,
-            )
-        if default_for == "export":
-            return resolve_exportable_modelo_calculation_revision_address(
-                address=address,
-                calculation_revision_id=calculation_revision_id,
-                selector=selector,
-            )
-        return resolve_modelo_calculation_revision_address(
+        return _resolve_revision_for_default(
             address=address,
             calculation_revision_id=calculation_revision_id,
             selector=selector,
+            default_for=default_for,
         )
     except CalculationRevisionNotFoundError as error:
         recovery_error = _calculation_revision_work_unit_target_error(
@@ -491,6 +509,31 @@ def resolve_modelo_revision_for_operator_target(
         if precondition_error is error:
             raise
         raise precondition_error from error
+
+
+def _resolve_revision_for_default(
+    *,
+    address: ModeloWorkAddress,
+    calculation_revision_id: CalculationRevisionId | None,
+    selector: ModeloCalculationRevisionSelector,
+    default_for: ModeloCalculationRevisionDefault | None,
+) -> CalculationRevision:
+    resolver = (
+        {
+            "verify": resolve_verifiable_modelo_calculation_revision_address,
+            "file": resolve_fileable_modelo_calculation_revision_address,
+            "export": resolve_exportable_modelo_calculation_revision_address,
+        }.get(default_for)
+        if default_for is not None
+        else None
+    )
+    if resolver is None:
+        resolver = resolve_modelo_calculation_revision_address
+    return resolver(
+        address=address,
+        calculation_revision_id=calculation_revision_id,
+        selector=selector,
+    )
 
 
 def _calculation_revision_work_unit_target_error(
@@ -556,19 +599,12 @@ def _natural_target_absent_precondition_error(
     default_for: ModeloCalculationRevisionDefault | None,
 ) -> ModeloWorkAddressNotFoundError:
     """Attach the declared no-action verdict to an absent natural verify/file target."""
-    if default_for == "verify":
-        subject_leaf_key = "modelo.work.verify"
-    elif default_for == "file":
-        subject_leaf_key = "modelo.work.file"
-    else:
+    subject_leaf_key = _natural_target_subject_leaf_key(default_for)
+    if subject_leaf_key is None or not _natural_target_is_addressed(address):
         return error
-    if (
-        address.work_unit_id is not None
-        or address.modelo is None
-        or address.filing_year is None
-        or address.period is None
-    ):
-        return error
+    assert address.modelo is not None
+    assert address.filing_year is not None
+    assert address.period is not None
     failure = build_modelo_precondition_failure_for_scenario(
         subject_leaf_key=subject_leaf_key,
         scenario_id=f"{subject_leaf_key}.work_address.natural_target_absent",
@@ -593,6 +629,23 @@ def _natural_target_absent_precondition_error(
             "bucket_id": address.bucket_id or "",
         },
         precondition_failure=failure,
+    )
+
+
+def _natural_target_subject_leaf_key(default_for: ModeloCalculationRevisionDefault | None) -> str | None:
+    if default_for == "verify":
+        return "modelo.work.verify"
+    if default_for == "file":
+        return "modelo.work.file"
+    return None
+
+
+def _natural_target_is_addressed(address: ModeloWorkAddress) -> bool:
+    return (
+        address.work_unit_id is None
+        and address.modelo is not None
+        and address.filing_year is not None
+        and address.period is not None
     )
 
 

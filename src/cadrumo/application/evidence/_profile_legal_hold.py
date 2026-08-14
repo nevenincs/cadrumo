@@ -1,0 +1,172 @@
+"""Canonical legal-case owner facts for local profile-deletion holds.
+
+This module owns legal-case snapshots.  It deliberately exposes no
+``cleared``/``held`` switch: the custody transaction can only project whether
+the authoritative snapshot names any open case.  The user-profile facade does
+not re-export this mutation owner.
+"""
+
+from __future__ import annotations
+
+import os
+from datetime import UTC, datetime
+from pathlib import Path
+from uuid import UUID
+
+from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
+
+from ...core import STRICT_FROZEN_CONFIG
+from ...core.time import validate_utc_aware
+from .._profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
+from ..profile_custody import (
+    ProfileCustodyLocalRecordStore,
+    canonical_snapshot_bytes,
+    canonical_snapshot_digest,
+    canonical_snapshot_payload,
+    default_profile_custody_local_record_store,
+    ensure_profile_custody_owner_root,
+    profile_custody_owner_root,
+)
+
+_MAX_BYTES = 8 * 1024
+
+
+class LegalHoldCaseSnapshot(BaseModel):
+    """Durable legal-owner fact: exactly the known open case identifiers."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    schema_version: int = Field(default=1, frozen=True)
+    profile_id: UUID
+    open_case_ids: tuple[str, ...]
+    observed_at: datetime
+    self_digest: str = Field(min_length=71, max_length=71)
+
+    @field_validator("open_case_ids")
+    @classmethod
+    def _validate_case_ids(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if value != tuple(sorted(set(value))):
+            raise ValueError("legal open case identifiers must be unique and sorted")
+        if any(
+            len(case_id) < 3
+            or len(case_id) > 256
+            or case_id != case_id.strip()
+            or any(character in case_id for character in "\\/\x00")
+            for case_id in value
+        ):
+            raise ValueError("legal open case identifiers must be bounded canonical identifiers")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_snapshot(self) -> LegalHoldCaseSnapshot:
+        validate_utc_aware(self.observed_at)
+        if self.self_digest != self.computed_self_digest:
+            raise ValueError("legal hold snapshot digest does not match its canonical fields")
+        return self
+
+    @property
+    def canonical_payload(self) -> dict[str, object]:
+        return canonical_snapshot_payload(self)
+
+    @property
+    def computed_self_digest(self) -> str:
+        return canonical_snapshot_digest(
+            self,
+            maximum_bytes=_MAX_BYTES,
+            limit_error="legal hold snapshot exceeds its byte limit",
+        )
+
+    def canonical_json_bytes(self) -> bytes:
+        return canonical_snapshot_bytes(
+            self,
+            maximum_bytes=_MAX_BYTES,
+            limit_error="legal hold snapshot exceeds its byte limit",
+        )
+
+    @classmethod
+    def from_open_cases(
+        cls,
+        *,
+        profile_id: UUID,
+        open_case_ids: tuple[str, ...],
+        observed_at: datetime,
+    ) -> LegalHoldCaseSnapshot:
+        unsigned = cls.model_construct(
+            schema_version=1,
+            profile_id=profile_id,
+            open_case_ids=open_case_ids,
+            observed_at=observed_at,
+            self_digest="",
+        )
+        return cls(
+            profile_id=profile_id,
+            open_case_ids=open_case_ids,
+            observed_at=observed_at,
+            self_digest=unsigned.computed_self_digest,
+        )
+
+
+class LegalHoldCaseAuthority:
+    """Legal-owner mutation and projection surface, outside deletion ownership."""
+
+    def __init__(
+        self,
+        *,
+        root: Path | None = None,
+        local_record_store: ProfileCustodyLocalRecordStore | None = None,
+    ) -> None:
+        self._local_record_store = local_record_store or default_profile_custody_local_record_store()
+        self._root = profile_custody_owner_root(root, "legal-case-owner")
+
+    def record_open_case_snapshot(
+        self,
+        *,
+        profile_id: UUID,
+        open_case_ids: tuple[str, ...],
+        observed_at: datetime,
+    ) -> LegalHoldCaseSnapshot:
+        """Persist a legal case-owner observation; outcome derives from the cases."""
+        snapshot = LegalHoldCaseSnapshot.from_open_cases(
+            profile_id=profile_id,
+            open_case_ids=open_case_ids,
+            observed_at=observed_at,
+        )
+        self._ensure_root()
+        with self._local_record_store.lock(self._root / ".legal-case-owner.lock"):
+            self._local_record_store.write(
+                self.path(profile_id),
+                snapshot.canonical_json_bytes(),
+                publish_once=False,
+            )
+        return snapshot
+
+    def project(self, profile_id: UUID, *, now: datetime) -> ProfileDeletionHoldOwnerProjection:
+        """Load canonical legal facts and derive the hold without caller disposition input."""
+        validate_utc_aware(now)
+        path = self.path(profile_id)
+        if not os.path.lexists(path):
+            raise FileNotFoundError("canonical legal case snapshot is absent")
+        payload = self._local_record_store.read(path, maximum_bytes=_MAX_BYTES)
+        try:
+            snapshot = LegalHoldCaseSnapshot.model_validate_json(payload)
+        except ValidationError as exc:
+            raise ValueError("canonical legal case snapshot is invalid") from exc
+        if snapshot.profile_id != profile_id or snapshot.canonical_json_bytes() != payload:
+            raise ValueError("canonical legal case snapshot identity or bytes differ from its path")
+        return ProfileDeletionHoldOwnerProjection(
+            owner="legal",
+            profile_id=profile_id,
+            blocks_local_deletion=bool(snapshot.open_case_ids),
+            source_record_id=f"legal-case-snapshot-{profile_id}",
+            source_record_digest=snapshot.self_digest,
+            assessed_at=now.astimezone(UTC),
+        )
+
+    def path(self, profile_id: UUID) -> Path:
+        return self._root / f"{profile_id}.json"
+
+    def _ensure_root(self) -> None:
+        ensure_profile_custody_owner_root(self._local_record_store, self._root)
+
+
+__all__ = ["LegalHoldCaseAuthority", "LegalHoldCaseSnapshot"]

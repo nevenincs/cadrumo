@@ -709,7 +709,7 @@ def _resolved_maternidad_meses(work_unit_id: str) -> MaternidadMesesResolution |
     silent-absent handling profile-sourced bindings already apply.
     """
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import UserProfileLifecycleRepository
+    from ..user_profile import ProfileRecordRepository
     from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
     from ._profile_binding import resolve_maternidad_meses
     from ._work_lifecycle import get_work_unit
@@ -717,7 +717,7 @@ def _resolved_maternidad_meses(work_unit_id: str) -> MaternidadMesesResolution |
     unit = get_work_unit(work_unit_id)
     snapshot = resolve_registry_snapshot_for_work_unit(unit)
     try:
-        record = UserProfileLifecycleRepository(bucket_id=unit.bucket_id).load(unit.bucket_id)
+        record = ProfileRecordRepository(bucket_id=unit.bucket_id).load(unit.bucket_id)
     except ProfileNotFoundError:
         return None
     return resolve_maternidad_meses(record, snapshot)
@@ -843,12 +843,12 @@ def _ambiguous_relacion_hijo_ids(work_unit_id: str, contributing_hijo_ids: froze
     if not contributing_hijo_ids:
         return frozenset[str]()
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import UserProfileLifecycleRepository
+    from ..user_profile import ProfileRecordRepository
     from ._work_lifecycle import get_work_unit
 
     unit = get_work_unit(work_unit_id)
     try:
-        record = UserProfileLifecycleRepository(bucket_id=unit.bucket_id).load(unit.bucket_id)
+        record = ProfileRecordRepository(bucket_id=unit.bucket_id).load(unit.bucket_id)
     except ProfileNotFoundError:
         return frozenset[str]()
     facts = {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}

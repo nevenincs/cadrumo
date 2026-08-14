@@ -251,6 +251,7 @@ def _m303_filing_facts(period: Period) -> M303FilingFacts:
     )
     return M303FilingFacts(
         joint_return_elected=False,
+        annual_volume_nonzero=False,
         insolvency=None,
         period=period,
         exonerado_390=M303Exonerado390FilingEvidence(

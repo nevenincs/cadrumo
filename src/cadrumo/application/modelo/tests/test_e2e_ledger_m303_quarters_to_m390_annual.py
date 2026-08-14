@@ -95,7 +95,7 @@ from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, IvaWalletDecisionRepository
 from ...invoices import build_catalogue_invoice
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     ModeloCrossPeriodCleanStateError,
     ModeloExportCommand,
@@ -436,7 +436,7 @@ def _wallet_decision(
 
 def _store_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed the ready taxpayer profile the M303 gates read."""
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="Laura - Taller Sol",
@@ -469,7 +469,7 @@ def _store_profile(secure_objects: SecureObjectRepository) -> None:
 
 def _store_irene_sl_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed Irene SL's IVA profile for the late-local-file persona path."""
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="Irene SL",

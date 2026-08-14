@@ -146,6 +146,11 @@ from ._m303_regimen_simplificado import (
     M303RegimenSimplificadoCalculationError,
     calculate_m303_regimen_simplificado_result,
 )
+from ._m303_regimen_simplificado_annual_summary import (
+    M303RegimenSimplificadoAnnualSummaryHandoffError,
+    M303RegimenSimplificadoAnnualSummarySourceResolver,
+    validate_m303_regimen_simplificado_annual_summary_target_revision,
+)
 from ._maritime_exemption_service import MaritimeExemptionResult, resolve_maritime_exemption
 from ._multi_year import (
     EnrollmentEvidence,
@@ -239,6 +244,8 @@ __all__ = [
     "IvaWalletDecisionSourceResolver",
     "LocalIvaCompensationRecurrence",
     "M303CarryIngressError",
+    "M303RegimenSimplificadoAnnualSummaryHandoffError",
+    "M303RegimenSimplificadoAnnualSummarySourceResolver",
     "M303RegimenSimplificadoCalculationError",
     "MaritimeExemptionResult",
     "NoPriorObligationProvenance",
@@ -307,5 +314,6 @@ __all__ = [
     "resolve_relations_from_local_store",
     "revision_carry_outcome",
     "seed_iva_compensation_period",
+    "validate_m303_regimen_simplificado_annual_summary_target_revision",
     "validate_normalized_m303_carry_observation_envelope",
 ]

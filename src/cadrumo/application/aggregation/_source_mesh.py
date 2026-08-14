@@ -20,6 +20,7 @@ for declared binding sources without an enrolled resolver.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -41,7 +42,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
 from ...core.i18n import tr
-from ...core.identity import BucketId, SnapshotId
+from ...core.identity import BucketId, SnapshotId, WorkUnitId
 from ...core.logging import get_logger
 from ...domain.calculations.registry import (
     BindingId,
@@ -51,7 +52,7 @@ from ...domain.calculations.registry import (
     RelationId,
     SourceRefId,
 )
-from ...domain.modelos import ModeloDetailRow
+from ...domain.modelos import M303RegimenSimplificadoAnnualSummaryHandoff, ModeloDetailRow
 from ._errors import AggregationValidationError, t
 
 RowBindingKey = tuple[BindingId, int]
@@ -349,6 +350,7 @@ CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
                 BindingSourceKind.LEDGER_OSS_AGGREGATION,
                 BindingSourceKind.COLLECTIBLE_INVOICE,
                 BindingSourceKind.PAYABLE_INVOICE,
+                BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
             },
         ),
         disposition=CallerOverrideDisposition.LOCK,
@@ -448,6 +450,11 @@ class CalculationSourceContext(BaseModel):
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
+    # Normal calculate routes carry the exact selected work unit.  Legacy
+    # resolver-unit tests may intentionally construct a context without one;
+    # a resolver that requires target calculation identity must refuse that
+    # incomplete context rather than select by coordinate alone.
+    work_unit_id: WorkUnitId | None = None
     modelo: str = Field(min_length=1, max_length=16)
     filing_year: int = Field(ge=2000, le=2099)
     period: Period
@@ -824,6 +831,10 @@ class CalculationSourceResolution(BaseModel):
     # snapshot id and sourced-binding set as TYPED data and hands them to
     # ``persist_calculation_revision``. ``None`` for every other resolver.
     borrador_provenance: BorradorSourceProvenance | None = None
+    # The persisted cross-model annual-summary input is a single frozen carrier,
+    # not a binding channel.  It remains separate so a later persistence layer
+    # cannot reconstruct it from scalar values or provenance strings.
+    m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None
     diagnostics: tuple[CalculationSourceDiagnostic, ...] = Field(default_factory=tuple)
     provenance: tuple[CalculationSourceProvenance, ...] = Field(default_factory=tuple)
 
@@ -1033,6 +1044,127 @@ class ModeloSourceResolver(Protocol):
         ...
 
 
+@dataclass(slots=True)
+class _SourceResolutionMergeState:
+    """Mutable accumulator for the exclusive source-resolution merge.
+
+    Keeping the ownership claims and output channels together makes the merge
+    orchestration small while retaining one canonical implementation of every
+    collision rule.  The state is private; callers continue to receive the
+    frozen :class:`CalculationSourceResolution` envelope.
+    """
+
+    binding_values: dict[BindingId, Decimal] = field(default_factory=dict)
+    enum_binding_values: dict[BindingId, str] = field(default_factory=dict)
+    date_binding_values: dict[BindingId, date] = field(default_factory=dict)
+    row_binding_values: dict[RowBindingKey, RowBindingValue] = field(default_factory=dict)
+    relation_values: dict[RelationId, Decimal] = field(default_factory=dict)
+    unresolved_relation_ids: set[RelationId] = field(default_factory=set)
+    unresolved_binding_ids: set[BindingId] = field(default_factory=set)
+    bound_inputs_by_casilla_id: dict[CasillaId, Decimal] = field(default_factory=dict)
+    detail_rows: list[ModeloDetailRow] = field(default_factory=list)
+    source_transaction_ids: set[str] = field(default_factory=set)
+    diagnostics: list[CalculationSourceDiagnostic] = field(default_factory=list)
+    provenance: list[CalculationSourceProvenance] = field(default_factory=list)
+    owned_sources: set[BindingSourceKind] = field(default_factory=set)
+    binding_owners: dict[BindingId, str] = field(default_factory=dict)
+    row_binding_owners: dict[RowBindingKey, str] = field(default_factory=dict)
+    relation_owners: dict[RelationId, str] = field(default_factory=dict)
+    casilla_owners: dict[CasillaId, str] = field(default_factory=dict)
+    borrador_provenance: BorradorSourceProvenance | None = None
+    m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None
+
+    def absorb(self, resolution: CalculationSourceResolution) -> None:
+        self.owned_sources.update(resolution.owned_sources)
+        self.diagnostics.extend(resolution.diagnostics)
+        self.provenance.extend(resolution.provenance)
+        self.detail_rows.extend(resolution.detail_rows)
+        self.source_transaction_ids.update(resolution.source_transaction_ids)
+        self.unresolved_relation_ids.update(resolution.unresolved_relation_ids)
+        self.unresolved_binding_ids.update(resolution.unresolved_binding_ids)
+        if resolution.borrador_provenance is not None:
+            self.borrador_provenance = resolution.borrador_provenance
+        handoff = resolution.m303_regimen_simplificado_annual_summary_handoff
+        if handoff is not None:
+            if self.m303_regimen_simplificado_annual_summary_handoff is not None:
+                raise AggregationValidationError(
+                    t("aggregation.source_mesh.errors.annual_summary_handoff_duplicate"),
+                    context={
+                        "first_resolver": self.m303_regimen_simplificado_annual_summary_handoff.source_work_unit_id,
+                        "second_resolver": resolution.resolver_id,
+                    },
+                )
+            self.m303_regimen_simplificado_annual_summary_handoff = handoff
+        self._absorb_binding_values(resolution)
+        self._absorb_row_binding_values(resolution)
+        self._absorb_relation_values(resolution)
+        self._absorb_bound_inputs(resolution)
+
+    def _absorb_binding_values(self, resolution: CalculationSourceResolution) -> None:
+        for binding_id, value in resolution.binding_values.items():
+            _claim_binding(self.binding_owners, binding_id, resolution.resolver_id)
+            self.binding_values[binding_id] = value
+            self.unresolved_binding_ids.discard(binding_id)
+        for binding_id, value in resolution.enum_binding_values.items():
+            _claim_binding(self.binding_owners, binding_id, resolution.resolver_id)
+            self.enum_binding_values[binding_id] = value
+            self.unresolved_binding_ids.discard(binding_id)
+        for binding_id, value in resolution.date_binding_values.items():
+            _claim_binding(self.binding_owners, binding_id, resolution.resolver_id)
+            self.date_binding_values[binding_id] = value
+            self.unresolved_binding_ids.discard(binding_id)
+
+    def _absorb_row_binding_values(self, resolution: CalculationSourceResolution) -> None:
+        for row_binding_key, value in resolution.row_binding_values.items():
+            _claim_row_binding(self.row_binding_owners, row_binding_key, resolution.resolver_id)
+            self.row_binding_values[row_binding_key] = value
+            self.unresolved_binding_ids.discard(row_binding_key[0])
+
+    def _absorb_relation_values(self, resolution: CalculationSourceResolution) -> None:
+        for relation_id, value in resolution.relation_values.items():
+            _claim_relation(self.relation_owners, relation_id, resolution.resolver_id)
+            self.relation_values[relation_id] = value
+            self.unresolved_relation_ids.discard(relation_id)
+
+    def _absorb_bound_inputs(self, resolution: CalculationSourceResolution) -> None:
+        for casilla_id, value in resolution.bound_inputs_by_casilla_id.items():
+            _claim_bound_casilla(self.casilla_owners, casilla_id, resolution.resolver_id)
+            self.bound_inputs_by_casilla_id[casilla_id] = value
+
+    def _unresolved_binding_ids(self) -> tuple[BindingId, ...]:
+        row_binding_ids = {binding_id for binding_id, _row_index in self.row_binding_values}
+        return tuple(
+            sorted(
+                self.unresolved_binding_ids.difference(
+                    self.binding_values,
+                    self.enum_binding_values,
+                    self.date_binding_values,
+                    row_binding_ids,
+                ),
+            ),
+        )
+
+    def to_resolution(self, resolver_id: str) -> CalculationSourceResolution:
+        return CalculationSourceResolution(
+            resolver_id=resolver_id,
+            owned_sources=tuple(sorted(self.owned_sources)),
+            binding_values=self.binding_values,
+            enum_binding_values=self.enum_binding_values,
+            date_binding_values=self.date_binding_values,
+            row_binding_values=self.row_binding_values,
+            relation_values=self.relation_values,
+            unresolved_relation_ids=tuple(sorted(self.unresolved_relation_ids.difference(self.relation_values))),
+            unresolved_binding_ids=self._unresolved_binding_ids(),
+            bound_inputs_by_casilla_id=self.bound_inputs_by_casilla_id,
+            detail_rows=tuple(self.detail_rows),
+            source_transaction_ids=tuple(sorted(self.source_transaction_ids)),
+            borrador_provenance=self.borrador_provenance,
+            m303_regimen_simplificado_annual_summary_handoff=self.m303_regimen_simplificado_annual_summary_handoff,
+            diagnostics=tuple(self.diagnostics),
+            provenance=tuple(self.provenance),
+        )
+
+
 def merge_source_resolutions(
     resolutions: Sequence[CalculationSourceResolution],
     *,
@@ -1042,89 +1174,10 @@ def merge_source_resolutions(
 
     Returns a :class:`CalculationSourceResolution`.
     """
-    binding_values: dict[BindingId, Decimal] = {}
-    enum_binding_values: dict[BindingId, str] = {}
-    date_binding_values: dict[BindingId, date] = {}
-    row_binding_values: dict[RowBindingKey, RowBindingValue] = {}
-    relation_values: dict[RelationId, Decimal] = {}
-    unresolved_relation_ids: set[RelationId] = set()
-    unresolved_binding_ids: set[BindingId] = set()
-    bound_inputs_by_casilla_id: dict[CasillaId, Decimal] = {}
-    detail_rows: list[ModeloDetailRow] = []
-    source_transaction_ids: set[str] = set()
-    diagnostics: list[CalculationSourceDiagnostic] = []
-    provenance: list[CalculationSourceProvenance] = []
-    owned_sources: set[BindingSourceKind] = set()
-    binding_owners: dict[BindingId, str] = {}
-    row_binding_owners: dict[RowBindingKey, str] = {}
-    relation_owners: dict[RelationId, str] = {}
-    casilla_owners: dict[CasillaId, str] = {}
-    # The borrador resolution is the sole contributor of the typed borrador
-    # provenance; preserve it onto the merged result. Exactly one resolution
-    # carries a non-None borrador_provenance (the borrador resolver) so a plain
-    # last-writer-wins carry is unambiguous.
-    borrador_provenance: BorradorSourceProvenance | None = None
-
+    state = _SourceResolutionMergeState()
     for resolution in resolutions:
-        owned_sources.update(resolution.owned_sources)
-        diagnostics.extend(resolution.diagnostics)
-        provenance.extend(resolution.provenance)
-        detail_rows.extend(resolution.detail_rows)
-        source_transaction_ids.update(resolution.source_transaction_ids)
-        unresolved_relation_ids.update(resolution.unresolved_relation_ids)
-        unresolved_binding_ids.update(resolution.unresolved_binding_ids)
-        if resolution.borrador_provenance is not None:
-            borrador_provenance = resolution.borrador_provenance
-        for binding_id, value in resolution.binding_values.items():
-            _claim_binding(binding_owners, binding_id, resolution.resolver_id)
-            binding_values[binding_id] = value
-            unresolved_binding_ids.discard(binding_id)
-        for binding_id, value in resolution.enum_binding_values.items():
-            _claim_binding(binding_owners, binding_id, resolution.resolver_id)
-            enum_binding_values[binding_id] = value
-            unresolved_binding_ids.discard(binding_id)
-        for binding_id, value in resolution.date_binding_values.items():
-            _claim_binding(binding_owners, binding_id, resolution.resolver_id)
-            date_binding_values[binding_id] = value
-            unresolved_binding_ids.discard(binding_id)
-        for row_binding_key, value in resolution.row_binding_values.items():
-            _claim_row_binding(row_binding_owners, row_binding_key, resolution.resolver_id)
-            row_binding_values[row_binding_key] = value
-            unresolved_binding_ids.discard(row_binding_key[0])
-        for relation_id, value in resolution.relation_values.items():
-            _claim_relation(relation_owners, relation_id, resolution.resolver_id)
-            relation_values[relation_id] = value
-            unresolved_relation_ids.discard(relation_id)
-        for casilla_id, value in resolution.bound_inputs_by_casilla_id.items():
-            _claim_bound_casilla(casilla_owners, casilla_id, resolution.resolver_id)
-            bound_inputs_by_casilla_id[casilla_id] = value
-
-    return CalculationSourceResolution(
-        resolver_id=resolver_id,
-        owned_sources=tuple(sorted(owned_sources)),
-        binding_values=binding_values,
-        enum_binding_values=enum_binding_values,
-        date_binding_values=date_binding_values,
-        row_binding_values=row_binding_values,
-        relation_values=relation_values,
-        unresolved_relation_ids=tuple(sorted(unresolved_relation_ids.difference(relation_values))),
-        unresolved_binding_ids=tuple(
-            sorted(
-                unresolved_binding_ids.difference(
-                    binding_values,
-                    enum_binding_values,
-                    date_binding_values,
-                    {binding_id for binding_id, _row_index in row_binding_values},
-                ),
-            ),
-        ),
-        bound_inputs_by_casilla_id=bound_inputs_by_casilla_id,
-        detail_rows=tuple(detail_rows),
-        source_transaction_ids=tuple(sorted(source_transaction_ids)),
-        borrador_provenance=borrador_provenance,
-        diagnostics=tuple(diagnostics),
-        provenance=tuple(provenance),
-    )
+        state.absorb(resolution)
+    return state.to_resolution(resolver_id)
 
 
 def merge_source_resolutions_by_precedence(
@@ -1163,6 +1216,7 @@ def merge_source_resolutions_by_precedence(
     provenance: list[CalculationSourceProvenance] = []
     owned_sources: set[BindingSourceKind] = set()
     borrador_provenance: BorradorSourceProvenance | None = None
+    m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None
 
     for tier in tiers:
         owned_sources.update(tier.owned_sources)
@@ -1174,6 +1228,16 @@ def merge_source_resolutions_by_precedence(
         unresolved_binding_ids.update(tier.unresolved_binding_ids)
         if tier.borrador_provenance is not None:
             borrador_provenance = tier.borrador_provenance
+        if tier.m303_regimen_simplificado_annual_summary_handoff is not None:
+            if m303_regimen_simplificado_annual_summary_handoff is not None:
+                raise AggregationValidationError(
+                    t("aggregation.source_mesh.errors.annual_summary_handoff_duplicate"),
+                    context={
+                        "first_resolver": m303_regimen_simplificado_annual_summary_handoff.source_work_unit_id,
+                        "second_resolver": tier.resolver_id,
+                    },
+                )
+            m303_regimen_simplificado_annual_summary_handoff = tier.m303_regimen_simplificado_annual_summary_handoff
         # Precedence overlay: later tier wins (dict update), no exclusive claim.
         binding_values.update(tier.binding_values)
         enum_binding_values.update(tier.enum_binding_values)
@@ -1209,6 +1273,7 @@ def merge_source_resolutions_by_precedence(
         detail_rows=tuple(detail_rows),
         source_transaction_ids=tuple(sorted(source_transaction_ids)),
         borrador_provenance=borrador_provenance,
+        m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
         diagnostics=tuple(diagnostics),
         provenance=tuple(provenance),
     )

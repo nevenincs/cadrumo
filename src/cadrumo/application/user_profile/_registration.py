@@ -19,7 +19,7 @@ primitives every other create route uses —
 :func:`~cadrumo.application.user_profile.profile_create_storage_span` around
 :func:`~cadrumo.application.user_profile.register_active_profile`, which
 delegates the cross-store unit of work to
-:meth:`~cadrumo.application.user_profile.ProfileRepository.create`. The one
+:meth:`~cadrumo.application.user_profile.CommittedProfileRepository.create`. The one
 thing this module adds is *binding the operator's new passphrase to that
 span*, so the bucket's key-encryption key is derived from the credential
 the operator just chose rather than from an ambient environment value.

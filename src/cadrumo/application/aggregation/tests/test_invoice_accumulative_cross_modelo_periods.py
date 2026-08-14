@@ -84,7 +84,7 @@ from ...modelo import (
     create_work_unit,
     persist_filed_revision_observation,
 )
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -185,7 +185,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 def _seed_taxpayer_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed the one taxpayer profile both M303 and M100/M130 bindings read."""
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="Test runtime profile",

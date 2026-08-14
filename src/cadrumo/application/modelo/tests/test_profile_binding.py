@@ -35,7 +35,7 @@ from ....domain.calculations.registry import (
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceResolution
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import ModeloError, calculate_modelo_revision, create_work_unit
 from .._profile_binding import (
     ProfileBindingResolutionError,
@@ -84,7 +84,7 @@ def _calculation_repositories() -> tuple[
 
 
 def _store_profile(record: UserProfileRecord) -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(record)
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(record)
 
 
 def _modelo_100_snapshot() -> RegistrySnapshot:

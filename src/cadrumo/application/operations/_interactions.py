@@ -8,7 +8,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, Hex64Str, OperationInteractionKind
+from ...core import STRICT_FROZEN_CONFIG, Hex64Str, OperationInteractionKind, content_hash_hex
 from ...core.identity import ContentDigest
 from ...core.time import validate_utc_aware
 from ._events import OperationEventCode
@@ -88,12 +88,115 @@ OperationInteractionResponse = Annotated[
     Field(discriminator="intent"),
 ]
 
+
+class OperationPendingInteraction(BaseModel):
+    """Credential-free durable checkpoint for one exact single-use response."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    request: OperationInteractionRequest
+    response_token_digest: ContentDigest
+    reviewed_proposal_digest: ContentDigest
+    baseline_digest: ContentDigest | None = None
+    proposed_effect_digest: ContentDigest | None = None
+
+    @classmethod
+    def bind(
+        cls,
+        *,
+        request: OperationInteractionRequest,
+        response_token: OperationResponseToken,
+        reviewed_proposal_digest: ContentDigest,
+        baseline_digest: ContentDigest | None = None,
+        proposed_effect_digest: ContentDigest | None = None,
+    ) -> OperationPendingInteraction:
+        """Digest the secret bearer token before it reaches journal state."""
+        return cls(
+            request=request,
+            response_token_digest=content_hash_hex(response_token),
+            reviewed_proposal_digest=reviewed_proposal_digest,
+            baseline_digest=baseline_digest,
+            proposed_effect_digest=proposed_effect_digest,
+        )
+
+    def consume(self, response: OperationApplyResponse | OperationRejectResponse) -> OperationConsumedInteraction:
+        """Refuse every response that does not match this exact checkpoint."""
+        _validate_response_identity(self.request, response)
+        _validate_response_content(self, response)
+        _validate_response_expiry(self.request, response)
+        _validate_apply_response(self, response)
+        return OperationConsumedInteraction(
+            interaction_id=self.request.interaction_id,
+            response_digest=content_hash_hex(response.model_dump(mode="json")),
+            consumed_at=response.responded_at,
+        )
+
+
+def _validate_response_identity(
+    request: OperationInteractionRequest,
+    response: OperationApplyResponse | OperationRejectResponse,
+) -> None:
+    if response.interaction_id != request.interaction_id:
+        raise ValueError("interaction response does not match the pending interaction identity")
+    if response.operation_id != request.identity.operation_id or response.revision != request.revision:
+        raise ValueError("interaction response does not match the pending operation revision")
+    if response.continuation_digest != request.continuation_digest:
+        raise ValueError("interaction response does not match the pending continuation")
+
+
+def _validate_response_content(
+    pending: OperationPendingInteraction,
+    response: OperationApplyResponse | OperationRejectResponse,
+) -> None:
+    if response.reviewed_proposal_digest != pending.reviewed_proposal_digest:
+        raise ValueError("interaction response does not match the reviewed proposal")
+    if content_hash_hex(response.response_token) != pending.response_token_digest:
+        raise ValueError("interaction response token does not match the pending token digest")
+
+
+def _validate_response_expiry(
+    request: OperationInteractionRequest,
+    response: OperationApplyResponse | OperationRejectResponse,
+) -> None:
+    if request.expires_at is not None and response.responded_at > request.expires_at:
+        raise ValueError("interaction response is expired")
+
+
+def _validate_apply_response(
+    pending: OperationPendingInteraction,
+    response: OperationApplyResponse | OperationRejectResponse,
+) -> None:
+    if not isinstance(response, OperationApplyResponse):
+        return
+    if response.baseline_digest != pending.baseline_digest:
+        raise ValueError("apply response does not match the pending baseline")
+    if response.proposed_effect_digest != pending.proposed_effect_digest:
+        raise ValueError("apply response does not match the pending proposed effect")
+
+
+class OperationConsumedInteraction(BaseModel):
+    """Safe durable proof that one response token was consumed exactly once."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    interaction_id: OperationInteractionId
+    response_digest: ContentDigest
+    consumed_at: datetime
+
+    @model_validator(mode="after")
+    def _validate_consumed_at(self) -> OperationConsumedInteraction:
+        validate_utc_aware(self.consumed_at)
+        return self
+
+
 __all__ = [
     "OperationActorReference",
     "OperationApplyResponse",
+    "OperationConsumedInteraction",
     "OperationInteractionId",
     "OperationInteractionRequest",
     "OperationInteractionResponse",
+    "OperationPendingInteraction",
     "OperationRejectResponse",
     "OperationResponseIntent",
     "OperationResponseToken",

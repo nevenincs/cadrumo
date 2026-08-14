@@ -74,7 +74,7 @@ from ....domain.modelos import CalculationRevision, ModeloVerificationFindingKin
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._calculation_actions import calculate_modelo_revision
 from .._verification_actions import verify_modelo_revision
 from .._work_lifecycle import create_work_unit
@@ -152,7 +152,7 @@ def _seed_minimal_m210_profile(objects: SecureObjectRepository) -> None:
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(record)
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(record)
 
 
 def _irnr_gb_workflow_profile() -> TaxpayerProfile:

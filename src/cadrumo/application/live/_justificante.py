@@ -835,10 +835,10 @@ def _expected_tax_id_for_filing_record(filing: ModeloRecord) -> str:
     if filing.member_nif is not None and filing.member_nif.strip():
         return tax_id_identity_token(filing.member_nif)
     from ...core.errors import CadrumoError
-    from ..user_profile import UserProfileLifecycleRepository, record_to_values
+    from ..user_profile import ProfileRecordRepository, record_to_values
 
     try:
-        record = UserProfileLifecycleRepository(bucket_id=filing.bucket_id).load(filing.bucket_id)
+        record = ProfileRecordRepository(bucket_id=filing.bucket_id).load(filing.bucket_id)
     except (CadrumoError, OSError) as exc:
         raise LiveApplicationInputError(
             translated_message="application.live.justificante.errors.filing_identity_unresolved",

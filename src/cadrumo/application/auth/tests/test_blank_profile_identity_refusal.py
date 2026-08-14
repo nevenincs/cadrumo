@@ -29,16 +29,9 @@ from pydantic import SecretStr
 
 from ....core import AuthProviderKind
 from ....core.config import override_settings
-from ....domain.user_profile import UserProfileStatus
+from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
-from ...user_profile import (
-    ProfileRepository,
-    RegisterProfileCommand,
-    build_lifecycle_service,
-    profile_create_storage_span,
-)
-from ...workflow import workflow_state_repository
+from ...user_profile import ProfileRecordRepository, profile_create_storage_span
 from .._sessions import AuthProfileIdentityMismatchError, _prepare_clave_auth
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -50,12 +43,14 @@ _TAX_ID_PATH = "identity.tax_id"
 
 def _register_active() -> None:
     """Register a schema-complete ACTIVE profile carrying its fiscal id."""
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(
-            state,
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
+        UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="cleared-identity-operator",
-            overrides={"identity.tax_id": _TAX_ID},
+            facts=(
+                UserProfileFact(path=_TAX_ID_PATH, value=_TAX_ID),
+                UserProfileFact(path="auth.clave_movil_route", value="qr"),
+            ),
         ),
     )
 
@@ -71,21 +66,18 @@ def _register_active_then_clear_identity() -> None:
     at setup and prove nothing about the guards.
     """
     _register_active()
-    repository = ProfileRepository()
-    aggregate = repository.load(_BUCKET_ID)
-    assert aggregate.record.status is UserProfileStatus.ACTIVE
+    repository = ProfileRecordRepository(bucket_id=_BUCKET_ID)
+    record = repository.load(_BUCKET_ID)
+    assert record.status is UserProfileStatus.ACTIVE
     cleared = tuple(
-        fact.model_copy(update={"value": None}) if fact.path == _TAX_ID_PATH else fact
-        for fact in aggregate.record.facts
+        fact.model_copy(update={"value": None}) if fact.path == _TAX_ID_PATH else fact for fact in record.facts
     )
-    repository.save(
-        aggregate.model_copy(update={"record": aggregate.record.model_copy(update={"facts": cleared})}),
-    )
+    repository.save(record.model_copy(update={"facts": cleared}))
     assert not _stored_tax_id(), "the fixture must actually have cleared the identity"
 
 
 def _stored_tax_id() -> object | None:
-    record = ProfileRepository().load(_BUCKET_ID).record
+    record = ProfileRecordRepository(bucket_id=_BUCKET_ID).load(_BUCKET_ID)
     return next((fact.value for fact in record.facts if fact.path == _TAX_ID_PATH), None)
 
 
@@ -118,8 +110,8 @@ def test_a_profile_still_in_setup_may_still_authenticate() -> None:
     read performed against such a session is what has to refuse.
     """
 
-    build_lifecycle_service(bucket_id=_BUCKET_ID).register(
-        RegisterProfileCommand(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
+        UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="mid-setup",
             facts=(),
@@ -147,5 +139,6 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span(_BUCKET_ID),
+        override_settings(cadrumo_active_profile=_BUCKET_ID),
     ):
         yield

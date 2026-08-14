@@ -63,7 +63,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, modelo_720_prior_baseline_observation
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._calculation_actions import _resolve_bucket_source_mesh, calculate_modelo_revision
 from .._verification_actions import verify_modelo_revision
 from .._work_lifecycle import create_work_unit
@@ -117,7 +117,7 @@ def _source_casilla_id(binding: DataBindingDefinition) -> CasillaId:
 @contextmanager
 def _secure_backend(tmp_path: Path) -> Iterator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=runtime.repository).save(
+        ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=runtime.repository).save(
             UserProfileRecord(
                 profile_id=_BUCKET_ID,
                 display_name="Test runtime profile",

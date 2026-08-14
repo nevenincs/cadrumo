@@ -1,4 +1,4 @@
-"""Cross-store roundtrip and unit-of-work tests for :class:`ProfileRepository`.
+"""Cross-store roundtrip and unit-of-work tests for :class:`ProfileRecordAggregateRepository`.
 
 The repository sequences a logical profile's cross-store aggregate changes.
 These tests exercise it against the shared secure-SQL test helper: a real
@@ -55,7 +55,7 @@ from ...workflow import (
 from .. import active_profile_pointer_transaction, fact_value
 from .._integrity import ProfileIntegrityError
 from .._orchestration import ProfileAlreadyRegisteredError, profile_create_storage_span, profile_storage_session
-from .._profile_repository import ProfileRepository
+from .._record_aggregate_repository import ProfileRecordAggregateRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -91,7 +91,7 @@ _INCOMPLETE_FACTS: tuple[UserProfileFact, ...] = tuple(fact for fact in _SECOND_
 
 
 def _create(
-    repository: ProfileRepository,
+    repository: ProfileRecordAggregateRepository,
     *,
     label: str,
     facts: tuple[UserProfileFact, ...],
@@ -99,7 +99,7 @@ def _create(
 ):
     """Wrap ``repository.create`` in a ``profile_create_storage_span``.
 
-    ``ProfileRepository.create`` delegates bucket-bound storage to
+    ``ProfileRecordAggregateRepository.create`` delegates bucket-bound storage to
     ``_lifecycle_service``, which resolves the active bucket session
     via the storage runtime. Production callers (CLI, wizard) supply
     that session through ``profile_create_storage_span`` before
@@ -117,7 +117,7 @@ def _create(
 
 
 def _create_setup_incomplete(
-    repository: ProfileRepository,
+    repository: ProfileRecordAggregateRepository,
     *,
     label: str,
     facts: tuple[UserProfileFact, ...],
@@ -138,37 +138,37 @@ def _create_setup_incomplete(
         )
 
 
-def _complete_setup(repository: ProfileRepository, profile_id: str):
+def _complete_setup(repository: ProfileRecordAggregateRepository, profile_id: str):
     """Wrap ``repository.complete_setup`` in a ``profile_storage_session``."""
     with profile_storage_session(profile_id):
         return repository.complete_setup(profile_id)
 
 
-def _load(repository: ProfileRepository, profile_id: str):
+def _load(repository: ProfileRecordAggregateRepository, profile_id: str):
     """Wrap ``repository.load`` in a ``profile_storage_session``."""
     with profile_storage_session(profile_id):
         return repository.load(profile_id)
 
 
-def _delete(repository: ProfileRepository, profile_id: str):
+def _delete(repository: ProfileRecordAggregateRepository, profile_id: str):
     """Acquire pointer ownership before the session, then re-enter on delete."""
     with active_profile_pointer_transaction(repository.root), profile_storage_session(profile_id):
         return repository.delete(profile_id)
 
 
-def _reactivate(repository: ProfileRepository, profile_id: str):
+def _reactivate(repository: ProfileRecordAggregateRepository, profile_id: str):
     """Wrap ``repository.reactivate`` in a ``profile_storage_session``."""
     with profile_storage_session(profile_id):
         return repository.reactivate(profile_id)
 
 
-def _select(repository: ProfileRepository, profile_id: str):
+def _select(repository: ProfileRecordAggregateRepository, profile_id: str):
     """Acquire pointer ownership before the session, then re-enter on select."""
     with active_profile_pointer_transaction(repository.root), profile_storage_session(profile_id):
         return repository.select(profile_id)
 
 
-def _rename(repository: ProfileRepository, profile_id: str, *, new_label: str):
+def _rename(repository: ProfileRecordAggregateRepository, profile_id: str, *, new_label: str):
     """Wrap ``repository.rename`` in a ``profile_storage_session``."""
     with profile_storage_session(profile_id):
         return repository.rename(profile_id, new_label=new_label)
@@ -191,7 +191,7 @@ def test_create_load_roundtrip_preserves_the_aggregate(_backend: Path) -> None:
     load-re-defaults-field regression would surface as inequality.
     """
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create(repository, label="Roundtrip Operator", facts=_VALID_FACTS)
 
     loaded = _load(repository, created.profile_id)
@@ -219,7 +219,7 @@ def test_output_language_hint_and_live_projection_share_effective_fact_policy(_b
         UserProfileFact(path="preferences.output_language", value="ca", valid_from=date(2025, 1, 1)),
         UserProfileFact(path="preferences.output_language", value="en", valid_from=date(2019, 1, 1)),
     )
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
 
     created = _create(repository, label="Windowed Language", facts=facts)
 
@@ -237,7 +237,7 @@ def test_create_refuses_a_duplicate_tax_id(_backend: Path) -> None:
     profiles and refuses the duplicate before any store write.
     """
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     first = _create(repository, label="Original", facts=_VALID_FACTS)
 
     # `_VALID_FACTS` carries tax id 00000000T; a second create with the
@@ -276,7 +276,7 @@ def test_create_succeeds_with_different_nif_when_scan_hits_unreadable_profile(
     once the bucket session is open).
     """
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create(repository, label="Torn Tax Id Holder", facts=_VALID_FACTS)
 
     # Corrupt the manifest so load() raises ProfileIntegrityError for this profile.
@@ -312,7 +312,7 @@ def test_create_still_refuses_duplicate_nif_against_readable_profiles(_backend: 
     detection of a duplicate against a perfectly readable profile.
     """
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     readable = _create(repository, label="Readable Holder", facts=_VALID_FACTS)
     torn = _create(repository, label="Torn Bystander", facts=_SECOND_FACTS)
 
@@ -344,7 +344,7 @@ def test_create_still_refuses_duplicate_nif_against_readable_profiles(_backend: 
 def test_create_allows_distinct_tax_ids(_backend: Path) -> None:
     """Two profiles with distinct tax ids both register cleanly."""
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     first = _create(repository, label="First", facts=_VALID_FACTS)
     second = _create(repository, label="Second", facts=_SECOND_FACTS)
 
@@ -369,7 +369,7 @@ def test_load_surfaces_manifest_uuid_drift(_backend: Path) -> None:
     load is tautological.
     """
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create(repository, label="Drift Operator", facts=_VALID_FACTS)
 
     # Corrupt the manifest in place: rewrite bucket_id to a foreign UUID.
@@ -398,7 +398,7 @@ def test_failed_create_leaves_no_half_live_profile(_backend: Path) -> None:
 
     # A pre-existing profile so "pointer restored to its prior state"
     # is a non-trivial assertion: the pointer must end at the regression.
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     survivor = _create(repository, label="Survivor", facts=_VALID_FACTS)
     write_pointer(_backend, BucketPointer(bucket_id=survivor.profile_id, schema_version=1))
     prior_pointer = read_pointer(_backend)
@@ -420,7 +420,7 @@ def test_failed_create_leaves_no_half_live_profile(_backend: Path) -> None:
 def test_failed_create_propagates_a_genuine_rollback_cleanup_failure(_backend: Path) -> None:
     """A held-open handle blocking the bucket-directory removal surfaces, never swallowed.
 
-    ``ProfileRepository._remove_bucket_directory`` calls the shared
+    ``ProfileRecordAggregateRepository._remove_bucket_directory`` calls the shared
     ``trash_rename_and_remove`` primitive with its default
     ``on_trash_cleanup_error="raise"`` — load-bearing so a genuine
     rollback-cleanup failure reaches the operator aggregated alongside the
@@ -430,7 +430,7 @@ def test_failed_create_propagates_a_genuine_rollback_cleanup_failure(_backend: P
     directory, blocking both the rename and the in-place ``rmtree``
     fallback — not a mock.
     """
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     profile_id = new_profile_id()
     paths = bucket_paths(_backend, profile_id)
     paths.bucket_dir.mkdir(parents=True)
@@ -458,7 +458,7 @@ def test_failed_create_propagates_a_genuine_rollback_cleanup_failure(_backend: P
 def test_delete_tombstones_and_clears_the_pointer(_backend: Path) -> None:
     """``delete`` tombstones the record and clears the active pointer."""
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create(repository, label="To Delete", facts=_VALID_FACTS)
     write_pointer(_backend, BucketPointer(bucket_id=created.profile_id, schema_version=1))
 
@@ -485,7 +485,7 @@ def test_failed_delete_leaves_no_torn_state(_backend: Path) -> None:
     record live" or "record tombstoned but pointer stranded" intermediate.
     """
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create(repository, label="Torn Delete", facts=_VALID_FACTS)
     write_pointer(_backend, BucketPointer(bucket_id=created.profile_id, schema_version=1))
 
@@ -522,7 +522,7 @@ def test_delete_clears_pointer_before_tombstoning(_backend: Path) -> None:
     own (untouched) state.
     """
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     active = _create(repository, label="Active One", facts=_VALID_FACTS)
     other = _create(repository, label="Other One", facts=_SECOND_FACTS)
     write_pointer(_backend, BucketPointer(bucket_id=active.profile_id, schema_version=1))
@@ -541,7 +541,7 @@ def test_delete_clears_pointer_before_tombstoning(_backend: Path) -> None:
 def test_list_summarises_every_registered_profile(_backend: Path) -> None:
     """``list`` returns one typed summary per registered profile."""
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     first = _create(repository, label="First", facts=_VALID_FACTS)
     second = _create(repository, label="Second", facts=_SECOND_FACTS)
 
@@ -564,7 +564,7 @@ def test_delete_mirrors_the_tombstone_onto_the_manifest(_backend: Path) -> None:
 
     from ....adapters.persistence.storage.bucket import read_manifest
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create(repository, label="Soft Delete", facts=_VALID_FACTS)
 
     _delete(repository, created.profile_id)
@@ -583,7 +583,7 @@ def test_tombstoned_profile_is_excluded_from_the_live_scan(_backend: Path) -> No
     tombstoned profile by UUID.
     """
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create(repository, label="Vanishing", facts=_VALID_FACTS)
     assert read_profile_bucket("Vanishing", root=_backend) is not None
 
@@ -610,7 +610,7 @@ def test_select_refuses_a_tombstoned_profile(_backend: Path) -> None:
     same error class as an unknown profile.
     """
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create(repository, label="Not Selectable", facts=_VALID_FACTS)
     _delete(repository, created.profile_id)
 
@@ -631,7 +631,7 @@ def test_reactivate_restores_active_status_and_the_live_scan(_backend: Path) -> 
     """
     from ....adapters.persistence.storage.bucket import read_manifest
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create(repository, label="Reactivation Candidate", facts=_VALID_FACTS)
     _delete(repository, created.profile_id)
     assert read_profile_bucket("Reactivation Candidate", root=_backend) is None
@@ -659,7 +659,7 @@ def test_reactivate_refuses_an_already_active_profile(_backend: Path) -> None:
     symmetric contract to ``rename``/``duplicate`` refusing a tombstoned
     source.
     """
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create(repository, label="Already Active", facts=_VALID_FACTS)
 
     with pytest.raises(ProfileNotFoundError) as excinfo:
@@ -673,7 +673,7 @@ def test_reactivated_profile_is_selectable_again(_backend: Path) -> None:
     Closes the loop on ``test_select_refuses_a_tombstoned_profile``: once
     reactivated, the same profile that was refused becomes selectable.
     """
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create(repository, label="Selectable Again", facts=_VALID_FACTS)
     _delete(repository, created.profile_id)
     with pytest.raises(ProfileNotFoundError):
@@ -691,7 +691,7 @@ def test_delete_reactivate_round_trip_preserves_created_at(_backend: Path) -> No
     The profile's original creation instant is immutable identity
     metadata; only the lifecycle timestamps move.
     """
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create(repository, label="Timestamp Guard", facts=_VALID_FACTS)
 
     deleted = _delete(repository, created.profile_id)
@@ -710,7 +710,7 @@ def test_deleted_profile_name_is_reusable(_backend: Path) -> None:
     profile's name is free to reuse.
     """
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     first = _create(repository, label="Recyclable", facts=_VALID_FACTS)
     _delete(repository, first.profile_id)
 
@@ -728,7 +728,7 @@ def test_deleted_profile_name_is_reusable_by_rename(_backend: Path) -> None:
     rename onto a tombstoned profile's former name succeeds.
     """
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     retired = _create(repository, label="Old Label", facts=_VALID_FACTS)
     _delete(repository, retired.profile_id)
     live = _create(repository, label="Live Label", facts=_SECOND_FACTS)
@@ -748,7 +748,7 @@ def test_load_surfaces_manifest_status_drift(_backend: Path) -> None:
     the tombstone leak could recur undetected.
     """
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create(repository, label="Status Drift", facts=_VALID_FACTS)
     # The fresh profile's record is ACTIVE and the manifest mirrors it.
     assert created.status is UserProfileStatus.ACTIVE
@@ -780,7 +780,7 @@ def test_setup_incomplete_create_persists_across_both_stores(_backend: Path) -> 
     """
     from ....adapters.persistence.storage.bucket import read_manifest
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create_setup_incomplete(repository, label="Mid Setup", facts=_VALID_FACTS)
     assert created.status is UserProfileStatus.SETUP_INCOMPLETE
 
@@ -803,7 +803,7 @@ def test_complete_setup_flips_both_stores_to_active_atomically(_backend: Path) -
     """
     from ....adapters.persistence.storage.bucket import read_manifest
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create_setup_incomplete(repository, label="Completing", facts=_VALID_FACTS)
 
     completed = _complete_setup(repository, created.profile_id)
@@ -828,7 +828,7 @@ def test_load_surfaces_setup_incomplete_status_drift(_backend: Path) -> None:
     status is genuinely read from both persisted surfaces and reconciled,
     never a constant a tautological test would pass regardless.
     """
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create_setup_incomplete(repository, label="Incomplete Drift", facts=_VALID_FACTS)
     assert created.status is UserProfileStatus.SETUP_INCOMPLETE
 
@@ -908,7 +908,7 @@ def test_every_manifest_writer_preserves_the_fields_it_does_not_own(_backend: Pa
     covered for every writer the moment it exists. Driven through the real
     repository and the real manifest IO — no mocks, no monkeypatching.
     """
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = (
         _create_setup_incomplete(repository, label="Preserve Operator", facts=_VALID_FACTS)
         if writer == "complete_setup"

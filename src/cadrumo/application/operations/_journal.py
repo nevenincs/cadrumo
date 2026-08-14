@@ -17,8 +17,20 @@ from ...core import (
 from ...core.identity import ContentDigest
 from ...core.time import validate_utc_aware
 from ._events import OperationEvent, OperationEventCode, OperationPhaseEvent, OperationTerminalEvent
-from ._leases import OperationLeaseObservation, OperationLeaseResult, OperationOwnerLease
-from ._models import OperationId, OperationIdentity, OperationRevision, OperationTerminalReceipt
+from ._interactions import OperationConsumedInteraction, OperationPendingInteraction
+from ._leases import (
+    OperationConflictScopeReference,
+    OperationLeaseObservation,
+    OperationLeaseResult,
+    OperationOwnerLease,
+)
+from ._models import (
+    OperationId,
+    OperationIdempotencyClaim,
+    OperationIdentity,
+    OperationRevision,
+    OperationTerminalReceipt,
+)
 from ._replay import OperationEventCursor, OperationReplayLimit, OperationReplayPage
 
 
@@ -32,7 +44,7 @@ class OperationPersistedSnapshot(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[2] = 2
     identity: OperationIdentity
     request_reference: ContentDigest
     revision: OperationRevision
@@ -45,6 +57,9 @@ class OperationPersistedSnapshot(BaseModel):
     event_cursor: OperationEventCursor = 0
     terminal_receipt: OperationTerminalReceipt | None = None
     events: tuple[OperationEvent, ...] = ()
+    idempotency_claim: OperationIdempotencyClaim | None = None
+    pending_interaction: OperationPendingInteraction | None = None
+    consumed_interactions: tuple[OperationConsumedInteraction, ...] = ()
 
     @property
     def operation_id(self) -> OperationId:
@@ -58,8 +73,44 @@ class OperationPersistedSnapshot(BaseModel):
         if self.updated_at < self.started_at:
             raise ValueError("persisted operation snapshot cannot update before it starts")
         _validate_terminal_state(self)
+        _validate_checkpoint_state(self)
         _validate_events(self)
         return self
+
+
+def _validate_checkpoint_state(snapshot: OperationPersistedSnapshot) -> None:
+    _validate_idempotency_claim(snapshot)
+    _validate_pending_interaction(snapshot)
+    _validate_consumed_interactions(snapshot)
+
+
+def _validate_idempotency_claim(snapshot: OperationPersistedSnapshot) -> None:
+    claim = snapshot.idempotency_claim
+    if claim is None:
+        return
+    if claim.operation_id != snapshot.operation_id or claim.definition_id != snapshot.identity.definition_id:
+        raise ValueError("idempotency claim does not match persisted operation identity")
+    if claim.subject_ref != snapshot.identity.subject_ref or claim.request_reference != snapshot.request_reference:
+        raise ValueError("idempotency claim does not match persisted request identity")
+
+
+def _validate_pending_interaction(snapshot: OperationPersistedSnapshot) -> None:
+    pending = snapshot.pending_interaction
+    if pending is None:
+        return
+    if snapshot.lifecycle is not OperationLifecycle.WAITING_FOR_INTERACTION:
+        raise ValueError("pending interaction requires waiting-for-interaction lifecycle")
+    if pending.request.identity != snapshot.identity or pending.request.revision != snapshot.revision:
+        raise ValueError("pending interaction does not match persisted operation revision")
+
+
+def _validate_consumed_interactions(snapshot: OperationPersistedSnapshot) -> None:
+    consumed_ids = tuple(item.interaction_id for item in snapshot.consumed_interactions)
+    if len(set(consumed_ids)) != len(consumed_ids):
+        raise ValueError("consumed interaction identities must be unique")
+    pending = snapshot.pending_interaction
+    if pending is not None and pending.request.interaction_id in consumed_ids:
+        raise ValueError("pending interaction cannot already be consumed")
 
 
 def _validate_terminal_state(snapshot: OperationPersistedSnapshot) -> None:
@@ -139,8 +190,7 @@ def _validate_event_timeline(snapshot: OperationPersistedSnapshot) -> None:
 def _validate_phase_code(snapshot: OperationPersistedSnapshot) -> None:
     """Ensure the snapshot phase mirrors the latest phase event."""
     phase_events = tuple(event for event in snapshot.events if isinstance(event, OperationPhaseEvent))
-    latest_phase_code = phase_events[-1].phase_code if phase_events else None
-    if snapshot.phase_code != latest_phase_code:
+    if phase_events and snapshot.phase_code != phase_events[-1].phase_code:
         raise ValueError("persisted phase code must equal the latest journal phase event")
 
 
@@ -163,6 +213,10 @@ class OperationJournal(Protocol):
     """Atomic snapshot-plus-event persistence with optimistic revision checks."""
 
     async def load(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
+
+    async def claim_idempotency(self, claim: OperationIdempotencyClaim) -> OperationId:
+        """Atomically create or resolve one definition-and-subject retry claim."""
+        ...
 
     async def commit(
         self,
@@ -192,7 +246,13 @@ class OperationEventStream(Protocol):
 class OperationLeaseRepository(Protocol):
     """Observe and transition one durable owner lease against explicit evidence time."""
 
-    async def inspect(self, operation_id: OperationId, *, observed_at: datetime) -> OperationLeaseObservation: ...
+    async def inspect(
+        self,
+        scope_ref: OperationConflictScopeReference,
+        operation_id: OperationId,
+        *,
+        observed_at: datetime,
+    ) -> OperationLeaseObservation: ...
 
     async def acquire(self, candidate: OperationOwnerLease, *, observed_at: datetime) -> OperationLeaseResult: ...
 
@@ -213,7 +273,7 @@ class OperationLeaseRepository(Protocol):
 class OperationSecureReferenceStore(Protocol):
     """Store and resolve confidential operands outside credential-free journals."""
 
-    async def put(self, operand: BaseModel) -> ContentDigest: ...
+    async def put(self, operand: BaseModel, *, written_at: datetime) -> ContentDigest: ...
 
     async def resolve[OperandT: BaseModel](
         self,

@@ -26,7 +26,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProf
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
-from ...user_profile import UserProfileLifecycleRepository, record_to_path_values
+from ...user_profile import ProfileRecordRepository, record_to_path_values
 from .. import (
     ModeloProfileReadinessError,
     WorkUnitMutationRefusedError,
@@ -53,7 +53,7 @@ _NONRESIDENT_PROFILE_ID = "20000000-0000-4000-8000-000000000002"
 
 
 def _store_incomplete_profile(bucket_id: str) -> None:
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+    ProfileRecordRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Incomplete profile",
@@ -65,7 +65,7 @@ def _store_incomplete_profile(bucket_id: str) -> None:
 
 
 def _store_profile_with_no_facts_whatsoever(bucket_id: str) -> None:
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+    ProfileRecordRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Zero-fact profile",
@@ -77,7 +77,7 @@ def _store_profile_with_no_facts_whatsoever(bucket_id: str) -> None:
 
 
 def _store_profile_without_activity(bucket_id: str) -> None:
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+    ProfileRecordRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="No activity profile",
@@ -104,7 +104,7 @@ def _store_profile_without_activity(bucket_id: str) -> None:
 
 
 def _store_ready_profile(bucket_id: str, *, activity_start_date: date) -> None:
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+    ProfileRecordRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Ready profile",
@@ -133,7 +133,7 @@ def _store_ready_profile(bucket_id: str, *, activity_start_date: date) -> None:
 
 
 def _store_nonresident_legal_entity_profile(bucket_id: str) -> None:
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+    ProfileRecordRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="NordHaus GmbH",
@@ -167,7 +167,7 @@ def _store_nonresident_natural_person_profile(bucket_id: str) -> None:
     must file Modelo 210 (IRNR) rather than Modelo 100 (the resident IRPF
     Renta).
     """
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+    ProfileRecordRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Olivia Whitfield",
@@ -844,7 +844,7 @@ def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: P
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
         _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2025, 1, 1))
-        repository = UserProfileLifecycleRepository(bucket_id=_OPERATOR_PROFILE_ID)
+        repository = ProfileRecordRepository(bucket_id=_OPERATOR_PROFILE_ID)
         record = repository.load(_OPERATOR_PROFILE_ID)
         repository.save(record.model_copy(update={"status": UserProfileStatus.SETUP_INCOMPLETE}))
 
@@ -880,7 +880,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
     ``require_profile_ready_for_modelo_work`` directly.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
-        UserProfileLifecycleRepository(bucket_id=_OPERATOR_PROFILE_ID).save(
+        ProfileRecordRepository(bucket_id=_OPERATOR_PROFILE_ID).save(
             UserProfileRecord(
                 profile_id=_OPERATOR_PROFILE_ID,
                 display_name="Baseline-only profile",
@@ -901,7 +901,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
             period_code="1T",
             revision_id=_M303_2025_REVISION,
         )
-        profile_repository = UserProfileLifecycleRepository(bucket_id=_OPERATOR_PROFILE_ID)
+        profile_repository = ProfileRecordRepository(bucket_id=_OPERATOR_PROFILE_ID)
         record = profile_repository.load(_OPERATOR_PROFILE_ID)
         profile_repository.save(record.model_copy(update={"status": UserProfileStatus.SETUP_INCOMPLETE}))
 

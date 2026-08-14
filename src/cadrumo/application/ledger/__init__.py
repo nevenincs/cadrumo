@@ -96,6 +96,10 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from functools import partial
+from importlib import import_module
+from types import ModuleType
 from typing import TYPE_CHECKING
 
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
@@ -704,6 +708,13 @@ _LAZY_EXPORTS: dict[str, str] = {
 }
 
 
+# Every loader target is a closed literal from the map above.  The attribute
+# name selects one of these pre-bound loaders; it never becomes an import path.
+_LAZY_MODULE_LOADERS: dict[str, Callable[[], ModuleType]] = {
+    module_path: partial(import_module, module_path, __name__) for module_path in frozenset(_LAZY_EXPORTS.values())
+}
+
+
 def __getattr__(name: str) -> object:
     """Resolve one public name by importing only the submodule that owns it.
 
@@ -724,13 +735,10 @@ def __getattr__(name: str) -> object:
     module_name = _LAZY_EXPORTS.get(name)
     if module_name is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    from importlib import import_module
-
-    # module_name is resolved from this package's own closed _LAZY_EXPORTS
-    # mapping above, never from caller-supplied input.
-    value = getattr(
-        import_module(module_name, __name__), name
-    )  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
+    loader = _LAZY_MODULE_LOADERS.get(module_name)
+    if loader is None:
+        raise RuntimeError(f"missing lazy loader for {module_name!r}")
+    value = getattr(loader(), name)
     globals()[name] = value
     return value
 

@@ -672,8 +672,6 @@ def project_modelo_100_from_m130(
             enum_binding_values=merged_enum_bindings,
             relation_values=m100_relations,
             date_binding_values=merged_date_bindings or None,
-            m303_regimen_simplificado_scope=None,
-            m303_annual_orden=None,
         )
     except RegistryValidationError:
         _LOG.exception(

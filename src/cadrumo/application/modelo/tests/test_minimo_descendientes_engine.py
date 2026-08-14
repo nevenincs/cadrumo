@@ -17,7 +17,7 @@ end.
 Real adapters throughout: the resident registry authority for every loaded
 :class:`RegistrySnapshot`, a genuine encrypted bucket via
 ``isolated_runtime_profile`` for the end-to-end calculate test, and
-:func:`descendant_facts_from_list` / :class:`UserProfileLifecycleRepository`
+:func:`descendant_facts_from_list` / :class:`ProfileRecordRepository`
 for the profile roundtrip — no mocks, stubs, or fakes. Expected euro amounts
 are read from the loaded revision's own ``renta-{year}-minimo-descendientes-*``
 parameters (including the Madrid-specific ``-madrid-*`` tranches), never
@@ -47,7 +47,7 @@ from ....domain.calculations.registry import (
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._profile_binding import inject_derived_minimo_descendientes_facts, resolve_profile_sourced_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -273,7 +273,7 @@ def test_profile_binding_resolution_routes_aggregate_into_decimal_channel(tmp_pa
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL) as profile:
         descendientes = (DescendantInfo(birth_date=date(2012, 4, 1)),)
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
-        UserProfileLifecycleRepository(bucket_id=_BUCKET, objects=profile.repository).save(
+        ProfileRecordRepository(bucket_id=_BUCKET, objects=profile.repository).save(
             UserProfileRecord(
                 profile_id=_BUCKET,
                 display_name=_PROFILE_LABEL,
@@ -304,7 +304,7 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
             DescendantInfo(birth_date=date(2023, 1, 15)),
         )
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
-        UserProfileLifecycleRepository(bucket_id=_BUCKET, objects=profile.repository).save(
+        ProfileRecordRepository(bucket_id=_BUCKET, objects=profile.repository).save(
             UserProfileRecord(
                 profile_id=_BUCKET,
                 display_name=_PROFILE_LABEL,
@@ -352,8 +352,6 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
             "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
             "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
         },
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
 
     assert resolution.binding_values["renta-2024-profile-minimo-descendientes-estatal"] == Decimal("7900.00")
@@ -483,7 +481,7 @@ def test_profile_binding_resolution_routes_madrid_autonomico_into_decimal_channe
             DescendantInfo(birth_date=date(2012, 1, 1)),
         )
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
-        UserProfileLifecycleRepository(bucket_id=_BUCKET, objects=profile.repository).save(
+        ProfileRecordRepository(bucket_id=_BUCKET, objects=profile.repository).save(
             UserProfileRecord(
                 profile_id=_BUCKET,
                 display_name=_PROFILE_LABEL,

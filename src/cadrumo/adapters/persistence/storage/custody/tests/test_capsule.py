@@ -27,6 +27,7 @@ from .. import (
     create_profile_custody_sentinel,
     export_profile_custody_recovery_artifact,
     import_profile_custody_recovery_artifact,
+    list_current_profile_custody_capsule_ids,
     load_committed_profile_password_material,
     parse_profile_custody_commit,
     parse_profile_custody_recovery_artifact,
@@ -335,6 +336,35 @@ def test_uncommitted_or_identity_mixed_capsules_are_not_usable(tmp_path: Path) -
     assert recognize_current_profile_capsule(_PROFILE_ID, settings=settings) is None
     with pytest.raises(ProfileCustodyRecordError, match="not committed"):
         load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+
+
+def test_committed_capsule_enumeration_refuses_linked_candidate_and_unsafe_root_ancestry(tmp_path: Path) -> None:
+    """Discovery is anchored at the custody root and never follows a UUID-named link."""
+    settings = _settings(tmp_path)
+    envelope = _password_envelope()
+    sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
+    published = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=uuid4(),
+        publication_kind="enroll",
+        password_envelope=envelope,
+        sentinel=sentinel,
+        data_files={"profile-label.v1.txt": b"Anchored operator"},
+        settings=settings,
+    )
+    other_profile = uuid4()
+    outside = tmp_path / "outside-capsule"
+    outside.mkdir()
+    os.symlink(outside, published.parent / str(other_profile), target_is_directory=True)
+
+    assert list_current_profile_custody_capsule_ids(settings=settings) == (_PROFILE_ID,)
+
+    moved_capsules = tmp_path / "real-capsules"
+    published.parent.rename(moved_capsules)
+    os.symlink(moved_capsules, tmp_path / "buckets", target_is_directory=True)
+    with pytest.raises(ProfileCustodyRecordError, match=r"link|unsafe|root|reparse"):
+        list_current_profile_custody_capsule_ids(settings=settings)
+    assert not (outside / "profile.commit.v1.json").exists()
 
 
 def test_crash_boundary_never_recognizes_a_marker_written_only_in_sibling_staging(tmp_path: Path) -> None:

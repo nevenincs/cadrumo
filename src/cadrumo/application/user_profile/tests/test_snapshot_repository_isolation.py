@@ -32,7 +32,7 @@ from ....domain.user_profile import (
 )
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._orchestration import profile_create_storage_span
-from .._repository import UserProfileLifecycleRepository, UserProfileSnapshotRepository
+from .._repository import ProfileRecordRepository, UserProfileSnapshotRepository
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -87,7 +87,7 @@ def test_the_live_profile_repository_is_guarded_like_the_snapshot_repository() -
     """Both repositories refuse a foreign identity; the asymmetry is resolved.
 
     This previously asserted the OPPOSITE, and said so deliberately: the live
-    repository was left unguarded because ``ProfileLifecycleService.duplicate``
+    repository was left unguarded because ``ProfileRecordLifecycle.duplicate``
     held one bucket-bound repository across a read of the source and a write
     of the target, which made a foreign identity an exercised shape rather
     than a leak.
@@ -99,7 +99,7 @@ def test_the_live_profile_repository_is_guarded_like_the_snapshot_repository() -
     than removed so the resolution stays as legible as the original asymmetry
     was.
     """
-    repository = UserProfileLifecycleRepository(bucket_id=_BUCKET_A)
+    repository = ProfileRecordRepository(bucket_id=_BUCKET_A)
 
     with pytest.raises(ProfileBucketMismatchError):
         repository.save(_record(_PROFILE_B))

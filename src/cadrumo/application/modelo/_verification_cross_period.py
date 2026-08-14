@@ -353,44 +353,14 @@ def _cross_period_clean_state_findings(
     findings: list[ModeloVerificationFinding] = []
     has_first_filer_candidate_block = False
     for evidence in verdict.dependencies:
-        if not evidence.clean:
-            if _iva_wallet_decision_covers_cross_period_dependency(verdict, evidence, iva_compensation_decision):
-                pass
-            else:
-                if set(evidence.blockers) & _FIRST_FILER_CANDIDATE_BLOCKERS:
-                    has_first_filer_candidate_block = True
-                requirement = evidence.requirement
-                requirement_period = requirement.period.registry_token
-                finding = ModeloVerificationFinding(
-                    kind=ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
-                    severity=ModeloVerificationFindingSeverity.BLOCKING,
-                    message_locale_key="application.modelo.findings.cross_period_dependency_unclean",
-                    message_facts={
-                        "source_modelo": str(requirement.source_modelo),
-                        "source_filing_year": requirement.filing_year,
-                        "source_period": requirement_period,
-                        "origin_code": requirement.origin.value,
-                        "origin_ids": _join_cross_period_ids(requirement.origin_ids),
-                        "blocker_codes": _join_cross_period_ids(
-                            tuple(blocker.value for blocker in evidence.blockers),
-                        ),
-                    },
-                    legal_refs=_cross_period_requirement_legal_refs(requirement),
-                    source_refs=_cross_period_requirement_source_refs(requirement),
-                )
-                findings.append(finding)
-                if blocking_finding_observer is not None:
-                    blocking_finding_observer(finding, evidence)
-        if evidence.operator_declared_suppression_advisory:
-            findings.append(_cross_period_operator_declared_suppression_advisory_finding(verdict, evidence))
-        if evidence.non_official_local_chain_advisory:
-            findings.append(_cross_period_non_official_local_chain_advisory_finding(verdict, evidence))
-        if evidence.suppressed_first_year_fractional:
-            findings.append(_cross_period_first_year_fractional_suppression_advisory_finding(verdict, evidence))
-        if evidence.zero_value_previous_filing_advisory:
-            findings.append(_cross_period_zero_value_previous_filing_advisory_finding(verdict, evidence))
-        if evidence.m111_no_retenciones_no_obligation_advisory:
-            findings.append(_cross_period_m111_no_retenciones_advisory_finding(verdict, evidence))
+        evidence_findings, evidence_has_first_filer_block = _cross_period_evidence_findings(
+            verdict,
+            evidence,
+            iva_compensation_decision=iva_compensation_decision,
+            blocking_finding_observer=blocking_finding_observer,
+        )
+        findings.extend(evidence_findings)
+        has_first_filer_candidate_block = has_first_filer_candidate_block or evidence_has_first_filer_block
     if activity_start_date is None and has_first_filer_candidate_block:
         missing_activity_start_finding = _cross_period_missing_activity_start_finding(verdict)
         findings.append(missing_activity_start_finding)
@@ -399,6 +369,57 @@ def _cross_period_clean_state_findings(
     if verdict.has_modelo_not_applicable_advisory:
         findings.append(_cross_period_modelo_not_applicable_advisory_finding(verdict))
     return tuple(findings)
+
+
+def _cross_period_evidence_findings(
+    verdict: CrossPeriodCleanStateVerdict,
+    evidence: CrossPeriodDependencyEvidence,
+    *,
+    iva_compensation_decision: object | None,
+    blocking_finding_observer: Callable[
+        [ModeloVerificationFinding, CrossPeriodDependencyEvidence | None],
+        None,
+    ]
+    | None,
+) -> tuple[tuple[ModeloVerificationFinding, ...], bool]:
+    findings: list[ModeloVerificationFinding] = []
+    has_first_filer_candidate_block = False
+    if not evidence.clean and not _iva_wallet_decision_covers_cross_period_dependency(
+        verdict,
+        evidence,
+        iva_compensation_decision,
+    ):
+        has_first_filer_candidate_block = bool(set(evidence.blockers) & _FIRST_FILER_CANDIDATE_BLOCKERS)
+        requirement = evidence.requirement
+        finding = ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.cross_period_dependency_unclean",
+            message_facts={
+                "source_modelo": str(requirement.source_modelo),
+                "source_filing_year": requirement.filing_year,
+                "source_period": requirement.period.registry_token,
+                "origin_code": requirement.origin.value,
+                "origin_ids": _join_cross_period_ids(requirement.origin_ids),
+                "blocker_codes": _join_cross_period_ids(tuple(blocker.value for blocker in evidence.blockers)),
+            },
+            legal_refs=_cross_period_requirement_legal_refs(requirement),
+            source_refs=_cross_period_requirement_source_refs(requirement),
+        )
+        findings.append(finding)
+        if blocking_finding_observer is not None:
+            blocking_finding_observer(finding, evidence)
+    if evidence.operator_declared_suppression_advisory:
+        findings.append(_cross_period_operator_declared_suppression_advisory_finding(verdict, evidence))
+    if evidence.non_official_local_chain_advisory:
+        findings.append(_cross_period_non_official_local_chain_advisory_finding(verdict, evidence))
+    if evidence.suppressed_first_year_fractional:
+        findings.append(_cross_period_first_year_fractional_suppression_advisory_finding(verdict, evidence))
+    if evidence.zero_value_previous_filing_advisory:
+        findings.append(_cross_period_zero_value_previous_filing_advisory_finding(verdict, evidence))
+    if evidence.m111_no_retenciones_no_obligation_advisory:
+        findings.append(_cross_period_m111_no_retenciones_advisory_finding(verdict, evidence))
+    return tuple(findings), has_first_filer_candidate_block
 
 
 def _cross_period_operator_declared_suppression_advisory_finding(

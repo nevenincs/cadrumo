@@ -2,7 +2,7 @@
 
 The wizard ``create`` path delegates the whole cross-store create —
 bucket directory, manifest, encrypted record, AND the active-profile
-pointer — to ``ProfileRepository.create`` as one unit of work. The
+pointer — to ``CommittedProfileRepository.create`` as one unit of work. The
 pointer write is part of that unit; a failure rolls it back to its
 pre-create state. There is no early caller-side pointer write to
 strand, so the ``missing_profile_record`` torn state (pointer aimed at

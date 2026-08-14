@@ -142,7 +142,7 @@ class BucketManifest(BaseModel):
     rejected at the read boundary (fail-closed) rather than silently
     hydrating as a live profile — a silent default would risk leaking a
     tombstoned bucket back onto the operator surface. The
-    :class:`ProfileRepository` sets it explicitly on every write:
+    :class:`CommittedProfileRepository` sets it explicitly on every write:
     ``ACTIVE`` at creation, ``TOMBSTONED`` in the same write that
     tombstones the encrypted record.
     """

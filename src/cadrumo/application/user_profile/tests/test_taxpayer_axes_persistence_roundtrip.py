@@ -134,7 +134,7 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
 
     Registers a profile carrying the full taxpayer-axis fact set at
     non-default values through ``register_active_profile`` (which
-    delegates the cross-store create to ``ProfileRepository``), reloads
+    delegates the cross-store create to ``ProfileRecordAggregateRepository``), reloads
     the :class:`UserProfileRecord` from the encrypted store via
     ``WorkflowState.active_profile_record``, and asserts every fact survived. The
     reloaded record is then projected through the canonical

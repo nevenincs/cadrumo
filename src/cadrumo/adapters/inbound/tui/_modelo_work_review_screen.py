@@ -284,25 +284,34 @@ class ModeloWorkReviewScreen(Screen[None]):
         return selected is None or (selected == _PRESENT) is present
 
     def _casilla_matches(self, row: ModeloWorkReviewCasilla) -> bool:
+        return (
+            self._casilla_matches_binding_filters(row)
+            and self._casilla_matches_presence_filters(row)
+            and self._casilla_matches_realised_filters(row)
+        )
+
+    def _casilla_matches_binding_filters(self, row: ModeloWorkReviewCasilla) -> bool:
         input_kind = self._selected("#modelo-review-filter-input-kind")
         binding_source = self._selected("#modelo-review-filter-binding-source")
         binding_resolved = self._selected_bool("#modelo-review-filter-binding-resolved")
-        relation_channel = self._selected("#modelo-review-filter-relation-channel")
-        realised_kind = self._selected("#modelo-review-filter-realised-kind")
-        anomaly = self._selected("#modelo-review-filter-origin-anomaly")
-        estado_casilla_oficial = self._selected("#modelo-review-filter-estado-casilla-oficial")
-        blocker_axis = self._selected("#modelo-review-filter-casilla-blocker")
         return all(
             (
                 input_kind is None or row.declared_input_kind.value == input_kind,
                 binding_source is None
                 or any(binding.source.value == binding_source for binding in row.concrete_bindings),
+                binding_resolved is None
+                or any(binding.resolved is binding_resolved for binding in row.concrete_bindings),
+            ),
+        )
+
+    def _casilla_matches_presence_filters(self, row: ModeloWorkReviewCasilla) -> bool:
+        relation_channel = self._selected("#modelo-review-filter-relation-channel")
+        return all(
+            (
                 self._matches_presence(
                     self._selected("#modelo-review-filter-binding-presence"),
                     bool(row.concrete_bindings),
                 ),
-                binding_resolved is None
-                or any(binding.resolved is binding_resolved for binding in row.concrete_bindings),
                 self._matches_presence(
                     self._selected("#modelo-review-filter-formula-presence"),
                     row.concrete_formula is not None,
@@ -313,6 +322,16 @@ class ModeloWorkReviewScreen(Screen[None]):
                 ),
                 relation_channel is None
                 or any(relation_channel in relation.channels for relation in row.relation_consumption),
+            ),
+        )
+
+    def _casilla_matches_realised_filters(self, row: ModeloWorkReviewCasilla) -> bool:
+        realised_kind = self._selected("#modelo-review-filter-realised-kind")
+        anomaly = self._selected("#modelo-review-filter-origin-anomaly")
+        estado_casilla_oficial = self._selected("#modelo-review-filter-estado-casilla-oficial")
+        blocker_axis = self._selected("#modelo-review-filter-casilla-blocker")
+        return all(
+            (
                 realised_kind is None or row.realised_kind.value == realised_kind,
                 anomaly is None or (row.origin_anomaly is not None and row.origin_anomaly.value == anomaly),
                 self._matches_presence(
@@ -414,52 +433,8 @@ class ModeloWorkReviewScreen(Screen[None]):
         )
         table.clear()
         for row in rows:
-            concrete = _json(
-                {
-                    "bindings": tuple(binding.model_dump(mode="json") for binding in row.concrete_bindings),
-                    "formula": None if row.concrete_formula is None else row.concrete_formula.model_dump(mode="json"),
-                    "relations": tuple(relation.model_dump(mode="json") for relation in row.relation_consumption),
-                },
-            )
-            schema = " · ".join(
-                (
-                    row.data_type,
-                    "/".join(row.section_path),
-                    _json(None if row.constraints is None else row.constraints.model_dump(mode="json")),
-                ),
-            )
-            official = ":".join(
-                part for part in (row.estado_casilla_oficial.value, row.official_reference) if part is not None
-            )
-            realised = ":".join(
-                part
-                for part in (
-                    row.realised_kind.value,
-                    _json(row.value),
-                    None if row.origin_anomaly is None else row.origin_anomaly.value,
-                )
-                if part is not None
-            )
-            grounding = _json(
-                {
-                    "formula_id": row.formula_id,
-                    "legal_refs": row.legal_refs,
-                    "source_refs": row.source_refs,
-                },
-            )
-            blocked_by = " | ".join(
-                f"{blocker.axis.value}:{blocker.native_code}:{_json(dict(blocker.facts))}" for blocker in row.blocked_by
-            )
             table.add_row(
-                f"{row.number} · {row.casilla_id}" + ("" if row.segmento is None else f" · {row.segmento}"),
-                row.label,
-                schema,
-                official,
-                row.declared_input_kind.value,
-                concrete,
-                realised,
-                grounding,
-                blocked_by,
+                *_casilla_row_values(row),
                 key=str(row.casilla_id),
             )
         self.query_one("#modelo-review-casillas-empty", Static).display = not rows
@@ -562,6 +537,73 @@ class ModeloWorkReviewScreen(Screen[None]):
 
     def action_toggle_appearance(self) -> None:
         toggle_appearance(self.review_app)
+
+
+def _casilla_row_values(row: ModeloWorkReviewCasilla) -> tuple[str, ...]:
+    """Render one review casilla into the table's stable text columns."""
+    return (
+        f"{row.number} · {row.casilla_id}" + ("" if row.segmento is None else f" · {row.segmento}"),
+        row.label,
+        _casilla_schema_text(row),
+        _casilla_official_text(row),
+        row.declared_input_kind.value,
+        _casilla_concrete_text(row),
+        _casilla_realised_text(row),
+        _casilla_grounding_text(row),
+        _casilla_blockers_text(row),
+    )
+
+
+def _casilla_concrete_text(row: ModeloWorkReviewCasilla) -> str:
+    return _json(
+        {
+            "bindings": tuple(binding.model_dump(mode="json") for binding in row.concrete_bindings),
+            "formula": None if row.concrete_formula is None else row.concrete_formula.model_dump(mode="json"),
+            "relations": tuple(relation.model_dump(mode="json") for relation in row.relation_consumption),
+        },
+    )
+
+
+def _casilla_schema_text(row: ModeloWorkReviewCasilla) -> str:
+    return " · ".join(
+        (
+            row.data_type,
+            "/".join(row.section_path),
+            _json(None if row.constraints is None else row.constraints.model_dump(mode="json")),
+        ),
+    )
+
+
+def _casilla_official_text(row: ModeloWorkReviewCasilla) -> str:
+    return ":".join(part for part in (row.estado_casilla_oficial.value, row.official_reference) if part is not None)
+
+
+def _casilla_realised_text(row: ModeloWorkReviewCasilla) -> str:
+    return ":".join(
+        part
+        for part in (
+            row.realised_kind.value,
+            _json(row.value),
+            None if row.origin_anomaly is None else row.origin_anomaly.value,
+        )
+        if part is not None
+    )
+
+
+def _casilla_grounding_text(row: ModeloWorkReviewCasilla) -> str:
+    return _json(
+        {
+            "formula_id": row.formula_id,
+            "legal_refs": row.legal_refs,
+            "source_refs": row.source_refs,
+        },
+    )
+
+
+def _casilla_blockers_text(row: ModeloWorkReviewCasilla) -> str:
+    return " | ".join(
+        f"{blocker.axis.value}:{blocker.native_code}:{_json(dict(blocker.facts))}" for blocker in row.blocked_by
+    )
 
 
 def _require_review_app(app: object) -> ModeloWorkReviewApp:

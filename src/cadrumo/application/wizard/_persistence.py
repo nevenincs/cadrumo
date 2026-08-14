@@ -127,7 +127,7 @@ def persist_answers(
     itself, not a runtime-detected fact. ``"create"`` routes to
     :func:`register_active_profile`, which delegates the whole
     cross-store create — bucket directory, manifest, encrypted record,
-    and the active-profile pointer — to :class:`ProfileRepository` as
+    and the active-profile pointer — to :class:`CommittedProfileRepository` as
     one unit of work and refuses a label already carried by a live
     profile. ``"edit"`` routes to :func:`set_active_fields`, which
     upserts facts on the active profile.

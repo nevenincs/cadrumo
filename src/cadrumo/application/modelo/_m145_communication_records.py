@@ -57,6 +57,7 @@ from ...domain.buckets import (
 from ...domain.calculations.registry import (
     CasillaDefinition,
     ExportRecordDefinition,
+    ModeloRevision,
     RegistrySnapshot,
     RevisionId,
     casillas_by_id,
@@ -624,90 +625,10 @@ def validate_m145_communication_record(
     revision = snapshot.revision
     revision_legal_refs = tuple(sorted(str(ref) for ref in revision.legal_refs))
     revision_source_refs = tuple(sorted(str(ref) for ref in revision.source_refs))
-    issues: list[M145CommunicationValidationIssue] = []
-
-    if record.revision_id != revision.id:
-        issues.append(
-            _issue(
-                M145CommunicationValidationIssueKind.REVISION_MISMATCH,
-                f"record revision {record.revision_id!r} does not match active registry revision {revision.id!r}",
-                legal_refs=revision_legal_refs,
-                source_refs=revision_source_refs,
-            ),
-        )
-    authority_refs_match = (
-        tuple(sorted(record.legal_refs)) == revision_legal_refs
-        and tuple(sorted(record.source_refs)) == revision_source_refs
-    )
-    if not authority_refs_match:
-        issues.append(
-            _issue(
-                M145CommunicationValidationIssueKind.SOURCE_AUTHORITY_MISMATCH,
-                "record authority refs do not match the active registry revision authority refs",
-                legal_refs=revision_legal_refs,
-                source_refs=revision_source_refs,
-            ),
-        )
-
     casillas = casillas_by_id(revision)
-    unknown = tuple(sorted(undeclared_casilla_ids(revision, record.field_values)))
-    for casilla_id in unknown:
-        issues.append(
-            _issue(
-                M145CommunicationValidationIssueKind.UNDECLARED_CASILLA,
-                f"casilla {casilla_id!r} is not declared by registry revision {revision.id!r}",
-                casilla_id=casilla_id,
-                legal_refs=revision_legal_refs,
-                source_refs=revision_source_refs,
-            ),
-        )
-
-    for casilla in sorted(casillas.values(), key=lambda item: item.id):
-        value = record.field_values.get(casilla.id)
-        if casilla.required and (value is None or not value.strip()):
-            issues.append(
-                _issue(
-                    M145CommunicationValidationIssueKind.MISSING_REQUIRED,
-                    f"required casilla {casilla.id!r} is missing",
-                    casilla=casilla,
-                ),
-            )
-        if value is None:
-            continue
-        if not casilla.legal_refs or not casilla.source_refs:
-            issues.append(
-                _issue(
-                    M145CommunicationValidationIssueKind.MISSING_SOURCE_AUTHORITY,
-                    f"casilla {casilla.id!r} lacks registry legal/source authority",
-                    casilla=casilla,
-                ),
-            )
-        value_issue = _value_shape_issue(casilla, value)
-        if value_issue is not None:
-            issues.append(
-                _issue(
-                    M145CommunicationValidationIssueKind.INVALID_VALUE,
-                    f"casilla {casilla.id!r} {value_issue}",
-                    casilla=casilla,
-                ),
-            )
-        if value_issue is None and casilla.data_type not in {"date", "integer", "money", "nif", "text", "year"}:
-            issues.append(
-                _issue(
-                    M145CommunicationValidationIssueKind.UNSUPPORTED_DATA_TYPE,
-                    f"casilla {casilla.id!r} uses unsupported data_type {casilla.data_type!r}",
-                    casilla=casilla,
-                ),
-            )
-        constraint_issue = _constraint_issue(casilla, value.strip())
-        if constraint_issue is not None:
-            issues.append(
-                _issue(
-                    M145CommunicationValidationIssueKind.INVALID_VALUE,
-                    f"casilla {casilla.id!r} {constraint_issue}",
-                    casilla=casilla,
-                ),
-            )
+    issues = _m145_authority_issues(record, revision, revision_legal_refs, revision_source_refs)
+    issues.extend(_m145_unknown_casilla_issues(record, revision, revision_legal_refs, revision_source_refs))
+    issues.extend(_m145_declared_casilla_issues(record, casillas))
 
     result_issues = tuple(issues)
     return M145CommunicationValidationResult(
@@ -722,6 +643,124 @@ def validate_m145_communication_record(
         legal_refs=revision_legal_refs,
         source_refs=revision_source_refs,
     )
+
+
+def _m145_authority_issues(
+    record: M145CommunicationRecord,
+    revision: ModeloRevision,
+    legal_refs: tuple[str, ...],
+    source_refs: tuple[str, ...],
+) -> list[M145CommunicationValidationIssue]:
+    issues: list[M145CommunicationValidationIssue] = []
+    if record.revision_id != revision.id:
+        issues.append(
+            _issue(
+                M145CommunicationValidationIssueKind.REVISION_MISMATCH,
+                f"record revision {record.revision_id!r} does not match active registry revision {revision.id!r}",
+                legal_refs=legal_refs,
+                source_refs=source_refs,
+            ),
+        )
+    if tuple(sorted(record.legal_refs)) != legal_refs or tuple(sorted(record.source_refs)) != source_refs:
+        issues.append(
+            _issue(
+                M145CommunicationValidationIssueKind.SOURCE_AUTHORITY_MISMATCH,
+                "record authority refs do not match the active registry revision authority refs",
+                legal_refs=legal_refs,
+                source_refs=source_refs,
+            ),
+        )
+    return issues
+
+
+def _m145_unknown_casilla_issues(
+    record: M145CommunicationRecord,
+    revision: ModeloRevision,
+    legal_refs: tuple[str, ...],
+    source_refs: tuple[str, ...],
+) -> list[M145CommunicationValidationIssue]:
+    return [
+        _issue(
+            M145CommunicationValidationIssueKind.UNDECLARED_CASILLA,
+            f"casilla {casilla_id!r} is not declared by registry revision {revision.id!r}",
+            casilla_id=casilla_id,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+        )
+        for casilla_id in sorted(undeclared_casilla_ids(revision, record.field_values))
+    ]
+
+
+def _m145_declared_casilla_issues(
+    record: M145CommunicationRecord,
+    casillas: Mapping[CasillaId, CasillaDefinition],
+) -> list[M145CommunicationValidationIssue]:
+    issues: list[M145CommunicationValidationIssue] = []
+    for casilla in sorted(casillas.values(), key=lambda item: item.id):
+        issues.extend(_m145_casilla_issues(record, casilla))
+    return issues
+
+
+def _m145_casilla_issues(
+    record: M145CommunicationRecord,
+    casilla: CasillaDefinition,
+) -> list[M145CommunicationValidationIssue]:
+    value = record.field_values.get(casilla.id)
+    if casilla.required and (value is None or not value.strip()):
+        missing = _issue(
+            M145CommunicationValidationIssueKind.MISSING_REQUIRED,
+            f"required casilla {casilla.id!r} is missing",
+            casilla=casilla,
+        )
+    else:
+        missing = None
+    if value is None:
+        return [] if missing is None else [missing]
+    issues = [] if missing is None else [missing]
+    issues.extend(_m145_value_issues(casilla, value))
+    return issues
+
+
+def _m145_value_issues(
+    casilla: CasillaDefinition,
+    value: str,
+) -> list[M145CommunicationValidationIssue]:
+    issues: list[M145CommunicationValidationIssue] = []
+    if not casilla.legal_refs or not casilla.source_refs:
+        issues.append(
+            _issue(
+                M145CommunicationValidationIssueKind.MISSING_SOURCE_AUTHORITY,
+                f"casilla {casilla.id!r} lacks registry legal/source authority",
+                casilla=casilla,
+            ),
+        )
+    value_issue = _value_shape_issue(casilla, value)
+    if value_issue is not None:
+        issues.append(
+            _issue(
+                M145CommunicationValidationIssueKind.INVALID_VALUE,
+                f"casilla {casilla.id!r} {value_issue}",
+                casilla=casilla,
+            ),
+        )
+    if value_issue is None and casilla.data_type not in {"date", "integer", "money", "nif", "text", "year"}:
+        issues.append(
+            _issue(
+                M145CommunicationValidationIssueKind.UNSUPPORTED_DATA_TYPE,
+                f"casilla {casilla.id!r} uses unsupported data_type {casilla.data_type!r}",
+                casilla=casilla,
+            ),
+        )
+    constraint_issue = _constraint_issue(casilla, value.strip())
+    if constraint_issue is not None:
+        issues.append(
+            _issue(
+                M145CommunicationValidationIssueKind.INVALID_VALUE,
+                f"casilla {casilla.id!r} {constraint_issue}",
+                casilla=casilla,
+            ),
+        )
+    return issues
 
 
 def _validation_issue_summary(result: M145CommunicationValidationResult) -> str:

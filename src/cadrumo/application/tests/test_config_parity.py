@@ -89,7 +89,7 @@ def test_config_create_then_config_show_round_trips_iva_regime(
         assert facts["iva.regime"] == "GENERAL"
 
         from ..user_profile import (
-            UserProfileLifecycleRepository,
+            ProfileRecordRepository,
             fact_value,
             profile_storage_session,
         )
@@ -100,7 +100,7 @@ def test_config_create_then_config_show_round_trips_iva_regime(
         pointer = read_profile_bucket("default")
         assert pointer is not None
         with profile_storage_session(pointer.bucket_id):
-            record = UserProfileLifecycleRepository(bucket_id=pointer.bucket_id).load(pointer.bucket_id)
+            record = ProfileRecordRepository(bucket_id=pointer.bucket_id).load(pointer.bucket_id)
             assert fact_value(record, "iva.regime") == "GENERAL"
 
 

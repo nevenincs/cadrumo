@@ -12,7 +12,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import CasillaId, validated_casilla_id
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 
 _Repos = tuple[
     WorkUnitCatalogueRepository,
@@ -79,7 +79,7 @@ def _casilla_values(*entries: tuple[CasillaId, str]) -> dict[CasillaId, Decimal]
 
 
 def _seed_ready_profile(
-    repository: UserProfileLifecycleRepository,
+    repository: ProfileRecordRepository,
     *,
     bucket_id: str,
     irpf_estimation_regime: str = "directa_normal",

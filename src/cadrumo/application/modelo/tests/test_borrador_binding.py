@@ -31,7 +31,7 @@ from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from ...live import Borrador100Snapshot, Borrador100SnapshotRepository, SnapshotLifecycleState
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
@@ -320,7 +320,7 @@ def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
         created_at=datetime(2026, 4, 1, tzinfo=UTC),
         updated_at=datetime(2026, 4, 1, tzinfo=UTC),
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(record)
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(record)
 
 
 def test_borrador_binding_command_rejects_unknown_fields() -> None:

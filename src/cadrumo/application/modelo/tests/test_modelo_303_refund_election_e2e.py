@@ -62,7 +62,7 @@ from ...calculations import (
     reconcile_modelo_303_iva_compensation,
     resolve_relations_from_local_store,
 )
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     ModeloRefundElectionNotEligibleError,
     calculate_modelo_revision,
@@ -125,7 +125,7 @@ def _secure_backend(tmp_path: Path) -> Iterator[None]:
 
 def _store_operator_profile(*, created_at: datetime, period_token: str) -> None:
     activity_start_date = _activity_start_date_for_period(period_token)
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="Test runtime profile",

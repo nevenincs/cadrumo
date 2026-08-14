@@ -32,7 +32,6 @@ from ....adapters.persistence.profile.bienes_inversion import BienesInversionIva
 from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.bienes_inversion import BienInversionIvaRecord, BienInversionKind
-from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
 from .._calculation_actions import _resolve_bucket_source_mesh
@@ -104,9 +103,6 @@ def test_source_mesh_resolves_bienes_inversion_regularizacion_binding(tmp_path: 
                 _VOLUMEN_TOTAL_ID: Decimal("100000.00"),
             },
             filing_period_date=snapshot.filing_period.end_date,
-            m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-                scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-            ),
         )
 
     bienes_diagnostics = tuple(

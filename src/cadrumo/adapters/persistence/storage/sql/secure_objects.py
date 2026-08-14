@@ -704,16 +704,38 @@ class SecureObjectRepository:
     ) -> Mapping[tuple[str, str], SecureObjectRecord]:
         """Validate and CAS-replace an explicit cross-namespace target set once."""
         unique_targets = tuple(dict.fromkeys(targets))
-        target_by_stored_key = {
-            (target.namespace, secure_object_key_digest(target.object_key)): target for target in unique_targets
-        }
-        stored_versions = {
+        target_by_stored_key = self._migration_targets_by_stored_key(unique_targets)
+        stored_versions = self._migration_stored_versions(target_by_stored_key)
+        records = self._load_migration_records(unique_targets)
+        old_targets = self._old_migration_targets(unique_targets, records, stored_versions)
+        if not old_targets:
+            return records
+        validate_upgraded_payloads({key: record.payload for key, record in records.items()})
+        self._apply_migration_targets(old_targets, records, write_provenance)
+        return records
+
+    @staticmethod
+    def _migration_targets_by_stored_key(
+        targets: Sequence[SecureObjectMigrationTarget],
+    ) -> dict[tuple[str, bytes], SecureObjectMigrationTarget]:
+        return {(target.namespace, secure_object_key_digest(target.object_key)): target for target in targets}
+
+    def _migration_stored_versions(
+        self,
+        target_by_stored_key: Mapping[tuple[str, bytes], SecureObjectMigrationTarget],
+    ) -> dict[tuple[str, bytes], int]:
+        return {
             (row.namespace, row.object_key): row.schema_version
             for row in self.iter_all_records_raw()
             if (row.namespace, row.object_key) in target_by_stored_key
         }
+
+    def _load_migration_records(
+        self,
+        targets: Sequence[SecureObjectMigrationTarget],
+    ) -> dict[tuple[str, str], SecureObjectRecord]:
         records: dict[tuple[str, str], SecureObjectRecord] = {}
-        for target in unique_targets:
+        for target in targets:
             record = self.load(
                 target.namespace,
                 target.object_key,
@@ -722,16 +744,28 @@ class SecureObjectRepository:
             )
             if record is not None:
                 records[(target.namespace, target.object_key)] = record
-        old_targets = tuple(
+        return records
+
+    @staticmethod
+    def _old_migration_targets(
+        targets: Sequence[SecureObjectMigrationTarget],
+        records: Mapping[tuple[str, str], SecureObjectRecord],
+        stored_versions: Mapping[tuple[str, bytes], int],
+    ) -> tuple[SecureObjectMigrationTarget, ...]:
+        return tuple(
             target
-            for target in unique_targets
+            for target in targets
             if (record := records.get((target.namespace, target.object_key))) is not None
             and stored_versions.get((target.namespace, record.object_key), target.current_version)
             < target.current_version
         )
-        if not old_targets:
-            return records
-        validate_upgraded_payloads({key: record.payload for key, record in records.items()})
+
+    def _apply_migration_targets(
+        self,
+        targets: Sequence[SecureObjectMigrationTarget],
+        records: Mapping[tuple[str, str], SecureObjectRecord],
+        write_provenance: str,
+    ) -> None:
         self.apply_batch(
             tuple(
                 SecureObjectWrite(
@@ -744,10 +778,9 @@ class SecureObjectRepository:
                     write_provenance=write_provenance,
                     expected_revision_id=records[(target.namespace, target.object_key)].revision_id,
                 )
-                for target in old_targets
+                for target in targets
             )
         )
-        return records
 
     def iter_many_with_failures(
         self,
@@ -1472,40 +1505,60 @@ class SecureObjectRepository:
         """
         if not update_rows:
             return
-        table = _secure_objects_table()
         guarded = [row for row in update_rows if row["b_guard_revision_id"] is not None]
         # A stored row without a revision id cannot be lineage-guarded; the
         # write path has stamped every row from birth, so such a row is
         # pre-existing corruption the read path refuses. Overwriting it keyed
         # on id alone matches the retired funnel's behaviour.
         unguarded = [row for row in update_rows if row["b_guard_revision_id"] is None]
-        value_names = [name.removeprefix("v_") for name in update_rows[0] if name.startswith("v_")]
-        values: dict[str, Any] = {name: bindparam(f"v_{name}") for name in value_names}
         if guarded:
-            stmt = (
-                update(table)
-                .where(
-                    table.c.id == bindparam("b_id"),
-                    table.c.revision_id == bindparam("b_guard_revision_id"),
-                )
-                .values(**values)
-            )
-            try:
-                # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-UPDATE:
-                # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``; a DML
-                # UPDATE always yields a rowcount-bearing result, and pysqlite
-                # accumulates executemany rowcounts across parameter sets.
-                result = cast(_RowcountResult, session.execute(stmt, guarded))
-            except IntegrityError as exc:
-                raise self._update_integrity_error(guarded, exc) from exc
-            if result.rowcount != len(guarded):
-                self._raise_stale_guarded_update(session, guarded)
+            self._execute_guarded_update_rows(session, guarded, update_rows)
         if unguarded:
-            stmt = update(table).where(table.c.id == bindparam("b_id")).values(**values)
-            try:
-                session.execute(stmt, unguarded)
-            except IntegrityError as exc:
-                raise self._update_integrity_error(unguarded, exc) from exc
+            self._execute_unguarded_update_rows(session, unguarded, update_rows)
+
+    @staticmethod
+    def _update_row_values(rows: Sequence[dict[str, object]]) -> dict[str, Any]:
+        value_names = [name.removeprefix("v_") for name in rows[0] if name.startswith("v_")]
+        return {name: bindparam(f"v_{name}") for name in value_names}
+
+    def _execute_guarded_update_rows(
+        self,
+        session: Session,
+        guarded: Sequence[dict[str, object]],
+        all_rows: Sequence[dict[str, object]],
+    ) -> None:
+        table = _secure_objects_table()
+        stmt = (
+            update(table)
+            .where(
+                table.c.id == bindparam("b_id"),
+                table.c.revision_id == bindparam("b_guard_revision_id"),
+            )
+            .values(**self._update_row_values(all_rows))
+        )
+        try:
+            # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-UPDATE:
+            # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``; a DML
+            # UPDATE always yields a rowcount-bearing result, and pysqlite
+            # accumulates executemany rowcounts across parameter sets.
+            result = cast(_RowcountResult, session.execute(stmt, guarded))
+        except IntegrityError as exc:
+            raise self._update_integrity_error(guarded, exc) from exc
+        if result.rowcount != len(guarded):
+            self._raise_stale_guarded_update(session, guarded)
+
+    def _execute_unguarded_update_rows(
+        self,
+        session: Session,
+        unguarded: Sequence[dict[str, object]],
+        all_rows: Sequence[dict[str, object]],
+    ) -> None:
+        table = _secure_objects_table()
+        stmt = update(table).where(table.c.id == bindparam("b_id")).values(**self._update_row_values(all_rows))
+        try:
+            session.execute(stmt, unguarded)
+        except IntegrityError as exc:
+            raise self._update_integrity_error(unguarded, exc) from exc
 
     def _update_integrity_error(
         self,

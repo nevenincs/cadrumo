@@ -99,7 +99,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     BucketAggregationCalculationResult,
     ModeloRequiredBindingsMissingError,
@@ -244,7 +244,7 @@ def _seed_m200_sociedad_profile() -> None:
         created_at=_T0,
         updated_at=_T0,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID_M200).save(record)
+    ProfileRecordRepository(bucket_id=_BUCKET_ID_M200).save(record)
 
 
 def _seed_m202_pago_for_m200(*, period: str, value: Decimal, obs_repo: CalculationObservationRepository) -> None:
@@ -325,7 +325,7 @@ def _seed_sociedad_profile() -> None:
     ``legal_entity_form`` describe the sociedad routing axis the corporate-tax
     facts hang off; ``display_name`` matches the ``isolated_runtime_profile``
     manifest label (``"Test runtime profile"``) so the loaded
-    :class:`ProfileAggregate` passes its cross-store label-agreement validator.
+    :class:`CommittedProfileView` passes its cross-store label-agreement validator.
     """
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
@@ -349,7 +349,7 @@ def _seed_sociedad_profile() -> None:
         created_at=_T0,
         updated_at=_T0,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(record)
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(record)
 
 
 def _seed_m202_pago(*, period: str, value: Decimal, obs_repo: CalculationObservationRepository) -> None:
