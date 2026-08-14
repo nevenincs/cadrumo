@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-14'
-body_hash: 'sha256:9b05d63e4a478e96da36c4932f596d450d5fdf7d8b2cc0c749939c4d2d3a9392'
+body_hash: 'sha256:5e738ed356dcfe11d2e0553f318d8acad8114dbb3fe2cba8e6654692944b4762'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -84,7 +84,7 @@ Implement authoritative submission, observation, response, cancellation, deadlin
 - [x] `W02.P05.S24` - Implement aggregate deadline, cooperative cancellation acknowledgement, irreversible-section protection, and cleanup deadlines; `src/cadrumo/application/operations/_supervisor.py`.
 - [x] `W02.P05.S25` - Normalize expected refusals and unexpected failures into safe terminal diagnostics while retaining correlation evidence; `src/cadrumo/application/operations/_supervisor.py`.
 - [x] `W02.P05.S26` - Reconcile non-terminal journal entries into resumed, recovered, interrupted, or orphaned states at startup; `src/cadrumo/application/operations/_supervisor.py`.
-- [ ] `W02.P05.S27` - Prove every terminal condition waits for resource cleanup and preserves the truthful effect axis; `src/cadrumo/application/operations/tests/test_supervisor_lifecycle.py`.
+- [x] `W02.P05.S27` - Prove every terminal condition waits for resource cleanup and preserves the truthful effect axis; `src/cadrumo/application/operations/tests/test_supervisor_lifecycle.py`.
 - [ ] `W02.P05.S28` - Prove detach, cursor replay, duplicate response refusal, cancellation races, deadline races, and restart reconciliation with real journal storage; `src/cadrumo/application/operations/tests/test_supervisor_recovery.py`.
 
 ## Wave `W03` - Application operation executors
