@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-14'
-body_hash: 'sha256:547a43766ba2415198182a635a23228df7ddab457c4892344c8cf19adbdd7be3'
+body_hash: 'sha256:96c465f8af645b94a895c0547dbff19a8f0966a3e23ee4010cd6950ea037d1c9'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -139,7 +139,7 @@ Move owner-specific tests to domain homes and correct package-root fixture ratio
 - [x] `W07.P25.S84` - Move and rename the core i18n default-language test to its owner; `src/cadrumo/tests/test_cli.py, src/cadrumo/core/i18n/tests`.
 - [x] `W07.P25.S85` - Move profile output-language integration tests to their application owner; `src/cadrumo/tests/test_output_language.py, src/cadrumo/application/user_profile/tests`.
 - [x] `W07.P25.S86` - Replace stale naked-test rationale with current distributed visibility requirements; `src/cadrumo/conftest.py`.
-- [ ] `W07.P25.S87` - Add a central-harness ownership gate without a file allowlist; `src/cadrumo/tests/test_test_inventory.py`.
+- [x] `W07.P25.S87` - Add a central-harness ownership gate without a file allowlist; `src/cadrumo/tests/test_test_inventory.py`.
 
 ## Wave `W08` - verify ownership performance and honesty
 

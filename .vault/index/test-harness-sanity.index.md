@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:1ce29f106af13955e247ae05766837d8efac263d2a3cbf031e46fbdafc8e132b'
+body_hash: 'sha256:1254af854164faad627f1fc52d17a0c642f15d25f8c4e5b206b5709a5d1f03ac'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -45,6 +45,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P25-S84]]'
   - '[[2026-08-14-test-harness-sanity-W07-P25-S85]]'
   - '[[2026-08-14-test-harness-sanity-W07-P25-S86]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P25-S87]]'
   - '[[2026-08-14-test-harness-sanity-audit]]'
   - '[[2026-08-14-test-harness-sanity-plan]]'
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -104,6 +105,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P25-S84` - Move and rename the core i18n default-language test to its owner
 - `2026-08-14-test-harness-sanity-W07-P25-S85` - Move profile output-language integration tests to their application owner
 - `2026-08-14-test-harness-sanity-W07-P25-S86` - Replace stale naked-test rationale with current distributed visibility requirements
+- `2026-08-14-test-harness-sanity-W07-P25-S87` - Add a central-harness ownership gate without a file allowlist
 
 ### plan
 
