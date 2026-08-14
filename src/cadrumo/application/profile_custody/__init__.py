@@ -44,6 +44,7 @@ from ...core.paths import effective_storage_root
 if TYPE_CHECKING:
     from ...domain.buckets import BucketEventHistoryCatalogue
     from ..user_profile._custody_ports import (
+        ProfileBucketSessionPort,
         ProfileCustodyEnvelopePort,
         ProfileCustodySentinelPort,
     )
@@ -168,52 +169,6 @@ class ProfileCustodyBucketSessionPort(Protocol):
     @property
     def dek(self) -> bytes:
         """The session's bound data-encryption key."""
-        ...
-
-
-class ProfileBucketSessionPort(Protocol):
-    """Live bucket-session capability exposed across the application boundary."""
-
-    @property
-    def bucket_id(self) -> str:
-        """The bucket this live session was opened against."""
-        ...
-
-    @property
-    def dek(self) -> bytes:
-        """The session's bound data-encryption key."""
-        ...
-
-    @property
-    def idle_deadline(self) -> datetime:
-        """The sliding deadline the next activity advances."""
-        ...
-
-    @property
-    def absolute_deadline(self) -> datetime:
-        """The immutable cap no activity can extend."""
-        ...
-
-    @property
-    def opened_at(self) -> datetime:
-        """When this session was authenticated."""
-        ...
-
-    @property
-    def unsecured_backend(self) -> bool:
-        """Whether the session was opened over the explicitly unsecured backend."""
-        ...
-
-    def touch(self, now: datetime) -> None:
-        """Advance the sliding idle deadline."""
-        ...
-
-    def is_expired(self, now: datetime) -> bool:
-        """Return whether this session has crossed either deadline."""
-        ...
-
-    def close(self) -> None:
-        """Zeroise and retire this session's local key material."""
         ...
 
 
@@ -1130,7 +1085,6 @@ def default_profile_bucket_event_history_repository(
 
 
 __all__ = [
-    "ProfileBucketSessionPort",
     "ProfileBucketStoragePathsPort",
     "ProfileBucketStoragePort",
     "ProfileCustodyBucketEventHistoryPort",
