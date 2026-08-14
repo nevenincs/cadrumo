@@ -62,10 +62,38 @@ def test_the_applicability_floor_makes_no_coverage_claim(revision_with_unresolve
     assert validate_authority_grade_section("r", modelo_id=modelo_id, revision=graded) == []
 
 
-def test_an_undeclared_grade_reads_as_the_floor(revision_with_unresolved_families) -> None:
-    """An ungraded revision must not be validated as though it claimed filing."""
+def test_an_undeclared_grade_refuses_on_the_absence_and_not_as_a_filing_claim(
+    revision_with_unresolved_families,
+) -> None:
+    """An ungraded revision must not be validated as though it claimed filing.
+
+    Two failures share this validator and must stay distinguishable: declaring
+    NOTHING and declaring TOO MUCH are different defects with different repairs.
+    An ungraded revision is refused for making no claim, never for overrunning a
+    claim it never made.
+
+    The earlier version of this test asserted the ungraded case produced no
+    failure at all. That encoded the exemption rather than the intent stated
+    above, so it guarded the silent pass instead of the distinction, and it went
+    green for the whole period the ladder was inert.
+    """
     modelo_id, revision = revision_with_unresolved_families
-    assert validate_authority_grade_section("r", modelo_id=modelo_id, revision=_graded(revision, None)) == []
+
+    ungraded = validate_authority_grade_section("r", modelo_id=modelo_id, revision=_graded(revision, None))
+    as_filing = validate_authority_grade_section(
+        "r",
+        modelo_id=modelo_id,
+        revision=_graded(revision, RegistryAuthorityGrade.FILING),
+    )
+
+    assert ungraded, "an ungraded revision was not refused, so silence still buys the weakest treatment"
+    assert "authority_grade" in ungraded[0]
+    assert ungraded != as_filing, "the ungraded refusal is indistinguishable from the filing-overreach refusal"
+    assert RegistryAuthorityGrade.FILING.value not in ungraded[0], (
+        "the ungraded revision was refused as though it had claimed filing grade, which is the "
+        "specific misreading this test exists to prevent"
+    )
+    assert as_filing, "the control failed: a filing claim over unresolved families must still refuse"
 
 
 def test_filing_grade_refuses_while_any_family_is_pending(revision_with_unresolved_families) -> None:

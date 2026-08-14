@@ -1176,7 +1176,14 @@ def _lazy_loader(module_name: str, group_label: str) -> Callable[[], typer.Typer
             module = import_module(module_name, __name__)  # nosemgrep
         except ModuleNotFoundError as error:
             return _surface_for_import_failure(group_label, error)
-        app = getattr(module, "app", None)
+        # Read the attribute rather than fetching it by name. The two are the
+        # same operation here, but only this spelling lets a static reader see
+        # WHICH attribute a dynamically imported module can reach, which is
+        # what proves nothing else escapes through this loader.
+        try:
+            app = module.app
+        except AttributeError as error:
+            raise RuntimeError(f"lazy CLI module {module_name!r} does not expose a Typer app") from error
         if not isinstance(app, typer.Typer):
             raise RuntimeError(f"lazy CLI module {module_name!r} does not expose a Typer app")
         return app
