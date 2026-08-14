@@ -28,7 +28,7 @@ from ....core.errors import NoActiveProfileError, get_registered_error_code
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ... import wizard as _wizard  # noqa: F401
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._models import WorkflowState
 from .._profile_bucket_scan import resolve_profile_bucket
 from .._profile_health import assess_active_profile_health, repair_active_profile_pointer
@@ -99,7 +99,7 @@ def test_label_override_resolves_real_record_and_masks_dangling_pointer_repair(t
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id, label="Operator") as profile:
-        UserProfileLifecycleRepository(bucket_id=bucket_id, objects=profile.repository).save(record)
+        ProfileRecordRepository(bucket_id=bucket_id, objects=profile.repository).save(record)
         write_pointer(profile.storage_root, BucketPointer(bucket_id=dangling_id, schema_version=1))
         target = pointer_path(profile.storage_root)
         dangling_bytes = target.read_bytes()

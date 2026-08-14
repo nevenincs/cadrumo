@@ -194,31 +194,18 @@ def resolve_casilla_population_scope(
     casilla_bindings: dict[CasillaId, BindingId] = {
         casilla.id: casilla.binding for casilla in registry_revision.casillas if casilla.binding is not None
     }
-    candidates = tuple(
-        casilla.id for casilla in registry_revision.casillas if casilla.input_kind is not InputKind.INFORMATIONAL
-    )
-
     supplied_inputs = frozenset(calculation.input_values_by_casilla_id)
     overridden_bindings = frozenset(calculation.binding_overrides)
     ledger_contributed = bool(calculation.source_transaction_ids)
-
-    comparable: list[CasillaId] = []
-    unpopulated: list[CasillaId] = []
-    for casilla_id in candidates:
-        casilla_leaves, binding_leaves = _closure_leaves(
-            casilla_id,
-            formula_expressions=formula_expressions,
-            casilla_bindings=casilla_bindings,
-        )
-        populated = bool(casilla_leaves & supplied_inputs) or any(
-            _binding_is_evidence(
-                bindings_by_id.get(binding_id),
-                overridden=binding_id in overridden_bindings,
-                ledger_contributed=ledger_contributed,
-            )
-            for binding_id in binding_leaves
-        )
-        (comparable if populated else unpopulated).append(casilla_id)
+    comparable, unpopulated = _partition_population_scope(
+        registry_revision,
+        formula_expressions=formula_expressions,
+        bindings_by_id=bindings_by_id,
+        casilla_bindings=casilla_bindings,
+        supplied_inputs=supplied_inputs,
+        overridden_bindings=overridden_bindings,
+        ledger_contributed=ledger_contributed,
+    )
 
     return CasillaPopulationScope(
         comparable_casilla_ids=tuple(sorted(comparable)),
@@ -226,6 +213,62 @@ def resolve_casilla_population_scope(
         supplied_input_casilla_ids=tuple(sorted(supplied_inputs)),
         supplied_binding_ids=tuple(sorted(overridden_bindings)),
         ledger_contributed=ledger_contributed,
+    )
+
+
+def _partition_population_scope(
+    registry_revision: ModeloRevision,
+    *,
+    formula_expressions: dict[CasillaId, FormulaExpression],
+    bindings_by_id: dict[BindingId, DataBindingDefinition],
+    casilla_bindings: dict[CasillaId, BindingId],
+    supplied_inputs: frozenset[CasillaId],
+    overridden_bindings: frozenset[BindingId],
+    ledger_contributed: bool,
+) -> tuple[list[CasillaId], list[CasillaId]]:
+    candidates = tuple(
+        casilla.id for casilla in registry_revision.casillas if casilla.input_kind is not InputKind.INFORMATIONAL
+    )
+    comparable: list[CasillaId] = []
+    unpopulated: list[CasillaId] = []
+    for casilla_id in candidates:
+        if _casilla_is_populated(
+            casilla_id,
+            formula_expressions=formula_expressions,
+            bindings_by_id=bindings_by_id,
+            casilla_bindings=casilla_bindings,
+            supplied_inputs=supplied_inputs,
+            overridden_bindings=overridden_bindings,
+            ledger_contributed=ledger_contributed,
+        ):
+            comparable.append(casilla_id)
+        else:
+            unpopulated.append(casilla_id)
+    return comparable, unpopulated
+
+
+def _casilla_is_populated(
+    casilla_id: CasillaId,
+    *,
+    formula_expressions: dict[CasillaId, FormulaExpression],
+    bindings_by_id: dict[BindingId, DataBindingDefinition],
+    casilla_bindings: dict[CasillaId, BindingId],
+    supplied_inputs: frozenset[CasillaId],
+    overridden_bindings: frozenset[BindingId],
+    ledger_contributed: bool,
+) -> bool:
+    casilla_leaves, binding_leaves = _closure_leaves(
+        casilla_id,
+        formula_expressions=formula_expressions,
+        casilla_bindings=casilla_bindings,
+    )
+    return bool(casilla_leaves & supplied_inputs) or any(
+        _binding_is_evidence(
+            bindings_by_id.get(binding_id),
+            overridden=binding_id in overridden_bindings,
+            ledger_contributed=ledger_contributed,
+        )
+        for binding_id in binding_leaves
     )
 
 

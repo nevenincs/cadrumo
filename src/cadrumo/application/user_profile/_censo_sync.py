@@ -45,7 +45,7 @@ if TYPE_CHECKING:
     from ...domain.user_profile import UserProfileRecord
     from ..workflow import WorkflowState
     from ._projections import EffectiveFact
-    from ._repository import UserProfileLifecycleRepository
+    from ._repository import ProfileRecordRepository
 
 CENSO_SOURCE_TAG: Final = "aeat_censo_read"
 """``UserProfileFact.source`` value marking an AEAT-verified censo fact."""
@@ -416,7 +416,7 @@ class CensoSyncService:
         self,
         *,
         bucket_id: str,
-        profiles: UserProfileLifecycleRepository | None = None,
+        profiles: ProfileRecordRepository | None = None,
     ) -> None:
         self._bucket_id = bucket_id.strip()
         if not self._bucket_id:
@@ -445,9 +445,9 @@ class CensoSyncService:
         """
         from ...domain.user_profile import ProfileNotFoundError
         from ._projections import record_to_path_values
-        from ._repository import UserProfileLifecycleRepository
+        from ._repository import ProfileRecordRepository
 
-        repository = self._profiles or UserProfileLifecycleRepository(bucket_id=self._bucket_id)
+        repository = self._profiles or ProfileRecordRepository(bucket_id=self._bucket_id)
         try:
             record = repository.load(profile_id)
         except ProfileNotFoundError:

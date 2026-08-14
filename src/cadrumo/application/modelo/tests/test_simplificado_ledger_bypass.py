@@ -44,7 +44,7 @@ from ....domain.transactions import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import ModeloAggregationBindingError
 from .._calculation_preparation import _raise_if_ledger_preflight_blocks_calculation
 
@@ -113,7 +113,7 @@ def _blocking_transaction() -> Transaction:
 
 
 def _seed_profile(bucket_id: str, *, iva_regime: str, m303_regime_composition: str) -> None:
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+    ProfileRecordRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Test runtime profile",

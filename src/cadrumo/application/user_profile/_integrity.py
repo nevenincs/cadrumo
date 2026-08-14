@@ -8,7 +8,7 @@ profile silently is the ``missing_profile_record`` / ghost-profile
 defect class.
 
 :func:`verify_profile_integrity` is the read-time gate
-:class:`ProfileRepository.load` runs on every load. It checks that the
+:class:`CommittedProfileRepository.load` runs on every load. It checks that the
 manifest ``bucket_id``, the on-disk directory name, and the
 :class:`UserProfileRecord.profile_id` all agree on the profile UUID.
 Decryption and pydantic validation of the record happen earlier in

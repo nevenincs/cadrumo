@@ -49,7 +49,9 @@ See Also:
 
 from __future__ import annotations
 
+import os
 from datetime import datetime
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -68,6 +70,7 @@ from ...adapters.persistence.storage.master_key import (
     idle_minutes_for_bucket,
     load_profile_session_key,
     mint_profile_session,
+    profile_session_path,
     record_login_failure,
     reset_login_throttle,
     resume_profile_session,
@@ -108,6 +111,14 @@ class ProfileLoginThrottledError(UserProfileError):
             context={"seconds": str(remaining_seconds)},
         )
         self.remaining_seconds = remaining_seconds
+
+
+class ProfileCustodySessionOwnerEffect(StrEnum):
+    """Verified outcome of one local custody session-owner operation."""
+
+    REVOKED = "revoked"
+    REMOVED = "removed"
+    VERIFIED_ABSENT = "verified_absent"
 
 
 class ProfileLoginOutcome(BaseModel):
@@ -195,6 +206,43 @@ def close_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> No
     """
     delete_profile_session(storage_root=storage_root, bucket_id=bucket_id)
     reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
+
+
+def revoke_live_profile_secret_for_custody_delete(*, bucket_id: str) -> ProfileCustodySessionOwnerEffect:
+    """Zeroise this process's live DEK only when it serves ``bucket_id``.
+
+    This is deliberately narrower than logout: a custody deletion must never
+    tear down an unrelated profile's active session.  The active-session
+    owner performs both the identity query and the zeroisation; callers only
+    receive a durable, non-secret outcome they can receipt.
+    """
+    session = current_active_bucket_session()
+    if not session_serves_bucket(session, bucket_id):
+        return ProfileCustodySessionOwnerEffect.VERIFIED_ABSENT
+    close_active_bucket_session()
+    if session_serves_bucket(current_active_bucket_session(), bucket_id):
+        raise UserProfileError(
+            translated_message="errors.integrity.integrity_storage_profile_custody_record",
+            context={"bucket_id": bucket_id, "owner": "process-secret-revocation"},
+        )
+    return ProfileCustodySessionOwnerEffect.REVOKED
+
+
+def remove_profile_session_acceleration_for_custody_delete(
+    *,
+    storage_root: Path,
+    bucket_id: str,
+) -> ProfileCustodySessionOwnerEffect:
+    """Remove the actual persisted session acceleration and verify its absence."""
+    path = profile_session_path(storage_root=storage_root, bucket_id=bucket_id)
+    was_present = os.path.lexists(path)
+    close_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
+    if os.path.lexists(path):
+        raise UserProfileError(
+            translated_message="errors.integrity.integrity_storage_profile_custody_record",
+            context={"bucket_id": bucket_id, "owner": "local-session-acceleration"},
+        )
+    return ProfileCustodySessionOwnerEffect.REMOVED if was_present else ProfileCustodySessionOwnerEffect.VERIFIED_ABSENT
 
 
 def resume_active_profile_session(
@@ -682,9 +730,12 @@ def _mint_or_warn(
 
 
 __all__ = [
+    "ProfileCustodySessionOwnerEffect",
     "ProfileLoginOutcome",
     "ProfileLoginThrottledError",
     "close_profile_session_artefacts",
     "login_profile",
+    "remove_profile_session_acceleration_for_custody_delete",
     "resume_active_profile_session",
+    "revoke_live_profile_secret_for_custody_delete",
 ]

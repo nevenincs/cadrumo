@@ -1312,10 +1312,10 @@ def _load_profile_facts(
     """Load and derive the bucket's profile fact index, or ``None`` when absent."""
     record = profile_record
     if record is None:
-        from ..user_profile import UserProfileLifecycleRepository
+        from ..user_profile import ProfileRecordRepository
 
         try:
-            record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+            record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
         except ProfileNotFoundError:
             return None
     profile_record_fingerprint = _profile_record_fingerprint(record)

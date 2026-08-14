@@ -37,7 +37,6 @@ from ....domain.calculations.registry import (
     materialize_relation_binding_values,
     resolve_available_bound_inputs_by_casilla_id,
 )
-from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -157,10 +156,6 @@ def _calculate_303(
         binding_values=binding_values,
         relation_values=dict(relation_values),
         date_context={"filing_period": date(filing_year, 12, 31)},
-        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-        ),
-        m303_annual_orden=None,
     )
 
 

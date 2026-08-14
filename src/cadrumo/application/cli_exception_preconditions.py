@@ -8,7 +8,7 @@ explicitly states that no executable recovery can be bound from that fact.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from enum import StrEnum
 
 from pydantic import ValidationError
@@ -24,6 +24,56 @@ from .operator_actions import (
 )
 
 
+def _registered_terminal_precondition_verdict(current: BaseException) -> PreconditionVerdict | None:
+    """Extract one registered terminal verdict from a single exception."""
+    from ..core import MissingOptionalExtraError
+    from ..core.errors import CadrumoError, CoreValidationError, get_registered_error_code
+
+    if not isinstance(current, CadrumoError):
+        return None
+    try:
+        get_registered_error_code(current)
+    except ValueError:
+        return None
+
+    verdict = getattr(current, "terminal_precondition_verdict", None)
+    if isinstance(verdict, PreconditionVerdict):
+        return verdict
+    if isinstance(current, MissingOptionalExtraError):
+        return cli_exception_no_recovery_verdict(
+            CliExceptionPrecondition.OPTIONAL_EXTRA_IMPORTABLE,
+            facts={
+                "extra": current.extra.extra,
+                "import_name": current.extra.import_name,
+                "importable": False,
+            },
+        )
+    if (
+        isinstance(current, CoreValidationError)
+        and current.context is not None
+        and current.context.get("section") == "aeat.pre303"
+    ):
+        return cli_exception_no_recovery_verdict(
+            CliExceptionPrecondition.EXTERNAL_CONSTANTS_SECTION_VALID,
+            facts={"section": "aeat.pre303", "valid": False},
+        )
+    return None
+
+
+def _nested_exception_links(current: BaseException) -> Iterator[BaseException]:
+    """Yield structural nested and causal links in traversal order."""
+    if isinstance(current, ValidationError):
+        for detail in current.errors(include_url=False):
+            context = detail.get("ctx")
+            nested = context.get("error") if isinstance(context, dict) else None
+            if isinstance(nested, BaseException):
+                yield nested
+    if current.__cause__ is not None:
+        yield current.__cause__
+    if current.__context__ is not None:
+        yield current.__context__
+
+
 def nested_terminal_precondition_verdict(error: BaseException) -> PreconditionVerdict | None:
     """Return one unambiguous registered typed verdict nested in ``error``.
 
@@ -35,9 +85,6 @@ def nested_terminal_precondition_verdict(error: BaseException) -> PreconditionVe
     terminal verdict is admitted; zero or multiple candidates fail closed to
     the generic validation outcome.
     """
-    from ..core import MissingOptionalExtraError
-    from ..core.errors import CadrumoError, CoreValidationError, get_registered_error_code
-
     pending: list[BaseException] = [error]
     seen: set[int] = set()
     candidates: dict[int, PreconditionVerdict] = {}
@@ -48,45 +95,10 @@ def nested_terminal_precondition_verdict(error: BaseException) -> PreconditionVe
             continue
         seen.add(identity)
 
-        if isinstance(current, CadrumoError):
-            try:
-                get_registered_error_code(current)
-            except ValueError:
-                pass
-            else:
-                verdict = getattr(current, "terminal_precondition_verdict", None)
-                if isinstance(verdict, PreconditionVerdict):
-                    candidates[identity] = verdict
-                elif isinstance(current, MissingOptionalExtraError):
-                    candidates[identity] = cli_exception_no_recovery_verdict(
-                        CliExceptionPrecondition.OPTIONAL_EXTRA_IMPORTABLE,
-                        facts={
-                            "extra": current.extra.extra,
-                            "import_name": current.extra.import_name,
-                            "importable": False,
-                        },
-                    )
-                elif (
-                    isinstance(current, CoreValidationError)
-                    and current.context is not None
-                    and current.context.get("section") == "aeat.pre303"
-                ):
-                    candidates[identity] = cli_exception_no_recovery_verdict(
-                        CliExceptionPrecondition.EXTERNAL_CONSTANTS_SECTION_VALID,
-                        facts={"section": "aeat.pre303", "valid": False},
-                    )
-
-        if isinstance(current, ValidationError):
-            for detail in current.errors(include_url=False):
-                context = detail.get("ctx")
-                nested = context.get("error") if isinstance(context, dict) else None
-                if isinstance(nested, BaseException):
-                    pending.append(nested)
-
-        if current.__cause__ is not None:
-            pending.append(current.__cause__)
-        if current.__context__ is not None:
-            pending.append(current.__context__)
+        verdict = _registered_terminal_precondition_verdict(current)
+        if verdict is not None:
+            candidates[identity] = verdict
+        pending.extend(_nested_exception_links(current))
 
     if len(candidates) != 1:
         return None

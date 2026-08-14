@@ -25,10 +25,10 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.storage.bucket import read_manifest
 from ....core.resources import resources
 from ....domain.buckets import BucketEventObjectType, BucketEventType
-from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
+from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....tests.user_profile import schema_valid_placeholder
-from ...user_profile import RegisterProfileCommand
+from ...user_profile import ProfileRecordRepository
 from .. import BucketMaintenanceService, RenameBucketCommand
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -67,30 +67,14 @@ def registered_profile(runtime: TestRuntimeProfile) -> None:
     The rename path delegates to ``rename_profile``, which loads the
     profile via the cross-store integrity check — so the record MUST
     exist before the service can be exercised. Uses the live
-    :class:`ProfileLifecycleService` against the real secure-object
+    :class:`ProfileCapsuleLifecycle` against the real secure-object
     repository so the encrypted record and the manifest both reflect
     the same starting state.
     """
-    from ...user_profile import (
-        ProfileLifecycleService,
-        ProfileValidationService,
-        UserProfileLifecycleRepository,
-    )
-
     schema = resources().user_profile_schema.singleton
     assert isinstance(schema, ProfileSchemaDefinition)
-    repository = UserProfileLifecycleRepository(
-        bucket_id=runtime.bucket_id,
-        objects=runtime.repository,
-    )
-    events = BucketEventHistoryRepository(objects=runtime.repository)
-    service = ProfileLifecycleService(
-        repository=repository,
-        validator=ProfileValidationService(schema=schema),
-        events=events,
-    )
-    service.register(
-        RegisterProfileCommand(
+    ProfileRecordRepository(bucket_id=runtime.bucket_id, objects=runtime.repository).save(
+        UserProfileRecord(
             profile_id=runtime.bucket_id,
             display_name=_ORIGINAL_LABEL,
             facts=_all_required_facts(schema),

@@ -17,8 +17,8 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage.bucket import ManifestKdfParams
 from ....domain.user_profile import UserProfileRecord, UserProfileStatus
-from .._aggregate import ProfileAggregate
 from .._integrity import ProfileIntegrityError, verify_profile_integrity
+from .._record_aggregate import ProfileAggregate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

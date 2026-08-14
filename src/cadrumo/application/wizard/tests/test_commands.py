@@ -130,7 +130,7 @@ def test_wizard_edit_without_name_updates_the_active_profile(
 ) -> None:
     """An omitted edit subject resolves through the real active-profile state."""
     from ....core import require_active_bucket_id
-    from ...user_profile import ProfileRepository, profile_storage_session, record_to_path_values
+    from ...user_profile import ProfileRecordRepository, profile_storage_session, record_to_path_values
 
     _invoke_wizard("create", _QUIET_PROFILE_ARGS, capsys)
 
@@ -142,7 +142,7 @@ def test_wizard_edit_without_name_updates_the_active_profile(
 
     profile_id = require_active_bucket_id()
     with profile_storage_session(profile_id):
-        active_profile = ProfileRepository().load(profile_id)
-        assert active_profile.label == "operator"
-        assert record_to_path_values(active_profile.record)["activities.description"] == "Servicios actualizados"
+        active_profile = ProfileRecordRepository(bucket_id=profile_id).load(profile_id)
+        assert active_profile.display_name == "operator"
+        assert record_to_path_values(active_profile)["activities.description"] == "Servicios actualizados"
     assert f"{_EXPECTED_PROFILE_LABEL}\toperator" in output

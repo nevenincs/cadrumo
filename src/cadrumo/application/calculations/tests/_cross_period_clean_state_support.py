@@ -40,7 +40,7 @@ from ...modelo import (
     create_work_unit,
     import_external_filing_evidence,
 )
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     CalculationObservationRepository,
     CrossPeriodCleanStateBlocker,
@@ -73,7 +73,7 @@ def _store_ready_profile(
     profile_id: str = _PROFILE_ID,
     tax_id: str = "X1234567L",
 ) -> None:
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+    ProfileRecordRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=profile_id,
             display_name="Cross-period clean-state test profile",

@@ -119,7 +119,6 @@ def _build_modelo_303_1t_draft():
         profile=ModeloOperatorProfile(tax_id=_TAX_ID, display_name="Conditional-trace regression"),
         inputs=_modelo_303_1t_inputs(),
         schema_provider=schema_provider,
-        m303_regimen_simplificado_scope=_general_m303_scope(),
     ), schema_provider
 
 

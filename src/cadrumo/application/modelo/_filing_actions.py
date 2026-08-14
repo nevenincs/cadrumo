@@ -76,7 +76,11 @@ from ...domain.modelos import (
     WorkUnit,
     WorkUnitCatalogueRepositoryProtocol,
 )
-from ..calculations import CalculationObservationRepository, CrossPeriodExpectedMemberSet
+from ..calculations import (
+    CalculationObservationRepository,
+    CrossPeriodExpectedMemberSet,
+    validate_m303_regimen_simplificado_annual_summary_target_revision,
+)
 from ..workflow import WorkflowEngine, WorkflowRunRepository
 from ._action_errors import (
     CalculationRevisionNotFoundError,
@@ -324,6 +328,13 @@ def file_modelo_revision(
         work_unit=work_unit,
         calculation_revision_id=calculation_revision_id,
         operation=RevisionParentOperation.FILE,
+    )
+    validate_m303_regimen_simplificado_annual_summary_target_revision(
+        target_work_unit=work_unit,
+        target_revision=target,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
     )
     if target.state is CalculationRevisionState.PRESENTADO:
         # Idempotent re-file: this revision is already the current filed answer.

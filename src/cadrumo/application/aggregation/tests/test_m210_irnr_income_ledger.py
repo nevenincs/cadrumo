@@ -34,7 +34,7 @@ from ...modelo import (
     create_work_unit,
     verify_modelo_revision,
 )
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
@@ -120,7 +120,7 @@ def _annual_evidence_row() -> Modelo210AgrupacionRentaRow:
 
 
 def _seed_m210_profile(*, objects: SecureObjectRepository) -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="M210 IRNR ledger test profile",

@@ -132,7 +132,6 @@ def test_submission_record_preserves_typed_draft_period(
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
         schema_provider=schema_provider,
-        m303_regimen_simplificado_scope=None,
     )
     justificante = Justificante(
         csv="ABCD1234EFGH5678",
@@ -178,7 +177,6 @@ def test_submission_record_preserves_an_aware_receipt_instant(
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
         schema_provider=schema_provider,
-        m303_regimen_simplificado_scope=None,
     )
     presented_at = datetime(2026, 4, 10, 11, 23, 45, tzinfo=UTC)
     justificante = Justificante(
@@ -214,7 +212,6 @@ class TestImportFromJustificante:
             import_filing_from_justificante(
                 pdf,
                 schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
-                m303_regimen_simplificado_scope=None,
             )
         # The import error carries a translated_message locale key (not a raw
         # args[0] string); assert the operator-facing rendered text, which
@@ -227,7 +224,6 @@ class TestImportFromJustificante:
             import_filing_from_justificante(
                 pdf,
                 schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
-                m303_regimen_simplificado_scope=None,
             )
         assert "modelo '100'" in resolve_error_message(excinfo.value)
 
@@ -242,7 +238,6 @@ class TestImportFromJustificante:
             import_filing_from_justificante(
                 pdf,
                 schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
-                m303_regimen_simplificado_scope=None,
             )
 
     def test_missing_pdf_raises_parse_error(
@@ -255,7 +250,6 @@ class TestImportFromJustificante:
             import_filing_from_justificante(
                 missing,
                 schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
-                m303_regimen_simplificado_scope=None,
             )
 
 

@@ -240,13 +240,13 @@ def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
     Returns ``None`` only when there is genuinely no profile for the bucket.
     """
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import ProfileRepository, record_to_path_values
+    from ..user_profile import ProfileRecordRepository, record_to_path_values
 
     try:
-        aggregate = ProfileRepository().load(bucket_id)
+        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return None
-    return record_to_path_values(aggregate.record)
+    return record_to_path_values(record)
 
 
 def _contains_profile_token(raw: str | None, token: str) -> bool | None:
@@ -906,19 +906,39 @@ def _relation_consumption(snapshot: RegistrySnapshot) -> _RelationConsumption:
         for relation in snapshot.revision.relations
     }
     return _RelationConsumption(
-        formula_fed=frozenset(
-            relation_id
-            for relation_id, channels in channels_by_relation.items()
-            if "formula_relation" in channels or "formula_binding" in channels
+        formula_fed=_relation_ids_for_channels(
+            channels_by_relation,
+            "formula_relation",
+            "formula_binding",
         ),
-        bound=frozenset(
-            relation_id
-            for relation_id, channels in channels_by_relation.items()
-            if "primary_binding" in channels or "alternate_binding" in channels
+        bound=_relation_ids_for_channels(
+            channels_by_relation,
+            "primary_binding",
+            "alternate_binding",
         ),
-        consumed=frozenset(relation_id for relation_id, channels in channels_by_relation.items() if channels),
-        target_bindings={relation.id: relation.target_binding for relation in snapshot.revision.relations},
+        consumed=_consumed_relation_ids(channels_by_relation),
+        target_bindings=_relation_target_bindings(snapshot),
     )
+
+
+def _relation_ids_for_channels(
+    channels_by_relation: Mapping[RelationId, tuple[str, ...]],
+    *required_channels: str,
+) -> frozenset[RelationId]:
+    required = frozenset(required_channels)
+    return frozenset(
+        relation_id for relation_id, channels in channels_by_relation.items() if required.intersection(channels)
+    )
+
+
+def _consumed_relation_ids(
+    channels_by_relation: Mapping[RelationId, tuple[str, ...]],
+) -> frozenset[RelationId]:
+    return frozenset(relation_id for relation_id, channels in channels_by_relation.items() if channels)
+
+
+def _relation_target_bindings(snapshot: RegistrySnapshot) -> dict[RelationId, BindingId]:
+    return {relation.id: relation.target_binding for relation in snapshot.revision.relations}
 
 
 def _unresolved_bound_relation_ids(

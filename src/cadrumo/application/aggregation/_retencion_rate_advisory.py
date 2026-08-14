@@ -327,10 +327,10 @@ def _profile_suggests_sectoral_activity(bucket_id: str | None) -> bool | None:
     # document: the profile package reaches back into this layer.
     from ...domain.deadlines import IrpfActivityKind, IrpfEstimationRegime, IVARegime
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import UserProfileLifecycleRepository, projection_for_taxpayer
+    from ..user_profile import ProfileRecordRepository, projection_for_taxpayer
 
     try:
-        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return None
     except (OSError, ValueError):

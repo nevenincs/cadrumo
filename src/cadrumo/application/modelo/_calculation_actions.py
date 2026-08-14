@@ -85,14 +85,17 @@ from ...domain.modelos import (
     CalculationSourceRef,
     FilingInstanceEvidence,
     LedgerFilingSnapshot,
+    M303RegimenSimplificadoAnnualSummaryHandoff,
     Modelo210AgrupacionRentaRow,
     ModeloDetailRow,
+    ModeloRecordCatalogueRepositoryProtocol,
     WorkUnit,
     WorkUnitCatalogueRepositoryProtocol,
     upsert_calculation_revision,
 )
 from ..calculations import CalculationObservationRepository
 from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
+from ..filing._runtime_repository import modelo_record_repository_for_application
 from ..prorrata_register import ProrrataRegisterRepository
 from ._action_errors import (
     CalculationRevisionNotFoundError,
@@ -384,6 +387,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     source_provenance: tuple[CalculationSourceRef, ...] = (),
     source_issues: tuple[CalculationSourceIssue, ...] = (),
     filing_instance_evidence: FilingInstanceEvidence | None = None,
+    m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Calculate with source evidence produced by the in-module source mesh only.
@@ -455,6 +459,10 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     work_units = prepared.work_units
     work_unit = prepared.work_unit
     snapshot = prepared.snapshot
+    _require_m303_regimen_simplificado_annual_summary_handoff(
+        revision=snapshot.revision,
+        handoff=m303_regimen_simplificado_annual_summary_handoff,
+    )
     _validate_m210_agrupacion_renta_detail_rows(work_unit, detail_rows, m210_official_tipo_renta_code)
     resolved_relations = dict(relation_values or {})
     backend_casilla_inputs = {
@@ -500,6 +508,10 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         resolved_row_bindings=row_binding_values or {},
     )
     casilla_values = dict(engine_result.values)
+    _require_m303_regimen_simplificado_annual_summary_arrival_values(
+        casilla_values=casilla_values,
+        handoff=m303_regimen_simplificado_annual_summary_handoff,
+    )
     _raise_if_m390_303_reconciliation_would_save_silent_zero(
         work_unit=work_unit,
         snapshot=snapshot,
@@ -547,6 +559,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         source_provenance=source_provenance,
         source_issues=source_issues,
         filing_instance_evidence=validated_filing_instance_evidence,
+        m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
         detail_rows=detail_rows,
         formula_count=len(engine_result.entries),
         actor=actor,
@@ -602,6 +615,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
@@ -637,6 +651,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
             Refuses caller values for source-owned binding and bound-casilla
             slots.
     """
+    fr_repo = filing_repository or modelo_record_repository_for_application()
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit_id,
         actor=actor,
@@ -653,6 +668,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
         filing_period_date=filing_period_date,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
+        filing_repository=fr_repo,
         bucket_event_repository=bucket_event_repository,
         transaction_repository=transaction_repository,
         invoice_repository=invoice_repository,
@@ -670,6 +686,9 @@ def _resolve_bucket_source_mesh(
     *,
     transaction_repository: TransactionCatalogueRepository | None,
     invoice_repository: InvoiceCatalogueRepository | None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...],
     casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
@@ -724,13 +743,17 @@ def _resolve_bucket_source_mesh(
     )
     from ..calculations import (
         IvaCompensationAnnualPartitionSourceResolver,
+        M303RegimenSimplificadoAnnualSummarySourceResolver,
         PreviousFilingSourceResolver,
         RelationPrefillSourceResolver,
     )
     from ..invoices import InvoiceCatalogueSourceResolver
 
+    resolved_work_unit_repository = work_unit_repository or WorkUnitCatalogueRepository()
+    resolved_calculation_repository = calculation_repository or CalculationRevisionCatalogueRepository()
     context = CalculationSourceContext(
         bucket_id=work_unit.bucket_id,
+        work_unit_id=work_unit.work_unit_id,
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
@@ -738,6 +761,16 @@ def _resolve_bucket_source_mesh(
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
     )
+    annual_summary_resolutions: tuple[CalculationSourceResolution, ...] = ()
+    if filing_repository is not None:
+        annual_summary_resolutions = (
+            M303RegimenSimplificadoAnnualSummarySourceResolver(
+                registry_snapshot=snapshot,
+                work_unit_repository=resolved_work_unit_repository,
+                calculation_repository=resolved_calculation_repository,
+                filing_repository=filing_repository,
+            ).resolve(context),
+        )
     source_resolution = merge_source_resolutions(
         (
             LedgerIvaAggregationSourceResolver(
@@ -835,6 +868,7 @@ def _resolve_bucket_source_mesh(
             # partition over filed Modelo 303 compensation states, not two
             # independent relation copy/sum folds.
             IvaCompensationAnnualPartitionSourceResolver(registry_snapshot=snapshot).resolve(context),
+            *annual_summary_resolutions,
         ),
     )
     source_resolution = _source_resolution_excluding_iva_compensation(snapshot, source_resolution)
@@ -1116,6 +1150,9 @@ def _resolve_bucket_aggregation_source_resolution(
     preparation: _BucketAggregationPreparation,
     transaction_repository: TransactionCatalogueRepository | None,
     invoice_repository: InvoiceCatalogueRepository | None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None,
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...],
     text_casilla_inputs: Mapping[CasillaId, str] | None,
     m210_official_tipo_renta_code: str | None,
@@ -1128,6 +1165,9 @@ def _resolve_bucket_aggregation_source_resolution(
         preparation.work_unit,
         transaction_repository=transaction_repository,
         invoice_repository=invoice_repository,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        filing_repository=filing_repository,
         foreign_asset_observations=foreign_asset_observations,
         casilla_inputs=preparation.source_casilla_inputs,
         text_casilla_inputs=text_casilla_inputs,
@@ -1232,6 +1272,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
@@ -1261,6 +1302,8 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     sources into the backend channels that feed the revision.
     """
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
+    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
+    fr_repo = filing_repository or modelo_record_repository_for_application()
     preparation = _prepare_bucket_aggregation_calculation(
         work_unit_id=work_unit_id,
         work_unit_repository=wu_repo,
@@ -1276,6 +1319,9 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         preparation=preparation,
         transaction_repository=transaction_repository,
         invoice_repository=invoice_repository,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
         foreign_asset_observations=foreign_asset_observations,
         text_casilla_inputs=text_casilla_inputs,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
@@ -1311,9 +1357,12 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         source_provenance=_source_provenance_refs(channels.source_resolution),
         source_issues=_unrouted_source_issues(channels.reconciliation.source_diagnostics),
         filing_instance_evidence=filing_instance_evidence,
+        m303_regimen_simplificado_annual_summary_handoff=(
+            channels.source_resolution.m303_regimen_simplificado_annual_summary_handoff
+        ),
         filing_period_date=filing_period_date,
         work_unit_repository=wu_repo,
-        calculation_repository=calculation_repository,
+        calculation_repository=cr_repo,
         bucket_event_repository=bucket_event_repository,
         borrador_snapshot_repository=borrador_snapshot_repository,
         detail_rows=channels.detail_rows,
@@ -1567,6 +1616,49 @@ def _without_iva_wallet_sources(
                 if not any(item.source_ref.endswith(f":{binding_id}") for binding_id in excluded_bindings)
                 and item.source_ref.split(":", 1)[0] not in relation_ids
             ),
+        },
+    )
+
+
+def _require_m303_regimen_simplificado_annual_summary_handoff(
+    *,
+    revision: ModeloRevision,
+    handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None,
+) -> None:
+    """Keep the 303/4T annual handoff on its one mesh-owned arrival path."""
+    declares_handoff = any(
+        binding.source is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY for binding in revision.bindings
+    )
+    if declares_handoff == (handoff is not None):
+        return
+    raise ModeloAggregationBindingError(
+        translated_message="errors.error.error_modelo_aggregation_binding",
+        context={
+            "reason": "m303_regimen_simplificado_annual_summary_handoff_required",
+            "revision_id": revision.id,
+            "declares_handoff": declares_handoff,
+        },
+    )
+
+
+def _require_m303_regimen_simplificado_annual_summary_arrival_values(
+    *,
+    casilla_values: Mapping[CasillaId, Decimal],
+    handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None,
+) -> None:
+    """Reject a target calculation whose engine output diverges from its carrier."""
+    if handoff is None:
+        return
+    mismatches = tuple(
+        casilla_id for casilla_id, value in handoff.values.items() if casilla_values.get(casilla_id) != value
+    )
+    if not mismatches:
+        return
+    raise ModeloAggregationBindingError(
+        translated_message="errors.error.error_modelo_aggregation_binding",
+        context={
+            "reason": "m303_regimen_simplificado_annual_summary_arrival_mismatch",
+            "casilla_ids": mismatches,
         },
     )
 

@@ -10,7 +10,7 @@ from pydantic import SecretStr
 from ....adapters.persistence.storage import SecureObjectRepository, has_active_bucket_session
 from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
 from ....application.state_projection import _build_active_profile
-from ....application.user_profile import UserProfileLifecycleRepository, rename_profile
+from ....application.user_profile import ProfileRecordRepository, rename_profile
 from ....core import BucketPointer, pointer_path, read_pointer, write_pointer
 from ....core.config import override_settings
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
@@ -47,7 +47,7 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 
 
 def _seed_ready_profile_record(bucket_id: str, repository: SecureObjectRepository) -> None:
-    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=repository).save(
+    ProfileRecordRepository(bucket_id=bucket_id, objects=repository).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name=_PROFILE_LABEL,

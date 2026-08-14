@@ -24,7 +24,7 @@ from ....domain.user_profile import ProfileSchemaValidationError, UserProfileFac
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...workflow import workflow_state_repository
-from .. import ProfileRepository, profile_create_storage_span, set_active_fields
+from .. import ProfileRecordAggregateRepository, profile_create_storage_span, set_active_fields
 from .._validation import NUMERIC_VALUE_ISSUE_CODE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -76,7 +76,7 @@ def _write(*facts: UserProfileFact) -> None:
 
 
 def _stored_share_pct(index: int = 0) -> object:
-    record = ProfileRepository().load(_BUCKET_ID).record
+    record = ProfileRecordAggregateRepository().load(_BUCKET_ID).record
     return next(
         (fact.value for fact in record.facts if fact.path == f"{_SOCIOS}.{index}.share_pct"),
         None,

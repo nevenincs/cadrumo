@@ -104,7 +104,7 @@ from ...domain.transactions import Transaction, TransactionCatalogue
 from ...domain.user_profile import ProfileNotFoundError, UserProfileFact, UserProfileStatus, new_profile_id
 from ..user_profile import (
     ProfileAlreadyRegisteredError,
-    build_lifecycle_service,
+    ProfileRecordRepository,
     profile_create_storage_span,
     profile_storage_session,
     register_active_profile,
@@ -448,7 +448,7 @@ def create_sandbox(command: CreateSandboxCommand) -> CreateSandboxResult:
             raise SandboxSourceNotFoundError(command.from_profile)
         try:
             with profile_storage_session(source_pointer.bucket_id):
-                source_record = build_lifecycle_service(bucket_id=source_pointer.bucket_id).read(
+                source_record = ProfileRecordRepository(bucket_id=source_pointer.bucket_id).load(
                     source_pointer.bucket_id,
                 )
         except ProfileNotFoundError as exc:

@@ -42,7 +42,7 @@ from ....domain.attachments import load_attachment
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
 from .._evidence_draft import (
     InvoiceDraft,
@@ -410,7 +410,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
 
         clock = datetime(2026, 1, 1, tzinfo=UTC)
-        UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
+        ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
             UserProfileRecord(
                 profile_id=_BUCKET_ID,
                 display_name="Vision opted out",

@@ -29,7 +29,7 @@ from ....domain.modelos import (
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import create_work_unit
 from .._action_errors import CalculationRevisionStateError
 from .._selectors import (
@@ -86,7 +86,7 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
-    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(
+    ProfileRecordRepository(bucket_id=bucket_id, objects=objects).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Modelo selector profile",

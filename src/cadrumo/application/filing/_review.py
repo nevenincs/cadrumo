@@ -55,7 +55,7 @@ from ...domain.invoices import InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import Transaction, TransactionCatalogue
 from ...domain.user_profile import ProfileNotFoundError
-from ..user_profile import ProfileRepository, record_to_path_values
+from ..user_profile import ProfileRecordRepository, record_to_path_values
 
 
 class _StoredPriorObservation(Protocol):
@@ -196,7 +196,7 @@ def compute_current_approval_basis(
             non-active bucket.
         profile_activity_fingerprint: Optional precomputed taxpayer-profile
             digest. When ``None``, the digest is self-loaded from the bucket's
-            :class:`~application.user_profile.ProfileRepository`. A precomputed
+            :class:`~application.user_profile.CommittedProfileRepository`. A precomputed
             override (typically :func:`empty_profile_activity_fingerprint`) lets a
             caller skip the bucket self-load for a deterministic basis.
         category_profiles: Optional override of the active category
@@ -716,7 +716,7 @@ def empty_prior_filing_observations_fingerprint() -> str:
 def _load_profile_activity_fingerprint(bucket_id: str) -> str:
     """Digest the bucket's taxpayer profile facts from the secure backend.
 
-    Self-loads the bucket-scoped :class:`~application.user_profile.ProfileRepository`
+    Self-loads the bucket-scoped :class:`~application.user_profile.CommittedProfileRepository`
     and fingerprints the wizard-free canonical projection
     (:func:`~application.user_profile.record_to_path_values`) — the SAME projection
     the relation resolver reads to scope relation resolution (activity-start date,
@@ -726,10 +726,10 @@ def _load_profile_activity_fingerprint(bucket_id: str) -> str:
     the stable empty-projection digest.
     """
     try:
-        aggregate = ProfileRepository().load(bucket_id)
+        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return _profile_activity_fingerprint(None)
-    return _profile_activity_fingerprint(record_to_path_values(aggregate.record))
+    return _profile_activity_fingerprint(record_to_path_values(record))
 
 
 def _profile_activity_fingerprint(path_values: Mapping[str, str] | None) -> str:

@@ -26,7 +26,7 @@ from ....domain.modelos import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     create_work_unit,
     get_calculation_revision,
@@ -100,7 +100,7 @@ def _repos(tmp_path: Path) -> Iterator[_Repos]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
         _seed_ready_profile(
-            UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=objects),
+            ProfileRecordRepository(bucket_id=_PROFILE_ID, objects=objects),
             bucket_id=_PROFILE_ID,
         )
         wu = WorkUnitCatalogueRepository(objects=objects)
@@ -111,7 +111,7 @@ def _repos(tmp_path: Path) -> Iterator[_Repos]:
         yield wu, cr, fr, vr, bv
 
 
-def _seed_ready_profile(repository: UserProfileLifecycleRepository, *, bucket_id: str) -> None:
+def _seed_ready_profile(repository: ProfileRecordRepository, *, bucket_id: str) -> None:
     repository.save(
         UserProfileRecord(
             profile_id=bucket_id,

@@ -31,7 +31,7 @@ import pytest
 
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._retencion_rate_advisory import _profile_suggests_sectoral_activity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -50,7 +50,7 @@ def secure_profile_backend(tmp_path: Path) -> Iterator[None]:
 
 def _save_profile(*facts: UserProfileFact) -> None:
     """Persist a profile carrying ``facts`` through the real repository."""
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
             profile_id=_PROFILE_ID,
             display_name="Retención sectoral hint",

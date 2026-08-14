@@ -56,7 +56,7 @@ from ....tests.env_scope import ready_clave_settings
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, cross_period_dependency_requirements
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     StoredCalculationDriftError,
     calculate_modelo_revision,
@@ -116,7 +116,7 @@ def _workflow_profile() -> TaxpayerProfile:
 
 
 def _seed_runtime_profile_record(bucket_id: str) -> None:
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+    ProfileRecordRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name=_PROFILE_LABEL,

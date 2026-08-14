@@ -22,7 +22,7 @@ values) with an anti-tautology proof (a surgical on-disk mutation
 that drops a persisted fact and reloads). Real adapters only — a real
 runtime profile and a real :class:`SecureObjectRepository`.
 
-The test exercises :class:`UserProfileLifecycleRepository` directly
+The test exercises :class:`ProfileRecordRepository` directly
 because it is the canonical user-profile boundary (the higher-level
 ``register_active_profile`` orchestration adds bucket-routing concerns
 that belong to a separate roundtrip). The persisted facts are pulled
@@ -55,7 +55,7 @@ from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._projections import projection_for_taxpayer
 from .._repository import (
     USER_PROFILE_VALUE_NAMESPACE,
-    UserProfileLifecycleRepository,
+    ProfileRecordRepository,
     user_profile_value_object_key,
 )
 
@@ -160,10 +160,10 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 
 @pytest.fixture
-def lifecycle(runtime_profile: TestRuntimeProfile) -> UserProfileLifecycleRepository:
+def lifecycle(runtime_profile: TestRuntimeProfile) -> ProfileRecordRepository:
     """A real lifecycle repository over a real runtime profile."""
 
-    return UserProfileLifecycleRepository(
+    return ProfileRecordRepository(
         # Bound to the profile it stores, as every production construction is.
         bucket_id=_PROFILE_UUID,
         objects=runtime_profile.repository,
@@ -177,7 +177,7 @@ def _fact_value(record: UserProfileRecord, path: str) -> object:
 
 
 def test_corporate_tax_facts_survive_encrypted_sql_roundtrip(
-    lifecycle: UserProfileLifecycleRepository,
+    lifecycle: ProfileRecordRepository,
 ) -> None:
     """Both corporate-tax facts survive a real encrypted-SQL save/load cycle.
 
@@ -242,7 +242,7 @@ def test_corporate_tax_facts_survive_encrypted_sql_roundtrip(
 
 
 def test_undeclared_corporate_tax_facts_project_to_none(
-    lifecycle: UserProfileLifecycleRepository,
+    lifecycle: ProfileRecordRepository,
 ) -> None:
     """A record without either fact projects both axes to ``None``.
 
@@ -311,7 +311,7 @@ def test_dropping_a_persisted_corporate_tax_fact_surfaces_on_reload(
     INCN fact must propagate to the typed projection.
     """
 
-    lifecycle = UserProfileLifecycleRepository(
+    lifecycle = ProfileRecordRepository(
         # Bound to the profile it stores, as every production construction is.
         bucket_id=_PROFILE_UUID,
         objects=runtime_profile.repository,

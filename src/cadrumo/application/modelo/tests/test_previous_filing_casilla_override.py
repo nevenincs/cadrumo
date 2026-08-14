@@ -16,7 +16,7 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry import RegistryValidationError
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import calculate_modelo_revision, create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -78,7 +78,7 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over an isolated profile — no mocks."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
-        UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=objects).save(
+        ProfileRecordRepository(bucket_id=_PROFILE_ID, objects=objects).save(
             UserProfileRecord(
                 profile_id=_PROFILE_ID,
                 display_name="Diego Operator",

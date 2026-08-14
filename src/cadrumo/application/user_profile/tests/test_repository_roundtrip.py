@@ -42,7 +42,7 @@ from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._repository import (
     USER_PROFILE_SNAPSHOT_NAMESPACE,
     USER_PROFILE_VALUE_NAMESPACE,
-    UserProfileLifecycleRepository,
+    ProfileRecordRepository,
     UserProfileSnapshotRepository,
     user_profile_snapshot_object_key,
     user_profile_value_object_key,
@@ -110,7 +110,7 @@ def test_user_profile_value_and_snapshot_survive_encrypted_storage_roundtrip(
     """UserProfileRecord + UserProfileSnapshot roundtrip through both repos."""
 
     profile_id = _PROFILE_UUID
-    lifecycle = UserProfileLifecycleRepository(bucket_id=profile_id, objects=runtime_profile.repository)
+    lifecycle = ProfileRecordRepository(bucket_id=profile_id, objects=runtime_profile.repository)
     snapshots = UserProfileSnapshotRepository(bucket_id=profile_id, objects=runtime_profile.repository)
 
     original_record = _populated_record()
@@ -181,7 +181,7 @@ def test_user_profile_active_with_removed_at_surfaces_at_load(
     # encrypted boundary, not about addressing a foreign bucket.
     record = _populated_record()
     bucket_id = record.profile_id
-    lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=runtime_profile.repository)
+    lifecycle = ProfileRecordRepository(bucket_id=bucket_id, objects=runtime_profile.repository)
     lifecycle.save(record)
 
     stored = runtime_profile.repository.load(
@@ -206,7 +206,7 @@ def test_user_profile_active_with_removed_at_surfaces_at_load(
     )
 
     with pytest.raises(StoredProfileDriftError) as excinfo:
-        UserProfileLifecycleRepository(bucket_id=bucket_id, objects=runtime_profile.repository).load(record.profile_id)
+        ProfileRecordRepository(bucket_id=bucket_id, objects=runtime_profile.repository).load(record.profile_id)
     assert excinfo.value.profile_id == record.profile_id
     assert isinstance(excinfo.value.original_exception, ValidationError)
 
@@ -235,7 +235,7 @@ def test_user_profile_snapshot_canonical_hash_drift_surfaces_at_load(
     """
 
     profile_id = _PROFILE_UUID
-    lifecycle = UserProfileLifecycleRepository(bucket_id=profile_id, objects=runtime_profile.repository)
+    lifecycle = ProfileRecordRepository(bucket_id=profile_id, objects=runtime_profile.repository)
     snapshots = UserProfileSnapshotRepository(bucket_id=profile_id, objects=runtime_profile.repository)
     record = _populated_record()
     lifecycle.save(record)

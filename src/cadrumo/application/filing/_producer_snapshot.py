@@ -215,6 +215,7 @@ class M303FilingFacts(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     joint_return_elected: bool
+    annual_volume_nonzero: bool
     insolvency: M303InsolvencyFilingFact | None
     exonerado_390: M303Exonerado390FilingEvidence
     regimen_simplificado: M303RegimenSimplificadoFilingEvidence
@@ -229,27 +230,39 @@ class M303FilingFacts(BaseModel):
 
     @model_validator(mode="after")
     def _arrivals_share_one_filing_period(self) -> M303FilingFacts:
-        _require_m303_official_filing_period(self.period)
-        if self.period != self.supplier_regime.period or self.period != self.prorrata_transition.period:
-            raise ValueError("M303 filing facts and arrivals must share one filing period")
-        if self.regimen_simplificado_result != self.regimen_simplificado.calculation_result:
-            raise ValueError("M303 filing facts must retain the exact simplified-regime calculation result")
-        if self.regimen_simplificado_result.period != self.period:
-            raise ValueError("M303 filing facts and simplified-regime result must share one filing period")
-        if self.regularisation_result.regularizacion_year != self.period.filing_year:
-            raise ValueError("M303 regularisation result must use the filing year")
-        assert_m303_regularisation_result_matches_bienes_register(
-            bienes_register=self.bienes_register,
-            regularisation_result=self.regularisation_result,
-        )
-        if self.prorrata_transition.is_applicable and not self.prorrata_register.has_complete_current_entry_coverage(
-            self.period.filing_year
-        ):
-            raise ValueError("M303 final-period filing facts require complete current-year prorrata register coverage")
-        for entry in self.prorrata_transition.register_evidence:
-            if self.prorrata_register.entry_for(entry.ejercicio, sector_id=entry.sector_id) != entry:
-                raise ValueError("M303 prorrata transition arrival evidence must belong to the supplied register")
+        _validate_m303_filing_periods(self)
+        _validate_m303_calculation_results(self)
+        _validate_m303_register_evidence(self)
         return self
+
+
+def _validate_m303_filing_periods(facts: M303FilingFacts) -> None:
+    _require_m303_official_filing_period(facts.period)
+    if facts.period != facts.supplier_regime.period or facts.period != facts.prorrata_transition.period:
+        raise ValueError("M303 filing facts and arrivals must share one filing period")
+    if facts.regularisation_result.regularizacion_year != facts.period.filing_year:
+        raise ValueError("M303 regularisation result must use the filing year")
+
+
+def _validate_m303_calculation_results(facts: M303FilingFacts) -> None:
+    if facts.regimen_simplificado_result != facts.regimen_simplificado.calculation_result:
+        raise ValueError("M303 filing facts must retain the exact simplified-regime calculation result")
+    if facts.regimen_simplificado_result.period != facts.period:
+        raise ValueError("M303 filing facts and simplified-regime result must share one filing period")
+
+
+def _validate_m303_register_evidence(facts: M303FilingFacts) -> None:
+    assert_m303_regularisation_result_matches_bienes_register(
+        bienes_register=facts.bienes_register,
+        regularisation_result=facts.regularisation_result,
+    )
+    if facts.prorrata_transition.is_applicable and not facts.prorrata_register.has_complete_current_entry_coverage(
+        facts.period.filing_year
+    ):
+        raise ValueError("M303 final-period filing facts require complete current-year prorrata register coverage")
+    for entry in facts.prorrata_transition.register_evidence:
+        if facts.prorrata_register.entry_for(entry.ejercicio, sector_id=entry.sector_id) != entry:
+            raise ValueError("M303 prorrata transition arrival evidence must belong to the supplied register")
 
 
 def resolve_m303_filing_facts(
@@ -267,6 +280,7 @@ def resolve_m303_filing_facts(
     _require_m303_official_filing_period(m303.period)
     return M303FilingFacts(
         joint_return_elected=m303.joint_return_elected,
+        annual_volume_nonzero=m303.annual_volume_nonzero,
         insolvency=m303.insolvency,
         exonerado_390=m303.exonerado_390,
         regimen_simplificado=m303.regimen_simplificado,

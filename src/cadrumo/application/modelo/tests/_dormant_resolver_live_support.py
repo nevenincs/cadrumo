@@ -7,7 +7,7 @@ from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
@@ -33,7 +33,7 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
-    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(
+    ProfileRecordRepository(bucket_id=bucket_id, objects=objects).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Ready operator",

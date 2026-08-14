@@ -27,7 +27,6 @@ source diagnostics rather than silently blanking the filed calculation.
 
 from __future__ import annotations
 
-from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
@@ -127,11 +126,15 @@ from ._iva_ledger import (
 from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from ._renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
 from ._renta_income_ledger import (
-    RentaIncomeObservation,
-    SalesInvoiceEvidenceRefusal,
     aggregate_renta_income_ledger_from_repositories,
     aggregate_renta_m100_income_ledger_from_repositories,
     aggregate_renta_m131_agrario_income_ledger_from_repositories,
+)
+from ._renta_income_ledger import (
+    fitted_diagnostic_id_list as _fitted_id_list,
+)
+from ._renta_income_ledger import (
+    unusable_sales_invoice_diagnostics as _unusable_sales_invoice_diagnostics,
 )
 from ._renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from ._retencion_observations_repository import RetencionObservationRepository
@@ -150,6 +153,7 @@ from ._retenciones import (
     aggregate_retenciones_193,
 )
 from ._source_mesh import (
+    DIAGNOSTIC_MESSAGE_MAX_LENGTH,
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
@@ -699,23 +703,6 @@ class LedgerRentaIncomeAggregationSourceResolver:
         )
 
 
-# The character budget an advisory message must fit, read from the field that
-# enforces it rather than restated as a literal -- a hardcoded copy silently
-# stops matching the moment the model's own limit moves, and the failure lands
-# as a ValidationError raised from inside the diagnostic that was supposed to
-# keep the operator informed.
-#
-# An operator needs a handle on the offending rows, not the whole list, so the
-# id sample is fitted to whatever budget the prose leaves. The count and the
-# summed cash are always exact and the omission is always stated, so the list
-# shortens but never becomes a silent cap.
-_DIAGNOSTIC_MESSAGE_MAX: int = next(
-    meta.max_length
-    for meta in CalculationSourceDiagnostic.model_fields["message"].metadata
-    if getattr(meta, "max_length", None) is not None
-)
-
-
 def _ungrounded_income_consequence(facts: frozenset[str]) -> str:
     """Describe what a missing base does to the income casilla, per declared fact.
 
@@ -755,7 +742,7 @@ def _ungrounded_income_diagnostics(
     The id list is fitted to the diagnostic's own character budget rather than
     to a fixed number of ids. Bounding by id COUNT was a proxy for the real
     constraint: :class:`CalculationSourceDiagnostic` caps ``message`` at
-    :data:`_DIAGNOSTIC_MESSAGE_MAX`, transaction ids are long and
+    :data:`DIAGNOSTIC_MESSAGE_MAX_LENGTH`, transaction ids are long and
     variable-length, and three of them already overflowed a five-id sample --
     raising ``ValidationError`` from inside the advisory and taking down the
     whole calculation. A safety net that crashes as soon as it has several
@@ -793,80 +780,9 @@ def _ungrounded_income_diagnostics(
             reason="ungrounded_income_substrate",
             source_kind="ledger_renta_income_aggregation",
             resolver_id=resolver_id,
-            message=preamble + _fitted_id_list(sampled, budget=_DIAGNOSTIC_MESSAGE_MAX - len(preamble)),
+            message=preamble + _fitted_id_list(sampled, budget=DIAGNOSTIC_MESSAGE_MAX_LENGTH - len(preamble)),
         ),
     )
-
-
-def _unusable_sales_invoice_diagnostics(
-    observations: Sequence[RentaIncomeObservation],
-    *,
-    resolver_id: str,
-) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Surface rows whose linked sales invoice could not be trusted.
-
-    These rows are NOT excluded -- they contribute their bank cash, because the
-    taxpayer was paid and that income is declarable whatever state its paperwork
-    is in. What they lost is the invoice's base, cuota and retención, so the
-    figure they contribute is the credited cash rather than the ingresos
-    íntegros the casilla asks for. Without this advisory that downgrade is
-    invisible: the row looks exactly like one that never had an invoice at all.
-
-    One advisory per refusal reason, not per row: the actionable unit is "these
-    links are unusable, and this is what is wrong with them", and a per-row
-    advisory trains operators to ignore the channel. The id sample is fitted to
-    the message budget by the same helper the ungrounded advisory uses, so a
-    long list degrades to a count instead of raising out of the diagnostic and
-    taking the calculation down with it.
-    """
-    by_reason: dict[SalesInvoiceEvidenceRefusal, list[RentaIncomeObservation]] = defaultdict(list)
-    for observation in observations:
-        if observation.sales_invoice_refusal is not None:
-            by_reason[observation.sales_invoice_refusal].append(observation)
-    diagnostics: list[CalculationSourceDiagnostic] = []
-    for reason in sorted(by_reason, key=lambda member: member.value):
-        rows = by_reason[reason]
-        total = sum((row.gross_amount for row in rows), Decimal("0"))
-        preamble = (
-            f"{len(rows)} income row(s) totalling {total} EUR link a sales invoice that could not be "
-            f"trusted ({reason.value}), so they declare bank cash instead of the invoice base and their "
-            f"retención credit is lost. Repair the link or record the base directly. Transactions: "
-        )
-        diagnostics.append(
-            CalculationSourceDiagnostic(
-                reason="unusable_sales_invoice_evidence",
-                source_kind="ledger_renta_income_aggregation",
-                resolver_id=resolver_id,
-                message=preamble
-                + _fitted_id_list(
-                    sorted(row.transaction_id for row in rows),
-                    budget=_DIAGNOSTIC_MESSAGE_MAX - len(preamble),
-                ),
-            ),
-        )
-    return tuple(diagnostics)
-
-
-def _fitted_id_list(identifiers: Sequence[str], *, budget: int) -> str:
-    """Render ``identifiers`` into at most ``budget`` characters, stating omissions.
-
-    Shows as many ids as fit alongside the "(and N more)" suffix that describes
-    the ones it dropped -- the suffix is part of the budget, because a truncation
-    notice that itself overflows would defeat the cap it exists to respect.
-
-    Degrades rather than raises: when even one id plus its suffix cannot fit, it
-    reports the bare count. The caller is an advisory about a measurement risk,
-    so losing the id sample is acceptable where losing the whole diagnostic --
-    and with it the calculation -- is not.
-    """
-    total = len(identifiers)
-    for shown in range(total, 0, -1):
-        remainder = total - shown
-        candidate = ", ".join(identifiers[:shown]) + (f" (and {remainder} more)" if remainder else "")
-        if len(candidate) <= budget:
-            return candidate
-    fallback = f"{total} transaction(s), ids omitted to fit the diagnostic length limit"
-    return fallback if len(fallback) <= budget else ""
 
 
 def _m130_retenciones_backend_inputs(

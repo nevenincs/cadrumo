@@ -26,7 +26,7 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     AmendmentEvidenceMissingError,
     CalculationRevisionNotFoundError,
@@ -272,7 +272,7 @@ def test_calculate_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: P
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_GUARD_BUCKET_B) as profile:
         _seed_ready_profile(
-            UserProfileLifecycleRepository(bucket_id=_GUARD_BUCKET_B, objects=profile.repository),
+            ProfileRecordRepository(bucket_id=_GUARD_BUCKET_B, objects=profile.repository),
             bucket_id=_GUARD_BUCKET_B,
         )
         wu_repo = WorkUnitCatalogueRepository(bucket_id=_GUARD_BUCKET_A, objects=profile.repository)

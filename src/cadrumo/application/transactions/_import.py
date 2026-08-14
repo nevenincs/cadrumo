@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import datetime as _datetime
 from collections.abc import Iterable
+from itertools import pairwise
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -97,17 +98,11 @@ def import_ledger_with_diagnostics(
     row_fingerprints = tuple(import_fingerprints)
     if len(row_fingerprints) != len(rows):
         raise ValueError("import_fingerprints must contain one fingerprint per raw transaction")
-    seen_fingerprints: set[str] = set()
-    seen_transaction_ids: set[str] = set()
     # The duplicate check keys on the stable import fingerprint — the
     # same identity the persisting import path deduplicates on — so a
     # verify run's preview agrees with what a real import would do,
     # including across file formats and after a transaction is edited.
-    existing_fingerprints = {
-        fingerprint
-        for transaction in existing_catalogue.values()
-        for fingerprint in existing_transaction_import_fingerprints(transaction)
-    }
+    existing_fingerprints = _existing_import_fingerprints(existing_catalogue)
 
     if not rows:
         diagnostics.append(
@@ -120,99 +115,19 @@ def import_ledger_with_diagnostics(
         )
         return LedgerImportResult(imported_count=0, skipped_count=0, diagnostics=tuple(diagnostics))
 
-    # Duplicate check & import logic
-    dates: list[_datetime.date] = []
-    for raw, fingerprint in zip(rows, row_fingerprints, strict=True):
-        tx_id = derive_transaction_id(raw)
-
-        verdict = classify_import_row(
-            fingerprint=fingerprint,
-            transaction_id=tx_id,
-            stored_fingerprints=existing_fingerprints,
-            batch_fingerprints=seen_fingerprints,
-            batch_transaction_ids=seen_transaction_ids,
-        )
-        if verdict is ImportRowVerdict.DUPLICATE_OF_STORED:
-            diagnostics.append(
-                build_ledger_import_diagnostic(
-                    kind=LedgerImportDiagnosticKind.DUPLICATE,
-                    severity=BaseSeverity.INFO,
-                    message=tr("transactions.import.message_082074"),
-                    source_path=source_path,
-                    affected_transaction_ids=(tx_id,),
-                ),
-            )
-        elif verdict is ImportRowVerdict.COLLIDING_TRANSACTION_ID:
-            diagnostics.append(
-                build_ledger_import_diagnostic(
-                    kind=LedgerImportDiagnosticKind.DUPLICATE,
-                    severity=BaseSeverity.WARNING,
-                    message=tr("transactions.import.batch_id_collision"),
-                    source_path=source_path,
-                    affected_transaction_ids=(tx_id,),
-                ),
-            )
-        elif verdict is ImportRowVerdict.REPEATED_IN_BATCH:
-            # Advisory, not a skip: both rows import. The message says so, because
-            # a "duplicate" the operator assumes was dropped is how a real
-            # double-count in the source file goes unreviewed.
-            diagnostics.append(
-                build_ledger_import_diagnostic(
-                    kind=LedgerImportDiagnosticKind.DUPLICATE,
-                    severity=BaseSeverity.WARNING,
-                    message=tr("transactions.import.message_053465"),
-                    source_path=source_path,
-                    affected_transaction_ids=(tx_id,),
-                ),
-            )
-
-        if verdict.imports:
-            imported_count += 1
-            seen_transaction_ids.add(tx_id)
-        else:
-            skipped_count += 1
-        seen_fingerprints.add(fingerprint)
-
-        date = raw.value_date or raw.booked_date
-        if date:
-            dates.append(date)
+    imported_count, skipped_count, row_diagnostics, dates = _process_import_rows(
+        rows,
+        row_fingerprints,
+        source_path=source_path,
+        existing_fingerprints=existing_fingerprints,
+    )
+    diagnostics.extend(row_diagnostics)
 
     # Gap check
-    if dates:
-        dates.sort()
-        for i in range(1, len(dates)):
-            if (dates[i] - dates[i - 1]) > _datetime.timedelta(days=35):
-                diagnostics.append(
-                    build_ledger_import_diagnostic(
-                        kind=LedgerImportDiagnosticKind.GAP,
-                        severity=BaseSeverity.WARNING,
-                        message=tr("transactions.import.message_829073"),
-                        source_path=source_path,
-                    ),
-                )
-                break  # Warn once per file to avoid noise
+    _append_gap_diagnostic(diagnostics, dates, source_path=source_path)
 
     # Original file check
-    if original_source_path and original_source_path.exists():
-        try:
-            diagnostics.append(
-                build_ledger_import_diagnostic(
-                    kind=LedgerImportDiagnosticKind.ORIGINAL_FILE,
-                    severity=BaseSeverity.INFO,
-                    message=tr("transactions.import.verified"),
-                    source_path=original_source_path,
-                ),
-            )
-        except OSError:
-            _logger.warning("could not read original file %s", original_source_path, exc_info=True)
-            diagnostics.append(
-                build_ledger_import_diagnostic(
-                    kind=LedgerImportDiagnosticKind.ORIGINAL_FILE,
-                    severity=BaseSeverity.WARNING,
-                    message=tr("transactions.import.unreadable"),
-                    source_path=original_source_path,
-                ),
-            )
+    _append_original_file_diagnostic(diagnostics, original_source_path)
 
     result = LedgerImportResult(
         imported_count=imported_count,
@@ -227,3 +142,120 @@ def import_ledger_with_diagnostics(
         len(result.diagnostics),
     )
     return result
+
+
+def _existing_import_fingerprints(existing_catalogue: TransactionCatalogue) -> set[str]:
+    return {
+        fingerprint
+        for transaction in existing_catalogue.values()
+        for fingerprint in existing_transaction_import_fingerprints(transaction)
+    }
+
+
+def _process_import_rows(
+    rows: tuple[RawTransaction, ...],
+    row_fingerprints: tuple[str, ...],
+    *,
+    source_path: Path,
+    existing_fingerprints: set[str],
+) -> tuple[int, int, list[LedgerImportDiagnostic], list[_datetime.date]]:
+    diagnostics: list[LedgerImportDiagnostic] = []
+    imported_count = 0
+    skipped_count = 0
+    dates: list[_datetime.date] = []
+    seen_fingerprints: set[str] = set()
+    seen_transaction_ids: set[str] = set()
+    for raw, fingerprint in zip(rows, row_fingerprints, strict=True):
+        tx_id = derive_transaction_id(raw)
+        verdict = classify_import_row(
+            fingerprint=fingerprint,
+            transaction_id=tx_id,
+            stored_fingerprints=existing_fingerprints,
+            batch_fingerprints=seen_fingerprints,
+            batch_transaction_ids=seen_transaction_ids,
+        )
+        diagnostic = _duplicate_diagnostic(verdict, tx_id, source_path=source_path)
+        if diagnostic is not None:
+            diagnostics.append(diagnostic)
+        if verdict.imports:
+            imported_count += 1
+            seen_transaction_ids.add(tx_id)
+        else:
+            skipped_count += 1
+        seen_fingerprints.add(fingerprint)
+        value_date = raw.value_date or raw.booked_date
+        if value_date:
+            dates.append(value_date)
+    return imported_count, skipped_count, diagnostics, dates
+
+
+def _duplicate_diagnostic(
+    verdict: ImportRowVerdict,
+    transaction_id: str,
+    *,
+    source_path: Path,
+) -> LedgerImportDiagnostic | None:
+    if verdict is ImportRowVerdict.DUPLICATE_OF_STORED:
+        severity = BaseSeverity.INFO
+        message = tr("transactions.import.message_082074")
+    elif verdict is ImportRowVerdict.COLLIDING_TRANSACTION_ID:
+        severity = BaseSeverity.WARNING
+        message = tr("transactions.import.batch_id_collision")
+    elif verdict is ImportRowVerdict.REPEATED_IN_BATCH:
+        # Advisory, not a skip: both rows import.
+        severity = BaseSeverity.WARNING
+        message = tr("transactions.import.message_053465")
+    else:
+        return None
+    return build_ledger_import_diagnostic(
+        kind=LedgerImportDiagnosticKind.DUPLICATE,
+        severity=severity,
+        message=message,
+        source_path=source_path,
+        affected_transaction_ids=(transaction_id,),
+    )
+
+
+def _append_gap_diagnostic(
+    diagnostics: list[LedgerImportDiagnostic],
+    dates: list[_datetime.date],
+    *,
+    source_path: Path,
+) -> None:
+    dates.sort()
+    if any((right - left) > _datetime.timedelta(days=35) for left, right in pairwise(dates)):
+        diagnostics.append(
+            build_ledger_import_diagnostic(
+                kind=LedgerImportDiagnosticKind.GAP,
+                severity=BaseSeverity.WARNING,
+                message=tr("transactions.import.message_829073"),
+                source_path=source_path,
+            ),
+        )
+
+
+def _append_original_file_diagnostic(
+    diagnostics: list[LedgerImportDiagnostic],
+    original_source_path: Path | None,
+) -> None:
+    if original_source_path is None or not original_source_path.exists():
+        return
+    try:
+        diagnostics.append(
+            build_ledger_import_diagnostic(
+                kind=LedgerImportDiagnosticKind.ORIGINAL_FILE,
+                severity=BaseSeverity.INFO,
+                message=tr("transactions.import.verified"),
+                source_path=original_source_path,
+            ),
+        )
+    except OSError:
+        _logger.warning("could not read original file %s", original_source_path, exc_info=True)
+        diagnostics.append(
+            build_ledger_import_diagnostic(
+                kind=LedgerImportDiagnosticKind.ORIGINAL_FILE,
+                severity=BaseSeverity.WARNING,
+                message=tr("transactions.import.unreadable"),
+                source_path=original_source_path,
+            ),
+        )

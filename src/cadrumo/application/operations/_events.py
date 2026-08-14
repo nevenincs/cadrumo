@@ -8,7 +8,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, OperationEffect, OperationEventKind
+from ...core import STRICT_FROZEN_CONFIG, Hex64Str, OperationEffect, OperationEventKind
 from ...core.time import validate_utc_aware
 from ._models import OperationIdentity, OperationRevision, OperationTerminalReceipt
 
@@ -95,6 +95,13 @@ class OperationDiagnosticEvent(_OperationEventBase):
     diagnostic_ref: OperationDiagnosticReference
 
 
+class OperationInteractionEvent(_OperationEventBase):
+    """Safe lifecycle fact that identifies a pending or consumed interaction."""
+
+    kind: Literal[OperationEventKind.INTERACTION] = OperationEventKind.INTERACTION
+    interaction_id: Hex64Str
+
+
 class OperationTerminalEvent(_OperationEventBase):
     kind: Literal[OperationEventKind.TERMINAL] = OperationEventKind.TERMINAL
     receipt: OperationTerminalReceipt
@@ -117,6 +124,7 @@ OperationEvent = Annotated[
     | OperationEffectEvent
     | OperationNoticeEvent
     | OperationDiagnosticEvent
+    | OperationInteractionEvent
     | OperationTerminalEvent,
     Field(discriminator="kind"),
 ]
@@ -128,6 +136,7 @@ __all__ = [
     "OperationEvent",
     "OperationEventCode",
     "OperationEventSequence",
+    "OperationInteractionEvent",
     "OperationLogRecord",
     "OperationLogSeverity",
     "OperationNoticeEvent",

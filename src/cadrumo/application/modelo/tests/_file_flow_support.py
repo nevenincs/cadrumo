@@ -49,7 +49,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from ...workflow import (
     WorkflowAbortReason,
     WorkflowEngine,
@@ -245,7 +245,7 @@ def _repos(tmp_path: Path) -> Iterator[_Repos]:
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FILE_FLOW_PROFILE_ID) as profile:
         objects = profile.repository
-        UserProfileLifecycleRepository(bucket_id=profile.bucket_id, objects=objects).save(
+        ProfileRecordRepository(bucket_id=profile.bucket_id, objects=objects).save(
             UserProfileRecord(
                 profile_id=profile.bucket_id,
                 display_name="File-flow ready profile",
@@ -284,7 +284,7 @@ def _file_flow_runtime(tmp_path: Path) -> Iterator[_FileFlowRuntime]:
     """Yield the file-flow repository bundle alongside its live engine."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FILE_FLOW_PROFILE_ID) as profile:
         objects = profile.repository
-        UserProfileLifecycleRepository(bucket_id=profile.bucket_id, objects=objects).save(
+        ProfileRecordRepository(bucket_id=profile.bucket_id, objects=objects).save(
             UserProfileRecord(
                 profile_id=profile.bucket_id,
                 display_name="File-flow ready profile",

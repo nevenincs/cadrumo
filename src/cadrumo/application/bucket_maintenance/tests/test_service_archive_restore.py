@@ -37,13 +37,12 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....core.resources import resources
 from ....domain.buckets import BucketArchiveRefusedError, BucketRestoreRefusedError
-from ....domain.user_profile import ProfileNotFoundError, ProfileSchemaDefinition, UserProfileFact
+from ....domain.user_profile import ProfileNotFoundError, ProfileSchemaDefinition, UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....tests.user_profile import schema_valid_placeholder
-from ...user_profile import RegisterProfileCommand
+from ...user_profile import ProfileRecordRepository
 from .. import ArchiveBucketCommand, BucketMaintenanceService, RestoreBucketCommand
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -77,24 +76,10 @@ def runtime(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 @pytest.fixture
 def registered_profile(runtime: TestRuntimeProfile) -> None:
     """Register a real profile so the archive/restore chain has something to tombstone."""
-    from ...user_profile import (
-        ProfileLifecycleService,
-        ProfileValidationService,
-        UserProfileLifecycleRepository,
-    )
-
     schema = resources().user_profile_schema.singleton
     assert isinstance(schema, ProfileSchemaDefinition)
-    service = ProfileLifecycleService(
-        repository=UserProfileLifecycleRepository(
-            bucket_id=runtime.bucket_id,
-            objects=runtime.repository,
-        ),
-        validator=ProfileValidationService(schema=schema),
-        events=BucketEventHistoryRepository(objects=runtime.repository),
-    )
-    service.register(
-        RegisterProfileCommand(
+    ProfileRecordRepository(bucket_id=runtime.bucket_id, objects=runtime.repository).save(
+        UserProfileRecord(
             profile_id=runtime.bucket_id,
             display_name=_ORIGINAL_LABEL,
             facts=_all_required_facts(schema),

@@ -69,7 +69,7 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.domain.user_profile import UserProfileFact, UserProfileRecord
 from cadrumo.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.user_profile import UserProfileLifecycleRepository
+from cadrumo.application.user_profile import ProfileRecordRepository
 from cadrumo.application.modelo import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
@@ -101,7 +101,7 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
         created_at=_T0,
         updated_at=_T0,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET).save(record)
+    ProfileRecordRepository(bucket_id=_BUCKET).save(record)
 
     # The decoupled helpers must resolve off the projection with NO catalogue.
     print("FIRST_YEAR:" + str(_first_year_modalidad_cuota_no_m202(_BUCKET, filing_year=2025)))

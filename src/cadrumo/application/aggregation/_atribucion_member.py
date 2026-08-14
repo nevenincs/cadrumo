@@ -26,7 +26,7 @@ from ...domain.user_profile import (
     UserProfileRecord,
     numeric_value_refusal,
 )
-from ..user_profile import UserProfileLifecycleRepository
+from ..user_profile import ProfileRecordRepository
 from ._source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -68,7 +68,7 @@ class AtribucionMemberSourceResolver:
         record = self._profile_record
         if record is None:
             try:
-                record = UserProfileLifecycleRepository(bucket_id=context.bucket_id).load(context.bucket_id)
+                record = ProfileRecordRepository(bucket_id=context.bucket_id).load(context.bucket_id)
             except ProfileNotFoundError:
                 return CalculationSourceResolution(
                     resolver_id=self.resolver_id,

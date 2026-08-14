@@ -87,7 +87,7 @@ from ....tests.env_scope import ready_clave_settings
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     ModeloAggregationBindingError,
     ModeloExportCommand,
@@ -472,7 +472,7 @@ def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
 def _seed_taxpayer_profile() -> None:
     """Seed the single-taxpayer profile M100's profile-sourced bindings consume."""
     # display_name MUST equal the manifest label isolated_runtime_profile created
-    # ("Test runtime profile") — ProfileAggregate._validate_cross_store_agreement
+    # ("Test runtime profile") — CommittedProfileView._validate_cross_store_agreement
     # rejects a label/display_name mismatch as a torn-rename inconsistency.
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
@@ -509,7 +509,7 @@ def _seed_taxpayer_profile() -> None:
         created_at=_T0,
         updated_at=_T0,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(record)
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(record)
 
 
 def _autonoma_workflow_profile() -> TaxpayerProfile:

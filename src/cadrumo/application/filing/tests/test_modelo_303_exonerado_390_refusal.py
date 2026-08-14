@@ -148,7 +148,6 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Exonerado refusal proof"),
         inputs=inputs,
         schema_provider=provider,
-        m303_regimen_simplificado_scope=_general_m303_scope(),
     ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
     # A final period must state the year's prorrata regime explicitly: the
     # register must not turn an absent declaration into "no transition". This
@@ -200,6 +199,7 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
         charge_account=None,
         m303_filing_facts=M303FilingFacts(
             joint_return_elected=False,
+            annual_volume_nonzero=False,
             insolvency=None,
             exonerado_390=_exonerado_evidence(),
             regimen_simplificado=regimen_evidence,

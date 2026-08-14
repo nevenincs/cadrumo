@@ -70,7 +70,7 @@ from ...modelo import (
     create_work_unit,
     verify_modelo_revision,
 )
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._foreign_asset_redeclaration import modelo_720_evidence_observation
 from .._observations_repository import CalculationObservationRepository
 
@@ -113,7 +113,7 @@ _ADVISORY_LOCALE_KEY = "application.modelo.findings.foreign_asset_redeclaration"
 @contextmanager
 def _secure_backend(tmp_path: Path) -> Iterator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=runtime.repository).save(
+        ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=runtime.repository).save(
             UserProfileRecord(
                 profile_id=_BUCKET_ID,
                 display_name="Test runtime profile",

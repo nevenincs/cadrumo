@@ -56,8 +56,6 @@ from ....domain.calculations.registry import RegistryValidationError
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva import (
     IvaDeductionClassificationProvenance,
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
 )
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import FilingInstanceEvidence, ModeloVerificationFindingKind
@@ -74,7 +72,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -172,7 +170,7 @@ def _workflow_profile() -> TaxpayerProfile:
 
 
 def _store_profile(objects: SecureObjectRepository) -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET, objects=objects).save(
+    ProfileRecordRepository(bucket_id=_BUCKET, objects=objects).save(
         UserProfileRecord(
             profile_id=_BUCKET,
             display_name="Test runtime profile",
@@ -626,10 +624,6 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
             "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
         },
         date_context={"filing_period": _date(2026, 3, 31)},
-        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-        ),
-        m303_annual_orden=None,
     )
     relay_boxes = {box: relay.values[box] for box in _BOX_SOURCE_MAP}
 

@@ -23,7 +23,7 @@ would make a deduction disappear with nothing said.
 See Also:
     :func:`~domain.contribuyente.parse_meses_trabajo`:
         The one grammar this boundary serialises to and parses back.
-    :class:`~domain.contribuyente.family.DescendantInfo`:
+    :class:`~domain.contribuyente.DescendantInfo`:
         Carrier of the month set, whose validator refuses a repeat or an
         unsorted set so the stored form is canonical.
 """

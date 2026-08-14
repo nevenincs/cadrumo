@@ -62,7 +62,7 @@ from ...aggregation import (
     merge_source_resolutions,
 )
 from ...calculations import CalculationObservationRepository, RelationPrefillSourceResolver
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
@@ -130,7 +130,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 def _seed_ready_profile(objects: SecureObjectRepository) -> None:
     """Persist a filing-ready profile for the annual M180 work-unit gate."""
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name=_PROFILE_LABEL,
@@ -181,8 +181,6 @@ def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[Ca
             inputs=inputs,
             binding_values=binding_values,
             date_context={"filing_period": date(_YEAR, 12, 31)},
-            m303_regimen_simplificado_scope=None,
-            m303_annual_orden=None,
         )
         obs_repo.save(
             obs_repo.prepare_observation_envelope(

@@ -278,7 +278,7 @@ def _require_stored_payload_schema_version(raw_payload: bytes, *, namespace: str
 class _BucketBoundRepository:
     """Shared bucket-binding init for the user-profile repository pair.
 
-    Both :class:`UserProfileLifecycleRepository` and
+    Both :class:`ProfileRecordRepository` and
     :class:`UserProfileSnapshotRepository` bind to one bucket's own
     database (no cross-bucket reads/writes by default) and either accept
     an injected
@@ -310,7 +310,7 @@ class _BucketBoundRepository:
         nothing on either path compared them.
 
         Now applied to the live-profile repository as well. The obstacle was
-        :meth:`ProfileLifecycleService.duplicate`, which held one bucket-bound
+        :meth:`ProfileCapsuleLifecycle.duplicate`, which held one bucket-bound
         repository across a read of the source and a write of the target; it
         had no production callers and has since been deleted, so nothing in
         the tree presents a foreign identity as legitimate.
@@ -318,7 +318,7 @@ class _BucketBoundRepository:
         Every production construction of a lifecycle repository binds the
         bucket to the very id it goes on to address: the aggregation and
         modelo readers all spell
-        ``UserProfileLifecycleRepository(bucket_id=X).load(X)``, the profile
+        ``ProfileRecordRepository(bucket_id=X).load(X)``, the profile
         repository binds ``bucket_id=profile_id``, and the lifecycle service
         is built for the same ``resolved_id`` that its
         ``RegisterProfileCommand`` carries. A foreign identity on this
@@ -341,8 +341,8 @@ class _BucketBoundRepository:
             )
 
 
-class UserProfileLifecycleRepository(_BucketBoundRepository):
-    """Read and write live user-profile aggregates in the secure DB.
+class ProfileRecordRepository(_BucketBoundRepository):
+    """Read and write current-profile facts through one bucket-bound handle.
 
     Rows use
     :data:`cadrumo.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE`,
@@ -390,7 +390,7 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
         a legitimate use of ``exists`` in general -- but a tree-wide sweep of
         every caller found none that uses THIS method as a cross-bucket
         presence check. Its sole production caller is
-        :meth:`ProfileLifecycleService.register`, which treats ``False`` as
+        :meth:`ProfileCapsuleLifecycle.register`, which treats ``False`` as
         permission to create.
 
         The cross-bucket probe does exist in this module, one class down:
@@ -854,7 +854,7 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
 __all__ = [
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
     "USER_PROFILE_VALUE_NAMESPACE",
-    "UserProfileLifecycleRepository",
+    "ProfileRecordRepository",
     "UserProfileSnapshotRepository",
     "refresh_output_language_hint",
     "secure_objects_for_bucket",

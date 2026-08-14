@@ -19,7 +19,7 @@ from ....domain.buckets import BucketEventObjectType, BucketEventType
 from ....domain.modelos import ModeloError
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     WorkUnitNotFoundError,
     assemble_work_unit_history,
@@ -41,7 +41,7 @@ _BUCKET_ID = "17171717-1717-4171-8171-171717171717"
 
 
 def _seed_ready_profile() -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="Test runtime profile",
@@ -67,7 +67,7 @@ def _seed_ready_profile() -> None:
 
 
 def _seed_sociedad_profile() -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="Test runtime profile",

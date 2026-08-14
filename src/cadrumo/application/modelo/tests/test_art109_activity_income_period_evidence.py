@@ -28,7 +28,7 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._art109_activity_income import (
     Art109ActivityIncomeCoverageStatus,
     derive_art109_activity_income_coverage,
@@ -218,7 +218,7 @@ def test_art109_period_evidence_fails_closed_when_gross_only_receipt_cannot_prov
 def objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _seed_ready_profile(
-            UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=profile.repository),
+            ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=profile.repository),
             bucket_id=_BUCKET_ID,
         )
         yield profile.repository

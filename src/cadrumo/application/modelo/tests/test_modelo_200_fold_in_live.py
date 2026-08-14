@@ -80,7 +80,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -186,7 +186,7 @@ def _seed_m200_sociedad_profile(*, activity_start_date: date | None = None) -> N
     profile resolver fills all six from the persisted record; no profile binding is
     hand-fed through the caller channel. ``display_name`` matches the
     ``isolated_runtime_profile`` manifest label so the loaded
-    :class:`ProfileAggregate` passes its cross-store label-agreement validator.
+    :class:`CommittedProfileView` passes its cross-store label-agreement validator.
     """
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
@@ -216,7 +216,7 @@ def _seed_m200_sociedad_profile(*, activity_start_date: date | None = None) -> N
         created_at=_T0,
         updated_at=_T0,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(record)
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(record)
 
 
 def _seed_prior_m200_closing_stock(*, obs_repo: CalculationObservationRepository) -> None:

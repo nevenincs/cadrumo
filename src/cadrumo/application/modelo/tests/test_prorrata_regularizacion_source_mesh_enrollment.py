@@ -39,7 +39,6 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.resources import bundled_path, resources
-from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.iva_compensation import M303_COMPENSATION_RESULTADO_CASILLA
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
@@ -197,9 +196,6 @@ def test_source_mesh_resolves_prorrata_regularizacion_binding(tmp_path: Path) ->
                 _VOLUMEN_TOTAL_ID: _MANUAL_CURRENT_YEAR_TOTAL,
             },
             filing_period_date=snapshot.filing_period.end_date,
-            m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-                scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-            ),
         )
 
     prorrata_diagnostics = tuple(

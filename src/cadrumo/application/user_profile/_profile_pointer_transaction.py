@@ -3,9 +3,9 @@
 The core pointer helpers own byte parsing and filesystem mutation. This module
 adds the application coordination policy required when one logical profile
 operation nests orchestration and repository pointer calls. The outermost
-transaction locks the active-pointer sidecar; same-root calls from the same
-process and thread reuse that ownership without reacquiring the non-reentrant
-operating-system lock.
+transaction locks the custody root sidecar shared with destructive pointer
+CAS; same-root calls from the same process and thread reuse that ownership
+without reacquiring the non-reentrant operating-system lock.
 
 Ownership never crosses roots, processes, threads, or transaction lifetimes.
 Every operation validates the live thread-local ownership record before it
@@ -18,22 +18,25 @@ from __future__ import annotations
 import os
 import threading
 from collections.abc import Generator
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
+from importlib import import_module
 from pathlib import Path
+from typing import cast
 
 from ...core import (
     BucketPointer,
     capture_pointer,
     clear_pointer,
-    exclusive_file_lock,
-    pointer_path,
     read_pointer,
     restore_pointer,
     write_pointer,
 )
+from ...core.config import load_settings
 from ...core.errors import CadrumoError
+from ...core.locks_errors import LockAcquisitionError
 from ...core.paths import effective_storage_root
+from ._profile_pointer_ports import ProfileCustodyRootLockPort
 
 
 class ActiveProfilePointerTransactionError(CadrumoError):
@@ -111,19 +114,48 @@ def _canonical_root(root: Path | None) -> Path:
     return effective_storage_root(root)
 
 
+def _default_root_lock_port() -> ProfileCustodyRootLockPort:
+    """Resolve the concrete storage lock through the application port."""
+    custody = import_module("cadrumo.adapters.persistence.storage.custody")
+    provider = getattr(custody, "profile_custody_root_lock", None)
+    if not callable(provider):
+        raise TypeError("profile custody root-lock provider is unavailable")
+    return cast(ProfileCustodyRootLockPort, provider)
+
+
+@contextmanager
+def _acquire_root_lock(
+    root: Path,
+    *,
+    timeout_seconds: float,
+    root_lock: ProfileCustodyRootLockPort,
+) -> Generator[None]:
+    """Adapt the injected root-lock port to the application error contract."""
+    with ExitStack() as stack:
+        try:
+            stack.enter_context(root_lock(root, timeout_seconds=timeout_seconds))
+        except Exception as exc:
+            raise LockAcquisitionError(str(exc)) from exc
+        yield
+
+
 @contextmanager
 def active_profile_pointer_transaction(
     root: Path | None = None,
+    *,
+    root_lock: ProfileCustodyRootLockPort | None = None,
 ) -> Generator[ActiveProfilePointerTransaction]:
     """Acquire or re-enter the active-profile pointer transaction.
 
     Re-entry is valid only for the same canonical root, process, and thread.
     Nested use for another root and inherited ownership after ``fork`` fail
     closed. The outermost call waits only for the bounded timeout enforced by
-    :func:`~cadrumo.core.exclusive_file_lock`.
+    :func:`~cadrumo.adapters.persistence.storage.custody.profile_custody_local_lock`.
 
     Args:
         root: Local storage root. The configured root is used when omitted.
+        root_lock: Optional application-owned lock provider for dependency
+            injection; the public custody provider is used by default.
 
     Yields:
         The same :class:`ActiveProfilePointerTransaction` object for every
@@ -132,7 +164,7 @@ def active_profile_pointer_transaction(
     Raises:
         ActiveProfilePointerTransactionError: If nested ownership targets a
             different root or was inherited from another process.
-        LockAcquisitionError: If the pointer sidecar remains contended until
+        LockAcquisitionError: If the custody root sidecar remains contended until
             the configured lock timeout expires.
     """
     canonical_root = _canonical_root(root)
@@ -163,7 +195,15 @@ def active_profile_pointer_transaction(
             ownership.depth -= 1
         return
 
-    with exclusive_file_lock(pointer_path(canonical_root)):
+    # The custody root lock is the one lock identity shared with destructive
+    # profile-custody CAS.  Pointer writers cannot publish between the
+    # captured-byte comparison and mutation performed under that root lock.
+    root_lock_port = root_lock or _default_root_lock_port()
+    with _acquire_root_lock(
+        canonical_root,
+        timeout_seconds=load_settings().cadrumo_file_lock_timeout_s,
+        root_lock=root_lock_port,
+    ):
         transaction = ActiveProfilePointerTransaction(
             root=canonical_root,
             owner_pid=current_pid,

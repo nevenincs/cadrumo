@@ -7,7 +7,7 @@ record write fails, so the operator never sees a half-created profile.
 
 These tests force a *real* failure at the encrypted-record write
 step. The trigger is an incomplete fact set: a record missing a
-schema-required field makes ``ProfileLifecycleService.register``
+schema-required field makes ``ProfileCapsuleLifecycle.register``
 raise ``ProfileSchemaValidationError`` before the record is
 persisted. No mock, no patched failure injection — the rejection is
 the genuine schema-validation path that ``register`` runs ahead of
@@ -79,7 +79,7 @@ def _register(profile_id: str, *, facts: Mapping[str, str]) -> None:
     its per-bucket engine, and the whole span is wrapped in a
     ``try``/``except`` that restores the captured prior pointer on any
     failure — closing the window the repository's own rollback cannot
-    see. ``ProfileRepository.create`` itself owns the rollback of the
+    see. ``CommittedProfileRepository.create`` itself owns the rollback of the
     bucket directory, manifest, and pointer for failures inside the
     create.
     """
@@ -101,7 +101,7 @@ def test_failed_atomic_create_raises_and_leaves_no_profile(_backend: Path) -> No
     """An encrypted-record-write failure rolls back the manifest and pointer.
 
         The incomplete fact set makes the schema validator reject the
-        record inside ``ProfileLifecycleService.register`` — the
+        record inside ``ProfileCapsuleLifecycle.register`` — the
     disaster contract step-4 failure. The rollback must clear the manifest
         and the active-profile pointer so neither the manifest scan nor
         the pointer chain reports a phantom ``victim`` profile.

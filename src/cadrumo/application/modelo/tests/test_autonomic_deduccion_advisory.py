@@ -43,7 +43,7 @@ from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._autonomic_deduccion_advisory import _madrid_nacimiento_adopcion_eligibility_advisory_finding
 from .._profile_binding import (
     inject_derived_autonomic_deduccion_facts,
@@ -93,7 +93,7 @@ def _seed(bucket_id: str, facts: tuple[UserProfileFact, ...]) -> None:
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(record)
+    ProfileRecordRepository(bucket_id=bucket_id).save(record)
 
 
 def test_advisory_fires_for_indeterminate_conjunta_unit_with_eligible_descendant(
@@ -249,7 +249,7 @@ def test_advisory_weighted_count_matches_calculate_path_candidate_count(
 
     from ....domain.user_profile import load_user_profile_schema
 
-    record = UserProfileLifecycleRepository(bucket_id=seeded_bucket).load(seeded_bucket)
+    record = ProfileRecordRepository(bucket_id=seeded_bucket).load(seeded_bucket)
     fact_index = profile_fact_index(record, load_user_profile_schema())
 
     # The calculate-path injector fail-closes for this indeterminate unit: the

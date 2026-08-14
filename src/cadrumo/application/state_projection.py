@@ -445,6 +445,9 @@ CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS: Mapping[
         BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: (
             "cli.app.modelo.bindings.readiness.compensacion_iva_anual"
         ),
+        BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY: (
+            "cli.app.modelo.bindings.readiness.declaracion_previa"
+        ),
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION: (
             "cli.app.modelo.bindings.readiness.regularizacion_bienes_inversion"
         ),
@@ -484,6 +487,7 @@ OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE: Mapping[
         BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.RETENCIONES_AGGREGATION: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
         BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
+        BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY: OperatorActionAxis.FILE_PRIOR_PERIOD,
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.PRORRATA_REGULARIZACION: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.BORRADOR: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
@@ -674,13 +678,13 @@ def _build_modelo_readiness(
         modelo_work_profile_preflight_report,
         pre_activity_period_refusal,
     )
-    from .user_profile import build_lifecycle_service
+    from .user_profile import ProfileRecordRepository
     from .workflow import read_profile_bucket_by_id
 
     pointer = read_profile_bucket_by_id(active_profile_id)
     if pointer is None:
         return ()
-    record = build_lifecycle_service(bucket_id=pointer.bucket_id).read(active_profile_id)
+    record = ProfileRecordRepository(bucket_id=pointer.bucket_id).load(pointer.bucket_id)
     reports: list[ProjectionModeloReadiness] = []
     for request in requests:
         readiness_period = _ledger_period_for_modelo_readiness(request)

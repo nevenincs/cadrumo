@@ -46,7 +46,7 @@ from ...operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,
 )
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     WorkflowAbortReason,
     WorkflowError,
@@ -99,7 +99,7 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 
 
 def _seed_ready_profile_record(bucket_id: str) -> None:
-    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+    ProfileRecordRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name=bucket_id,

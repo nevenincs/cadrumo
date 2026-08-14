@@ -41,7 +41,7 @@ from ....domain.modelos import Modelo184MemberRow
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import DEFERRED_SOURCE_KINDS, ForeignAssetClass, ForeignAssetIngestObservation
-from ...user_profile import UserProfileLifecycleRepository, build_profile_preflight_requirement
+from ...user_profile import ProfileRecordRepository, build_profile_preflight_requirement
 from .. import (
     BucketAggregationCalculationResult,
     ModeloAggregationBindingError,
@@ -106,7 +106,7 @@ _ATTRIBUTION_PROFILE_FACTS = (
 
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_ID) -> None:
-    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(
+    ProfileRecordRepository(bucket_id=bucket_id, objects=objects).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Source boundary ready profile",
@@ -118,7 +118,7 @@ def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str = _BU
 
 
 def _seed_attribution_entity_profile(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_ID) -> None:
-    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(
+    ProfileRecordRepository(bucket_id=bucket_id, objects=objects).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Source boundary attribution profile",
@@ -289,7 +289,7 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        profile_repository = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects)
+        profile_repository = ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects)
         profile_repository.save(
             UserProfileRecord(
                 profile_id=_BUCKET_ID,

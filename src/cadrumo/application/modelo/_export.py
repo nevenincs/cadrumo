@@ -108,6 +108,7 @@ from ..calculations import (
     CrossPeriodExpectedMemberSet,
     IvaWalletDecisionRepository,
     PriorDomiciliationElectionProjection,
+    validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
 from ..filing import (
     AmendmentEvidence,
@@ -1198,6 +1199,13 @@ def _prepare_modelo_export(
             translated_message="application.modelo.errors.work_unit_not_found",
             context={"work_unit_id": revision.work_unit_id},
         )
+    validate_m303_regimen_simplificado_annual_summary_target_revision(
+        target_work_unit=work_unit,
+        target_revision=revision,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        filing_repository=filing_repository,
+    )
     try:
         require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=revision)
     except ModeloError as exc:

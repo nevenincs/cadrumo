@@ -17,7 +17,7 @@ calculation/filing/aggregation consumers. The aggregate passed across
 service boundaries is :class:`domain.user_profile.UserProfileRecord`.
 The service implementations live in sibling modules and are exposed as
 lazy facade members, including
-:class:`ProfileLifecycleService`,
+:class:`ProfileCapsuleLifecycle`,
 :class:`UserProfileSnapshotRepository`,
 :class:`ProfileValidationService`, and
 :class:`ProfilePreflightService`.
@@ -68,7 +68,7 @@ See Also:
     :mod:`domain.user_profile`
         Domain schema, value records, registry-selector contract, and lazy
         portable-export payload consumed by this facade.
-    :class:`ProfileLifecycleService`
+    :class:`ProfileCapsuleLifecycle`
         Application service for register, read, edit, rename, remove,
         reactivate, and setup-completion operations over
         :class:`domain.user_profile.UserProfileRecord`.
@@ -89,11 +89,11 @@ See Also:
 
 from __future__ import annotations
 
-import importlib
+from collections.abc import Callable
+from functools import partial
+from importlib import import_module
+from types import ModuleType
 from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from ._profile_repository import TAX_ID_FACT_PATH
 
 from ...core.identity import ProfileId
 from ._language_resolver import register_language_resolver as _register_language_resolver
@@ -214,11 +214,32 @@ if TYPE_CHECKING:
         restore_carried_objects,
         serialize_carried_objects,
     )
+    from ._custody_pointer import ProfileCustodyPointerSnapshot
+    from ._custody_repository import (
+        ProfileCustodyTransactionRepository,
+        compare_and_swap_profile_pointer,
+        profile_custody_transaction_lock,
+    )
+    from ._custody_service import ProfileCustodyTransactionService
+    from ._custody_transactions import (
+        ProfileCustodyDeleteConfirmation,
+        ProfileCustodyHoldAssessment,
+        ProfileCustodyHoldEvidence,
+        ProfileCustodyInventoryWitness,
+        ProfileCustodyTransactionConflictError,
+        ProfileCustodyTransactionCorruptError,
+        ProfileCustodyTransactionError,
+        ProfileCustodyTransactionJournal,
+        ProfileCustodyTransactionOperation,
+        ProfileCustodyTransactionReceipt,
+        ProfileCustodyTransactionRefusalError,
+        ProfileCustodyTransactionState,
+    )
     from ._filing_baseline import missing_filing_baseline_flags
     from ._integrity import ProfileIntegrityError
     from ._keys_validation import list_profile_key_records, validate_profile_values
     from ._language_resolver import resolve_profile_output_language_hint
-    from ._lifecycle import ProfileLifecycleService
+    from ._lifecycle import ProfileCapsuleLifecycle
     from ._login_session import (
         ProfileLoginOutcome,
         ProfileLoginThrottledError,
@@ -273,7 +294,7 @@ if TYPE_CHECKING:
         format_profile_selector_requirements,
     )
     from ._profile_pointer_transaction import active_profile_pointer_transaction
-    from ._profile_repository import ProfileRepository
+    from ._profile_repository import CommittedProfileRepository, ProfileNotFoundError, ProfileSummary
     from ._projections import (
         EffectiveFact,
         facts_to_values,
@@ -283,6 +304,9 @@ if TYPE_CHECKING:
         record_to_values,
         snapshot_to_values,
     )
+    from ._record_aggregate import ProfileAggregate
+    from ._record_aggregate_repository import TAX_ID_FACT_PATH, ProfileRecordAggregateRepository, ProfileRecordSummary
+    from ._record_lifecycle import ProfileRecordLifecycle
     from ._registration import (
         PASSPHRASE_MINIMUM_LENGTH,
         PassphraseAssessment,
@@ -294,7 +318,7 @@ if TYPE_CHECKING:
     from ._repository import (
         USER_PROFILE_SNAPSHOT_NAMESPACE,
         USER_PROFILE_VALUE_NAMESPACE,
-        UserProfileLifecycleRepository,
+        ProfileRecordRepository,
         UserProfileSnapshotRepository,
         user_profile_snapshot_object_key,
         user_profile_value_object_key,
@@ -352,7 +376,13 @@ _LAZY_EXPORTS: dict[str, str] = {
     for module, names in (
         ("._commands", tuple(_COMMAND_NAMES)),
         ("...domain.user_profile", tuple(_DOMAIN_RECORD_NAMES)),
-        ("._lifecycle", ("ProfileLifecycleService",)),
+        ("._lifecycle", ("ProfileCapsuleLifecycle",)),
+        ("._record_aggregate", ("ProfileAggregate",)),
+        (
+            "._record_aggregate_repository",
+            ("ProfileRecordAggregateRepository", "ProfileRecordSummary", "TAX_ID_FACT_PATH"),
+        ),
+        ("._record_lifecycle", ("ProfileRecordLifecycle",)),
         ("._censo_errors", ("CensoSyncError",)),
         (
             "._censo_sync",
@@ -481,6 +511,36 @@ _LAZY_EXPORTS: dict[str, str] = {
         ("._language_resolver", ("resolve_profile_output_language_hint",)),
         ("._profile_pointer_transaction", ("active_profile_pointer_transaction",)),
         (
+            "._custody_transactions",
+            (
+                "ProfileCustodyDeleteConfirmation",
+                "ProfileCustodyHoldAssessment",
+                "ProfileCustodyHoldEvidence",
+                "ProfileCustodyInventoryWitness",
+                "ProfileCustodyTransactionConflictError",
+                "ProfileCustodyTransactionCorruptError",
+                "ProfileCustodyTransactionError",
+                "ProfileCustodyTransactionJournal",
+                "ProfileCustodyTransactionOperation",
+                "ProfileCustodyTransactionReceipt",
+                "ProfileCustodyTransactionRefusalError",
+                "ProfileCustodyTransactionState",
+            ),
+        ),
+        (
+            "._custody_pointer",
+            ("ProfileCustodyPointerSnapshot",),
+        ),
+        (
+            "._custody_repository",
+            (
+                "ProfileCustodyTransactionRepository",
+                "compare_and_swap_profile_pointer",
+                "profile_custody_transaction_lock",
+            ),
+        ),
+        ("._custody_service", ("ProfileCustodyTransactionService",)),
+        (
             "._login_session",
             (
                 "ProfileLoginOutcome",
@@ -551,13 +611,13 @@ _LAZY_EXPORTS: dict[str, str] = {
             (
                 "USER_PROFILE_SNAPSHOT_NAMESPACE",
                 "USER_PROFILE_VALUE_NAMESPACE",
-                "UserProfileLifecycleRepository",
+                "ProfileRecordRepository",
                 "UserProfileSnapshotRepository",
                 "user_profile_snapshot_object_key",
                 "user_profile_value_object_key",
             ),
         ),
-        ("._profile_repository", ("ProfileRepository", "TAX_ID_FACT_PATH")),
+        ("._profile_repository", ("CommittedProfileRepository", "ProfileNotFoundError", "ProfileSummary")),
         (
             "._capabilities",
             (
@@ -583,16 +643,23 @@ _LAZY_EXPORTS: dict[str, str] = {
 }
 
 
+# Each target is a closed literal from ``_LAZY_EXPORTS``.  Binding the target
+# to a loader once keeps the PEP-562 boundary lazy without allowing the
+# requested attribute name to become an import path.
+_LAZY_MODULE_LOADERS: dict[str, Callable[[], ModuleType]] = {
+    module_path: partial(import_module, module_path, __name__) for module_path in frozenset(_LAZY_EXPORTS.values())
+}
+
+
 def __getattr__(name: str):
     """Lazy-import every re-exported name to keep the boundary light."""
     module_path = _LAZY_EXPORTS.get(name)
     if module_path is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    # module_path is resolved from this package's own closed _LAZY_EXPORTS
-    # mapping above, never from caller-supplied input.
-    return getattr(
-        importlib.import_module(module_path, __name__), name
-    )  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
+    loader = _LAZY_MODULE_LOADERS.get(module_path)
+    if loader is None:
+        raise RuntimeError(f"missing lazy loader for {module_path!r}")
+    return getattr(loader(), name)
 
 
 __all__ = [
@@ -616,6 +683,7 @@ __all__ = [
     "CensoDivergence",
     "CensoSyncError",
     "CensoSyncService",
+    "CommittedProfileRepository",
     "CompleteSetupCommand",
     "CustodyPassphraseChangeResult",
     "CustodyRecoverResult",
@@ -629,6 +697,7 @@ __all__ = [
     "EncryptedProfileBundleExport",
     "PassphraseAssessment",
     "PreparedProfileExport",
+    "ProfileAggregate",
     "ProfileAlreadyRegisteredError",
     "ProfileBundleExportJournalRepository",
     "ProfileBundleExportPurpose",
@@ -638,6 +707,22 @@ __all__ = [
     "ProfileBundleExportResult",
     "ProfileBundleExportTarget",
     "ProfileBundleExportTransport",
+    "ProfileCapsuleLifecycle",
+    "ProfileCustodyDeleteConfirmation",
+    "ProfileCustodyHoldAssessment",
+    "ProfileCustodyHoldEvidence",
+    "ProfileCustodyInventoryWitness",
+    "ProfileCustodyPointerSnapshot",
+    "ProfileCustodyTransactionConflictError",
+    "ProfileCustodyTransactionCorruptError",
+    "ProfileCustodyTransactionError",
+    "ProfileCustodyTransactionJournal",
+    "ProfileCustodyTransactionOperation",
+    "ProfileCustodyTransactionReceipt",
+    "ProfileCustodyTransactionRefusalError",
+    "ProfileCustodyTransactionRepository",
+    "ProfileCustodyTransactionService",
+    "ProfileCustodyTransactionState",
     "ProfileFactsApplied",
     "ProfileFieldChoice",
     "ProfileFieldView",
@@ -645,21 +730,25 @@ __all__ = [
     "ProfileImportResult",
     "ProfileIntegrityError",
     "ProfileLifecycleResult",
-    "ProfileLifecycleService",
     "ProfileLoginOutcome",
     "ProfileLoginThrottledError",
     "ProfileLogoutOverrideError",
+    "ProfileNotFoundError",
     "ProfileOverview",
     "ProfilePreflightReport",
     "ProfilePreflightRequirement",
     "ProfilePreflightService",
+    "ProfileRecordAggregateRepository",
+    "ProfileRecordLifecycle",
+    "ProfileRecordRepository",
+    "ProfileRecordSummary",
     "ProfileRegistrationError",
     "ProfileRegistrationOutcome",
-    "ProfileRepository",
     "ProfileSectionView",
     "ProfileSnapshot",
     "ProfileSnapshotRequest",
     "ProfileStaleCheckReport",
+    "ProfileSummary",
     "ProfileValidationIssue",
     "ProfileValidationReport",
     "ProfileValidationService",
@@ -670,7 +759,6 @@ __all__ = [
     "UnsupportedBundleSchemaVersionError",
     "UserProfileFact",
     "UserProfileFactValue",
-    "UserProfileLifecycleRepository",
     "UserProfileRecord",
     "UserProfileSnapshotRepository",
     "UserProfileStatus",
@@ -692,6 +780,7 @@ __all__ = [
     "change_passphrase",
     "close_profile_session_artefacts",
     "cloud_evidence_upload_eligible_for_active_profile",
+    "compare_and_swap_profile_pointer",
     "complete_setup_with_lifecycle_span",
     "conditional_profile_missing_required",
     "create_recovery_code",
@@ -718,6 +807,7 @@ __all__ = [
     "open_censo_divergences",
     "prepare_profile_export",
     "profile_create_storage_span",
+    "profile_custody_transaction_lock",
     "profile_export_runtime",
     "profile_field_choices",
     "profile_section_rows",

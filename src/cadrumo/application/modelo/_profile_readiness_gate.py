@@ -50,9 +50,9 @@ from ..user_profile import (
     ProfilePreflightReport,
     ProfilePreflightRequirement,
     ProfilePreflightService,
+    ProfileRecordRepository,
     ProfileValidationIssue,
     ProfileValidationService,
-    UserProfileLifecycleRepository,
     build_profile_preflight_requirement,
     format_profile_preflight_requirement,
     missing_required_field_paths,
@@ -508,7 +508,7 @@ def require_profile_ready_for_modelo_work(
     this hot path.
     """
     try:
-        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
     except ProfileNotFoundError as exc:
         raise ModeloProfileReadinessError(
             translated_message="application.modelo.errors.profile_readiness_profile_missing",
@@ -609,7 +609,7 @@ def require_existing_profile_baseline_ready_for_modelo_work(
     raise the canonical missing-profile error.
     """
     try:
-        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return
     applicability_first = enforce_applicability and modelo.strip() in _PRE_ACTIVITY_LIFECYCLE_MODELOS

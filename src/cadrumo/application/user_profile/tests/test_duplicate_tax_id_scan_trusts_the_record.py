@@ -37,7 +37,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileStatus
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._integrity import ProfileIntegrityError
 from .._orchestration import ProfileAlreadyRegisteredError, profile_create_storage_span
-from .._profile_repository import ProfileRepository
+from .._record_aggregate_repository import ProfileRecordAggregateRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -65,7 +65,7 @@ def backend(tmp_path: Path) -> Iterator[Path]:
         yield storage_root
 
 
-def _create(repository: ProfileRepository, *, label: str, facts: tuple[UserProfileFact, ...]):
+def _create(repository: ProfileRecordAggregateRepository, *, label: str, facts: tuple[UserProfileFact, ...]):
     from ....domain.user_profile import new_profile_id
 
     profile_id = new_profile_id()
@@ -93,7 +93,7 @@ def test_a_second_profile_with_the_same_tax_id_is_refused(backend: Path) -> None
     fixture reaches the guard at all -- a create that failed for an unrelated
     reason would otherwise read as a refusal.
     """
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     _create(repository, label="First", facts=_FACTS)
 
     with pytest.raises(ProfileAlreadyRegisteredError):
@@ -111,7 +111,7 @@ def test_a_tombstoned_profile_frees_its_tax_id(backend: Path) -> None:
     from .. import active_profile_pointer_transaction
     from .._orchestration import profile_storage_session
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create(repository, label="Gone", facts=_FACTS)
     with active_profile_pointer_transaction(repository.root), profile_storage_session(created.profile_id):
         repository.delete(created.profile_id)
@@ -130,7 +130,7 @@ def test_a_manifest_tombstone_over_an_active_record_does_not_free_the_tax_id(bac
     docstring names. The record is untouched and still ``active``; only the
     plaintext mirror was rewritten, which is the state a torn write leaves.
     """
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create(repository, label="Live Taxpayer", facts=_FACTS)
 
     _mirror_status_on_disk(backend, created.profile_id, UserProfileStatus.TOMBSTONED.value)
@@ -150,7 +150,7 @@ def test_the_drift_state_is_real_and_the_record_still_says_active(backend: Path)
     from ....adapters.persistence.storage.bucket import read_manifest
     from .._orchestration import profile_storage_session
 
-    repository = ProfileRepository()
+    repository = ProfileRecordAggregateRepository()
     created = _create(repository, label="Drifted", facts=_FACTS)
     _mirror_status_on_disk(backend, created.profile_id, UserProfileStatus.TOMBSTONED.value)
 
@@ -158,7 +158,7 @@ def test_the_drift_state_is_real_and_the_record_still_says_active(backend: Path)
     assert manifest.status is UserProfileStatus.TOMBSTONED
 
     # The record itself is untouched and still active. Read through the
-    # record repository rather than ``ProfileRepository.load``, which asserts
+    # record repository rather than ``ProfileRecordAggregateRepository.load``, which asserts
     # manifest-versus-record integrity and refuses the drifted pair outright --
     # that refusal is real and is exactly what the scan must not swallow.
     with profile_storage_session(created.profile_id):

@@ -3,7 +3,7 @@
 A repeatable section's rows live at ``section.INDEX.field``, and the write
 door judges a whole fact batch at once: every required field of a row must
 arrive together or none of it lands
-(:meth:`~cadrumo.application.user_profile.ProfileLifecycleService.edit_fields`).
+(:meth:`~cadrumo.application.user_profile.ProfileCapsuleLifecycle.edit_fields`).
 That makes row creation a batch operation rather than a sequence of field
 edits, so what a surface needs is the index a new row may occupy and the
 facts that fill it -- both derived from the schema's own

@@ -32,7 +32,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import calculate_modelo_revision, create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -85,7 +85,7 @@ def _seed_taxpayer_profile(objects: SecureObjectRepository) -> None:
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(record)
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(record)
 
 
 def _repositories():

@@ -218,6 +218,28 @@ def _counterparty_review_items(
     )
 
 
+def _resolved_supply_nature(
+    *,
+    supply_nature: SupplyNature | None,
+    printed_citation: str | None,
+    stated_category: DeclaredFact[IvaCategory] | None,
+) -> DeclaredFact[SupplyNature] | None:
+    """Resolve supply nature by operator, citation, then category authority."""
+    if supply_nature is not None:
+        return DeclaredFact(value=supply_nature, source=ClassifierInputSource.OPERATOR_ASSERTION)
+    derivation = derive_supply_nature_from_citation(printed_citation=printed_citation)
+    if derivation.outcome is SupplyNatureDerivationOutcome.DERIVED and derivation.nature is not None:
+        return DeclaredFact(value=derivation.nature, source=ClassifierInputSource.DOCUMENT_EVIDENCE)
+    category_derivation = supply_nature_implied_by_category(
+        None if stated_category is None else stated_category.value,
+    )
+    if category_derivation.outcome is not SupplyNatureDerivationOutcome.DERIVED:
+        return None
+    if category_derivation.nature is None:
+        return None
+    return DeclaredFact(value=category_derivation.nature, source=ClassifierInputSource.DOCUMENT_EVIDENCE)
+
+
 def _declared_facts(
     *,
     kind: InvoiceKind,
@@ -249,61 +271,11 @@ def _declared_facts(
     filer = (
         None if filer_scope is None else DeclaredFact(value=filer_scope, source=ClassifierInputSource.PROFILE_AUTHORITY)
     )
-    # The operator's own answer, and the ONLY sanctioned source for this axis
-    # besides a printed statutory citation. Stamped OPERATOR_ASSERTION rather
-    # than any evidence provenance: the classifier's inputs stay facts about
-    # who established them, and an operator saying "services" is a different
-    # kind of claim from a document citing art. 69.
-    #
-    # Direction-independent, unlike every other fact here. Goods or services is
-    # a property of the SUPPLY, so it does not swap sides when the filer does.
-    asserted_nature = (
-        None
-        if supply_nature is None
-        else DeclaredFact(value=supply_nature, source=ClassifierInputSource.OPERATOR_ASSERTION)
+    asserted_nature = _resolved_supply_nature(
+        supply_nature=supply_nature,
+        printed_citation=printed_citation,
+        stated_category=stated_category,
     )
-    # The OTHER sanctioned source, read here because nothing read it before. The
-    # citation axis was built, exported and covered, and had no production
-    # caller -- so the gap message telling an operator that a printed statutory
-    # citation settles this named a route that could not fire, and a document
-    # printing an art. 25 mention asked them anyway.
-    #
-    # Stamped DOCUMENT_EVIDENCE rather than OPERATOR_ASSERTION because the
-    # backing genuinely is the page: an auditor asking why this record says
-    # goods is sent to the printed article, not to a person. That is the
-    # distinction the source enum exists to keep.
-    #
-    # The operator's own answer WINS, and is checked first. They hold the
-    # document and can see a mention the reader mis-transcribed, so an
-    # assertion is a correction rather than a duplicate.
-    derived_nature = asserted_nature
-    if derived_nature is None:
-        derivation = derive_supply_nature_from_citation(printed_citation=printed_citation)
-        # Only DERIVED yields a value. CONTRADICTED deliberately carries no
-        # nature -- the record refuses to hold one side of a disagreement -- and
-        # ABSENT is the ordinary outcome for the domestic majority, which is
-        # obliged to cite no article at all.
-        if derivation.outcome is not SupplyNatureDerivationOutcome.DERIVED or derivation.nature is None:
-            # THIRD route, and the one that needs nothing printed. A category is
-            # grounded in specific articles, and some of those DEFINE the
-            # operation as one of goods -- an entrega intracomunitaria is exempt
-            # under art. 25, which exempts "las entregas de bienes definidas en
-            # el articulo 8". Asking the operator there asks a question the law
-            # already answered.
-            #
-            # Ranked BELOW the printed citation because the page is more
-            # specific than the family: a document citing an article states
-            # something about itself, while the category states what its family
-            # rests on.
-            derivation = supply_nature_implied_by_category(
-                None if stated_category is None else stated_category.value,
-            )
-        if derivation.outcome is SupplyNatureDerivationOutcome.DERIVED and derivation.nature is not None:
-            derived_nature = DeclaredFact(
-                value=derivation.nature,
-                source=ClassifierInputSource.DOCUMENT_EVIDENCE,
-            )
-    asserted_nature = derived_nature
     if kind is InvoiceKind.RECEIVED:
         return DeclaredFacts(
             issuer_scope=counterparty_scope,

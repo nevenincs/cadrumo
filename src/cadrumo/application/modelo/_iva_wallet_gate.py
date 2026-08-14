@@ -662,10 +662,10 @@ def _supplied_prior_compensation_amounts(
 def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
     """Return canonical user-profile path values for ``bucket_id``."""
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import UserProfileLifecycleRepository, record_to_path_values
+    from ..user_profile import ProfileRecordRepository, record_to_path_values
 
     try:
-        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return None
     return record_to_path_values(record)

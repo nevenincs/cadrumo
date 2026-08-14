@@ -1061,14 +1061,14 @@ def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, .
 @pytest.fixture
 def source_runtime(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_LABEL) as profile:
-        from ...user_profile._lifecycle import ProfileLifecycleService
-        from ...user_profile._repository import UserProfileLifecycleRepository
+        from ...user_profile._record_lifecycle import ProfileRecordLifecycle
+        from ...user_profile._repository import ProfileRecordRepository
         from ...user_profile._validation import ProfileValidationService
 
         schema = resources().user_profile_schema.singleton
         assert isinstance(schema, ProfileSchemaDefinition)
-        ProfileLifecycleService(
-            repository=UserProfileLifecycleRepository(bucket_id=profile.bucket_id, objects=profile.repository),
+        ProfileRecordLifecycle(
+            repository=ProfileRecordRepository(bucket_id=profile.bucket_id, objects=profile.repository),
             validator=ProfileValidationService(schema=schema),
             events=BucketEventHistoryRepository(objects=profile.repository),
         ).register(

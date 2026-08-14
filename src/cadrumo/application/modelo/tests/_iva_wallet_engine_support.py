@@ -37,7 +37,7 @@ from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, IvaWalletDecisionRepository
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import create_work_unit
 
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
@@ -225,7 +225,7 @@ def _store_operator_profile() -> None:
 
 
 def _store_operator_profile_with_tax_id(tax_id: str) -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="Test runtime profile",

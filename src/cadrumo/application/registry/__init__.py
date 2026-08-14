@@ -44,6 +44,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
 from importlib import import_module as _import_module
 from pathlib import Path
@@ -61,6 +62,9 @@ from ...core import BindingSourceKind as _BindingSourceKind
 from ...core import CasillaId as _CasillaId
 from ...core import validated_casilla_id as _validated_casilla_id
 from ...core.resources import bundled_path as _bundled_path
+from ...domain.calculations.registry import BindingId as _BindingId
+from ...domain.calculations.registry import CasillaDefinition as _CasillaDefinition
+from ...domain.calculations.registry import DataBindingDefinition as _DataBindingDefinition
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check required by Modelo 100 snapshots.
@@ -73,6 +77,7 @@ from ...domain.calculations.registry import ModeloDefinition as _ModeloDefinitio
 from ...domain.calculations.registry import (
     RegistryFiledStateComparison as _RegistryFiledStateComparison,
 )
+from ...domain.calculations.registry import RegistryModeloObservation as _RegistryModeloObservation
 from ...domain.calculations.registry import RegistrySnapshot as _RegistrySnapshot
 from ...domain.calculations.registry import RelationId as _RelationId
 from ...domain.calculations.registry import SourceRefId as _SourceRefId
@@ -396,25 +401,11 @@ def verify_filed_state(
         filing_year=filed_observation.ejercicio,
         period=filing_period_token,
     )
-    bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
-    input_casilla_ids: set[_CasillaId] = set()
-    for casilla in snapshot.revision.casillas:
-        if casilla.input_kind == _InputKind.COMPUTED:
-            continue
-        if (
-            casilla.input_kind == _InputKind.BOUND
-            and casilla.binding is not None
-            and (binding_def := bindings_by_id.get(casilla.binding)) is not None
-            and binding_def.source == _BindingSourceKind.PREVIOUS_FILING
-            and binding_def.id not in binding_values
-        ):
-            continue
-        input_casilla_ids.add(casilla.id)
-    inputs: dict[_CasillaId, Decimal] = {
-        casilla_id: value
-        for casilla_id, value in registry_observation.casilla_values.items()
-        if casilla_id in input_casilla_ids
-    }
+    inputs = _filed_state_inputs(
+        snapshot,
+        registry_observation,
+        binding_values=binding_values,
+    )
     relation_values = _resolve_relation_values_from_observations(
         snapshot.revision,
         registry_source_observations,
@@ -428,10 +419,6 @@ def verify_filed_state(
         binding_values=binding_values,
         relation_values=relation_values,
         # Recomputation reconciles a filed observation's own values, carrying no
-        # filing-instance evidence, so it states the absence of M303 filing facts
-        # rather than inheriting it from a default.
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
     casilla_ids = requested_required_casilla_ids or tuple(
         casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == _InputKind.COMPUTED
@@ -446,6 +433,43 @@ def verify_filed_state(
         observation_path=str(observation_path),
         source_observation_paths=tuple(str(path) for path in source_observation_paths),
         comparison=comparison,
+    )
+
+
+def _filed_state_inputs(
+    snapshot: _RegistrySnapshot,
+    registry_observation: _RegistryModeloObservation,
+    *,
+    binding_values: Mapping[_BindingId, Decimal],
+) -> dict[_CasillaId, Decimal]:
+    bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
+    input_casilla_ids = {
+        casilla.id
+        for casilla in snapshot.revision.casillas
+        if _filed_state_casilla_is_input(casilla, bindings_by_id=bindings_by_id, binding_values=binding_values)
+    }
+    return {
+        casilla_id: value
+        for casilla_id, value in registry_observation.casilla_values.items()
+        if casilla_id in input_casilla_ids
+    }
+
+
+def _filed_state_casilla_is_input(
+    casilla: _CasillaDefinition,
+    *,
+    bindings_by_id: Mapping[_BindingId, _DataBindingDefinition],
+    binding_values: Mapping[_BindingId, Decimal],
+) -> bool:
+    if casilla.input_kind == _InputKind.COMPUTED:
+        return False
+    if casilla.input_kind != _InputKind.BOUND or casilla.binding is None:
+        return True
+    binding_def = bindings_by_id.get(casilla.binding)
+    return not (
+        binding_def is not None
+        and binding_def.source == _BindingSourceKind.PREVIOUS_FILING
+        and binding_def.id not in binding_values
     )
 
 

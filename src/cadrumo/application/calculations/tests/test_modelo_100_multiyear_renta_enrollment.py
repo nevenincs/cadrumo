@@ -74,7 +74,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import calculate_modelo_revision, create_work_unit
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -149,7 +149,7 @@ def _seed_taxpayer_unit_profile() -> None:
     """
     # The display_name MUST match the label the isolated_runtime_profile
     # fixture stamps on the bucket's profile manifest ("Test runtime profile");
-    # a divergent label trips the torn-rename guard in ProfileAggregate.
+    # a divergent label trips the torn-rename guard in CommittedProfileView.
     record = UserProfileRecord(
         profile_id=_PROFILE_ID,
         display_name="Test runtime profile",
@@ -188,7 +188,7 @@ def _seed_taxpayer_unit_profile() -> None:
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(record)
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(record)
 
 
 def _calculate_100(*, filing_year: int, obs_repo: CalculationObservationRepository):

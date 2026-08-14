@@ -204,8 +204,6 @@ def _calculate_714_from_local_m100(
         inputs=_manual_m714_inputs(scenario),
         relation_values=relation_values,
         date_context={"filing_period": date(scenario.filing_year, 12, 31)},
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
     )
 
 

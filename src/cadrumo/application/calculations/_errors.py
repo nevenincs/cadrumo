@@ -34,15 +34,19 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from enum import StrEnum
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from ...core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core.errors import CoreError, CoreValidationError
+from ...core.errors import CoreError, CoreValidationError, TerminalPreconditionErrorMixin
 
 if TYPE_CHECKING:
     from ..operator_actions import PreconditionVerdict
+
+    _CalculationPreconditionErrorMixin = TerminalPreconditionErrorMixin[PreconditionVerdict]
+else:
+    _CalculationPreconditionErrorMixin = TerminalPreconditionErrorMixin
 
 
 class CalculationRefusalPrecondition(StrEnum):
@@ -104,33 +108,6 @@ def calculation_no_recovery_verdict(
     )
 
 
-class CalculationPreconditionErrorMixin:
-    """Carry a terminal application verdict without a prose recovery bridge.
-
-    Mixed in ahead of the registered error class so the subclass keeps its own
-    qualname and its declared :class:`~core.errors.ErrorCode` binding. The mixin
-    itself is not a :class:`~core.errors.CadrumoError` subclass, so it declares
-    no code of its own.
-    """
-
-    def __init__(
-        self,
-        message: str | None = None,
-        *,
-        context: Mapping[str, object] | None = None,
-        translated_message: str | None = None,
-        precondition_verdict: PreconditionVerdict | None = None,
-    ) -> None:
-        parent_init = cast(Callable[..., None], super().__init__)
-        parent_init(message, context=context, translated_message=translated_message)
-        self._terminal_precondition_verdict = precondition_verdict
-
-    @property
-    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
-        """Return the explicit no-recovery verdict, when the raise site declared one."""
-        return self._terminal_precondition_verdict
-
-
 class IvaCompensationModeloError(CoreError):
     """Raised when a non-Modelo 303 observation is passed to IVA compensation history.
 
@@ -170,7 +147,7 @@ class ObservationKeyError(CoreValidationError):
     """
 
 
-class ObservationEvidenceDisplacementError(CalculationPreconditionErrorMixin, CoreValidationError):
+class ObservationEvidenceDisplacementError(_CalculationPreconditionErrorMixin, CoreValidationError):
     """Raised when a non-official write would displace official AEAT evidence.
 
     A ``(modelo, filing_year, period)`` slot holding evidence observed from AEAT

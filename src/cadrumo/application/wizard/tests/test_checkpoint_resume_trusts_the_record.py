@@ -52,7 +52,7 @@ from ....adapters.persistence.storage.bucket import bucket_paths, read_manifest,
 from ....core.flows import FlowMode
 from ....domain.user_profile import ProfileNotFoundError, UserProfileStatus, new_profile_id
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile import ProfileIntegrityError, ProfileRepository, profile_storage_session
+from ...user_profile import CommittedProfileRepository, ProfileIntegrityError, profile_storage_session
 from ...workflow import workflow_state_repository
 from .. import ProfileFactsCheckpointStore
 from .._catalogue import SETUP_FLOW
@@ -212,7 +212,7 @@ def test_an_absent_profile_is_reported_as_no_resume(backend: Path) -> None:
 def test_the_verifying_load_is_what_refuses(backend: Path) -> None:
     """The refusal comes from the existing integrity authority, not a new check.
 
-    Asserted against ``ProfileRepository.load`` directly so a future refactor
+    Asserted against ``CommittedProfileRepository.load`` directly so a future refactor
     that reintroduces a second, parallel status comparison in the checkpoint
     store fails here rather than passing quietly.
     """
@@ -221,4 +221,4 @@ def test_the_verifying_load_is_what_refuses(backend: Path) -> None:
     _tear_manifest(backend, profile_id)
 
     with pytest.raises(ProfileIntegrityError), profile_storage_session(profile_id):
-        ProfileRepository().load(profile_id)
+        CommittedProfileRepository().load(profile_id)

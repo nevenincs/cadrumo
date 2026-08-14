@@ -60,7 +60,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import calculate_modelo_revision, create_work_unit
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -141,7 +141,7 @@ _Q1_INPUTS: dict[CasillaId, Decimal] = {
 
 
 def _seed_ready_profile(objects: SecureObjectRepository) -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
             profile_id=_PROFILE_ID,
             display_name="Test runtime profile",

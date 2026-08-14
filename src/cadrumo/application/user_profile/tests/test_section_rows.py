@@ -32,7 +32,7 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...workflow import workflow_state_repository
 from .. import (
-    ProfileRepository,
+    ProfileRecordAggregateRepository,
     build_profile_overview,
     next_section_row_index,
     profile_create_storage_span,
@@ -68,13 +68,13 @@ def _write(*facts: UserProfileFact) -> None:
 
 def _present() -> frozenset[str]:
     """Present paths as the manager's own page decides them."""
-    record = ProfileRepository().load(_BUCKET_ID).record
+    record = ProfileRecordAggregateRepository().load(_BUCKET_ID).record
     overview = build_profile_overview(record)
     return frozenset(view.path for section in overview.sections for view in section.fields if view.present)
 
 
 def _rows(section_key: str) -> list[str | None]:
-    record = ProfileRepository().load(_BUCKET_ID).record
+    record = ProfileRecordAggregateRepository().load(_BUCKET_ID).record
     overview = build_profile_overview(record)
     section = next(view for view in overview.sections if view.key == section_key)
     return sorted({view.row_index for view in section.fields if view.present}, key=lambda row: (row is not None, row))
@@ -203,7 +203,7 @@ def test_a_row_assembled_here_satisfies_the_write_door() -> None:
     _write(*facts)
 
     assert _rows(_SOCIOS) == ["0"]
-    record = ProfileRepository().load(_BUCKET_ID).record
+    record = ProfileRecordAggregateRepository().load(_BUCKET_ID).record
     assert build_profile_overview(record).missing_required == ()
 
 

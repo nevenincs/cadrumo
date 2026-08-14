@@ -116,6 +116,7 @@ from ..calculations import (
     CalculationObservationRepository,
     CrossPeriodDependencyEvidence,
     CrossPeriodExpectedMemberSet,
+    validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
 from ..workflow import WorkflowEngine, WorkflowPurpose, WorkflowRunRepository
 from ._action_errors import (
@@ -943,6 +944,13 @@ def verify_modelo_revision_with_preconditions(
         )
 
     _assert_revision_content_integrity(target)
+    validate_m303_regimen_simplificado_annual_summary_target_revision(
+        target_work_unit=work_unit,
+        target_revision=target,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=repos.filing,
+    )
     require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=target)
 
     from ._profile_readiness_gate import require_profile_ready_for_work_unit

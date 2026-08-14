@@ -102,10 +102,10 @@ def _has_descendiente_facts(bucket_id: str) -> bool:
     handling :func:`~application.modelo._profile_binding.resolve_profile_sourced_bindings`
     already applies to profile-sourced bindings.
     """
-    from ..user_profile import UserProfileLifecycleRepository
+    from ..user_profile import ProfileRecordRepository
 
     try:
-        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return False
     return any(
@@ -182,10 +182,10 @@ def _family_profile_from_facts(facts: dict[str, str]) -> RentaFamilyProfile:
 
 def _profile_fact_strings(bucket_id: str) -> dict[str, str] | None:
     """Return every non-null profile fact as a ``{path: str-value}`` map, or ``None``."""
-    from ..user_profile import UserProfileLifecycleRepository
+    from ..user_profile import ProfileRecordRepository
 
     try:
-        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return None
     return {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
@@ -937,10 +937,10 @@ def collect_minimo_descendientes_dependencia_diagnostics(
 
 def _declared_descendant_row_count(bucket_id: str) -> int | None:
     """Return how many descendant rows the profile carries, or ``None`` if unreadable."""
-    from ..user_profile import UserProfileLifecycleRepository
+    from ..user_profile import ProfileRecordRepository
 
     try:
-        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return None
     instances = {
@@ -953,10 +953,10 @@ def _declared_descendant_row_count(bucket_id: str) -> int | None:
 
 def _stored_descendientes_count(bucket_id: str) -> Decimal | None:
     """Return the stored aggregate count fact, or ``None`` when absent."""
-    from ..user_profile import UserProfileLifecycleRepository
+    from ..user_profile import ProfileRecordRepository
 
     try:
-        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+        record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return None
     for fact in record.facts:

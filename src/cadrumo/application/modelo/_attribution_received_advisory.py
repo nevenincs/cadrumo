@@ -47,7 +47,7 @@ from ...domain.modelos import (
     ModeloVerificationFindingSeverity,
 )
 from ...domain.user_profile import ProfileNotFoundError, UserProfileFact, UserProfileRecord
-from ..user_profile import UserProfileLifecycleRepository
+from ..user_profile import ProfileRecordRepository
 from ._semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 
 if TYPE_CHECKING:
@@ -106,7 +106,7 @@ def _attribution_received_omission_advisory_findings(
     record = profile_record
     if record is None:
         try:
-            record = UserProfileLifecycleRepository(bucket_id=work_unit.bucket_id).load(work_unit.bucket_id)
+            record = ProfileRecordRepository(bucket_id=work_unit.bucket_id).load(work_unit.bucket_id)
         except ProfileNotFoundError:
             return ()
 
@@ -114,40 +114,52 @@ def _attribution_received_omission_advisory_findings(
     facts_present = total_base is not None
 
     if facts_present and not casilla_has_value:
-        return (
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.ADVISORY,
-                severity=ModeloVerificationFindingSeverity.WARNING,
-                casilla_id=casilla_id,
-                message_locale_key="application.modelo.findings.attribution_received_unfolded",
-                message_facts={
-                    "filing_year": work_unit.filing_year,
-                    "total_base": total_base,
-                    "casilla_id": casilla_id,
-                },
-                legal_refs=_ATRIBUCION_LEGAL_REFS,
-                source_refs=(),
-            ),
-        )
+        return (_attribution_received_unfolded_finding(work_unit, casilla_id, total_base),)
 
     if casilla_has_value and not facts_present:
-        return (
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.ADVISORY,
-                severity=ModeloVerificationFindingSeverity.WARNING,
-                casilla_id=casilla_id,
-                message_locale_key="application.modelo.findings.attribution_received_uncaptured",
-                message_facts={
-                    "casilla_id": casilla_id,
-                    "filing_year": work_unit.filing_year,
-                    "casilla_value": casilla_value if casilla_value is not None else "absent",
-                },
-                legal_refs=_ATRIBUCION_LEGAL_REFS,
-                source_refs=(),
-            ),
-        )
+        return (_attribution_received_uncaptured_finding(work_unit, casilla_id, casilla_value),)
 
     return ()
+
+
+def _attribution_received_unfolded_finding(
+    work_unit: WorkUnit,
+    casilla_id: CasillaId,
+    total_base: Decimal,
+) -> ModeloVerificationFinding:
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        casilla_id=casilla_id,
+        message_locale_key="application.modelo.findings.attribution_received_unfolded",
+        message_facts={
+            "filing_year": work_unit.filing_year,
+            "total_base": total_base,
+            "casilla_id": casilla_id,
+        },
+        legal_refs=_ATRIBUCION_LEGAL_REFS,
+        source_refs=(),
+    )
+
+
+def _attribution_received_uncaptured_finding(
+    work_unit: WorkUnit,
+    casilla_id: CasillaId,
+    casilla_value: Decimal | None,
+) -> ModeloVerificationFinding:
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        casilla_id=casilla_id,
+        message_locale_key="application.modelo.findings.attribution_received_uncaptured",
+        message_facts={
+            "casilla_id": casilla_id,
+            "filing_year": work_unit.filing_year,
+            "casilla_value": casilla_value if casilla_value is not None else "absent",
+        },
+        legal_refs=_ATRIBUCION_LEGAL_REFS,
+        source_refs=(),
+    )
 
 
 def _attribution_received_base_for_year(

@@ -27,6 +27,7 @@ from .errors import ModeloApplicationError
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage import SecureObjectRepository
+    from ...domain.modelos import ModeloRecordCatalogueRepositoryProtocol
 
 
 def resolve_application_filing_bucket_id(bucket_id: str | None) -> str:
@@ -65,7 +66,22 @@ def secure_objects_for_application_filing_bucket(bucket_id: str) -> SecureObject
     return secure_object_repository_for_bucket(bucket_id)
 
 
+def modelo_record_repository_for_application() -> ModeloRecordCatalogueRepositoryProtocol:
+    """Build the concrete filing-record port at the application boundary.
+
+    The modelo application services consume the domain repository protocol;
+    this deferred runtime factory is the single application-filing wiring
+    point for the encrypted persistence adapter. Keeping construction here
+    avoids making calculation orchestration import a persistence detail while
+    preserving the existing active-profile default.
+    """
+    from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+
+    return ModeloRecordCatalogueRepository()
+
+
 __all__ = [
+    "modelo_record_repository_for_application",
     "resolve_application_filing_bucket_id",
     "secure_objects_for_application_filing_bucket",
 ]

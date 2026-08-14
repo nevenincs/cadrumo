@@ -129,6 +129,81 @@ def collect_storage_area_inventory(*, settings: Settings | None = None) -> Stora
     )
 
 
+def _storage_tree_root_issues(root: Path) -> list[StorageTreeIssue]:
+    """Describe a missing or file-occupied storage root."""
+    if not root.exists():
+        return [
+            StorageTreeIssue(
+                kind=StorageTreeIssueKind.MISSING_DIRECTORY,
+                path=root,
+                detail="the storage root itself does not exist",
+            ),
+        ]
+    if not root.is_dir():
+        return [
+            StorageTreeIssue(
+                kind=StorageTreeIssueKind.FILE_WHERE_DIRECTORY_EXPECTED,
+                path=root,
+                detail="the storage root is occupied by a file",
+            ),
+        ]
+    return []
+
+
+def _storage_location_issues(
+    location: StorageLocation,
+    target: Path,
+) -> list[StorageTreeIssue]:
+    """Describe filesystem kind drift for one resolved taxonomy member."""
+    issues: list[StorageTreeIssue] = []
+    expected_directory = target if location.node_kind is StorageNodeKind.DIRECTORY else target.parent
+    area = StorageArea(location.grouping.value)
+    if not expected_directory.exists():
+        issues.append(
+            StorageTreeIssue(
+                kind=StorageTreeIssueKind.MISSING_DIRECTORY,
+                path=expected_directory,
+                area=area,
+                detail="declared directory has not been materialised",
+            ),
+        )
+    elif not expected_directory.is_dir():
+        issues.append(
+            StorageTreeIssue(
+                kind=StorageTreeIssueKind.FILE_WHERE_DIRECTORY_EXPECTED,
+                path=expected_directory,
+                area=area,
+                detail="a file occupies a path the taxonomy declares a directory",
+            ),
+        )
+    if location.node_kind is StorageNodeKind.FILE and target.is_dir():
+        issues.append(
+            StorageTreeIssue(
+                kind=StorageTreeIssueKind.DIRECTORY_WHERE_FILE_EXPECTED,
+                path=target,
+                area=area,
+                detail="a directory occupies a path the taxonomy declares a file",
+            ),
+        )
+    return issues
+
+
+def _storage_root_permission_issues(root: Path, *, enforced: bool) -> list[StorageTreeIssue]:
+    """Describe root mode drift when the platform enforces it."""
+    if not enforced or not root.is_dir():
+        return []
+    actual = root.stat().st_mode & 0o777
+    if actual == _EXPECTED_ROOT_MODE:
+        return []
+    return [
+        StorageTreeIssue(
+            kind=StorageTreeIssueKind.ROOT_PERMISSIONS_DRIFTED,
+            path=root,
+            detail=f"root mode is {actual:04o}, expected {_EXPECTED_ROOT_MODE:04o}",
+        ),
+    ]
+
+
 def inspect_storage_tree(*, settings: Settings | None = None) -> StorageTreeCheckReport:
     """Report where the materialised tree disagrees with its declaration.
 
@@ -152,25 +227,8 @@ def inspect_storage_tree(*, settings: Settings | None = None) -> StorageTreeChec
     """
     resolved = settings if settings is not None else load_settings()
     root = Path(resolved.cadrumo_local_storage_root)
-    issues: list[StorageTreeIssue] = []
+    issues = _storage_tree_root_issues(root)
     checked = 0
-
-    if not root.exists():
-        issues.append(
-            StorageTreeIssue(
-                kind=StorageTreeIssueKind.MISSING_DIRECTORY,
-                path=root,
-                detail="the storage root itself does not exist",
-            ),
-        )
-    elif not root.is_dir():
-        issues.append(
-            StorageTreeIssue(
-                kind=StorageTreeIssueKind.FILE_WHERE_DIRECTORY_EXPECTED,
-                path=root,
-                detail="the storage root is occupied by a file",
-            ),
-        )
 
     for category, location in STORAGE_TAXONOMY.items():
         if location.scope is not StorageScope.ROOT or location.settings_field is None:
@@ -183,46 +241,10 @@ def inspect_storage_tree(*, settings: Settings | None = None) -> StorageTreeChec
         # creates the PARENT and deliberately not the leaf, so an absent leaf is
         # the normal state of a document nothing has written yet. Only its
         # parent's absence is a gap in the tree.
-        expected_directory = target if location.node_kind is StorageNodeKind.DIRECTORY else target.parent
-        if not expected_directory.exists():
-            issues.append(
-                StorageTreeIssue(
-                    kind=StorageTreeIssueKind.MISSING_DIRECTORY,
-                    path=expected_directory,
-                    area=StorageArea(location.grouping.value),
-                    detail="declared directory has not been materialised",
-                ),
-            )
-        elif not expected_directory.is_dir():
-            issues.append(
-                StorageTreeIssue(
-                    kind=StorageTreeIssueKind.FILE_WHERE_DIRECTORY_EXPECTED,
-                    path=expected_directory,
-                    area=StorageArea(location.grouping.value),
-                    detail="a file occupies a path the taxonomy declares a directory",
-                ),
-            )
-        if location.node_kind is StorageNodeKind.FILE and target.is_dir():
-            issues.append(
-                StorageTreeIssue(
-                    kind=StorageTreeIssueKind.DIRECTORY_WHERE_FILE_EXPECTED,
-                    path=target,
-                    area=StorageArea(location.grouping.value),
-                    detail="a directory occupies a path the taxonomy declares a file",
-                ),
-            )
+        issues.extend(_storage_location_issues(location, target))
 
     mode_enforced = _root_mode_is_enforceable()
-    if mode_enforced and root.is_dir():
-        actual = root.stat().st_mode & 0o777
-        if actual != _EXPECTED_ROOT_MODE:
-            issues.append(
-                StorageTreeIssue(
-                    kind=StorageTreeIssueKind.ROOT_PERMISSIONS_DRIFTED,
-                    path=root,
-                    detail=f"root mode is {actual:04o}, expected {_EXPECTED_ROOT_MODE:04o}",
-                ),
-            )
+    issues.extend(_storage_root_permission_issues(root, enforced=mode_enforced))
 
     return StorageTreeCheckReport(
         storage_root=root,
@@ -255,6 +277,37 @@ def materialise_storage_tree(*, settings: Settings | None = None) -> StorageInit
     )
 
 
+def _reclaim_candidates(
+    area: StorageArea,
+    settings: Settings,
+) -> tuple[tuple[StorageCategory, StorageLocation, Path], ...]:
+    """Resolve the taxonomy members eligible for one reclaim area."""
+    return tuple(
+        (category, location, storage_path(category, settings=settings))
+        for category, location in STORAGE_TAXONOMY.items()
+        if location.grouping.value == area.value and location.lifecycle in RECLAIMABLE_LIFECYCLES
+    )
+
+
+def _remove_reclaim_targets(targets: Iterable[Path]) -> tuple[int, list[Path]]:
+    """Remove entries under preflighted targets, retaining failures."""
+    removed = 0
+    retained: list[Path] = []
+    for target in targets:
+        if not target.exists():
+            continue
+        entries = (target,) if target.is_file() else tuple(sorted(target.iterdir()))
+        for entry in entries:
+            try:
+                _remove_reclaim_entry(entry)
+            except OSError:
+                retained.append(entry)
+                _LOGGER.debug("reclaim could not remove %s", entry, exc_info=True)
+            else:
+                removed += 1
+    return removed, retained
+
+
 def reclaim_storage_area(
     area: StorageArea,
     *,
@@ -275,11 +328,7 @@ def reclaim_storage_area(
             reason="the area contains durable state",
         )
 
-    candidates = tuple(
-        (category, location, storage_path(category, settings=resolved))
-        for category, location in STORAGE_TAXONOMY.items()
-        if location.grouping.value == area.value and location.lifecycle in RECLAIMABLE_LIFECYCLES
-    )
+    candidates = _reclaim_candidates(area, resolved)
     _preflight_reclaim_targets(area, candidates, resolved)
     targets = _minimal_paths(path for _, _, path in candidates)
     storage_root = Path(resolved.cadrumo_local_storage_root).resolve(strict=False)
@@ -289,20 +338,7 @@ def reclaim_storage_area(
     if not confirmed:
         raise StorageReclaimUnconfirmedError(area, entry_count=entry_count)
 
-    removed = 0
-    retained: list[Path] = []
-    for target in targets:
-        if not target.exists():
-            continue
-        entries = (target,) if target.is_file() else tuple(sorted(target.iterdir()))
-        for entry in entries:
-            try:
-                _remove_reclaim_entry(entry)
-            except OSError:
-                retained.append(entry)
-                _LOGGER.debug("reclaim could not remove %s", entry, exc_info=True)
-            else:
-                removed += 1
+    removed, retained = _remove_reclaim_targets(targets)
 
     return StorageReclaimReport(
         area=area,

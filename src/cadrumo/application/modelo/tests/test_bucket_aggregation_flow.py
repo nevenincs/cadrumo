@@ -42,7 +42,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     ModeloAggregationBindingError,
     calculate_modelo_revision_from_bucket_aggregation,
@@ -195,7 +195,7 @@ def _seed_303_work_unit(
 
 
 def _store_profile(objects: SecureObjectRepository) -> None:
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="Test runtime profile",
@@ -232,7 +232,7 @@ def _store_first_period_profile(objects: SecureObjectRepository) -> None:
     decision instead of blocking. This is the genuine new-filer / sin-actividad
     scenario: the first Modelo 303 with an empty ledger.
     """
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="Test runtime profile",

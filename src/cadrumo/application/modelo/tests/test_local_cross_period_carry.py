@@ -54,7 +54,7 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceProvenance, CalculationSourceResolution
 from ...calculations import CalculationObservationRepository
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     APP_FILING_SOURCE_KIND,
     ModeloIvaWalletReconciliationBlocked,
@@ -256,7 +256,7 @@ def _seed_first_year_activity_profile(repos_: _Repos) -> None:
         created_at=_T1,
         updated_at=_T1,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(profile)
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(profile)
 
 
 def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
@@ -286,7 +286,7 @@ def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
         created_at=_T1,
         updated_at=_T1,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(profile)
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(profile)
 
 
 def _seed_first_303_activity_profile(repos_: _Repos) -> None:
@@ -316,7 +316,7 @@ def _seed_first_303_activity_profile(repos_: _Repos) -> None:
         created_at=_T1,
         updated_at=_T1,
     )
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(profile)
+    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(profile)
 
 
 def test_local_file_then_next_period_calculate_carries_previous_filing_value(repos: _Repos) -> None:

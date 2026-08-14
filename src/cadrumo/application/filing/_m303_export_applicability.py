@@ -5,7 +5,11 @@ from __future__ import annotations
 from ...core import Modelo, Period
 from ...domain.calculations.registry import ExportLayoutDefinition, RegistrySnapshot
 from ...domain.filing import FilingExportError
-from ._producer_snapshot import FilingProducerSnapshot, assert_m303_regularisation_result_matches_bienes_register
+from ._producer_snapshot import (
+    FilingProducerSnapshot,
+    M303FilingFacts,
+    assert_m303_regularisation_result_matches_bienes_register,
+)
 
 
 def validate_m303_export_applicability(
@@ -16,6 +20,14 @@ def validate_m303_export_applicability(
     producer_snapshot: FilingProducerSnapshot,
 ) -> None:
     """Validate canonical M303 facts against the already-selected snapshot."""
+    _validate_producer_snapshot_shape(period, producer_snapshot)
+    _require_m303_producer_snapshot(producer_snapshot)
+    filing_facts = _require_m303_filing_facts(period, producer_snapshot)
+    _validate_snapshot_selection(period, registry_snapshot, layout)
+    _validate_m303_regularisation(period, filing_facts)
+
+
+def _validate_producer_snapshot_shape(period: Period, producer_snapshot: FilingProducerSnapshot) -> None:
     try:
         FilingProducerSnapshot.model_validate(dict(producer_snapshot))
     except ValueError as exc:
@@ -28,6 +40,9 @@ def validate_m303_export_applicability(
                 "validation_error_type": type(exc).__name__,
             },
         ) from exc
+
+
+def _require_m303_producer_snapshot(producer_snapshot: FilingProducerSnapshot) -> None:
     if producer_snapshot.modelo is not Modelo.M303:
         raise FilingExportError(
             translated_message="application.filing.m303_export_applicability.errors.producer_snapshot_wrong_modelo",
@@ -36,6 +51,9 @@ def validate_m303_export_applicability(
                 "actual_modelo": producer_snapshot.modelo.value,
             },
         )
+
+
+def _require_m303_filing_facts(period: Period, producer_snapshot: FilingProducerSnapshot) -> M303FilingFacts:
     filing_facts = producer_snapshot.m303_filing_facts
     if filing_facts is None:
         raise FilingExportError(
@@ -55,6 +73,15 @@ def validate_m303_export_applicability(
                 "filing_facts_period": filing_facts.period.registry_token,
             },
         )
+
+    return filing_facts
+
+
+def _validate_snapshot_selection(
+    period: Period,
+    registry_snapshot: RegistrySnapshot,
+    layout: ExportLayoutDefinition,
+) -> None:
     if (
         registry_snapshot.modelo.id != "303"
         or registry_snapshot.filing_year != period.filing_year
@@ -80,6 +107,9 @@ def validate_m303_export_applicability(
                 "snapshot_layout_count": len(registry_snapshot.revision.export_layouts),
             },
         )
+
+
+def _validate_m303_regularisation(period: Period, filing_facts: M303FilingFacts) -> None:
     try:
         assert_m303_regularisation_result_matches_bienes_register(
             bienes_register=filing_facts.bienes_register,

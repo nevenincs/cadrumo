@@ -98,9 +98,9 @@ def test_registration_creates_an_addressable_profile_with_no_tax_facts(tmp_path:
             passphrase=_OPERATOR_PASSPHRASE,
         )
 
-        from .. import ProfileRepository
+        from .. import ProfileRecordAggregateRepository
 
-        aggregate = ProfileRepository().load(outcome.profile_id)
+        aggregate = ProfileRecordAggregateRepository().load(outcome.profile_id)
         assert aggregate is not None
         assert aggregate.status is UserProfileStatus.SETUP_INCOMPLETE
         assert aggregate.label == "Minimal Subject"

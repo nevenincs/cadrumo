@@ -58,7 +58,7 @@ from ....domain.modelos import (
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     AmendmentComplementariaLiabilityDecreaseError,
     AmendmentKindNotPermittedError,
@@ -115,7 +115,7 @@ def repos(tmp_path: Path) -> Generator[_Repos]:
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID, label=_PROFILE_LABEL) as profile:
         objects = profile.repository
-        UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=objects).save(
+        ProfileRecordRepository(bucket_id=_PROFILE_ID, objects=objects).save(
             UserProfileRecord(
                 profile_id=_PROFILE_ID,
                 display_name=_PROFILE_LABEL,

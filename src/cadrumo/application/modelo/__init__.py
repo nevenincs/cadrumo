@@ -567,8 +567,8 @@ from ._work_review import (
     ModeloWorkRelationConsumption,
     ModeloWorkReview,
     ModeloWorkReviewCasilla,
-    build_modelo_work_review,
 )
+from ._work_review_projection import build_modelo_work_review
 from ._workflow_gate import build_revision_deadline_window_checker, workflow_period_for_work_unit
 
 __all__ = [

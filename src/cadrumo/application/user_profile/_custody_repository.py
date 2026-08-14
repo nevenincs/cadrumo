@@ -1,0 +1,221 @@
+"""Application repository and lock ports for profile custody transactions."""
+
+from __future__ import annotations
+
+from collections.abc import Generator
+from contextlib import contextmanager
+from importlib import import_module
+from pathlib import Path
+from typing import Any, Literal
+from uuid import UUID
+
+from pydantic import ValidationError
+
+from ...core import StorageCategory, storage_location
+from ...core.paths import effective_storage_root
+from ._custody_pointer import ProfileCustodyPointerSnapshot
+from ._custody_transactions import (
+    CUSTODY_RECEIPT_MAX_BYTES,
+    CUSTODY_TRANSACTION_MAX_BYTES,
+    ProfileCustodyOwnerReceipt,
+    ProfileCustodyTransactionConflictError,
+    ProfileCustodyTransactionCorruptError,
+    ProfileCustodyTransactionJournal,
+    ProfileCustodyTransactionReceipt,
+    read_profile_custody_record,
+)
+
+
+def _default_custody_adapters() -> Any:
+    """Resolve the public custody adapter facade at the composition boundary."""
+    return import_module("cadrumo.adapters.persistence.storage.custody")
+
+
+class ProfileCustodyTransactionRepository:
+    """Persist strict current-format transaction journals and owner receipts."""
+
+    def __init__(self, *, root: Path | None = None, adapters: Any | None = None) -> None:
+        self._storage_root = effective_storage_root(root)
+        self._adapters: Any = adapters if adapters is not None else _default_custody_adapters()
+        self._journal_root = (
+            self._storage_root / storage_location(StorageCategory.PROFILE_CUSTODY_TRANSACTION_JOURNAL).relative_path()
+        )
+        self._receipt_root = (
+            self._storage_root / storage_location(StorageCategory.PROFILE_CUSTODY_RECEIPT).relative_path()
+        )
+
+    def journal_path(self, transaction_id: UUID) -> Path:
+        return self._journal_root / f"{transaction_id}.json"
+
+    def receipt_path(self, transaction_id: UUID) -> Path:
+        return self._receipt_root / f"{transaction_id}.application-local-custody.json"
+
+    def owner_receipt_path(
+        self,
+        transaction_id: UUID,
+        owner: Literal["process-secret-revocation", "local-session-acceleration"],
+    ) -> Path:
+        return self._receipt_root / f"{transaction_id}.{owner}.json"
+
+    def create_journal(self, journal: ProfileCustodyTransactionJournal) -> None:
+        self._ensure_root(self._journal_root, "custody transaction journal")
+        path = self.journal_path(journal.transaction_id)
+        with self._adapters.profile_custody_local_lock(self._journal_root / ".repository.lock"):
+            self._write_exclusive(path, journal.canonical_json_bytes(), "custody transaction journal")
+
+    def load_journal(self, transaction_id: UUID) -> ProfileCustodyTransactionJournal:
+        path = self.journal_path(transaction_id)
+        payload = self._read_bounded(path, CUSTODY_TRANSACTION_MAX_BYTES, "custody transaction journal")
+        try:
+            journal = ProfileCustodyTransactionJournal.model_validate_json(payload)
+        except (ValidationError, ValueError) as exc:
+            raise ProfileCustodyTransactionCorruptError("custody transaction journal is invalid") from exc
+        if journal.transaction_id != transaction_id or journal.canonical_json_bytes() != payload:
+            raise ProfileCustodyTransactionCorruptError(
+                "custody transaction journal identity or canonical bytes differ"
+            )
+        return journal
+
+    def save_journal(self, journal: ProfileCustodyTransactionJournal) -> None:
+        self._ensure_root(self._journal_root, "custody transaction journal")
+        path = self.journal_path(journal.transaction_id)
+        with self._adapters.profile_custody_local_lock(self._journal_root / f".{path.name}.lock"):
+            try:
+                self._read_bounded(path, CUSTODY_TRANSACTION_MAX_BYTES, "custody transaction journal")
+            except ProfileCustodyTransactionConflictError:
+                raise ProfileCustodyTransactionConflictError("custody transaction journal is absent") from None
+            self._write_replace(path, journal.canonical_json_bytes(), "custody transaction journal")
+
+    def write_receipt(self, receipt: ProfileCustodyTransactionReceipt) -> ProfileCustodyTransactionReceipt:
+        self._ensure_root(self._receipt_root, "custody receipt")
+        path = self.receipt_path(receipt.transaction_id)
+        payload = receipt.canonical_json_bytes()
+        with self._adapters.profile_custody_local_lock(self._receipt_root / f".{path.name}.lock"):
+            try:
+                existing = self._read_bounded(path, CUSTODY_RECEIPT_MAX_BYTES, "custody receipt")
+            except ProfileCustodyTransactionConflictError:
+                self._write_exclusive(path, payload, "custody receipt")
+            else:
+                if existing != payload:
+                    raise ProfileCustodyTransactionConflictError("custody receipt identity has different durable bytes")
+            return receipt
+        return receipt
+
+    def load_receipt(self, transaction_id: UUID) -> ProfileCustodyTransactionReceipt | None:
+        path = self.receipt_path(transaction_id)
+        try:
+            payload = self._read_bounded(path, CUSTODY_RECEIPT_MAX_BYTES, "custody receipt")
+        except ProfileCustodyTransactionConflictError:
+            return None
+        try:
+            receipt = ProfileCustodyTransactionReceipt.model_validate_json(payload)
+        except (ValidationError, ValueError) as exc:
+            raise ProfileCustodyTransactionCorruptError("custody receipt is invalid") from exc
+        if receipt.transaction_id != transaction_id or receipt.canonical_json_bytes() != payload:
+            raise ProfileCustodyTransactionCorruptError("custody receipt identity or canonical bytes differ")
+        return receipt
+
+    def write_owner_receipt(self, receipt: ProfileCustodyOwnerReceipt) -> ProfileCustodyOwnerReceipt:
+        self._ensure_root(self._receipt_root, "custody owner receipt")
+        path = self.owner_receipt_path(receipt.transaction_id, receipt.owner)
+        payload = receipt.canonical_json_bytes()
+        with self._adapters.profile_custody_local_lock(self._receipt_root / f".{path.name}.lock"):
+            try:
+                existing = self._read_bounded(path, CUSTODY_RECEIPT_MAX_BYTES, "custody owner receipt")
+            except ProfileCustodyTransactionConflictError:
+                self._write_exclusive(path, payload, "custody owner receipt")
+            else:
+                if existing != payload:
+                    raise ProfileCustodyTransactionConflictError(
+                        "custody owner receipt identity has different durable bytes"
+                    )
+            return receipt
+        return receipt
+
+    def load_owner_receipt(
+        self,
+        transaction_id: UUID,
+        owner: Literal["process-secret-revocation", "local-session-acceleration"],
+    ) -> ProfileCustodyOwnerReceipt | None:
+        path = self.owner_receipt_path(transaction_id, owner)
+        try:
+            receipt = ProfileCustodyOwnerReceipt.model_validate_json(
+                self._read_bounded(path, CUSTODY_RECEIPT_MAX_BYTES, "custody owner receipt")
+            )
+        except ProfileCustodyTransactionConflictError:
+            return None
+        except ValidationError as exc:
+            raise ProfileCustodyTransactionCorruptError("custody owner receipt is invalid") from exc
+        if receipt.transaction_id != transaction_id or receipt.owner != owner:
+            raise ProfileCustodyTransactionCorruptError("custody owner receipt identity differs from its path")
+        return receipt
+
+    def _ensure_root(self, root: Path, subject: str) -> None:
+        try:
+            self._adapters.ensure_profile_custody_local_directory(root)
+        except Exception as exc:
+            raise ProfileCustodyTransactionCorruptError(f"{subject} root cannot be anchored") from exc
+
+    @staticmethod
+    def _read_bounded(path: Path, maximum_bytes: int, subject: str) -> bytes:
+        return read_profile_custody_record(path, maximum_bytes=maximum_bytes, subject=subject)
+
+    def _write_exclusive(self, path: Path, payload: bytes, subject: str) -> None:
+        try:
+            self._adapters.write_profile_custody_local_record(path, payload, publish_once=True)
+        except Exception as exc:
+            raise ProfileCustodyTransactionCorruptError(f"{subject} cannot be exclusively created") from exc
+
+    def _write_replace(self, path: Path, payload: bytes, subject: str) -> None:
+        try:
+            self._adapters.write_profile_custody_local_record(path, payload, publish_once=False)
+        except Exception as exc:
+            raise ProfileCustodyTransactionCorruptError(f"{subject} cannot be atomically replaced") from exc
+
+
+@contextmanager
+def profile_custody_transaction_lock(root: Path, profile_id: UUID) -> Generator[None]:
+    """Acquire root then profile lock, the only accepted custody lock order."""
+    adapters = _default_custody_adapters()
+    storage_root = effective_storage_root(root)
+    capsules_root = storage_root / storage_location(StorageCategory.BUCKETS).relative_path()
+    with adapters.profile_custody_root_lock(storage_root):
+        try:
+            adapters.ensure_profile_custody_local_directory(capsules_root)
+        except Exception as exc:
+            raise ProfileCustodyTransactionCorruptError("profile custody lock root cannot be anchored") from exc
+        profile_target = capsules_root / f".profile-custody-{profile_id}.lock"
+        with adapters.profile_custody_local_lock(profile_target):
+            yield
+
+
+def compare_and_swap_profile_pointer(
+    *,
+    root: Path,
+    expected: ProfileCustodyPointerSnapshot,
+    replacement: bytes | None,
+) -> None:
+    """Replace or clear the pointer only while its exact captured bytes still match."""
+    adapters = _default_custody_adapters()
+    storage_root = effective_storage_root(root)
+    with adapters.profile_custody_root_lock(storage_root):
+        current = ProfileCustodyPointerSnapshot.capture(storage_root)
+        if current != expected:
+            raise ProfileCustodyTransactionConflictError("active profile pointer changed after custody preflight")
+        target = storage_root / storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).relative_path()
+        try:
+            if replacement is None:
+                adapters.clear_profile_custody_local_record(target)
+            else:
+                adapters.write_profile_custody_local_record(target, replacement, publish_once=False)
+        except Exception as exc:
+            raise ProfileCustodyTransactionCorruptError(
+                "active profile pointer cannot be atomically compared and swapped"
+            ) from exc
+
+
+__all__ = [
+    "ProfileCustodyTransactionRepository",
+    "compare_and_swap_profile_pointer",
+    "profile_custody_transaction_lock",
+]

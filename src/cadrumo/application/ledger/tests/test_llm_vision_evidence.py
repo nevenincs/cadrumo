@@ -110,10 +110,10 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
     instructive, non-silent error naming the opt-in command.
     """
     from ....domain.user_profile import UserProfileFact, UserProfileRecord
-    from ...user_profile import UserProfileLifecycleRepository
+    from ...user_profile import ProfileRecordRepository
 
     clock = datetime(2026, 1, 1, tzinfo=UTC)
-    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
+    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="Vision opted out",

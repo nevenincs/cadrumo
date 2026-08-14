@@ -20,7 +20,10 @@ from .. import (
     OperationExecutor,
     OperationExecutorContext,
     OperationIdentity,
+    OperationInteractionAccess,
     OperationLogSeverity,
+    OperationOwnedResource,
+    OperationPendingInteraction,
     OperationSecureOperandLookup,
 )
 
@@ -78,8 +81,13 @@ class CleanupOwner:
     def __init__(self) -> None:
         self.resource: Resource | None = None
 
-    def own(self, resource: Resource) -> None:
+    def own(self, resource: Resource, *, family: OperationOwnedResource) -> None:
+        assert family is OperationOwnedResource.ASYNC_TASK
         self.resource = resource
+
+
+class InteractionAccess:
+    async def request(self, pending: OperationPendingInteraction) -> None: ...
 
 
 class ExecutorContext:
@@ -90,6 +98,7 @@ class ExecutorContext:
         self.events = EventEmitter()
         self.operands = SecureOperandLookup()
         self.cleanup = CleanupOwner()
+        self.interactions = InteractionAccess()
 
 
 class Executor:
@@ -105,13 +114,14 @@ def test_public_protocols_accept_complete_structural_implementations() -> None:
     assert isinstance(context.events, OperationEventEmitter)
     assert isinstance(context.operands, OperationSecureOperandLookup)
     assert isinstance(context.cleanup, OperationCleanupOwner)
+    assert isinstance(context.interactions, OperationInteractionAccess)
     assert isinstance(context, OperationExecutorContext)
     assert isinstance(Executor(), OperationExecutor)
 
     asyncio.run(context.cancellation.acknowledge_cancellation())
     operand = asyncio.run(context.operands.resolve("sha256:" + "b" * 64, Operand))
     resource = Resource()
-    context.cleanup.own(resource)
+    context.cleanup.own(resource, family=OperationOwnedResource.ASYNC_TASK)
     asyncio.run(context.events.phase("profile.sync.read"))
     asyncio.run(context.events.progress(completed=1, total=1, unit_code="profile"))
     asyncio.run(context.events.log(code="profile.sync.done", severity=OperationLogSeverity.INFO))

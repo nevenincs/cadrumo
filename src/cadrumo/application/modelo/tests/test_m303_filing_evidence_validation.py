@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Modelo, Period
+from ....core import M303RegimenSimplificadoFact, Modelo, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
 from ....domain.deadlines import M303RegimeComposition
@@ -123,6 +123,7 @@ def _evidence(period: Period) -> FilingInstanceEvidence:
         m303=M303FilingInstanceEvidence(
             period=period,
             joint_return_elected=False,
+            annual_volume_nonzero=False,
             insolvency=None,
             exonerado_390=M303Exonerado390FilingEvidence(
                 applicable=False,
@@ -213,7 +214,7 @@ def _simplified_evidence(period: Period) -> FilingInstanceEvidence:
                 ),
                 facts=tuple(
                     HechoActividadSimplificado(
-                        identity=identity,
+                        fact=M303RegimenSimplificadoFact.CUOTA_DEVENGADA_OPERACIONES_CORRIENTES,
                         value=Decimal("1"),
                         evidence_reference=reference,
                     )
@@ -227,6 +228,7 @@ def _simplified_evidence(period: Period) -> FilingInstanceEvidence:
         m303=M303FilingInstanceEvidence(
             period=period,
             joint_return_elected=False,
+            annual_volume_nonzero=False,
             insolvency=None,
             exonerado_390=M303Exonerado390FilingEvidence(
                 applicable=False,

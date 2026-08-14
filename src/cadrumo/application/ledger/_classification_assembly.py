@@ -80,7 +80,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from pydantic import BaseModel, Field
 
@@ -180,6 +180,16 @@ class ClassificationAssembly(BaseModel):
     def assembled(self) -> bool:
         """Return whether the criteria were fully established."""
         return self.criteria is not None
+
+
+class _InitialClassificationState(NamedTuple):
+    missing: tuple[MissingClassifierInput, ...]
+    supply_nature: SupplyNature | None
+    status: CustomerTaxStatus | None
+    issuer_scope: IvaTerritorialScope | None
+    customer_scope: IvaTerritorialScope | None
+    issuer_state: EUMemberState | None
+    customer_state: EUMemberState | None
 
 
 #: Every status the customer could actually turn out to have.
@@ -830,6 +840,85 @@ def _domestic_rate_tier_is_reachable(
     )
 
 
+def _initial_classification_state(
+    *,
+    transaction_date: date | None,
+    declared: DeclaredFacts,
+    issuer_country_code: str | None,
+    customer_country_code: str | None,
+    issuer_postal_code: str | None,
+    customer_postal_code: str | None,
+    issuer_identifier: str | None,
+    customer_identifier: str | None,
+    rate_tier: IvaRateKind | None,
+) -> _InitialClassificationState:
+    missing: list[MissingClassifierInput] = []
+    supply_nature = _value_of(declared.supply_nature)
+    status = _value_of(declared.customer_tax_status)
+    issuer_scope = _scope_or_recorded_gap(
+        missing,
+        issuer_country_code,
+        issuer_postal_code,
+        field="issuer_residency",
+        asserted=_value_of(declared.issuer_scope),
+    )
+    customer_scope = _scope_or_recorded_gap(
+        missing,
+        customer_country_code,
+        customer_postal_code,
+        field="customer_residency",
+        asserted=_value_of(declared.customer_scope),
+    )
+
+    issuer_state = _identification_state(
+        issuer_identifier,
+        asserted=_value_of(declared.issuer_identification_state),
+    )
+    customer_state = _identification_state(
+        customer_identifier,
+        asserted=_value_of(declared.customer_identification_state),
+    )
+
+    if transaction_date is None:
+        missing.append(
+            MissingClassifierInput(
+                field="transaction_date",
+                reason="no invoice date was established",
+                settled_by="the printed invoice date, or an explicit operator assertion",
+            ),
+        )
+
+    # An undetermined status is passed as an OPEN axis rather than as a value,
+    # so the tier is demanded alongside it instead of one round-trip later.
+    settled_status = None if status is _UNDETERMINED_STATUS else status
+    if rate_tier is None and _domestic_rate_tier_is_reachable(
+        issuer_scope,
+        customer_scope,
+        supply_nature,
+        settled_status,
+    ):
+        missing.append(
+            MissingClassifierInput(
+                field="rate_tier",
+                reason=(
+                    "the operation is domestic and no IVA rate tier was read from the document, "
+                    "so the classifier cannot tell which domestic category applies"
+                ),
+                settled_by="the rate printed on the invoice lines, or an explicit operator assertion",
+            ),
+        )
+
+    return _InitialClassificationState(
+        missing=tuple(missing),
+        supply_nature=supply_nature,
+        status=status,
+        issuer_scope=issuer_scope,
+        customer_scope=customer_scope,
+        issuer_state=issuer_state,
+        customer_state=customer_state,
+    )
+
+
 def assemble_classification_criteria(
     *,
     transaction_date: date | None,
@@ -875,71 +964,25 @@ def assemble_classification_criteria(
     Returns:
         :class:`ClassificationAssembly`: the criteria, or the missing inputs.
     """
-    missing: list[MissingClassifierInput] = []
-
-    supply_nature = _value_of(declared.supply_nature)
-    status = _value_of(declared.customer_tax_status)
-
-    issuer_scope = _scope_or_recorded_gap(
-        missing,
-        issuer_country_code,
-        issuer_postal_code,
-        field="issuer_residency",
-        asserted=_value_of(declared.issuer_scope),
+    initial = _initial_classification_state(
+        transaction_date=transaction_date,
+        declared=declared,
+        issuer_country_code=issuer_country_code,
+        customer_country_code=customer_country_code,
+        issuer_postal_code=issuer_postal_code,
+        customer_postal_code=customer_postal_code,
+        issuer_identifier=issuer_identifier,
+        customer_identifier=customer_identifier,
+        rate_tier=rate_tier,
     )
-    customer_scope = _scope_or_recorded_gap(
-        missing,
-        customer_country_code,
-        customer_postal_code,
-        field="customer_residency",
-        asserted=_value_of(declared.customer_scope),
-    )
+    missing = list(initial.missing)
+    supply_nature = initial.supply_nature
+    status = initial.status
+    issuer_scope = initial.issuer_scope
+    customer_scope = initial.customer_scope
 
-    # Resolved unconditionally and demanded conditionally. Which branches need
-    # an identification is the table's to say, and the table cannot be asked
-    # before the rest of the criteria exist -- so the fact is established here if
-    # the evidence carries it, and its ABSENCE is judged further down against the
-    # branch the operation actually reaches.
-    issuer_state = _identification_state(
-        issuer_identifier,
-        asserted=_value_of(declared.issuer_identification_state),
-    )
-    customer_state = _identification_state(
-        customer_identifier,
-        asserted=_value_of(declared.customer_identification_state),
-    )
-
-    if transaction_date is None:
-        missing.append(
-            MissingClassifierInput(
-                field="transaction_date",
-                reason="no invoice date was established",
-                settled_by="the printed invoice date, or an explicit operator assertion",
-            ),
-        )
-
-    # An undetermined status is passed as an OPEN axis rather than as a value,
-    # so the tier is demanded alongside it instead of one round-trip later. The
-    # sentinel is a member of the enum but is the absence of the fact, and
-    # letting it answer "not B2C" would spare the tier on an operation that may
-    # yet land on the branch needing it.
-    settled_status = None if status is _UNDETERMINED_STATUS else status
-    if rate_tier is None and _domestic_rate_tier_is_reachable(
-        issuer_scope,
-        customer_scope,
-        supply_nature,
-        settled_status,
-    ):
-        missing.append(
-            MissingClassifierInput(
-                field="rate_tier",
-                reason=(
-                    "the operation is domestic and no IVA rate tier was read from the document, "
-                    "so the classifier cannot tell which domestic category applies"
-                ),
-                settled_by="the rate printed on the invoice lines, or an explicit operator assertion",
-            ),
-        )
+    issuer_state = initial.issuer_state
+    customer_state = initial.customer_state
 
     if missing:
         # The probe needs otherwise-complete criteria, and this operation does

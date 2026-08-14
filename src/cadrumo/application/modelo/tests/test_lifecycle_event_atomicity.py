@@ -43,7 +43,7 @@ from ....domain.modelos import CalculationRevisionState, ExternalEvidenceKind, W
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import ProfileRecordRepository
 from .. import (
     create_work_unit,
     discard_work_unit,
@@ -101,7 +101,7 @@ def fixture(tmp_path: Path) -> Iterator[_Fixture]:
     """Yield real catalogue repositories over one encrypted SQLite database."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
-        UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=objects).save(
+        ProfileRecordRepository(bucket_id=_PROFILE_ID, objects=objects).save(
             UserProfileRecord(
                 profile_id=_PROFILE_ID,
                 display_name="Atomicity Operator",
