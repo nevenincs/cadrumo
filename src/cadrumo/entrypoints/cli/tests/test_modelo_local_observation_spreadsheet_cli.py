@@ -16,10 +16,10 @@ import pytest
 from openpyxl import Workbook
 
 from ....application.calculations import CalculationObservationRepository, resolve_bindings_from_local_store
-from ....application.user_profile import profile_storage_session
 from ....core import Period
 from ....core.resources import resources
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from .envelope_helpers import unwrap_envelope_notices, unwrap_schema_envelope
 
@@ -97,7 +97,7 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
     notices = unwrap_envelope_notices(result.output)
     assert [notice["code"] for notice in notices] == ["modelo.filing_record.observe_local.non_official"]
 
-    with profile_storage_session(runtime_profile.bucket_id):
+    with open_test_profile_session(runtime_profile.bucket_id):
         repository = CalculationObservationRepository()
         observed = repository.load_observation("100", Period.from_year_and_code(2024, "0A"))
         assert observed is not None

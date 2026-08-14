@@ -32,13 +32,13 @@ from textual.widgets import Button, DataTable, Input, Static
 
 from .....application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection
 from .....application.user_profile import (
-    ProfileRecordAggregateRepository,
     build_profile_overview,
     register_profile_with_credentials,
 )
 from .....core import require_active_bucket_id
 from .....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from .....tests.manager_pilot import wait_until_settled
+from .....tests.profile_capsule import load_test_profile_record
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import (
     FlowTuiApp,
@@ -238,9 +238,7 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
     from .....application.user_profile import (
         next_section_row_index,
         section_row_facts,
-        set_active_fields,
     )
-    from .....application.workflow import workflow_state_repository
     from .....domain.user_profile import load_user_profile_schema
     from .....entrypoints.cli._config._manager_actions import manager_actions
     from .....entrypoints.cli._config._manager_frontend import (
@@ -248,6 +246,7 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
         persist_active_profile_field,
         profile_field_value_refusal,
     )
+    from .....tests.profile_capsule import set_active_test_profile_facts
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
@@ -256,7 +255,7 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
         facts = section_row_facts(
             section, row_index=next_section_row_index(section.key, ()), values={"description": "Consultoria"}
         )
-        workflow_state_repository().update(lambda state: set_active_fields(state, facts))
+        set_active_test_profile_facts(facts)
         yield ProfileManagerApp(
             build_active_profile_overview(),
             persist=persist_active_profile_field,
@@ -757,12 +756,12 @@ async def test_a_modal_secret_never_paints_its_value(tmp_path: Path) -> None:
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
-        aggregate = ProfileRecordAggregateRepository().load(require_active_bucket_id())
+        record = load_test_profile_record(require_active_bucket_id())
         from .....entrypoints.cli._config._manager_actions import manager_actions
         from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
 
         app = ProfileManagerApp(
-            build_profile_overview(aggregate.record, label=_VISUAL_LABEL),
+            build_profile_overview(record, label=_VISUAL_LABEL),
             persist=lambda path, value: persist_active_profile_field(path, value, label=_VISUAL_LABEL),
             actions=manager_actions(),
         )

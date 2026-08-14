@@ -17,7 +17,6 @@ from ....application.operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,
 )
-from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import (
     WorkflowAbortReason,
     WorkflowFailureDetails,
@@ -42,7 +41,7 @@ from ....core import (
 from ....domain.deadlines import ObligationStatus
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import seed_test_profile_record
+from ....tests.profile_capsule import open_test_profile_session, seed_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 
@@ -92,7 +91,7 @@ def _seed_ready_profile_record(bucket_id: str) -> None:
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(_PROFILE_ID),
+        open_test_profile_session(_PROFILE_ID),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(

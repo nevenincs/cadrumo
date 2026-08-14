@@ -23,6 +23,7 @@ from ....domain.iva_compensation import (
     IvaCompensationPeriodState,
     IvaCompensationReconciliationDecision,
 )
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import (
     dev_test_database_password,
     isolated_profile_storage_root,
@@ -36,7 +37,6 @@ from ...calculations import (
     IvaWalletDecisionRepository,
     iva_wallet_decision_key,
 )
-from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .. import load_iva_remote_state, persist_and_reconcile_iva_compensation_wallet
 
@@ -377,7 +377,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
 
 def test_remote_iva_evidence_reload_opens_active_profile_session_without_cli_bootstrap(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        with profile_create_storage_span(_SESSION_BUCKET_ID):
+        with open_test_profile_session(_SESSION_BUCKET_ID):
             workflow_state_repository().update(
                 lambda state: register_minimal_profile(state, profile_id=_SESSION_BUCKET_ID),
             )

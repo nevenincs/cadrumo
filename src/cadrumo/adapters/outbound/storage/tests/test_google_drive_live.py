@@ -32,6 +32,7 @@ import pytest
 
 from .....core.logging import get_logger
 from .....tests.live_gate import requires_live_enabled, requires_live_google_enabled
+from .....tests.profile_capsule import open_test_profile_session
 from .. import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
     OutboundStorageNotFoundError,
@@ -74,13 +75,12 @@ def _require_drive_configured() -> None:
 
 @contextmanager
 def _active_profile_storage_session() -> Iterator[None]:
-    from .....application.user_profile import profile_storage_session
     from .....core import resolve_active_bucket_id
 
     active = resolve_active_bucket_id()
     if active is None:
         pytest.fail("live Google Drive tests require an active AEAT profile pointer")
-    with profile_storage_session(active):
+    with open_test_profile_session(active):
         yield
 
 

@@ -25,7 +25,7 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ...user_profile import profile_create_storage_span
+from ....tests.profile_capsule import open_test_profile_session
 from .._enums import ReviewState
 from .._operator import project_review_queue
 
@@ -89,7 +89,7 @@ def _seed(tmp_path: Path) -> tuple[Settings, dict[str, str]]:
     perfect = _transaction(source_row_index=4, confidence=Decimal("1.00"))
     unscored = _transaction(source_row_index=5, confidence=None)
     catalogue = TransactionCatalogue.from_transactions((low, boundary, high, perfect, unscored))
-    with profile_create_storage_span(_PROFILE_ID):
+    with open_test_profile_session(_PROFILE_ID):
         TransactionCatalogueRepository(bucket_id=_PROFILE_ID).save(catalogue)
     ids = {
         "low": low.transaction_id,
@@ -103,7 +103,7 @@ def _seed(tmp_path: Path) -> tuple[Settings, dict[str, str]]:
 
 def test_confidence_below_includes_only_strictly_lower_rows(tmp_path: Path) -> None:
     settings, ids = _seed(tmp_path)
-    with profile_create_storage_span(_PROFILE_ID):
+    with open_test_profile_session(_PROFILE_ID):
         report = project_review_queue(
             settings=settings,
             state=ReviewState.ALL,
@@ -121,7 +121,7 @@ def test_confidence_below_includes_only_strictly_lower_rows(tmp_path: Path) -> N
 
 def test_confidence_below_one_surfaces_every_scored_row_under_one(tmp_path: Path) -> None:
     settings, ids = _seed(tmp_path)
-    with profile_create_storage_span(_PROFILE_ID):
+    with open_test_profile_session(_PROFILE_ID):
         report = project_review_queue(
             settings=settings,
             state=ReviewState.ALL,
@@ -136,7 +136,7 @@ def test_confidence_below_one_surfaces_every_scored_row_under_one(tmp_path: Path
 
 def test_confidence_below_zero_surfaces_nothing(tmp_path: Path) -> None:
     settings, _ids = _seed(tmp_path)
-    with profile_create_storage_span(_PROFILE_ID):
+    with open_test_profile_session(_PROFILE_ID):
         report = project_review_queue(
             settings=settings,
             state=ReviewState.ALL,
@@ -148,7 +148,7 @@ def test_confidence_below_zero_surfaces_nothing(tmp_path: Path) -> None:
 def test_no_confidence_filter_includes_non_transaction_kinds(tmp_path: Path) -> None:
     """Without the filter the queue is not narrowed to the low-confidence source."""
     settings, ids = _seed(tmp_path)
-    with profile_create_storage_span(_PROFILE_ID):
+    with open_test_profile_session(_PROFILE_ID):
         unfiltered = project_review_queue(settings=settings, state=ReviewState.ALL)
         filtered = project_review_queue(
             settings=settings,

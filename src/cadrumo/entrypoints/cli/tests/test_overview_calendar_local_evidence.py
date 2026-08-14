@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -18,33 +16,29 @@ from ....adapters.outbound.aeat.sede import (
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....application.calculations import CalculationObservationRepository
-from ....application.user_profile import profile_create_storage_span, profile_storage_session
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.config import load_settings
 from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.modelos import upsert_filing_record
 from ....tests import FIXTURES_DIR
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
 from .._overview import _local_calendar_filing_evidence
 from ._overview_calendar_support import (
     _SOURCE_URL,
     PRIMARY_PROFILE_ID,
+    _isolated_backend,
     _justificante_metadata,
     _modelo_record_with_external_justificante,
     _observed_casilla_observations,
-    isolated_calendar_backend,
 )
+
+__all__ = ["_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _SECOND_PROFILE_ID = "22222222-2222-4222-8222-222222222222"
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_calendar_backend(tmp_path):
-        yield
 
 
 def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -> None:
@@ -55,7 +49,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
         filing_period=Period.from_year_and_code(2025, "1T"),
         observations=_observed_casilla_observations(Decimal("10.00")),
     )
-    with profile_storage_session(PRIMARY_PROFILE_ID):
+    with open_test_profile_session(PRIMARY_PROFILE_ID):
         CalculationObservationRepository().save(
             CalculationObservationRepository().prepare_observation_envelope(
                 observation,
@@ -167,7 +161,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
             ),
         )
 
-    with profile_create_storage_span(_SECOND_PROFILE_ID):
+    with open_test_profile_session(_SECOND_PROFILE_ID):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,
@@ -176,9 +170,9 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
             ),
         )
 
-    with profile_storage_session(_SECOND_PROFILE_ID):
+    with open_test_profile_session(_SECOND_PROFILE_ID):
         second_evidence, _second_notice = _local_calendar_filing_evidence(_SECOND_PROFILE_ID, ())
-    with profile_storage_session(PRIMARY_PROFILE_ID):
+    with open_test_profile_session(PRIMARY_PROFILE_ID):
         operator_evidence, _operator_notice = _local_calendar_filing_evidence(
             PRIMARY_PROFILE_ID,
             (),
@@ -207,7 +201,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
 
 def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justificante() -> None:
     pdf_bytes = (FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf").read_bytes()
-    with profile_storage_session(PRIMARY_PROFILE_ID):
+    with open_test_profile_session(PRIMARY_PROFILE_ID):
         store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
         artefact = store.persist_artefact(
             ("130", 2026, Period.from_year_and_code(2026, "1T"), "202613000010001A"),
@@ -272,7 +266,7 @@ def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justif
 
 def test_local_calendar_filing_evidence_resolves_persisted_justificante_metadata() -> None:
     csv = "JUST3032025X1T7"
-    with profile_storage_session(PRIMARY_PROFILE_ID):
+    with open_test_profile_session(PRIMARY_PROFILE_ID):
         repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), _modelo_record_with_external_justificante(csv=csv)))
         JustificanteRepository().save(_justificante_metadata(csv=csv))

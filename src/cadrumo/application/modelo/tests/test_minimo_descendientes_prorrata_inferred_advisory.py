@@ -31,10 +31,10 @@ from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
 from ....domain.contribuyente import DescendantInfo, RentaMaritalStatus, descendant_facts_from_list
 from ....domain.user_profile import UserProfileFact
+from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...aggregation import CalculationSourceDiagnostic
-from ...user_profile import profile_create_storage_span, set_active_fields
 from ...workflow import workflow_state_repository
 from .._minimo_descendientes_advisory import collect_minimo_descendientes_prorrata_inferred_diagnostics
 
@@ -67,7 +67,7 @@ def _bucket(tmp_path: Path) -> Iterator[None]:
     from ... import wizard as _wizard
 
     assert _wizard.WIZARD_FLOWS
-    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_BUCKET_ID):
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
         workflow_state_repository().update(lambda s: register_minimal_profile(s, profile_id=_BUCKET_ID))
         yield
 
@@ -92,7 +92,7 @@ def _revision() -> ModeloRevision:
 def _write(*descendants: DescendantInfo, **profile_facts: str) -> None:
     facts = [UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list(list(descendants))]
     facts.extend(UserProfileFact(path=path, value=value) for path, value in profile_facts.items())
-    workflow_state_repository().update(lambda s: set_active_fields(s, tuple(facts)))
+    set_active_test_profile_facts(tuple(facts))
 
 
 def _write_household(*descendants: DescendantInfo, signals: dict[str, str] | None = None) -> None:

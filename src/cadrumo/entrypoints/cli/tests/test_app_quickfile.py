@@ -59,6 +59,7 @@ from ....domain.transactions import (
 )
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .envelope_helpers import unwrap_envelope_notices as _notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -266,7 +267,6 @@ def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
     from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ....application.calculations import IvaWalletDecisionRepository
     from ....application.invoices import build_catalogue_invoice
-    from ....application.user_profile import profile_storage_session
     from ....domain.invoices import InvoiceCatalogue, link_transaction
     from ....domain.iva import InvoiceKind
 
@@ -301,7 +301,7 @@ def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
         purchase_invoice.invoice_id,
         purchase.transaction_id,
     )
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
             TransactionCatalogue.from_transactions((sale, purchase)),
         )

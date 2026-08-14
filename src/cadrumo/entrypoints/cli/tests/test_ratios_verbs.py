@@ -2,36 +2,23 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
-from pathlib import Path
+from collections.abc import Sequence
 
 import pytest
 from click.testing import Result
 
-from ....application.user_profile import profile_create_storage_span
-from ....application.workflow import workflow_state_repository
 from ....core.i18n import tr
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ....tests.profile_capsule import set_active_test_profile_facts
+from ._strict_cli_fixture_support import inventory_isolated_backend
+
+__all__ = ["inventory_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _invoke_ratios(args: Sequence[str]) -> Result:
     return invoke_cached_cli(["app", "ledger", "ratios", *args])
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
-    ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000")
-        )
-        yield
 
 
 def test_ratios_list_starts_empty() -> None:
@@ -159,13 +146,13 @@ def _capture_censo_with_vivienda_office(office_m2: str, total_m2: str) -> None:
     """
     from decimal import Decimal
 
-    from ....application.user_profile import UserProfileFact, set_active_fields
+    from ....application.user_profile import UserProfileFact
 
     facts = (
         UserProfileFact(path="vivienda_office.total_m2", value=Decimal(total_m2)),
         UserProfileFact(path="vivienda_office.office_m2", value=Decimal(office_m2)),
     )
-    workflow_state_repository().update(lambda state: set_active_fields(state, facts))
+    set_active_test_profile_facts(facts)
 
 
 def test_ratios_set_emits_censo_override_warning_when_suministros_diverges() -> None:

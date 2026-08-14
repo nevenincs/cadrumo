@@ -20,7 +20,7 @@ Profile identity contract:
   refused; ``--label`` is the recovery path for the label case.
 
 No mocks.  Real ``isolated_profile_storage_root`` fixture, real
-``profile_storage_session``, real encrypted repositories.
+``open_test_profile_session``, real encrypted repositories.
 """
 
 from __future__ import annotations
@@ -42,10 +42,9 @@ from ....domain.calculations.registry import (
     SourceRefId,
 )
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
-from ._isolated_profile_storage_fixtures import _isolated_source
+from ....tests.secure_sql import isolated_profile_storage, isolated_profile_storage_root
 
-__all__ = ["_isolated_source"]
+__all__ = ["isolated_profile_storage"]
 from .envelope_helpers import unwrap_envelope_notices
 from .privacy_helpers import (
     assert_public_profile_id_not_leaked,

@@ -3,22 +3,15 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-import pytest
 from click.testing import Result
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import profile_create_storage_span
-from ....application.workflow import workflow_state_repository
 from ....core import CasillaId, validated_casilla_id
-from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.ledger_cli import list_ledger_rows_via_cli
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 
 _CORPUS = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "financial" / "ledger-corpus"
 _FILES = (
@@ -43,30 +36,6 @@ def _casilla_id(value: object) -> CasillaId:
 
 
 _REVISION_CASILLA: CasillaId = _casilla_id("01")
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        # revolut-multi.csv carries GBP/USD rows, so importing it drives the CLI's
-        # live ECB euro reference-rate normalizer; opt in explicitly rather than
-        # relying on the provider's now-guarded default (see fx._ecb_provider).
-        override_settings(
-            cadrumo_local_storage_root=tmp_path,
-            cadrumo_output_language="en",
-            cadrumo_live_tests_enabled="1",
-        ),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
-    ):
-        try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000")
-            )
-            yield
-        finally:
-            dispose_engine()
 
 
 def _oracle_rules() -> list[dict[str, Any]]:

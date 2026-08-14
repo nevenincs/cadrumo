@@ -30,9 +30,9 @@ import pytest
 
 from ....core import Period, RescateType
 from ....core.resources import resources
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .. import create_work_unit
 from .._calculate_input import WorkCalculateInputBundle, build_work_calculate_input_bundle
@@ -106,7 +106,7 @@ def _reasons(bundle: WorkCalculateInputBundle) -> list[str]:
 
 def test_out_of_window_withholds_the_reduccion(tmp_path: Path) -> None:
     """Declared years proving the window closed WITHHOLD the 40% reducción."""
-    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_BUCKET_ID):
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
         work_unit_id, reduccion_casilla_id = _create_m100_work_unit()
         # Contingencia 2020 (general branch): window closes end-2022; a 2024
         # rescate is out of window.
@@ -127,7 +127,7 @@ def test_out_of_window_withholds_the_reduccion(tmp_path: Path) -> None:
 
 def test_in_window_injects_the_reduccion_without_advisory(tmp_path: Path) -> None:
     """An in-window rescate injects the 40% reducción and raises no window advisory."""
-    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_BUCKET_ID):
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
         work_unit_id, reduccion_casilla_id = _create_m100_work_unit()
         # Contingencia 2024, rescate 2024: inside the general window [2024, 2026].
         bundle = _build_bundle(
@@ -142,7 +142,7 @@ def test_in_window_injects_the_reduccion_without_advisory(tmp_path: Path) -> Non
 
 def test_rescate_year_defaults_to_filing_year(tmp_path: Path) -> None:
     """Omitting --rescate-year uses the work unit filing year for the window check."""
-    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_BUCKET_ID):
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
         work_unit_id, reduccion_casilla_id = _create_m100_work_unit()
         # Contingencia 2020, rescate_year omitted -> defaults to filing year 2024
         # -> out of the [2020, 2022] window -> withheld.
@@ -154,7 +154,7 @@ def test_rescate_year_defaults_to_filing_year(tmp_path: Path) -> None:
 
 def test_absent_contingencia_year_injects_with_unverified_advisory(tmp_path: Path) -> None:
     """No contingencia year injects the reducción and warns the window is unverified."""
-    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_BUCKET_ID):
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
         work_unit_id, reduccion_casilla_id = _create_m100_work_unit()
         bundle = _build_bundle(work_unit_id)
 
@@ -166,7 +166,7 @@ def test_absent_contingencia_year_injects_with_unverified_advisory(tmp_path: Pat
 
 def test_parcial_type_adds_guidance_advisory(tmp_path: Path) -> None:
     """A parcial rescate adds the shared-window/mixed-forfeiture guidance advisory."""
-    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_BUCKET_ID):
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
         work_unit_id, reduccion_casilla_id = _create_m100_work_unit()
         bundle = _build_bundle(
             work_unit_id,
@@ -185,7 +185,7 @@ def test_parcial_type_adds_guidance_advisory(tmp_path: Path) -> None:
 
 def test_total_type_adds_no_guidance_advisory(tmp_path: Path) -> None:
     """A total rescate does not raise the parcial guidance advisory."""
-    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_BUCKET_ID):
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
         work_unit_id, _ = _create_m100_work_unit()
         bundle = _build_bundle(
             work_unit_id,

@@ -437,6 +437,74 @@ class ProfileValidationService:
         return str(value)
 
 
+_PROFILE_SCHEMA_VALIDATION_MESSAGE: Final[str] = "profile facts failed schema validation"
+
+_REPORTED_ISSUE_LIMIT: Final[int] = 3
+"""How many refused facts the message names before it summarises the rest.
+
+The operator needs the first few named to act; an unbounded list on a badly
+wrong batch turns a refusal into a wall of text nobody reads.
+"""
+
+
+def reject_invalid_profile_facts(
+    profile_id: str,
+    facts: Iterable[UserProfileFact],
+    *,
+    require_complete: bool,
+    schema: ProfileSchemaDefinition | None = None,
+) -> None:
+    """Refuse a fact set on blocking schema issues, or return silently.
+
+    Every door that writes profile facts -- registration's initial record and
+    the record repository's fact patch alike -- judges through here, so an
+    engine-derived path, an unknown path or a mis-shaped value is refused at
+    the write rather than at whichever surface happened to collect it. A check
+    living only in an edit dialog binds nobody who writes through another
+    surface, and a stored value at a derived path silently displaces the
+    computation that owns it.
+
+    The whole resulting fact sequence is judged rather than the incoming
+    change alone, so a patch is never left half-applied by a later field's
+    refusal.
+
+    ``require_complete`` selects which issues block. A profile that is still
+    :attr:`~cadrumo.domain.user_profile.ProfileSetupState.INCOMPLETE` is by
+    definition allowed to be missing the fields filing depends on -- demanding
+    them in order to build an incomplete profile is a contradiction. Shape and
+    value are judged in both modes; only the missing-required-field issues are
+    deferred, to the moment the profile is completed.
+
+    Raises:
+        ProfileSchemaValidationError: When any blocking issue remains, naming
+            the refused paths and why.
+    """
+    from ...domain.user_profile import ProfileSchemaValidationError, load_user_profile_schema
+
+    service = ProfileValidationService(schema=schema or load_user_profile_schema())
+    report = service.validate_facts(profile_id, facts)
+    blocking = [
+        issue
+        for issue in report.issues
+        if issue.severity is BaseSeverity.ERROR and (require_complete or issue.code not in COMPLETENESS_ISSUE_CODES)
+    ]
+    if not blocking:
+        return
+    named = "; ".join(issue.message for issue in blocking[:_REPORTED_ISSUE_LIMIT])
+    remaining = len(blocking) - _REPORTED_ISSUE_LIMIT
+    detail = f"{named}; and {remaining} more" if remaining > 0 else named
+    raise ProfileSchemaValidationError(
+        f"{_PROFILE_SCHEMA_VALIDATION_MESSAGE}: {detail}",
+        context={
+            "profile_id": profile_id,
+            "issue_count": len(blocking),
+            "issue_codes": tuple(issue.code for issue in blocking),
+            "issue_paths": tuple(issue.path for issue in blocking),
+        },
+        translated_message="application.user_profile.errors.lifecycle_schema_validation_failed",
+    )
+
+
 __all__ = [
     "BOOLEAN_VALUE_ISSUE_CODE",
     "COMPLETENESS_ISSUE_CODES",
@@ -448,4 +516,5 @@ __all__ = [
     "NUMERIC_VALUE_ISSUE_CODE",
     "REQUIRED_FIELD_MISSING_CODE",
     "ProfileValidationService",
+    "reject_invalid_profile_facts",
 ]

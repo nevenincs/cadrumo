@@ -19,7 +19,6 @@ from ....application.operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,
 )
-from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import (
     SiteHealthAlert,
     WorkflowAbortReason,
@@ -45,7 +44,7 @@ from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ....domain.deadlines import ObligationStatus
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import seed_test_profile_record
+from ....tests.profile_capsule import open_test_profile_session, seed_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .._action_rendering import resolved_precondition_action_json_cell
@@ -82,7 +81,7 @@ _RAW_COMMAND_PATTERN = re.compile(r"(?i)(?:^|[\s`'\"])(?:aeat)\s+")
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(_PROFILE_ID),
+        open_test_profile_session(_PROFILE_ID),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(

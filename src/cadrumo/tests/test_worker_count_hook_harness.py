@@ -17,7 +17,7 @@ import pytest
 
 from ._worker_count_hook import DEFAULT_WORKER_COUNT
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.harness]
 
 _SUBPROCESS_TIMEOUT_SECONDS = 60
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[3]

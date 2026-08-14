@@ -7,16 +7,70 @@ from pathlib import Path
 
 import pytest
 
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....application.workflow import workflow_state_repository
+from ....core.config import override_settings
+from ....tests.profile_capsule import open_test_profile_session
+from ....tests.secure_sql import isolated_profile_storage_root, isolated_sessionless_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+def _isolated_state(tmp_path: Path) -> Iterator[None]:
+    with isolated_sessionless_storage_root(tmp_path=tmp_path):
         yield
 
 
-@pytest.fixture(autouse=True)
-def _isolated_source(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+@pytest.fixture(name="_isolated_backend", autouse=True)
+def active_profile_isolated_backend(tmp_path: Path) -> Iterator[None]:
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        open_test_profile_session("11111111-1111-4111-8111-111111111111"),
+    ):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id="11111111-1111-4111-8111-111111111111",
+            ),
+        )
         yield
+
+
+@pytest.fixture(name="_isolated_backend", autouse=True)
+def llm_profile_isolated_backend(tmp_path: Path) -> Iterator[None]:
+    with (
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        open_test_profile_session("00000000-0000-4000-8000-000000000000"),
+    ):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id="00000000-0000-4000-8000-000000000000",
+            ),
+        )
+        yield
+
+
+@pytest.fixture(name="_isolated_backend", autouse=True)
+def live_fx_isolated_backend(tmp_path: Path) -> Iterator[None]:
+    dispose_engine()
+    with (
+        override_settings(
+            cadrumo_local_storage_root=tmp_path,
+            cadrumo_output_language="en",
+            cadrumo_live_tests_enabled="1",
+        ),
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        open_test_profile_session("00000000-0000-4000-8000-000000000000"),
+    ):
+        try:
+            workflow_state_repository().update(
+                lambda state: register_minimal_profile(
+                    state,
+                    profile_id="00000000-0000-4000-8000-000000000000",
+                ),
+            )
+            yield
+        finally:
+            dispose_engine()

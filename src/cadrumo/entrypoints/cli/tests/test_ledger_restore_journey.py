@@ -11,26 +11,22 @@ row's event history.
 
 Harness mirrors the sibling journey suites: an isolated profile backend via
 ``override_settings`` + ``isolated_profile_storage_root`` +
-``profile_create_storage_span`` + ``register_minimal_profile``.
+``open_test_profile_session`` + ``register_minimal_profile``.
 """
 
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Sequence
-from pathlib import Path
+from collections.abc import Sequence
 
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import profile_create_storage_span
-from ....application.workflow import workflow_state_repository
-from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.ledger_cli import list_ledger_rows_via_cli as _list_rows
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ._ledger_seeded_profile_fixture import _isolated_backend
+
+__all__ = ["_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -44,23 +40,6 @@ _ROWS = (
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
-    ):
-        try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000")
-            )
-            yield
-        finally:
-            dispose_engine()
 
 
 def _add_rows() -> list[str]:

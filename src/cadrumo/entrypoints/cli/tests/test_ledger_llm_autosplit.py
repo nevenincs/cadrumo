@@ -7,7 +7,7 @@ rejection-state projection through real application and persistence boundaries.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from decimal import Decimal
 from pathlib import Path
 
@@ -15,10 +15,7 @@ import pytest
 from click.testing import Result
 
 from ....application.ledger import reject_llm_suggestion
-from ....application.user_profile import profile_create_storage_span
-from ....application.workflow import workflow_state_repository
 from ....core import STR_KEYED_MAPPING_ADAPTER
-from ....core.config import override_settings
 from ....core.json_contract import NoticeSeverity
 from ....domain.categories import SpendingCategory
 from ....domain.transactions import BusinessClassification
@@ -26,11 +23,11 @@ from ....llm import LLMClassificationSuggestion
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 from .._ledger_llm_cli import split_recommendation_notice
+from ._isolated_profile_storage_fixtures import llm_profile_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["llm_profile_isolated_backend"]
 
 
 def _invoke(args: Sequence[str]) -> Result:
@@ -39,19 +36,6 @@ def _invoke(args: Sequence[str]) -> Result:
 
 def _json_object(value: object) -> dict[str, object]:
     return STR_KEYED_MAPPING_ADAPTER.validate_python(value)
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
-    ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000")
-        )
-        yield
 
 
 def _import_one_transaction(tmp_path: Path) -> str:

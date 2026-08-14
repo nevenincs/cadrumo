@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
+
+from ....tests.profile_capsule import set_active_test_profile_facts
+from ...tests._profile_backend_fixtures import _isolated_backend
+
+__all__ = ["_isolated_backend"]
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
@@ -18,8 +21,6 @@ from ....domain.modelos import (
     ExternalEvidenceKind,
 )
 from ....domain.user_profile import UserProfileFact
-from ...user_profile import set_active_fields
-from ...workflow import workflow_state_repository
 from .._justificante import register_capture_as_filing_evidence
 from .._snapshot_base import SnapshotLifecycleState
 from ._justificante_reconcile_support import (
@@ -28,16 +29,9 @@ from ._justificante_reconcile_support import (
     _persist_capture,
     _seed_unverified_filing,
     _seed_work_unit,
-    isolated_justificante_backend,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_justificante_backend(tmp_path):
-        yield
 
 
 def test_stamp_registers_justificante_and_marks_filing_live_captured() -> None:
@@ -383,11 +377,8 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_profile_tax_id() -> No
     """A live-captured receipt cannot stamp a filing for a different taxpayer profile."""
     from .._errors import LiveApplicationInputError
 
-    workflow_state_repository().update(
-        lambda state: set_active_fields(
-            state,
-            (UserProfileFact(path="identity.tax_id", value="12345678Z"),),
-        ),
+    set_active_test_profile_facts(
+        (UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")

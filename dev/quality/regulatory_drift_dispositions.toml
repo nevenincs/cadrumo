@@ -448,6 +448,66 @@ enclosing_symbol = "<module>"
 disposition = "not_regulatory"
 rationale = "The filing year of the terminal-UI development fixture. A fixture constant."
 
+# -- Allowlist: zero defaults, scales and mathematical bounds ----------------
+#
+# Surfaced only after the named-constant detector was taught to see a value
+# wrapped in Decimal(...). Every one is a number written as a Decimal because the
+# surrounding code is Decimal-typed, not because the law fixes it.
+
+[[decision]]
+path = "src/cadrumo/application/ledger/_invoice_extraction_authority.py"
+enclosing_symbol = "<module>"
+disposition = "not_regulatory"
+rationale = "The percent scale divisor 100, used to render a fraction as a percentage. A pure mathematical constant, which the authority-flow rule names as an acceptable exception."
+
+[[decision]]
+path = "src/cadrumo/domain/transactions/_models.py"
+enclosing_symbol = "<module>"
+disposition = "not_regulatory"
+rationale = """
+The ceiling a rate fraction is validated against, which is 1 because a fraction
+above one is not a rate at all. A mathematical bound on the representation, not a
+rate the law fixes.
+"""
+
+[[decision]]
+path = "src/cadrumo/application/modelo/_m303_m349_reconcile.py"
+enclosing_symbol = "<module>"
+disposition = "not_regulatory"
+rationale = """
+A one-euro de minimis tolerance below which an M303-versus-M349 gap raises no
+advisory. The application chose it to suppress rounding noise; no provision fixes
+it, and moving it into the registry would give it a legal authority it does not
+have.
+"""
+
+[[decision]]
+path = "src/cadrumo/domain/calculations/registry/_ledger_bindings.py"
+enclosing_symbol = "IvaLedgerObservation"
+disposition = "not_regulatory"
+rationale = "A zero default on a recargo amount field. The absence of a value, not a value."
+
+[[decision]]
+path = "src/cadrumo/domain/calculations/registry/_withholding_bindings.py"
+enclosing_symbol = "WithholdingObservation"
+disposition = "not_regulatory"
+rationale = "A zero default on a retencion practicada field. The absence of a value, not a value."
+
+[[decision]]
+path = "src/cadrumo/domain/fincas/_aggregates.py"
+enclosing_symbol = "_aggregate_finca"
+disposition = "not_regulatory"
+rationale = "A zero accumulator seeded before summing reductions. An initial value for an addition."
+
+[[decision]]
+path = "src/cadrumo/domain/fincas/_aggregates.py"
+enclosing_symbol = "compute_finca_aggregates"
+disposition = "not_regulatory"
+rationale = """
+Zero accumulators and a non-negative field bound on the amortizacion, reduccion
+and imputacion totals. Initial values and a sign constraint, not amounts.
+"""
+
 # -- Grouped decisions, one per file and kind --------------------------------
 
 [[decision]]

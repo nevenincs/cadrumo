@@ -41,8 +41,8 @@ The public surface is grouped by contract:
   :func:`resolve_attachment_store`, the one place a caller holding an optional
   injected :class:`~domain.attachments.AttachmentStoreProtocol` turns it into a
   concrete :class:`AttachmentStore`.
-- Recovery and rotation — :class:`RecoveryRecord`, :class:`MintedRecovery`,
-  BIP-39 recovery helpers, :class:`RotationPlanEntry`,
+- Recovery and rotation — :class:`RecoveryRecord`, the low-level BIP-39
+  recovery helpers, :class:`RotationPlanEntry`,
   :class:`RotationSummary`, and master-key / blob-store rotation functions.
 - Secure-object hierarchy registry — :data:`STORAGE_NAMESPACE_REGISTRY`,
   :data:`STORAGE_PATH_DEFINITIONS`, namespace constants, and
@@ -296,7 +296,6 @@ from .master_key import (
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
     MasterKeyProvider,
-    MintedRecovery,
     NoActiveBucketSessionError,
     RecoveryKey,
     RecoveryRecord,
@@ -316,18 +315,12 @@ from .master_key import (
     get_active_master_key,
     get_master_key_provider,
     has_active_bucket_session,
-    load_recovery_envelope,
     load_wrapped_master_key,
     looks_like_real_tax_id,
-    mint_recovery_envelope,
-    open_session_from_recovery,
     refuse_unsecured_with_real_nif,
-    save_recovery_envelope,
     save_wrapped_master_key,
     suspend_active_session,
     unwrap_master_key,
-    unwrap_recovery_envelope,
-    verify_recovery_mnemonic,
     wrap_master_key,
 )
 from .runtime import (
@@ -515,7 +508,6 @@ __all__ = [
     "MasterKeyPassphraseMismatchError",
     "MasterKeyProvider",
     "MasterKeyUnavailableError",
-    "MintedRecovery",
     "ModeloCatalogueRecord",
     "ModeloRepository",
     "NoActiveBucketSessionError",
@@ -618,12 +610,9 @@ __all__ = [
     "load_corpus_manifest",
     "load_encrypted_envelope",
     "load_envelope",
-    "load_recovery_envelope",
     "load_wrapped_master_key",
     "looks_like_real_tax_id",
     "manifest_path_for",
-    "mint_recovery_envelope",
-    "open_session_from_recovery",
     "parse_profile_custody_envelope",
     "profile_custody_path",
     "redact",
@@ -639,7 +628,6 @@ __all__ = [
     "save_corpus_manifest",
     "save_encrypted_envelope",
     "save_envelope",
-    "save_recovery_envelope",
     "save_wrapped_master_key",
     "secure_object_logical_path",
     "secure_object_namespace_logical_path",
@@ -651,9 +639,7 @@ __all__ = [
     "suspend_active_session",
     "unwrap_blob_payload",
     "unwrap_master_key",
-    "unwrap_recovery_envelope",
     "validate_profile_password",
     "verify_corpus_manifest",
-    "verify_recovery_mnemonic",
     "wrap_master_key",
 ]

@@ -48,12 +48,11 @@ os.environ["CADRUMO_SECRET_STORE_BACKEND"] = "file"
 os.environ["CADRUMO_SECRET_PASSPHRASE"] = "s423-selected-language-passphrase"
 
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from cadrumo.application.user_profile import profile_storage_session
 from cadrumo.core import resolve_active_bucket_id
 
 bucket_id = resolve_active_bucket_id()
 assert bucket_id is not None
-with profile_storage_session(bucket_id):
+with open_test_profile_session(bucket_id):
     catalogue = VerificationReportCatalogueRepository(bucket_id=bucket_id).load()
 report = catalogue.get(sys.argv[3])
 assert report is not None

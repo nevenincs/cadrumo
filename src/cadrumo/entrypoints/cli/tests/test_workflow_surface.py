@@ -19,6 +19,7 @@ from ....core.config import SecretStoreBackend, load_settings, override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....domain.buckets import BucketEventType
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import read_db_at_rest_bytes
 from ....tests.user_profile import register_minimal_profile
 
@@ -136,7 +137,6 @@ def _seed_profile(
     matches the operator's state after a quiet profile-create run.
     """
 
-    from ....application.user_profile import profile_create_storage_span
     from ....application.workflow import workflow_state_repository
 
     repo = workflow_state_repository()
@@ -154,7 +154,7 @@ def _seed_profile(
     }
     if extra_values:
         values.update(extra_values)
-    with profile_create_storage_span("00000000-0000-4000-8000-000000000000"):
+    with open_test_profile_session("00000000-0000-4000-8000-000000000000"):
         repo.update(
             lambda state: register_minimal_profile(
                 state,
@@ -171,7 +171,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     """Profile setup, config reads, deadlines, and filing runtime use one profile bucket."""
 
     from ....application.filing import load_default_filing_profile
-    from ....application.user_profile import fact_value, profile_storage_session
+    from ....application.user_profile import fact_value
     from ....application.workflow import workflow_state_repository
     from ....tests.profile_capsule import load_test_profile_record
 
@@ -198,7 +198,6 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     assert declare_result.exit_code == 0, declare_result.output
 
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....application.user_profile import set_active_field
     from ....application.workflow import read_profile_bucket
     from ....domain.user_profile import UserProfileFact
 
@@ -212,11 +211,9 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
 
     provider = get_master_key_provider()
     with activate_master_key_provider(provider):
-        workflow_state_repository().update(
-            lambda current: set_active_field(current, UserProfileFact(path="preferences.output_language", value="en")),
-        )
+        set_active_test_profile_facts((UserProfileFact(path="preferences.output_language", value="en"),))
 
-        with profile_storage_session(operator_profile_id):
+        with open_test_profile_session(operator_profile_id):
             refreshed = load_test_profile_record(operator_profile_id)
         assert fact_value(refreshed, "preferences.output_language") == "en"
 
@@ -237,7 +234,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     with activate_master_key_provider(get_master_key_provider()):
         state = workflow_state_repository().load()
         assert state.active_profile_bucket_id() == operator_profile_id
-        with profile_storage_session(operator_profile_id):
+        with open_test_profile_session(operator_profile_id):
             stored = load_test_profile_record(operator_profile_id)
         assert fact_value(stored, "identity.tax_id") == "00000000T"
         assert fact_value(stored, "preferences.output_language") == "en"

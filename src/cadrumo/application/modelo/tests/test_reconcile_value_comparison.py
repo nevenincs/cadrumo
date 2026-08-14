@@ -14,12 +14,14 @@ silent false green.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
+
+from ...tests._profile_backend_fixtures import _isolated_backend
+
+__all__ = ["_isolated_backend"]
 
 from ....adapters.inbound.justificante import parse_justificante
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -39,9 +41,6 @@ from ....domain.modelos import (
 )
 from ....tests import FIXTURES_DIR
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
-from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .._reconcile import (
     _reconcile_parsed_justificante,
@@ -58,22 +57,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 _PROFILE_TAX_ID = "00000000T"
 _CLOCK = datetime(2025, 4, 15, tzinfo=UTC)
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
-    ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id="11111111-1111-4111-8111-111111111111",
-                overrides={"identity.tax_id": _PROFILE_TAX_ID},
-            ),
-        )
-        yield
 
 
 def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> WorkUnit:

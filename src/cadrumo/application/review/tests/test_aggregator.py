@@ -35,8 +35,8 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from ...user_profile import profile_create_storage_span, profile_storage_session
 from ...workflow import workflow_state_repository
 from .. import (
     ReviewItemKind,
@@ -73,7 +73,7 @@ def _build_settings(tmp_path: Path) -> Settings:
 def _seed_all_sources(tmp_path: Path) -> Settings:
     """Materialise one pending item in every source under tmp_path."""
     settings = _build_settings(tmp_path)
-    with profile_create_storage_span(_PROFILE_ID):
+    with open_test_profile_session(_PROFILE_ID):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,
@@ -182,7 +182,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
 
 
 def _collect(settings: Settings, **kwargs: Any) -> tuple[Any, ...]:
-    with profile_storage_session(_PROFILE_ID):
+    with open_test_profile_session(_PROFILE_ID):
         return ReviewQueue.collect(settings, bucket_id=_PROFILE_ID, **kwargs)
 
 
@@ -231,5 +231,5 @@ def test_collect_state_all_matches_pending_today(tmp_path: Path) -> None:
 
 def test_collect_returns_empty_tuple_when_no_sources_present(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
-    with profile_create_storage_span(_PROFILE_ID):
+    with open_test_profile_session(_PROFILE_ID):
         assert ReviewQueue.collect(settings, bucket_id=_PROFILE_ID) == ()

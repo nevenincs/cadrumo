@@ -13,12 +13,12 @@ from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.sede import NotificationDocument, RemoteNotification
 from ....application.live.tests._notification_document_support import build_service, sancion_pdf_bytes, served_document
-from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core import require_active_bucket_id
 from ....core.config import override_settings
 from ....core.hashing import sha256_hex
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .envelope_helpers import unwrap_cli_result, unwrap_envelope_notices
@@ -33,7 +33,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(cadrumo_live_state_dir=tmp_path / "probe-live-state"),
-        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
+        open_test_profile_session("00000000-0000-4000-8000-000000000000"),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000")

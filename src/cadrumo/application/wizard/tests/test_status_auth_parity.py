@@ -14,26 +14,20 @@ never echoes an invalid selector. These pin the wizard to that verdict.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
 
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_profile_storage
 from ...state_projection import build_auth_readiness
 from ...workflow import WorkflowState
 from .._status import build_wizard_status
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+__all__ = ["isolated_profile_storage"]
+
 _AUTHENTICATED_AT = datetime(2026, 8, 1, 12, 0, tzinfo=UTC)
-
-
-@pytest.fixture(autouse=True)
-def _file_backed_profile_store(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
 
 
 def _state_with_auth(provider: str | None) -> WorkflowState:

@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from ....core.config import Settings, override_settings
 from ....core.errors import resolve_error_message
 from ....core.i18n import tr
-from ...user_profile import profile_create_storage_span
+from ....tests.profile_capsule import open_test_profile_session
 from .. import ReviewSeverity, ReviewState
 from .._errors import ReviewError, ReviewKindReservedError
 from .._models import FindingReviewItem
@@ -76,7 +76,7 @@ def test_review_queue_row_rejects_blank_legal_refs() -> None:
 def test_project_review_item_not_found_error_omits_raw_item_id() -> None:
     sensitive_item_id = "review-client-tax-id-12345678Z-private-note"
 
-    with profile_create_storage_span("23232323-2323-4232-8232-232323232323"), pytest.raises(ReviewError) as exc_info:
+    with open_test_profile_session("23232323-2323-4232-8232-232323232323"), pytest.raises(ReviewError) as exc_info:
         project_review_item(sensitive_item_id, settings=Settings())
 
     assert exc_info.value.translated_message == "review.operator.errors.item_not_found"

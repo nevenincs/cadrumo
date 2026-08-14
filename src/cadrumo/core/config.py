@@ -338,6 +338,20 @@ class Settings(CadrumoMcpServingSettings):
         ),
     )
 
+    cadrumo_profile_kdf_measure_calibration: bool = Field(
+        default=True,
+        description=(
+            "Whether profile-custody KDF calibration MEASURES the parameter grid on this host. "
+            "True (the default, and the only production posture) samples real supervised "
+            "derivations to pick the strongest grid point that still lands inside the operator "
+            "latency band. False skips the measurement loop and adopts the fixed fallback point "
+            "the calibrator already falls back to when the grid cannot be measured in time. "
+            "This changes only whether the host is MEASURED, never how strongly a profile is "
+            "wrapped: the fallback point is stronger than the measured band's floor, and the "
+            "derivation itself is the same real Argon2id through the same supervised worker."
+        ),
+    )
+
     # ── Live tests ──────────────────────────────────────────────────────────
     # Typed as ``str`` to preserve the strict literal-"1" opt-in predicate.
     cadrumo_live_tests_enabled: str = Field(

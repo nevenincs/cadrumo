@@ -9,13 +9,12 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
+import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....application.user_profile import (
     CENSO_SOURCE_TAG,
-    profile_create_storage_span,
-    profile_storage_session,
 )
 from ....application.workflow import workflow_state_repository
 from ....core import CasillaId, Period, validated_casilla_id
@@ -30,10 +29,12 @@ from ....domain.modelos import (
 )
 from ....domain.user_profile import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
-from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
+from ....tests.profile_capsule import load_test_profile_record, open_test_profile_session, replace_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+
+__all__ = ["_isolated_backend"]
 
 _SOURCE_URL = AnyHttpUrl(aeat_url("sede", "/"))
 _WORK_UNIT_ID = "a" * 64
@@ -71,7 +72,7 @@ _CALENDAR_GATING_FACT_OVERRIDES: dict[str, str] = {
 def isolated_calendar_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(PRIMARY_PROFILE_ID),
+        open_test_profile_session(PRIMARY_PROFILE_ID),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
@@ -81,6 +82,12 @@ def isolated_calendar_backend(tmp_path: Path) -> Iterator[None]:
                 overrides=_CALENDAR_GATING_FACT_OVERRIDES,
             ),
         )
+        yield
+
+
+@pytest.fixture(autouse=True)
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    with isolated_calendar_backend(tmp_path):
         yield
 
 
@@ -108,7 +115,7 @@ def calendar_backend_omitting_gating_facts(tmp_path: Path, *omitted: str) -> Ite
         overrides[path] = ""
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(PRIMARY_PROFILE_ID),
+        open_test_profile_session(PRIMARY_PROFILE_ID),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
@@ -192,7 +199,7 @@ def _justificante_metadata(*, csv: str, tax_id: str = "X1234567L") -> Justifican
 
 
 def _stamp_calendar_enrolment_from_censo() -> None:
-    with profile_storage_session(PRIMARY_PROFILE_ID):
+    with open_test_profile_session(PRIMARY_PROFILE_ID):
         record = load_test_profile_record(PRIMARY_PROFILE_ID)
         censo_paths = {
             "iva.regime": CENSO_SOURCE_TAG,

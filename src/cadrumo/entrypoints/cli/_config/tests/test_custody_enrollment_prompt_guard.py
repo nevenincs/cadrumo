@@ -1,20 +1,25 @@
-"""Real-behaviour proof that recovery enrollment refuses instead of blocking.
+"""Real-behaviour proof that a custody unlock refuses instead of blocking.
 
 The hardened no-echo prompt is only worth what the verbs actually route
-through it. ``config recovery create`` and ``rotate`` must unwrap the master
-key before they can mint a candidate envelope, and the storage substrate's own
-passphrase resolver ends in a bare :func:`getpass.getpass` — a read with no
-real-console precondition, so on Windows it calls ``msvcrt.getwch()`` and
-BLOCKS FOREVER on a console-less host, and with no promotion of an
-echo-suppression failure to a refusal, so it can degrade to an echoing read.
-An enrollment that inherits that resolver hangs with no diagnostic and no way
-for the operator to distinguish a hang from a slow KDF.
+through it. ``config login`` must read the profile passphrase before it can
+unwrap a capsule, and the storage substrate's own passphrase resolver ends in
+a bare :func:`getpass.getpass` — a read with no real-console precondition, so
+on Windows it calls ``msvcrt.getwch()`` and BLOCKS FOREVER on a console-less
+host, and with no promotion of an echo-suppression failure to a refusal, so
+it can degrade to an echoing read. A login that inherits that resolver hangs
+with no diagnostic and no way for the operator to distinguish a hang from a
+slow KDF.
 
 This drives the real verb rather than the prompt helper, which is the whole
 point: exercising :func:`prompt_secret_no_echo` in isolation proves nothing
 about a path that never calls it. The child is a genuine ``DETACHED_PROCESS``
 spawn with no console — no patching, no doubles — and the test fails on
 timeout, so a regression that re-introduces the block cannot pass by hanging.
+
+The child registers a REAL profile first, with the passphrase supplied
+directly, so the login it then attempts has a genuine locked capsule to
+unwrap. Without that the verb would refuse for want of a profile and the
+gate would pass without ever reaching the secret channel it exists to guard.
 
 Windows is where the exposure lives, and where this gate has teeth: there a
 console-less stdin reports ``isatty() == True``, so the verb's cheap
@@ -24,11 +29,6 @@ real-console precondition further in. On POSIX the same spawn yields a non-tty
 below still hold there, but the platform carries no equivalent blocking read
 to regress. The preconditions recorded in the verdict make which case ran
 auditable rather than assumed.
-
-The ``"master.recovery.key"`` literal is a ``not (...).exists()`` refusal
-guard proving a refused enrollment mints no recovery envelope, and it is the
-provider's own filename choice (matches ``_RECOVERY_WRAP_FILENAME`` in
-``application/user_profile/_custody.py``), not a caller-supplied value.
 """
 
 from __future__ import annotations
@@ -45,25 +45,32 @@ import pytest
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"master.recovery.key", "master.key"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring.
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"active-profile"})
+"""Taxonomy-vocabulary literals this module deliberately pins.
 
-``"master.key"`` is asserted absent alongside ``"master.recovery.key"`` in the
-same refused-enrollment proof: neither key material must be minted."""
+The active-profile pointer filename is asserted UNCHANGED across the refused
+login: a refusal must not move the operator's selection to the profile it
+declined to unlock."""
 
 # A console-less child that blocks is unbounded, so any finite budget detects
 # the regression; the size only trades against a false failure. The child must
-# import the whole CLI tree before it can refuse, which has been measured at
-# over a minute on a box running parallel test lanes, so the budget is set well
-# clear of that rather than close to it.
+# import the whole CLI tree and derive a real Argon2id key before it can even
+# reach the prompt, which has been measured at over a minute on a box running
+# parallel test lanes, so the budget is set well clear of that rather than
+# close to it.
 _CHILD_BUDGET_SECONDS = 300.0
 
-_ENROLLMENT_PROBE = """
+_LABEL = "Console Less Login Subject"
+_PASSPHRASE = "console-less-login-operator-secret"  # noqa: S105 - synthetic test fixture
+
+_LOGIN_PROBE = """
 import json, sys
 from pathlib import Path
 
 storage_root = Path(sys.argv[1])
 verdict_path = Path(sys.argv[2])
+label = sys.argv[3]
+passphrase = sys.argv[4]
 verdict = {}
 try:
     from cadrumo.core import config as config_module
@@ -84,7 +91,15 @@ try:
 
     token = config_module._settings_override.set(settings)
     try:
-        sys.argv = ["cadrumo", "config", "recovery", "create"]
+        # A real locked profile, so the login below has a capsule to unwrap
+        # and must reach the passphrase channel to do it.
+        from cadrumo.application.user_profile import logout_active_profile, register_profile_with_credentials
+
+        register_profile_with_credentials(label=label, passphrase=passphrase)
+        logout_active_profile()
+        verdict["profile_registered"] = True
+
+        sys.argv = ["cadrumo", "config", "login", label]
         from cadrumo.entrypoints.cli import main
 
         try:
@@ -118,8 +133,8 @@ def _child_env() -> dict[str, str]:
     return env
 
 
-def _run_console_less_enrollment(storage_root: pathlib.Path) -> dict[str, object]:
-    """Run ``config recovery create`` in a console-less child and return its verdict."""
+def _run_console_less_login(storage_root: pathlib.Path) -> dict[str, object]:
+    """Run ``config login`` in a console-less child and return its verdict."""
     verdict_path = storage_root.parent / "verdict.json"
     creationflags = 0
     if sys.platform == "win32":
@@ -128,9 +143,11 @@ def _run_console_less_enrollment(storage_root: pathlib.Path) -> dict[str, object
         [
             sys.executable,
             "-c",
-            textwrap.dedent(_ENROLLMENT_PROBE),
+            textwrap.dedent(_LOGIN_PROBE),
             str(storage_root),
             str(verdict_path),
+            _LABEL,
+            _PASSPHRASE,
         ],
         creationflags=creationflags,
         env=_child_env(),
@@ -143,22 +160,21 @@ def _run_console_less_enrollment(storage_root: pathlib.Path) -> dict[str, object
     except subprocess.TimeoutExpired:
         process.kill()
         pytest.fail(
-            "`config recovery create` BLOCKED on a console-less host instead of refusing; "
-            "the enrollment path has regressed to the storage substrate's unguarded "
+            "`config login` BLOCKED on a console-less host instead of refusing; "
+            "the unlock path has regressed to the storage substrate's unguarded "
             "passphrase read",
         )
 
-    assert verdict_path.is_file(), "the console-less enrollment produced no verdict"
+    assert verdict_path.is_file(), "the console-less login produced no verdict"
     verdict: dict[str, object] = json.loads(verdict_path.read_text(encoding="utf-8"))
     return verdict
 
 
-def test_recovery_create_refuses_on_a_console_less_host_instead_of_blocking(tmp_path: pathlib.Path) -> None:
-    """The enrollment verb terminates with a refusal, minting no key material."""
+def test_login_refuses_on_a_console_less_host_instead_of_blocking(tmp_path: pathlib.Path) -> None:
+    """The unlock verb terminates with a refusal, unlocking nothing."""
     storage_root = tmp_path / "cadrumo-storage"
-    secret_store_dir = storage_root / "fallback-store"
 
-    verdict = _run_console_less_enrollment(storage_root)
+    verdict = _run_console_less_login(storage_root)
 
     # Precondition: the environment channel is genuinely unavailable, so the
     # passphrase really does have to be resolved interactively. Without this
@@ -167,18 +183,22 @@ def test_recovery_create_refuses_on_a_console_less_host_instead_of_blocking(tmp_
         f"the probe inherited a configured secret-store passphrase: {verdict!r}"
     )
 
-    assert verdict["outcome"] == "exited", (
-        f"the enrollment must end in a typed refusal, not an escaped exception; got {verdict!r}"
+    # Precondition: a real locked profile exists, so the verb had to reach the
+    # secret channel rather than refusing for want of a target.
+    assert verdict.get("profile_registered") is True, (
+        f"the probe never registered a profile, so the login never reached the secret channel: {verdict!r}"
     )
-    assert verdict["exit_code"] != 0, f"a refused enrollment must exit non-zero; got {verdict!r}"
+
+    assert verdict["outcome"] == "exited", (
+        f"the login must end in a typed refusal, not an escaped exception; got {verdict!r}"
+    )
+    assert verdict["exit_code"] != 0, f"a refused login must exit non-zero; got {verdict!r}"
     assert "error_type" not in verdict, (
         f"the refusal must reach the operator through the CLI error boundary; got {verdict!r}"
     )
 
-    assert not (secret_store_dir / "master.key").exists(), "a refused enrollment must not mint master key material"
-    assert not (secret_store_dir / "master.recovery.key").exists(), (
-        "a refused enrollment must not install a recovery envelope"
-    )
+    # A refused unlock must not move the operator's selection onto the target.
+    assert not (storage_root / "active-profile").is_file(), "a refused login left an active-profile selection behind"
 
     if verdict["isatty"] is True:
         # The Windows trap this gate exists for: the verb's cheap interactive

@@ -44,11 +44,11 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....tests.filing_evidence import general_m303_filing_evidence
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...calculations import IvaCompensationHistoryRepository
-from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .. import (
     ModeloIvaWalletCorrectionNoRecordError,
@@ -85,7 +85,7 @@ _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
 def _runtime(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(_BUCKET_ID),
+        open_test_profile_session(_BUCKET_ID),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(

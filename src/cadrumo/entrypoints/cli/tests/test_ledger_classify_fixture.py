@@ -22,6 +22,7 @@ from ....core.config import override_settings
 from ....domain.transactions import derive_transaction_id
 from ....tests import FIXTURES_DIR
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 
@@ -77,14 +78,13 @@ def test_classify_fixture_matches_oracle_derivation() -> None:
 
 @pytest.fixture
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    from ....application.user_profile import profile_create_storage_span
     from ....application.workflow import workflow_state_repository
 
     dispose_engine()
     with (
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
+        open_test_profile_session("00000000-0000-4000-8000-000000000000"),
     ):
         try:
             workflow_state_repository().update(

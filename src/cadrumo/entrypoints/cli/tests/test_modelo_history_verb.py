@@ -8,14 +8,11 @@ carries a dedicated CLI surface test exercising the real backend
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....domain.buckets import (
     BucketEvent,
@@ -25,24 +22,12 @@ from ....domain.buckets import (
     derive_bucket_event_id,
 )
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["active_profile_isolated_backend"]
 
 _EVENT_OCCURRED_AT = datetime(2026, 5, 28, 13, 20, 0, tzinfo=UTC)
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
-    ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
-        )
-        yield
 
 
 def _seed_event(

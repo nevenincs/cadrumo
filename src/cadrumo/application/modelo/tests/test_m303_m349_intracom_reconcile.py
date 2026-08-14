@@ -14,12 +14,14 @@ tautological calculation assertions.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
+
+from ...tests._profile_backend_fixtures import _isolated_backend
+
+__all__ = ["_isolated_backend"]
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -39,9 +41,6 @@ from ....domain.modelos import (
 )
 from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
-from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 
@@ -52,22 +51,6 @@ _CLOCK = datetime(2025, 4, 15, tzinfo=UTC)
 _M303_ADQUISICIONES: CasillaId = validated_casilla_id("10", surface="test")
 _M303_ENTREGAS: CasillaId = validated_casilla_id("59", surface="test")
 _M349_IMPORTE_OPERACIONES: CasillaId = validated_casilla_id("decl.importe-operaciones", surface="test")
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
-    ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id="11111111-1111-4111-8111-111111111111",
-                overrides={"identity.tax_id": _PROFILE_TAX_ID},
-            ),
-        )
-        yield
 
 
 def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> WorkUnit:

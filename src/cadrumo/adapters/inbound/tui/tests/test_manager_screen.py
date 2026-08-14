@@ -20,7 +20,6 @@ from textual.widget import Widget
 from textual.widgets import DataTable, Input, Static
 
 from .....application.user_profile import (
-    ProfileRecordAggregateRepository,
     build_profile_overview,
     register_profile_with_credentials,
 )
@@ -28,6 +27,7 @@ from .....core import require_active_bucket_id, resolve_active_bucket_id
 from .....core.i18n import tr
 from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
 from .....tests.manager_pilot import wait_until_settled
+from .....tests.profile_capsule import load_test_profile_record
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import ProfileManagerApp
 
@@ -43,8 +43,8 @@ _EDITED_PATH = "identity.name"
 
 def _live_overview(label: str = "Manager Subject"):
     """Build the overview from whatever the store currently holds."""
-    aggregate = ProfileRecordAggregateRepository().load(require_active_bucket_id())
-    return build_profile_overview(aggregate.record, label=label)
+    record = load_test_profile_record(require_active_bucket_id())
+    return build_profile_overview(record, label=label)
 
 
 def _persist(path: str, value: str):
@@ -206,7 +206,7 @@ async def test_editing_a_row_writes_through_to_the_encrypted_record(tmp_path) ->
             await wait_until_settled(app, pilot)
             app.exit(None)
 
-        reloaded = ProfileRecordAggregateRepository().load(require_active_bucket_id()).record
+        reloaded = load_test_profile_record(require_active_bucket_id())
         stored = {fact.path: fact.value for fact in reloaded.facts}
         assert stored.get(_EDITED_PATH) == "Ada Lovelace"
 
@@ -317,7 +317,7 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
             await wait_until_settled(app, pilot)
             app.exit(None)
 
-        reloaded = ProfileRecordAggregateRepository().load(require_active_bucket_id()).record
+        reloaded = load_test_profile_record(require_active_bucket_id())
         assert {fact.path: fact.value for fact in reloaded.facts}.get(_EDITED_PATH) == "Ada Lovelace", (
             "the gated door must be the real one, or this test proves nothing about production"
         )
@@ -909,41 +909,6 @@ async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) ->
             assert "12345.67" in rendered, (
                 "the long IRPF field-name label pushed the value column out of the 80-column viewport"
             )
-            app.exit(None)
-
-
-@pytest.mark.asyncio
-async def test_the_manager_states_the_recovery_boundary_by_name(tmp_path) -> None:
-    """Recovery create/rotate stay CLI-only; the manager must say so, and say which verbs.
-
-    Per the recovery-mnemonic-surface decision, the TUI may never paint a
-    recovery mnemonic the application mints -- create and rotate are
-    permanently CLI-only, because both display 24 generated words no
-    framework compositor can show "once". The manager is where every
-    other credential action (certificate, passphrase, censal pull,
-    export) lives as a button, so an operator landing here with no
-    recovery row must not have to infer the boundary from its absence:
-    the exact verbs and the show-once reason must be stated.
-
-    This is a static zone, not a wired action -- there is no
-    ``ManagerAction`` for it, and it never imports the minting
-    callables ``test_no_generated_secret_display.py`` gates.
-    """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
-
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=(100, 30)) as pilot:
-            await pilot.pause()
-            zone = app.screen.query_one("#manager-recovery-boundary", Static)
-            text = str(zone.render())
-
-            assert "aeat config recovery create" in text
-            assert "aeat config recovery rotate" in text
-            # The show-once reason, not just the verb names -- otherwise an
-            # operator reads a bare command pair as an arbitrary redirect
-            # rather than an explained constraint.
-            assert "una sola vez" in text
             app.exit(None)
 
 

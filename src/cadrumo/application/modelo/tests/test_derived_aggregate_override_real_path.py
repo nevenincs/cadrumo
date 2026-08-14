@@ -50,14 +50,14 @@ from ....core.resources import resources
 from ....domain.calculations.registry import BindingId
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile import ProfileSchemaValidationError, UserProfileFact
-from ....tests.profile_capsule import load_test_profile_record
+from ....tests.profile_capsule import (
+    load_test_profile_record,
+    open_test_profile_session,
+    set_active_test_profile_facts,
+)
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...user_profile import (
-    profile_create_storage_span,
-    record_to_path_values,
-    set_active_field,
-)
+from ...user_profile import record_to_path_values
 from ...workflow import workflow_state_repository
 from .. import calculate_modelo_revision_from_bucket_aggregation, create_work_unit
 
@@ -156,7 +156,7 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
     overrides["renta_family.minor_children_in_unit"] = "false"
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(_BUCKET),
+        open_test_profile_session(_BUCKET),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
@@ -194,12 +194,7 @@ def _calculate_estatal_minimo() -> Decimal:
 
 def _store_sentinel_at_derived_path() -> None:
     """Write the sentinel through the real single-field operator write door."""
-    workflow_state_repository().update(
-        lambda state: set_active_field(
-            state,
-            UserProfileFact(path=_DERIVED_PATH, value=_SENTINEL),
-        ),
-    )
+    set_active_test_profile_facts((UserProfileFact(path=_DERIVED_PATH, value=_SENTINEL),))
 
 
 @pytest.mark.usefixtures("_active_profile")

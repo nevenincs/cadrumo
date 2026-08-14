@@ -103,8 +103,19 @@ _HEX_MARKERS = frozenset(
 # ``resident_service`` is the same supplementary-label pattern for a precondition
 # of a RUNNING LOCAL SERVICE rather than of the dependency set; enrolled by
 # ``just test-resident-service``. Full rationale on the pyproject registration.
+# ``harness`` is the same supplementary-label pattern for tests that reach their
+# subject by spawning a real child pytest process. Their cost is MULTIPLICATIVE
+# inside another lane's xdist pool (N outer workers each booting an inner pool),
+# so every lane excludes the label and ``just test-harness`` enrols the members
+# outer-serially. Unlike ``os_keychain``, membership needs no pinned node-id list
+# here: the enrolling recipe names its members by explicit path, and
+# dev/ci/tests/test_machine_aware_load.py proves the labelled set and the
+# recipe's member set are exactly equal, so a test cannot use the label to leave
+# every lane without also joining the verdict that runs it.
 _EXPECTED_CONFIGURED_MARKERS = (
-    _EXECUTION_MARKERS | _HEX_MARKERS | {"docs", "serial", "perf", "external_tool", "os_keychain", "resident_service"}
+    _EXECUTION_MARKERS
+    | _HEX_MARKERS
+    | {"docs", "serial", "perf", "external_tool", "os_keychain", "resident_service", "harness"}
 )
 _OS_KEYCHAIN_MARKER = "os_keychain"
 _LIVE_POLICY_SUBPROCESS_TIMEOUT_SECONDS = 60

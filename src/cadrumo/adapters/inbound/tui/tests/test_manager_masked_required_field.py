@@ -32,7 +32,6 @@ from textual.widgets import Input
 from .....application.user_profile import (
     MASKED_PLACEHOLDER,
     ProfileFieldView,
-    ProfileRecordAggregateRepository,
     build_profile_overview,
     register_profile_with_credentials,
 )
@@ -41,6 +40,7 @@ from .....core.classification import SensitivityClass
 from .....domain.user_profile import load_user_profile_schema
 from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
 from .....tests.manager_pilot import wait_until_settled
+from .....tests.profile_capsule import load_test_profile_record
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import ProfileManagerApp
 from .._manager_screen import FieldEditScreen
@@ -64,8 +64,8 @@ _PLAIN_PATH = "identity.name"
 
 
 def _live_overview():
-    aggregate = ProfileRecordAggregateRepository().load(require_active_bucket_id())
-    return build_profile_overview(aggregate.record, label=_LABEL)
+    record = load_test_profile_record(require_active_bucket_id())
+    return build_profile_overview(record, label=_LABEL)
 
 
 def _persist(path: str, value: str):
@@ -74,7 +74,7 @@ def _persist(path: str, value: str):
 
 
 def _stored() -> dict[str, object | None]:
-    reloaded = ProfileRecordAggregateRepository().load(require_active_bucket_id()).record
+    reloaded = load_test_profile_record(require_active_bucket_id())
     return {fact.path: fact.value for fact in reloaded.facts}
 
 

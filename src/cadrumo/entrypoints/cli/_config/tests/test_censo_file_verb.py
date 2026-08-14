@@ -70,15 +70,15 @@ def test_apply_routes_through_the_single_cotejo_apply_authority() -> None:
     the adopt-all emission itself is proven directly against ``apply_cotejo``
     in the user_profile suite. This inspection-level pin guards the door's
     routing: it must call the single apply authority and never re-introduce a
-    parallel ``set_active_fields`` write that would skip the event.
+    parallel record-repository fact write that would skip the event.
     """
     import inspect
 
     from .. import _censo_file
 
     source = inspect.getsource(_censo_file.censo_file)
-    # The persistence call is apply_cotejo(...), never a bare set_active_fields(...)
+    # The persistence call is apply_cotejo(...), never a bare apply_fact_changes(...)
     # write that would skip the CENSO_APPLIED emission (the prose comment naming
-    # the retired parallel write is not a call, so pin on the call form).
+    # the bypassed write is not a call, so pin on the call form).
     assert "apply_cotejo(state" in source
-    assert "set_active_fields(" not in source
+    assert "apply_fact_changes(" not in source

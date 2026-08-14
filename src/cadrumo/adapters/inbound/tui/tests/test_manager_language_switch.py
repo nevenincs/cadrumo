@@ -24,7 +24,6 @@ from textual.widgets import DataTable, OptionList
 from textual.widgets._footer import FooterKey
 
 from .....application.user_profile import (
-    ProfileRecordAggregateRepository,
     build_profile_overview,
     register_profile_with_credentials,
 )
@@ -32,6 +31,7 @@ from .....core import require_active_bucket_id
 from .....core.i18n import tr
 from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
 from .....tests.manager_pilot import wait_until_settled
+from .....tests.profile_capsule import load_test_profile_record
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import ProfileManagerApp
 from .._manager_screen import _LANGUAGE_KEY, _OUTPUT_LANGUAGE_PATH
@@ -94,9 +94,9 @@ def _register_in(language: str) -> None:
 
 
 def _manager() -> ProfileManagerApp:
-    aggregate = ProfileRecordAggregateRepository().load(require_active_bucket_id())
+    record = load_test_profile_record(require_active_bucket_id())
     return ProfileManagerApp(
-        build_profile_overview(aggregate.record, label=_LABEL),
+        build_profile_overview(record, label=_LABEL),
         persist=lambda path, value: persist_active_profile_field(path, value, label=_LABEL),
     )
 
@@ -242,7 +242,7 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
             )
             app.exit(None)
 
-        record = ProfileRecordAggregateRepository().load(require_active_bucket_id()).record
+        record = load_test_profile_record(require_active_bucket_id())
         stored = {fact.path: fact.value for fact in record.facts}
         assert stored.get(_OUTPUT_LANGUAGE_PATH) == _TARGET_LANGUAGE, (
             "the choice must reach the encrypted record through the ordinary write door"

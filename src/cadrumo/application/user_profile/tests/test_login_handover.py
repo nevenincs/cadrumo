@@ -19,6 +19,7 @@ from pathlib import Path
 from threading import Event as ThreadEvent
 from threading import Thread
 from typing import TypedDict
+from uuid import UUID
 
 import pytest
 from sqlalchemy.exc import DatabaseError as SqlDatabaseError
@@ -27,6 +28,7 @@ from ....adapters.persistence.storage.custody import (
     PROFILE_CUSTODY_SENTINEL_FILENAME,
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
+    compare_and_replace_same_or_predecessor_profile_custody_local_record,
 )
 from ....application.profile_custody import profile_current_bucket_session, profile_session_path
 from ....core import BucketPointer, capture_pointer, read_pointer, write_pointer
@@ -119,6 +121,84 @@ def _replace_journal_in_child(path_text: str, payload: bytes, result_queue: Queu
     replacement.write_bytes(payload)
     os.replace(replacement, path)
     result_queue.put("replaced")
+
+
+def _replace_journal_after_cas_stage_appears(
+    path_text: str,
+    payload: bytes,
+    ready: Event,
+    result_queue: Queue[str],
+) -> None:
+    """Replace the real leaf after the custody CAS has captured its expected bytes."""
+    path = Path(path_text)
+    stage_prefix = f".{path.name}.cas-stage."
+    ready.set()
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        if any(entry.name.startswith(stage_prefix) for entry in path.parent.iterdir()):
+            replacement = path.with_name(f".{path.name}.interleaving-replacement")
+            replacement.write_bytes(payload)
+            os.replace(replacement, path)
+            result_queue.put("replaced-after-capture")
+            return
+    result_queue.put("missed-cas-stage")
+
+
+def _block_idempotent_journal_cleanup_after_publication(
+    path_text: str,
+    predecessor: bytes,
+    watching: Event,
+    ready: Event,
+    release: Event,
+    result_queue: Queue[str],
+) -> None:
+    """Make only post-publication predecessor cleanup unavailable in a child.
+
+    Windows keeps the deterministic ReplaceFileW backup open without DELETE
+    sharing. POSIX removes directory write permission only after the exchanged
+    backup has the predecessor bytes, so the receipt target is already current.
+    """
+    path = Path(path_text)
+    backup_name = f".{path.name}.cas-idempotent-backup"
+    deadline = time.monotonic() + 30
+    original_mode: int | None = None
+    handle = None
+    try:
+        watching.set()
+        while time.monotonic() < deadline:
+            if os.name == "nt":
+                backup = path.with_name(backup_name)
+                if backup.exists():
+                    handle = backup.open("rb")
+                    ready.set()
+                    if not release.wait(30):
+                        result_queue.put("release-timeout")
+                        return
+                    result_queue.put("released")
+                    return
+            else:
+                backup = path.with_name(backup_name)
+                try:
+                    if not backup.exists() or backup.read_bytes() != predecessor:
+                        time.sleep(0.001)
+                        continue
+                except OSError:
+                    continue
+                original_mode = path.parent.stat().st_mode
+                os.chmod(path.parent, original_mode & ~0o222)
+                ready.set()
+                if not release.wait(30):
+                    result_queue.put("release-timeout")
+                    return
+                result_queue.put("released")
+                return
+            time.sleep(0.001)
+        result_queue.put("missed-post-publication-cleanup")
+    finally:
+        if original_mode is not None:
+            os.chmod(path.parent, original_mode)
+        if handle is not None:
+            handle.close()
 
 
 def _read_journal_phase_without_blocking_replace(path: Path) -> str:
@@ -341,9 +421,122 @@ def test_handover_journal_roundtrips_through_the_anchored_bounded_record_store(t
     assert path.read_bytes() == prepared.canonical_json_bytes()
     assert _load_handover_journal(storage_root=storage_root) == prepared
 
-    _clear_handover_journal(storage_root=storage_root)
+    _clear_handover_journal(storage_root=storage_root, journal=prepared)
 
     assert _load_handover_journal(storage_root=storage_root) is None
+
+
+def test_handover_journal_duplicate_prepared_receipt_is_an_identity_preserving_noop(tmp_path: Path) -> None:
+    """Re-saving the first durable receipt neither replaces nor clears it."""
+    storage_root = tmp_path / "handover-root"
+    storage_root.mkdir()
+    prepared = _prepared_handover_journal()
+
+    _save_handover_journal(storage_root=storage_root, journal=prepared)
+
+    path = _handover_journal_path(storage_root)
+    before = path.stat()
+    before_identity = (before.st_dev, before.st_ino)
+    before_bytes = path.read_bytes()
+    _save_handover_journal(storage_root=storage_root, journal=prepared)
+
+    after = path.stat()
+    assert (after.st_dev, after.st_ino) == before_identity
+    assert path.read_bytes() == before_bytes == prepared.canonical_json_bytes()
+    assert _load_handover_journal(storage_root=storage_root) == prepared
+
+
+def test_handover_journal_duplicate_later_phase_receipt_is_an_identity_preserving_noop(tmp_path: Path) -> None:
+    """A complete later phase can be replayed without regressing or replacing it."""
+    storage_root = tmp_path / "handover-root"
+    storage_root.mkdir()
+    prepared = _prepared_handover_journal()
+    published = prepared.at_phase(_HandoverPhase.POINTER_PUBLISHED)
+    _save_handover_journal(storage_root=storage_root, journal=prepared)
+    _save_handover_journal(storage_root=storage_root, journal=published)
+
+    path = _handover_journal_path(storage_root)
+    before = path.stat()
+    before_identity = (before.st_dev, before.st_ino)
+    before_bytes = path.read_bytes()
+    _save_handover_journal(storage_root=storage_root, journal=published)
+
+    after = path.stat()
+    assert (after.st_dev, after.st_ino) == before_identity
+    assert path.read_bytes() == before_bytes == published.canonical_json_bytes()
+    assert _load_handover_journal(storage_root=storage_root) == published
+
+
+def test_handover_journal_retry_converges_after_postpublication_cleanup_refusal(tmp_path: Path) -> None:
+    """A retry removes only the verified predecessor backup after a real cleanup refusal."""
+    storage_root = tmp_path / "handover-root"
+    storage_root.mkdir()
+    prepared = _prepared_handover_journal()
+    published = prepared.at_phase(_HandoverPhase.POINTER_PUBLISHED)
+    _save_handover_journal(storage_root=storage_root, journal=prepared)
+
+    path = _handover_journal_path(storage_root)
+    compare_and_replace_same_or_predecessor_profile_custody_local_record(
+        path,
+        current=published.canonical_json_bytes(),
+        predecessor=prepared.canonical_json_bytes(),
+        maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
+    )
+    assert path.with_name(f".{path.name}.cas-idempotent-backup").exists()
+
+    context = get_context("spawn")
+    watching = context.Event()
+    ready = context.Event()
+    release = context.Event()
+    result_queue: Queue[str] = context.Queue()
+    child = context.Process(
+        target=_block_idempotent_journal_cleanup_after_publication,
+        args=(
+            str(path),
+            prepared.canonical_json_bytes(),
+            watching,
+            ready,
+            release,
+            result_queue,
+        ),
+    )
+    failures: list[BaseException] = []
+
+    def save_later_receipt() -> None:
+        try:
+            _save_handover_journal(storage_root=storage_root, journal=published)
+        except BaseException as exc:
+            failures.append(exc)
+
+    child.start()
+    assert watching.wait(30)
+    worker = Thread(target=save_later_receipt, daemon=True)
+    worker.start()
+    try:
+        assert ready.wait(30)
+        worker.join(timeout=30)
+        assert not worker.is_alive()
+        assert len(failures) == 1
+        assert isinstance(failures[0], ActiveProfilePointerTransactionError)
+
+        assert path.read_bytes() == published.canonical_json_bytes()
+        assert _load_handover_journal(storage_root=storage_root) == published
+
+        release.set()
+        assert result_queue.get(timeout=30) == "released"
+        child.join(timeout=30)
+        assert child.exitcode == 0
+
+        _save_handover_journal(storage_root=storage_root, journal=published)
+
+        assert _load_handover_journal(storage_root=storage_root) == published
+        assert not path.with_name(f".{path.name}.cas-idempotent-backup").exists()
+    finally:
+        release.set()
+        worker.join(timeout=30)
+        if child.is_alive():
+            child.terminate()
+            child.join(timeout=30)
 
 
 @pytest.mark.parametrize(
@@ -395,7 +588,7 @@ def test_handover_journal_clear_refuses_to_remove_a_replaced_noncanonical_leaf(t
     path.write_bytes(substitute)
 
     with pytest.raises(ActiveProfilePointerTransactionError):
-        _clear_handover_journal(storage_root=storage_root)
+        _clear_handover_journal(storage_root=storage_root, journal=prepared)
 
     assert path.read_bytes() == substitute
 
@@ -438,6 +631,77 @@ def test_handover_journal_refuses_a_fresh_canonical_replacement_from_another_pro
             child.join(timeout=30)
 
 
+def test_handover_journal_cas_replace_restores_a_valid_sibling_substitute(tmp_path: Path) -> None:
+    """A sibling leaf swap after CAS capture survives instead of being overwritten."""
+    storage_root = tmp_path / "handover-root"
+    storage_root.mkdir()
+    prepared = _prepared_handover_journal()
+    _save_handover_journal(storage_root=storage_root, journal=prepared)
+    substitute = _ProfileLoginHandoverJournal.prepare(
+        profile_a="interleaved-profile-a",
+        profile_b="interleaved-profile-b",
+        pointer_before=b"interleaved-a",
+        pointer_after=b"interleaved-b",
+        activation_at=datetime(2026, 8, 14, 9, 32, tzinfo=UTC),
+    )
+    context = get_context("spawn")
+    ready = context.Event()
+    result_queue: Queue[str] = context.Queue()
+    child = context.Process(
+        target=_replace_journal_after_cas_stage_appears,
+        args=(str(_handover_journal_path(storage_root)), substitute.canonical_json_bytes(), ready, result_queue),
+    )
+    child.start()
+    try:
+        assert ready.wait(30)
+        with pytest.raises(ActiveProfilePointerTransactionError):
+            _save_handover_journal(
+                storage_root=storage_root,
+                journal=prepared.at_phase(_HandoverPhase.POINTER_PUBLISHED),
+            )
+        assert result_queue.get(timeout=30) == "replaced-after-capture"
+        child.join(timeout=30)
+        assert child.exitcode == 0
+        assert _load_handover_journal(storage_root=storage_root) == substitute
+    finally:
+        if child.is_alive():
+            child.terminate()
+            child.join(timeout=30)
+
+
+def test_handover_journal_cas_clear_refuses_and_preserves_a_valid_sibling_substitute(tmp_path: Path) -> None:
+    """A canonical sibling replacement cannot be deleted by a stale clear intent."""
+    storage_root = tmp_path / "handover-root"
+    storage_root.mkdir()
+    prepared = _prepared_handover_journal()
+    _save_handover_journal(storage_root=storage_root, journal=prepared)
+    substitute = _ProfileLoginHandoverJournal.prepare(
+        profile_a="clear-interleaved-profile-a",
+        profile_b="clear-interleaved-profile-b",
+        pointer_before=b"clear-interleaved-a",
+        pointer_after=b"clear-interleaved-b",
+        activation_at=datetime(2026, 8, 14, 9, 33, tzinfo=UTC),
+    )
+    context = get_context("spawn")
+    result_queue: Queue[str] = context.Queue()
+    child = context.Process(
+        target=_replace_journal_in_child,
+        args=(str(_handover_journal_path(storage_root)), substitute.canonical_json_bytes(), result_queue),
+    )
+    child.start()
+    try:
+        assert result_queue.get(timeout=30) == "replaced"
+        child.join(timeout=30)
+        assert child.exitcode == 0
+        with pytest.raises(ActiveProfilePointerTransactionError):
+            _clear_handover_journal(storage_root=storage_root, journal=prepared)
+        assert _load_handover_journal(storage_root=storage_root) == substitute
+    finally:
+        if child.is_alive():
+            child.terminate()
+            child.join(timeout=30)
+
+
 def test_wrong_b_password_leaves_active_a_and_pointer_bytes_intact(tmp_path: Path) -> None:
     """A rejected B password cannot change any active A handover authority."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
@@ -454,7 +718,7 @@ def test_wrong_b_password_leaves_active_a_and_pointer_bytes_intact(tmp_path: Pat
             assert capture_pointer(storage_root) == pointer_a
             assert profile_current_bucket_session() is active_a
             assert require_profile_record_session(profile_a) is record_a
-            assert not profile_session_path(storage_root=storage_root, bucket_id=profile_b).exists()
+            assert not profile_session_path(storage_root=storage_root, profile_id=UUID(profile_b)).exists()
         finally:
             _close_live_login()
 
@@ -482,7 +746,7 @@ def test_invalid_b_candidate_material_leaves_active_a_and_pointer_bytes_intact(t
             assert capture_pointer(storage_root) == pointer_a
             assert profile_current_bucket_session() is active_a
             assert require_profile_record_session(profile_a) is record_a
-            assert not profile_session_path(storage_root=storage_root, bucket_id=profile_b).exists()
+            assert not profile_session_path(storage_root=storage_root, profile_id=UUID(profile_b)).exists()
         finally:
             _close_live_login()
 
@@ -496,9 +760,9 @@ def test_corrupt_b_activation_store_rolls_back_every_a_authority(tmp_path: Path)
             active_a = profile_current_bucket_session()
             record_a = require_profile_record_session(profile_a)
             pointer_a = capture_pointer(storage_root)
-            a_session_path = profile_session_path(storage_root=storage_root, bucket_id=profile_a)
+            a_session_path = profile_session_path(storage_root=storage_root, profile_id=UUID(profile_a))
             a_session_before = a_session_path.read_bytes() if a_session_path.is_file() else None
-            b_session_path = profile_session_path(storage_root=storage_root, bucket_id=profile_b)
+            b_session_path = profile_session_path(storage_root=storage_root, profile_id=UUID(profile_b))
             database_path = storage_root / "buckets" / profile_b / "db" / "cadrumo.db"
             assert database_path.is_file(), "B must have the committed current event store registration created"
             database_path.write_bytes(b"corrupt-current-b-event-store")
@@ -534,7 +798,7 @@ def test_successful_b_handover_publishes_before_retiring_a(tmp_path: Path) -> No
             assert active_b.bucket_id == profile_b
             assert require_profile_record_session(profile_b).profile_id.hex == profile_b.replace("-", "")
             assert capture_pointer(storage_root) is not None
-            assert profile_session_path(storage_root=storage_root, bucket_id=profile_a).exists() is False
+            assert profile_session_path(storage_root=storage_root, profile_id=UUID(profile_a)).exists() is False
         finally:
             _close_live_login()
 
@@ -569,7 +833,7 @@ def test_pointer_conflict_rolls_back_candidate_and_keeps_live_a(tmp_path: Path) 
             current_pointer = read_pointer(storage_root)
             assert current_pointer is not None
             assert current_pointer.bucket_id == profile_b
-            assert not profile_session_path(storage_root=storage_root, bucket_id=profile_b).exists()
+            assert not profile_session_path(storage_root=storage_root, profile_id=UUID(profile_b)).exists()
         finally:
             if child.is_alive():
                 child.terminate()
@@ -595,7 +859,7 @@ def test_keyring_acceleration_failure_leaves_b_process_scoped_after_handover(tmp
             assert result["active_bucket"] == profile_b
             assert result["session_persisted"] is False
             assert capture_pointer(storage_root) == result["pointer"]
-            assert not profile_session_path(storage_root=storage_root, bucket_id=profile_b).exists()
+            assert not profile_session_path(storage_root=storage_root, profile_id=UUID(profile_b)).exists()
         finally:
             if child.is_alive():
                 child.terminate()

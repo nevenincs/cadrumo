@@ -42,6 +42,7 @@ from ..profile_custody import create_profile_custody_registration_material
 from ._capsule_record import ProfileRecordSession
 from ._custody_transactions import ProfileCustodyTransactionConflictError
 from ._lifecycle import ProfileCapsuleLifecycle
+from ._validation import reject_invalid_profile_facts
 
 if TYPE_CHECKING:
     from ...domain.user_profile import UserProfileFact
@@ -143,6 +144,10 @@ def register_profile_with_credentials(
         ProfileRegistrationError: When the label is blank or the passphrase
             is shorter than :data:`PASSPHRASE_MINIMUM_LENGTH`.
         ProfileRegistrationError: When the label is already bound.
+        ProfileSchemaValidationError: When an initial fact names an unknown or
+            engine-derived path, or carries a value its field will not take.
+            Missing filing fields are not refused: the profile is born
+            incomplete on purpose.
     """
     resolved_label = label.strip()
     if not resolved_label:
@@ -172,6 +177,11 @@ def register_profile_with_credentials(
     envelope = custody_material.envelope
     sentinel = custody_material.sentinel
     session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+    # A profile is born incomplete, so missing filing fields are legitimate
+    # here -- but an unknown path, an engine-derived path, or a mis-shaped
+    # value is not, and refusing them only on later edits would let the create
+    # door plant exactly what every edit afterwards is forbidden to write.
+    reject_invalid_profile_facts(str(identity), facts, require_complete=False)
     try:
         try:
             ProfileCapsuleLifecycle().create(

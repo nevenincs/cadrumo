@@ -11,13 +11,12 @@ from pathlib import Path
 import pytest
 
 from ....application.calculations import CalculationObservationRepository, resolve_bindings_from_local_store
-from ....application.user_profile import profile_storage_session
 from ....core import Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import seed_test_profile_record
+from ....tests.profile_capsule import open_test_profile_session, seed_test_profile_record
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from .envelope_helpers import unwrap_envelope_notices, unwrap_schema_envelope
@@ -128,7 +127,7 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
     notices = unwrap_envelope_notices(result.output)
     assert [notice["code"] for notice in notices] == ["modelo.filing_record.observe_local.non_official"]
 
-    with profile_storage_session(runtime_profile.bucket_id):
+    with open_test_profile_session(runtime_profile.bucket_id):
         repository = CalculationObservationRepository()
         observed = repository.load_observation("100", Period.from_year_and_code(2024, "0A"))
         assert observed is not None
@@ -201,7 +200,7 @@ def test_observe_local_exposes_and_executes_explicit_official_evidence_replaceme
 ) -> None:
     """The operator can invoke the exact escape hatch named by the refusal."""
     period = Period.from_year_and_code(2025, "1T")
-    with profile_storage_session(runtime_profile.bucket_id):
+    with open_test_profile_session(runtime_profile.bucket_id):
         repository = CalculationObservationRepository()
         repository.save(
             repository.prepare_observation_envelope(
@@ -254,7 +253,7 @@ def test_observe_local_exposes_and_executes_explicit_official_evidence_replaceme
     assert result.exit_code == 0, result.output
     payload = unwrap_schema_envelope(result.output)
     assert payload["source_kind"] == "operator_manual"
-    with profile_storage_session(runtime_profile.bucket_id):
+    with open_test_profile_session(runtime_profile.bucket_id):
         replaced = CalculationObservationRepository().load_observation("303", period)
         assert replaced is not None
         assert replaced.source_kind == "operator_manual"

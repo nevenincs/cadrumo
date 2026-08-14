@@ -17,9 +17,10 @@ import pytest
 
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_runner import invoke_cached_cli
-from ._isolated_profile_storage_fixtures import _isolated_backend
+from ....tests.profile_capsule import open_test_profile_session
+from ....tests.secure_sql import isolated_profile_storage
 
-__all__ = ["_isolated_backend"]
+__all__ = ["isolated_profile_storage"]
 from ._profile_cli_support import create_quiet_profile as _create_profile
 from .envelope_helpers import unwrap_envelope_notices
 
@@ -108,7 +109,6 @@ def test_a_fresh_sociedades_profile_gets_the_history_notice_with_no_action() -> 
 def test_one_pulled_observation_from_any_modelo_silences_the_sociedades_notice_too() -> None:
     """The predicate stays official-source membership, not a Sociedades-only exemption."""
     from ....application.calculations import CalculationObservationRepository
-    from ....application.user_profile import profile_storage_session
     from ....application.workflow import read_profile_bucket
     from ....domain.calculations.registry import RegistryModeloObservation
 
@@ -131,7 +131,7 @@ def test_one_pulled_observation_from_any_modelo_silences_the_sociedades_notice_t
 
     pointer = read_profile_bucket("webco-with-history")
     assert pointer is not None
-    with profile_storage_session(pointer.bucket_id):
+    with open_test_profile_session(pointer.bucket_id):
         repository = CalculationObservationRepository()
         repository.save(
             repository.prepare_observation_envelope(

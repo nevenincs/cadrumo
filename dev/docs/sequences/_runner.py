@@ -7,7 +7,7 @@ backend), the project-wide frozen instant :data:`SANDBOX_INSTANT`
 (:func:`cadrumo.core.time.frozen_clock`), a deterministic injected profile
 identity :data:`SANDBOX_PROFILE_ID` registered through the canonical atomic
 create (:func:`~cadrumo.application.user_profile.register_active_profile` inside
-:func:`~cadrumo.application.user_profile.profile_create_storage_span` — never a
+:func:`~cadrumo.application.user_profile.open_test_profile_session` — never a
 parallel write path), English output pinned via the central settings surface,
 and the live-AEAT gate off. Frames are invoked in-process through the cached
 Click tree (:func:`~cadrumo.tests.cli_runner.invoke_cached_cli`). Sequences never
@@ -75,6 +75,7 @@ from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.time import frozen_clock
 from cadrumo.domain.user_profile import UserProfileFact
 from cadrumo.tests.cli_runner import invoke_cached_cli, semantic_cli_text
+from cadrumo.tests.profile_capsule import open_test_profile_session
 from cadrumo.tests.secure_sql import isolated_profile_storage_root
 
 from ._errors import SequenceExecutionError
@@ -465,7 +466,7 @@ def _provision_sandbox_profile() -> None:
     Mirrors the workspace-initialization composition exactly — the
     cross-store atomic create is owned by
     :func:`~cadrumo.application.user_profile.register_active_profile` inside a
-    :func:`~cadrumo.application.user_profile.profile_create_storage_span` — so
+    :func:`~cadrumo.application.user_profile.open_test_profile_session` — so
     the sandbox introduces no parallel write path. The injected fixed
     ``profile_id`` is what makes every profile-derived identifier in a frame's
     output deterministic across runs.
@@ -476,12 +477,11 @@ def _provision_sandbox_profile() -> None:
     pattern). Both targets are public top-level facades.
     """
     from cadrumo.application.user_profile import (
-        profile_create_storage_span,
         register_active_profile,
     )
     from cadrumo.application.workflow import workflow_state_repository
 
-    with profile_create_storage_span(SANDBOX_PROFILE_ID) as routing_profile_id:
+    with open_test_profile_session(SANDBOX_PROFILE_ID) as routing_profile_id:
         workflow_state_repository().update(
             lambda state: register_active_profile(
                 state,

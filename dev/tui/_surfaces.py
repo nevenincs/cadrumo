@@ -159,7 +159,7 @@ def _modelo_work_wizard() -> App:
     from ._modelo_work_fixture import ensure_modelo_work_unit
 
     # ``harness_modelo_work_storage`` (this surface's ``provision``) already
-    # holds a real ``profile_storage_session`` open around this call.
+    # holds a real ``open_test_profile_session`` open around this call.
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         message = "modelo-work-wizard surface built outside its provisioned session"

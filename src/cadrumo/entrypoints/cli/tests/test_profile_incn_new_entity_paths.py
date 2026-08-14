@@ -24,9 +24,10 @@ from __future__ import annotations
 
 import pytest
 
-from ._isolated_profile_storage_fixtures import _isolated_backend
+from ....tests.profile_capsule import open_test_profile_session
+from ....tests.secure_sql import isolated_profile_storage
 
-__all__ = ["_isolated_backend"]
+__all__ = ["isolated_profile_storage"]
 from ._profile_cli_support import (
     create_quiet_profile as _create_profile,
 )
@@ -102,7 +103,7 @@ def _load_active_taxpayer_profile():
     the storage runtime.
     """
 
-    from ....application.user_profile import profile_storage_session, record_to_path_values
+    from ....application.user_profile import record_to_path_values
     from ....application.workflow import workflow_state_repository
     from ....core import read_pointer
     from ....core.config import load_settings
@@ -110,7 +111,7 @@ def _load_active_taxpayer_profile():
 
     pointer = read_pointer(load_settings().cadrumo_local_storage_root)
     assert pointer is not None, "config profile create did not mint an active bucket pointer"
-    with profile_storage_session(pointer.bucket_id):
+    with open_test_profile_session(pointer.bucket_id):
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None

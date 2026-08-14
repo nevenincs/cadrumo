@@ -32,7 +32,7 @@ from typing import Any
 import pytest
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.application.user_profile import UserProfileLifecycleRepository, profile_storage_session
+from cadrumo.application.user_profile import UserProfileLifecycleRepository
 from cadrumo.core import resolve_active_bucket_id
 from cadrumo.domain.transactions import (
     BusinessClassification,
@@ -51,6 +51,7 @@ from cadrumo.domain.user_profile import (
 )
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
+from cadrumo.tests.profile_capsule import open_test_profile_session
 from cadrumo.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 
 from .. import GoldenScenario, load_scenario, run_golden_scenario
@@ -159,7 +160,7 @@ def _seed_ledger_row(*, direction: TransactionDirection, amount: Decimal, filing
             "classified_by": "manual",
         },
     )
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         existing = TransactionCatalogueRepository(bucket_id=bucket_id).load()
         transactions = (*tuple(existing.transactions.values()), row)
         TransactionCatalogueRepository(bucket_id=bucket_id).save(

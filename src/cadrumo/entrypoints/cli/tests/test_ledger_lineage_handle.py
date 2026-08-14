@@ -15,45 +15,24 @@ resolution behaviour are all asserted against real catalogue state.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
-from pathlib import Path
+from collections.abc import Sequence
 from typing import Any
 
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import profile_create_storage_span
-from ....application.workflow import workflow_state_repository
-from ....core.config import override_settings
 from ....domain.transactions import derive_transaction_id
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ._ledger_seeded_profile_fixture import _isolated_backend
 from .envelope_helpers import unwrap_cli_result as _json_result
+
+__all__ = ["_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
-    ):
-        try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000")
-            )
-            yield
-        finally:
-            dispose_engine()
 
 
 def _add_row(*, amount: str, description: str, idempotency_key: str) -> str:

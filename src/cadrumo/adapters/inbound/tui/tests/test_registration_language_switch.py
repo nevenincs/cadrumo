@@ -22,10 +22,11 @@ import pytest
 from textual.widgets import Button, Input, Label, Select, Static
 from textual.widgets._select import SelectOverlay
 
-from .....application.user_profile import ProfileRecordAggregateRepository, assess_passphrase, login_profile
+from .....application.user_profile import assess_passphrase, login_profile
 from .....core import require_active_bucket_id
 from .....core.i18n import output_language, tr
 from .....entrypoints.cli._config._manager_frontend import attempt_registration
+from .....tests.profile_capsule import load_test_profile_record
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import RegistrationApp
 
@@ -211,7 +212,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
         # Unlocking again through the ordinary login door is how the test
         # reaches the encrypted record the screen actually wrote.
         login_profile(name="Language Subject", passphrase_callback=lambda: _PASSWORD)
-        record = ProfileRecordAggregateRepository().load(require_active_bucket_id()).record
+        record = load_test_profile_record(require_active_bucket_id())
         stored = {fact.path: fact.value for fact in record.facts}
         assert stored.get(_OUTPUT_LANGUAGE_PATH) == _TARGET_LANGUAGE, (
             "the profile must be created in the language the chooser was left on"

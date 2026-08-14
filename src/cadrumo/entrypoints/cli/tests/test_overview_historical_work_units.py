@@ -7,7 +7,6 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....application.user_profile import profile_storage_session
 from ....core import Period, resolve_active_bucket_id
 from ....core.resources import resources
 from ....core.time import now
@@ -17,6 +16,7 @@ from ....domain.modelos import (
     derive_work_unit_id,
     upsert_work_unit,
 )
+from ....tests.profile_capsule import open_test_profile_session
 from ._modelo_work_ux_support import _create_profile, _invoke
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -63,7 +63,7 @@ def _create_historical_work_unit(
         filed_calculation_revision_id=filed_calculation_revision_id,
         current_filing_record_id=current_filing_record_id,
     )
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         repository = WorkUnitCatalogueRepository(bucket_id=bucket_id)
         repository.save(upsert_work_unit(repository.load(), unit))
     return work_unit_id

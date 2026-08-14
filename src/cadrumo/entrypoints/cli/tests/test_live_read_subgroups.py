@@ -9,10 +9,8 @@ import shutil
 import subprocess
 import sys
 import textwrap
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 from time import sleep
 from typing import cast
 
@@ -31,14 +29,10 @@ from ....application.live import (
     VerifyService,
     VerifySurface,
 )
-from ....application.user_profile import profile_create_storage_span
-from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.config import override_settings
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 from .._app_live import (
     _PROCESS_INVENTORY_TIMEOUT_SECONDS,
     _iva_remote_state_capture_lines,
@@ -62,12 +56,13 @@ from .._app_live import (
     app as live_app,
 )
 from .._app_live_auth_preflight import _live_auth_preflight_lines
+from ._live_read_profile_fixture import _ACTIVE_TEST_BUCKET_ID, _isolated_backend
+
+__all__ = ["_isolated_backend"]
 
 # INTENTIONAL: integration because it exercises the live-read CLI subgroup wiring and
 # error surfaces locally without contacting AEAT.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_ACTIVE_TEST_BUCKET_ID = "00000000-0000-4000-8000-000000000000"
 
 #: Allowance for a COLD import of the live application + CLI surface in a fresh
 #: interpreter, which dominates the watchdog subprocess below. Measured at
@@ -134,19 +129,6 @@ def _forbidden_mutation_verbs(name: str) -> frozenset[str]:
     normalized = name.lower().replace("_", "-")
     tokens = {normalized, *normalized.split("-")}
     return frozenset(tokens & _FORBIDDEN_LIVE_MUTATION_VERBS)
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(cadrumo_live_state_dir=tmp_path / "probe-live-state"),
-        profile_create_storage_span(_ACTIVE_TEST_BUCKET_ID),
-    ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id=_ACTIVE_TEST_BUCKET_ID),
-        )
-        yield
 
 
 def _invoke_expedientes(*args: str):

@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from datetime import UTC, date, datetime
-from pathlib import Path
 
 import pytest
 from click.testing import Result
@@ -20,7 +19,6 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.storage import SensitivityClass
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....application.live import ExpedientesCapture, ExpedientesService, NotificationsService
-from ....application.user_profile import profile_create_storage_span, profile_storage_session
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.config import override_settings
@@ -32,16 +30,19 @@ from ....domain.modelos import (
     upsert_filing_record,
 )
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
 from .._overview import _calendar_shift_reason_text, _live_censo_verified_profile_keys
 from ._overview_calendar_support import (
     _SOURCE_URL,
     PRIMARY_PROFILE_ID,
+    _isolated_backend,
     _justificante_metadata,
     _modelo_record_with_external_justificante,
     _stamp_calendar_enrolment_from_censo,
-    isolated_calendar_backend,
 )
+
+__all__ = ["_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -54,12 +55,6 @@ _OUTPUT_LANGUAGE_CHOICE_LIST = "|".join(SUPPORTED_OUTPUT_LANGUAGES)
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_calendar_backend(tmp_path):
-        yield
 
 
 _INVALID_CALENDAR_CLI_ARGS = (
@@ -495,7 +490,7 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> 
         csv=local_ref,
         evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
     )
-    with profile_storage_session(PRIMARY_PROFILE_ID):
+    with open_test_profile_session(PRIMARY_PROFILE_ID):
         repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), record))
     ExpedientesService().capture(
@@ -590,7 +585,7 @@ def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_ref
         csv=local_ref,
         evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
     )
-    with profile_storage_session(PRIMARY_PROFILE_ID):
+    with open_test_profile_session(PRIMARY_PROFILE_ID):
         repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), record))
     ExpedientesService().capture(
@@ -677,7 +672,7 @@ def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante
         csv=csv,
         evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
     )
-    with profile_storage_session(PRIMARY_PROFILE_ID):
+    with open_test_profile_session(PRIMARY_PROFILE_ID):
         repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), record))
 
@@ -735,7 +730,7 @@ def test_calendar_text_output_names_verified_aeat_evidence() -> None:
     csv = "JUST3032025X1T7"
     record = _modelo_record_with_external_justificante(csv=csv)
     _stamp_calendar_enrolment_from_censo()
-    with profile_storage_session(PRIMARY_PROFILE_ID):
+    with open_test_profile_session(PRIMARY_PROFILE_ID):
         repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), record))
         JustificanteRepository().save(_justificante_metadata(csv=csv, tax_id="57964777Q"))
@@ -786,7 +781,7 @@ def test_all_profiles_flag_iterates_every_registered_profile() -> None:
     --allow-incomplete is required to get any output at all.
     """
 
-    with profile_create_storage_span("22222222-2222-4222-8222-222222222222"):
+    with open_test_profile_session("22222222-2222-4222-8222-222222222222"):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,

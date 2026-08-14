@@ -22,9 +22,9 @@ from ....domain.modelos import (
     upsert_calculation_revision,
 )
 from ....tests import general_m303_filing_evidence
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .._export import (
     ModeloExportCommand,
@@ -45,7 +45,7 @@ _CUOTA_CASILLA: CasillaId = validated_casilla_id("cuota", surface="_CUOTA_CASILL
 def active_profile(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
+        open_test_profile_session("11111111-1111-4111-8111-111111111111"),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111"),

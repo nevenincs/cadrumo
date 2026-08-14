@@ -432,13 +432,14 @@ def test_the_commit_routes_through_the_single_cotejo_apply_authority() -> None:
     """The door persists through ``apply_censal_read``, never a parallel write.
 
     ``apply_censal_read`` delegates to ``apply_cotejo``, which emits
-    exactly one ``CENSO_APPLIED`` per apply-commit. A direct
-    ``set_active_fields`` write here would skip that event and give the
-    live transport a second write path the file transport does not share.
+    exactly one ``CENSO_APPLIED`` per apply-commit. A direct record-repository
+    ``apply_fact_changes`` write here — the only other door onto profile facts
+    — would skip that event and give the live transport a second write path
+    the file transport does not share.
     """
     source = inspect.getsource(_censo_file.censo_pull)
     assert "apply_censal_read(state" in source
-    assert "set_active_fields(" not in source
+    assert "apply_fact_changes(" not in source
 
 
 def test_the_commit_is_reachable_only_under_apply() -> None:

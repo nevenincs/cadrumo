@@ -16,7 +16,7 @@ The fixture shape mirrors the one the oracle-grounded wizard CLI test suite
 same profile facts, the same ``resolve_registry_revision_for_work_target`` +
 ``ensure_modelo_work_unit_for_active_target`` pair the CLI's own
 ``work create`` command calls, and the same
-:func:`~cadrumo.application.user_profile.profile_storage_session` binding an
+:func:`~cadrumo.application.user_profile.open_test_profile_session` binding an
 application-layer call outside a CLI command's own bootstrap needs.
 """
 
@@ -24,6 +24,8 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+
+from cadrumo.tests.profile_capsule import open_test_profile_session
 
 from ._fixture import workspace
 
@@ -71,7 +73,7 @@ def harness_modelo_work_storage() -> Iterator[str]:
     Creates the profile through the real ``config profile create`` CLI
     door on first use (idempotent: a profile already on disk is reused,
     never re-created), then holds a real
-    :func:`~cadrumo.application.user_profile.profile_storage_session` open
+    :func:`~cadrumo.application.user_profile.open_test_profile_session` open
     for the block -- the same binding
     :func:`~cadrumo.entrypoints.cli._modelo.run_modelo_work_wizard` gets for
     free from the CLI's own command bootstrap, and which an in-process
@@ -101,9 +103,8 @@ def harness_modelo_work_storage() -> Iterator[str]:
             message = "the harness modelo-work-wizard profile did not activate after creation"
             raise RuntimeError(message)
 
-        from cadrumo.application.user_profile import profile_storage_session
 
-        with profile_storage_session(bucket_id):
+        with open_test_profile_session(bucket_id):
             yield bucket_id
 
 

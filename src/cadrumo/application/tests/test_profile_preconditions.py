@@ -79,6 +79,14 @@ _EXPECTED_SCENARIOS: dict[str, _ExpectedOutcome] = {
         "profile.session.current",
         "operator.profile.login",
     ),
+    "session.custody_changed": _ExpectedOutcome(
+        "profile.session.current",
+        "operator.profile.login",
+    ),
+    "session.keyring_unavailable": _ExpectedOutcome(
+        "profile.session.logged_in",
+        "operator.profile.login",
+    ),
     "session.schema_version_mismatch": _ExpectedOutcome(
         "profile.session.schema_current",
         "operator.profile.login",

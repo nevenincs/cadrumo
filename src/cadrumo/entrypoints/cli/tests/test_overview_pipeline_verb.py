@@ -25,7 +25,6 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....application.overview import ModeloReadinessState
-from ....application.user_profile import profile_storage_session
 from ....core import resolve_active_bucket_id
 from ....domain.modelos import (
     VerificationCompletenessStatus,
@@ -33,6 +32,7 @@ from ....domain.modelos import (
     derive_verification_report_id,
     upsert_verification_report,
 )
+from ....tests.profile_capsule import open_test_profile_session
 from .._overview_payloads import OverviewPipelineModeloPayload
 from ._modelo_work_ux_support import _create_profile, _invoke
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
@@ -293,7 +293,7 @@ def test_pipeline_distinguishes_persisted_incomplete_from_never_verified(
     )
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         repository = VerificationReportCatalogueRepository(bucket_id=bucket_id)
         repository.save(upsert_verification_report(repository.load(), report))
 

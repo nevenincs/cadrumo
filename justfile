@@ -492,8 +492,8 @@ test-unit-serial:
 [doc('Run the integration suite in two lanes: parallel xdist, then the isolation-sensitive serial tests alone.')]
 [group('testing')]
 test-integration:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "integration and not serial and not os_keychain"
-    @uv run --no-sync pytest -q -m "integration and serial and not perf and not os_keychain" -n0
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "integration and not serial and not os_keychain and not harness"
+    @uv run --no-sync pytest -q -m "integration and serial and not perf and not os_keychain and not harness" -n0
 
 # THIS FILE IS THE SOLE DECLARATION SITE FOR EVERY `dev/` TEST LANE.
 #
@@ -624,12 +624,12 @@ test-both-lanes:
 [doc('Run only the parallel integration lane, holding the isolation-sensitive serial tests out.')]
 [group('testing')]
 test-integration-parallel:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "integration and not serial and not os_keychain"
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "integration and not serial and not os_keychain and not harness"
 
 # Run only the serial (isolation-sensitive) integration lane, no xdist workers.
 [group('testing')]
 test-integration-serial:
-    @uv run --no-sync pytest -q -m "integration and serial and not perf and not os_keychain" -n0
+    @uv run --no-sync pytest -q -m "integration and serial and not perf and not os_keychain and not harness" -n0
 
 # Run the OS-credential-store custody tests. These carry `os_keychain` alongside
 # their execution marker, and EVERY lane above excludes it, so this recipe is the

@@ -33,22 +33,18 @@ path: whichever is unavailable or insufficient, the operator-facing
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....application.user_profile import profile_create_storage_span
-from ....application.workflow import workflow_state_repository
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .envelope_helpers import require_schema_envelope as _json_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["active_profile_isolated_backend"]
 
 
 def _redacted(tax_id: str) -> str:
@@ -77,18 +73,6 @@ _BASE_ARGS = [
     "--taxable-base", "100.00",
     "--iva-rate", "21",
 ]  # fmt: skip
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
-    ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111"),
-        )
-        yield
 
 
 def _line_value(output: str, key: str) -> str:

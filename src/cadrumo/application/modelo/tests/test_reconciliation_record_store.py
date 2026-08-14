@@ -46,9 +46,9 @@ from ....core.resources import resources
 from ....domain.buckets import BucketEventType
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
 from ....tests import FIXTURES_DIR
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .._reconcile import (
     ModeloReconciliationCommand,
@@ -79,7 +79,7 @@ _RECONCILED_AT = datetime(2026, 6, 1, 9, 15, 30, tzinfo=UTC)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(_PROFILE_ID),
+        open_test_profile_session(_PROFILE_ID),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(

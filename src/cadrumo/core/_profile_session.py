@@ -17,9 +17,10 @@ class ProfileSessionRefusalReason(StrEnum):
     """Closed enumeration of fail-closed persisted-session refusal reasons.
 
     Every value names one branch on which a persisted profile session is
-    NOT resumed. ``ABSENT`` is the ordinary logged-out state; every other
-    member also implies the stale artefacts were deleted so the next
-    ``aeat config login`` starts clean.
+    NOT resumed. ``ABSENT`` is the ordinary logged-out state.  Stale,
+    authenticated receipts are removed only when their exact keychain entry
+    is reachable; ``KEYRING_UNAVAILABLE`` deliberately preserves that
+    evidence and leaves authentication process-scoped.
     """
 
     ABSENT = "absent"
@@ -39,6 +40,12 @@ class ProfileSessionRefusalReason(StrEnum):
 
     KEYCHAIN_ENTRY_MISSING = "keychain_entry_missing"
     """The OS-keychain session key vanished; treated as logged out."""
+
+    KEYRING_UNAVAILABLE = "keyring_unavailable"
+    """The OS keychain is unavailable; existing cache evidence is retained."""
+
+    CUSTODY_CHANGED = "custody_changed"
+    """The current envelope generation or DEK epoch revoked this cache."""
 
     TAMPERED = "tampered"
     """AEAD tag verification failed (metadata or ciphertext altered)."""

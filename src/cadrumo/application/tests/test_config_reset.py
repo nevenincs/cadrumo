@@ -10,6 +10,8 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from ...tests.profile_capsule import open_test_profile_session
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_A_ID = "11111111-1111-4111-8111-111111111111"
@@ -59,20 +61,22 @@ def _create_profile(
     label: str,
     tax_id: str,
 ) -> None:
-    from ..user_profile import profile_create_storage_span, register_active_profile
+    from ...domain.user_profile import ProfileSetupState, UserProfileRecord
+    from ...tests.profile_capsule import seed_test_profile_record
+    from ..user_profile import ProfileCapsuleLifecycle
     from ..wizard import WIZARD_FLOWS
-    from ..workflow import workflow_state_repository
 
     assert WIZARD_FLOWS
-    with profile_create_storage_span(profile_id):
-        workflow_state_repository().update(
-            lambda current: register_active_profile(
-                current,
+    with open_test_profile_session(profile_id):
+        seed_test_profile_record(
+            UserProfileRecord(
                 profile_id=profile_id,
-                display_name=label,
                 facts=_profile_facts(tax_id=tax_id, name=label),
+                setup_state=ProfileSetupState.COMPLETE,
             ),
+            label=label,
         )
+        ProfileCapsuleLifecycle().select(profile_id)
 
 
 def _write_active_pointer(root: Path, bucket_id: str) -> None:
@@ -98,7 +102,6 @@ def _persist_filing(
         ModeloRecordCatalogue,
         derive_filing_record_id,
     )
-    from ..user_profile import profile_storage_session
 
     work_unit_id = (seed * 64)[:64]
     revision_id = ((chr(ord(seed) + 1)) * 64)[:64]
@@ -118,7 +121,7 @@ def _persist_filing(
         filed_at=datetime(filing_year, 7, 1, tzinfo=UTC),
         filed_by="aeat.cli.modelo.file",
     )
-    with profile_storage_session(bucket_id):
+    with open_test_profile_session(bucket_id):
         repository = ModeloRecordCatalogueRepository(bucket_id=bucket_id)
         catalogue = repository.load()
         repository.save(

@@ -18,19 +18,16 @@ real bucket and the real registry authority resolves the bindings.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import profile_create_storage_span, set_active_fields
-from ....application.workflow import workflow_state_repository
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ....tests.profile_capsule import set_active_test_profile_facts
+from ._strict_cli_fixture_support import binding_isolated_backend
+
+__all__ = ["binding_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -61,33 +58,14 @@ _RESOLVED_BINDING_IDS = frozenset(
 )
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
-    ):
-        try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111"),
-            )
-            yield
-        finally:
-            dispose_engine()
-
-
 def _seed_partial_modelo_100_profile() -> None:
     """Write the four profile facts that resolve a proper subset of M100 bindings."""
-    workflow_state_repository().update(
-        lambda state: set_active_fields(
-            state,
-            (
-                UserProfileFact(path="tax_residence.ccaa", value="cataluna"),
-                UserProfileFact(path="renta_filing.declaration_type", value="1"),
-                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-            ),
+    set_active_test_profile_facts(
+        (
+            UserProfileFact(path="tax_residence.ccaa", value="cataluna"),
+            UserProfileFact(path="renta_filing.declaration_type", value="1"),
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
         ),
     )
 

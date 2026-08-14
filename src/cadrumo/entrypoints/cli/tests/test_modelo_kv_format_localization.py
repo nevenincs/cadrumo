@@ -10,7 +10,6 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....domain.modelos import (
@@ -20,6 +19,7 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 
@@ -34,7 +34,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     dispose_engine()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(_PROFILE_ID),
+        open_test_profile_session(_PROFILE_ID),
     ):
         try:
             workflow_state_repository().update(

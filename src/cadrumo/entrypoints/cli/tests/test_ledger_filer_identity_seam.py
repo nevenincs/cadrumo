@@ -38,9 +38,9 @@ from typing import Final
 import pytest
 
 from ....application.ledger import FILER_TAX_ID_FACT_PATH, resolve_filer_tax_id
-from ....application.user_profile import set_active_fields
 from ....application.workflow import workflow_state_repository
 from ....domain.user_profile import UserProfileFact
+from ....tests.profile_capsule import set_active_test_profile_facts
 from ._ledger_validation_support import open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -65,9 +65,7 @@ def test_the_reading_path_reads_the_identifier_the_profile_declares() -> None:
     and requires the lookup to have followed it.
     """
     repository = workflow_state_repository()
-    repository.update(
-        lambda state: set_active_fields(state, (UserProfileFact(path=FILER_TAX_ID_FACT_PATH, value=_DECLARED_NIF),)),
-    )
+    set_active_test_profile_facts((UserProfileFact(path=FILER_TAX_ID_FACT_PATH, value=_DECLARED_NIF),))
 
     declared = resolve_filer_tax_id(profile_record=repository.load().active_profile_record())
 
