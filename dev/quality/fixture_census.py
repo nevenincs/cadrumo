@@ -515,21 +515,29 @@ def _performs_no_work(body: list[ast.stmt]) -> bool:
     exists to force the consuming module to supply its own. Every such scaffold
     in the tree normalises identically no matter what concept it scaffolds.
 
-    A body that calls nothing, opens no context and branches nowhere is a value
-    binding: ``return _BUCKET_ID`` is the same AST in every module while the
-    constant behind it differs in each. Reporting eleven per-module overrides as
-    one duplicated behaviour inverts the truth -- they are eleven DIFFERENT
-    values wearing one trivial shape.
+    A body that only hands back a module global -- ``return _BUCKET_ID`` -- is a
+    value binding. It is the same AST in every module while the constant behind
+    it differs in each, so reporting eleven per-module overrides as one
+    duplicated behaviour inverts the truth: they are eleven DIFFERENT values
+    wearing one trivial shape.
 
-    Grouping either kind reports identical absence of behaviour as duplication,
+    The distinction is deliberately drawn at NAME versus LITERAL, not at
+    "performs no call". ``return "fixed"`` is self-contained and identical
+    wherever it appears, so three fixtures sharing it genuinely are one
+    behaviour copied and MUST still be reported. Only the bare-name form defers
+    its value to a per-module global and is therefore uninformative.
+
+    Grouping either excluded kind reports absence of behaviour as duplication,
     and a detector that fires on non-duplicates is one reviewers learn to skip.
     """
     if not body:
         return False
     if all(isinstance(statement, ast.Raise) for statement in body):
         return True
-    operations = (ast.Call, ast.With, ast.AsyncWith, ast.For, ast.AsyncFor, ast.While, ast.If, ast.Try)
-    return not any(isinstance(node, operations) for statement in body for node in ast.walk(statement))
+    if len(body) != 1:
+        return False
+    only = body[0]
+    return isinstance(only, ast.Return) and isinstance(only.value, ast.Name)
 
 
 def _is_deferred_to_call_site(value: ast.expr, deferred_names: frozenset[str]) -> bool:
