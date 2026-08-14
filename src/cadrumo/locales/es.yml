@@ -3511,8 +3511,8 @@ cli:
       support_matrix:
         help: 'Muestra la matriz de soporte por modelo a nivel de registro: grado
           de cálculo, manifiesto de completitud, formatos de exportación, cobertura
-          de extractores, renombrados de casillas declarados, decisiones de baja de
-          soporte y referencias cruzadas con el portal de la AEAT.'
+          de extractores, renombrados de casillas declarados y referencias cruzadas
+          con el portal de la AEAT.'
       verification_report:
         app_help: Inspeccionar los informes de verificación registrados
         list_help: Listar los informes de verificación, opcionalmente filtrados por
@@ -4362,6 +4362,7 @@ cli:
         session_not_persisted: No hay un almacén de claves del sistema utilizable,
           así que la sesión no se puede guardar; este inicio de sesión solo vale para
           el comando actual.
+      passphrase_prompt: 'Contraseña del perfil: '
       refusal:
         abandoned: Se ha cancelado el inicio de sesión; no se ha abierto ningún perfil.
     logout:
@@ -4369,19 +4370,6 @@ cli:
       notices:
         already_logged_out: Ningún perfil tenía la sesión iniciada; no hay nada que
           cerrar.
-    passphrase:
-      change:
-        help: Cambia la contraseña del almacén de secretos tras verificar la actual.
-      confirm_new_passphrase_prompt: 'Confirma la nueva contraseña del almacén secreto
-        Cadrumo: '
-      current_passphrase_prompt: 'Contraseña actual del almacén secreto Cadrumo: '
-      errors:
-        current_passphrase_incorrect: La contraseña actual es incorrecta; el almacén
-          de secretos no se ha modificado.
-        store_unprovisioned: El almacén de secretos en archivo no está inicializado;
-          no hay contraseña que cambiar.
-      help: Gestiona la contraseña del almacén de secretos en archivo.
-      new_passphrase_prompt: 'Nueva contraseña del almacén secreto Cadrumo: '
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
       archive:
@@ -4744,36 +4732,6 @@ cli:
           dentro de un límite de tiempo.
         model_help: Identificador del modelo que se verificará. Por defecto, el modelo
           seleccionado para la función.
-    recover:
-      errors:
-        recovery_code_rejected: El código de recuperación no abrió el envoltorio de
-          recuperación; el almacén de secretos no se ha cambiado.
-      help: Recupera el almacén de secretos de archivo con el código de recuperación
-        de 24 palabras y vincúlalo a una frase de contraseña nueva.
-    recovery:
-      candidate_intro: 'Tu nuevo código de recuperación. Anota ahora estas 24 palabras,
-        en orden:'
-      create:
-        help: Registra un código de recuperación; las palabras aparecen una sola vez
-          en el terminal y deben volver a escribirse.
-      errors:
-        interactive_terminal_required: 'El registro de recuperación necesita un terminal
-          interactivo: el código se muestra una vez y debe volver a escribirse.'
-        retype_mismatch: El código de recuperación reescrito no coincide con el mostrado;
-          no se ha cambiado nada.
-      help: Gestiona el código de recuperación de 24 palabras del almacén de secretos
-        de archivo.
-      recovery_code_prompt: 'Código de recuperación de 24 palabras: '
-      retype_prompt: 'Vuelve a escribir el código de recuperación de 24 palabras para
-        confirmar (entrada oculta): '
-      rotate:
-        help: Sustituye el código de recuperación registrado; las palabras nuevas
-          aparecen una sola vez y deben volver a escribirse.
-      status:
-        help: Muestra si hay un código de recuperación registrado, sin exponerlo.
-      verify:
-        help: Comprueba que un código de recuperación abre el envoltorio de recuperación
-          guardado.
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
       connectivity_target_help: Objetivo de conectividad que se debe comprobar
@@ -5806,7 +5764,6 @@ cli:
           CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
           y CADRUMO_SECRET_PASSPHRASE; los logs quedan por defecto bajo ese directorio
           de almacenamiento.
-        passphrase_change: Cambia la contraseña que protege los datos locales.
         profile_delete: Eliminar un perfil de contribuyente.
         profile_duplicate: Duplicar un perfil de contribuyente existente.
         profile_export: Exporta un paquete portátil del perfil.
@@ -5818,17 +5775,11 @@ cli:
         profile_sar: Exporta un paquete de datos de acceso del interesado.
         profile_show: Mostrar los datos del perfil activo.
         profile_status: Mostrar el estado del perfil activo.
-        recover: Recupera el acceso local con una frase de recuperación.
-        recovery_create: Registra una frase de recuperación.
-        recovery_rotate: Renueva la frase de recuperación.
-        recovery_status: Muestra el estado de registro de la frase de recuperación.
-        recovery_verify: Verifica una frase de recuperación sin utilizarla.
         reset_resume: Continúa una operación de reinicio incompleta.
         reset_start: Inicia un nuevo reinicio irreversible de todos los perfiles locales.
         reset_status: Muestra el estado de una operación de reinicio sin modificar
           datos locales.
         section_authentication: Autenticación AEAT
-        section_custody: Custodia de contraseña y recuperación
         section_diagnostics: Diagnóstico
         section_first_run: Primera ejecución
         section_profile_inspection: Inspección de perfil
@@ -5871,7 +5822,6 @@ cli:
           un formulario oficial de la AEAT, distinto de su unidad de trabajo o exportación
           local.
         recovery_login: Inicia o renueva una sesión ausente, cerrada o caducada.
-        recovery_passphrase: Recupera el almacén de secretos con el código registrado.
         recovery_profile: Inspecciona un problema detectado en el puntero de perfil
           activo.
         recovery_repair: Antes de cambiar datos, ejecuta este informe de salud de
@@ -7730,9 +7680,6 @@ errors:
       no está admitida fiscalmente. Usa FIFO, precio medio ponderado o coste medio.
     refused_profile_login_throttled: Demasiados intentos de inicio de sesión fallidos.
       Espera %{seconds} segundos antes de volver a intentarlo.
-    refused_profile_logout_override: El cierre de sesión no puede cambiar un perfil
-      activo seleccionado mediante --profile. Quita la opción --profile y vuelve a
-      intentarlo.
     refused_profile_not_configured: La verificación de la declaración de la Renta
       necesita un perfil de residencia fiscal. Completa el perfil antes de continuar.
     refused_profile_not_found: No existe ningún perfil con el identificador indicado.
@@ -7971,15 +7918,6 @@ flows:
       google_export_year_invalid: Introduce un año entre 2000 y 2099.
       logout: Cerrar sesión
       logout_done: Sesión cerrada.
-      passphrase: Cambiar la contraseña
-      passphrase_confirm: Confirme la nueva contraseña
-      passphrase_current: Contraseña actual
-      passphrase_done: Contraseña cambiada.
-      passphrase_failed: No se pudo cambiar la contraseña. Revisa el estado del almacenamiento
-        local y vuelve a intentarlo.
-      passphrase_mismatch: La nueva contraseña y su confirmación no coinciden.
-      passphrase_new: Nueva contraseña
-      passphrase_wrong_current: Esa no es la contraseña actual.
       provider:
         certificate: Certificado electrónico
         clave_movil: Cl@ve Móvil
@@ -8258,18 +8196,11 @@ flows:
         setup_incomplete: configuración incompleta
         tombstoned: eliminado
         unknown: desconocido
-    recovery:
-      commands_title: Acciones (copiar y ejecutar)
-      enrolled: activado
-      fingerprint: Huella
-      not_enrolled: no activado
-      state: Código de recuperación
     section:
       auth: Autenticación
       notices: Avisos
       profile: Perfil activo
       profiles: Perfiles
-      recovery: Recuperación
     title: Estado
   tui:
     binding_back: Anterior
@@ -68588,7 +68519,7 @@ modelo:
             label: Total cuota IVA devengada (repercutido a los tres tipos + autorepercutido
               en adquisiciones intracomunitarias)
           iva-cuota-repercutida-general:
-            help: null
+            help: Cuota total de IVA repercutido calculada al tipo general del 21%.
             label: Cuota IVA repercutido al tipo general (21%)
           iva-cuota-repercutida-reducido:
             help: null
@@ -71809,13 +71740,7 @@ modelo:
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
               label: null
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: null
-              label: null
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
               help: null
               label: null
             x-d5r62bjiclpnar3kc5i6u:
@@ -72520,17 +72445,9 @@ modelo:
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
               label: Cuota IVA repercutido al tipo reducido (10%)
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: Casilla transitoria del RD-ley 4/2024 para el tipo reducido, que
-                convive con el tipo reducido ordinario del 10%.
-              label: Cuota IVA repercutido al tipo reducido transitorio (5%/7,5%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: null
               label: Cuota IVA repercutido al tipo super-reducido (4%)
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
-              help: Casilla transitoria del RD-ley 4/2024 para el tipo super-reducido,
-                que convive con el tipo super-reducido ordinario del 4%.
-              label: Cuota IVA repercutido al tipo super-reducido transitorio (2%)
             x-d5r62bjiclpnar3kc5i6u:
               help: null
               label: Resultado de la autoliquidacion ([66]+[77]+[68]-[78])
@@ -73304,6 +73221,33 @@ modelo:
           iva-anual-reconciliacion-resultado-303:
             help: null
             label: Reconciliación anual - resultado declarado en los modelos 303
+          iva-anual-regimen-simplificado-aic-bienes-cuota-devengada:
+            help: null
+            label: IVA devengado en adquisiciones intracomunitarias
+          iva-anual-regimen-simplificado-cuota-resultante-agricola:
+            help: null
+            label: IVA devengado - Suma cuotas actividades agríc., ganad. y forest.
+          iva-anual-regimen-simplificado-cuota-resultante-no-agricola:
+            help: null
+            label: IVA devengado - Suma cuotas actividades no agríc., ganad. y forest.
+          iva-anual-regimen-simplificado-entrega-activos-fijos:
+            help: null
+            label: IVA devengado en entregas de activos fijos
+          iva-anual-regimen-simplificado-inversion-sujeto-pasivo:
+            help: null
+            label: IVA devengado por inversión del sujeto pasivo
+          iva-anual-regimen-simplificado-iva-soportado-activos-fijos:
+            help: null
+            label: Deducciones - IVA soportado en adquisición de activos fijos
+          iva-anual-regimen-simplificado-regularizacion-bienes-inversion:
+            help: null
+            label: Deducciones - Regularización de bienes de inversión
+          iva-anual-regimen-simplificado-resultado:
+            help: null
+            label: Resultado régimen simplificado
+          iva-anual-regimen-simplificado-suma-deducciones:
+            help: null
+            label: Deducciones - Suma de deducciones
           iva-anual-regularizacion-bienes-inversion:
             help: null
             label: Regularización por bienes de inversión (LIVA arts. 107-110)
@@ -73474,439 +73418,1378 @@ modelo:
           Valor Añadido.
         title: IVA. Declaración-resumen anual
       revision:
-        2010-y-siguientes:
+        '2022':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: Ejercicio al que se refiere la declaracion-resumen
+              label: Ejercicio al que se refiere la autoliquidacion
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
-              label: Tipo de declaracion (originaria / sustitutiva / complementaria)
+              label: Tipo de declaración
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de bienes al tipo general, sea cual sea el porcentaje aplicado a cada
-                operación.
-              label: Base imponible de adquisiciones intracomunitarias de bienes al
-                tipo general, sin desglose por tipo - anual
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de bienes
+                al tipo general (21%)
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de bienes al tipo reducido, sea cual sea el porcentaje aplicado a
-                cada operación.
-              label: Base imponible de adquisiciones intracomunitarias de bienes al
-                tipo reducido, sin desglose por tipo - anual
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de bienes
+                al tipo reducido (10%)
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de bienes al tipo super-reducido, sea cual sea el porcentaje aplicado
-                a cada operación.
-              label: Base imponible de adquisiciones intracomunitarias de bienes al
-                tipo superreducido, sin desglose por tipo - anual
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de bienes
+                al tipo super-reducido (4%)
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de bienes gravadas al tipo del 0 %.
-              label: Base imponible de adquisiciones intracomunitarias de bienes al
-                tipo del 0% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                0% - Base imponible
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
-              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
-                de bienes gravadas al tipo del 0 %.
-              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
-                del 0% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                0% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de bienes gravadas al tipo del 10 %.
-              label: Base imponible de adquisiciones intracomunitarias de bienes al
-                tipo del 10% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                10% - Base imponible
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
-              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
-                de bienes gravadas al tipo del 10 %.
-              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
-                del 10% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                10% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de bienes gravadas al tipo del 2 %.
-              label: Base imponible de adquisiciones intracomunitarias de bienes al
-                tipo del 2% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                2% - Base imponible
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
-              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
-                de bienes gravadas al tipo del 2 %.
-              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
-                del 2% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                2% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de bienes gravadas al tipo del 21 %.
-              label: Base imponible de adquisiciones intracomunitarias de bienes al
-                tipo del 21% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                21% - Base imponible
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
-              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
-                de bienes gravadas al tipo del 21 %.
-              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
-                del 21% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                21% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de bienes gravadas al tipo del 4 %.
-              label: Base imponible de adquisiciones intracomunitarias de bienes al
-                tipo del 4% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                4% - Base imponible
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
-              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
-                de bienes gravadas al tipo del 4 %.
-              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
-                del 4% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                4% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de bienes gravadas al tipo del 5 %.
-              label: Base imponible de adquisiciones intracomunitarias de bienes al
-                tipo del 5% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                5% - Base imponible
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
-              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
-                de bienes gravadas al tipo del 5 %.
-              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
-                del 5% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                5% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de bienes gravadas al tipo del 7,5 %.
-              label: Base imponible de adquisiciones intracomunitarias de bienes al
-                tipo del 7,5% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                7,5% - Base imponible
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
-              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
-                de bienes gravadas al tipo del 7,5 %.
-              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
-                del 7,5% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                7,5% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de bienes al tipo cero, sea cual sea el porcentaje aplicado a cada
-                operación.
-              label: Base imponible de adquisiciones intracomunitarias de bienes al
-                tipo cero, sin desglose por tipo - anual
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de bienes
+                al tipo cero (0%)
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de servicios al tipo general, sea cual sea el porcentaje aplicado
-                a cada operación.
-              label: Base imponible de adquisiciones intracomunitarias de servicios
-                al tipo general, sin desglose por tipo - anual
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de servicios
+                al tipo general (21%)
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de servicios al tipo reducido, sea cual sea el porcentaje aplicado
-                a cada operación.
-              label: Base imponible de adquisiciones intracomunitarias de servicios
-                al tipo reducido, sin desglose por tipo - anual
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de servicios
+                al tipo reducido (10%)
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de servicios al tipo super-reducido, sea cual sea el porcentaje aplicado
-                a cada operación.
-              label: Base imponible de adquisiciones intracomunitarias de servicios
-                al tipo superreducido, sin desglose por tipo - anual
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de servicios
+                al tipo super-reducido (4%)
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de servicios gravadas al tipo del 0 %.
-              label: Base imponible de adquisiciones intracomunitarias de servicios
-                al tipo del 0% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 0% - Base imponible
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
-              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
-                de servicios gravadas al tipo del 0 %.
-              label: Cuota IVA de adquisiciones intracomunitarias de servicios al
-                tipo del 0% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 0% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de servicios gravadas al tipo del 10 %.
-              label: Base imponible de adquisiciones intracomunitarias de servicios
-                al tipo del 10% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 10% - Base imponible
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
-              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
-                de servicios gravadas al tipo del 10 %.
-              label: Cuota IVA de adquisiciones intracomunitarias de servicios al
-                tipo del 10% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 10% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de servicios gravadas al tipo del 2 %.
-              label: Base imponible de adquisiciones intracomunitarias de servicios
-                al tipo del 2% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 2% - Base imponible
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
-              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
-                de servicios gravadas al tipo del 2 %.
-              label: Cuota IVA de adquisiciones intracomunitarias de servicios al
-                tipo del 2% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 2% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de servicios gravadas al tipo del 21 %.
-              label: Base imponible de adquisiciones intracomunitarias de servicios
-                al tipo del 21% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 21% - Base imponible
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
-              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
-                de servicios gravadas al tipo del 21 %.
-              label: Cuota IVA de adquisiciones intracomunitarias de servicios al
-                tipo del 21% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 21% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de servicios gravadas al tipo del 4 %.
-              label: Base imponible de adquisiciones intracomunitarias de servicios
-                al tipo del 4% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 4% - Base imponible
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
-              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
-                de servicios gravadas al tipo del 4 %.
-              label: Cuota IVA de adquisiciones intracomunitarias de servicios al
-                tipo del 4% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 4% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de servicios gravadas al tipo del 5 %.
-              label: Base imponible de adquisiciones intracomunitarias de servicios
-                al tipo del 5% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 5% - Base imponible
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
-              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
-                de servicios gravadas al tipo del 5 %.
-              label: Cuota IVA de adquisiciones intracomunitarias de servicios al
-                tipo del 5% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 5% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de servicios gravadas al tipo del 7,5 %.
-              label: Base imponible de adquisiciones intracomunitarias de servicios
-                al tipo del 7,5% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 7,5% - Base imponible
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
-              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
-                de servicios gravadas al tipo del 7,5 %.
-              label: Cuota IVA de adquisiciones intracomunitarias de servicios al
-                tipo del 7,5% - anual
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 7,5% - Cuota
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
-              help: Suma la base imponible de las adquisiciones intracomunitarias
-                de servicios al tipo cero, sea cual sea el porcentaje aplicado a cada
-                operación.
-              label: Base imponible de adquisiciones intracomunitarias de servicios
-                al tipo cero, sin desglose por tipo - anual
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de servicios
+                al tipo cero (0%)
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
-              help: Suma la base imponible autorrepercutida en operaciones interiores
-                durante el ejercicio.
-              label: Base imponible autorepercutida en operaciones interiores - anual
+              help: null
+              label: Base imponible IVA autorepercutido en operaciones interiores
+                con inversión del sujeto pasivo
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: Declara la cuota de IVA autorrepercutida en operaciones interiores
-                durante el ejercicio.
-              label: Cuota IVA autorepercutida en operaciones interiores - anual
+              help: null
+              label: Cuota IVA autorepercutida en operaciones interiores con inversion
+                del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: null
               label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
-                - anual
+                (LIVA art 84.Uno.2)
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
               help: null
-              label: Cuotas pendientes de compensacion generadas en el ejercicio y
-                distintas de las incluidas en la casilla 97
+              label: Saldo a compensar generado en el ejercicio
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
               help: null
-              label: Resultado declaracion-liquidacion ultimo periodo - A compensar
+              label: Cuotas a compensar del último período de liquidación
             x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
               help: null
-              label: Total cuota IVA deducible anual (soportado + autorepercutido)
+              label: Total cuota IVA deducible del ejercicio
             x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
               help: null
-              label: Total cuota IVA devengada anual (repercutido + autorepercutido)
+              label: Total cuota IVA devengada del ejercicio
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechim8tb3d5h6op9d6co36:
               help: null
-              label: Cuota deducible anual reconciliada desde los cuatro Modelos 303
-                trimestrales
+              label: Reconciliación anual - cuota deducible declarada en los modelos
+                303
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9d6co36:
               help: null
-              label: Cuota devengada anual reconciliada desde los cuatro Modelos 303
-                trimestrales
+              label: Reconciliación anual - cuota devengada declarada en los modelos
+                303
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9dedkmqs3cd5j6ior1chniqcpg6c:
               help: null
-              label: IVA devengado regimen simplificado - Total cuota resultante (anual
-                desde Modelo 303 4T)
+              label: Reconciliación anual - cuota devengada del régimen simplificado
+                declarada en los modelos 303
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
               help: null
-              label: Resultado anual reconciliado desde los cuatro Modelos 303 trimestrales
+              label: Reconciliación anual - resultado declarado en los modelos 303
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
+              help: null
+              label: IVA devengado en adquisiciones intracomunitarias
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
+              help: null
+              label: IVA devengado - Suma cuotas actividades agríc., ganad. y forest.
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
+              help: null
+              label: IVA devengado - Suma cuotas actividades no agríc., ganad. y forest.
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
+              help: null
+              label: IVA devengado en entregas de activos fijos
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
+              help: null
+              label: IVA devengado por inversión del sujeto pasivo
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
+              help: null
+              label: Deducciones - IVA soportado en adquisición de activos fijos
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
+              help: null
+              label: Deducciones - Regularización de bienes de inversión
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
+              help: null
+              label: Resultado régimen simplificado
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
+              help: null
+              label: Deducciones - Suma de deducciones
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
               help: null
-              label: Regularizacion de inversiones - anual
+              label: Regularización por bienes de inversión (LIVA arts. 107-110)
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
               help: null
-              label: Regularizacion por aplicacion del porcentaje definitivo de prorrata
-                - anual
+              label: Regularización prorrata por porcentaje definitivo - Cuota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
               help: null
-              label: Cuota IVA repercutido al tipo general (21%) - anual
+              label: Cuota IVA repercutido al tipo general (21%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
-              help: Suma la base imponible de las operaciones interiores repercutidas
-                al tipo general, sea cual sea el porcentaje aplicado a cada operación.
-              label: Base imponible IVA devengado - Regimen ordinario - Tipo 21% -
-                anual
+              help: null
+              label: Base imponible IVA repercutido al tipo general (21%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
               help: null
-              label: Recargo de equivalencia tipo 5.2pct - Cuota devengada anual
+              label: Recargo de equivalencia al tipo general (5,2%) - Cuota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpee9im8tb3d5i6u:
               help: null
-              label: Recargo de equivalencia tipo 1.4pct - Cuota devengada anual
+              label: Recargo de equivalencia al tipo reducido (1,4%) - Cuota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
               help: null
-              label: Recargo de equivalencia tipo 0.5pct - Cuota devengada anual
+              label: Recargo de equivalencia al tipo super-reducido (0,5%) - Cuota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
-              help: Declara la cuota de recargo de equivalencia al 0,26 % repercutida
-                en las ventas a comerciantes minoristas acogidos al régimen de recargo,
-                sobre entregas gravadas al tipo de IVA del 2 % (RDL 4/2024 art. 1).
-                Se consigna en la casilla 692.
-              label: Recargo de equivalencia tipo 0,26 % - Cuota devengada anual
+              help: null
+              label: Recargo de equivalencia al tipo 0,26% - Cuota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
-              help: Declara la cuota de recargo de equivalencia al 0,5 % repercutida
-                en las ventas a comerciantes minoristas acogidos al régimen de recargo,
-                sobre entregas gravadas al tipo de IVA del 4 % (LIVA art. 161.3).
-                Se consigna en la casilla 36.
-              label: Recargo de equivalencia tipo 0,5 % - Cuota devengada anual
+              help: null
+              label: Recargo de equivalencia al tipo 0,5% - Cuota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
-              help: Declara la cuota de recargo de equivalencia al 0,62 % repercutida
-                en las ventas a comerciantes minoristas acogidos al régimen de recargo,
-                sobre entregas gravadas al tipo de IVA del 5 % (RDL 4/2024 art. 1).
-                Se consigna en la casilla 666.
-              label: Recargo de equivalencia tipo 0,62 % - Cuota devengada anual
+              help: null
+              label: Recargo de equivalencia al tipo 0,62% - Cuota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
-              help: Declara la cuota de recargo de equivalencia al 1,4 % repercutida
-                en las ventas a comerciantes minoristas acogidos al régimen de recargo,
-                sobre entregas gravadas al tipo de IVA del 10 % (LIVA art. 161.2).
-                Se consigna en la casilla 600.
-              label: Recargo de equivalencia tipo 1,4 % - Cuota devengada anual
+              help: null
+              label: Recargo de equivalencia al tipo 1,4% - Cuota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
-              help: Declara la cuota de recargo de equivalencia al 1 % repercutida
-                en las ventas a comerciantes minoristas acogidos al régimen de recargo,
-                sobre entregas gravadas al tipo de IVA del 7,5 % (RDL 4/2024 art.
-                1). Se consigna en la casilla 694.
-              label: Recargo de equivalencia tipo 1 % - Cuota devengada anual
+              help: null
+              label: Recargo de equivalencia al tipo 1% - Cuota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
-              help: Declara la cuota de recargo de equivalencia al 5,2 % repercutida
-                en las ventas a comerciantes minoristas acogidos al régimen de recargo,
-                sobre entregas gravadas al tipo de IVA del 21 % (LIVA art. 161.1).
-                Se consigna en la casilla 602.
-              label: Recargo de equivalencia tipo 5,2 % - Cuota devengada anual
+              help: null
+              label: Recargo de equivalencia al tipo 5,2% - Cuota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: null
-              label: Cuota IVA repercutido al tipo reducido (10%) - anual
+              label: Cuota IVA repercutido al tipo reducido (10%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
-              help: Suma la base imponible de las operaciones interiores repercutidas
-                al tipo reducido, sea cual sea el porcentaje aplicado a cada operación.
-              label: Base imponible IVA devengado - Regimen ordinario - Tipo 10% -
-                anual
+              help: null
+              label: Base imponible IVA repercutido al tipo reducido (10%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
               help: null
-              label: Cuota IVA repercutido al tipo super-reducido (4%) - anual
+              label: Cuota IVA repercutido al tipo super-reducido (4%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
-              help: Suma la base imponible de las operaciones interiores repercutidas
-                al tipo superreducido, sea cual sea el porcentaje aplicado a cada
-                operación.
-              label: Base imponible IVA devengado - Regimen ordinario - Tipo 4% -
-                anual
+              help: null
+              label: Base imponible IVA repercutido al tipo super-reducido (4%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
-              help: Declara la base imponible de las operaciones interiores del régimen
-                ordinario gravadas al tipo del 0 %. El Real Decreto-ley 4/2024, artículo
-                1, aplicó este tipo a los alimentos básicos desde el 1 de julio hasta
-                el 30 de septiembre de 2024.
-              label: Base imponible IVA devengado - Regimen ordinario - Tipo 0% -
-                anual
+              help: null
+              label: Base imponible IVA repercutido al tipo 0%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
-              help: Declara la cuota de IVA repercutida al tipo del 0 % sobre la base
-                imponible de la casilla 700. Un tipo del 0 % no genera cuota, así
-                que este importe es cero.
-              label: Cuota IVA devengado - Regimen ordinario - Tipo 0% - anual
+              help: null
+              label: Cuota IVA repercutido al tipo 0%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
-              help: Declara la base imponible de las operaciones interiores del régimen
-                ordinario gravadas al tipo reducido del 10 %.
-              label: Base imponible IVA devengado - Regimen ordinario - Tipo 10% -
-                anual
+              help: null
+              label: Base imponible IVA repercutido al tipo 10%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
-              help: Declara la cuota de IVA repercutida al tipo reducido del 10 %
-                sobre la base imponible de la casilla 03.
-              label: Cuota IVA devengado - Regimen ordinario - Tipo 10% - anual
+              help: null
+              label: Cuota IVA repercutido al tipo 10%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
-              help: 'Declara la base imponible de los alimentos básicos gravados al
-                2 %: pan común, harinas panificables, leche, quesos, huevos, frutas,
-                verduras, hortalizas, legumbres, tubérculos, cereales naturales y
-                aceites de oliva. El Real Decreto-ley 4/2024, artículo 1, fijó este
-                tipo desde el 1 de octubre hasta el 31 de diciembre de 2024.'
-              label: Base imponible IVA devengado - Regimen ordinario - Tipo 2% -
-                anual
+              help: null
+              label: Base imponible IVA repercutido al tipo 2%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
-              help: Declara la cuota de IVA repercutida al 2 % sobre la base imponible
-                de la casilla 667. El Real Decreto-ley 4/2024, artículo 1, fijó este
-                tipo desde el 1 de octubre hasta el 31 de diciembre de 2024.
-              label: Cuota IVA devengado - Regimen ordinario - Tipo 2% - anual
+              help: null
+              label: Cuota IVA repercutido al tipo 2%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
-              help: Declara la base imponible de las operaciones interiores del régimen
-                ordinario gravadas al tipo general del 21 %.
-              label: Base imponible IVA devengado - Regimen ordinario - Tipo 21% -
-                anual
+              help: null
+              label: Base imponible IVA repercutido al tipo 21%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
-              help: Declara la cuota de IVA repercutida al tipo general del 21 % sobre
-                la base imponible de la casilla 05.
-              label: Cuota IVA devengado - Regimen ordinario - Tipo 21% - anual
+              help: null
+              label: Cuota IVA repercutido al tipo 21%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
-              help: Declara la base imponible de las operaciones interiores del régimen
-                ordinario gravadas al tipo superreducido del 4 %.
-              label: Base imponible IVA devengado - Regimen ordinario - Tipo 4% -
-                anual
+              help: null
+              label: Base imponible IVA repercutido al tipo 4%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
-              help: Declara la cuota de IVA repercutida al tipo superreducido del
-                4 % sobre la base imponible de la casilla 01.
-              label: Cuota IVA devengado - Regimen ordinario - Tipo 4% - anual
+              help: null
+              label: Cuota IVA repercutido al tipo 4%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
-              help: Declara la base imponible de los aceites de semillas y las pastas
-                alimenticias gravados al 5 %. El Real Decreto-ley 4/2024, artículo
-                1, fijó este tipo desde el 1 de julio hasta el 30 de septiembre de
-                2024.
-              label: Base imponible IVA devengado - Regimen ordinario - Tipo 5% -
-                anual
+              help: null
+              label: Base imponible IVA repercutido al tipo 5%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
-              help: Declara la cuota de IVA repercutida al 5 % sobre la base imponible
-                de la casilla 702. El Real Decreto-ley 4/2024, artículo 1, fijó este
-                tipo desde el 1 de julio hasta el 30 de septiembre de 2024.
-              label: Cuota IVA devengado - Regimen ordinario - Tipo 5% - anual
+              help: null
+              label: Cuota IVA repercutido al tipo 5%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
-              help: Declara la base imponible de los aceites de semillas y las pastas
-                alimenticias gravados al 7,5 %. El Real Decreto-ley 4/2024, artículo
-                1, fijó este tipo desde el 1 de octubre hasta el 31 de diciembre de
-                2024.
-              label: Base imponible IVA devengado - Regimen ordinario - Tipo 7,5%
-                - anual
+              help: null
+              label: Base imponible IVA repercutido al tipo 7,5%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
-              help: Declara la cuota de IVA repercutida al 7,5 % sobre la base imponible
-                de la casilla 669. El Real Decreto-ley 4/2024, artículo 1, fijó este
-                tipo desde el 1 de octubre hasta el 31 de diciembre de 2024.
-              label: Cuota IVA devengado - Regimen ordinario - Tipo 7,5% - anual
+              help: null
+              label: Cuota IVA repercutido al tipo 7,5%
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
-              help: Suma la base imponible de las operaciones interiores repercutidas
-                al tipo cero, sea cual sea el porcentaje aplicado a cada operación.
-              label: IVA devengado RG tipo cero - Base imponible
+              help: null
+              label: Base imponible IVA repercutido al tipo cero (0%)
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
-              label: Resultado anual del regimen general (cuota devengada - cuota
-                deducible)
+              label: Resultado del regimen general (cuota devengada - cuota deducible)
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
               help: null
               label: Cuota IVA soportado deducible en importaciones de bienes corrientes
-                - anual
+                (LIVA art 17 + art 92; oficial casilla 33)
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: null
-              label: Cuota IVA soportado en operaciones interiores corrientes - anual
+              label: Cuota IVA soportado en operaciones interiores corrientes
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
-              help: Suma la base imponible de las adquisiciones interiores corrientes
-                de bienes y servicios con IVA soportado, agregando los tres tipos
-                interiores.
-              label: Base imponible IVA deducible - Total operaciones interiores corrientes
-                de bienes y servicios - anual
+              help: null
+              label: Base imponible IVA soportado en operaciones interiores corrientes
             x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
-              help: Suma la cuota IVA devengada de los tipos general, reducido y super-reducido
-                y la autorepercutida en adquisiciones intracomunitarias, excluyendo
-                el recargo de equivalencia (casilla 47).
-              label: Total bases y cuotas IVA - Cuota (Reg. ordinario) - anual
+              help: null
+              label: Total bases y cuotas de IVA del ejercicio
             x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
-              help: 'Importe de las entregas de bienes a otro Estado miembro, exentas
-                por el artículo 25 de la Ley del IVA. No incluya los servicios prestados
-                a empresarios de la UE: no están sujetos en España y se declaran como
-                operaciones no sujetas.'
-              label: Entregas intracomunitarias de bienes
+              help: null
+              label: Entregas intracomunitarias de bienes y servicios
             x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
-              help: Importe de las exportaciones de bienes exentas por el artículo
-                21 de la Ley del IVA y de las operaciones asimiladas a la exportación
-                exentas por el artículo 22.
-              label: Exportaciones y otras operaciones exentas con derecho a deducción
+              help: null
+              label: Exportaciones y operaciones asimiladas
           construct:
             modelo-390-iva-resumen-anual:
               field:
-                title: Modelo 390 IVA annual summary declaration
+                title: Declaración-resumen anual de IVA
           field:
-            label: Modelo 390 ejercicios 2010 y siguientes (Orden EHA/3111/2009, modificada
-              por sucesivas ordenes incluida HAP/2373/2014)
+            label: Modelo 390 ejercicio 2022 (Orden EHA/3111/2009, modificada por
+              sucesivas ordenes incluida HAP/2373/2014)
+        '2023':
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la autoliquidacion
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de bienes
+                al tipo general (21%)
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de bienes
+                al tipo reducido (10%)
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de bienes
+                al tipo super-reducido (4%)
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                0% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                0% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                10% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                10% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                2% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                2% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                21% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                21% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                4% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                4% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                5% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                5% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                7,5% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                7,5% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de bienes
+                al tipo cero (0%)
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de servicios
+                al tipo general (21%)
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de servicios
+                al tipo reducido (10%)
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de servicios
+                al tipo super-reducido (4%)
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 0% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 0% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 10% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 10% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 2% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 2% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 21% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 21% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 4% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 4% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 5% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 5% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 7,5% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 7,5% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de servicios
+                al tipo cero (0%)
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
+              help: null
+              label: Base imponible IVA autorepercutido en operaciones interiores
+                con inversión del sujeto pasivo
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
+              help: null
+              label: Cuota IVA autorepercutida en operaciones interiores con inversion
+                del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
+              help: null
+              label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
+                (LIVA art 84.Uno.2)
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
+              help: null
+              label: Saldo a compensar generado en el ejercicio
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
+              help: null
+              label: Cuotas a compensar del último período de liquidación
+            x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
+              help: null
+              label: Total cuota IVA deducible del ejercicio
+            x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
+              help: null
+              label: Total cuota IVA devengada del ejercicio
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechim8tb3d5h6op9d6co36:
+              help: null
+              label: Reconciliación anual - cuota deducible declarada en los modelos
+                303
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9d6co36:
+              help: null
+              label: Reconciliación anual - cuota devengada declarada en los modelos
+                303
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9dedkmqs3cd5j6ior1chniqcpg6c:
+              help: null
+              label: Reconciliación anual - cuota devengada del régimen simplificado
+                declarada en los modelos 303
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
+              help: null
+              label: Reconciliación anual - resultado declarado en los modelos 303
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
+              help: null
+              label: IVA devengado en adquisiciones intracomunitarias
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
+              help: null
+              label: IVA devengado - Suma cuotas actividades agríc., ganad. y forest.
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
+              help: null
+              label: IVA devengado - Suma cuotas actividades no agríc., ganad. y forest.
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
+              help: null
+              label: IVA devengado en entregas de activos fijos
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
+              help: null
+              label: IVA devengado por inversión del sujeto pasivo
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
+              help: null
+              label: Deducciones - IVA soportado en adquisición de activos fijos
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
+              help: null
+              label: Deducciones - Regularización de bienes de inversión
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
+              help: null
+              label: Resultado régimen simplificado
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
+              help: null
+              label: Deducciones - Suma de deducciones
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
+              help: null
+              label: Regularización por bienes de inversión (LIVA arts. 107-110)
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
+              help: null
+              label: Regularización prorrata por porcentaje definitivo - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
+              help: null
+              label: Cuota IVA repercutido al tipo general (21%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
+              help: null
+              label: Base imponible IVA repercutido al tipo general (21%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
+              help: null
+              label: Recargo de equivalencia al tipo general (5,2%) - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpee9im8tb3d5i6u:
+              help: null
+              label: Recargo de equivalencia al tipo reducido (1,4%) - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
+              help: null
+              label: Recargo de equivalencia al tipo super-reducido (0,5%) - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
+              help: null
+              label: Recargo de equivalencia al tipo 0,26% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
+              help: null
+              label: Recargo de equivalencia al tipo 0,5% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
+              help: null
+              label: Recargo de equivalencia al tipo 0,62% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
+              help: null
+              label: Recargo de equivalencia al tipo 1,4% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
+              help: null
+              label: Recargo de equivalencia al tipo 1% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
+              help: null
+              label: Recargo de equivalencia al tipo 5,2% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
+              help: null
+              label: Cuota IVA repercutido al tipo reducido (10%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
+              help: null
+              label: Base imponible IVA repercutido al tipo reducido (10%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
+              help: null
+              label: Cuota IVA repercutido al tipo super-reducido (4%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
+              help: null
+              label: Base imponible IVA repercutido al tipo super-reducido (4%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
+              help: null
+              label: Base imponible IVA repercutido al tipo 0%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
+              help: null
+              label: Cuota IVA repercutido al tipo 0%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
+              help: null
+              label: Base imponible IVA repercutido al tipo 10%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
+              help: null
+              label: Cuota IVA repercutido al tipo 10%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
+              help: null
+              label: Base imponible IVA repercutido al tipo 2%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
+              help: null
+              label: Cuota IVA repercutido al tipo 2%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
+              help: null
+              label: Base imponible IVA repercutido al tipo 21%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
+              help: null
+              label: Cuota IVA repercutido al tipo 21%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
+              help: null
+              label: Base imponible IVA repercutido al tipo 4%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
+              help: null
+              label: Cuota IVA repercutido al tipo 4%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
+              help: null
+              label: Base imponible IVA repercutido al tipo 5%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
+              help: null
+              label: Cuota IVA repercutido al tipo 5%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
+              help: null
+              label: Base imponible IVA repercutido al tipo 7,5%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
+              help: null
+              label: Cuota IVA repercutido al tipo 7,5%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
+              help: null
+              label: Base imponible IVA repercutido al tipo cero (0%)
+            x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
+              help: null
+              label: Resultado del regimen general (cuota devengada - cuota deducible)
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
+              help: null
+              label: Cuota IVA soportado deducible en importaciones de bienes corrientes
+                (LIVA art 17 + art 92; oficial casilla 33)
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
+              help: null
+              label: Cuota IVA soportado en operaciones interiores corrientes
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
+              help: null
+              label: Base imponible IVA soportado en operaciones interiores corrientes
+            x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
+              help: null
+              label: Total bases y cuotas de IVA del ejercicio
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
+              help: null
+              label: Entregas intracomunitarias de bienes y servicios
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
+              help: null
+              label: Exportaciones y operaciones asimiladas
+          construct:
+            modelo-390-iva-resumen-anual:
+              field:
+                title: Declaración-resumen anual de IVA
+          field:
+            label: Modelo 390 ejercicio 2023 (Orden EHA/3111/2009, modificada por
+              sucesivas ordenes incluida HAP/2373/2014)
+        '2024':
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la autoliquidacion
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de bienes
+                al tipo general (21%)
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de bienes
+                al tipo reducido (10%)
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de bienes
+                al tipo super-reducido (4%)
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                0% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                0% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                10% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                10% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                2% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                2% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                21% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                21% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                4% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                4% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                5% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                5% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                7,5% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                7,5% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de bienes
+                al tipo cero (0%)
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de servicios
+                al tipo general (21%)
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de servicios
+                al tipo reducido (10%)
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de servicios
+                al tipo super-reducido (4%)
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 0% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 0% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 10% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 10% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 2% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 2% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 21% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 21% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 4% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 4% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 5% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 5% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 7,5% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 7,5% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de servicios
+                al tipo cero (0%)
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
+              help: null
+              label: Base imponible IVA autorepercutido en operaciones interiores
+                con inversión del sujeto pasivo
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
+              help: null
+              label: Cuota IVA autorepercutida en operaciones interiores con inversion
+                del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
+              help: null
+              label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
+                (LIVA art 84.Uno.2)
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
+              help: null
+              label: Saldo a compensar generado en el ejercicio
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
+              help: null
+              label: Cuotas a compensar del último período de liquidación
+            x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
+              help: null
+              label: Total cuota IVA deducible del ejercicio
+            x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
+              help: null
+              label: Total cuota IVA devengada del ejercicio
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechim8tb3d5h6op9d6co36:
+              help: null
+              label: Reconciliación anual - cuota deducible declarada en los modelos
+                303
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9d6co36:
+              help: null
+              label: Reconciliación anual - cuota devengada declarada en los modelos
+                303
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9dedkmqs3cd5j6ior1chniqcpg6c:
+              help: null
+              label: Reconciliación anual - cuota devengada del régimen simplificado
+                declarada en los modelos 303
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
+              help: null
+              label: Reconciliación anual - resultado declarado en los modelos 303
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
+              help: null
+              label: IVA devengado en adquisiciones intracomunitarias
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
+              help: null
+              label: IVA devengado - Suma cuotas actividades agríc., ganad. y forest.
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
+              help: null
+              label: IVA devengado - Suma cuotas actividades no agríc., ganad. y forest.
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
+              help: null
+              label: IVA devengado en entregas de activos fijos
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
+              help: null
+              label: IVA devengado por inversión del sujeto pasivo
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
+              help: null
+              label: Deducciones - IVA soportado en adquisición de activos fijos
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
+              help: null
+              label: Deducciones - Regularización de bienes de inversión
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
+              help: null
+              label: Resultado régimen simplificado
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
+              help: null
+              label: Deducciones - Suma de deducciones
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
+              help: null
+              label: Regularización por bienes de inversión (LIVA arts. 107-110)
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
+              help: null
+              label: Regularización prorrata por porcentaje definitivo - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
+              help: null
+              label: Cuota IVA repercutido al tipo general (21%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
+              help: null
+              label: Base imponible IVA repercutido al tipo general (21%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
+              help: null
+              label: Recargo de equivalencia al tipo general (5,2%) - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpee9im8tb3d5i6u:
+              help: null
+              label: Recargo de equivalencia al tipo reducido (1,4%) - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
+              help: null
+              label: Recargo de equivalencia al tipo super-reducido (0,5%) - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
+              help: null
+              label: Recargo de equivalencia al tipo 0,26% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
+              help: null
+              label: Recargo de equivalencia al tipo 0,5% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
+              help: null
+              label: Recargo de equivalencia al tipo 0,62% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
+              help: null
+              label: Recargo de equivalencia al tipo 1,4% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
+              help: null
+              label: Recargo de equivalencia al tipo 1% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
+              help: null
+              label: Recargo de equivalencia al tipo 5,2% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
+              help: null
+              label: Cuota IVA repercutido al tipo reducido (10%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
+              help: null
+              label: Base imponible IVA repercutido al tipo reducido (10%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
+              help: null
+              label: Cuota IVA repercutido al tipo super-reducido (4%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
+              help: null
+              label: Base imponible IVA repercutido al tipo super-reducido (4%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
+              help: null
+              label: Base imponible IVA repercutido al tipo 0%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
+              help: null
+              label: Cuota IVA repercutido al tipo 0%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
+              help: null
+              label: Base imponible IVA repercutido al tipo 10%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
+              help: null
+              label: Cuota IVA repercutido al tipo 10%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
+              help: null
+              label: Base imponible IVA repercutido al tipo 2%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
+              help: null
+              label: Cuota IVA repercutido al tipo 2%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
+              help: null
+              label: Base imponible IVA repercutido al tipo 21%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
+              help: null
+              label: Cuota IVA repercutido al tipo 21%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
+              help: null
+              label: Base imponible IVA repercutido al tipo 4%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
+              help: null
+              label: Cuota IVA repercutido al tipo 4%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
+              help: null
+              label: Base imponible IVA repercutido al tipo 5%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
+              help: null
+              label: Cuota IVA repercutido al tipo 5%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
+              help: null
+              label: Base imponible IVA repercutido al tipo 7,5%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
+              help: null
+              label: Cuota IVA repercutido al tipo 7,5%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
+              help: null
+              label: Base imponible IVA repercutido al tipo cero (0%)
+            x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
+              help: null
+              label: Resultado del regimen general (cuota devengada - cuota deducible)
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
+              help: null
+              label: Cuota IVA soportado deducible en importaciones de bienes corrientes
+                (LIVA art 17 + art 92; oficial casilla 33)
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
+              help: null
+              label: Cuota IVA soportado en operaciones interiores corrientes
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
+              help: null
+              label: Base imponible IVA soportado en operaciones interiores corrientes
+            x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
+              help: null
+              label: Total bases y cuotas de IVA del ejercicio
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
+              help: null
+              label: Entregas intracomunitarias de bienes y servicios
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
+              help: null
+              label: Exportaciones y operaciones asimiladas
+          construct:
+            modelo-390-iva-resumen-anual:
+              field:
+                title: Declaración-resumen anual de IVA
+          field:
+            label: Modelo 390 ejercicio 2024 (Orden EHA/3111/2009, modificada por
+              sucesivas ordenes incluida HAP/2373/2014)
+        '2025':
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la autoliquidacion
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de bienes
+                al tipo general (21%)
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de bienes
+                al tipo reducido (10%)
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de bienes
+                al tipo super-reducido (4%)
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                0% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                0% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                10% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                10% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                2% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                2% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                21% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                21% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                4% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                4% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                5% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                5% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                7,5% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+                7,5% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de bienes
+                al tipo cero (0%)
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de servicios
+                al tipo general (21%)
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de servicios
+                al tipo reducido (10%)
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de servicios
+                al tipo super-reducido (4%)
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 0% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 0% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 10% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 10% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 2% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 2% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 21% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 21% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 4% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 4% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 5% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 5% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 7,5% - Base imponible
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
+              help: null
+              label: IVA devengado adquisiciones intracomunitarias de servicios al
+                tipo 7,5% - Cuota
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
+              help: null
+              label: Base imponible total adquisiciones intracomunitarias de servicios
+                al tipo cero (0%)
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
+              help: null
+              label: Base imponible IVA autorepercutido en operaciones interiores
+                con inversión del sujeto pasivo
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
+              help: null
+              label: Cuota IVA autorepercutida en operaciones interiores con inversion
+                del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
+              help: null
+              label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
+                (LIVA art 84.Uno.2)
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
+              help: null
+              label: Saldo a compensar generado en el ejercicio
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
+              help: null
+              label: Cuotas a compensar del último período de liquidación
+            x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
+              help: null
+              label: Total cuota IVA deducible del ejercicio
+            x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
+              help: null
+              label: Total cuota IVA devengada del ejercicio
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechim8tb3d5h6op9d6co36:
+              help: null
+              label: Reconciliación anual - cuota deducible declarada en los modelos
+                303
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9d6co36:
+              help: null
+              label: Reconciliación anual - cuota devengada declarada en los modelos
+                303
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9dedkmqs3cd5j6ior1chniqcpg6c:
+              help: null
+              label: Reconciliación anual - cuota devengada del régimen simplificado
+                declarada en los modelos 303
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
+              help: null
+              label: Reconciliación anual - resultado declarado en los modelos 303
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
+              help: null
+              label: IVA devengado en adquisiciones intracomunitarias
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
+              help: null
+              label: IVA devengado - Suma cuotas actividades agríc., ganad. y forest.
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
+              help: null
+              label: IVA devengado - Suma cuotas actividades no agríc., ganad. y forest.
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
+              help: null
+              label: IVA devengado en entregas de activos fijos
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
+              help: null
+              label: IVA devengado por inversión del sujeto pasivo
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
+              help: null
+              label: Deducciones - IVA soportado en adquisición de activos fijos
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
+              help: null
+              label: Deducciones - Regularización de bienes de inversión
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
+              help: null
+              label: Resultado régimen simplificado
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
+              help: null
+              label: Deducciones - Suma de deducciones
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
+              help: null
+              label: Regularización por bienes de inversión (LIVA arts. 107-110)
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
+              help: null
+              label: Regularización prorrata por porcentaje definitivo - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
+              help: null
+              label: Cuota IVA repercutido al tipo general (21%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
+              help: null
+              label: Base imponible IVA repercutido al tipo general (21%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
+              help: null
+              label: Recargo de equivalencia al tipo general (5,2%) - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpee9im8tb3d5i6u:
+              help: null
+              label: Recargo de equivalencia al tipo reducido (1,4%) - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
+              help: null
+              label: Recargo de equivalencia al tipo super-reducido (0,5%) - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
+              help: null
+              label: Recargo de equivalencia al tipo 0,26% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
+              help: null
+              label: Recargo de equivalencia al tipo 0,5% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
+              help: null
+              label: Recargo de equivalencia al tipo 0,62% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
+              help: null
+              label: Recargo de equivalencia al tipo 1,4% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
+              help: null
+              label: Recargo de equivalencia al tipo 1% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
+              help: null
+              label: Recargo de equivalencia al tipo 5,2% - Cuota
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
+              help: null
+              label: Cuota IVA repercutido al tipo reducido (10%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
+              help: null
+              label: Base imponible IVA repercutido al tipo reducido (10%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
+              help: null
+              label: Cuota IVA repercutido al tipo super-reducido (4%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
+              help: null
+              label: Base imponible IVA repercutido al tipo super-reducido (4%)
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
+              help: null
+              label: Base imponible IVA repercutido al tipo 0%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
+              help: null
+              label: Cuota IVA repercutido al tipo 0%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
+              help: null
+              label: Base imponible IVA repercutido al tipo 10%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
+              help: null
+              label: Cuota IVA repercutido al tipo 10%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
+              help: null
+              label: Base imponible IVA repercutido al tipo 2%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
+              help: null
+              label: Cuota IVA repercutido al tipo 2%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
+              help: null
+              label: Base imponible IVA repercutido al tipo 21%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
+              help: null
+              label: Cuota IVA repercutido al tipo 21%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
+              help: null
+              label: Base imponible IVA repercutido al tipo 4%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
+              help: null
+              label: Cuota IVA repercutido al tipo 4%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
+              help: null
+              label: Base imponible IVA repercutido al tipo 5%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
+              help: null
+              label: Cuota IVA repercutido al tipo 5%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
+              help: null
+              label: Base imponible IVA repercutido al tipo 7,5%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
+              help: null
+              label: Cuota IVA repercutido al tipo 7,5%
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
+              help: null
+              label: Base imponible IVA repercutido al tipo cero (0%)
+            x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
+              help: null
+              label: Resultado del regimen general (cuota devengada - cuota deducible)
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
+              help: null
+              label: Cuota IVA soportado deducible en importaciones de bienes corrientes
+                (LIVA art 17 + art 92; oficial casilla 33)
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
+              help: null
+              label: Cuota IVA soportado en operaciones interiores corrientes
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
+              help: null
+              label: Base imponible IVA soportado en operaciones interiores corrientes
+            x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
+              help: null
+              label: Total bases y cuotas de IVA del ejercicio
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
+              help: null
+              label: Entregas intracomunitarias de bienes y servicios
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
+              help: null
+              label: Exportaciones y operaciones asimiladas
+          construct:
+            modelo-390-iva-resumen-anual:
+              field:
+                title: Declaración-resumen anual de IVA
+          field:
+            label: Modelo 390 ejercicio 2025 (Orden EHA/3111/2009, modificada por
+              sucesivas ordenes incluida HAP/2373/2014)
     '490':
       field:
         official_name: Modelo 490. Impuesto sobre Determinados Servicios Digitales.

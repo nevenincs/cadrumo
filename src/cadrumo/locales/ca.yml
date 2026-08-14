@@ -3480,8 +3480,8 @@ cli:
       support_matrix:
         help: 'Mostra la matriu de suport per model a nivell de registre: grau de
           càlcul, manifest de completesa, formats d''exportació, cobertura d''extractors,
-          canvis de nom de casella declarats, decisions de baixa de suport i referències
-          creuades amb el portal de l''AEAT.'
+          canvis de nom de casella declarats i referències creuades amb el portal
+          de l''AEAT.'
       verification_report:
         app_help: Inspeccionar els informes de verificació registrats
         list_help: Llistar els informes de verificació, opcionalment filtrats per
@@ -4328,25 +4328,13 @@ cli:
         session_not_persisted: No hi ha cap magatzem de claus del sistema utilitzable,
           així que la sessió no es pot desar; aquest inici de sessió només val per
           a l'ordre actual.
+      passphrase_prompt: 'Contrasenya del perfil: '
       refusal:
         abandoned: S'ha cancel·lat l'inici de sessió; no s'ha obert cap perfil.
     logout:
       help: Tanca la sessió del perfil i esborra el seu punter local
       notices:
         already_logged_out: Cap perfil tenia la sessió iniciada; no hi ha res a tancar.
-    passphrase:
-      change:
-        help: Canvia la contrasenya del magatzem de secrets després de verificar l'actual.
-      confirm_new_passphrase_prompt: 'Confirma la nova contrasenya del magatzem secret
-        Cadrumo: '
-      current_passphrase_prompt: 'Contrasenya actual del magatzem secret Cadrumo: '
-      errors:
-        current_passphrase_incorrect: La contrasenya actual és incorrecta; el magatzem
-          de secrets no s'ha modificat.
-        store_unprovisioned: El magatzem de secrets en fitxer no està inicialitzat;
-          no hi ha cap contrasenya per canviar.
-      help: Gestiona la contrasenya del magatzem de secrets en fitxer.
-      new_passphrase_prompt: 'Nova contrasenya del magatzem secret Cadrumo: '
     profile:
       already_exists: El perfil %{name} ja existeix. Tria un altre identificador de
         destinació.
@@ -4704,36 +4692,6 @@ cli:
           d'un límit de temps.
         model_help: Identificador del model que es verificarà. Per defecte, el model
           seleccionat per a la funció.
-    recover:
-      errors:
-        recovery_code_rejected: El codi de recuperació no ha obert l'embolcall de
-          recuperació; el magatzem de secrets no s'ha canviat.
-      help: Recupera el magatzem de secrets de fitxer amb el codi de recuperació de
-        24 paraules i vincula'l a una frase de contrasenya nova.
-    recovery:
-      candidate_intro: 'El teu nou codi de recuperació. Anota ara aquestes 24 paraules,
-        en ordre:'
-      create:
-        help: Registra un codi de recuperació; les paraules apareixen una sola vegada
-          al terminal i s'han de tornar a escriure.
-      errors:
-        interactive_terminal_required: 'El registre de recuperació necessita un terminal
-          interactiu: el codi es mostra una vegada i s''ha de tornar a escriure.'
-        retype_mismatch: El codi de recuperació reescrit no coincideix amb el mostrat;
-          no s'ha canviat res.
-      help: Gestiona el codi de recuperació de 24 paraules del magatzem de secrets
-        de fitxer.
-      recovery_code_prompt: 'Codi de recuperació de 24 paraules: '
-      retype_prompt: 'Torna a escriure el codi de recuperació de 24 paraules per confirmar
-        (entrada oculta): '
-      rotate:
-        help: Substitueix el codi de recuperació registrat; les paraules noves apareixen
-          una sola vegada i s'han de tornar a escriure.
-      status:
-        help: Mostra si hi ha un codi de recuperació registrat, sense exposar-lo.
-      verify:
-        help: Comprova que un codi de recuperació obre l'embolcall de recuperació
-          desat.
     repair:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
       connectivity_target_help: Objectiu de connectivitat que cal comprovar
@@ -5761,7 +5719,6 @@ cli:
           CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
           i CADRUMO_SECRET_PASSPHRASE; els logs queden per defecte sota aquest directori
           d'emmagatzematge.
-        passphrase_change: Canvia la contrasenya que protegeix les dades locals.
         profile_delete: Eliminar un perfil de contribuent.
         profile_duplicate: Duplicar un perfil de contribuent existent.
         profile_export: Exporta un paquet portàtil del perfil.
@@ -5773,17 +5730,11 @@ cli:
         profile_sar: Exporta un paquet de dades d'accés de l'interessat.
         profile_show: Mostrar les dades del perfil actiu.
         profile_status: Mostrar l'estat del perfil actiu.
-        recover: Recupera l'accés local amb una frase de recuperació.
-        recovery_create: Registra una frase de recuperació.
-        recovery_rotate: Renova la frase de recuperació.
-        recovery_status: Mostra l'estat de registre de la frase de recuperació.
-        recovery_verify: Verifica una frase de recuperació sense utilitzar-la.
         reset_resume: Reprèn una operació de reinici incompleta.
         reset_start: Inicia un reinici irreversible de tots els perfils desats localment.
         reset_status: Mostra l'estat d'una operació de reinici sense modificar dades
           locals.
         section_authentication: Autenticació AEAT
-        section_custody: Custòdia de contrasenya i recuperació
         section_diagnostics: Diagnòstic
         section_first_run: Primera execució
         section_profile_inspection: Inspecció del perfil
@@ -5822,7 +5773,6 @@ cli:
         paragraph_tax_terms: El llibre conté moviments importats. Un model és un formulari
           oficial de l'AEAT, diferent de la seva unitat de treball o exportació local.
         recovery_login: Inicia o renova una sessió absent, tancada o caducada.
-        recovery_passphrase: Recupera el magatzem de secrets amb el codi registrat.
         recovery_profile: Inspecciona un problema detectat al punter del perfil actiu.
         recovery_repair: Abans de canviar dades, executa aquest informe de salut de
           només lectura.
@@ -7680,9 +7630,6 @@ errors:
       està admesa fiscalment. Fes servir FIFO, preu mitjà ponderat o cost mitjà.
     refused_profile_login_throttled: Massa intents d'inici de sessió fallits. Espera
       %{seconds} segons abans de tornar-ho a intentar.
-    refused_profile_logout_override: El tancament de sessió no pot canviar un perfil
-      actiu seleccionat mitjançant --profile. Treu l'opció --profile i torna-ho a
-      provar.
     refused_profile_not_configured: La verificació de la declaració de la Renda necessita
       un perfil de residència fiscal. Completa el perfil abans de continuar.
     refused_profile_not_found: No existeix cap perfil amb l'identificador indicat.
@@ -7919,15 +7866,6 @@ flows:
       google_export_year_invalid: Introdueix un any entre 2000 i 2099.
       logout: Tanca la sessió
       logout_done: Sessió tancada.
-      passphrase: Canviar la contrasenya
-      passphrase_confirm: Confirma la nova contrasenya
-      passphrase_current: Contrasenya actual
-      passphrase_done: Contrasenya canviada.
-      passphrase_failed: No s'ha pogut canviar la contrasenya. Revisa l'estat de l'emmagatzematge
-        local i torna-ho a provar.
-      passphrase_mismatch: La nova contrasenya i la seva confirmació no coincideixen.
-      passphrase_new: Nova contrasenya
-      passphrase_wrong_current: Aquesta no és la contrasenya actual.
       provider:
         certificate: Certificat electrònic
         clave_movil: Cl@ve Mòbil
@@ -8206,18 +8144,11 @@ flows:
         setup_incomplete: configuració incompleta
         tombstoned: eliminat
         unknown: desconegut
-    recovery:
-      commands_title: Accions (copiar i executar)
-      enrolled: activat
-      fingerprint: Empremta
-      not_enrolled: no activat
-      state: Codi de recuperació
     section:
       auth: Autenticació
       notices: Avisos
       profile: Perfil actiu
       profiles: Perfils
-      recovery: Recuperació
     title: Estat
   tui:
     binding_back: Anterior
@@ -66239,7 +66170,7 @@ modelo:
             help: null
             label: Total quota d'IVA meritada
           iva-cuota-repercutida-general:
-            help: null
+            help: Quota total d'IVA repercutit calculada al tipus general del 21%.
             label: Quota IVA repercutit al tipus general (21%)
           iva-cuota-repercutida-reducido:
             help: null
@@ -69404,13 +69335,7 @@ modelo:
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
               label: null
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: null
-              label: null
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
               help: null
               label: null
             x-d5r62bjiclpnar3kc5i6u:
@@ -70144,17 +70069,9 @@ modelo:
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: Total d'IVA repercutit calculat al tipus reduït del 10%.
               label: Quota d'IVA repercutit al tipus reduït (10%)
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: Casella transitòria del RD-ley 4/2024 per al tipus reduït, que
-                conviu amb el tipus reduït ordinari del 10%.
-              label: Quota d’IVA repercutit al tipus reduït transitori (5%/7,5%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: Total d'IVA repercutit calculat al tipus superreduït del 4%.
               label: Quota d'IVA repercutit al tipus superreduït (4%)
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
-              help: Casella transitòria del RDL 4/2024 per al tipus superreduït, que
-                conviu amb el tipus superreduït ordinari del 4%.
-              label: Quota d’IVA repercutit al tipus superreduït transitori (2%)
             x-d5r62bjiclpnar3kc5i6u:
               help: null
               label: null
@@ -70886,6 +70803,33 @@ modelo:
           iva-anual-reconciliacion-resultado-303:
             help: null
             label: Reconciliació anual - resultat declarat en els models 303
+          iva-anual-regimen-simplificado-aic-bienes-cuota-devengada:
+            help: null
+            label: null
+          iva-anual-regimen-simplificado-cuota-resultante-agricola:
+            help: null
+            label: null
+          iva-anual-regimen-simplificado-cuota-resultante-no-agricola:
+            help: null
+            label: null
+          iva-anual-regimen-simplificado-entrega-activos-fijos:
+            help: null
+            label: null
+          iva-anual-regimen-simplificado-inversion-sujeto-pasivo:
+            help: null
+            label: null
+          iva-anual-regimen-simplificado-iva-soportado-activos-fijos:
+            help: null
+            label: null
+          iva-anual-regimen-simplificado-regularizacion-bienes-inversion:
+            help: null
+            label: null
+          iva-anual-regimen-simplificado-resultado:
+            help: null
+            label: null
+          iva-anual-regimen-simplificado-suma-deducciones:
+            help: null
+            label: null
           iva-anual-regularizacion-bienes-inversion:
             help: null
             label: Regularització de béns d'inversió
@@ -71052,419 +70996,1196 @@ modelo:
         official_name: null
         title: null
       revision:
-        2010-y-siguientes:
+        '2022':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: Exercici a què es refereix la declaració-resum
+              label: null
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
-              label: Tipus de declaració (original / substitutiva / complementària)
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                béns al tipus general, sigui quin sigui el percentatge aplicat a cada
-                operació.
-              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
-                general, sense desglossament per tipus - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                béns al tipus reduït, sigui quin sigui el percentatge aplicat a cada
-                operació.
-              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
-                reduït, sense desglossament per tipus - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                béns al tipus superreduït, sigui quin sigui el percentatge aplicat
-                a cada operació.
-              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
-                superreduït, sense desglossament per tipus - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                béns gravades al tipus del 0 %.
-              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
-                del 0% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
-              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
-                béns gravades al tipus del 0 %.
-              label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
-                del 0% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                béns gravades al tipus del 10 %.
-              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
-                del 10% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
-              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
-                béns gravades al tipus del 10 %.
-              label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
-                del 10% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                béns gravades al tipus del 2 %.
-              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
-                del 2% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
-              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
-                béns gravades al tipus del 2 %.
-              label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
-                del 2% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                béns gravades al tipus del 21 %.
-              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
-                del 21% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
-              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
-                béns gravades al tipus del 21 %.
-              label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
-                del 21% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                béns gravades al tipus del 4 %.
-              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
-                del 4% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
-              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
-                béns gravades al tipus del 4 %.
-              label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
-                del 4% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                béns gravades al tipus del 5 %.
-              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
-                del 5% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
-              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
-                béns gravades al tipus del 5 %.
-              label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
-                del 5% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                béns gravades al tipus del 7,5 %.
-              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
-                del 7,5% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
-              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
-                béns gravades al tipus del 7,5 %.
-              label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
-                del 7,5% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                béns al tipus zero, sigui quin sigui el percentatge aplicat a cada
-                operació.
-              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
-                zero, sense desglossament per tipus - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                serveis al tipus general, sigui quin sigui el percentatge aplicat
-                a cada operació.
-              label: Base imposable d'adquisicions intracomunitàries de serveis al
-                tipus general, sense desglossament per tipus - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                serveis al tipus reduït, sigui quin sigui el percentatge aplicat a
-                cada operació.
-              label: Base imposable d'adquisicions intracomunitàries de serveis al
-                tipus reduït, sense desglossament per tipus - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                serveis al tipus superreduït, sigui quin sigui el percentatge aplicat
-                a cada operació.
-              label: Base imposable d'adquisicions intracomunitàries de serveis al
-                tipus superreduït, sense desglossament per tipus - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                serveis gravades al tipus del 0 %.
-              label: Base imposable d'adquisicions intracomunitàries de serveis al
-                tipus del 0% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
-              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
-                serveis gravades al tipus del 0 %.
-              label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
-                del 0% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                serveis gravades al tipus del 10 %.
-              label: Base imposable d'adquisicions intracomunitàries de serveis al
-                tipus del 10% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
-              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
-                serveis gravades al tipus del 10 %.
-              label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
-                del 10% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                serveis gravades al tipus del 2 %.
-              label: Base imposable d'adquisicions intracomunitàries de serveis al
-                tipus del 2% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
-              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
-                serveis gravades al tipus del 2 %.
-              label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
-                del 2% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                serveis gravades al tipus del 21 %.
-              label: Base imposable d'adquisicions intracomunitàries de serveis al
-                tipus del 21% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
-              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
-                serveis gravades al tipus del 21 %.
-              label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
-                del 21% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                serveis gravades al tipus del 4 %.
-              label: Base imposable d'adquisicions intracomunitàries de serveis al
-                tipus del 4% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
-              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
-                serveis gravades al tipus del 4 %.
-              label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
-                del 4% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                serveis gravades al tipus del 5 %.
-              label: Base imposable d'adquisicions intracomunitàries de serveis al
-                tipus del 5% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
-              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
-                serveis gravades al tipus del 5 %.
-              label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
-                del 5% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                serveis gravades al tipus del 7,5 %.
-              label: Base imposable d'adquisicions intracomunitàries de serveis al
-                tipus del 7,5% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
-              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
-                serveis gravades al tipus del 7,5 %.
-              label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
-                del 7,5% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
-              help: Suma la base imposable de les adquisicions intracomunitàries de
-                serveis al tipus zero, sigui quin sigui el percentatge aplicat a cada
-                operació.
-              label: Base imposable d'adquisicions intracomunitàries de serveis al
-                tipus zero, sense desglossament per tipus - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
-              help: Suma la base imposable autorepercutida en operacions interiors
-                durant l'exercici.
-              label: Base imposable autorepercutida en operacions interiors - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: Declara la quota d'IVA autorepercutida en operacions interiors
-                durant l'exercici.
-              label: Quota d'IVA autorepercutida en operacions interiors - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: null
-              label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
-                - anual
+              label: null
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
               help: null
-              label: Quotes pendents de compensació generades en l'exercici i diferents
-                de les incloses en la casella 97
+              label: null
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
               help: null
-              label: Resultat declaració-liquidació de l'últim període - A compensar
+              label: null
             x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
               help: null
-              label: Total quota d'IVA deduïble anual (suportat + autorepercutit)
+              label: null
             x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
               help: null
-              label: Total quota d'IVA meritada anual (repercutit + autorepercutit)
+              label: null
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechim8tb3d5h6op9d6co36:
               help: null
-              label: Quota deduïble anual reconciliada des dels quatre Models 303
-                trimestrals
+              label: null
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9d6co36:
               help: null
-              label: Quota meritada anual reconciliada des dels quatre Models 303
-                trimestrals
+              label: null
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9dedkmqs3cd5j6ior1chniqcpg6c:
               help: null
-              label: IVA meritat règim simplificat - Total quota resultant (anual
-                des del Model 303 4T)
+              label: null
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
               help: null
-              label: Resultat anual reconciliat des dels quatre Models 303 trimestrals
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
               help: null
-              label: Regularització d'inversions - anual
+              label: null
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
               help: null
-              label: Regularització per aplicació del percentatge definitiu de prorrata
-                - anual
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
               help: null
-              label: Quota d'IVA repercutit al tipus general (21%) - anual
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
-              help: Suma la base imposable de les operacions interiors repercutides
-                al tipus general, sigui quin sigui el percentatge aplicat a cada operació.
-              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 21% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
               help: null
-              label: Recàrrec d'equivalència tipus 5,2% - Quota meritada anual
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpee9im8tb3d5i6u:
               help: null
-              label: Recàrrec d'equivalència tipus 1,4% - Quota meritada anual
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
               help: null
-              label: Recàrrec d'equivalència tipus 0,5% - Quota meritada anual
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
-              help: Declara la quota de recàrrec d'equivalència al 0,26 % repercutida
-                en les vendes a comerciants minoristes acollits al règim de recàrrec,
-                sobre lliuraments gravats al tipus d'IVA del 2 % (RDL 4/2024 art.
-                1). Es consigna a la casella 692.
-              label: Recàrrec d'equivalència tipus 0,26 % - Quota meritada anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
-              help: Declara la quota de recàrrec d'equivalència al 0,5 % repercutida
-                en les vendes a comerciants minoristes acollits al règim de recàrrec,
-                sobre lliuraments gravats al tipus d'IVA del 4 % (LIVA art. 161.3).
-                Es consigna a la casella 36.
-              label: Recàrrec d'equivalència tipus 0,5 % - Quota meritada anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
-              help: Declara la quota de recàrrec d'equivalència al 0,62 % repercutida
-                en les vendes a comerciants minoristes acollits al règim de recàrrec,
-                sobre lliuraments gravats al tipus d'IVA del 5 % (RDL 4/2024 art.
-                1). Es consigna a la casella 666.
-              label: Recàrrec d'equivalència tipus 0,62 % - Quota meritada anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
-              help: Declara la quota de recàrrec d'equivalència al 1,4 % repercutida
-                en les vendes a comerciants minoristes acollits al règim de recàrrec,
-                sobre lliuraments gravats al tipus d'IVA del 10 % (LIVA art. 161.2).
-                Es consigna a la casella 600.
-              label: Recàrrec d'equivalència tipus 1,4 % - Quota meritada anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
-              help: Declara la quota de recàrrec d'equivalència al 1 % repercutida
-                en les vendes a comerciants minoristes acollits al règim de recàrrec,
-                sobre lliuraments gravats al tipus d'IVA del 7,5 % (RDL 4/2024 art.
-                1). Es consigna a la casella 694.
-              label: Recàrrec d'equivalència tipus 1 % - Quota meritada anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
-              help: Declara la quota de recàrrec d'equivalència al 5,2 % repercutida
-                en les vendes a comerciants minoristes acollits al règim de recàrrec,
-                sobre lliuraments gravats al tipus d'IVA del 21 % (LIVA art. 161.1).
-                Es consigna a la casella 602.
-              label: Recàrrec d'equivalència tipus 5,2 % - Quota meritada anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: null
-              label: Quota d'IVA repercutit al tipus reduït (10%) - anual
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
-              help: Suma la base imposable de les operacions interiors repercutides
-                al tipus reduït, sigui quin sigui el percentatge aplicat a cada operació.
-              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 10% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
               help: null
-              label: Quota d'IVA repercutit al tipus superreduït (4%) - anual
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
-              help: Suma la base imposable de les operacions interiors repercutides
-                al tipus superreduït, sigui quin sigui el percentatge aplicat a cada
-                operació.
-              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 4% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
-              help: Declara la base imposable de les operacions interiors del règim
-                ordinari gravades al tipus del 0 %. El Reial decret llei 4/2024, article
-                1, va aplicar aquest tipus als aliments bàsics des de l'1 de juliol
-                fins al 30 de setembre de 2024.
-              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 0% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
-              help: Declara la quota d'IVA repercutida al tipus del 0 % sobre la base
-                imposable de la casella 700. Un tipus del 0 % no genera quota, així
-                que aquest import és zero.
-              label: Quota d’IVA meritat - Règim ordinari - Tipus 0% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
-              help: Declara la base imposable de les operacions interiors del règim
-                ordinari gravades al tipus reduït del 10 %.
-              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 10% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
-              help: Declara la quota d'IVA repercutida al tipus reduït del 10 % sobre
-                la base imposable de la casella 03.
-              label: Quota d’IVA meritat - Règim ordinari - Tipus 10% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
-              help: 'Declara la base imposable dels aliments bàsics gravats al 2 %:
-                pa comú, farines panificables, llet, formatges, ous, fruites, verdures,
-                hortalisses, llegums, tubercles, cereals naturals i olis d''oliva.
-                El Reial decret llei 4/2024, article 1, va fixar aquest tipus des
-                de l''1 d''octubre fins al 31 de desembre de 2024.'
-              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 2% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
-              help: Declara la quota d'IVA repercutida al 2 % sobre la base imposable
-                de la casella 667. El Reial decret llei 4/2024, article 1, va fixar
-                aquest tipus des de l'1 d'octubre fins al 31 de desembre de 2024.
-              label: Quota d’IVA meritat - Règim ordinari - Tipus 2% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
-              help: Declara la base imposable de les operacions interiors del règim
-                ordinari gravades al tipus general del 21 %.
-              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 21% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
-              help: Declara la quota d'IVA repercutida al tipus general del 21 % sobre
-                la base imposable de la casella 05.
-              label: Quota d’IVA meritat - Règim ordinari - Tipus 21% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
-              help: Declara la base imposable de les operacions interiors del règim
-                ordinari gravades al tipus superreduït del 4 %.
-              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 4% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
-              help: Declara la quota d'IVA repercutida al tipus superreduït del 4
-                % sobre la base imposable de la casella 01.
-              label: Quota d’IVA meritat - Règim ordinari - Tipus 4% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
-              help: Declara la base imposable dels olis de llavors i les pastes alimentàries
-                gravats al 5 %. El Reial decret llei 4/2024, article 1, va fixar aquest
-                tipus des de l'1 de juliol fins al 30 de setembre de 2024.
-              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 5% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
-              help: Declara la quota d'IVA repercutida al 5 % sobre la base imposable
-                de la casella 702. El Reial decret llei 4/2024, article 1, va fixar
-                aquest tipus des de l'1 de juliol fins al 30 de setembre de 2024.
-              label: Quota d’IVA meritat - Règim ordinari - Tipus 5% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
-              help: Declara la base imposable dels olis de llavors i les pastes alimentàries
-                gravats al 7,5 %. El Reial decret llei 4/2024, article 1, va fixar
-                aquest tipus des de l'1 d'octubre fins al 31 de desembre de 2024.
-              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 7,5% -
-                anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
-              help: Declara la quota d'IVA repercutida al 7,5 % sobre la base imposable
-                de la casella 669. El Reial decret llei 4/2024, article 1, va fixar
-                aquest tipus des de l'1 d'octubre fins al 31 de desembre de 2024.
-              label: Quota d’IVA meritat - Règim ordinari - Tipus 7,5% - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
-              help: Suma la base imposable de les operacions interiors repercutides
-                al tipus zero, sigui quin sigui el percentatge aplicat a cada operació.
-              label: IVA meritat RG tipus zero - Base imposable
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
-              label: Resultat anual del règim general (quota meritada - quota deduïble)
+              label: null
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
               help: null
-              label: Quota d'IVA suportat deduïble en importacions de béns corrents
-                - anual
+              label: null
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: null
-              label: Quota d'IVA suportat en operacions interiors corrents - anual
+              label: null
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
-              help: Suma la base imposable de les adquisicions interiors corrents
-                de béns i serveis amb IVA suportat, agregant els tres tipus interiors.
-              label: Base imposable d’IVA deduïble - Total operacions interiors corrents
-                de béns i serveis - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
-              help: Suma la quota d'IVA meritada dels tipus general, reduit i superreduit
-                mes l'autorepercutida en adquisicions intracomunitaries, excloent
-                el recarrec d'equivalencia (casella 47).
-              label: Total bases i quotes IVA - Quota (Reg. ordinari) - anual
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
-              help: 'Import dels lliuraments de béns a un altre Estat membre, exempts
-                per l''article 25 de la Llei de l''IVA. No hi incloeu els serveis
-                prestats a empresaris de la UE: no estan subjectes a Espanya i es
-                declaren com a operacions no subjectes.'
-              label: Lliuraments intracomunitaris de bens
+              help: null
+              label: null
             x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
-              help: Import de les exportacions de béns exemptes per l'article 21 de
-                la Llei de l'IVA i de les operacions assimilades a l'exportació exemptes
-                per l'article 22.
-              label: Exportacions i altres operacions exemptes amb dret a deducció
+              help: null
+              label: null
+          construct:
+            modelo-390-iva-resumen-anual:
+              field:
+                title: null
+          field:
+            label: null
+        '2023':
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechim8tb3d5h6op9d6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9d6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9dedkmqs3cd5j6ior1chniqcpg6c:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpee9im8tb3d5i6u:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
+              help: null
+              label: null
+          construct:
+            modelo-390-iva-resumen-anual:
+              field:
+                title: null
+          field:
+            label: null
+        '2024':
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechim8tb3d5h6op9d6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9d6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9dedkmqs3cd5j6ior1chniqcpg6c:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpee9im8tb3d5i6u:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
+              help: null
+              label: null
+          construct:
+            modelo-390-iva-resumen-anual:
+              field:
+                title: null
+          field:
+            label: null
+        '2025':
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechim8tb3d5h6op9d6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9d6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9dedkmqs3cd5j6ior1chniqcpg6c:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpee9im8tb3d5i6u:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
+              help: null
+              label: null
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
+              help: null
+              label: null
           construct:
             modelo-390-iva-resumen-anual:
               field:
