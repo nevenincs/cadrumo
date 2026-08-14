@@ -50,7 +50,9 @@ from ...tests.loopback_llm import (
     write_json_response,
 )
 from .. import LLMClient, LLMContentionError, LLMRequest, LLMRetryPolicy, transport_retry_permitted
-from .._client import reset_on_host_inference_arena
+from ._arena_fixtures import _fresh_arena
+
+__all__ = ["_fresh_arena"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -60,13 +62,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _CATALOGUED_MODEL = "qwen3:1.7b"
 
 _GIB = 1024**3
-
-
-@pytest.fixture(autouse=True)
-def _fresh_arena() -> Iterator[None]:
-    reset_on_host_inference_arena()
-    yield
-    reset_on_host_inference_arena()
 
 
 def test_the_model_under_test_still_declares_a_memory_requirement() -> None:

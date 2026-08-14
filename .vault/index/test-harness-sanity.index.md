@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:e35de363963cce88cde224d0f9d7929174b2f07df71097b0496d347c9605a1b3'
+body_hash: 'sha256:0a8cd26a52dd95afe798818ec532be4aa92c90aacca557b18f9acbece6e0ecfe'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -24,6 +24,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P20-S63]]'
   - '[[2026-08-14-test-harness-sanity-W07-P20-S64]]'
   - '[[2026-08-14-test-harness-sanity-W07-P20-S65]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P21-S66]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S67]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S68]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S71]]'
@@ -78,6 +79,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P20-S63` - Canonicalize the M180 committed registry snapshot family
 - `2026-08-14-test-harness-sanity-W07-P20-S64` - Canonicalize the M100 2024 committed registry snapshot family
 - `2026-08-14-test-harness-sanity-W07-P20-S65` - Canonicalize the M200 development registry snapshot family
+- `2026-08-14-test-harness-sanity-W07-P21-S66` - Adjudicate and canonicalize every remaining source-tree fixture cluster in the census
 - `2026-08-14-test-harness-sanity-W07-P21-S67` - Adjudicate and canonicalize every remaining development fixture cluster in the census
 - `2026-08-14-test-harness-sanity-W07-P21-S68` - Adjudicate and canonicalize every remaining packaging fixture cluster in the census
 - `2026-08-14-test-harness-sanity-W07-P22-S71` - Promote banned-live-import enforcement into the shared root policy helper
