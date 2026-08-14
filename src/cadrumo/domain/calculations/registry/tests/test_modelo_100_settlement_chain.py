@@ -68,7 +68,6 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .. import BindingId, RegistrySnapshot, RelationId, calculate_registry_snapshot
-from .._authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -184,11 +183,6 @@ def _casilla_inputs(*, retenciones: Decimal = _RETENCIONES_ARRENDAMIENTOS) -> di
         _M100_TRABAJO_RENDIMIENTO_NETO_CASILLA: _BASE_LIQUIDABLE_GENERAL,
         _M100_RETENCIONES_ARRENDAMIENTOS_CASILLA: retenciones,
     }
-
-
-@pytest.fixture
-def m100_2024_snapshot(registry_authority: ValidatedRegistryAuthority):
-    return registry_authority.snapshot("100", filing_year=2024, period="0A")
 
 
 def test_0587_cuota_liquida_total_is_computed(m100_2024_snapshot: RegistrySnapshot) -> None:

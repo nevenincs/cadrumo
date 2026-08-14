@@ -23,6 +23,7 @@ from collections.abc import Callable
 import pytest
 
 from .....application import wizard as _wizard  # noqa: F401  -- side-effect import: registers profile keys
+from .._authority import ValidatedRegistryAuthority
 from .._schema import RegistrySnapshot
 from ._formula_runtime_support import (
     _committed_modelo_130_snapshot,
@@ -42,3 +43,10 @@ def committed_modelo_180_snapshot(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> RegistrySnapshot:
     return _committed_modelo_180_snapshot(registry_snapshot)
+
+
+@pytest.fixture
+def m100_2024_snapshot(
+    registry_authority: ValidatedRegistryAuthority,
+) -> RegistrySnapshot:
+    return registry_authority.snapshot("100", filing_year=2024, period="0A")

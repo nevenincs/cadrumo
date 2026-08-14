@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:3fa77e55b67b6115eb560c276e212fa07081dc0de46d91de70cf86439303222e'
+body_hash: 'sha256:92c3f9aace8b32d886600667934c892d31b8e4c6a37f292487cc362b5c6af885'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -21,6 +21,8 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P20-S61]]'
   - '[[2026-08-14-test-harness-sanity-W07-P20-S62]]'
   - '[[2026-08-14-test-harness-sanity-W07-P20-S63]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P20-S64]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P20-S65]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S71]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S72]]'
   - '[[2026-08-14-test-harness-sanity-W07-P22-S73]]'
@@ -69,6 +71,8 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P20-S61` - Remove local redeclarations of the canonical modelo repositories fixture
 - `2026-08-14-test-harness-sanity-W07-P20-S62` - Canonicalize the M130 committed registry snapshot family
 - `2026-08-14-test-harness-sanity-W07-P20-S63` - Canonicalize the M180 committed registry snapshot family
+- `2026-08-14-test-harness-sanity-W07-P20-S64` - Canonicalize the M100 2024 committed registry snapshot family
+- `2026-08-14-test-harness-sanity-W07-P20-S65` - Canonicalize the M200 development registry snapshot family
 - `2026-08-14-test-harness-sanity-W07-P22-S71` - Promote banned-live-import enforcement into the shared root policy helper
 - `2026-08-14-test-harness-sanity-W07-P22-S72` - Make the repository root the sole collection-policy hook owner
 - `2026-08-14-test-harness-sanity-W07-P22-S73` - Remove duplicate marker traversal and live-policy ownership from the child conftest

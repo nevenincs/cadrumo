@@ -143,11 +143,6 @@ def _base_binding_values_2025(
 
 
 @pytest.fixture
-def m100_2024_snapshot(registry_authority: ValidatedRegistryAuthority):
-    return registry_authority.snapshot("100", filing_year=2024, period="0A")
-
-
-@pytest.fixture
 def m100_2025_snapshot(registry_authority: ValidatedRegistryAuthority):
     return registry_authority.snapshot("100", filing_year=2025, period="0A")
 

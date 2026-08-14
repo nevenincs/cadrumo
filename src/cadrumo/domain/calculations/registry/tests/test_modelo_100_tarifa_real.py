@@ -39,7 +39,6 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .. import BindingId, RegistrySnapshot, RelationId, calculate_registry_snapshot
-from .._authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -120,11 +119,6 @@ _CUOTA_RESULTANTE_CASILLA: CasillaId = _casilla_id("0595")
 _TOTAL_PAGOS_A_CUENTA_CASILLA: CasillaId = _casilla_id("0609")
 _CUOTA_DIFERENCIAL_CASILLA: CasillaId = _casilla_id("0610")
 _ANUALIDADES_PRIMER_HIJO_CASILLA: CasillaId = _casilla_id("1741")
-
-
-@pytest.fixture
-def m100_2024_snapshot(registry_authority: ValidatedRegistryAuthority):
-    return registry_authority.snapshot("100", filing_year=2024, period="0A")
 
 
 def test_m100_2024_minimo_contribuyente_computed_not_zero(m100_2024_snapshot: RegistrySnapshot) -> None:

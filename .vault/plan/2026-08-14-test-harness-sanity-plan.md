@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-14'
-body_hash: 'sha256:689c9cc68b68a867b7d0675185e761e6c8415e26f41c926a14e7e31152e749ea'
+body_hash: 'sha256:48e8be747381d03b2e60602aebfdf1ec84e3693fb496a3c07c4efdb6aca44baa'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -91,7 +91,7 @@ Use existing modelo and registry owners to remove local redeclarations and repea
 - [x] `W07.P20.S61` - Remove local redeclarations of the canonical modelo repositories fixture; `src/cadrumo/application/modelo/tests`.
 - [x] `W07.P20.S62` - Canonicalize the M130 committed registry snapshot family; `src/cadrumo/domain/calculations/registry/tests`.
 - [x] `W07.P20.S63` - Canonicalize the M180 committed registry snapshot family; `src/cadrumo/domain/calculations/registry/tests`.
-- [ ] `W07.P20.S64` - Canonicalize the M100 2024 committed registry snapshot family; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `W07.P20.S64` - Canonicalize the M100 2024 committed registry snapshot family; `src/cadrumo/domain/calculations/registry/tests`.
 - [ ] `W07.P20.S65` - Canonicalize the M200 development registry snapshot family; `dev/registry/tests`.
 
 ### Phase `W07.P21` - adjudicate every remaining fixture and support factory
