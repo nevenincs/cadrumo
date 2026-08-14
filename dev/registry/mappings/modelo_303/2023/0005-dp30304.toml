@@ -72,12 +72,12 @@ record_identity = "DP30304"
 [[entries]]
 export_field_id = "m303-2023.dp30304.f006"
 kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
 [entries.projection_ref]
 projection_kind = "m303_exonerado_390_activity"
 slot = 1
 field = "activity_code"
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
 [entries.anchor]
 sheet = "DP30304"
 source_row = 11
@@ -88,12 +88,12 @@ record_identity = "DP30304"
 [[entries]]
 export_field_id = "m303-2023.dp30304.f007"
 kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
 [entries.projection_ref]
 projection_kind = "m303_exonerado_390_activity"
 slot = 1
 field = "iae_epigrafe"
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
 [entries.anchor]
 sheet = "DP30304"
 source_row = 12
@@ -104,12 +104,12 @@ record_identity = "DP30304"
 [[entries]]
 export_field_id = "m303-2023.dp30304.f008"
 kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
 [entries.projection_ref]
 projection_kind = "m303_exonerado_390_activity"
 slot = 2
 field = "activity_code"
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
 [entries.anchor]
 sheet = "DP30304"
 source_row = 13
@@ -120,12 +120,12 @@ record_identity = "DP30304"
 [[entries]]
 export_field_id = "m303-2023.dp30304.f009"
 kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
 [entries.projection_ref]
 projection_kind = "m303_exonerado_390_activity"
 slot = 2
 field = "iae_epigrafe"
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
 [entries.anchor]
 sheet = "DP30304"
 source_row = 14
@@ -136,12 +136,12 @@ record_identity = "DP30304"
 [[entries]]
 export_field_id = "m303-2023.dp30304.f010"
 kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
 [entries.projection_ref]
 projection_kind = "m303_exonerado_390_activity"
 slot = 3
 field = "activity_code"
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
 [entries.anchor]
 sheet = "DP30304"
 source_row = 15
@@ -152,12 +152,12 @@ record_identity = "DP30304"
 [[entries]]
 export_field_id = "m303-2023.dp30304.f011"
 kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
 [entries.projection_ref]
 projection_kind = "m303_exonerado_390_activity"
 slot = 3
 field = "iae_epigrafe"
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
 [entries.anchor]
 sheet = "DP30304"
 source_row = 16
@@ -168,12 +168,12 @@ record_identity = "DP30304"
 [[entries]]
 export_field_id = "m303-2023.dp30304.f012"
 kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
 [entries.projection_ref]
 projection_kind = "m303_exonerado_390_activity"
 slot = 4
 field = "activity_code"
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
 [entries.anchor]
 sheet = "DP30304"
 source_row = 17
@@ -184,12 +184,12 @@ record_identity = "DP30304"
 [[entries]]
 export_field_id = "m303-2023.dp30304.f013"
 kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
 [entries.projection_ref]
 projection_kind = "m303_exonerado_390_activity"
 slot = 4
 field = "iae_epigrafe"
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
 [entries.anchor]
 sheet = "DP30304"
 source_row = 18
@@ -200,12 +200,12 @@ record_identity = "DP30304"
 [[entries]]
 export_field_id = "m303-2023.dp30304.f014"
 kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
 [entries.projection_ref]
 projection_kind = "m303_exonerado_390_activity"
 slot = 5
 field = "activity_code"
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
 [entries.anchor]
 sheet = "DP30304"
 source_row = 19
@@ -216,12 +216,12 @@ record_identity = "DP30304"
 [[entries]]
 export_field_id = "m303-2023.dp30304.f015"
 kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
 [entries.projection_ref]
 projection_kind = "m303_exonerado_390_activity"
 slot = 5
 field = "iae_epigrafe"
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
 [entries.anchor]
 sheet = "DP30304"
 source_row = 20
@@ -232,12 +232,12 @@ record_identity = "DP30304"
 [[entries]]
 export_field_id = "m303-2023.dp30304.f016"
 kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
 [entries.projection_ref]
 projection_kind = "m303_exonerado_390_activity"
 slot = 6
 field = "activity_code"
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
 [entries.anchor]
 sheet = "DP30304"
 source_row = 21
@@ -248,12 +248,12 @@ record_identity = "DP30304"
 [[entries]]
 export_field_id = "m303-2023.dp30304.f017"
 kind = "projection"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
 [entries.projection_ref]
 projection_kind = "m303_exonerado_390_activity"
 slot = 6
 field = "iae_epigrafe"
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023"]
 [entries.anchor]
 sheet = "DP30304"
 source_row = 22
@@ -264,10 +264,10 @@ record_identity = "DP30304"
 [[entries]]
 export_field_id = "m303-2023.dp30304.f018"
 kind = "projection"
-[entries.projection_ref]
-projection_kind = "m303_exonerado_390_operaciones_terceros"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023"]
+[entries.projection_ref]
+projection_kind = "m303_exonerado_390_operaciones_terceros"
 [entries.anchor]
 sheet = "DP30304"
 source_row = 23
