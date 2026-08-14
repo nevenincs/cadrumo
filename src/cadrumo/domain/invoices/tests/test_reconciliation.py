@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -11,9 +10,9 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....application.invoices import link_invoice_transaction_repositories
 from ....core import LinkInconsistencyDirection
-from ....tests.secure_sql import isolated_runtime_profile
 from ...iva import InvoiceKind
 from ...transactions import (
     RawProvenance,
@@ -35,10 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _BUCKET_ID = "18181818-1818-4181-8181-181818181818"
 
 
-@pytest.fixture(autouse=True)
-def _active_bucket_runtime(tmp_path: Path) -> Iterator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        yield
+_active_bucket_runtime = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=True, name="_active_bucket_runtime")
 
 
 def _invoice(
