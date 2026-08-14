@@ -3,7 +3,8 @@
 The ``SensitivityClassField`` alias coerces registry ``output_sensitivity``
 tokens into :class:`SensitivityClass` members before strict schema validation.
 ``RevisionReviewStatusField`` does the same for the per-revision governance
-stamp's ``review_status`` token.
+stamp's ``review_status`` token, and ``RegistryAuthorityGradeField`` for the
+per-revision ``authority_grade`` token.
 """
 
 from __future__ import annotations
@@ -13,7 +14,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
-from ....core import STRICT_FROZEN_CONFIG, LegalReviewStatus, RevisionReviewStatus
+from ....core import STRICT_FROZEN_CONFIG, LegalReviewStatus, RegistryAuthorityGrade, RevisionReviewStatus
 from ....core.classification import SensitivityClass
 from ._errors import RegistryValidationError
 from ._ids import LegalRefId, SourceRefId
@@ -31,6 +32,7 @@ __all__ = [
     "LegalReviewStatusField",
     "ManifestOnlyMarker",
     "ModeloFilingCapability",
+    "RegistryAuthorityGradeField",
     "RegistryModel",
     "ReviewStatus",
     "RevisionReviewStatusField",
@@ -72,6 +74,30 @@ constructor and surfaces as a registry load failure naming the offending value.
 
 Distinct from :data:`ReviewStatus` below, which is the legal catalogue's own
 single-valued review vocabulary and governs a different subject.
+"""
+
+
+def _coerce_registry_authority_grade(value: object) -> object:
+    if isinstance(value, RegistryAuthorityGrade):
+        return value
+    if isinstance(value, str):
+        return RegistryAuthorityGrade(value)
+    return value
+
+
+RegistryAuthorityGradeField = Annotated[RegistryAuthorityGrade, BeforeValidator(_coerce_registry_authority_grade)]
+"""Registry ``authority_grade`` token coerced into a :class:`RegistryAuthorityGrade` member.
+
+The same coercion hop :data:`RevisionReviewStatusField` needs, for the same
+reason: registry schema models validate under ``strict=True``, which refuses a
+bare TOML string for an enum-typed field. Registry TOML therefore stays
+free-form and the loader boundary hydrates the typed member, so an unknown grade
+surfaces as a registry load failure naming the offending value rather than
+reaching a downstream branch on a string.
+
+Distinct subject from :data:`RevisionReviewStatusField`: that vocabulary records
+who signed a revision off, this one records how far the revision's authority
+reaches.
 """
 
 

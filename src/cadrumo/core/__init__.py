@@ -10,7 +10,9 @@ include :data:`STRICT_FROZEN_CONFIG`, :class:`CasillaId`, :class:`Modelo`,
 :class:`Period`, :class:`StandardPeriodCode`, ``PeriodKind``,
 :class:`TaxDomain`, :class:`RefundElection`, :class:`ResultDisposition`,
 :class:`RevisionReviewStatus` with its derived
-:data:`REVIEWED_REVISION_REVIEW_STATUSES` companion set, and
+:data:`REVIEWED_REVISION_REVIEW_STATUSES` companion set,
+:class:`RegistryAuthorityGrade` with its fail-closed
+:data:`UNDECLARED_REGISTRY_AUTHORITY_GRADE` floor, and
 the lazily resolved :class:`BindingSourceKind` registry-source taxonomy.
 Obligation-coverage mappings expose :data:`OUT_OF_SCOPE_OBLIGATIONS` and
 :data:`UNMODELED_OBLIGATIONS`, the codified AEAT modelo sets the overview
@@ -97,6 +99,7 @@ from ._amendment_kind_regime import (
     resolve_amendment_kind_regime,
 )
 from ._auth_provider import AuthProviderDescription, AuthProviderKind, ClaveMovilRoute
+from ._authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ._casilla_value_kind import CasillaValueKind
@@ -529,6 +532,7 @@ __all__: list[str] = [
     "STRICT_FROZEN_CONFIG",
     "STRUCTURED_DOCUMENT_SHAPES",
     "STR_KEYED_MAPPING_ADAPTER",
+    "UNDECLARED_REGISTRY_AUTHORITY_GRADE",
     "UNMODELED_OBLIGATIONS",
     "AcceleratorKind",
     "ActionArgumentResolution",
@@ -674,6 +678,7 @@ __all__: list[str] = [
     "ProrrataRegisterRegime",
     "RefundElection",
     "RegisterScopingSignal",
+    "RegistryAuthorityGrade",
     "RegistryPeriodCode",
     "RegistrySelectorPeriodCode",
     "RentaDeclaracionType",

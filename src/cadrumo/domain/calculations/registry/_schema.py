@@ -23,10 +23,12 @@ from pydantic import (
 )
 
 from ....core import (
+    UNDECLARED_REGISTRY_AUTHORITY_GRADE,
     CasillaId,
     FilingProjectionRef,
     Period,
     PeriodKind,
+    RegistryAuthorityGrade,
     RevisionReviewStatus,
     TaxDomain,
     filing_projection_ref_casilla_id,
@@ -240,6 +242,7 @@ from ._schema_base import (
     FormulaOperator,
     LegalRefs,
     ModeloFilingCapability,
+    RegistryAuthorityGradeField,
     RegistryModel,
     ReviewStatus,
     RevisionReviewStatusField,
@@ -1022,6 +1025,18 @@ class ModeloRevision(RegistryModel):
     fail-closed to :attr:`RevisionReviewStatus.PENDING_REVIEW` on absence. Its
     rules and the reasoning behind them live in :mod:`.._schema_governance`,
     which the validators below delegate to.
+
+    ``authority_grade`` is the revision's *declared* authority reach, a separate
+    subject from the stamp: the stamp says who signed the revision off, the grade
+    says how far the revision's authority extends. It shares the stamp's
+    manifest-only placement guarantee — it is a claim about the whole revision,
+    so it must be readable in ``revision.toml`` rather than merged in from a
+    fragment thousands deep — and it shares the fail-closed shape, reading as
+    :data:`~cadrumo.core.UNDECLARED_REGISTRY_AUTHORITY_GRADE` when absent. It is
+    deliberately optional rather than defaulted on the field, so an ungraded
+    revision stays distinguishable from one explicitly graded at that same
+    floor; :attr:`effective_authority_grade` is the reading, and
+    :attr:`is_graded` the distinction.
     """
 
     id: RevisionId
@@ -1057,6 +1072,7 @@ class ModeloRevision(RegistryModel):
     verification_predicates: tuple[VerificationPredicateDefinition, ...] = ()
     continuidad_validation: Literal["advisory", "strict"] = "advisory"
     casilla_continuidad_evolutions: tuple[CasillaContinuidadEvolutionDefinition, ...] = ()
+    authority_grade: Annotated[RegistryAuthorityGradeField | None, MANIFEST_ONLY] = None
     engineered_by: Annotated[str | None, GOVERNANCE_STAMP] = None
     review_status: Annotated[RevisionReviewStatusField, GOVERNANCE_STAMP] = RevisionReviewStatus.PENDING_REVIEW
     reviewed_by: Annotated[str | None, GOVERNANCE_STAMP] = None
@@ -1079,6 +1095,28 @@ class ModeloRevision(RegistryModel):
         if self.valid_to is not None and self.valid_to < self.valid_from:
             raise RegistryValidationError("revision valid_to must be on or after valid_from")
         return self
+
+    @property
+    def is_graded(self) -> bool:
+        """Return whether this revision declares an authority grade at all.
+
+        The distinction :attr:`effective_authority_grade` deliberately erases: an
+        ungraded revision and one declared at the floor read as the same scope
+        but are not the same claim, and only one of them is a backlog entry.
+        """
+        return self.authority_grade is not None
+
+    @property
+    def effective_authority_grade(self) -> RegistryAuthorityGrade:
+        """Return the authority reach to act on, reading absence fail-closed.
+
+        An undeclared grade reads as
+        :data:`~cadrumo.core.UNDECLARED_REGISTRY_AUTHORITY_GRADE` — the lowest
+        rung — so a revision nobody has graded confers scheduling reach and
+        nothing more. Consumers read the reach here rather than each deciding
+        for itself what a missing declaration means.
+        """
+        return self.authority_grade if self.authority_grade is not None else UNDECLARED_REGISTRY_AUTHORITY_GRADE
 
     def get_label(self, locale: str) -> str | None:
         """Resolve the optional revision label from the shared catalogue."""
@@ -1196,7 +1234,9 @@ A superset of :data:`REVISION_GOVERNANCE_FIELDS` by construction, since
 :class:`GovernanceStampMarker` is a :class:`ManifestOnlyMarker`. Beyond the
 governance stamp it carries the legally load-bearing scalars ``legal_refs``,
 ``orden_aplicabilidad`` and ``valid_to``, which share the stamp's readability
-hazard and raise its stakes; :mod:`.._schema_governance` records how a deep
+hazard and raise its stakes, and ``authority_grade``, which is a claim about how
+far the whole revision's authority reaches and so belongs in the one file a
+reviewer opens; :mod:`.._schema_governance` records how a deep
 fragment can otherwise supply a revision's legal grounding while
 ``revision.toml`` reads as though it did not.
 """
