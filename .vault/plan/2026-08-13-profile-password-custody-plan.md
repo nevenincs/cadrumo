@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-14'
-body_hash: 'sha256:c4607d94289d77f66f2980a4dc51a08545892b0123a2e4276d1cba227297da50'
+body_hash: 'sha256:3a8e518ed36d97cb1e3e70f2a04d0c34ba5811ebd9ec076bc4ab34a68066e060'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -124,6 +124,8 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S49` - Have Terra XHigh resolve the collision between capsule publication and the workflow repository, where reading workflow state materialises a database beneath the bucket directory that capsule publication then tries to claim by atomic no-replace rename, so the seeding idiom the discovery step itself shipped always refuses, and sweep every module still using that shape; `src/cadrumo/application/user_profile/ and src/cadrumo/application/workflow/ and src/cadrumo/application/modelo/tests/`.
 - [ ] `W04.P07.S50` - Have Terra XHigh make the profile-record session authority re-derive when the latched session does not serve the requested identity, since a latched authority is never refreshed on an in-process profile switch and every record read for the second profile refuses until the process restarts, which a one-command-per-process command line hides but a long-lived terminal or tool host does not; `src/cadrumo/application/user_profile/_profile_record_repository.py`.
 - [ ] `W04.P07.S53` - Have Terra XHigh stop the supervised key-derivation child from importing the custody package graph to perform one hash, since the child costs one point seven one seconds to import and zero point two seven five seconds to derive, so eighty-six percent of every wrap and unwrap is the import and only eleven percent is the cryptography, a cost paid on the production login path as well as in tests, and neither the memory nor the iteration parameter may be weakened to buy the time back; `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker.py and src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py`.
+- [ ] `W04.P07.S54` - Have Sol Medium sequence the remaining auth-coverage restoration behind the capsule-publication collision rather than beside it, since four restored modules already carry a hand-copied seed-through-a-detached-workflow-state workaround with no shared helper and ten further modules totalling three thousand four hundred lines use the same seeding path, so restoring them first would multiply the workaround five to fourteen times while a step is in flight to remove the constraint that justifies it, leaving dead scaffolding nobody will remember to unwind; `src/cadrumo/tests/profile_capsule.py and src/cadrumo/application/auth/tests/`.
+- [ ] `W04.P07.S55` - Have Terra XHigh measure the executed import graph across the storage adapter package and resolve the cycles that one hundred and seventy-four function-local deferred imports are currently concealing, since a deferred import postpones a cycle rather than removing it and the package proved it by raising a partially-initialised secret-store import the moment a routine edit changed evaluation order, then either break each real cycle at its architectural seam or declare it with the reason it cannot be broken, never by adding a further deferral; `src/cadrumo/adapters/persistence/storage/`.
 
 ## Wave `W05` - end-to-end proof
 
