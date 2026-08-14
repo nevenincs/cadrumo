@@ -1192,12 +1192,16 @@ def _static_module_bindings(module: _ProductionModule) -> dict[str, object]:
     return bindings
 
 
+_LAZY_EXPORTS_NAME = "_LAZY_EXPORTS"
+"""The module-level mapping a PEP 562 facade route is proven closed over."""
+
+
 def _lazy_mapping_lookup(node: ast.AST, *, name: str) -> bool:
     return (
         isinstance(node, ast.Call)
         and isinstance(node.func, ast.Attribute)
         and isinstance(node.func.value, ast.Name)
-        and node.func.value.id == "_LAZY_EXPORTS"
+        and node.func.value.id == _LAZY_EXPORTS_NAME
         and node.func.attr == "get"
         and len(node.args) == 1
         and isinstance(node.args[0], ast.Name)
@@ -1583,24 +1587,189 @@ def _direct_route_statements(statements: Iterable[ast.stmt]) -> Iterable[ast.stm
             yield from _direct_route_statements(statement.body)
 
 
+def _module_level_binding(module: _ProductionModule, name: str) -> ast.expr | None:
+    """Return the sole module-level value bound to ``name``, or ``None``.
+
+    ``None`` for a name bound more than once, so a table proven closed at its
+    declaration cannot be quietly replaced further down the module.
+    """
+    found: ast.expr | None = None
+    for statement in module.tree.body:
+        targets: tuple[ast.expr, ...]
+        if isinstance(statement, ast.Assign):
+            targets = tuple(statement.targets)
+        elif isinstance(statement, ast.AnnAssign):
+            targets = (statement.target,)
+        else:
+            continue
+        if not any(isinstance(target, ast.Name) and target.id == name for target in targets):
+            continue
+        if found is not None or statement.value is None:
+            return None
+        found = statement.value
+    return found
+
+
+def _functools_partial_callable(module: _ProductionModule, node: ast.expr) -> bool:
+    """Whether ``node`` names :func:`functools.partial` and nothing else.
+
+    Checked by binding rather than by spelling, and rebinding disqualifies:
+    the loader table's closure argument rests entirely on ``partial`` being
+    the real one, so a module-level shadow would otherwise let an arbitrary
+    callable inherit the proof.
+    """
+    if isinstance(node, ast.Attribute) and node.attr == "partial":
+        return (
+            isinstance(node.value, ast.Name)
+            and any(
+                isinstance(statement, ast.Import)
+                and any(
+                    alias.name == "functools" and (alias.asname or "functools") == node.value.id
+                    for alias in statement.names
+                )
+                for statement in module.tree.body
+            )
+            and _module_level_binding(module, node.value.id) is None
+        )
+    if not isinstance(node, ast.Name):
+        return False
+    imported = any(
+        isinstance(statement, ast.ImportFrom)
+        and statement.level == 0
+        and statement.module == "functools"
+        and any(alias.name == "partial" and (alias.asname or "partial") == node.id for alias in statement.names)
+        for statement in module.tree.body
+    )
+    return imported and _module_level_binding(module, node.id) is None
+
+
+def _closed_partial_loader_table(module: _ProductionModule, *, table_name: str) -> bool:
+    """Whether ``table_name`` is a loader table closed over ``_LAZY_EXPORTS``.
+
+    The sanctioned shape, which four package facades share verbatim::
+
+        _LAZY_MODULE_LOADERS: dict[str, Callable[[], ModuleType]] = {
+            module_path: partial(import_module, module_path, __name__)
+            for module_path in frozenset(_LAZY_EXPORTS.values())
+        }
+
+    Every element is load-bearing for the closure proof. The comprehension
+    iterates ``_LAZY_EXPORTS.values()``, so the reachable target set is exactly
+    the statically-read mapping and cannot exceed it; the key and the partial's
+    bound argument are the SAME comprehension variable, so a table entry cannot
+    import a module other than the one it is filed under; and the partial binds
+    both arguments at table-construction time, so the resulting loader takes
+    none and the requested attribute name can never reach an import path.
+
+    That last property is why this spelling exists and why it is admitted here
+    rather than rewritten to the direct one: it is strictly more closed than
+    ``getattr(import_module(module_path, __name__), name)``, which keeps a live
+    two-argument import call in the route body.
+    """
+    table = _module_level_binding(module, table_name)
+    if not isinstance(table, ast.DictComp) or len(table.generators) != 1:
+        return False
+    generator = table.generators[0]
+    if generator.ifs or generator.is_async or not isinstance(generator.target, ast.Name):
+        return False
+    variable = generator.target.id
+    source = generator.iter
+    if isinstance(source, ast.Call) and isinstance(source.func, ast.Name) and source.func.id == "frozenset":
+        if len(source.args) != 1 or source.keywords:
+            return False
+        source = source.args[0]
+    if not (
+        isinstance(source, ast.Call)
+        and isinstance(source.func, ast.Attribute)
+        and source.func.attr == "values"
+        and isinstance(source.func.value, ast.Name)
+        and source.func.value.id == _LAZY_EXPORTS_NAME
+        and not source.args
+        and not source.keywords
+    ):
+        return False
+    if not (isinstance(table.key, ast.Name) and table.key.id == variable):
+        return False
+    loader = table.value
+    return (
+        isinstance(loader, ast.Call)
+        and _functools_partial_callable(module, loader.func)
+        and len(loader.args) == 3
+        and not loader.keywords
+        and _module_import_module_callable(module, loader.args[0])
+        and isinstance(loader.args[1], ast.Name)
+        and loader.args[1].id == variable
+        and isinstance(loader.args[2], ast.Name)
+        and loader.args[2].id == "__name__"
+    )
+
+
+def _loader_table_import(
+    node: ast.AST,
+    *,
+    mapping_name: str,
+    module: _ProductionModule,
+    values: dict[str, ast.AST],
+) -> bool:
+    """Whether ``node`` is a zero-argument call of a loader drawn from the table."""
+    if not isinstance(node, ast.Call) or node.args or node.keywords or not isinstance(node.func, ast.Name):
+        return False
+    bound = values.get(node.func.id)
+    if not (
+        isinstance(bound, ast.Call)
+        and isinstance(bound.func, ast.Attribute)
+        and bound.func.attr == "get"
+        and isinstance(bound.func.value, ast.Name)
+        and len(bound.args) == 1
+        and not bound.keywords
+        and isinstance(bound.args[0], ast.Name)
+        and bound.args[0].id == mapping_name
+    ):
+        return False
+    return _closed_partial_loader_table(module, table_name=bound.func.value.id)
+
+
 def _static_lazy_import_module_calls(module: _ProductionModule) -> tuple[ast.Call, ...]:
+    """Return the route's live ``import_module`` calls, exempting them from the dynamic-import refusal.
+
+    Empty for a route that proves closed without calling ``import_module`` in
+    its own body -- the loader-table spelling binds the call inside a partial
+    at module level, so there is no call site in the route to exempt. Emptiness
+    therefore does NOT mean "unanalysable", which is why
+    :func:`_lazy_route_is_static` no longer reads it as a boolean.
+    """
+    route = _static_lazy_route(module)
+    return route if route is not None else ()
+
+
+def _static_lazy_route(module: _ProductionModule) -> tuple[ast.Call, ...] | None:
+    """Return the proven-closed PEP 562 route's exemptible calls, or ``None`` if unproven.
+
+    ``None`` and ``()`` are different answers and the distinction is the whole
+    point: ``None`` means no closed route was proven, ``()`` means one was
+    proven and it exempts no call. Collapsing them -- which a single
+    ``bool(...)`` of the tuple did -- refused every facade whose route is closed
+    by construction rather than by an inline call, and because that refusal was
+    raised during export resolution it aborted the scan of the entire tree on
+    the alphabetically-first such facade.
+    """
     candidates = [
         statement
         for statement in module.tree.body
         if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)) and statement.name == "__getattr__"
     ]
     if len(candidates) != 1:
-        return ()
+        return None
     route = candidates[0]
     parameters = (*route.args.posonlyargs, *route.args.args)
     if len(parameters) != 1 or route.args.vararg is not None or route.args.kwarg is not None:
-        return ()
+        return None
     name = parameters[0].arg
     values: dict[str, ast.AST] = {}
     mapping_names: list[str] = []
     statements = tuple(_direct_route_statements(route.body))
     if any(isinstance(statement, (ast.Try, ast.TryStar)) for statement in statements):
-        return ()
+        return None
     for node in statements:
         if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
             values[node.targets[0].id] = node.value
@@ -1611,48 +1780,54 @@ def _static_lazy_import_module_calls(module: _ProductionModule) -> tuple[ast.Cal
             if _lazy_mapping_lookup(node.value, name=name):
                 mapping_names.append(node.target.id)
     if len(mapping_names) != 1:
-        return ()
+        return None
     mapping_name = mapping_names[0]
     returns = [node for node in statements if isinstance(node, ast.Return)]
     if len(returns) != 1 or returns[0] not in route.body:
-        return ()
+        return None
     node = returns[0]
     if node.value is None:
-        return ()
+        return None
     value = values.get(node.value.id, node.value) if isinstance(node.value, ast.Name) else node.value
     if not isinstance(value, ast.Call) or not isinstance(value.func, ast.Name) or value.func.id != "getattr":
-        return ()
+        return None
     if len(value.args) != 2 or value.keywords or not isinstance(value.args[1], ast.Name) or value.args[1].id != name:
-        return ()
+        return None
     imported = values.get(value.args[0].id, value.args[0]) if isinstance(value.args[0], ast.Name) else value.args[0]
-    return (
-        (imported,)
-        if isinstance(imported, ast.Call) and _import_module_call(imported, mapping_name=mapping_name, module=module)
-        else ()
-    )
+    if isinstance(imported, ast.Call) and _import_module_call(imported, mapping_name=mapping_name, module=module):
+        return (imported,)
+    if _loader_table_import(imported, mapping_name=mapping_name, module=module, values=values):
+        return ()
+    return None
 
 
 def _lazy_route_is_static(module: _ProductionModule) -> bool:
-    return bool(_static_lazy_import_module_calls(module))
+    return _static_lazy_route(module) is not None
 
 
-def _lazy_exports(module: _ProductionModule) -> dict[str, str]:
-    lazy = _static_module_bindings(module).get("_LAZY_EXPORTS")
+def _lazy_exports(module: _ProductionModule) -> tuple[dict[str, str], str | None]:
+    """Return a module's lazy re-export mapping, plus the code that disqualified it.
+
+    Returns a finding rather than raising, so one facade the analyser cannot
+    prove closed does not decide what the gate learns about every other module.
+    The caller reports the accumulated set; see :func:`_resolve_module_exports`.
+    """
+    lazy = _static_module_bindings(module).get(_LAZY_EXPORTS_NAME)
     if lazy is None:
-        return {}
+        return {}, None
     if not _lazy_route_is_static(module):
-        raise _recovery_error("E_REHOMING_LAZY_GETATTR", module.relative_path)
+        return {}, "E_REHOMING_LAZY_GETATTR"
     if not isinstance(lazy, dict):
-        raise _recovery_error("E_REHOMING_LAZY_EXPORTS_STATIC", module.relative_path)
+        return {}, "E_REHOMING_LAZY_EXPORTS_STATIC"
     lazy_map = cast(dict[object, object], lazy)
     if not all(isinstance(key, str) and isinstance(value, str) for key, value in lazy_map.items()):
-        raise _recovery_error("E_REHOMING_LAZY_EXPORTS_STATIC", module.relative_path)
+        return {}, "E_REHOMING_LAZY_EXPORTS_STATIC"
     exports: dict[str, str] = {}
     for raw_name, raw_relative_module in lazy_map.items():
         name = cast(str, raw_name)
         relative_module = cast(str, raw_relative_module)
         if not name or not relative_module:
-            raise _recovery_error("E_REHOMING_LAZY_EXPORTS_VALUE", module.relative_path)
+            return {}, "E_REHOMING_LAZY_EXPORTS_VALUE"
         if relative_module.startswith("."):
             resolved = _absolute_module(
                 module, len(relative_module) - len(relative_module.lstrip(".")), relative_module.lstrip(".")
@@ -1660,7 +1835,7 @@ def _lazy_exports(module: _ProductionModule) -> dict[str, str]:
         else:
             resolved = relative_module
         exports[name] = resolved
-    return exports
+    return exports, None
 
 
 def _module_bases(modules: tuple[_ProductionModule, ...], targets: frozenset[str]) -> dict[str, dict[str, _Resolution]]:
@@ -1727,7 +1902,30 @@ def _resolve_module_exports(
 ) -> dict[str, dict[str, _Resolution]]:
     module_names = frozenset(module.module for module in modules)
     bases = _module_bases(modules, targets)
-    lazy = {module.module: _lazy_exports(module) for module in modules}
+    lazy: dict[str, dict[str, str]] = {}
+    # Every module is classified before any is refused. Raising inside the
+    # comprehension that used to build this made the FIRST unprovable facade
+    # decide the outcome for the whole tree: resolution never finished, the
+    # lexical scan never ran, and the gate reported one path while saying
+    # nothing about the several hundred modules behind it. A per-module
+    # outcome collected here still fails closed -- it just fails closed about
+    # all of them at once, and names every one.
+    unprovable: list[tuple[str, str]] = []
+    for module in modules:
+        exports_for_module, finding = _lazy_exports(module)
+        lazy[module.module] = exports_for_module
+        if finding is not None:
+            unprovable.append((finding, module.relative_path))
+    if unprovable:
+        codes = sorted({finding for finding, _ in unprovable})
+        ordered = sorted(unprovable, key=lambda entry: entry[1])
+        # One code heads the message when every module failed the same way, so
+        # the common case still reads as the single code callers match on; the
+        # per-entry code is carried only when the outcomes actually differ.
+        raise _recovery_error(
+            codes[0] if len(codes) == 1 else "E_REHOMING_LAZY_ROUTE",
+            *(path if len(codes) == 1 else f"{finding}:{path}" for finding, path in ordered),
+        )
     exports = {name: dict(values) for name, values in bases.items()}
     limit = len(modules) * 2 + 1
     for _round in range(limit):
