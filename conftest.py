@@ -5,7 +5,7 @@ item gathered under ``src/cadrumo/...`` passes through the same enforcement
 surface. The hook body lives in :mod:`cadrumo.tests._marker_hook`; this
 conftest is a thin wrapper.
 
-Also hosts the project-branded ``CADRUMO_PYTEST_WORKERS`` worker-count cap
+Also hosts the project-branded ``CADRUMO_PYTEST_WORKERS`` worker-count policy
 (``pytest_xdist_auto_num_workers``), delegated to
 :func:`cadrumo.tests._worker_count_hook.resolve_auto_num_workers`, so every
 pytest invocation shape resolves ``-n auto`` through the same policy. See
@@ -113,7 +113,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
 
 def pytest_xdist_auto_num_workers(config: pytest.Config) -> int | None:
-    """Delegate to the shared ``CADRUMO_PYTEST_WORKERS`` worker-count resolver."""
+    """Delegate to the repository-owned xdist auto-width resolver."""
     return _resolve_auto_num_workers(config)
 
 

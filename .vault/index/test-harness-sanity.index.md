@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:f90ca0d5c43feb985fcd298bfc5306ee89f8cb87ae1fd95c47dcd10b2514f734'
+body_hash: 'sha256:a089f25cf294e8d44128ee1da7c50bbb2c2cf23db9cb78084c0081f3a66cfd56'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -29,6 +29,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P23-S79]]'
   - '[[2026-08-14-test-harness-sanity-W07-P24-S80]]'
   - '[[2026-08-14-test-harness-sanity-W07-P24-S81]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P24-S82]]'
   - '[[2026-08-14-test-harness-sanity-audit]]'
   - '[[2026-08-14-test-harness-sanity-plan]]'
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -72,6 +73,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P23-S79` - Restore the no-monkeypatch gate and discriminating controls to green
 - `2026-08-14-test-harness-sanity-W07-P24-S80` - Move installed-hook worker-pool proofs out of routine unit execution
 - `2026-08-14-test-harness-sanity-W07-P24-S81` - Move full-corpus collectability out of unit while retaining bounded controls
+- `2026-08-14-test-harness-sanity-W07-P24-S82` - Align worker tests with repository-owned six-worker authority and explicit overrides
 
 ### plan
 

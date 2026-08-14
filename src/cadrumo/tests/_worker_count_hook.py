@@ -1,4 +1,4 @@
-"""Project-branded ``-n auto`` worker-count cap for pytest-xdist.
+"""Repository-owned ``-n auto`` worker-count policy for pytest-xdist.
 
 This module is test-infrastructure, not a production module. It is imported
 from the repo-root ``conftest.py`` (mirroring the ``_marker_hook`` delegation
@@ -37,7 +37,7 @@ mid-write leaving stale zero-byte index locks that blocked commits for
 everyone, and xdist workers crashing mid-run, which corrupts a run's own
 pass/fail counts.
 
-``DEFAULT_WORKER_CAP`` is therefore a default, never a ceiling: an explicitly
+``DEFAULT_WORKER_COUNT`` is therefore a default, never a ceiling: an explicitly
 set ``CADRUMO_PYTEST_WORKERS`` still wins in both directions (higher or
 lower), and an explicit ``-n <N>`` bypasses this hook entirely, so anyone who
 deliberately asks for full width still gets it.
@@ -64,7 +64,7 @@ _WORKER_ID_PATTERN = re.compile(r"\Agw(\d+)\Z")
 #: meaningful while leaving headroom for concurrent agents -- and for the
 #: subprocess CLI invocations integration tests spawn, which are not xdist
 #: workers and are governed by nothing.
-DEFAULT_WORKER_CAP = 6
+DEFAULT_WORKER_COUNT = 6
 
 
 def resolve_auto_num_workers(config: pytest.Config) -> int:
@@ -76,7 +76,7 @@ def resolve_auto_num_workers(config: pytest.Config) -> int:
 
     Returns:
         The parsed integer when ``CADRUMO_PYTEST_WORKERS`` is set to a valid
-        integer, otherwise :data:`DEFAULT_WORKER_CAP`. An unparseable value
+        integer, otherwise :data:`DEFAULT_WORKER_COUNT`. An unparseable value
         warns and falls back to the default rather than raising, so a typo
         degrades to the safe width instead of failing the run -- and instead
         of silently granting the wider machine default, which is what a
@@ -84,15 +84,15 @@ def resolve_auto_num_workers(config: pytest.Config) -> int:
     """
     env_var = os.environ.get(_ENV_VAR)
     if not env_var:
-        return DEFAULT_WORKER_CAP
+        return DEFAULT_WORKER_COUNT
     try:
         return int(env_var)
     except ValueError:
         warnings.warn(
-            f"{_ENV_VAR} is not a number: {env_var!r}. Using {DEFAULT_WORKER_CAP}.",
+            f"{_ENV_VAR} is not a number: {env_var!r}. Using {DEFAULT_WORKER_COUNT}.",
             stacklevel=2,
         )
-        return DEFAULT_WORKER_CAP
+        return DEFAULT_WORKER_COUNT
 
 
 def replacement_occurred(worker_ids: Iterable[str], *, worker_count: int) -> bool:
