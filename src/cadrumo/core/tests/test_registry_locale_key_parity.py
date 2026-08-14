@@ -23,11 +23,11 @@ from typing import cast
 import pytest
 from dev.locales import LocaleManager, scan_registry_keys
 
-from ..core.i18n import tr
+from ..i18n import tr
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_LOCALES_DIR = Path(__file__).resolve().parents[1] / "locales"
+_LOCALES_DIR = Path(__file__).resolve().parents[2] / "locales"
 _LOCALES = ("en", "es", "ca", "hu")
 
 # Returned verbatim when a key has no catalogue entry, so a miss is detectable

@@ -99,13 +99,13 @@ from typing import Final
 import pytest
 from dev.identity.identifier_noun_census import annotation_text, is_bare_str
 
-from ..core import identity
+from .. import identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 #: Production source root in the CURRENT worktree. The parent path calculation
 #: is anchored to this test file rather than the process cwd.
-_SOURCE_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
+_SOURCE_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 
 #: Repository root in the CURRENT worktree, used only to render stable anchors.
 _REPOSITORY_ROOT: Final[Path] = _SOURCE_ROOT.parents[1]

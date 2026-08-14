@@ -58,13 +58,13 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from . import SRC_CADRUMO, non_test_package_python_files, repo_relative
+from ...tests import SRC_CADRUMO, non_test_package_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 if TYPE_CHECKING:
-    from ..application.ledger import InvoiceExtractionAuthorityValues
-    from ..core.config import LLMProvider
+    from ...application.ledger import InvoiceExtractionAuthorityValues
+    from ..config import LLMProvider
 
 _DELETED_CLOUD_SYMBOL_FAMILIES: dict[str, tuple[str, ...]] = {
     "transport and provider builders": (
@@ -123,7 +123,7 @@ def _verify_settings_field(symbol: str) -> None:
 
 def _verify_consent_predicate(symbol: str) -> None:
     """Assert the consent predicate is importable from the package facade and callable."""
-    from ..llm import cloud_evidence_read_permitted
+    from ...llm import cloud_evidence_read_permitted
 
     assert cloud_evidence_read_permitted.__name__ == symbol
     assert callable(cloud_evidence_read_permitted)
@@ -136,7 +136,7 @@ def _verify_capability_defaults_off(symbol: str) -> None:
     defaulting on would satisfy a mere membership check while removing the bar
     it names.
     """
-    from ..core import ServiceCapability
+    from .. import ServiceCapability
 
     capability = ServiceCapability[symbol]
     assert capability.default_enabled is False
@@ -323,7 +323,7 @@ def test_the_reinstated_consent_apparatus_exists_and_is_wired_at_the_choke_point
     import inspect
     import textwrap
 
-    from ..llm import LLMClient
+    from ...llm import LLMClient
 
     for symbol in _REINSTATED_CONSENT_SYMBOLS:
         _REINSTATED_CONSENT_VERIFIERS[symbol](symbol)
@@ -344,7 +344,7 @@ def _settings_model_fields() -> tuple[str, ...]:
     Read from the model rather than from source text, so a field renamed
     without this gate's knowledge fails here instead of passing on a substring.
     """
-    from ..core.config import Settings
+    from ..config import Settings
 
     return tuple(str(name) for name in Settings.model_fields)
 
@@ -358,7 +358,7 @@ def _transport_of(stamp: str) -> str:
     carry their own copy of a grammar agree until the grammar changes, and then
     the checker keeps passing on the shape nothing writes any more.
     """
-    from ..core import provenance_stamp_transport
+    from .. import provenance_stamp_transport
 
     transport = provenance_stamp_transport(stamp)
     assert transport is not None, f"{stamp!r} does not name a transport the canonical parser can read"
@@ -366,16 +366,16 @@ def _transport_of(stamp: str) -> str:
 
 
 def _text_classifier_transport() -> str:
-    from ..domain.transactions import prompt_spec_with_every_spending_category
-    from ..llm import LocalTextLLMClassifier
+    from ...domain.transactions import prompt_spec_with_every_spending_category
+    from ...llm import LocalTextLLMClassifier
 
     spec = prompt_spec_with_every_spending_category()
     return _transport_of(LocalTextLLMClassifier(spec=spec, model="qwen2.5:3b").decided_by)
 
 
 def _vision_classifier_transport() -> str:
-    from ..domain.transactions import prompt_spec_with_every_spending_category
-    from ..llm import LocalVisionLLMClassifier
+    from ...domain.transactions import prompt_spec_with_every_spending_category
+    from ...llm import LocalVisionLLMClassifier
 
     spec = prompt_spec_with_every_spending_category()
     return _transport_of(LocalVisionLLMClassifier(spec=spec, model="qwen2.5vl:3b").decided_by)
@@ -392,8 +392,8 @@ def _pinned_authority_values() -> InvoiceExtractionAuthorityValues:
     """
     from decimal import Decimal
 
-    from ..application.ledger import InvoiceExtractionAuthorityValues, default_invoice_extraction_period
-    from ..domain.iva import IvaCategory
+    from ...application.ledger import InvoiceExtractionAuthorityValues, default_invoice_extraction_period
+    from ...domain.iva import IvaCategory
 
     return InvoiceExtractionAuthorityValues(
         period=default_invoice_extraction_period(),
@@ -405,8 +405,8 @@ def _pinned_authority_values() -> InvoiceExtractionAuthorityValues:
 
 
 def _text_extractor_transport(provider: LLMProvider | None = None) -> str:
-    from ..core.config import LLMProvider
-    from ..llm import TextInvoiceFieldExtractor
+    from ...llm import TextInvoiceFieldExtractor
+    from ..config import LLMProvider
 
     resolved = provider if provider is not None else LLMProvider.LOCAL
     model = "qwen3:1.7b" if resolved is LLMProvider.LOCAL else "gpt-4.1"
@@ -419,8 +419,8 @@ def _text_extractor_transport(provider: LLMProvider | None = None) -> str:
 
 
 def _vision_transcriber_transport(provider: LLMProvider | None = None) -> str:
-    from ..core.config import LLMProvider
-    from ..llm import LocalVisionDocumentTranscriber
+    from ...llm import LocalVisionDocumentTranscriber
+    from ..config import LLMProvider
 
     resolved = provider if provider is not None else LLMProvider.LOCAL
     model = "qwen2.5vl:3b" if resolved is LLMProvider.LOCAL else "claude-haiku-4-5-20251001"
@@ -428,8 +428,8 @@ def _vision_transcriber_transport(provider: LLMProvider | None = None) -> str:
 
 
 def _column_role_mapper_transport(provider: LLMProvider | None = None) -> str:
-    from ..core.config import LLMProvider
-    from ..llm import SemanticColumnRoleMapper
+    from ...llm import SemanticColumnRoleMapper
+    from ..config import LLMProvider
 
     resolved = provider if provider is not None else LLMProvider.LOCAL
     model = "qwen3:1.7b" if resolved is LLMProvider.LOCAL else "gpt-4.1"
@@ -489,8 +489,8 @@ def test_every_transport_mintable_without_a_consent_token_is_on_host() -> None:
     """
     import inspect
 
-    from ..core import LOCAL_TRANSPORT_LABEL
-    from ..llm import LocalTextLLMClassifier, LocalVisionLLMClassifier
+    from ...llm import LocalTextLLMClassifier, LocalVisionLLMClassifier
+    from .. import LOCAL_TRANSPORT_LABEL
 
     classes = {
         "LocalTextLLMClassifier": LocalTextLLMClassifier,
@@ -530,8 +530,8 @@ def test_a_reader_reachable_only_under_consent_stamps_the_transport_it_actually_
     reader that assembled a hardcoded label would satisfy any source-level
     pattern while storing the same lie.
     """
-    from ..core import LOCAL_TRANSPORT_LABEL
-    from ..core.config import LLMProvider
+    from .. import LOCAL_TRANSPORT_LABEL
+    from ..config import LLMProvider
 
     off_host = {
         "TextInvoiceFieldExtractor": LLMProvider.OPENAI,

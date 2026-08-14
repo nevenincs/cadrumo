@@ -38,17 +38,17 @@ import ast
 
 import pytest
 
-from ..application.calculations import assert_enrollment_matches_manifest
-from ..core.access_gate import (
+from ...application.calculations import assert_enrollment_matches_manifest
+from ...tests._inventory import repo_path
+from ..access_gate import (
     CANONICAL_MODELO_FLEET,
     FLEET_SIZE,
     MIN_DISTINCT_RENTA_YEARS,
     AuthorizationState,
 )
-from ..core.resources import resources
-from ._inventory import repo_path
+from ..resources import resources
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 #: The name of the cross-check every enrolling test must call. A real call to
 #: this function in the enrolling test source is the un-fakeable proof the test

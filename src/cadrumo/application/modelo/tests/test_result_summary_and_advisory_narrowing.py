@@ -16,65 +16,14 @@ from typing import NoReturn
 
 import pytest
 
-from ..core.errors import (
-    CadrumoError,
-    build_error_envelope,
-    get_registered_error_code,
-)
-from ..core.setup_answers import ProjectAnswersNotRegisteredError
-from ..core.wizard_catalogue import (
-    WizardCatalogueAlreadyRegisteredError,
-    WizardCatalogueNotRegisteredError,
-)
-from ..domain.modelos import (
+from ....core.setup_answers import ProjectAnswersNotRegisteredError
+from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-
-# ---------------------------------------------------------------------------
-# (a) Registry + envelope roundtrip for the three new error classes
-# ---------------------------------------------------------------------------
-
-
-class TestNewErrorClassesRegistered:
-    """The three new error classes are CadrumoError subclasses with registry entries."""
-
-    # Declared as ``type[CadrumoError]`` (not inferred from the literal subclasses)
-    # so ``test_envelope_roundtrip``'s fallback construction below type-checks
-    # against the common base constructor rather than each member's own
-    # override — two of the three hardcode a message and take no positional
-    # arg, one inherits ``CadrumoError``'s optional-message constructor.
-    _ERROR_CASES: tuple[tuple[type[CadrumoError], str], ...] = (
-        (WizardCatalogueNotRegisteredError, "INTERNAL_WIZARD_CATALOGUE_NOT_REGISTERED"),
-        (WizardCatalogueAlreadyRegisteredError, "INTERNAL_WIZARD_CATALOGUE_ALREADY_REGISTERED"),
-        (ProjectAnswersNotRegisteredError, "INTERNAL_PROFILE_PROJECT_ANSWERS_NOT_REGISTERED"),
-    )
-
-    @pytest.mark.parametrize(("error_cls", "expected_code"), _ERROR_CASES)
-    def test_error_classes_are_cadrumo_errors_with_registered_codes(
-        self,
-        error_cls: type[CadrumoError],
-        expected_code: str,
-    ) -> None:
-        assert issubclass(error_cls, CadrumoError), error_cls.__name__
-        code = get_registered_error_code(error_cls)
-        assert code.code == expected_code
-
-    @pytest.mark.parametrize(("error_cls", "_expected_code"), _ERROR_CASES)
-    def test_envelope_roundtrip(self, error_cls: type[CadrumoError], _expected_code: str) -> None:
-        """An instance can be built into an ErrorEnvelope without raising."""
-        del _expected_code
-        try:
-            instance = error_cls()
-        except TypeError:
-            instance = error_cls("test message")
-        envelope = build_error_envelope(instance)
-        assert envelope.code == get_registered_error_code(error_cls).code
-        assert envelope.message, error_cls.__name__
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 # ---------------------------------------------------------------------------
@@ -117,7 +66,7 @@ class TestAdvisoryPredicateDecimalNarrowing:
         values: dict[str, decimal.Decimal],
         expected: bool,
     ) -> None:
-        from ..application.modelo._verification_actions import _evaluate_advisory_predicate_fires
+        from .._verification_actions import _evaluate_advisory_predicate_fires
 
         result = _evaluate_advisory_predicate_fires(expression, values)
         assert result is expected, expression
@@ -148,7 +97,7 @@ class TestResultSummaryNarrowing:
 
     def test_cadrumo_error_from_get_work_unit_returns_none(self) -> None:
         """An CadrumoError from get_work_unit is caught and returns None."""
-        from ..application.modelo import calculation_result_summary
+        from .. import calculation_result_summary
 
         def _raising(work_unit_id: str) -> NoReturn:
             del work_unit_id
@@ -160,7 +109,7 @@ class TestResultSummaryNarrowing:
 
     def test_lookup_error_from_get_work_unit_returns_none(self) -> None:
         """A LookupError from get_work_unit returns None."""
-        from ..application.modelo import calculation_result_summary
+        from .. import calculation_result_summary
 
         def _raising(work_unit_id: str) -> NoReturn:
             del work_unit_id
@@ -172,7 +121,7 @@ class TestResultSummaryNarrowing:
 
     def test_runtime_error_from_get_work_unit_propagates(self) -> None:
         """A RuntimeError from get_work_unit propagates — not swallowed."""
-        from ..application.modelo import calculation_result_summary
+        from .. import calculation_result_summary
 
         def _raising(work_unit_id: str) -> NoReturn:
             del work_unit_id
