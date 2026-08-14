@@ -129,12 +129,15 @@ def _receipt(
     if len(matches) != 1:
         _raise(command, "amended filing target does not resolve to one persisted justificante")
     receipt = matches[0]
-    if not receipt.matches_filing_target(
-        modelo=str(work_unit.modelo),
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        tax_id=workflow_profile.tax_id,
-    ) or receipt.presentation_id is None:
+    if (
+        not receipt.matches_filing_target(
+            modelo=str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+            tax_id=workflow_profile.tax_id,
+        )
+        or receipt.presentation_id is None
+    ):
         _raise(command, "persisted justificante disagrees with the export authority")
     return justificantes, receipt
 
