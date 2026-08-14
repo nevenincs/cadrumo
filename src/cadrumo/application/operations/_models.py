@@ -42,6 +42,12 @@ OperationDefinitionId = Annotated[
 OperationReference = Annotated[str, Field(min_length=1, max_length=256)]
 """Opaque safe reference to an application-owned record or subject."""
 
+OperationDiagnosticReference = Annotated[
+    str,
+    Field(pattern=r"^sha256:(?:[0-9a-f]{12}|[0-9a-f]{64})$"),
+]
+"""Opaque correlation fingerprint; never diagnostic prose or identity content."""
+
 
 class OperationIdentity(BaseModel):
     """Immutable invocation identity, distinct from recovery-action identity."""
@@ -117,7 +123,7 @@ class OperationTerminalReceipt(BaseModel):
     settled_at: datetime
     result_ref: OperationReference | None = None
     refusal_ref: OperationReference | None = None
-    diagnostic_ref: OperationReference | None = None
+    diagnostic_ref: OperationDiagnosticReference | None = None
 
     @model_validator(mode="after")
     def _validate_terminal_references(self) -> OperationTerminalReceipt:
@@ -240,6 +246,7 @@ def _require_immutable_model_config(model: BaseModel, *, path: str) -> None:
 
 __all__ = [
     "OperationDefinitionId",
+    "OperationDiagnosticReference",
     "OperationId",
     "OperationIdempotencyClaim",
     "OperationIdentity",

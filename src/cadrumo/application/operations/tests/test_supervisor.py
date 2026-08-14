@@ -27,7 +27,9 @@ from ....adapters.persistence.storage import (
     StorageNamespaceScope,
 )
 from ....core import STRICT_FROZEN_CONFIG
+from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.classification import SensitivityClass
+from ....core.errors import CoreError, get_registered_error_code
 from ....tests.secure_sql import isolated_ephemeral_secure_sql, isolated_runtime_profile
 from .. import (
     OperationApplyResponse,
@@ -38,6 +40,7 @@ from .. import (
     OperationConflictScope,
     OperationDeadline,
     OperationDefinition,
+    OperationDiagnosticEvent,
     OperationDurability,
     OperationEffect,
     OperationExecutor,
@@ -49,7 +52,6 @@ from .. import (
     OperationInteractionRequest,
     OperationLeaseDisposition,
     OperationLifecycle,
-    OperationNoticeEvent,
     OperationOwnedResource,
     OperationPendingInteraction,
     OperationPersistedSnapshot,
@@ -62,6 +64,7 @@ from .. import (
     OperationSensitiveInputPolicy,
     OperationSupervisor,
     OperationTerminalCondition,
+    OperationTerminalEvent,
     OperationTerminalReceipt,
     operation_conflict_scope_reference,
 )
@@ -84,6 +87,10 @@ _RESPONSE_TOKEN = "b" * 64
 _REVIEWED_PROPOSAL_DIGEST = "c" * 64
 _BASELINE_DIGEST = "d" * 64
 _PROPOSED_EFFECT_DIGEST = "e" * 64
+_SENSITIVE_EXCEPTION_DETAIL = (
+    "B12345674 https://sede.agenciatributaria.gob.es/private?token=correct-horse "
+    "C:/Users/operator/private-key.p12 Bearer correct-horse-battery-staple"
+)
 
 
 class SupervisorRequest(BaseModel):
@@ -314,6 +321,78 @@ class CleanupDeadlineExecutor:
         self.cancellation_observed.set()
         await self.release.wait()
         return None
+
+
+class RegisteredRefusalExecutor:
+    """Concrete executor that raises one registered refusal with planted sensitive detail."""
+
+    async def execute(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        del request, context
+        raise AeatLiveReadNotEnabledError(_SENSITIVE_EXCEPTION_DETAIL)
+
+
+class RegisteredErrorExecutor:
+    """Concrete executor that raises a registered non-refusal error safely."""
+
+    async def execute(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        del request, context
+        raise CoreError(_SENSITIVE_EXCEPTION_DETAIL)
+
+
+class CancellableResourceExecutor:
+    """Concrete executor whose real owned resource is closed by controlled settlement."""
+
+    def __init__(self) -> None:
+        self.started = asyncio.Event()
+        self.release = asyncio.Event()
+        self.cancelled = False
+        self.resource = TrackedAsyncResource()
+
+    async def execute(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        del request
+        context.cleanup.own(self.resource, family=OperationOwnedResource.ASYNC_TASK)
+        self.started.set()
+        try:
+            await self.release.wait()
+        except asyncio.CancelledError:
+            self.cancelled = True
+            raise
+        return None
+
+
+class UnexpectedFailureExecutor:
+    """Concrete executor that commits a declared effect then raises a sensitive failure."""
+
+    def __init__(self) -> None:
+        self.resource = TrackedAsyncResource()
+
+    async def execute(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        del request
+        context.cleanup.own(self.resource, family=OperationOwnedResource.ASYNC_TASK)
+        await context.events.effect(OperationEffect.UPDATED)
+        raise RuntimeError(_SENSITIVE_EXCEPTION_DETAIL)
+
+
+def _assert_sensitive_detail_absent_from_operation_bytes(storage_root: Path) -> None:
+    forbidden = _SENSITIVE_EXCEPTION_DETAIL.encode("utf-8")
+    persisted = b"".join(path.read_bytes() for path in storage_root.rglob("*") if path.is_file())
+    assert forbidden not in persisted
 
 
 def test_timed_out_settlement_refuses_live_executor_before_durable_terminal_commit(tmp_path: Path) -> None:
@@ -689,11 +768,11 @@ def test_submit_excludes_only_the_exact_definition_subject_conflict_scope(tmp_pa
         UndeclaredInteractionExecutor(),
     ),
 )
-def test_start_refuses_each_undeclared_executor_mutation_after_only_the_safe_started_transition(
+def test_start_normalizes_each_undeclared_executor_mutation_after_only_the_safe_started_transition(
     tmp_path: Path,
     executor: OperationExecutor[BaseModel],
 ) -> None:
-    """The context refuses executor mutation beyond the one safe started event."""
+    """The context rejects undeclared work and the supervisor closes it as a safe failure."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         journal, leases, operands = _repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
@@ -708,32 +787,197 @@ def test_start_refuses_each_undeclared_executor_mutation_after_only_the_safe_sta
         )
         operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
 
-        with pytest.raises(ValueError, match="not declared"):
-            asyncio.run(supervisor.start(operation_id))
-
-        after_refusal = asyncio.run(journal.load(operation_id))
-        assert after_refusal.lifecycle is OperationLifecycle.RUNNING
-        assert after_refusal.revision == 1
-        assert len(after_refusal.events) == 1
-        assert isinstance(after_refusal.events[0], OperationNoticeEvent)
-        assert after_refusal.events[0].notice_code == "operation.started"
-        assert after_refusal.event_cursor == 1
-        assert after_refusal.phase_code is None
-        assert after_refusal.pending_interaction is None
-        assert after_refusal.effect is OperationEffect.NONE
-
-        receipt = OperationTerminalReceipt(
-            identity=after_refusal.identity,
-            revision=2,
-            condition=OperationTerminalCondition.FAILED,
-            effect=OperationEffect.NONE,
-            settled_at=_NOW,
-        )
-        terminal = asyncio.run(supervisor.settle(operation_id, receipt))
+        terminal = asyncio.run(supervisor.start(operation_id))
         assert terminal.lifecycle is OperationLifecycle.TERMINAL
+        assert terminal.terminal_condition is OperationTerminalCondition.FAILED
+        assert terminal.revision == 2
+        assert terminal.phase_code is None
+        assert terminal.pending_interaction is None
+        assert terminal.effect is OperationEffect.NONE
+        assert terminal.terminal_receipt is not None
+        assert terminal.terminal_receipt.diagnostic_ref is not None
+        assert tuple(type(event) for event in terminal.events) == (
+            OperationDiagnosticEvent,
+            OperationTerminalEvent,
+        )
         if isinstance(executor, UndeclaredResourceExecutor):
             assert executor.resource is not None
             assert executor.resource.close_calls == 0
+
+
+def test_start_settles_registered_executor_refusal_without_persisting_its_sensitive_detail(tmp_path: Path) -> None:
+    """One registered refusal becomes its canonical code rather than captured exception prose."""
+    storage_root = tmp_path / "durable-state"
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        supervisor = _supervisor(
+            registry=_registry(executor_type=RegisteredRefusalExecutor, build=RegisteredRefusalExecutor),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        terminal = asyncio.run(supervisor.start(operation_id))
+
+        assert terminal.terminal_condition is OperationTerminalCondition.REFUSED
+        assert terminal.effect is OperationEffect.NONE
+        assert terminal.terminal_receipt is not None
+        assert terminal.terminal_receipt.refusal_ref == get_registered_error_code(AeatLiveReadNotEnabledError()).code
+        assert terminal.terminal_receipt.diagnostic_ref is None
+        assert len(terminal.events) == 1
+        assert isinstance(terminal.events[0], OperationTerminalEvent)
+        assert _SENSITIVE_EXCEPTION_DETAIL not in terminal.model_dump_json()
+        _assert_sensitive_detail_absent_from_operation_bytes(storage_root)
+
+
+def test_start_settles_unexpected_executor_failure_with_correlated_opaque_diagnostic(tmp_path: Path) -> None:
+    """A real effectful executor preserves its effect, closes its resource, and leaks no failure detail."""
+    storage_root = tmp_path / "durable-state"
+    executor = UnexpectedFailureExecutor()
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        supervisor = _supervisor(
+            registry=_registry(
+                executor_type=UnexpectedFailureExecutor,
+                build=lambda: executor,
+                capabilities=_capabilities(
+                    owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
+                    permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED}),
+                ),
+            ),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        terminal = asyncio.run(supervisor.start(operation_id))
+        replay = asyncio.run(journal.read_after(operation_id, 0, limit=10))
+
+        assert terminal.terminal_condition is OperationTerminalCondition.FAILED
+        assert terminal.effect is OperationEffect.UPDATED
+        assert terminal.terminal_receipt is not None
+        correlation = terminal.terminal_receipt.diagnostic_ref
+        assert correlation is not None and correlation.startswith("sha256:")
+        assert correlation == "sha256:7941bacab17db1fdca826bf7e7e55a69919916975fb0cb7d31d9e2d8e3d06376"
+        assert tuple(type(event) for event in terminal.events) == (
+            OperationDiagnosticEvent,
+            OperationTerminalEvent,
+        )
+        diagnostic = terminal.events[0]
+        assert isinstance(diagnostic, OperationDiagnosticEvent)
+        assert diagnostic.diagnostic_ref == correlation
+        terminal_event = terminal.events[1]
+        assert isinstance(terminal_event, OperationTerminalEvent)
+        assert terminal_event.receipt.diagnostic_ref == correlation
+        assert replay.events[-2:] == terminal.events
+        assert executor.resource.close_calls == 1
+        assert _SENSITIVE_EXCEPTION_DETAIL not in terminal.model_dump_json()
+        assert _SENSITIVE_EXCEPTION_DETAIL.encode("utf-8") not in b"".join(
+            event.model_dump_json().encode("utf-8") for event in replay.events
+        )
+        _assert_sensitive_detail_absent_from_operation_bytes(storage_root)
+
+
+def test_start_normalizes_registered_non_refusal_error_to_safe_failed_diagnostic(tmp_path: Path) -> None:
+    """A registered error category other than refusal fails closed without persisting its detail."""
+    storage_root = tmp_path / "durable-state"
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        supervisor = _supervisor(
+            registry=_registry(executor_type=RegisteredErrorExecutor, build=RegisteredErrorExecutor),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        terminal = asyncio.run(supervisor.start(operation_id))
+        replay = asyncio.run(journal.read_after(operation_id, 0, limit=10))
+
+        assert get_registered_error_code(CoreError()).code == "ERROR_CADRUMO_CORE"
+        assert terminal.terminal_condition is OperationTerminalCondition.FAILED
+        assert terminal.terminal_receipt is not None
+        assert terminal.terminal_receipt.refusal_ref is None
+        correlation = terminal.terminal_receipt.diagnostic_ref
+        assert correlation is not None and correlation.startswith("sha256:")
+        assert tuple(type(event) for event in terminal.events) == (
+            OperationDiagnosticEvent,
+            OperationTerminalEvent,
+        )
+        diagnostic, terminal_event = terminal.events
+        assert isinstance(diagnostic, OperationDiagnosticEvent)
+        assert diagnostic.diagnostic_ref == correlation
+        assert isinstance(terminal_event, OperationTerminalEvent)
+        assert terminal_event.receipt.diagnostic_ref == correlation
+        assert _SENSITIVE_EXCEPTION_DETAIL not in terminal.model_dump_json()
+        assert _SENSITIVE_EXCEPTION_DETAIL.encode("utf-8") not in b"".join(
+            event.model_dump_json().encode("utf-8") for event in replay.events
+        )
+        _assert_sensitive_detail_absent_from_operation_bytes(storage_root)
+
+
+def test_start_cancellation_propagates_without_false_terminal_artifacts(tmp_path: Path) -> None:
+    """Cancelling start crosses the executor boundary and leaves controlled settlement to the caller."""
+    executor = CancellableResourceExecutor()
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        supervisor = _supervisor(
+            registry=_registry(
+                executor_type=CancellableResourceExecutor,
+                build=lambda: executor,
+                capabilities=_capabilities(
+                    owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
+                ),
+            ),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+        )
+
+        async def cancel_then_settle() -> tuple[OperationPersistedSnapshot, OperationPersistedSnapshot]:
+            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            start_task = asyncio.create_task(supervisor.start(operation_id))
+            await executor.started.wait()
+            start_task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await start_task
+
+            running = await supervisor.inspect(operation_id)
+            replay = await journal.read_after(operation_id, 0, limit=10)
+            assert executor.cancelled is True
+            assert running.lifecycle is OperationLifecycle.RUNNING
+            assert running.terminal_receipt is None
+            assert running.terminal_condition is None
+            assert running.revision == 1
+            assert not any(isinstance(event, OperationDiagnosticEvent) for event in replay.events)
+            assert not any(isinstance(event, OperationTerminalEvent) for event in replay.events)
+
+            settled = await supervisor.settle(
+                operation_id,
+                OperationTerminalReceipt(
+                    identity=running.identity,
+                    revision=running.revision + 1,
+                    condition=OperationTerminalCondition.FAILED,
+                    effect=OperationEffect.NONE,
+                    settled_at=_NOW,
+                ),
+            )
+            return running, settled
+
+        running, settled = asyncio.run(cancel_then_settle())
+        assert running.terminal_receipt is None
+        assert settled.lifecycle is OperationLifecycle.TERMINAL
+        assert settled.terminal_condition is OperationTerminalCondition.FAILED
+        assert executor.resource.close_calls == 1
 
 
 @pytest.mark.parametrize("intent", ("apply", "reject"))

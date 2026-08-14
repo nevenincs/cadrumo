@@ -15,9 +15,12 @@ from ...core import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
+    content_hash_hex,
 )
 from ...core.async_cleanup import AsyncCloseable, close_async_resources
+from ...core.errors import ErrorCategory, get_registered_error_code
 from ._events import (
+    OperationDiagnosticEvent,
     OperationEvent,
     OperationInteractionEvent,
     OperationNoticeEvent,
@@ -200,12 +203,76 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         )
         self._contexts[operation_id] = context
         executor = definition.executor_factory.create()
-        await self._execute_with_deadlines(
-            identity=running.identity,
-            context=context,
-            executor=executor.execute(request, context),
-        )
+        try:
+            await self._execute_with_deadlines(
+                identity=running.identity,
+                context=context,
+                executor=executor.execute(request, context),
+            )
+        except Exception as error:
+            return await self._settle_executor_failure(context.snapshot, error)
         return context.snapshot
+
+    async def _settle_executor_failure(
+        self,
+        snapshot: OperationPersistedSnapshot,
+        error: Exception,
+    ) -> OperationPersistedSnapshot:
+        """Settle one stopped executor without persisting its exception surface.
+
+        Registered ``REFUSED`` errors retain their registry code as the
+        canonical operator reference. Every other exception receives a stable
+        opaque correlation digest over safe lifecycle facts only; exception
+        message text, arguments, contexts, tracebacks, paths, and URLs never
+        enter operation persistence.
+        """
+        try:
+            registered = get_registered_error_code(error)
+        except ValueError:
+            registered = None
+        if registered is not None and registered.category is ErrorCategory.REFUSED:
+            receipt = OperationTerminalReceipt(
+                identity=snapshot.identity,
+                revision=snapshot.revision + 1,
+                condition=OperationTerminalCondition.REFUSED,
+                effect=snapshot.effect,
+                settled_at=self._clock(),
+                refusal_ref=registered.code,
+            )
+        else:
+            receipt = OperationTerminalReceipt(
+                identity=snapshot.identity,
+                revision=snapshot.revision + 1,
+                condition=OperationTerminalCondition.FAILED,
+                effect=snapshot.effect,
+                settled_at=self._clock(),
+                diagnostic_ref=self._executor_failure_diagnostic_reference(snapshot, error),
+            )
+        return await self.settle(snapshot.identity.operation_id, receipt)
+
+    @staticmethod
+    def _executor_failure_diagnostic_reference(
+        snapshot: OperationPersistedSnapshot,
+        error: Exception,
+    ) -> str:
+        """Derive a non-reversing correlation key without absorbing error data.
+
+        The correlation scope intentionally groups the same exception type for
+        one operation terminal revision. It is not a message fingerprint, so
+        its stable journal identity cannot reveal an operand, exception arg,
+        filesystem path, URL, credential, or traceback fragment.
+        """
+        error_type = type(error)
+        digest = content_hash_hex(
+            {
+                "schema_version": 1,
+                "operation_id": snapshot.identity.operation_id,
+                "definition_id": snapshot.identity.definition_id,
+                "exception_type": f"{error_type.__module__}.{error_type.__qualname__}",
+                "terminal_revision": snapshot.revision + 1,
+            }
+        )
+        return f"sha256:{digest}"
 
     def _execution_deadline_for(self, deadline_capability: OperationDeadline) -> datetime | None:
         if deadline_capability is OperationDeadline.ABSENT:
@@ -475,13 +542,28 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             except TimeoutError:
                 cleanup_deadline_elapsed = True
             if not cleanup_deadline_elapsed:
+                diagnostic_event = (
+                    OperationDiagnosticEvent(
+                        identity=snapshot.identity,
+                        revision=receipt.revision,
+                        sequence=snapshot.event_cursor + 1,
+                        timestamp=now,
+                        code="operation.diagnostic",
+                        diagnostic_ref=receipt.diagnostic_ref,
+                    )
+                    if receipt.diagnostic_ref is not None
+                    else None
+                )
                 event = OperationTerminalEvent(
                     identity=snapshot.identity,
                     revision=receipt.revision,
-                    sequence=snapshot.event_cursor + 1,
+                    sequence=snapshot.event_cursor + (2 if diagnostic_event is not None else 1),
                     timestamp=now,
                     code="operation.terminal",
                     receipt=receipt,
+                )
+                events: tuple[OperationEvent, ...] = (
+                    (diagnostic_event, event) if diagnostic_event is not None else (event,)
                 )
                 successor = snapshot.model_copy(
                     update={
@@ -491,7 +573,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                         "effect": receipt.effect,
                         "updated_at": now,
                         "event_cursor": event.sequence,
-                        "events": (event,),
+                        "events": events,
                         "terminal_receipt": receipt,
                         "pending_interaction": None,
                     }

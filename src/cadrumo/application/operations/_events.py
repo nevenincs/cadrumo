@@ -10,18 +10,13 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, Hex64Str, OperationEffect, OperationEventKind
 from ...core.time import validate_utc_aware
-from ._models import OperationIdentity, OperationRevision, OperationTerminalReceipt
+from ._models import OperationDiagnosticReference, OperationIdentity, OperationRevision, OperationTerminalReceipt
 
 OperationEventSequence = Annotated[int, Field(ge=1)]
 OperationEventCode = Annotated[
     str,
     Field(min_length=3, max_length=128, pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"),
 ]
-OperationDiagnosticReference = Annotated[
-    str,
-    Field(pattern=r"^sha256:(?:[0-9a-f]{12}|[0-9a-f]{64})$"),
-]
-"""Opaque correlation fingerprint; never raw diagnostic or identity content."""
 
 
 class OperationLogSeverity(StrEnum):
