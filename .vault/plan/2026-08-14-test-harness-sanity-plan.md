@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-14'
-body_hash: 'sha256:5517eb31d4c0b848a76a9b4065949e57fbc5f42f646b10a287941d99b6280eb9'
+body_hash: 'sha256:6c65fd6b325e281529863ae694ab87ef3a10b1e4e44097eb2eeb375d4659b569'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -89,7 +89,7 @@ Consolidate repeated profile and schema setup only within constraint-compatible 
 Use existing modelo and registry owners to remove local redeclarations and repeated immutable snapshots.
 
 - [x] `W07.P20.S61` - Remove local redeclarations of the canonical modelo repositories fixture; `src/cadrumo/application/modelo/tests`.
-- [ ] `W07.P20.S62` - Canonicalize the M130 committed registry snapshot family; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `W07.P20.S62` - Canonicalize the M130 committed registry snapshot family; `src/cadrumo/domain/calculations/registry/tests`.
 - [ ] `W07.P20.S63` - Canonicalize the M180 committed registry snapshot family; `src/cadrumo/domain/calculations/registry/tests`.
 - [ ] `W07.P20.S64` - Canonicalize the M100 2024 committed registry snapshot family; `src/cadrumo/domain/calculations/registry/tests`.
 - [ ] `W07.P20.S65` - Canonicalize the M200 development registry snapshot family; `dev/registry/tests`.

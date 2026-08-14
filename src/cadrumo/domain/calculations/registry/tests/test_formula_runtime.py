@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 
@@ -34,17 +33,9 @@ from ._formula_runtime_support import (
     _M130_RETENCIONES_CASILLA,
     _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING,
     _PREVIOUS_YEAR_NET_INCOME_BINDING,
-    _committed_modelo_130_snapshot,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-@pytest.fixture
-def committed_modelo_130_snapshot(
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
-) -> RegistrySnapshot:
-    return _committed_modelo_130_snapshot(registry_snapshot)
 
 
 def test_registry_calculation_result_refuses_ungrounded_observations() -> None:

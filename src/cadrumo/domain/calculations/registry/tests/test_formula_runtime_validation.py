@@ -24,19 +24,11 @@ from ._formula_runtime_support import (
     _M130_RETENCIONES_CASILLA,
     _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING,
     _PREVIOUS_YEAR_NET_INCOME_BINDING,
-    _committed_modelo_130_snapshot,
     _committed_modelo_180_snapshot,
     _modelo_180_snapshot_with_inactive_relation_period,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-@pytest.fixture
-def committed_modelo_130_snapshot(
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
-) -> RegistrySnapshot:
-    return _committed_modelo_130_snapshot(registry_snapshot)
 
 
 @pytest.fixture
