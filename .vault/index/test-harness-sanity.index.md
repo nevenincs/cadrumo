@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:ec686b2c00deba25b397d1c3c4cea06e8ffcee501c71ee6c844389a9854e97a9'
+body_hash: 'sha256:3fa77e55b67b6115eb560c276e212fa07081dc0de46d91de70cf86439303222e'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -33,6 +33,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P24-S80]]'
   - '[[2026-08-14-test-harness-sanity-W07-P24-S81]]'
   - '[[2026-08-14-test-harness-sanity-W07-P24-S82]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P25-S84]]'
   - '[[2026-08-14-test-harness-sanity-audit]]'
   - '[[2026-08-14-test-harness-sanity-plan]]'
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -80,6 +81,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P24-S80` - Move installed-hook worker-pool proofs out of routine unit execution
 - `2026-08-14-test-harness-sanity-W07-P24-S81` - Move full-corpus collectability out of unit while retaining bounded controls
 - `2026-08-14-test-harness-sanity-W07-P24-S82` - Align worker tests with repository-owned six-worker authority and explicit overrides
+- `2026-08-14-test-harness-sanity-W07-P25-S84` - Move and rename the core i18n default-language test to its owner
 
 ### plan
 
