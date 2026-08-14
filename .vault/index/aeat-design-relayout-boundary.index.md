@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#aeat-design-relayout-boundary'
-date: '2026-08-13'
-modified: '2026-08-13'
+date: '2026-08-14'
+modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:bf1bdf1e32c2693ac6145deaa7baa3d6a51415a206e58500a6cf1a34feefc7ba'
+body_hash: 'sha256:821cc15a2958f3f2b6935a6f964e87318b037fd7618d8e40506873fcf5e4ed69'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -50,6 +50,8 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
   - '[[2026-08-09-aeat-design-relayout-boundary-modelo-200-fragment-tree-provenance-research]]'
   - '[[2026-08-13-aeat-design-relayout-boundary-audit]]'
+  - '[[2026-08-13-aeat-design-relayout-boundary-blocked-waves-carry-forward-audit]]'
+  - '[[2026-08-14-aeat-design-relayout-boundary-row-disposition-carry-forward-audit]]'
 ---
 
 # `aeat-design-relayout-boundary` feature index
@@ -68,6 +70,8 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 ### audit
 
 - `2026-08-13-aeat-design-relayout-boundary-audit` - `aeat-design-relayout-boundary` audit: `Campaign closure: overtaken rulings, the grounding gap, and the blocked state`
+- `2026-08-13-aeat-design-relayout-boundary-blocked-waves-carry-forward-audit` - `aeat-design-relayout-boundary` audit: `Blocked Wave carry-forward: the three modelo authoring Waves remain open, not superseded, pending the sibling generator`
+- `2026-08-14-aeat-design-relayout-boundary-row-disposition-carry-forward-audit` - `aeat-design-relayout-boundary` audit: `row disposition and carry-forward close`
 
 ### exec
 
