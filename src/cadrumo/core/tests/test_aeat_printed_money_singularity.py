@@ -60,7 +60,7 @@ import pytest
 from ...adapters.inbound.notificacion import _sancion
 from ...adapters.inbound.pdf import SPANISH_AMOUNT_GROUP
 from ...adapters.outbound.aeat.sede import _iva_compensation_wallet_parsing
-from ...tests._inventory import aeat_relative, production_python_files
+from ...tests import aeat_relative, production_python_files
 from ..decimal import AEAT_THOUSANDS_SEPARATORS, is_aeat_printed_money
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

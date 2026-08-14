@@ -35,7 +35,7 @@ from ....domain.transactions import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ...tests._wizard_catalogue_fixtures import _register_wizard_catalogue
+from ...tests import register_wizard_catalogue
 from .. import (
     BucketAggregationCalculationResult,
     ModeloAggregationBindingError,
@@ -46,7 +46,7 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-__all__ = ["_register_wizard_catalogue"]
+__all__ = ["register_wizard_catalogue"]
 
 _BUCKET_ID = "2035baea-4afe-4fe3-b502-ff084fe79153"
 _T0 = datetime(2026, 1, 14, 10, 0, tzinfo=UTC)

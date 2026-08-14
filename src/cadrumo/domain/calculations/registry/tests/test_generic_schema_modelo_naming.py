@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from .....core import Modelo
-from .....tests._inventory import SRC_CADRUMO, aeat_relative, production_ast_items
+from .....tests import SRC_CADRUMO, aeat_relative, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

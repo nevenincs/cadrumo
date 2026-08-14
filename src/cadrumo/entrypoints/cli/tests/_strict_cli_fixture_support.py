@@ -21,15 +21,6 @@ _DIAGNOSTICS_BUCKET_ID = "22222222-3333-4444-8555-666666666666"
 __all__ = ["english_locale_fixture"]
 
 
-@pytest.fixture(name="_isolated_backend", autouse=True)
-def config_check_isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path / "storage", cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-    ):
-        yield
-
-
 @pytest.fixture(name="_isolated_backend")
 def diagnostics_isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (

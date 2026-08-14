@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from ...tests._wizard_catalogue_fixtures import _register_wizard_catalogue
+from ...tests import register_wizard_catalogue
 
-__all__ = ["_register_wizard_catalogue"]
+__all__ = ["register_wizard_catalogue"]
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository

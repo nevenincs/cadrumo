@@ -25,9 +25,9 @@ from .....application.provisioning import (
 from .....core import AcceleratorKind, ContentionCause
 from .....core.config import override_settings
 from .....tests.cli_runner import invoke_cached_cli
-from ...tests._strict_cli_fixture_support import config_check_isolated_backend
 from .._check_hardware_rows import CONTENTION_ROW_ID, contention_row
 from .._check_payloads import CheckDependencyPayload
+from ._isolated_storage_fixture import config_check_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["config_check_isolated_backend"]

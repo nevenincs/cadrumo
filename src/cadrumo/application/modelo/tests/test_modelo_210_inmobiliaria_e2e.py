@@ -75,7 +75,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
-from ...tests._wizard_catalogue_fixtures import _register_wizard_catalogue
+from ...tests import register_wizard_catalogue
 from .._calculation_actions import calculate_modelo_revision
 from .._verification_actions import verify_modelo_revision
 from .._work_lifecycle import create_work_unit
@@ -83,7 +83,7 @@ from .._work_lifecycle import create_work_unit
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-__all__ = ["_register_wizard_catalogue"]
+__all__ = ["register_wizard_catalogue"]
 
 _BUCKET_ID = "9a1c0e5e-2b1c-4f0e-8f7c-9d2f5b6a7c31"
 _CLOCK = datetime(2026, 5, 21, 9, 0, 0, tzinfo=UTC)

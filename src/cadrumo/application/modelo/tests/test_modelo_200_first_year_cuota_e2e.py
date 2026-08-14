@@ -57,7 +57,7 @@ from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations import CalculationObservationRepository
-from ...tests._wizard_catalogue_fixtures import _register_wizard_catalogue
+from ...tests import register_wizard_catalogue
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -68,7 +68,7 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-__all__ = ["_register_wizard_catalogue"]
+__all__ = ["register_wizard_catalogue"]
 
 _BUCKET_ID = "234af0d3-5002-452b-9eff-80bbc1de0c84"
 _T0 = datetime(2026, 1, 12, 10, 0, tzinfo=UTC)
