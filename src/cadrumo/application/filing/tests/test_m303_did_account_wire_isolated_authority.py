@@ -40,6 +40,7 @@ from ....domain.calculations.registry import (
     load_modelo_directory,
     resolve_m303_regimen_simplificado_snapshot,
 )
+from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.deadlines import (
     ChargeAccount,
     IVARegime,
@@ -114,7 +115,15 @@ def _required_iae_epigrafe(value: str | None) -> str:
 
 
 def _test_snapshot(*, modelo, revision) -> RegistrySnapshot:
-    """Materialize a test-owned revision against the real loaded source catalogue."""
+    """Materialize a test-owned synthetic revision against the real source catalogue.
+
+    Only :func:`_load_isolated_did_layout` uses this: its ``export_layouts``
+    fragment is hand-authored and IS the thing under test, and the canonical
+    ``build_snapshot`` unconditionally overwrites ``export_layouts`` via
+    ``derive_export_layouts_from_bindings``, which would destroy it. A real
+    bundled revision has no such conflict and goes through ``build_snapshot``
+    directly (see ``_m303_2026_snapshot``).
+    """
     authority = bundled_authority()
     catalogues = authority.catalogues
     return RegistrySnapshot(
@@ -132,11 +141,10 @@ def _test_snapshot(*, modelo, revision) -> RegistrySnapshot:
         application_links={},
         deadline_windows={},
         filing_schedules={},
-        support_removal_decisions={},
         constructs={},
         dependency_classifications={},
         convenio=catalogues.convenio,
-        m303_annual_orden=catalogues.m303_annual_orden,
+        supplementary_ordenes=catalogues.supplementary_ordenes,
     )
 
 
@@ -258,9 +266,21 @@ source_refs = ["{_SOURCE_REF}"]
 
 
 def _m303_2026_snapshot() -> RegistrySnapshot:
-    """Load the real 2026 revision without asking the unrelated filing-grade gate to re-admit it."""
-    modelo = bundled_authority().modelo(Modelo.M303.value)
-    return _test_snapshot(modelo=modelo, revision=modelo.revisions[_REVISION_ID])
+    """Build the real 2026 revision through the canonical snapshot builder.
+
+    ``build_snapshot`` defaults ``require_operator_review=False``, so the
+    unrelated filing-grade legal-review gate ``build_validated_snapshot``
+    hardcodes never engages here.
+    """
+    authority = bundled_authority()
+    modelo = authority.modelo(Modelo.M303.value)
+    return build_snapshot(
+        modelo,
+        authority.catalogues,
+        source_root=bundled_path(),
+        filing_year=2026,
+        period="1T",
+    )
 
 
 def _filing_envelope_layout(

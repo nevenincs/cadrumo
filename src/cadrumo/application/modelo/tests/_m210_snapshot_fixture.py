@@ -5,10 +5,10 @@ import pytest
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
     RegistrySnapshot,
-    build_snapshot,
     load_convenio_authority,
     load_registry_tree,
 )
+from ....domain.calculations.registry.tests import build_snapshot
 
 
 @pytest.fixture(scope="module")

@@ -9,15 +9,16 @@ from typing import Any
 import pytest
 
 from ....application.filing import _filing_binding_values
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import CasillaId, Modelo, Period, validated_casilla_id
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
     RegistrySnapshot,
     RegistrySnapshotRef,
+    bundled_authority,
     calculate_registry_snapshot,
-    load_modelo_path,
     resolve_available_bound_inputs_by_casilla_id,
 )
+from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.filing import (
     ModeloCasillaProvenance,
     ModeloDraft,
@@ -48,7 +49,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _CLOCK = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
 _BUCKET_ID = "m349-display-export-parity"
 _PROFILE_TAX_ID = "12345678Z"
-_REVISION_ID = "2020-y-siguientes"
 _DECL_NUMERO_OPERADORES: CasillaId = validated_casilla_id(
     "decl.numero-operadores",
     surface="test_m349_calculation_display_export",
@@ -68,26 +68,14 @@ _DECL_IMPORTE_RECTIFICACIONES: CasillaId = validated_casilla_id(
 
 
 def _m349_snapshot(*, period: str) -> RegistrySnapshot:
-    modelo = load_modelo_path(bundled_path("registry", "aeat", "modelos", "349"))
-    revision = modelo.revisions[_REVISION_ID]
-    filing_period = Period.from_year_and_code(2026, period)
-    return RegistrySnapshot(
-        modelo=modelo,
-        revision=revision,
-        filing_period=filing_period,
+    authority = bundled_authority()
+    modelo = authority.modelo(Modelo.M349.value)
+    return build_snapshot(
+        modelo,
+        authority.catalogues,
+        source_root=bundled_path(),
         filing_year=2026,
         period=period,
-        legal={},
-        sources={},
-        extraction_profiles={profile.id: profile for profile in revision.extraction_profiles},
-        live_cross_references={item.id: item for item in revision.live_cross_references},
-        workbook_parity_refs={item.id: item for item in revision.workbook_parity_refs},
-        verification_expectations={item.id: item for item in revision.verification_expectations},
-        application_links={item.id: item for item in revision.application_links},
-        deadline_windows={item.id: item for item in revision.deadline_windows},
-        filing_schedules={item.id: item for item in revision.filing_schedules},
-        constructs={item.id: item for item in revision.constructs},
-        dependency_classifications={item.id: item for item in revision.dependency_classifications},
     )
 
 

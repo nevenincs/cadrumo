@@ -1159,11 +1159,14 @@ REGISTRY_LOADER_PACKAGE: Final[str] = "cadrumo.domain.calculations.registry"
 #: W01.P04.S34 for ``build_snapshot`` -- the plan's own text calls it "the
 #: same unguarded-entry-point class as the raw loader family"). Each had zero
 #: cross-package production OR test consumers at demotion time, EXCEPT
-#: ``build_snapshot``, whose sole external caller is a test fixture (confirmed
-#: by an AST scan over ``walk_module_imports``, not a text grep -- a
-#: multi-line ``from ... import (...)`` block hides a name from a per-line
-#: regex, which is exactly how ``collect_registry_tree_fingerprints`` was
-#: nearly misclassified here). The eight raw-loader siblings that stayed
+#: ``build_snapshot``, whose only external caller at demotion time was a test
+#: fixture (confirmed by an AST scan over ``walk_module_imports``, not a text
+#: grep -- a multi-line ``from ... import (...)`` block hides a name from a
+#: per-line regex, which is exactly how ``collect_registry_tree_fingerprints``
+#: was nearly misclassified here). Test callers of a demoted name are never
+#: gated below (``site.is_test`` short-circuits); ``build_snapshot`` has since
+#: gained more of them, routed through the ``domain.calculations.registry.tests``
+#: facade rather than this package directly. The eight raw-loader siblings that stayed
 #: exported (``load_registry_tree``, ``load_legal_parameters_only``,
 #: ``load_catalogue_file``, ``load_modelo_directory``, ``load_modelo_file``,
 #: ``load_modelo_path``, ``clear_fingerprint_cache``,
