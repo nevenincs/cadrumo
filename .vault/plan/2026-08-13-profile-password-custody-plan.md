@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-14'
-body_hash: 'sha256:024319101999c34d0cf03a3eeb3433212bc6802e81e1f76a0281d3823b1ac0cf'
+body_hash: 'sha256:56608702ae9785dc85e766ee06ac12398e0f311b8cfc5869feed7a516fc004ac'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -142,6 +142,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S69` - Have Terra XHigh remove the second bucket-root creator that survives as dead production code, since the layout helper creating a bucket directory with its database and blob children outside publication has zero production callers and is reached only from tests, making it exactly the class of second creator the new bucket-root guard exists to refuse, and leaving it in the production package invites it being wired back up; `src/cadrumo/adapters/persistence/storage/bucket/_layout.py`.
 - [ ] `W04.P07.S70` - Have Sol Medium triage the one hundred and fifty-one rehoming-ledger findings the repaired gate can now report, being one hundred and two fingerprint-multiset divergences, forty-three closed-owner violations and six zero-disposition entries, assigning an owner per code and establishing for each code whether the ledger is stale against live source or the source is genuinely wrong, since the gate was structurally unable to say any of this while it aborted on the first unprovable facade; `dev/tests/test_error_code_default_recovery_rehoming.py and dev/quality/error_code_default_recovery_rehoming.py`.
 - [ ] `W04.P07.S71` - Have Sol Medium rule on the rehoming analyser asymmetry that accepts a module attribute fetched through a guarded variable while refusing the same fetch through a string literal, even though a literal is strictly the more determinate of the two, since that inversion is what made a genuinely closed command-line loader look unprovable and two independent pinned tests currently enshrine it, so overturning it means changing deliberately authored cases rather than fixing an oversight; `dev/quality/error_code_default_recovery_rehoming.py`.
+- [ ] `W04.P07.S72` - Have Terra XHigh make the settings-override test control its own environment instead of inheriting the operator's, since its baseline asserts no secret passphrase is configured while the test harness deliberately bridges the untracked local environment file into the process environment, so the test is red on every developer machine that has a passphrase and green on a clean runner, and fix it by isolating the variable rather than by weakening the assertion; `src/cadrumo/core/tests/test_config_override.py`.
 
 ## Wave `W05` - end-to-end proof
 
