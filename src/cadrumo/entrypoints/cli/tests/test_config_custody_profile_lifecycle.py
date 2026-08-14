@@ -1,7 +1,7 @@
 """Real-entrypoint custody coverage for the profile lifecycle surface.
 
 The ``"buckets"`` and ``"keystore"`` literals below are not arbitrary
-injected values: the ``_CLI_HARNESS`` subprocess sets no bucket-root or
+injected values: the subprocess CLI harness sets no bucket-root or
 keystore-dir override, so ``tmp_path / "buckets"`` and
 ``tmp_path / "keystore" / bucket_id`` check production's real
 DEFAULT-derived locations -- the on-disk shape the CLI must actually
@@ -13,12 +13,9 @@ unconditionally with the code path it exists to independently confirm.
 from __future__ import annotations
 
 import json
-import os
 import subprocess
-import sys
 import tomllib
 from pathlib import Path
-from textwrap import dedent
 from typing import Final
 
 import pytest
@@ -26,58 +23,12 @@ import pytest
 from ....adapters.persistence.storage import BUCKET_DEK_FILENAME, BUCKET_MANIFEST_FILENAME
 from ....core.config import load_settings
 from ....tests import REPO_ROOT
+from ....tests.subprocess_cli import run_cadrumo_subprocess
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets", "keystore"})
 """Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
-
-_CLI_HARNESS = dedent(
-    """
-    from __future__ import annotations
-
-    import sys
-    from pathlib import Path
-
-    from cadrumo.core import config as config_module
-    from cadrumo.core.config import Settings
-
-    storage_root = Path(sys.argv[1])
-    passphrase_arg = sys.argv[2]
-    cli_args = sys.argv[3:]
-    base_settings = Settings(_env_file=None)
-    passphrase = passphrase_arg or base_settings.cadrumo_dev_test_database_password
-    settings = Settings(
-        _env_file=None,
-        cadrumo_local_storage_root=storage_root,
-        cadrumo_secret_store_dir=storage_root / "fallback-store",
-        cadrumo_secret_store_backend="file",
-        cadrumo_secret_passphrase=passphrase,
-        cadrumo_output_language="en",
-    )
-    token = config_module._settings_override.set(settings)
-    try:
-        sys.argv = ["cadrumo", *cli_args]
-        from cadrumo.entrypoints.cli import main
-
-        main()
-    finally:
-        config_module._settings_override.reset(token)
-    """,
-)
-
-
-def _env() -> dict[str, str]:
-    env = {
-        key: value for key, value in os.environ.items() if not key.startswith("AEAT_") and not key.startswith("PYTEST_")
-    }
-    env.update(
-        {
-            "PYTHONIOENCODING": "utf-8",
-            "PYTHONUTF8": "1",
-        },
-    )
-    return env
 
 
 def _run_cadrumo(
@@ -88,19 +39,19 @@ def _run_cadrumo(
     extra_env: dict[str, str] | None = None,
     stdin_payload: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
-    env = _env()
-    if extra_env:
-        env.update(extra_env)
-    return subprocess.run(
-        [sys.executable, "-c", _CLI_HARNESS, str(storage_root), passphrase or "", *args],
-        cwd=Path(__file__).parents[3],
-        env=env,
-        input=stdin_payload,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        capture_output=True,
-        check=False,
+    resolved_passphrase = passphrase or load_settings().cadrumo_dev_test_database_password.get_secret_value()
+    return run_cadrumo_subprocess(
+        args,
+        settings={
+            "cadrumo_local_storage_root": storage_root,
+            "cadrumo_secret_store_dir": storage_root / "fallback-store",
+            "cadrumo_secret_store_backend": "file",
+            "cadrumo_secret_passphrase": resolved_passphrase,
+            "cadrumo_output_language": "en",
+        },
+        env_strip_prefixes=("AEAT_", "PYTEST_"),
+        extra_env=extra_env,
+        stdin_payload=stdin_payload,
         timeout=45.0,
     )
 

@@ -813,15 +813,15 @@ convention = "google"
 "src/cadrumo/entrypoints/cli/tests/test_cold_start_wizard_registration.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_help_without_secrets.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_json_error_contract.py" = ["S603"]
-"src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_config_recovery_lifecycle.py" = ["S603"]
-"src/cadrumo/entrypoints/cli/tests/test_profile_login_session_lifecycle.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_lazy_command_tree.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/_command_group_import_support.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_live_read_subgroups.py" = ["S603"]
-"src/cadrumo/entrypoints/cli/tests/test_root_fallback_write_guard.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_work_calculate_row_flag.py" = ["S603"]
+# Canonical fresh-interpreter subprocess CLI harness transport (see its module
+# docstring); the controlled-argv pattern above is centralised here.
+"src/cadrumo/tests/subprocess_cli.py" = ["S603"]
 "src/cadrumo/application/user_profile/tests/test_lazy_boundary.py" = ["S603"]
 "src/cadrumo/domain/user_profile/tests/test_lazy_boundary.py" = ["S603"]
 # ── Group H: advisory-fixture and docstring-reference ignores ─────────────
