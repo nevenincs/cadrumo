@@ -637,8 +637,6 @@ application:
         profile first.
       archive_not_confirmed: Archiving is a reversible state transition, but it still
         requires explicit confirmation.
-      archive_schema_version_from_future: The archive schema version {archive_schema_version}
-        is newer than this application supports (up to {max_supported}).
       delete_active_bucket: Cannot delete the active bucket; log in to another profile
         first with aeat config login NAME.
       delete_not_confirmed: This operation is destructive. Re-run with --yes to confirm.
@@ -648,16 +646,8 @@ application:
         identity fields: %{missing_flags}. Repair the source profile and export it
         again.'
       import_payload_invalid: The profile archive content is invalid or corrupted.
-      import_recovery_passphrase_required: This archive includes an encrypted recovery
-        wrap; provide the recovery passphrase to import it.
-      import_recovery_wrap_invalid: The supplied recovery passphrase could not unwrap
-        the encrypted wrap.
-      import_recovery_wrap_missing: The archive declares a recovery wrap but does
-        not contain its bytes; the archive is incomplete or corrupted.
       restore_not_archived: The bucket is not archived (tombstoned); there is nothing
         to restore.
-      unsupported_archive_schema_version: Archive schema version {archive_schema_version}
-        predates what this application supports; it cannot be restored without a migration.
   calculations:
     binding_prefill:
       errors:
@@ -4058,9 +4048,6 @@ cli:
           --recovery-wrap-passphrase before email or cross-host transfer.
         export_name_help: Profile to back up; defaults to active.
         export_out_help: Destination path for the archive.
-        export_recovery_wrap_help: Optional passphrase to seal the archive under,
-          instead of the active bucket key; required if the archive will leave this
-          host.
         help: Back up and restore a profile as a sealed, AEAD-encrypted archive (the
           full-custody recovery transport).
         import_active_switch_info: The restored profile {name} is now the ACTIVE profile;
@@ -4069,8 +4056,6 @@ cli:
           bucket id.
         import_help: Restore a profile from a sealed, encrypted archive at PATH.
         import_path_help: Path to the sealed archive.
-        import_recovery_wrap_help: Passphrase to unseal the archive; required if it
-          was exported with one.
         inspect_help: Show a sealed archive's header without decrypting or restoring
           it.
         inspect_path_help: Path to the sealed archive.

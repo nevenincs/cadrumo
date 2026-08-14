@@ -660,8 +660,6 @@ application:
       archive_active_bucket: Az aktív bucket nem archiválható; válts előbb másik profilra.
       archive_not_confirmed: Az archiválás visszafordítható állapotátmenet, de kifejezett
         megerősítést igényel.
-      archive_schema_version_from_future: Az archívum sémaverziója ({archive_schema_version})
-        újabb, mint amit ez az alkalmazás támogat (legfeljebb {max_supported}).
       delete_active_bucket: Az aktív bucket nem törölhető; előbb jelentkezzen be másik
         profilba az aeat config login NÉV paranccsal.
       delete_not_confirmed: Ez a művelet visszafordíthatatlan. Futtassa újra a --yes
@@ -672,16 +670,7 @@ application:
         benyújtási azonossági mezők: %{missing_flags}. Javítsa a forrásprofilt, majd
         exportálja újra.'
       import_payload_invalid: A profilarchívum tartalma érvénytelen vagy sérült.
-      import_recovery_passphrase_required: Ez az archívum titkosított helyreállítási
-        csomagolást tartalmaz; adja meg a helyreállítási jelmondatot az importáláshoz.
-      import_recovery_wrap_invalid: A megadott helyreállítási jelmondat nem tudta
-        kibontani a titkosított csomagolást.
-      import_recovery_wrap_missing: Az archívum helyreállítási csomagolást jelöl,
-        de nem tartalmazza annak bájtjait; az archívum hiányos vagy sérült.
       restore_not_archived: A bucket nincs archiválva (nincs törölve); nincs mit visszaállítani.
-      unsupported_archive_schema_version: A(z) {archive_schema_version} archívum sémaverziója
-        megelőzi az alkalmazás által támogatott verziót; migráció nélkül nem állítható
-        vissza.
   calculations:
     binding_prefill:
       errors:
@@ -4277,8 +4266,6 @@ cli:
           opciót.
         export_name_help: A mentendő profil; alapértelmezés szerint az aktív.
         export_out_help: Az archívum célútvonala.
-        export_recovery_wrap_help: Opcionális jelmondat az archívum lezárásához az
-          aktív bucket-kulcs helyett; kötelező, ha az archívum elhagyja ezt a gépet.
         help: Profil biztonsági mentése és visszaállítása lezárt, AEAD-titkosított
           archívumként (a teljes körű helyreállítási átvitel).
         import_active_switch_info: A visszaállított {name} profil mostantól az AKTÍV
@@ -4288,8 +4275,6 @@ cli:
         import_help: Profil visszaállítása egy lezárt, titkosított archívumból az
           ÚTVONAL helyről.
         import_path_help: A lezárt archívum útvonala.
-        import_recovery_wrap_help: Jelmondat az archívum feloldásához; kötelező, ha
-          ezzel exportálták.
         inspect_help: Megjeleníti egy lezárt archívum fejlécét visszafejtés vagy visszaállítás
           nélkül.
         inspect_path_help: A lezárt archívum útvonala.

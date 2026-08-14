@@ -702,8 +702,6 @@ application:
         altre perfil.
       archive_not_confirmed: Arxivar és una transició d'estat reversible, però requereix
         confirmació explícita.
-      archive_schema_version_from_future: La versió d'esquema de l'arxiu {archive_schema_version}
-        és més recent del que admet aquesta aplicació (fins a {max_supported}).
       delete_active_bucket: No es pot eliminar el bucket actiu; inicia primer la sessió
         en un altre perfil amb aeat config login NAME.
       delete_not_confirmed: Aquesta operació és destructiva. Torna a executar-la amb
@@ -715,17 +713,8 @@ application:
         torna''l a exportar.'
       import_payload_invalid: El contingut de l'arxiu de perfil no és vàlid o està
         malmès.
-      import_recovery_passphrase_required: Aquest arxiu inclou un embolcall de recuperació
-        xifrat; indica la frase de contrasenya de recuperació per importar-lo.
-      import_recovery_wrap_invalid: La frase de contrasenya de recuperació indicada
-        no ha pogut desxifrar l'embolcall.
-      import_recovery_wrap_missing: L'arxiu declara un embolcall de recuperació però
-        no conté els seus bytes; l'arxiu està incomplet o malmès.
       restore_not_archived: El bucket no està arxivat (donat de baixa); no hi ha res
         a recuperar.
-      unsupported_archive_schema_version: La versió d'esquema de l'arxiu {archive_schema_version}
-        és anterior a l'admesa per aquesta aplicació; no es pot restaurar sense una
-        migració.
   calculations:
     binding_prefill:
       errors:
@@ -4368,9 +4357,6 @@ cli:
           o transferir-lo entre equips.
         export_name_help: Perfil a copiar; per defecte l'actiu.
         export_out_help: Camí de destinació de l'arxiu.
-        export_recovery_wrap_help: Frase de pas opcional per segellar l'arxiu, en
-          lloc de la clau activa del bucket; obligatòria si l'arxiu sortirà d'aquest
-          equip.
         help: Fes còpia de seguretat i restaura un perfil com a arxiu segellat i xifrat
           AEAD (el transport de recuperació de custòdia completa).
         import_active_switch_info: El perfil restaurat {name} ara és el perfil ACTIU;
@@ -4379,8 +4365,6 @@ cli:
           de bucket de l'arxiu.
         import_help: Restaura un perfil des d'un arxiu segellat i xifrat a CAMÍ.
         import_path_help: Camí de l'arxiu segellat.
-        import_recovery_wrap_help: Frase de pas per desxifrar l'arxiu; obligatòria
-          si es va exportar amb una.
         inspect_help: Mostra la capçalera d'un arxiu segellat sense desxifrar-lo ni
           restaurar-lo.
         inspect_path_help: Camí de l'arxiu segellat.
