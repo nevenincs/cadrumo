@@ -24,19 +24,13 @@ from .._field_mapping import (
     unmapped_slot_census,
     validate_mapping_targets,
 )
-from .._key import CorpusDocument, CorpusKey, load_corpus_key
+from .._key import CorpusDocument, CorpusKey
 from .._scoring import score_emission
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _DRAFT_FIELDS = frozenset(InvoiceDraft.model_fields)
 _NON_SCORED = (MappingKind.OUT_OF_SCOPE, MappingKind.PRODUCT_GAP)
-
-
-@pytest.fixture(scope="module")
-def key() -> CorpusKey:
-    """The pinned key, loaded once."""
-    return load_corpus_key()
 
 
 # ----------------------------------------------------------------------------

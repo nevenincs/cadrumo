@@ -17,7 +17,7 @@ from typing import Any
 
 import pytest
 
-from .._key import CorpusDocument, CorpusKey, load_corpus_key
+from .._key import CorpusDocument, CorpusKey
 from .._result import HarnessRefusalError
 from .._scoring import FieldVerdict, score_emission
 
@@ -27,12 +27,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 #: real corpus document with both a substantial scorable set and a substantial
 #: trap set, which is exactly what a scorer needs to be exercised on.
 _ANCHOR_DOC_ID = "OP-PUR-COM-2026-0005_layout-minimal"
-
-
-@pytest.fixture(scope="module")
-def key() -> CorpusKey:
-    """The pinned key, loaded once."""
-    return load_corpus_key()
 
 
 @pytest.fixture

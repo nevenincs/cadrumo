@@ -22,17 +22,11 @@ from __future__ import annotations
 import pytest
 
 from .._driver import DriverError, measure_structured_document, read_structured_draft
-from .._key import CorpusKey, load_corpus_key
+from .._key import CorpusKey
 from .._result import EngineRoute, HarnessRefusalError, ModelTier, PipelineStage
 from .._runner import HarnessReport
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
-
-
-@pytest.fixture(scope="module")
-def key() -> CorpusKey:
-    """The pinned key, loaded once."""
-    return load_corpus_key()
 
 
 def _structured_documents(key: CorpusKey) -> list:

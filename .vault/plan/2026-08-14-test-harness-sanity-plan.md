@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-14'
-body_hash: 'sha256:48e8be747381d03b2e60602aebfdf1ec84e3693fb496a3c07c4efdb6aca44baa'
+body_hash: 'sha256:00f2681621a814399e13eca2fc482ab795700b2ed00b8b2b7f568a6c0c14ebff'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -99,7 +99,7 @@ Use existing modelo and registry owners to remove local redeclarations and repea
 Complete root source development and packaging census remediation with no unclassified fixture.
 
 - [ ] `W07.P21.S66` - Adjudicate and canonicalize every remaining source-tree fixture cluster in the census; `src/cadrumo`.
-- [ ] `W07.P21.S67` - Adjudicate and canonicalize every remaining development fixture cluster in the census; `dev`.
+- [x] `W07.P21.S67` - Adjudicate and canonicalize every remaining development fixture cluster in the census; `dev`.
 - [ ] `W07.P21.S68` - Adjudicate and canonicalize every remaining packaging fixture cluster in the census; `packaging`.
 - [ ] `W07.P21.S69` - Adjudicate root conftest and explicit-import support factories and remove substitute owners; `conftest.py, src/cadrumo/tests`.
 - [ ] `W07.P21.S70` - Make census drift fail on any unclassified or substitutable duplicate fixture; `dev/quality/tests/test_fixture_census.py`.
