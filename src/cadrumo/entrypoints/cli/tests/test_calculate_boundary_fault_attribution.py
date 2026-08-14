@@ -29,11 +29,11 @@ from typing import Any
 
 import pytest
 
-from ....application.user_profile import ProfileRecordRepository
 from ....domain.buckets import BUCKET_ACTOR_LABEL_MAX_LENGTH
-from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -80,8 +80,7 @@ def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile, *, label: st
         schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
-        display_name=label,
-        status=UserProfileStatus.ACTIVE,
+        setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.name", value="Probe IS Operator"),
             UserProfileFact(path="identity.legal_name", value="Probe IS Operator SL"),
@@ -101,7 +100,7 @@ def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile, *, label: st
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         ),
     )
-    ProfileRecordRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).save(record)
+    seed_test_profile_record(record, root=runtime_profile.storage_root, label=label)
 
 
 def _calculate_args(work_unit_id: str) -> list[str]:

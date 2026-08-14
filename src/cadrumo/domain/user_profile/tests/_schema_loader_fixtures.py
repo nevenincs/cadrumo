@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core.resources import resources
 from .._loader import load_user_profile_schema
 from .._schema import ProfileSchemaDefinition
 
@@ -23,3 +24,8 @@ def function_scoped_schema() -> ProfileSchemaDefinition:
 def module_scoped_schema() -> ProfileSchemaDefinition:
     """Load the frozen schema once for each requesting test module."""
     return load_user_profile_schema()
+
+
+@pytest.fixture(name="legal_ids", scope="module")
+def legal_ids_fixture() -> frozenset[str]:
+    return frozenset(resources().modelos.authority.catalogues.legal)

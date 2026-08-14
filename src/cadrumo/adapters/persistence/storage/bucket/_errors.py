@@ -117,7 +117,7 @@ class RecoveryUnavailableError(BucketError):
     """Raised when the recovery wrap cannot be loaded for the active bucket.
 
     Distinguishes "recovery never enrolled" (the bucket's manifest has
-    ``recovery_enrolled = false``) from a torn or tampered envelope; the
+    recovery envelope state from a torn or tampered envelope; the
     typed payload carries the active bucket id.
     """
 

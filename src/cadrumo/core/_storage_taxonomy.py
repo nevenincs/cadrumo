@@ -362,6 +362,7 @@ class StorageCategory(StrEnum):
     PROFILE_CUSTODY_TRANSACTION_JOURNAL = "profile-custody-transaction-journal"
     PROFILE_CUSTODY_RECEIPT = "profile-custody-receipt"
     PROFILE_CUSTODY_HOLD_EVIDENCE = "profile-custody-hold-evidence"
+    PROFILE_CUSTODY_LABEL_HEAD = "profile-custody-label-head"
 
     # ── Fixed layout: per-bucket ────────────────────────────────────────────
     BUCKET_DATABASE = "bucket.db"

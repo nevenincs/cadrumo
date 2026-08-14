@@ -186,6 +186,11 @@ def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None
     }
 
 
+def fact_value(record: UserProfileRecord | UserProfileSnapshot | None, path: str) -> str | None:
+    """Read one effective current fact through the canonical projection."""
+    return record_to_path_values(record).get(path)
+
+
 class EffectiveFact(BaseModel):
     """The fact at one schema path whose effective window starts latest.
 
@@ -304,6 +309,7 @@ def _merged_taxpayer_values(
 
 
 __all__ = [
+    "fact_value",
     "facts_to_values",
     "projection_for_taxpayer",
     "record_to_path_values",

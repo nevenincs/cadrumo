@@ -40,10 +40,10 @@ from ....domain.modelos import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
-from ...user_profile import ProfileRecordRepository
 from .. import (
     CalculationRevisionStateError,
     ModeloExportCommand,
@@ -125,10 +125,9 @@ def _seed_profile(*, bucket_id: str, incn: Decimal | None) -> None:
     ]
     if incn is not None:
         facts.append(UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=incn))
-    ProfileRecordRepository(bucket_id=bucket_id).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Test runtime profile",
             facts=tuple(facts),
             created_at=_CLOCK,
             updated_at=_CLOCK,

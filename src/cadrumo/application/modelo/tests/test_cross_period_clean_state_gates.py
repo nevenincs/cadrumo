@@ -42,6 +42,7 @@ from ....domain.modelos import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import (
@@ -53,7 +54,6 @@ from ...calculations import (
     CrossPeriodDependencyRequirement,
     cross_period_dependency_requirements,
 )
-from ...user_profile import ProfileRecordRepository
 from .. import create_work_unit, import_external_filing_evidence, verify_modelo_revision
 from .._verification_cross_period import _cross_period_clean_state_findings
 
@@ -72,10 +72,9 @@ def _workflow_profile() -> TaxpayerProfile:
 
 
 def _store_ready_profile_record(*, activity_start_date: str | None = None) -> None:
-    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="Cross-period clean-state profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=str(_workflow_profile().tax_id)),
                 UserProfileFact(path="identity.name", value="Test"),

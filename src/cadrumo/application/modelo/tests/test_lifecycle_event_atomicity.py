@@ -41,9 +41,9 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.buckets import BucketEventObjectType, BucketEventType
 from ....domain.modelos import CalculationRevisionState, ExternalEvidenceKind, WorkUnit
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
-from ...user_profile import ProfileRecordRepository
 from .. import (
     create_work_unit,
     discard_work_unit,
@@ -101,10 +101,9 @@ def fixture(tmp_path: Path) -> Iterator[_Fixture]:
     """Yield real catalogue repositories over one encrypted SQLite database."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
-        ProfileRecordRepository(bucket_id=_PROFILE_ID, objects=objects).save(
+        seed_test_profile_record(
             UserProfileRecord(
                 profile_id=_PROFILE_ID,
-                display_name="Atomicity Operator",
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,
                 updated_at=_T0,

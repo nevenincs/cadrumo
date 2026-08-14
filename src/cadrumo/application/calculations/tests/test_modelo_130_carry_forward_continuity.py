@@ -52,6 +52,7 @@ from ....domain.deadlines import IVARegime, M303RegimeComposition, M303TaxTerrit
 from ....domain.modelos import CalculationRevision, ExternalEvidenceKind, ModeloVerificationFindingKind
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import (
@@ -61,7 +62,6 @@ from ...modelo import (
     verify_modelo_revision,
 )
 from ...modelo.tests.justificante_metadata import persist_justificante_metadata
-from ...user_profile import ProfileRecordRepository
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._observations_repository import CalculationObservationRepository
 
@@ -159,10 +159,7 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over an isolated profile — no mocks."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile(
-            ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects),
-            profile_id=_PROFILE_ID,
-        )
+        _seed_ready_profile(profile_id=_PROFILE_ID)
         yield (
             WorkUnitCatalogueRepository(objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),
@@ -173,11 +170,10 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         )
 
 
-def _seed_ready_profile(repository: ProfileRecordRepository, *, profile_id: str) -> None:
-    repository.save(
+def _seed_ready_profile(*, profile_id: str) -> None:
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=profile_id,
-            display_name="Sofia Operator",
             facts=_READY_PROFILE_FACTS,
             created_at=_CLOCK,
             updated_at=_CLOCK,

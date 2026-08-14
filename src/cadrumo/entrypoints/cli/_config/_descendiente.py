@@ -24,8 +24,8 @@ Every verb rewrites the FULL declared descendant set on the active profile: a pa
 patch of only the changed index would leave stale higher-index facts behind after a
 ``remove`` shrinks the set. ``descendant_list_from_facts`` reconstructs the current set,
 the verb mutates the in-memory tuple, and ``descendant_facts_from_list`` re-derives the
-canonical fact rows, which are then upserted (or cleared with ``value=None`` for indices
-no longer present) via :func:`~application.user_profile.set_active_fields`.
+canonical fact rows, which are published through one authenticated
+revision-bound replacement command.
 
 See Also:
     :mod:`~application.modelo._profile_binding`:
@@ -44,8 +44,8 @@ import typer
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....domain.contribuyente import DescendantInfo, serialise_meses_trabajo
-from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from .._common import emit_envelope
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 if TYPE_CHECKING:
@@ -138,10 +138,13 @@ def _write_descendientes(bucket_id: str, descendientes: tuple[DescendantInfo, ..
     clears = tuple(UserProfileFact(path=path, value=None) for path in stale_paths if path not in new_pairs)
     upserts = tuple(UserProfileFact(path=path, value=value) for path, value in new_pairs.items())
 
-    from ....application.user_profile import set_active_fields
-    from ....application.workflow import workflow_state_repository
+    from ....application.wizard._persistence import apply_wizard_fact_changes
 
-    workflow_state_repository().update(lambda current: set_active_fields(current, (*clears, *upserts)))
+    apply_wizard_fact_changes(
+        profile_id=bucket_id,
+        changes=(*clears, *upserts),
+        event_type="profile.wizard.descendants.changed",
+    )
 
 
 def _tri(value: bool | None) -> str:
@@ -291,7 +294,7 @@ def _emit_descendiente_list(
     )
     lines = [f"profile\t{pointer.label}", f"total\t{len(descendientes)}"]
     lines.extend(_descendiente_row_lines(descendientes))
-    _emit_envelope(ctx, command="config.profile.descendiente.list", result=result, lines=lines)
+    emit_envelope(ctx, command="config.profile.descendiente.list", result=result, lines=lines)
 
 
 @descendiente_app.callback()
@@ -569,7 +572,7 @@ def descendiente_add(
         total=len(combined),
     )
     ambiguous_indices = _ambiguous_relacion_indices(new_rows, index_offset=len(existing))
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.profile.descendiente.add",
         result=result,
@@ -639,7 +642,7 @@ def descendiente_remove(
         removed_index=index,
         total=len(remaining),
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.profile.descendiente.remove",
         result=result,

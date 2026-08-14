@@ -36,10 +36,10 @@ from ....domain.user_profile import (
     ProfileRemovePolicy,
     ProfileSchemaDefinition,
     ProfileSectionDefinition,
+    ProfileSetupState,
     ProfileSnapshotPolicy,
     UserProfileFact,
     UserProfileRecord,
-    UserProfileStatus,
     derived_selector_for_path,
     load_user_profile_schema,
 )
@@ -104,8 +104,7 @@ def _schema(*, derived: bool) -> ProfileSchemaDefinition:
 def _record() -> UserProfileRecord:
     return UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="derived filter probe",
-        status=UserProfileStatus.ACTIVE,
+        setup_state=ProfileSetupState.COMPLETE,
         facts=(UserProfileFact(path=_OPERATOR_PATH, value=False),),
     )
 

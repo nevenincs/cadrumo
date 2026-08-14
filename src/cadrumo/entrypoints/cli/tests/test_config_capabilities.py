@@ -15,13 +15,11 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....application.user_profile import CapabilitySource, profile_create_storage_span
-from ....application.workflow import workflow_state_repository
+from ....application.user_profile import CapabilitySource, register_profile_with_credentials
 from ....core import ServiceCapability
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -31,10 +29,10 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
     ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000")
+        register_profile_with_credentials(
+            label="Capability test profile",
+            passphrase="capability-test-passphrase",  # noqa: S106 - synthetic test credential
         )
         yield
 

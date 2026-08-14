@@ -68,6 +68,41 @@ class ActiveProfilePointerTransaction:
         self._assert_live_ownership()
         write_pointer(self._root, pointer)
 
+    def compare_and_write(self, *, expected: bytes | None, pointer: BucketPointer) -> bytes:
+        """Durably write ``pointer`` only when the captured bytes still match.
+
+        The transaction holds the canonical custody-root lock, so cooperating
+        writers cannot interleave the comparison and durable replacement.  The
+        exact-byte comparison also detects an out-of-band writer rather than
+        silently overwriting a selection it did not observe.
+        """
+        self._assert_live_ownership()
+        observed = capture_pointer(self._root)
+        if observed != expected:
+            raise ActiveProfilePointerTransactionError(
+                translated_message="errors.integrity.integrity_storage_profile_custody_record",
+                context={"owner": "active-profile-pointer", "compare_and_swap": False},
+            )
+        write_pointer(self._root, pointer)
+        published = capture_pointer(self._root)
+        if published is None:
+            raise ActiveProfilePointerTransactionError(
+                translated_message="errors.integrity.integrity_storage_profile_custody_record",
+                context={"owner": "active-profile-pointer", "published": False},
+            )
+        return published
+
+    def compare_and_restore(self, *, expected: bytes | None, captured: bytes | None) -> None:
+        """Restore exact bytes only while the expected post-write value remains."""
+        self._assert_live_ownership()
+        observed = capture_pointer(self._root)
+        if observed != expected:
+            raise ActiveProfilePointerTransactionError(
+                translated_message="errors.integrity.integrity_storage_profile_custody_record",
+                context={"owner": "active-profile-pointer", "compare_and_swap": False},
+            )
+        restore_pointer(self._root, captured)
+
     def restore(self, captured: bytes | None) -> None:
         """Atomically restore exact captured bytes under live ownership."""
         self._assert_live_ownership()

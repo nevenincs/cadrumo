@@ -1,8 +1,10 @@
-"""Real-crypto contracts for the capsule-resident profile record."""
+"""Secure-object lineage and restore contracts for the current profile record."""
 
 from __future__ import annotations
 
+import sqlite3
 from base64 import b64encode
+from pathlib import Path
 from uuid import UUID
 
 import pytest
@@ -10,22 +12,32 @@ import pytest
 from ....adapters.persistence.storage.custody import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
+    ProfileCustodySentinelRecord,
     ProfileCustodyWrappedDek,
+    create_profile_custody_sentinel,
 )
+from ....domain.buckets import BucketEventType
 from ....domain.user_profile import ProfileSetupState, UserProfileRecord
-from .._capsule_record import ProfileRecordConflictError, ProfileRecordSession
+from .._capsule_record import ProfileRecordIntegrityError, ProfileRecordSession, ProfileRecordStore
+from .._lifecycle import ProfileCapsuleLifecycle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = UUID("cc0aeac5-30af-460d-b2cc-dcbbf30c578a")
 _DEK = bytes(range(32))
+_RECORD_NAMESPACE = "cadrumo.application.user_profile.value"
 
 
-def _envelope() -> ProfileCustodyEnvelope:
+def _envelope(
+    *,
+    profile_id: UUID = _PROFILE_ID,
+    password_generation: int = 7,
+    dek_epoch: bytes = b"e" * 16,
+) -> ProfileCustodyEnvelope:
     return ProfileCustodyEnvelope.create(
-        profile_id=_PROFILE_ID,
-        password_generation=7,
-        dek_epoch=b64encode(b"e" * 16).decode("ascii"),
+        profile_id=profile_id,
+        password_generation=password_generation,
+        dek_epoch=b64encode(dek_epoch).decode("ascii"),
         kdf=ProfileCustodyKdfParameters(
             algorithm="argon2id",
             version=19,
@@ -43,51 +55,183 @@ def _envelope() -> ProfileCustodyEnvelope:
     )
 
 
-def test_initial_record_is_encrypted_and_bound_to_the_exact_envelope_session() -> None:
-    session = ProfileRecordSession.from_envelope(envelope=_envelope(), dek=_DEK)
-    record = UserProfileRecord(profile_id=str(_PROFILE_ID))
-
-    payload = session.create_initial(record)
-    restored, artifact = session.decode_current(payload, expected_revision=1)
-
-    assert restored == record
-    assert artifact.previous_record_digest is None
-    assert "Initial operator" not in payload.decode("utf-8")
-
-
-def test_record_compare_and_swap_carries_the_previous_current_digest() -> None:
-    session = ProfileRecordSession.from_envelope(envelope=_envelope(), dek=_DEK)
-    initial = UserProfileRecord(profile_id=str(_PROFILE_ID), setup_state=ProfileSetupState.INCOMPLETE)
-    current, current_artifact = session.decode_current(session.create_initial(initial))
-    replacement = UserProfileRecord.model_validate(
-        current.model_dump(exclude={"content_digest"})
-        | {"setup_state": ProfileSetupState.COMPLETE, "record_revision": 2, "previous_record_digest": current.content_digest}
+def _create_capsule(
+    root: Path,
+) -> tuple[ProfileCapsuleLifecycle, ProfileCustodyEnvelope, ProfileCustodySentinelRecord, ProfileRecordSession]:
+    envelope = _envelope()
+    sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
+    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=_DEK)
+    lifecycle = ProfileCapsuleLifecycle(root=root)
+    lifecycle.create(
+        label="Lineage operator",
+        profile_id=_PROFILE_ID,
+        password_envelope=envelope,
+        sentinel=sentinel,
+        data_files={"state/payload.bin": b"x"},
+        initial_record=UserProfileRecord(
+            profile_id=str(_PROFILE_ID),
+            setup_state=ProfileSetupState.INCOMPLETE,
+        ),
+        record_session=session,
     )
+    return lifecycle, envelope, sentinel, session
 
-    next_payload = session.prepare_replace(
-        current_artifact,
-        replacement,
-        expected_revision=current_artifact.revision,
-        expected_content_digest=current_artifact.content_digest,
-    )
-    restored, next_artifact = session.decode_current(next_payload, expected_revision=2)
 
-    assert restored == replacement
-    assert next_artifact.previous_record_digest == current_artifact.content_digest
-    with pytest.raises(ProfileRecordConflictError):
-        session.prepare_replace(
-            current_artifact,
-            replacement,
-            expected_revision=2,
-            expected_content_digest=current_artifact.content_digest,
+def _database(root: Path) -> Path:
+    return root / "buckets" / str(_PROFILE_ID) / "db" / "cadrumo.db"
+
+
+def test_initial_record_is_one_encrypted_database_row_with_authenticated_creation_history(tmp_path: Path) -> None:
+    _lifecycle, _envelope_value, _sentinel, session = _create_capsule(tmp_path)
+
+    loaded = ProfileRecordStore(session=session, root=tmp_path).load()
+    events = ProfileRecordStore(session=session, root=tmp_path).history()
+
+    assert loaded.record.record_revision == 1
+    assert loaded.record.previous_record_digest is None
+    assert (tmp_path / "buckets" / str(_PROFILE_ID) / "data" / "profile-record.v1.json").exists() is False
+    assert _database(tmp_path).is_file()
+    assert [event.event_type for event in events] == [BucketEventType.PROFILE_BUCKET_CREATED]
+    assert events[0].event_id == loaded.event_id
+
+
+def test_record_refuses_a_row_whose_envelope_bound_provenance_was_tampered(tmp_path: Path) -> None:
+    _lifecycle, _envelope_value, _sentinel, session = _create_capsule(tmp_path)
+    with sqlite3.connect(_database(tmp_path)) as connection:
+        connection.execute(
+            "UPDATE secure_objects SET write_provenance = ? WHERE namespace = ?",
+            ("cadrumo.profile-record.v2:forged", _RECORD_NAMESPACE),
+        )
+
+    with pytest.raises(ProfileRecordIntegrityError, match="provenance"):
+        ProfileRecordStore(session=session, root=tmp_path).load()
+
+
+def test_record_refuses_a_different_current_custody_envelope(tmp_path: Path) -> None:
+    _lifecycle, _envelope_value, _sentinel, _session = _create_capsule(tmp_path)
+    changed_session = ProfileRecordSession.from_envelope(envelope=_envelope(password_generation=8), dek=_DEK)
+
+    with pytest.raises(ProfileRecordIntegrityError, match="provenance"):
+        ProfileRecordStore(session=changed_session, root=tmp_path).load()
+
+
+def test_record_refuses_a_changed_custody_dek_epoch(tmp_path: Path) -> None:
+    _lifecycle, _envelope_value, _sentinel, _session = _create_capsule(tmp_path)
+    changed_session = ProfileRecordSession.from_envelope(envelope=_envelope(dek_epoch=b"z" * 16), dek=_DEK)
+
+    with pytest.raises(ProfileRecordIntegrityError, match="provenance"):
+        ProfileRecordStore(session=changed_session, root=tmp_path).load()
+
+
+def test_restore_refuses_missing_arbitrary_and_malformed_current_database(tmp_path: Path) -> None:
+    _lifecycle, envelope, sentinel, session = _create_capsule(tmp_path / "source")
+    database_bytes = _database(tmp_path / "source").read_bytes()
+
+    with pytest.raises(ValueError, match="requires its canonical profile database"):
+        ProfileCapsuleLifecycle(root=tmp_path / "missing").restore(
+            label="Restore target",
+            password_envelope=envelope,
+            sentinel=sentinel,
+            data_files={},
+            record_session=session,
+            database_bytes=b"",
+        )
+    with pytest.raises(ValueError, match="refuses arbitrary capsule data files"):
+        ProfileCapsuleLifecycle(root=tmp_path / "arbitrary").restore(
+            label="Restore target",
+            password_envelope=envelope,
+            sentinel=sentinel,
+            data_files={"untrusted.bin": b"arbitrary"},
+            record_session=session,
+            database_bytes=database_bytes,
+        )
+    with pytest.raises(ProfileRecordIntegrityError, match="authenticated current-record validation"):
+        ProfileCapsuleLifecycle(root=tmp_path / "malformed").restore(
+            label="Restore target",
+            password_envelope=envelope,
+            sentinel=sentinel,
+            data_files={},
+            record_session=session,
+            database_bytes=b"not a sqlite database",
         )
 
 
-def test_record_refuses_a_session_for_a_different_current_envelope() -> None:
-    initial_session = ProfileRecordSession.from_envelope(envelope=_envelope(), dek=_DEK)
-    payload = initial_session.create_initial(UserProfileRecord(profile_id=str(_PROFILE_ID)))
-    changed_envelope = _envelope().model_copy(update={"password_generation": 8})
-    changed_session = ProfileRecordSession.from_envelope(envelope=changed_envelope, dek=_DEK)
+def test_restore_refuses_duplicate_or_mismatched_current_record_lineage(tmp_path: Path) -> None:
+    _lifecycle, envelope, sentinel, session = _create_capsule(tmp_path / "source")
+    duplicate_database = tmp_path / "duplicate.db"
+    duplicate_database.write_bytes(_database(tmp_path / "source").read_bytes())
+    with sqlite3.connect(duplicate_database) as connection:
+        connection.execute(
+            """
+            INSERT INTO secure_objects (
+                namespace, object_key, classification, schema_version, written_at,
+                revision_id, previous_revision_id, revision_ancestor_ids,
+                previous_payload_hash, payload_hash, ciphertext_hash,
+                revision_written_at, write_provenance, source_event_id,
+                conflict_policy, payload
+            )
+            SELECT
+                namespace, randomblob(32), classification, schema_version, written_at,
+                revision_id, previous_revision_id, revision_ancestor_ids,
+                previous_payload_hash, payload_hash, ciphertext_hash,
+                revision_written_at, write_provenance, source_event_id,
+                conflict_policy, payload
+            FROM secure_objects
+            WHERE namespace = ?
+            """,
+            (_RECORD_NAMESPACE,),
+        )
+        assert connection.execute(
+            "SELECT COUNT(*) FROM secure_objects WHERE namespace = ?",
+            (_RECORD_NAMESPACE,),
+        ).fetchone() == (2,)
+        connection.commit()
+        connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+    with pytest.raises(
+        ProfileRecordIntegrityError, match="authenticated current-record validation"
+    ) as duplicate_refusal:
+        ProfileCapsuleLifecycle(root=tmp_path / "duplicate").restore(
+            label="Restore target",
+            password_envelope=envelope,
+            sentinel=sentinel,
+            data_files={},
+            record_session=session,
+            database_bytes=duplicate_database.read_bytes(),
+        )
+    assert isinstance(duplicate_refusal.value.__cause__, ProfileRecordIntegrityError)
+    assert "exactly one current record row" in str(duplicate_refusal.value.__cause__)
 
-    with pytest.raises(ProfileRecordConflictError):
-        changed_session.decode_current(payload)
+    mismatched_session = ProfileRecordSession.from_envelope(envelope=_envelope(password_generation=8), dek=_DEK)
+    with pytest.raises(
+        ProfileRecordIntegrityError, match="authenticated current-record validation"
+    ) as mismatch_refusal:
+        ProfileCapsuleLifecycle(root=tmp_path / "mismatch").restore(
+            label="Restore target",
+            password_envelope=envelope,
+            sentinel=sentinel,
+            data_files={},
+            record_session=mismatched_session,
+            database_bytes=_database(tmp_path / "source").read_bytes(),
+        )
+    assert isinstance(mismatch_refusal.value.__cause__, ProfileRecordIntegrityError)
+    assert "provenance" in str(mismatch_refusal.value.__cause__)
+
+
+def test_restore_refuses_a_database_bound_to_a_different_profile_uuid(tmp_path: Path) -> None:
+    _lifecycle, _envelope_value, _sentinel, _session = _create_capsule(tmp_path / "source")
+    other_profile_id = UUID("d9173bfc-8420-4715-a570-29c8f2b59a4e")
+    other_envelope = _envelope(profile_id=other_profile_id)
+    other_session = ProfileRecordSession.from_envelope(envelope=other_envelope, dek=_DEK)
+
+    with pytest.raises(ProfileRecordIntegrityError, match="authenticated current-record validation") as refusal:
+        ProfileCapsuleLifecycle(root=tmp_path / "uuid-mismatch").restore(
+            label="Restore target",
+            password_envelope=other_envelope,
+            sentinel=create_profile_custody_sentinel(envelope=other_envelope, dek=_DEK),
+            data_files={},
+            record_session=other_session,
+            database_bytes=_database(tmp_path / "source").read_bytes(),
+        )
+
+    assert isinstance(refusal.value.__cause__, ProfileRecordIntegrityError)
+    assert "exactly one current record row" in str(refusal.value.__cause__)

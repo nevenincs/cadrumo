@@ -30,10 +30,10 @@ from .....domain.user_profile import (
     ProfileRemovePolicy,
     ProfileSchemaDefinition,
     ProfileSectionDefinition,
+    ProfileSetupState,
     ProfileSnapshotPolicy,
     UserProfileFact,
     UserProfileRecord,
-    UserProfileStatus,
     load_user_profile_schema,
     profile_field_label,
     section_field_key,
@@ -191,8 +191,7 @@ def _rows_for_schema_free(*facts: UserProfileFact):
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
     return UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="status-indexed-operator",
-        status=UserProfileStatus.ACTIVE,
+        setup_state=ProfileSetupState.COMPLETE,
         facts=facts,
     )
 

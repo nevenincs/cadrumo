@@ -11,6 +11,8 @@ class ProfileCustodyEnvelopePort(Protocol):
 
     profile_id: UUID
     password_generation: int
+    self_digest: str
+    dek_epoch: str
 
 
 class ProfileCustodySentinelPort(Protocol):

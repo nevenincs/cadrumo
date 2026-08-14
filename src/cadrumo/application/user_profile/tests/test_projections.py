@@ -38,7 +38,6 @@ def test_facts_to_values_translates_paths_through_schema_selectors() -> None:
 def test_record_to_values_uses_schema_model_selectors() -> None:
     record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Operator",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
     assert record_to_values(record)["tax.id"] == "12345678Z"
@@ -47,7 +46,6 @@ def test_record_to_values_uses_schema_model_selectors() -> None:
 def test_projection_for_taxpayer_round_trips_iva_regime_through_descriptor() -> None:
     record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Operator",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
@@ -67,7 +65,6 @@ def test_projection_for_taxpayer_round_trips_iva_regime_through_descriptor() -> 
 def test_projection_for_taxpayer_uses_no_aplica_for_natural_person_without_activity_or_iva_fact() -> None:
     record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Landlord",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
@@ -84,7 +81,6 @@ def test_projection_for_taxpayer_uses_no_aplica_for_natural_person_without_activ
 def test_projection_for_taxpayer_preserves_explicit_iva_regime_for_natural_person_without_activity() -> None:
     record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Landlord",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
@@ -123,7 +119,7 @@ def test_projection_for_taxpayer_accepts_a_flat_mapping_directly() -> None:
 
 
 def test_projection_for_taxpayer_uses_defaults_when_record_is_blank() -> None:
-    record = UserProfileRecord(profile_id="11111111-1111-4111-8111-111111111111", display_name="Operator", facts=())
+    record = UserProfileRecord(profile_id="11111111-1111-4111-8111-111111111111", facts=())
     profile = projection_for_taxpayer(record, tax_id_default="Z0000000M")
     assert profile.tax_id == "Z0000000M"
     assert profile.iva_regime is IVARegime.GENERAL
@@ -146,7 +142,6 @@ def test_projection_for_taxpayer_carries_section_prefixed_withholding_facts() ->
 
     record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Operator",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
@@ -182,7 +177,6 @@ def test_record_to_values_emits_bare_key_for_third_party_threshold() -> None:
     """
     record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Operator",
         facts=(
             UserProfileFact(
                 path="obligations.third_party_transactions_above_347_threshold",
@@ -203,7 +197,6 @@ def test_crypto_abroad_threshold_projects_to_taxpayer_profile() -> None:
 
     record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Operator",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
@@ -238,7 +231,6 @@ def test_projection_for_taxpayer_populates_selector_aliased_direct_reads() -> No
     """
     record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Operator",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="contact.fiscal_address_cadastral_reference", value="9872023VH5797S0001WX"),
@@ -268,7 +260,6 @@ def test_projection_for_taxpayer_is_the_single_state_projection_authority() -> N
     """
     record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Operator",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
@@ -303,7 +294,7 @@ def test_a_record_with_no_windows_projects_exactly_as_declared() -> None:
         UserProfileFact(path="identity.tax_id", value="22222222J"),
         UserProfileFact(path="contact.postcode", value="08032"),
     )
-    record = UserProfileRecord(profile_id=_PROFILE_UUID, display_name="Operator", facts=facts)
+    record = UserProfileRecord(profile_id=_PROFILE_UUID, facts=facts)
 
     assert record_to_path_values(record)["identity.tax_id"] == "22222222J", (
         "declaration order still decides when no window does"
@@ -324,7 +315,7 @@ def test_the_latest_effective_window_wins_at_one_path() -> None:
         UserProfileFact(path="contact.postcode", value="28001", valid_from=date(2024, 1, 1)),
         UserProfileFact(path="contact.postcode", value="08032", valid_from=date(2019, 1, 1)),
     )
-    record = UserProfileRecord(profile_id=_PROFILE_UUID, display_name="Operator", facts=facts)
+    record = UserProfileRecord(profile_id=_PROFILE_UUID, facts=facts)
 
     assert record_to_path_values(record)["contact.postcode"] == "28001"
     assert record_to_effective_facts(record)["contact.postcode"].value == "28001"
@@ -336,7 +327,7 @@ def test_a_windowed_fact_supersedes_an_unwindowed_one() -> None:
         UserProfileFact(path="contact.postcode", value="28001", valid_from=date(2024, 1, 1)),
         UserProfileFact(path="contact.postcode", value="08032"),
     )
-    record = UserProfileRecord(profile_id=_PROFILE_UUID, display_name="Operator", facts=facts)
+    record = UserProfileRecord(profile_id=_PROFILE_UUID, facts=facts)
 
     assert record_to_path_values(record)["contact.postcode"] == "28001"
 
@@ -351,7 +342,7 @@ def test_the_two_projections_agree_on_which_fact_is_effective() -> None:
         UserProfileFact(path="contact.postcode", value="28001", valid_from=date(2024, 1, 1)),
         UserProfileFact(path="contact.postcode", value=None, valid_from=date(2019, 1, 1)),
     )
-    record = UserProfileRecord(profile_id=_PROFILE_UUID, display_name="Operator", facts=facts)
+    record = UserProfileRecord(profile_id=_PROFILE_UUID, facts=facts)
 
     assert record_to_path_values(record)["contact.postcode"] == "28001"
     assert record_to_effective_facts(record)["contact.postcode"].value == "28001", (

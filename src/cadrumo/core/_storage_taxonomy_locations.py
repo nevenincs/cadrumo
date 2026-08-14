@@ -569,6 +569,14 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
     ),
+    _location(
+        StorageCategory.PROFILE_CUSTODY_LABEL_HEAD,
+        "profile-custody-label-heads",
+        consumer_module="adapters/persistence/storage/custody/_label_head.py",
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        override_policy=StorageOverridePolicy.FIXED,
+    ),
 )
 
 

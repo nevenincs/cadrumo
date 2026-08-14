@@ -96,10 +96,10 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
-from ...user_profile import ProfileRecordRepository
 from .. import (
     BucketAggregationCalculationResult,
     ModeloRequiredBindingsMissingError,
@@ -223,7 +223,6 @@ def _seed_m200_sociedad_profile() -> None:
     """
     record = UserProfileRecord(
         profile_id=_BUCKET_ID_M200,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B87654323"),
             UserProfileFact(path="identity.legal_name", value="M200 Fold Sociedad Limitada"),
@@ -244,7 +243,7 @@ def _seed_m200_sociedad_profile() -> None:
         created_at=_T0,
         updated_at=_T0,
     )
-    ProfileRecordRepository(bucket_id=_BUCKET_ID_M200).save(record)
+    seed_test_profile_record(record)
 
 
 def _seed_m202_pago_for_m200(*, period: str, value: Decimal, obs_repo: CalculationObservationRepository) -> None:
@@ -322,7 +321,6 @@ def _seed_sociedad_profile() -> None:
     """
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
             UserProfileFact(path="identity.legal_name", value="M202 Fold Sociedad Limitada"),
@@ -342,7 +340,7 @@ def _seed_sociedad_profile() -> None:
         created_at=_T0,
         updated_at=_T0,
     )
-    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(record)
+    seed_test_profile_record(record)
 
 
 def _seed_m202_pago(*, period: str, value: Decimal, obs_repo: CalculationObservationRepository) -> None:

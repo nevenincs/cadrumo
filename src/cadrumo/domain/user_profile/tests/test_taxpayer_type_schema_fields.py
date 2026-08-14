@@ -11,17 +11,11 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.resources import bundled_path, resources
+from ....core.resources import bundled_path
 from .. import ProfileSchemaDefinition
-from ._schema_loader_fixtures import module_scoped_schema  # noqa: F401
+from ._schema_loader_fixtures import legal_ids_fixture, module_scoped_schema  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-@pytest.fixture(scope="module")
-def legal_ids() -> frozenset[str]:
-    catalogues = resources().modelos.authority.catalogues
-    return frozenset(catalogues.legal)
 
 
 def test_entity_type_enum_carries_the_three_branches(

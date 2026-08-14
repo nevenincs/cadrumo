@@ -7,16 +7,10 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core.resources import resources
 from .._schema import ProfileFieldDefinition, ProfileFieldType, ProfileSchemaDefinition
-from ._schema_loader_fixtures import module_scoped_schema  # noqa: F401
+from ._schema_loader_fixtures import legal_ids_fixture, module_scoped_schema  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-@pytest.fixture(scope="module")
-def legal_ids() -> frozenset[str]:
-    return frozenset(resources().modelos.authority.catalogues.legal)
 
 
 def test_attribution_entity_legal_form_declares_sc_and_cb(

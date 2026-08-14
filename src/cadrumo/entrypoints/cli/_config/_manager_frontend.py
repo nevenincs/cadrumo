@@ -20,7 +20,7 @@ nor a screen at all is refused with the flag form named.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -44,7 +44,8 @@ def _field_value_was_supplied(value: object) -> bool:
     if value is None:
         return False
     if isinstance(value, list | tuple):
-        return any(str(item) for item in value)
+        items = cast(list[object] | tuple[object, ...], value)
+        return any(str(item) for item in items)
     return True
 
 
@@ -100,14 +101,14 @@ def host_can_run_full_screen() -> bool:
 
 def build_active_profile_overview(*, label: str | None = None) -> ProfileOverview:
     """Build the manager's page for whichever profile is currently active."""
-    from ....application.user_profile import ProfileRecordRepository, build_profile_overview
+    from ....application.user_profile import CommittedProfileRepository, ProfileRecordRepository, build_profile_overview
     from ....core import require_active_bucket_id
 
     profile_id = require_active_bucket_id()
     record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
     overview = build_profile_overview(
         record,
-        label=label if label is not None else record.display_name,
+        label=label if label is not None else CommittedProfileRepository().load(profile_id).label,
     )
     from ._status_frontend import build_active_profile_notices
 
@@ -125,8 +126,8 @@ def persist_active_profile_field(path: str, value: str, *, label: str | None = N
     the previous view: the edit door may normalise or refuse a value, and
     the operator must see what was actually stored.
     """
-    from ....application.user_profile import set_active_field
-    from ....application.workflow import workflow_state_repository
+    from ....application.wizard._persistence import apply_wizard_fact_changes
+    from ....core import require_active_bucket_id
     from ....domain.user_profile import UserProfileFact
 
     # Strip before deciding blank-versus-value. An exact `!= ""` test persists a
@@ -136,7 +137,11 @@ def persist_active_profile_field(path: str, value: str, *, label: str | None = N
     # freely thereafter. The two surfaces have to agree on what spaces mean, and
     # this is the boundary that decides it.
     fact = UserProfileFact(path=path, value=value.strip() or None)
-    workflow_state_repository().update(lambda state: set_active_field(state, fact))
+    apply_wizard_fact_changes(
+        profile_id=require_active_bucket_id(),
+        changes=(fact,),
+        event_type="profile.manager.field.applied",
+    )
     return build_active_profile_overview(label=label)
 
 
@@ -278,24 +283,21 @@ def _active_profile_manager_storage(
     Only a rename moves it, and the manager exposes no rename action, so it
     cannot drift while this screen is open.
     """
-    from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
     from ....application.user_profile import (
+        CommittedProfileRepository,
         ProfileRecordRepository,
-        apply_active_profile_facts,
         build_profile_overview,
     )
-    from ....application.workflow import WorkflowState, WorkflowStateRepository
+    from ....application.wizard._persistence import apply_wizard_fact_changes
     from ....core import require_active_bucket_id
     from ....domain.user_profile import UserProfileFact, UserProfileRecord, load_user_profile_schema
 
     profile_id = require_active_bucket_id()
-    secure_objects = secure_object_repository_for_active_bucket()
     schema = load_user_profile_schema()
     profiles = ProfileRecordRepository.for_current_session(profile_id)
-    workflow = WorkflowStateRepository(objects=secure_objects)
 
     opening = profiles.load(profile_id)
-    resolved_label = label if label is not None else opening.display_name
+    resolved_label = label if label is not None else CommittedProfileRepository().load(profile_id).label
 
     def _page(record: UserProfileRecord) -> ProfileOverview:
         from ._status_frontend import build_active_profile_notices
@@ -305,22 +307,12 @@ def _active_profile_manager_storage(
 
     def _persist(path: str, value: str) -> ProfileOverview:
         fact = UserProfileFact(path=path, value=value.strip() or None)
-        committed: list[UserProfileRecord] = []
-
-        def _apply(state: WorkflowState) -> WorkflowState:
-            applied = apply_active_profile_facts(
-                state,
-                (fact,),
-                secure_objects=secure_objects,
-                schema=schema,
-            )
-            # A revision conflict re-runs this callback, so keep the LAST
-            # record: that is the one whose write is the surviving state.
-            committed.append(applied.record)
-            return applied.state
-
-        workflow.update(_apply)
-        return _page(committed[-1])
+        applied = apply_wizard_fact_changes(
+            profile_id=profile_id,
+            changes=(fact,),
+            event_type="profile.manager.field.applied",
+        )
+        return _page(applied)
 
     return _page(opening), _persist
 
@@ -379,7 +371,6 @@ def attempt_registration(label: str, passphrase: str, output_language: str) -> R
     """
     from ....adapters.inbound.tui import RegistrationAttempt as _Attempt
     from ....application.user_profile import (
-        ProfileAlreadyRegisteredError,
         ProfileRegistrationError,
         register_profile_with_credentials,
     )
@@ -391,7 +382,7 @@ def attempt_registration(label: str, passphrase: str, output_language: str) -> R
             passphrase=passphrase,
             facts=(UserProfileFact(path="preferences.output_language", value=output_language),),
         )
-    except (ProfileRegistrationError, ProfileAlreadyRegisteredError) as refusal:
+    except ProfileRegistrationError as refusal:
         return _Attempt(refusal=str(refusal))
     return _Attempt(outcome=outcome)
 

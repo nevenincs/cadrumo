@@ -3,10 +3,9 @@
 The autouse ``_isolated_aeat_root`` fixture redirects the
 ``cadrumo_local_storage_root`` field on :class:`~cadrumo.core.config.Settings` to a
 function-scoped ``tmp_path`` for unit tests under this package, so the
-:class:`~cadrumo.core.BucketPointer` file materialised by
-:func:`~cadrumo.application.user_profile.register_active_profile` and
-:func:`~cadrumo.application.user_profile.select_profile` lands inside the test
-sandbox and never bleeds into the project's real ``var/storage/`` directory.
+:class:`~cadrumo.core.BucketPointer` file materialised by profile custody
+operations lands inside the test sandbox and never bleeds into the project's
+real ``var/storage/`` directory.
 
 Opt-in live tests are intentionally excluded. They need the operator's
 real active-profile pointer and encrypted bucket so Cl@ve-backed reads
@@ -25,18 +24,24 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, cast, runtime_checkable
 
 import pytest
 
-from ..adapters.persistence.storage.sql import SecureObjectRepository
 from ..tests import temporary_env
 from ..tests.secure_sql import isolated_runtime_profile
+
+if TYPE_CHECKING:
+    from ..adapters.persistence.storage.sql import SecureObjectRepository
 
 
 @runtime_checkable
 class _MarkerNode(Protocol):
     def get_closest_marker(self, name: str) -> object | None: ...
+
+
+class _RequestWithModule(Protocol):
+    module: object
 
 
 @pytest.fixture(autouse=True, name="_isolated_aeat_root")
@@ -59,7 +64,8 @@ def secure_objects(
     request: pytest.FixtureRequest,
 ) -> Iterator[SecureObjectRepository]:
     """Yield the real encrypted-SQLite object repository for a module bucket."""
-    bucket_id = getattr(request.module, "_BUCKET_ID", None)
+    request_with_module = cast(_RequestWithModule, request)
+    bucket_id = getattr(request_with_module.module, "_BUCKET_ID", None)
     if not isinstance(bucket_id, str) or not bucket_id:
         raise RuntimeError("secure_objects requires a non-empty module _BUCKET_ID")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:

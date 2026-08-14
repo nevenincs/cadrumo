@@ -34,6 +34,7 @@ from ....domain.modelos import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import (
     ModeloCalculationRevisionSelector,
@@ -46,7 +47,6 @@ from ...operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,
 )
-from ...user_profile import ProfileRecordRepository
 from .. import (
     WorkflowAbortReason,
     WorkflowError,
@@ -99,14 +99,14 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 
 
 def _seed_ready_profile_record(bucket_id: str) -> None:
-    ProfileRecordRepository(bucket_id=bucket_id).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name=bucket_id,
             facts=_READY_PROFILE_FACTS,
             created_at=_T,
             updated_at=_T,
         ),
+        label=bucket_id,
     )
 
 

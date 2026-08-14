@@ -28,13 +28,13 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....application.aggregation import AggregationValidationError, RetencionObservationRepository
 from ....application.invoices import build_catalogue_invoice, create_catalogue_invoice
 from ....application.modelo import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics, create_work_unit
-from ....application.user_profile import ProfileRecordRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -83,11 +83,10 @@ def _professional_services_invoice(
     )
 
 
-def _seed_ready_profile(objects: SecureObjectRepository) -> None:
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+def _seed_ready_profile(root: Path) -> None:
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="M111 invoice retención routing",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="Test"),
@@ -109,6 +108,8 @@ def _seed_ready_profile(objects: SecureObjectRepository) -> None:
             created_at=_T0,
             updated_at=_T0,
         ),
+        root=root,
+        label="M111 invoice retención routing",
     )
 
 
@@ -145,7 +146,7 @@ def test_received_invoice_routes_through_aggregate_cli_into_m111(tmp_path: Path)
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 invoice retencion") as profile:
         objects: SecureObjectRepository = profile.repository
-        _seed_ready_profile(objects)
+        _seed_ready_profile(profile.storage_root)
         invoice = _professional_services_invoice(bucket_id=_BUCKET_ID)
         InvoiceCatalogueRepository(objects=objects).save(InvoiceCatalogue.from_invoices([invoice]))
 
@@ -286,7 +287,7 @@ def test_producer_created_invoice_routes_through_aggregate_cli_into_m111(tmp_pat
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 producer retencion") as profile:
         objects: SecureObjectRepository = profile.repository
-        _seed_ready_profile(objects)
+        _seed_ready_profile(profile.storage_root)
         invoice = _producer_created_invoice(
             objects=objects,
             number="F-PROV-CLI-901",
@@ -348,7 +349,7 @@ def test_producer_without_retention_is_excluded_from_m111(tmp_path: Path) -> Non
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 producer retencion") as profile:
         objects: SecureObjectRepository = profile.repository
-        _seed_ready_profile(objects)
+        _seed_ready_profile(profile.storage_root)
         invoice = _producer_created_invoice(
             objects=objects,
             number="F-PROV-CLI-902",

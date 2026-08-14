@@ -40,7 +40,7 @@ _PERIOD = Period.from_year_and_code(2024, "1T")
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return UserProfileRecord(profile_id=_PROFILE_ID, display_name="axis probe", facts=facts)
+    return UserProfileRecord(profile_id=_PROFILE_ID, facts=facts)
 
 
 def _schema_with_selector(selector: str) -> ProfileSchemaDefinition:
@@ -75,7 +75,7 @@ def _report(schema: ProfileSchemaDefinition, record: UserProfileRecord, modelo: 
     return ProfilePreflightService(schema=schema).report(
         record=record,
         modelo=modelo,
-        revision_id="2024-0A",
+        revision_id="2024-0a",
         period=_PERIOD,
     )
 

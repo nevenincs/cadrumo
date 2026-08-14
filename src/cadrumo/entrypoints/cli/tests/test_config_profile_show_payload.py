@@ -6,8 +6,8 @@ lifecycle status or a non-positive schema version could be reported as a
 valid profile row. It now bounds them at the same widths
 :class:`~cadrumo.domain.user_profile.UserProfileRecord` enforces, while
 keeping the explicit missing/unreadable failure branches (including the
-``profile_record_unreadable`` readiness sentinel, which is not itself a
-:class:`~cadrumo.domain.user_profile.UserProfileStatus` lifecycle state).
+``profile_record_unreadable`` readiness sentinel, which is separate from the
+record's ``setup_state``.
 """
 
 from __future__ import annotations
@@ -15,17 +15,19 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....domain.user_profile import UserProfileStatus
+from ....domain.user_profile import ProfileSetupState
 from .._config_payloads import ConfigProfileShowResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+_PROFILE_ID = "2af4a976-6a8b-46d0-89e4-c1a6c8462ea2"
+
 
 def _success_kwargs(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
-        "profile_id": "operator",
+        "profile_id": _PROFILE_ID,
         "display_name": "Operator",
-        "status": UserProfileStatus.ACTIVE,
+        "setup_state": ProfileSetupState.COMPLETE,
         "valid": True,
         "schema_version": 3,
         "issues": [],
@@ -38,14 +40,14 @@ def _success_kwargs(**overrides: object) -> dict[str, object]:
 def test_config_profile_show_result_round_trips_valid_success_row() -> None:
     result = ConfigProfileShowResult.model_validate(_success_kwargs())
 
-    assert result.status is UserProfileStatus.ACTIVE
+    assert result.setup_state is ProfileSetupState.COMPLETE
     assert result.schema_version == 3
 
 
 def test_config_profile_show_result_round_trips_unreadable_sentinel() -> None:
     """The readiness-branch sentinel is not a lifecycle status, but is accepted."""
     result = ConfigProfileShowResult(
-        profile_id="operator",
+        profile_id=_PROFILE_ID,
         display_name="Operator",
         status="profile_record_unreadable",
         registered_bucket=True,
@@ -58,7 +60,7 @@ def test_config_profile_show_result_round_trips_unreadable_sentinel() -> None:
 def test_config_profile_show_result_round_trips_missing_record_branch() -> None:
     """The missing-record branch carries no status at all."""
     result = ConfigProfileShowResult(
-        profile_id="operator",
+        profile_id=_PROFILE_ID,
         display_name="Operator",
         registered_bucket=True,
         profile_record_present=False,
@@ -74,7 +76,7 @@ def test_config_profile_show_result_round_trips_missing_record_branch() -> None:
     (
         ("profile_id", ""),
         ("display_name", ""),
-        ("status", "bogus"),
+        ("setup_state", "bogus"),
         ("schema_version", 0),
     ),
 )

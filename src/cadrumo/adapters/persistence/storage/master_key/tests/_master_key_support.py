@@ -4,7 +4,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from ......core.config import SecretStoreBackend, Settings
-from ......domain.user_profile import UserProfileStatus
 from ...bucket import (
     BUCKET_MANIFEST_SCHEMA_VERSION,
     BucketKeySchedule,
@@ -50,11 +49,9 @@ def _write_registered_bucket(
                 salt=b"0123456789abcdef",
                 output_length=32,
             ),
-            recovery_enrolled=False,
             idle_lock_minutes=idle_lock_minutes,
             session_absolute_minutes=session_absolute_minutes,
             key_schedule=key_schedule,
             schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-            status=UserProfileStatus.ACTIVE,
         ),
     )

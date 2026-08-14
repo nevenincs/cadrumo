@@ -146,8 +146,6 @@ def active_profile_storage_span(
     target_bucket_id: str | None = None,
 ):
     """Return a storage context for the explicit target or active profile."""
-    from ..user_profile import profile_storage_session
-
     ambient_settings = load_settings()
     ambient_storage_root = _canonical_storage_root(ambient_settings.cadrumo_local_storage_root)
     explicitly_routed = _is_explicitly_routed(
@@ -173,8 +171,9 @@ def active_profile_storage_span(
             with nullcontext():
                 yield bucket_id
             return
-        with profile_storage_session(bucket_id) as active:
-            yield active
+        raise AuthOperationScopeConflictError(
+            "auth operation requires the target profile's active authenticated custody session",
+        )
 
 
 @dataclass(slots=True)

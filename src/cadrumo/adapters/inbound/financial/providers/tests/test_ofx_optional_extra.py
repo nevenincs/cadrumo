@@ -54,8 +54,7 @@ def test_a_bare_core_probe_miss_carries_machine_identity_not_install_prose(tmp_p
         )
     except subprocess.TimeoutExpired as exc:
         pytest.fail(
-            "bare-core OFX probe exceeded 90 seconds; "
-            f"stdout={exc.stdout!r} stderr={exc.stderr!r}",
+            f"bare-core OFX probe exceeded 90 seconds; stdout={exc.stdout!r} stderr={exc.stderr!r}",
         )
 
     assert probe.returncode == 0, f"stdout={probe.stdout}\nstderr={probe.stderr}"

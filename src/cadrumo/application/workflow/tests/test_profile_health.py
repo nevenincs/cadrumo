@@ -1,34 +1,45 @@
-"""Real-behavior tests for active-profile health and pointer repair."""
+"""Real current-capsule behaviour for active-profile health and pointer repair."""
 
 from __future__ import annotations
 
+import os
+import sys
+from base64 import b64encode
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from uuid import UUID
 
 import pytest
-from pydantic import SecretStr
 
-from ....adapters.persistence.storage import SecureObjectRepository, has_active_bucket_session
-from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
+from ....adapters.persistence.storage.custody import (
+    ProfileCustodyEnvelope,
+    ProfileCustodyKdfParameters,
+    ProfileCustodyWrappedDek,
+    create_profile_custody_sentinel,
+)
+from ....application.profile_custody import (
+    profile_bind_bucket_session,
+    profile_bucket_session_open_resumed,
+    profile_close_bucket_session,
+)
 from ....application.state_projection import _build_active_profile
-from ....application.user_profile import ProfileRecordRepository, rename_profile
-from ....core import BucketPointer, pointer_path, read_pointer, write_pointer
+from ....application.user_profile import active_profile_pointer_transaction
+from ....application.user_profile._capsule_record import ProfileRecordSession
+from ....application.user_profile._lifecycle import ProfileCapsuleLifecycle
+from ....application.user_profile._profile_record_repository import bound_profile_record_session
+from ....core import BucketPointer, read_pointer, write_pointer
 from ....core.config import override_settings
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests.secure_sql import isolated_runtime_profile
-from ... import wizard as _wizard  # noqa: F401
-from .._profile_health import (
-    assess_active_profile_health,
-    assess_active_profile_health_with_session,
-    repair_active_profile_pointer,
-)
+from .._models import WorkflowState
+from .._profile_health import assess_active_profile_health, repair_active_profile_pointer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "31313131-3131-4313-8313-313131313131"
+_PROFILE_ID = "31313131-3131-4313-8313-313131313131"
 _PROFILE_LABEL = "Operator"
+_DEK = bytes(range(32))
 
-
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
+_READY_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="00000000T"),
     UserProfileFact(path="identity.name", value="Test Operator"),
     UserProfileFact(path="tax_residence.ccaa", value="madrid"),
@@ -46,68 +57,84 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 )
 
 
-def _seed_ready_profile_record(bucket_id: str, repository: SecureObjectRepository) -> None:
-    ProfileRecordRepository(bucket_id=bucket_id, objects=repository).save(
-        UserProfileRecord(
-            profile_id=bucket_id,
-            display_name=_PROFILE_LABEL,
-            facts=_READY_PROFILE_FACTS,
+def _create_current_profile(*, root: Path, facts: tuple[UserProfileFact, ...] = _READY_FACTS) -> ProfileRecordSession:
+    """Publish one real capsule through the production lifecycle owner."""
+    identity = UUID(_PROFILE_ID)
+    seed = identity.bytes + identity.bytes
+    envelope = ProfileCustodyEnvelope.create(
+        profile_id=identity,
+        password_generation=1,
+        dek_epoch=b64encode(seed[:16]).decode("ascii"),
+        kdf=ProfileCustodyKdfParameters(
+            algorithm="argon2id",
+            version=19,
+            memory_mib=19,
+            iterations=2,
+            parallelism=1,
+            salt_b64=b64encode(seed[16:]).decode("ascii"),
+            output_bytes=32,
+        ),
+        wrapped_dek=ProfileCustodyWrappedDek(
+            nonce_b64=b64encode(seed[:12]).decode("ascii"),
+            ciphertext_b64=b64encode(seed).decode("ascii"),
+            tag_b64=b64encode(seed[:16]).decode("ascii"),
         ),
     )
-
-
-def test_active_profile_health_reports_missing_profile_record(tmp_path: Path) -> None:
-    with isolated_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_BUCKET_ID,
+    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=_DEK)
+    ProfileCapsuleLifecycle(root=root).create(
         label=_PROFILE_LABEL,
-    ) as profile:
-        write_pointer(profile.storage_root, BucketPointer(bucket_id=_BUCKET_ID, schema_version=1))
-        with override_settings(cadrumo_active_profile=None):
+        profile_id=identity,
+        password_envelope=envelope,
+        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+        data_files={},
+        initial_record=UserProfileRecord(profile_id=_PROFILE_ID, facts=facts),
+        record_session=session,
+    )
+    return session
+
+
+def test_active_profile_health_is_ready_from_one_current_capsule_projection(tmp_path: Path) -> None:
+    session = _create_current_profile(root=tmp_path)
+    try:
+        with (
+            override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_PROFILE_ID),
+            bound_profile_record_session(session),
+        ):
+            health = assess_active_profile_health(WorkflowState())
+
+        assert health.active_profile == _PROFILE_ID
+        assert health.active_profile_label == _PROFILE_LABEL
+        assert health.status == "ready"
+        assert health.registered_bucket is True
+        assert health.profile_record_present is True
+        assert health.precondition_verdict is None
+        assert _build_active_profile(health).label == _PROFILE_LABEL
+        assert "active_profile_label" not in health.model_dump(mode="json")
+    finally:
+        session.close()
+
+
+def test_inactive_current_capsule_routes_the_operator_to_login(tmp_path: Path) -> None:
+    session = _create_current_profile(root=tmp_path)
+    try:
+        with active_profile_pointer_transaction(tmp_path) as pointer_transaction:
+            pointer_transaction.clear()
+        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
             health = assess_active_profile_health()
 
-    assert health.active_profile == _BUCKET_ID
-    assert health.source == "pointer"
-    assert health.registered_bucket is True
-    assert health.profile_record_present is False
-    assert health.status == "missing_profile_record"
-    assert health.repairable_by_clearing_pointer is True
-    assert health.precondition_verdict is not None
-    assert health.precondition_verdict.action is not None
-    assert health.precondition_verdict.action.action_id == "operator.profile.repair_active_pointer"
-    assert health.precondition_verdict.missing_argument_names == ("yes",)
-    assert "next_action" not in health.model_dump(mode="json")
+        assert health.status == "none"
+        assert health.precondition_verdict is not None
+        assert health.precondition_verdict.action is not None
+        assert health.precondition_verdict.action.action_id == "operator.profile.login"
+        assert health.precondition_verdict.missing_argument_names == ("name",)
+    finally:
+        session.close()
 
 
-def test_profile_health_keeps_its_label_snapshot_private_after_a_real_rename(tmp_path: Path) -> None:
-    """Projection labels stay coherent with the health verdict that produced them."""
-    with isolated_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_BUCKET_ID,
-        label=_PROFILE_LABEL,
-    ) as profile:
-        _seed_ready_profile_record(_BUCKET_ID, profile.repository)
+def test_empty_storage_routes_the_operator_to_current_registration(tmp_path: Path) -> None:
+    with override_settings(cadrumo_local_storage_root=tmp_path / "empty", cadrumo_active_profile=None):
         health = assess_active_profile_health()
 
-        rename_profile(profile_id=_BUCKET_ID, new_label="Renamed Operator")
-        projected = _build_active_profile(health)
-
-    assert health.active_profile_label == _PROFILE_LABEL
-    assert projected.label == _PROFILE_LABEL
-    assert "active_profile_label" not in health.model_dump(mode="json")
-
-
-def test_active_profile_health_none_status_requires_a_profile_name_when_no_profile_is_registered(
-    tmp_path: Path,
-) -> None:
-    """A genuinely empty storage root offers to create a profile, not log in to one."""
-    with override_settings(
-        cadrumo_local_storage_root=tmp_path / "empty-storage-root",
-        cadrumo_active_profile=None,
-    ):
-        health = assess_active_profile_health()
-
-    assert health.active_profile is None
     assert health.status == "none"
     assert health.precondition_verdict is not None
     assert health.precondition_verdict.action is not None
@@ -115,203 +142,148 @@ def test_active_profile_health_none_status_requires_a_profile_name_when_no_profi
     assert health.precondition_verdict.missing_argument_names == ("profile_name",)
 
 
-def test_active_profile_health_none_status_requires_a_profile_name_when_a_profile_is_registered(
+def test_pointer_to_no_current_capsule_is_repaired_without_creating_a_bucket(tmp_path: Path) -> None:
+    write_pointer(tmp_path, BucketPointer(bucket_id=_PROFILE_ID, schema_version=1))
+    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+        before = assess_active_profile_health()
+        repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
+
+    assert before.status == "dangling_pointer"
+    assert before.repairable_by_clearing_pointer is True
+    assert repaired.dry_run is False
+    assert repaired.cleared_pointer is True
+    assert repaired.after is not None
+    assert repaired.after.status == "none"
+    assert read_pointer(tmp_path) is None
+
+
+def test_pointer_to_malformed_current_marker_is_reported_as_capsule_integrity_not_manifest_state(
     tmp_path: Path,
 ) -> None:
-    """A registered-but-inactive profile is pointed at login, never a second create."""
-    with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL),
-        override_settings(cadrumo_active_profile=None),
-    ):
-        health = assess_active_profile_health()
+    marker = tmp_path / "buckets" / _PROFILE_ID / "profile.commit.v1.json"
+    marker.parent.mkdir(parents=True)
+    malformed = b"not a current commit"
+    marker.write_bytes(malformed)
+    write_pointer(tmp_path, BucketPointer(bucket_id=_PROFILE_ID, schema_version=1))
 
-    assert health.active_profile is None
-    assert health.status == "none"
-    assert health.precondition_verdict is not None
-    assert health.precondition_verdict.action is not None
-    assert health.precondition_verdict.action.action_id == "operator.profile.login"
-    assert health.precondition_verdict.missing_argument_names == ("name",)
-
-
-def test_profile_repair_clears_only_degraded_pointer(tmp_path: Path) -> None:
-    with isolated_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_BUCKET_ID,
-        label=_PROFILE_LABEL,
-    ) as profile:
-        write_pointer(profile.storage_root, BucketPointer(bucket_id=_BUCKET_ID, schema_version=1))
-        with override_settings(cadrumo_active_profile=None):
-            dry_run = repair_active_profile_pointer(clear_active=True, confirmed=False)
-            assert dry_run.dry_run is True
-            assert dry_run.cleared_pointer is False
-            assert read_pointer(profile.storage_root) is not None
-
-            repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
-
-        assert repaired.dry_run is False
-        assert repaired.cleared_pointer is True
-        assert repaired.after is not None
-        assert repaired.after.status == "none"
-        assert read_pointer(profile.storage_root) is None
-
-
-def test_profile_repair_does_not_clear_healthy_pointer(tmp_path: Path) -> None:
-    with isolated_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_BUCKET_ID,
-        label=_PROFILE_LABEL,
-    ) as profile:
-        _seed_ready_profile_record(_BUCKET_ID, profile.repository)
-        write_pointer(profile.storage_root, BucketPointer(bucket_id=_BUCKET_ID, schema_version=1))
-
-        with override_settings(cadrumo_active_profile=None):
-            health = assess_active_profile_health()
-            repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
-
-        assert health.status == "ready"
-        assert health.source == "pointer"
-        assert repaired.dry_run is True
-        assert repaired.cleared_pointer is False
-    assert read_pointer(profile.storage_root) is not None
-
-
-def test_profile_health_opens_a_cold_session_for_a_sibling_process_profile(tmp_path: Path) -> None:
-    """Read a durable profile after the creating process's bucket session has closed."""
-    with isolated_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_BUCKET_ID,
-        label=_PROFILE_LABEL,
-    ) as profile:
-        _seed_ready_profile_record(_BUCKET_ID, profile.repository)
-        write_pointer(profile.storage_root, BucketPointer(bucket_id=_BUCKET_ID, schema_version=1))
-        storage_root = profile.storage_root
-        secret_store_backend = profile.settings.cadrumo_secret_store_backend
-        secret_store_dir = profile.settings.cadrumo_secret_store_dir
-        secret_passphrase = profile.settings.cadrumo_secret_passphrase
-
-    assert has_active_bucket_session() is False
-    with override_settings(
-        cadrumo_local_storage_root=storage_root,
-        cadrumo_active_profile=None,
-        cadrumo_secret_store_backend=secret_store_backend,
-        cadrumo_secret_store_dir=secret_store_dir,
-        cadrumo_secret_passphrase=secret_passphrase,
-    ):
-        health = assess_active_profile_health_with_session()
-
-    assert health.status == "ready"
-    assert health.source == "pointer"
-    assert health.profile_record_present is True
-    assert health.repairable_by_clearing_pointer is False
-    assert has_active_bucket_session() is False
-
-
-def test_profile_repair_preserves_pointer_when_master_key_unlock_fails(tmp_path: Path) -> None:
-    """Keep a valid pointer when the active profile secret store cannot be unlocked."""
-    pointer = BucketPointer(bucket_id=_BUCKET_ID, schema_version=1)
-    with isolated_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_BUCKET_ID,
-        label=_PROFILE_LABEL,
-    ) as profile:
-        _seed_ready_profile_record(_BUCKET_ID, profile.repository)
-        write_pointer(profile.storage_root, pointer)
-        storage_root = profile.storage_root
-        secret_store_backend = profile.settings.cadrumo_secret_store_backend
-        secret_store_dir = profile.settings.cadrumo_secret_store_dir
-
-    assert has_active_bucket_session() is False
-    with override_settings(
-        cadrumo_local_storage_root=storage_root,
-        cadrumo_active_profile=None,
-        cadrumo_secret_store_backend=secret_store_backend,
-        cadrumo_secret_store_dir=secret_store_dir,
-        cadrumo_secret_passphrase=SecretStr("definitely-wrong-passphrase"),
-    ):
-        health = assess_active_profile_health_with_session()
+    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+        before = assess_active_profile_health()
         repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
 
-    assert health.status == "profile_record_unreadable"
-    assert "MasterKeyPassphraseMismatchError" in health.profile_record_error
-    assert health.repairable_by_clearing_pointer is False
-    assert health.precondition_verdict is not None
-    assert health.precondition_verdict.action is None
-    assert health.precondition_verdict.no_recovery_outcome == "operator_decision"
-    assert health.precondition_verdict.failed_condition_id == "profile.secret_store.available"
-    assert repaired.dry_run is True
-    assert repaired.cleared_pointer is False
-    assert repaired.after is None
-    assert read_pointer(storage_root) == pointer
-    assert has_active_bucket_session() is False
+    assert before.status == "capsule_unreadable"
+    assert before.repairable_by_clearing_pointer is True
+    assert "ProfileCustodyRecordError" in before.profile_record_error
+    assert repaired.cleared_pointer is True
+    assert repaired.after is not None
+    assert repaired.after.status == "capsule_unreadable"
+    assert marker.read_bytes() == malformed
 
 
-def test_profile_repair_clears_pointer_sourced_unreadable_manifest(tmp_path: Path) -> None:
-    """Clear a pointer-sourced unreadable manifest without rewriting or backfilling it."""
-    with isolated_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_BUCKET_ID,
-        label=_PROFILE_LABEL,
-    ) as profile:
-        write_pointer(profile.storage_root, BucketPointer(bucket_id=_BUCKET_ID, schema_version=1))
-        target = manifest_path(bucket_paths(profile.storage_root, _BUCKET_ID))
-        malformed_manifest = b"not valid toml = [\n"
-        target.write_bytes(malformed_manifest)
+def test_health_observes_current_or_degraded_state_without_provider_or_recovery_access(tmp_path: Path) -> None:
+    """Observe ready, absent, malformed, and cold state without an implicit unlock.
 
-        with override_settings(cadrumo_active_profile=None):
-            before = assess_active_profile_health()
-            repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
+    The audit hook observes the real process file-access stream after all four
+    filesystem arrangements exist.  The secret-store paths are the actual
+    configured provider route for each assessment, while the recovery path is
+    a deliberately hostile directory inside each current-format custody tree.
+    No test double is involved: readiness uses a real, already-authenticated
+    custody session and the cold case intentionally has none.
+    """
+    ready_root = tmp_path / "ready"
+    cold_root = tmp_path / "cold"
+    absent_root = tmp_path / "absent"
+    malformed_root = tmp_path / "malformed"
+    ready_record_session = _create_current_profile(root=ready_root)
+    cold_record_session = _create_current_profile(root=cold_root)
+    ready_record_session.close()
+    cold_record_session.close()
 
-        assert before.status == "manifest_unreadable"
-        assert before.source == "pointer"
-        assert before.repairable_by_clearing_pointer is True
-        assert repaired.before.status == "manifest_unreadable"
-        assert repaired.before.repairable_by_clearing_pointer is True
-        assert repaired.dry_run is False
-        assert repaired.cleared_pointer is True
-        assert repaired.after is not None
-        assert repaired.after.status == "none"
-        assert read_pointer(profile.storage_root) is None
-        assert target.read_bytes() == malformed_manifest
+    malformed_marker = malformed_root / "buckets" / _PROFILE_ID / "profile.commit.v1.json"
+    malformed_marker.parent.mkdir(parents=True)
+    malformed_marker.write_bytes(b"malformed current marker")
+    write_pointer(malformed_root, BucketPointer(bucket_id=_PROFILE_ID, schema_version=1))
 
+    secret_paths = tuple(root / "secrets" for root in (ready_root, absent_root, malformed_root, cold_root))
+    recovery_paths = (
+        ready_root / "buckets" / _PROFILE_ID / "custody" / "recovery.v1.json",
+        cold_root / "buckets" / _PROFILE_ID / "custody" / "recovery.v1.json",
+        malformed_root / "buckets" / _PROFILE_ID / "custody" / "recovery.v1.json",
+    )
+    for path in (*secret_paths, *recovery_paths):
+        path.mkdir(parents=True, exist_ok=True)
 
-def test_profile_repair_cold_noop_creates_no_lock_or_session(tmp_path: Path) -> None:
-    """Keep a confirmed cold no-op dry-run and sessionless, with no pointer or lock sidecar."""
-    storage_root = tmp_path / "cold-profile-health"
-    target = pointer_path(storage_root)
-    lock_sidecar = target.with_name(f"{target.name}.lock")
+    sensitive_accesses: list[str] = []
 
-    with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_active_profile=None):
-        assert has_active_bucket_session() is False
-        repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
-        assert has_active_bucket_session() is False
+    def observe_open(event: str, arguments: tuple[object, ...]) -> None:
+        if event != "open" or not arguments:
+            return
+        candidate = arguments[0]
+        if not isinstance(candidate, (str, bytes, os.PathLike)):
+            return
+        candidate_text = os.fsdecode(os.fspath(candidate))
+        candidate_path = Path(candidate_text)
+        if candidate_path in recovery_paths or any(
+            candidate_path == secret_path or secret_path in candidate_path.parents for secret_path in secret_paths
+        ):
+            sensitive_accesses.append(candidate_text)
 
-    assert repaired.dry_run is True
-    assert repaired.cleared_pointer is False
-    assert repaired.before.status == "none"
-    assert repaired.after is None
-    assert target.exists() is False
-    assert lock_sidecar.exists() is False
-    assert storage_root.exists() is False
+    def observe_filesystem_calls(frame: object, event: str, argument: object) -> None:
+        if event != "c_call" or getattr(argument, "__name__", "") not in {"stat", "lstat", "open", "read"}:
+            return
+        local_values = getattr(frame, "f_locals", {}).values()
+        watched_paths = (*secret_paths, *recovery_paths)
+        if any(isinstance(value, Path) and value in watched_paths for value in local_values):
+            sensitive_accesses.append(getattr(argument, "__name__", "unknown"))
 
+    sys.addaudithook(observe_open)
+    previous_profile = sys.getprofile()
+    sys.setprofile(observe_filesystem_calls)
+    instant = datetime.now(UTC)
+    ready_custody_session = profile_bucket_session_open_resumed(
+        bucket_id=_PROFILE_ID,
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=instant,
+        idle_deadline=instant + timedelta(minutes=15),
+        absolute_deadline=instant + timedelta(hours=4),
+        storage_root=ready_root,
+    )
+    try:
+        profile_bind_bucket_session(ready_custody_session)
+        with override_settings(
+            cadrumo_local_storage_root=ready_root,
+            cadrumo_secret_store_dir=ready_root / "secrets",
+            cadrumo_active_profile=_PROFILE_ID,
+        ):
+            ready = assess_active_profile_health()
+        profile_close_bucket_session()
 
-def test_manifest_without_status_is_not_backfilled_from_profile_record(tmp_path: Path) -> None:
-    with isolated_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_BUCKET_ID,
-        label=_PROFILE_LABEL,
-    ) as profile:
-        _seed_ready_profile_record(_BUCKET_ID, profile.repository)
-        target = manifest_path(bucket_paths(profile.storage_root, _BUCKET_ID))
-        legacy_text = "\n".join(
-            line for line in target.read_text(encoding="utf-8").splitlines() if not line.startswith("status = ")
-        )
-        target.write_text(f"{legacy_text}\n", encoding="utf-8")
+        with override_settings(
+            cadrumo_local_storage_root=absent_root,
+            cadrumo_secret_store_dir=absent_root / "secrets",
+            cadrumo_active_profile=None,
+        ):
+            absent = assess_active_profile_health()
+        with override_settings(
+            cadrumo_local_storage_root=malformed_root,
+            cadrumo_secret_store_dir=malformed_root / "secrets",
+            cadrumo_active_profile=None,
+        ):
+            malformed = assess_active_profile_health()
+        with override_settings(
+            cadrumo_local_storage_root=cold_root,
+            cadrumo_secret_store_dir=cold_root / "secrets",
+            cadrumo_active_profile=_PROFILE_ID,
+        ):
+            cold = assess_active_profile_health()
+    finally:
+        profile_close_bucket_session()
+        sys.setprofile(previous_profile)
 
-        broken = assess_active_profile_health()
-
-        assert broken.status == "manifest_unreadable"
-        assert broken.repairable_by_clearing_pointer is False
-        assert broken.precondition_verdict is not None
-        assert broken.precondition_verdict.action is None
-        assert broken.precondition_verdict.no_recovery_outcome == "operator_decision"
-        assert "status = " not in target.read_text(encoding="utf-8")
+    assert ready.status == "ready"
+    assert absent.status == "none"
+    assert malformed.status == "capsule_unreadable"
+    assert cold.status == "profile_record_unreadable"
+    assert cold.precondition_verdict is not None
+    assert cold.precondition_verdict.failed_condition_id == "profile.active.record_readable"
+    assert sensitive_accesses == []

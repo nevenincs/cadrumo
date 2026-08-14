@@ -19,7 +19,6 @@ from ....adapters.persistence.storage.bucket import (
     BucketManifest,
     ManifestKdfParams,
 )
-from ....domain.user_profile import UserProfileStatus
 from .. import compute_manifest_digest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -45,9 +44,7 @@ def _manifest(*, bucket_id: str = _BUCKET_ID, label: str = "Test label") -> Buck
             salt=b"a" * 16,
             output_length=32,
         ),
-        recovery_enrolled=False,
         schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-        status=UserProfileStatus.ACTIVE,
         key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
     )
 

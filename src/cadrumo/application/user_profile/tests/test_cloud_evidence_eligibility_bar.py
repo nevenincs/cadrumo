@@ -59,7 +59,6 @@ _PRODUCTION_ROOT = Path(__file__).resolve().parents[3]
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
     return UserProfileRecord(
         profile_id="19191919-1919-4191-8191-191919191919",
-        display_name="P1",
         facts=facts,
         created_at=_NOW,
         updated_at=_NOW,

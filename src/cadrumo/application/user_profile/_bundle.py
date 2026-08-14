@@ -210,9 +210,9 @@ def serialize_profile_bundle(
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...domain.user_profile import UserProfilePortableExport
-    from ._orchestration import build_lifecycle_service
+    from ._profile_record_repository import ProfileRecordRepository
 
-    record = build_lifecycle_service(bucket_id=bucket_id).read(bucket_id)
+    record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
 
     work_unit_catalogue = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
     work_units = tuple(work_unit_catalogue)

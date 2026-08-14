@@ -29,7 +29,6 @@ import pytest
 
 from ......core import COMPATIBILITY_REGIME, RELEASED_FORMAT_FLOORS, expected_floor
 from ......core.external_constants import UTF_8_ENCODING
-from ......domain.user_profile import UserProfileStatus
 from ...errors import StorageValidationError
 from .._layout import provision_bucket_directory
 from .._manifest import (
@@ -62,10 +61,8 @@ def _manifest() -> BucketManifest:
             salt=b"0123456789abcdef",
             output_length=32,
         ),
-        recovery_enrolled=False,
         key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
         schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-        status=UserProfileStatus.ACTIVE,
     )
 
 

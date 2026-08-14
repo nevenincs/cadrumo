@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import NamedTuple
+from uuid import UUID
 
 from ..core import BucketPointer, capture_pointer
 from ..core.config import load_settings
@@ -35,11 +36,10 @@ from .bucket_maintenance import (
     AssessBucketDeletionCommand,
     BucketDeletionAssessment,
     BucketMaintenanceService,
-    DeleteBucketCommand,
 )
 from .user_profile import (
+    ProfileCapsuleLifecycle,
     active_profile_pointer_transaction,
-    logout_active_profile,
 )
 from .workflow import list_profile_buckets
 
@@ -101,7 +101,6 @@ def start_config_reset(
         target_ids = set(
             list_profile_buckets(
                 root=settings.cadrumo_local_storage_root,
-                include_tombstoned=True,
             ),
         )
         if pointer_snapshot.bucket_id is not None:
@@ -335,7 +334,7 @@ def _target_from_assessment(
         ConfigResetTarget(
             bucket_id=assessment.bucket_id,
             label=assessment.label,
-            status_at_snapshot=assessment.status,
+            setup_state_at_snapshot=assessment.setup_state,
             exists_at_snapshot=assessment.exists,
             fingerprint=assessment.fingerprint,
             phase=(ConfigResetTargetPhase.RETENTION_APPROVED if resolved else ConfigResetTargetPhase.SNAPSHOTTED),
@@ -434,7 +433,7 @@ def _vanished_target_outcome(target: ConfigResetTarget) -> _ResumeTargetOutcome:
         exists_at_snapshot=False,
         fingerprint=None,
         label=None,
-        status_at_snapshot=None,
+        setup_state_at_snapshot=None,
     )
     return _ResumeTargetOutcome(target=vanished, changed=True, blocked=False)
 
@@ -474,7 +473,7 @@ def _resume_target_outcome(
     updated_target = _update_target(
         target,
         label=assessment.label,
-        status_at_snapshot=assessment.status,
+        setup_state_at_snapshot=assessment.setup_state,
         exists_at_snapshot=True,
         fingerprint=current_fingerprint,
         retention=retention,
@@ -660,7 +659,8 @@ def _reconcile_pointer(
         repository.save(operation)
     active_bucket_id = operation.pointer_snapshot.bucket_id
     if active_bucket_id is not None and any(target.bucket_id == active_bucket_id for target in operation.targets):
-        logout_active_profile()
+        with active_profile_pointer_transaction(load_settings().cadrumo_local_storage_root) as pointer_transaction:
+            pointer_transaction.clear()
     for index in indexes:
         target = operation.targets[index]
         operation = _replace_target(
@@ -677,7 +677,7 @@ def _delete_targets(
     repository: ConfigResetJournalRepository,
     operation: ConfigResetOperation,
 ) -> ConfigResetOperation:
-    service = BucketMaintenanceService()
+    lifecycle = ProfileCapsuleLifecycle()
     for index, target in enumerate(operation.targets):
         if target.phase is ConfigResetTargetPhase.DELETED:
             continue
@@ -695,9 +695,7 @@ def _delete_targets(
             repository.save(operation)
             continue
         fingerprint = target.fingerprint
-        retention = target.retention
         assert fingerprint is not None
-        assert retention is not None
         if target.phase is not ConfigResetTargetPhase.DELETING:
             target = _update_target(
                 target,
@@ -711,20 +709,13 @@ def _delete_targets(
             )
             operation = _replace_target(operation, index, target)
             repository.save(operation)
-        result = service.delete(
-            DeleteBucketCommand(
-                bucket_id=target.bucket_id,
-                confirmed=True,
-                acknowledge_retention_override=retention.override_approved,
-                retention_override_reason=retention.override_reason,
-                reset_operation_id=operation.operation_id,
-                expected_deletion_fingerprint=fingerprint.digest,
-            ),
-        )
+        journal = lifecycle.prepare_delete(profile_id=UUID(target.bucket_id))
+        confirmation = lifecycle.confirm_delete(journal)
+        result = lifecycle.delete(confirmation)
         target = _update_target(
             target,
             phase=ConfigResetTargetPhase.DELETED,
-            completed_at=result.occurred_at,
+            completed_at=result.completed_at,
         )
         operation = _replace_target(operation, index, target)
         repository.save(operation)

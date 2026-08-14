@@ -16,7 +16,7 @@ import typer
 
 from ....core import ServiceCapability, resolve_active_bucket_id
 from ....core.i18n import tr
-from .._common import _bad, _emit_envelope
+from .._common import bad, emit_envelope
 from .._errors import decorate_typer_app
 
 # Eager import so the @register_schema decorators run when this module is imported
@@ -32,7 +32,6 @@ class _Toggle(StrEnum):
 
 
 def _register_show(capabilities_app: typer.Typer) -> None:
-    @capabilities_app.command("show", help=tr("cli.config.profile.capabilities.show_help"))
     def capabilities_show(ctx: typer.Context) -> None:
         """Report the resolved posture of every service capability for the active profile."""
         from ....application.user_profile import resolve_active_capability
@@ -57,34 +56,33 @@ def _register_show(capabilities_app: typer.Typer) -> None:
             )
             lines.append(f"{capability.value}\t{state}\t{decision.source.value}\t{decision.reason}")
         result = CapabilitiesShowResult.model_validate({"profile_id": profile_id, "capabilities": rows})
-        _emit_envelope(ctx, command="config.profile.capabilities.show", result=result, lines=lines)
+        emit_envelope(ctx, command="config.profile.capabilities.show", result=result, lines=lines)
+
+    capabilities_app.command("show", help=tr("cli.config.profile.capabilities.show_help"))(capabilities_show)
 
 
 def _register_set(capabilities_app: typer.Typer) -> None:
-    @capabilities_app.command("set", help=tr("cli.config.profile.capabilities.set_help"))
     def capabilities_set(
         ctx: typer.Context,
         capability: ServiceCapability = typer.Argument(..., help=tr("cli.config.profile.capabilities.capability_help")),
         state: _Toggle = typer.Argument(..., help=tr("cli.config.profile.capabilities.state_help")),
     ) -> None:
         """Opt the active profile in or out of one service capability."""
-        from ....application.user_profile import set_active_fields
-        from ....application.workflow import workflow_state_repository
+        from ....application.wizard._persistence import apply_wizard_fact_changes
         from ....domain.user_profile import UserProfileFact
 
         profile_id = resolve_active_bucket_id()
         if profile_id is None:
-            raise _bad(
+            raise bad(
                 tr(
                     "cli.config.profile.capabilities.no_active_profile",
                 ),
             )
         enabled = state is _Toggle.ON
-        workflow_state_repository().update(
-            lambda current: set_active_fields(
-                current,
-                (UserProfileFact(path=capability.schema_path, value=enabled),),
-            ),
+        apply_wizard_fact_changes(
+            profile_id=profile_id,
+            changes=(UserProfileFact(path=capability.schema_path, value=enabled),),
+            event_type="profile.capability.changed",
         )
         result = CapabilitySetResult.model_validate(
             {"profile_id": profile_id, "capability": capability, "enabled": enabled},
@@ -93,7 +91,9 @@ def _register_set(capabilities_app: typer.Typer) -> None:
             f"{tr('cli.config.profile.capabilities.capability_label')}\t{capability.value}",
             f"{tr('cli.config.profile.capabilities.state_label')}\t{state.value}",
         ]
-        _emit_envelope(ctx, command="config.profile.capabilities.set", result=result, lines=lines)
+        emit_envelope(ctx, command="config.profile.capabilities.set", result=result, lines=lines)
+
+    capabilities_app.command("set", help=tr("cli.config.profile.capabilities.set_help"))(capabilities_set)
 
 
 def register(profile_app: typer.Typer) -> None:

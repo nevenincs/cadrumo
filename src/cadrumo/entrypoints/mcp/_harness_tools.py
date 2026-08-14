@@ -26,14 +26,13 @@ The operating-layer text is read through the ``cadrumo.agent`` package facade
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...agent import iter_personas, operator_rules_text
-from ...application.user_profile import TAX_ID_FACT_PATH
 from ...application.wizard import ensure_profile_keys_registered
-from ...application.workflow import ProfileHealthStatus, assess_active_profile_health_with_session
+from ...application.workflow import ProfileHealthStatus, assess_active_profile_health
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.i18n import tr
 from ...core.json_contract import ResolvedPreconditionAction
@@ -56,6 +55,7 @@ HARNESS_LOAD_TOOL = "cadrumo_harness_load"
 WHOAMI_TOOL = "cadrumo_whoami"
 
 _MARKDOWN_SUFFIX = ".md"
+_TAX_ID_FACT_PATH: Final[str] = "identity.tax_id"
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -260,17 +260,17 @@ def build_whoami_identity() -> WhoamiIdentity:
     """Resolve the active taxpayer identity block, best-effort.
 
     Wraps the active-profile health assessment
-    (:func:`~application.workflow.assess_active_profile_health_with_session`): its
+    (:func:`~application.workflow.assess_active_profile_health`): its
     ``status`` is the ``readiness`` and its typed precondition verdict is
     projected through the canonical CLI action resolver. The display LABEL is
     captured by the same health assessment - the
     same non-secret name the envelope-spine ``active_profile`` carries, never
     the redacted bucket/profile UUID the health projection's
     ``active_profile`` field holds. Reusing that captured value prevents a
-    manifest change between health assessment and identity rendering from
+    committed-capsule change between health assessment and identity rendering from
     mixing two profile snapshots. ``tax_id_present`` is derived from the health projection: a
     tax id is on file when the profile record is present and the canonical
-    ``identity.tax_id`` fact path (:data:`~application.user_profile.TAX_ID_FACT_PATH`)
+    ``identity.tax_id`` fact path (:data:`_TAX_ID_FACT_PATH`)
     is not among the missing required fields, so it reports correctly even for
     an otherwise-incomplete profile. The health assessment never raises for an
     absent or unreadable profile (it returns a degraded status), and label
@@ -286,8 +286,8 @@ def build_whoami_identity() -> WhoamiIdentity:
     made a real server answer every identity call with a registration error.
     """
     ensure_profile_keys_registered()
-    health = assess_active_profile_health_with_session()
-    tax_id_present = health.profile_record_present and TAX_ID_FACT_PATH not in health.missing_required
+    health = assess_active_profile_health()
+    tax_id_present = health.profile_record_present and _TAX_ID_FACT_PATH not in health.missing_required
     from ..cli import resolve_cli_precondition_action
 
     return WhoamiIdentity(

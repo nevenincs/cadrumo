@@ -31,10 +31,10 @@ from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENAN
 from ...core.identity import ProfileId
 from ...domain.calculations.registry import RevisionId
 from ...domain.user_profile import (
+    ProfileSetupState,
     UserProfileFact,
     UserProfileFactValue,
     UserProfileRecord,
-    UserProfileStatus,
 )
 
 # ---------------------------------------------------------------------------
@@ -45,11 +45,11 @@ from ...domain.user_profile import (
 class RegisterProfileCommand(BaseModel):
     """Register a new live profile root in the secure DB backend.
 
-    ``status`` selects the registration arm: ``ACTIVE`` (the default) for
-    a complete registration, ``SETUP_INCOMPLETE`` for the interactive
-    setup flow's early mint (the record is live, but modelo work is
-    refused until :class:`CompleteSetupCommand` lands). A tombstoned
-    registration is refused — a profile is never born dead.
+    ``setup_state`` selects the registration arm: ``COMPLETE`` (the default)
+    for a complete registration, or ``INCOMPLETE`` for the interactive setup
+    flow's early mint. The record is live, but modelo work is refused until
+    :class:`CompleteSetupCommand` lands. Profile removal is owned by the
+    capsule lifecycle and is not a registration state.
 
     The early mint does NOT reserve a tax id. Uniqueness is enforced
     against the facts the mint is given, and the setup flow's first
@@ -63,15 +63,8 @@ class RegisterProfileCommand(BaseModel):
     model_config = _STRICT_FROZEN
 
     profile_id: ProfileId
-    display_name: str = Field(min_length=1, max_length=160)
     facts: tuple[UserProfileFact, ...] = ()
-    status: UserProfileStatus = UserProfileStatus.ACTIVE
-
-    @model_validator(mode="after")
-    def _refuse_tombstoned_birth(self) -> Self:
-        if self.status is UserProfileStatus.TOMBSTONED:
-            raise ValueError("a profile cannot be registered tombstoned")
-        return self
+    setup_state: ProfileSetupState = ProfileSetupState.COMPLETE
 
 
 class CompleteSetupCommand(BaseModel):
@@ -104,43 +97,6 @@ class EditProfileSectionCommand(BaseModel):
     section_key: str = Field(min_length=1, max_length=64)
     facts: tuple[UserProfileFact, ...]
     source: str = Field(default=_PROVENANCE_SOURCE_MANUAL_CLI, min_length=1, max_length=80)
-
-
-class RemoveProfileCommand(BaseModel):
-    """Tombstone the live profile root (immutable filing snapshots are retained)."""
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-
-
-class ReactivateProfileCommand(BaseModel):
-    """Restore a tombstoned profile root to active status.
-
-    The symmetric inverse of :class:`RemoveProfileCommand`: reverses a
-    soft tombstone that never progressed to hard directory removal.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-
-
-class RenameProfileCommand(BaseModel):
-    """Update a live profile's display label.
-
-    Profile identity is an immutable UUID, so a rename is a pure
-    label edit: the live record's ``display_name`` is updated and the
-    record is re-saved under the same secure-object key. There is no
-    directory move, no re-key, and no rollback machinery. The
-    orchestration layer updates the parallel copy of the label in the
-    plaintext bucket manifest.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-    target_display_name: str = Field(min_length=1, max_length=160)
 
 
 # ---------------------------------------------------------------------------

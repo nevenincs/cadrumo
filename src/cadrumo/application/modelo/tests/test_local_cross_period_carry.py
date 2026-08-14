@@ -50,11 +50,11 @@ from ....domain.calculations.registry import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceProvenance, CalculationSourceResolution
 from ...calculations import CalculationObservationRepository
-from ...user_profile import ProfileRecordRepository
 from .. import (
     APP_FILING_SOURCE_KIND,
     ModeloIvaWalletReconciliationBlocked,
@@ -230,10 +230,8 @@ def _file_1t_with_negative_result(repos_: _Repos) -> Decimal:
 
 
 def _seed_first_year_activity_profile(repos_: _Repos) -> None:
-    objects = repos_[4].secure_object_repository
     profile = UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="identity.name", value="Test"),
@@ -256,14 +254,12 @@ def _seed_first_year_activity_profile(repos_: _Repos) -> None:
         created_at=_T1,
         updated_at=_T1,
     )
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(profile)
+    seed_test_profile_record(profile)
 
 
 def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
-    objects = repos_[4].secure_object_repository
     profile = UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
             UserProfileFact(path="identity.legal_name", value="Test Company SL"),
@@ -286,14 +282,12 @@ def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
         created_at=_T1,
         updated_at=_T1,
     )
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(profile)
+    seed_test_profile_record(profile)
 
 
 def _seed_first_303_activity_profile(repos_: _Repos) -> None:
-    objects = repos_[4].secure_object_repository
     profile = UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Test first IVA profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
             UserProfileFact(path="identity.legal_name", value="Test Company SL"),
@@ -316,7 +310,7 @@ def _seed_first_303_activity_profile(repos_: _Repos) -> None:
         created_at=_T1,
         updated_at=_T1,
     )
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(profile)
+    seed_test_profile_record(profile)
 
 
 def test_local_file_then_next_period_calculate_carries_previous_filing_value(repos: _Repos) -> None:

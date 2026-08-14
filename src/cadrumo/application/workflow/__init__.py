@@ -15,16 +15,16 @@ Their definitions live in the internal shared leaf
 :mod:`application._workflow_auth_models`, while callers import them from this
 facade.
 
-The profile-discovery surface is manifest-backed and intentionally cheap.
+The profile-discovery surface is the one anchored committed-capsule projection.
 :func:`list_profile_buckets`,
 :func:`read_profile_bucket`,
 :func:`read_profile_bucket_by_id`, and
-:func:`resolve_profile_bucket` scan plaintext
-bucket manifests and return
+:func:`resolve_profile_bucket` enumerate current committed capsules and return
 :class:`ProfileBucketPointer` records without
-opening an encrypted database. The scanners resolve immutable bucket UUIDs
-and operator labels, filter tombstoned buckets from live surfaces by default,
-and leave tombstoned-by-id inspection to diagnostics and repair callers.
+opening profile facts. The projection exposes immutable bucket UUIDs and
+non-authoritative operator labels. Retired-layout detection and malformed
+current commit markers propagate as typed custody outcomes; workflow never
+scans arbitrary bucket directories or parses former metadata files.
 Active-profile status and repair use the redacted
 :class:`ActiveProfileHealth` projection;
 sensitive profile records are loaded only through the active bucket and the
@@ -42,14 +42,14 @@ workflow-state row only: they emit a plaintext-free
 :class:`WorkflowStateResetFingerprint` and append
 the ``workflow_state.reset`` bucket event before deleting the encrypted row.
 
-This initializer is only the public re-export boundary. Manifest parsing stays
-in :mod:`_profile_bucket_scan`; health projection and
+This initializer is only the public re-export boundary. Committed-capsule
+projection stays in :mod:`_profile_bucket_scan`; health projection and
 pointer repair stay in :mod:`_profile_health`;
 encrypted state and run storage stay behind
 :class:`WorkflowStateRepository` and
 :class:`WorkflowRunRepository`; and engine
 orchestration stays in :mod:`_engine`. Callers must
-not duplicate pointer parsing, manifest resolution, secure-repository opening,
+not duplicate pointer parsing, capsule discovery, secure-repository opening,
 SQL routing, or master-key handling here. The active-profile refusal
 ``NoActiveProfileError`` remains core-owned and is imported from
 :mod:`core.errors`.
@@ -64,8 +64,8 @@ See Also:
     :func:`resolve_modelo_workflow_resume_target`:
         Resolve exact run ids, exact work-unit ids, calculation revisions, or
         visible modelo selectors to one resumable workflow run target.
-    :func:`list_profile_buckets`: Enumerate live
-        manifest-backed profile buckets without opening secure storage.
+    :func:`list_profile_buckets`: Enumerate current committed profile
+        projections without opening profile facts.
     :func:`assess_active_profile_health`: Produce
         the redacted active-profile status used by CLI status surfaces.
     :func:`~cadrumo.application.workflow._persistence.workflow_state_repository`: Resolve the
@@ -163,7 +163,6 @@ from ._persistence import (
 
 # ---- profile-bucket scan (depends on _models only) --------------------------
 from ._profile_bucket_scan import (
-    list_profile_bucket_scan_issues,
     list_profile_buckets,
     read_profile_bucket,
     read_profile_bucket_by_id,
@@ -175,7 +174,6 @@ from ._profile_health import (
     ProfileHealthStatus,
     ProfileSource,
     assess_active_profile_health,
-    assess_active_profile_health_with_session,
     repair_active_profile_pointer,
     unavailable_profile_record_verdict,
 )
@@ -277,7 +275,6 @@ __all__ = [
     "WorkflowValidationFailedDetails",
     "active_transaction_catalogue_repository",
     "assess_active_profile_health",
-    "assess_active_profile_health_with_session",
     "compute_run_id",
     "current_operation_instant",
     "declaration_key",
@@ -285,7 +282,6 @@ __all__ = [
     "find_latest_run_for_period",
     "find_unique_run_for_period",
     "fingerprint_workflow_state",
-    "list_profile_bucket_scan_issues",
     "list_profile_buckets",
     "list_runs",
     "load_run",

@@ -173,7 +173,6 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 state,
                 profile_id=_SECOND_PROFILE_ID,
                 display_name="Second Operator",
-                enforce_unique_tax_id=False,
             ),
         )
 

@@ -75,7 +75,6 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -95,7 +94,7 @@ from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import BindingId, ValidatedRegistryAuthority
 from ....domain.period import calculation_filing_date
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ...user_profile import ProfileRecordRepository
+from ....tests.profile_capsule import seed_test_profile_record
 from .. import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -148,7 +147,6 @@ def _seed_sociedad_m_profile() -> None:
     """
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.name", value="Sociedad M Ejemplo"),
             UserProfileFact(path="identity.legal_name", value="Sociedad Limitada M SL"),
@@ -170,7 +168,7 @@ def _seed_sociedad_m_profile() -> None:
         created_at=_T0,
         updated_at=_T0,
     )
-    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(record)
+    seed_test_profile_record(record)
 
 
 def _calculate_m202(

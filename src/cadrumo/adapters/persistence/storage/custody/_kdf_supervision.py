@@ -413,7 +413,13 @@ def profile_kdf_lease(*, deadline: float, settings: Settings | None = None) -> G
         raise _resource_refusal()
     try:
         try:
-            root = storage_path(StorageCategory.BUCKETS, settings=settings).parent.resolve(strict=True)
+            root = storage_path(StorageCategory.BUCKETS, settings=settings).parent
+            # The first credential enrollment occurs before a capsule exists,
+            # so the storage root has no prior lifecycle owner to materialise
+            # it.  The KDF lease owns this one non-capsule coordination file;
+            # create only its configured parent before resolving it.
+            root.mkdir(parents=True, exist_ok=True)
+            root = root.resolve(strict=True)
             if not root.is_dir():
                 raise NotADirectoryError(root)
             lock_path = root / _KDF_LEASE_FILENAME

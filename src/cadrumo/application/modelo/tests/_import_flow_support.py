@@ -27,8 +27,8 @@ from ....domain.modelos import (
     upsert_filing_record,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import ProfileRecordRepository
 from .. import (
     create_work_unit,
     get_calculation_revision,
@@ -102,10 +102,7 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile(
-            ProfileRecordRepository(bucket_id=_PROFILE_ID, objects=objects),
-            bucket_id=_PROFILE_ID,
-        )
+        _seed_ready_profile(bucket_id=_PROFILE_ID)
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
         fr = ModeloRecordCatalogueRepository(objects=objects)
@@ -114,11 +111,10 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         yield wu, cr, fr, vr, bv
 
 
-def _seed_ready_profile(repository: ProfileRecordRepository, *, bucket_id: str) -> None:
-    repository.save(
+def _seed_ready_profile(*, bucket_id: str) -> None:
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Test Operator",
             facts=_READY_PROFILE_FACTS,
             created_at=_T0,
             updated_at=_T0,

@@ -26,7 +26,7 @@ No mocks.  Real ``isolated_profile_storage_root`` fixture, real
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -43,6 +43,9 @@ from ....domain.calculations.registry import (
 )
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ._isolated_profile_storage_fixtures import _isolated_source
+
+__all__ = ["_isolated_source"]
 from .envelope_helpers import unwrap_envelope_notices
 from .privacy_helpers import (
     assert_public_profile_id_not_leaked,
@@ -63,12 +66,6 @@ _CASILLA_12: CasillaId = validated_casilla_id("casilla-12", surface="_CASILLA_12
 _LEGAL_REF_BASE: LegalRefId = "ley-37-1992:art-78"
 _LEGAL_REF_QUOTA: LegalRefId = "ley-37-1992:art-90"
 _SOURCE_REF_303: SourceRefId = "aeat-modelo-303-instrucciones-2026"
-
-
-@pytest.fixture(autouse=True)
-def _isolated_source(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
 
 
 def _invoke(args: Sequence[str], *, input: str | None = None) -> Result:

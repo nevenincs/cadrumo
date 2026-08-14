@@ -1,100 +1,34 @@
-"""Secure-DB persistence for user-profile lifecycle records and filing snapshots.
-
-Two registry-owned storage contracts govern this module:
-
-- :data:`cadrumo.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE` —
-  live profile aggregate keyed by the immutable ``profile_id`` (a UUIDv4).
-  There is exactly one live profile-value record per profile bucket.
-- :data:`cadrumo.adapters.persistence.storage.USER_PROFILE_SNAPSHOT_NAMESPACE` —
-  immutable filing-time snapshots keyed by ``(profile_id, snapshot_id)``:
-  a profile owns many filing snapshots.
-
-Both namespace definitions provide the ``IDENTITY``
-:class:`~cadrumo.adapters.persistence.storage.SensitivityClass`, schema version,
-bucket-local scope, and object-key grammar. They ride the active-bucket
-plumbing: every read and write resolves through a profile bucket so two
-operators never share profile storage. ``snapshot_id`` is deterministic in
-shape but globally unique within a bucket per ``new_profile_snapshot_id``.
-Records are stored as :class:`~cadrumo.adapters.persistence.storage.Envelope`
-objects encrypted at rest by
-:class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`.
-"""
+"""Secure-object persistence for immutable filing-time profile snapshots."""
 
 from __future__ import annotations
 
-import json
-from collections.abc import Iterable
-
-from pydantic import TypeAdapter, ValidationError
-
 from ...adapters.persistence.storage import (
     USER_PROFILE_SNAPSHOT_NAMESPACE as USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE,
-)
-from ...adapters.persistence.storage import (
-    USER_PROFILE_VALUE_NAMESPACE as USER_PROFILE_VALUE_STORAGE_NAMESPACE,
 )
 from ...adapters.persistence.storage import (
     ClassificationError,
     Envelope,
     EnvelopeVersionError,
     SecureObjectRepository,
-    SecureObjectWrite,
     inner_envelope_classification_is_expected,
     inner_envelope_version_is_current,
 )
 from ...adapters.persistence.storage.bucket import BucketValidationError
-from ...core.logging import get_logger
 from ...core.time import now
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepositoryProtocol,
-    bucket_event_history_write,
-)
 from ...domain.user_profile import (
     ProfileBucketMismatchError,
-    ProfileNotFoundError,
     ProfileSnapshotNotFoundError,
-    StoredProfileDriftError,
-    UserProfileRecord,
     UserProfileSnapshot,
 )
-from ._projections import record_to_path_values
 
-USER_PROFILE_VALUE_NAMESPACE = USER_PROFILE_VALUE_STORAGE_NAMESPACE.namespace
 USER_PROFILE_SNAPSHOT_NAMESPACE = USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.namespace
-_USER_PROFILE_VALUE_VERSION = USER_PROFILE_VALUE_STORAGE_NAMESPACE.schema_version
-_USER_PROFILE_VALUE_SENSITIVITY = USER_PROFILE_VALUE_STORAGE_NAMESPACE.sensitivity
 _USER_PROFILE_SNAPSHOT_VERSION = USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version
 _USER_PROFILE_SNAPSHOT_SENSITIVITY = USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity
-_PROFILE_RECORD_MISSING_MESSAGE = "profile record not found in secure storage"
-# repository_classification_mismatch (below) is the ONE shared i18n key for
-# the classification-mismatch condition raised for both stored artifact kinds
-# this repository owns (the profile record proper and its point-in-time
-# snapshot). It was formerly two near-identical keys
-# (repository_profile_record_classification_mismatch /
-# ..._snapshot_classification_mismatch); they collapsed onto one because the
-# diagnostic specificity a support engineer needs — WHICH secure-object
-# namespace failed — is carried by the ``namespace`` context field (a
-# technical dotted identifier, e.g. USER_PROFILE_VALUE_NAMESPACE /
-# USER_PROFILE_SNAPSHOT_NAMESPACE, never translated) substituted into the
-# message, exactly mirroring the already-shipped, already-parameterized
-# errors.storage.namespace.classification_mismatch one layer below (see
-# adapters/persistence/storage/sql/_secure_object_row_codec.py). This is NOT
-# merged with the adapters/persistence/profile layer's own
-# errors.integrity.integrity_storage_classification (see
-# adapters/persistence/profile/transactions.py): that key belongs to a
-# different architectural layer (the raw secure-object storage adapter, not
-# this application-layer repository), and unifying across the
-# adapter/application boundary would blur which layer owns the message.
+_PROFILE_SNAPSHOT_MISSING_MESSAGE = "profile snapshot not found in secure storage"
 _PROFILE_CLASSIFICATION_MISMATCH_MESSAGE = (
     "secure-object namespace classification does not match the repository contract"
 )
-_PROFILE_RECORD_VERSION_MESSAGE = "profile record schema version is not supported"
-_PROFILE_SNAPSHOT_MISSING_MESSAGE = "profile snapshot not found in secure storage"
 _PROFILE_SNAPSHOT_VERSION_MESSAGE = "profile snapshot schema version is not supported"
-_OUTPUT_LANGUAGE_FACT_PATH = "preferences.output_language"
-_JSON_OBJECT = TypeAdapter(dict[str, object])
-_log = get_logger(__name__)
 
 
 def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
@@ -109,117 +43,6 @@ def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
     from ...core.config import load_settings
 
     return secure_object_repository_for_bucket(bucket_id, load_settings())
-
-
-secure_objects_for_bucket = _secure_objects_for_bucket
-
-
-def _clear_output_language_cache() -> None:
-    """Invalidate cached i18n output-language resolution after a profile write.
-
-    Every persisted profile fact write may shift the active profile's
-    ``preferences.output_language`` and therefore the resolved CLI render
-    language. Importing lazily so persistence cannot block on the i18n
-    module.
-    """
-    try:
-        from ...core.i18n import clear_output_language_cache
-    except ImportError:  # pragma: no cover - cache invalidation must never block persistence
-        _log.debug("user-profile output-language cache invalidation import failed", exc_info=True)
-        return
-    clear_output_language_cache()
-
-
-def _record_output_language(record: UserProfileRecord) -> str | None:
-    return record_to_path_values(record).get(_OUTPUT_LANGUAGE_FACT_PATH)
-
-
-def _output_language_is_already_current(*, bucket_id: str, record: UserProfileRecord) -> bool:
-    """Whether the persisted hint already names ``record``'s output language.
-
-    The bucket-local hint is written by every refresh, so it is the durable
-    record of the language the last write settled on. When it already equals
-    this record's language, the write cannot have moved the language, so
-    neither the hint nor the in-process i18n cache needs touching.
-
-    That matters because the invalidation is far from free: the next
-    :func:`~cadrumo.core.i18n.tr` call after a clear resolves cold through
-    :func:`resolve_active_profile_output_language`, which loads and decrypts
-    the whole workflow state -- state the profile write had just persisted.
-    Invalidating on every fact write therefore forced a full decrypt to
-    re-read a language no write had changed.
-
-    Fails toward invalidating: an unreadable hint (absent, drifted, or an
-    unsupported language the writer refused to persist) is reported as not
-    current, so the refresh runs and the cache is cleared. The gate can only
-    ever skip work it has positively proven redundant.
-    """
-    from ...adapters.persistence.storage.bucket import (
-        normalize_output_language_hint,
-        read_bucket_output_language_hint,
-    )
-    from ...core.config import load_settings
-
-    language = normalize_output_language_hint(_record_output_language(record))
-    if language is None:
-        return False
-    return (
-        read_bucket_output_language_hint(
-            storage_root=load_settings().cadrumo_local_storage_root,
-            bucket_id=bucket_id,
-        )
-        == language
-    )
-
-
-def _refresh_output_language_hint(*, bucket_id: str, record: UserProfileRecord) -> None:
-    from ...adapters.persistence.storage.bucket import (
-        clear_bucket_output_language_hint,
-        write_bucket_output_language_hint,
-    )
-    from ...core.config import load_settings
-
-    language = _record_output_language(record)
-    try:
-        if language is None:
-            clear_bucket_output_language_hint(
-                storage_root=load_settings().cadrumo_local_storage_root,
-                bucket_id=bucket_id,
-            )
-            return
-        written = write_bucket_output_language_hint(
-            storage_root=load_settings().cadrumo_local_storage_root,
-            bucket_id=bucket_id,
-            language=language,
-        )
-        if not written:
-            clear_bucket_output_language_hint(
-                storage_root=load_settings().cadrumo_local_storage_root,
-                bucket_id=bucket_id,
-            )
-    except OSError:
-        _log.warning(
-            "user-profile output-language hint refresh failed bucket_id=%s",
-            bucket_id,
-            exc_info=True,
-        )
-
-
-refresh_output_language_hint = _refresh_output_language_hint
-
-
-def user_profile_value_object_key(profile_id: str) -> str:
-    """Return the secure-object key for a profile's live aggregate.
-
-    The key shape is the object-key grammar declared by
-    :data:`cadrumo.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE`.
-    A profile bucket holds exactly one live profile-value record, so the
-    key is single-segment: the immutable ``profile_id`` (UUIDv4).
-    """
-    trimmed_profile = profile_id.strip()
-    if not trimmed_profile:
-        raise BucketValidationError(context={"field": "profile_id", "blank": True})
-    return f"user-profile:{trimmed_profile}"
 
 
 def user_profile_snapshot_object_key(profile_id: str, snapshot_id: str) -> str:
@@ -240,52 +63,14 @@ def user_profile_snapshot_object_key(profile_id: str, snapshot_id: str) -> str:
     return f"user-profile-snapshot:{trimmed_profile}:{trimmed_snapshot}"
 
 
-def _require_stored_payload_schema_version(raw_payload: bytes, *, namespace: str, subject: str) -> None:
-    """Refuse a stored profile payload whose bytes declare no schema version.
-
-    Read from the decrypted JSON while it is still a mapping, which is the only
-    point where the question can be answered. The typed model resolves the
-    field from a ``default_factory`` reading the schema authority, so once
-    validation has run the marker is present whether or not the bytes carried
-    it -- a check placed after that seam passes on every payload and proves
-    nothing.
-
-    An unstamped payload is corruption, not history. Nothing this build writes
-    can produce one: the single production construction site stamps the id and
-    version from the loaded schema, and the field's own default derives from
-    the same authority, so bytes without the marker came from outside that
-    path and this build cannot say what schema they were written under.
-
-    Lives at the profile boundary rather than in the shared secure-object
-    repository, whose generic path serves every namespace: a check there would
-    change behaviour for records that have no such marker and are not ours.
-    """
-    try:
-        document = _JSON_OBJECT.validate_python(json.loads(raw_payload.decode("utf-8")))
-    except (UnicodeDecodeError, ValueError):
-        # Malformed bytes are not this check's subject; the typed validation
-        # below reports them with the field-level detail it already produces.
-        return
-    inner = document.get("payload")
-    if not isinstance(inner, dict) or "schema_version" in inner:
-        return
-    raise EnvelopeVersionError(
-        translated_message="errors.integrity.integrity_storage_envelope_version",
-        context={"namespace": namespace, "subject": subject, "schema_version_declared": False},
-    )
-
-
 class _BucketBoundRepository:
-    """Shared bucket-binding init for the user-profile repository pair.
+    """Shared bucket-binding init for the immutable snapshot repository.
 
-    Both :class:`ProfileRecordRepository` and
-    :class:`UserProfileSnapshotRepository` bind to one bucket's own
+    :class:`UserProfileSnapshotRepository` binds to one bucket's own
     database (no cross-bucket reads/writes by default) and either accept
     an injected
     :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
-    or build one for the
-    named bucket. The constructor is identical across both classes so it
-    lives here as a single source of truth.
+    or builds one for the named bucket.
     """
 
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
@@ -299,402 +84,12 @@ class _BucketBoundRepository:
         self._objects = objects or _secure_objects_for_bucket(trimmed)
 
     def _assert_owns(self, profile_id: str, *, surface: str) -> None:
-        """Refuse a payload identity that does not belong to the bound bucket.
-
-        Snapshot rows are keyed by the BOUND BUCKET plus the snapshot id, not
-        by the payload's own ``profile_id``, and ``load`` validated the
-        envelope without ever checking whose profile came back. A snapshot for
-        profile B could therefore be written into, found in, and read out of
-        profile A's repository, filed under a key that names only A — so the
-        stored row and its contents disagreed about whose profile it was, and
-        nothing on either path compared them.
-
-        Now applied to the live-profile repository as well. The obstacle was
-        :meth:`ProfileCapsuleLifecycle.duplicate`, which held one bucket-bound
-        repository across a read of the source and a write of the target; it
-        had no production callers and has since been deleted, so nothing in
-        the tree presents a foreign identity as legitimate.
-
-        Every production construction of a lifecycle repository binds the
-        bucket to the very id it goes on to address: the aggregation and
-        modelo readers all spell
-        ``ProfileRecordRepository(bucket_id=X).load(X)``, the profile
-        repository binds ``bucket_id=profile_id``, and the lifecycle service
-        is built for the same ``resolved_id`` that its
-        ``RegisterProfileCommand`` carries. A foreign identity on this
-        repository is therefore a caller holding the wrong handle, never a
-        question the design intends to answer.
-
-        That is why the probe surfaces refuse rather than answering falsely.
-        ``exists`` returning ``False`` for a foreign id reads identically to
-        "no such profile anywhere", and its one production caller --
-        ``register`` -- treats ``False`` as permission to create. A probe
-        against the wrong repository would answer ``False``, and registration
-        would proceed to write into a bucket that already holds a different
-        profile. Refusing converts that silent divergence into a stop.
-        """
-        trimmed = profile_id.strip()
-        if trimmed != self._bucket_id:
+        """Refuse a snapshot payload whose identity differs from its bucket."""
+        if profile_id.strip() != self._bucket_id:
             raise ProfileBucketMismatchError(
                 translated_message="application.user_profile.errors.repository_profile_bucket_mismatch",
-                context={"profile_id": trimmed, "bucket_id": self._bucket_id, "surface": surface},
+                context={"profile_id": profile_id, "bucket_id": self._bucket_id, "surface": surface},
             )
-
-
-class ProfileRecordRepository(_BucketBoundRepository):
-    """Read and write current-profile facts through one bucket-bound handle.
-
-    Rows use
-    :data:`cadrumo.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE`,
-    wrap each :class:`UserProfileRecord` in an
-    :class:`~cadrumo.adapters.persistence.storage.Envelope`, and persist through
-    :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`.
-    """
-
-    @property
-    def bucket_id(self) -> str:
-        """Return the logical profile bucket this repository is bound to.
-
-        A bucket is a named, isolated storage partition: every read and write
-        addresses this bucket's own database, so two operators never share
-        profile storage. The value is the stripped, non-blank identifier
-        supplied at construction.
-
-        Returns:
-            The name of the bucket (storage partition) this repository
-            operates against.
-        """
-        return self._bucket_id
-
-    def exists(self, profile_id: str) -> bool:
-        """Report whether a live profile aggregate is stored under ``profile_id``.
-
-        Probes the secure-object backend for the single live profile-value
-        record keyed by ``profile_id`` (a UUIDv4) in this bucket, without
-        decrypting or validating the payload.
-
-        Args:
-            profile_id: The immutable UUIDv4 identifying the profile.
-
-        Returns:
-            ``True`` when a record exists under that key, else ``False``.
-
-        Raises:
-            ProfileBucketMismatchError: ``profile_id`` is not this bucket's
-                own profile. The answer for a foreign id would always be
-                ``False``, which is indistinguishable from "no such profile"
-                and is read as permission to create.
-
-        Refusing here rather than answering honestly was the one judgement
-        call in extending the guard, so the evidence is recorded. A probe is
-        a legitimate use of ``exists`` in general -- but a tree-wide sweep of
-        every caller found none that uses THIS method as a cross-bucket
-        presence check. Its sole production caller is
-        :meth:`ProfileCapsuleLifecycle.register`, which treats ``False`` as
-        permission to create.
-
-        The cross-bucket probe does exist in this module, one class down:
-        :meth:`UserProfileSnapshotRepository.exists` takes a *snapshot* id, so
-        asking about a foreign one is a real question with a real answer, and
-        it is deliberately left answering. The difference is that a lifecycle
-        key IS the bucket, so "is profile B in bucket A?" collapses into a
-        question only a confused caller asks.
-        """
-        self._assert_owns(profile_id, surface="exists")
-        return self._objects.exists(
-            USER_PROFILE_VALUE_NAMESPACE,
-            user_profile_value_object_key(profile_id),
-        )
-
-    def load(self, profile_id: str) -> UserProfileRecord:
-        """Load and decrypt the live profile aggregate for ``profile_id``.
-
-        Reads the encrypted ``Envelope`` (the stored container that holds the
-        encrypted payload plus its metadata) for the single live profile
-        record in this bucket, validates it back into a :class:`UserProfileRecord`,
-        and enforces two storage-contract checks before returning the payload.
-        First, the envelope's classification (its declared sensitivity level)
-        must match the level expected for profile data. Second, the schema
-        version recorded on the envelope must not be newer than the version
-        this code can read.
-
-        Args:
-            profile_id: The immutable UUIDv4 identifying the profile.
-
-        Returns:
-            The decrypted :class:`UserProfileRecord` carried by the envelope.
-
-        Raises:
-            ProfileNotFoundError: No record is stored under ``profile_id``
-                in this bucket.
-            StoredProfileDriftError: The stored payload no longer validates
-                against the current ``UserProfileRecord`` schema.
-            :class:`~cadrumo.adapters.persistence.storage.ClassificationError`:
-                The envelope's classification differs from the level expected
-                for profile data.
-            :class:`~cadrumo.adapters.persistence.storage.EnvelopeVersionError`:
-                The stored schema version is newer than this code can read.
-        """
-        self._assert_owns(profile_id, surface="load")
-        record = self._objects.load(
-            USER_PROFILE_VALUE_NAMESPACE,
-            user_profile_value_object_key(profile_id),
-            expected_class=_USER_PROFILE_VALUE_SENSITIVITY,
-            max_supported_version=_USER_PROFILE_VALUE_VERSION,
-        )
-        if record is None:
-            raise ProfileNotFoundError(
-                _PROFILE_RECORD_MISSING_MESSAGE,
-                translated_message="application.user_profile.errors.repository_profile_record_missing",
-                context={"profile_id": profile_id, "bucket_id": self._bucket_id},
-            )
-        _require_stored_payload_schema_version(
-            record.payload,
-            namespace=USER_PROFILE_VALUE_NAMESPACE,
-            subject="user profile record",
-        )
-        try:
-            envelope = Envelope[UserProfileRecord].model_validate_json(record.payload.decode("utf-8"))
-        except ValidationError as exc:
-            raise StoredProfileDriftError(profile_id=profile_id, error=exc) from exc
-        if not inner_envelope_classification_is_expected(envelope.classification, _USER_PROFILE_VALUE_SENSITIVITY):
-            raise ClassificationError(
-                _PROFILE_CLASSIFICATION_MISMATCH_MESSAGE,
-                translated_message="application.user_profile.errors.repository_classification_mismatch",
-                context={
-                    "namespace": USER_PROFILE_VALUE_NAMESPACE,
-                    "profile_id": profile_id,
-                    "classification": envelope.classification.value,
-                    "expected": _USER_PROFILE_VALUE_SENSITIVITY.value,
-                },
-            )
-        if not inner_envelope_version_is_current(envelope.schema_version, _USER_PROFILE_VALUE_VERSION):
-            raise EnvelopeVersionError(
-                _PROFILE_RECORD_VERSION_MESSAGE,
-                translated_message="application.user_profile.errors.repository_profile_record_version_unsupported",
-                context={
-                    "profile_id": profile_id,
-                    "schema_version": envelope.schema_version,
-                    "max_supported_version": _USER_PROFILE_VALUE_VERSION,
-                },
-            )
-        # The entry guard above proves the CALLER asked for this bucket's
-        # profile; this proves the stored row agrees. They catch different
-        # faults -- a caller holding the wrong handle, and a row whose
-        # contents name a profile other than the key it is filed under -- and
-        # only the second survives a correct caller.
-        self._assert_owns(envelope.payload.profile_id, surface="load")
-        return envelope.payload
-
-    def save(self, record: UserProfileRecord) -> None:
-        """Persist ``record`` as this bucket's single live profile aggregate.
-
-        Wraps the :class:`UserProfileRecord` in an encrypted ``Envelope`` (the
-        stored container holding the encrypted payload plus its metadata)
-        stamped with the current schema version, the write timestamp, and the
-        sensitivity classification for profile data, then stores it under the
-        key derived from ``record.profile_id``. A profile bucket holds exactly
-        one live profile record, so this overwrites any prior aggregate for
-        the same ``profile_id``. Afterwards it runs the post-commit
-        output-language refresh through :meth:`refresh_output_language_cache`,
-        because a write may have changed the active profile's preferred
-        language for command-line output.
-
-        Args:
-            record: The live :class:`UserProfileRecord` aggregate to encrypt and store.
-
-        Raises:
-            ProfileBucketMismatchError: ``record`` names a profile other than
-                this bucket's own.
-        """
-        self._assert_owns(record.profile_id, surface="save")
-        envelope = Envelope[UserProfileRecord](
-            schema_version=_USER_PROFILE_VALUE_VERSION,
-            written_at=now(),
-            classification=_USER_PROFILE_VALUE_SENSITIVITY,
-            payload=record,
-        )
-        self._objects.save(
-            namespace=USER_PROFILE_VALUE_NAMESPACE,
-            object_key=user_profile_value_object_key(record.profile_id),
-            classification=_USER_PROFILE_VALUE_SENSITIVITY,
-            schema_version=_USER_PROFILE_VALUE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
-        )
-        self.refresh_output_language_cache(record)
-
-    def to_secure_object_write(self, record: UserProfileRecord) -> SecureObjectWrite:
-        """Return the prepared upsert for ``record`` without committing it.
-
-        The batching half of :meth:`save`, for a caller that must commit the
-        record in the SAME unit of work as something else -- in practice the
-        bucket event that claims the change happened. Emitting that event in a
-        second write let the rename come to rest durable-but-unrecorded: the
-        label moved and the audit trail did not, with no marker naming the gap.
-
-        Deliberately does NOT run the output-language cache refresh that
-        :meth:`save` performs. That is a post-commit side effect on in-process
-        state, and running it here would invalidate the cache for a write the
-        caller may still abandon.
-
-        Guarded in its own right rather than relying on :meth:`save`: this is
-        a second write path to the same key, reached by ``commit_with_events``
-        and by any caller batching its own unit of work. A guard on ``save``
-        alone would leave the hole open on the path that bypasses it.
-
-        Args:
-            record: The live :class:`UserProfileRecord` aggregate to prepare
-                for write without committing it yet.
-        """
-        self._assert_owns(record.profile_id, surface="to_secure_object_write")
-        envelope = Envelope[UserProfileRecord](
-            schema_version=_USER_PROFILE_VALUE_VERSION,
-            written_at=now(),
-            classification=_USER_PROFILE_VALUE_SENSITIVITY,
-            payload=record,
-        )
-        return SecureObjectWrite(
-            namespace=USER_PROFILE_VALUE_NAMESPACE,
-            object_key=user_profile_value_object_key(record.profile_id),
-            classification=_USER_PROFILE_VALUE_SENSITIVITY,
-            schema_version=_USER_PROFILE_VALUE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
-        )
-
-    def commit_with_events(
-        self,
-        record: UserProfileRecord,
-        *,
-        events: tuple[BucketEvent, ...],
-        event_repository: BucketEventHistoryRepositoryProtocol,
-    ) -> None:
-        """Persist ``record`` and ``events`` in one unit of work.
-
-        The batching counterpart of :meth:`save`. A caller that saved the
-        record and emitted afterwards could come to rest durable-but-
-        unrecorded, so this hands both writes to the secure-object backend's
-        atomic batch: neither the record nor the events it promises can land
-        without the other.
-
-        The post-commit cache refresh runs only after the batch commits, for
-        the same reason it is absent from :meth:`to_secure_object_write` -- a
-        refresh for a write that raised would leave the cache describing state
-        that never existed.
-
-        Args:
-            record: The live :class:`UserProfileRecord` aggregate to persist
-                alongside ``events`` in the same secure-object batch.
-            events: The bucket events claiming this change happened. They
-                commit with the record or not at all.
-            event_repository: The history repository whose write is batched
-                beside the record's.
-        """
-        self._objects.save_many(
-            (
-                self.to_secure_object_write(record),
-                bucket_event_history_write(event_repository, events),
-            ),
-        )
-        self.refresh_output_language_cache(record)
-
-    def refresh_output_language_cache(self, record: UserProfileRecord) -> None:
-        """Apply the post-commit output-language refresh a committed write owes.
-
-        Paired with :meth:`to_secure_object_write` so a batching caller can
-        reproduce :meth:`save`'s full behaviour: prepare, commit alongside its
-        siblings, then refresh. Separating them is what keeps the cache from
-        being invalidated for a write that never lands. :meth:`save` routes
-        through here too, so the one post-commit contract has one home.
-
-        A write that provably did not move the language does nothing: see
-        :func:`_output_language_is_already_current` for why re-clearing the
-        cache is expensive rather than merely redundant.
-
-        Args:
-            record: The live :class:`UserProfileRecord` aggregate whose
-                output-language preference the cache should now reflect.
-        """
-        if _output_language_is_already_current(bucket_id=self._bucket_id, record=record):
-            return
-        _refresh_output_language_hint(bucket_id=self._bucket_id, record=record)
-        _clear_output_language_cache()
-
-    def iter_records(self) -> Iterable[UserProfileRecord]:
-        """Yield every live :class:`UserProfileRecord` from the secure-object backend.
-
-        Walks the IDENTITY-class secure-object index for this bucket
-        namespace and validates each row against the typed envelope at
-        the configured schema version. The lifecycle service consumes
-        this iterator to list live profiles without reaching for the
-        repository's private secure-object reference.
-
-        A row whose stored bytes declare no schema version aborts the walk.
-        The alternative -- yielding the rows around it -- returns a listing
-        that is short and indistinguishable from a complete one, which is the
-        worse failure for a surface whose whole job is to enumerate what the
-        operator has.
-        """
-        for raw in self._objects.list_records(
-            USER_PROFILE_VALUE_NAMESPACE,
-            expected_class=_USER_PROFILE_VALUE_SENSITIVITY,
-            max_supported_version=_USER_PROFILE_VALUE_VERSION,
-        ):
-            # Refuses the whole walk rather than skipping the row. An
-            # unstamped payload means the store holds something this build
-            # cannot say it understands, and an iteration that steps past it
-            # yields a SHORT list that looks complete -- a profile the operator
-            # owns silently absent from every listing, with nothing anywhere
-            # saying so. The neighbouring failure already takes this position:
-            # a drifted row raises rather than being dropped from the yield.
-            _require_stored_payload_schema_version(
-                raw.payload,
-                namespace=USER_PROFILE_VALUE_NAMESPACE,
-                subject="user profile record",
-            )
-            # Extract the profile_id from the hashed object key is not
-            # possible (keys are stored hashed); use the bucket_id as
-            # the context identifier so the error is still actionable.
-            try:
-                envelope = Envelope[UserProfileRecord].model_validate_json(raw.payload.decode("utf-8"))
-            except ValidationError as exc:
-                raise StoredProfileDriftError(profile_id=self._bucket_id, error=exc) from exc
-            # Keys are stored hashed, so the row cannot be asked which profile
-            # it was filed under; the payload's own claim is the only identity
-            # available here, and it must be this bucket's.
-            self._assert_owns(envelope.payload.profile_id, surface="iter_records")
-            yield envelope.payload
-
-    def delete(self, profile_id: str) -> bool:
-        """Remove the live profile aggregate stored under ``profile_id``.
-
-        Deletes the single live profile record keyed by ``profile_id`` from
-        this bucket. When a record was actually removed, it clears the cached
-        output language, because the deleted profile may have governed the
-        active profile's preferred language for command-line output.
-
-        Args:
-            profile_id: The immutable UUIDv4 identifying the profile.
-
-        Returns:
-            ``True`` when a record was deleted, ``False`` when no record was
-            stored under that key.
-
-        Raises:
-            ProfileBucketMismatchError: ``profile_id`` is not this bucket's
-                own profile. Same shape as :meth:`exists`: a foreign id would
-                delete nothing and report ``False``, which reads as "already
-                gone".
-        """
-        self._assert_owns(profile_id, surface="delete")
-        deleted = self._objects.delete(
-            USER_PROFILE_VALUE_NAMESPACE,
-            user_profile_value_object_key(profile_id),
-        )
-        if deleted:
-            _clear_output_language_cache()
-        return deleted
 
 
 class UserProfileSnapshotRepository(_BucketBoundRepository):
@@ -783,16 +178,6 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
                 translated_message="application.user_profile.errors.repository_profile_snapshot_missing",
                 context={"snapshot_id": snapshot_id, "bucket_id": self._bucket_id},
             )
-        # Defence in depth on this half: the snapshot's own marker is already
-        # required with no default, so an unstamped payload would fail typed
-        # validation anyway. Checked here too so the refusal is the same typed
-        # one at both read sites, and so the guarantee does not silently depend
-        # on that field never gaining a default.
-        _require_stored_payload_schema_version(
-            record.payload,
-            namespace=USER_PROFILE_SNAPSHOT_NAMESPACE,
-            subject="user profile snapshot",
-        )
         envelope = Envelope[UserProfileSnapshot].model_validate_json(record.payload.decode("utf-8"))
         if not inner_envelope_classification_is_expected(envelope.classification, _USER_PROFILE_SNAPSHOT_SENSITIVITY):
             raise ClassificationError(
@@ -815,7 +200,11 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
                     "max_supported_version": _USER_PROFILE_SNAPSHOT_VERSION,
                 },
             )
-        self._assert_owns(envelope.payload.profile_id, surface="load")
+        if envelope.payload.profile_id != self._bucket_id:
+            raise ProfileBucketMismatchError(
+                translated_message="application.user_profile.errors.repository_profile_bucket_mismatch",
+                context={"profile_id": envelope.payload.profile_id, "bucket_id": self._bucket_id, "surface": "load"},
+            )
         return envelope.payload
 
     def save(self, snapshot: UserProfileSnapshot) -> None:
@@ -834,7 +223,11 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
         Args:
             snapshot: The filing-time profile snapshot to encrypt and store.
         """
-        self._assert_owns(snapshot.profile_id, surface="save")
+        if snapshot.profile_id != self._bucket_id:
+            raise ProfileBucketMismatchError(
+                translated_message="application.user_profile.errors.repository_profile_bucket_mismatch",
+                context={"profile_id": snapshot.profile_id, "bucket_id": self._bucket_id, "surface": "save"},
+            )
         envelope = Envelope[UserProfileSnapshot](
             schema_version=_USER_PROFILE_SNAPSHOT_VERSION,
             written_at=now(),
@@ -853,11 +246,6 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
 
 __all__ = [
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
-    "USER_PROFILE_VALUE_NAMESPACE",
-    "ProfileRecordRepository",
     "UserProfileSnapshotRepository",
-    "refresh_output_language_hint",
-    "secure_objects_for_bucket",
     "user_profile_snapshot_object_key",
-    "user_profile_value_object_key",
 ]

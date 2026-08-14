@@ -56,7 +56,6 @@ def _register(*, profile_id: str, label: str) -> None:
             state,
             profile_id=profile_id,
             display_name=label,
-            enforce_unique_tax_id=False,
         ),
     )
 

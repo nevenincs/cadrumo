@@ -1089,7 +1089,6 @@ def _profile_with_ccaa(ccaa_value: str | None) -> UserProfileRecord:
         facts = (*facts, UserProfileFact(path="tax_residence.ccaa", value=ccaa_value))
     return UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Region Tester",
         facts=facts,
     )
 
@@ -1187,7 +1186,6 @@ def _profile_with_iva_regime(*iva_facts: UserProfileFact) -> UserProfileRecord:
     """Build a user-profile record from explicitly supplied IVA facts."""
     return UserProfileRecord(
         profile_id="33333333-3333-4333-8333-333333333333",
-        display_name="IVA Regime Tester",
         facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *iva_facts),
     )
 

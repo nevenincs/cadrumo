@@ -84,7 +84,6 @@ from ...domain.iva_compensation import IvaCompensationReconciliationDecision as 
 from ...domain.iva_compensation import (
     build_iva_compensation_carry_forward_report as _build_iva_compensation_carry_forward_report,
 )
-from ..user_profile import profile_storage_session as _profile_storage_session
 from ._errors import LiveApplicationError, LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from ._filed_data_capture import capture_report_path as _capture_report_path
 from ._filed_observation_persistence import latest_declarations_by_period as _latest_declarations_by_period
@@ -240,8 +239,9 @@ def _active_profile_storage_span():
     if _active_bucket_session_serves(active_bucket_id):
         yield
         return
-    with _profile_storage_session(active_bucket_id):
-        yield
+    from ...adapters.persistence.storage import StorageValidationError as _StorageValidationError
+
+    raise _StorageValidationError(translated_message="errors.storage.runtime.not_ready")
 
 
 async def capture_iva_compensation_history(

@@ -14,6 +14,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from ....adapters.persistence.storage.custody import (
+    ProfileCustodyCapsuleLabel,
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyRecordError,
@@ -22,7 +23,7 @@ from ....adapters.persistence.storage.custody import (
     create_profile_custody_sentinel,
     inventory_staged_profile_custody_capsule,
     list_current_profile_custody_capsule_ids,
-    load_committed_profile_custody_label,
+    load_committed_profile_custody_label_record,
     profile_custody_staging_path,
     publish_profile_custody_capsule,
     publish_staged_profile_custody_capsule,
@@ -45,7 +46,7 @@ from ...evidence._profile_legal_hold import LegalHoldCaseAuthority
 from ...filing._profile_filing_retention import FilingRetentionAuthority
 from .._custody_pointer import ProfileCustodyPointerSnapshot
 from .._custody_repository import compare_and_swap_profile_pointer, profile_custody_transaction_lock
-from .._custody_service import ProfileCustodyTransactionService
+from .._custody_service import _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService
 from .._custody_transactions import (
     ProfileCustodyHoldEvidence,
     ProfileCustodyTransactionConflictError,
@@ -76,7 +77,13 @@ def _committed_capsule(
         publication_kind="enroll",
         password_envelope=envelope,
         sentinel=sentinel,
-        data_files={**data_files, "profile-label.v1.txt": b"crash label"},
+        data_files={
+            **data_files,
+            "profile-label.v1.json": ProfileCustodyCapsuleLabel.create(
+                profile_id=profile_id,
+                label="crash label",
+            ).canonical_json_bytes(),
+        },
         settings=Settings(cadrumo_local_storage_root=root),
         published_at=_INSTANT,
     )
@@ -211,6 +218,7 @@ def _crash_create_at_durable_boundary(root_text: str, transaction_id_text: str, 
     transaction_id = UUID(transaction_id_text)
     service = ProfileCustodyTransactionService(root=root)
     envelope, sentinel, data_files = _create_capsule_input()
+    label_record = ProfileCustodyCapsuleLabel.create(profile_id=_PROFILE_ID, label="crash label")
     stage_name = profile_custody_staging_path(
         profile_id=_PROFILE_ID,
         transaction_id=transaction_id,
@@ -226,6 +234,9 @@ def _crash_create_at_durable_boundary(root_text: str, transaction_id_text: str, 
         pointer_before=ProfileCustodyPointerSnapshot.capture(root),
         proposed_generation=envelope.password_generation,
         label="crash label",
+        label_revision=label_record.label_revision,
+        label_content_digest=label_record.content_digest,
+        label_self_digest=label_record.self_digest,
         staged_relative_path=stage_name,
     )
     service._repository.create_journal(journal)
@@ -237,7 +248,10 @@ def _crash_create_at_durable_boundary(root_text: str, transaction_id_text: str, 
         publication_kind="enroll",
         password_envelope=envelope,
         sentinel=sentinel,
-        data_files={**data_files, "profile-label.v1.txt": b"crash label"},
+        data_files={
+            **data_files,
+            "profile-label.v1.json": label_record.canonical_json_bytes(),
+        },
         root=root,
         published_at=_INSTANT,
         stage_only=True,
@@ -608,7 +622,7 @@ def test_create_orchestration_journals_stages_verifies_and_publishes_pointer_las
     assert journal.proposed_generation == envelope.password_generation
     assert journal.proposed_custody_digest == receipt.inventory.digest
     assert journal.label == "Custody operator"
-    assert load_committed_profile_custody_label(_PROFILE_ID, root=tmp_path) == "Custody operator"
+    assert load_committed_profile_custody_label_record(_PROFILE_ID, root=tmp_path).label == "Custody operator"
     assert not hasattr(service, "prepare_create")
 
 
@@ -656,7 +670,7 @@ def test_create_recovery_after_real_subprocess_crash_at_each_durable_boundary(
     assert capture_pointer(tmp_path) == BucketPointer(bucket_id=str(_PROFILE_ID), schema_version=1).to_toml().encode(
         "utf-8"
     )
-    assert load_committed_profile_custody_label(_PROFILE_ID, root=tmp_path) == "crash label"
+    assert load_committed_profile_custody_label_record(_PROFILE_ID, root=tmp_path).label == "crash label"
 
 
 def test_create_recovery_refuses_a_label_claimed_while_its_real_stage_waited(tmp_path: Path) -> None:
@@ -741,7 +755,7 @@ def test_create_root_lock_serializes_duplicate_labels_across_real_processes(tmp_
     assert sorted((result_queue.get(timeout=5), result_queue.get(timeout=5))) == ["collision", "published"]
     visible = list_current_profile_custody_capsule_ids(root=tmp_path)
     assert len(visible) == 1
-    assert load_committed_profile_custody_label(visible[0], root=tmp_path).casefold() == "same label"
+    assert load_committed_profile_custody_label_record(visible[0], root=tmp_path).label.casefold() == "same label"
 
 
 def test_publish_once_has_one_sibling_process_winner_and_never_overwrites(tmp_path: Path) -> None:

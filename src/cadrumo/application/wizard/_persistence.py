@@ -32,10 +32,7 @@ from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ...core.parsing import parse_bool, parse_iso8601_date
 from ...core.setup_answers import register_project_answers as _register_project_answers
 from ...core.time import today_madrid
-from ..user_profile import (
-    register_active_profile,
-    set_active_fields,
-)
+from ...domain.user_profile import UserProfileFact, UserProfileRecord
 from ..workflow import WorkflowInputMismatchError, WorkflowState
 from ._descendant_group import (
     DESCENDANT_PAGE_IDS,
@@ -48,6 +45,37 @@ WizardPersistMode = Literal["create", "edit"]
 """Which wizard verb is persisting — ``create`` registers a new profile,
 ``edit`` upserts facts on an existing one. The verb is the authority for
 the create-vs-edit branch; it is never re-derived at runtime."""
+
+
+def apply_wizard_fact_changes(
+    *,
+    profile_id: str,
+    changes: tuple[UserProfileFact, ...],
+    event_type: str,
+) -> UserProfileRecord:
+    """Publish a wizard-owned exact fact replacement through the active session.
+
+    The wizard never writes an aggregate or a generic profile row.  It loads
+    the authenticated current record, replaces only the paths the validated
+    command names, and asks the record repository to CAS-publish the complete
+    resulting sequence with one command event.  A ``value=None`` change is
+    retained deliberately: it is the explicit current-record representation
+    of clearing an answer.
+    """
+    from ..user_profile import ProfileRecordRepository
+
+    repository = ProfileRecordRepository.for_current_session(profile_id)
+    current = repository.load(profile_id)
+    changed_paths = {fact.path for fact in changes}
+    next_facts = (*tuple(fact for fact in current.facts if fact.path not in changed_paths), *changes)
+    return repository.apply_fact_changes(
+        profile_id,
+        facts=next_facts,
+        expected_revision=current.record_revision,
+        expected_content_digest=current.content_digest,
+        event_type=event_type,
+        event_payload={"changed_fact_count": str(len(changes))},
+    )
 
 
 def _canonicalise(question: WizardQuestion, value: object) -> str:
@@ -123,14 +151,10 @@ def persist_answers(
     ``profile_id`` is the immutable UUID profile identity; ``profile_name``
     is the operator-chosen display label.
 
-    ``mode`` is the create-vs-edit discriminator and is the wizard verb
-    itself, not a runtime-detected fact. ``"create"`` routes to
-    :func:`register_active_profile`, which delegates the whole
-    cross-store create — bucket directory, manifest, encrypted record,
-    and the active-profile pointer — to :class:`CommittedProfileRepository` as
-    one unit of work and refuses a label already carried by a live
-    profile. ``"edit"`` routes to :func:`set_active_fields`, which
-    upserts facts on the active profile.
+    ``mode`` is the command discriminator. ``"create"`` is deliberately
+    unavailable: credential registration is the only creation door.
+    ``"edit"`` publishes an explicit fact replacement through the active
+    session-bound record repository.
 
     ``supplied_question_ids`` names the questions the operator
     explicitly supplied on the command line. On the ``"edit"`` path it
@@ -144,14 +168,11 @@ def persist_answers(
     from ...domain.user_profile import UserProfileFact
 
     if mode == "create":
-        canonical = serialise_answers(flow, answers)
-        facts = tuple(UserProfileFact(path=path, value=value) for path, value in canonical.items() if value)
-        return register_active_profile(
-            state,
-            profile_id=profile_id,
-            display_name=profile_name,
-            facts=facts,
-            routing_profile_id=routing_profile_id,
+        del flow, answers, profile_name, routing_profile_id
+        from ..user_profile import ProfileRegistrationError
+
+        raise ProfileRegistrationError(
+            "wizard profile creation is unavailable; register with credentials before setup",
         )
 
     if supplied_question_ids is None:
@@ -160,7 +181,12 @@ def persist_answers(
         )
     canonical = serialise_answers(flow, answers, only_question_ids=supplied_question_ids)
     facts = tuple(UserProfileFact(path=path, value=value) for path, value in canonical.items() if value)
-    return set_active_fields(state, facts)
+    apply_wizard_fact_changes(
+        profile_id=profile_id,
+        changes=facts,
+        event_type="profile.wizard.answers.applied",
+    )
+    return state
 
 
 def profile_values_from_patch(flow: WizardFlow, supplied: Mapping[str, str]) -> dict[str, str]:
@@ -200,7 +226,7 @@ def persist_patch(
     model — which would demand every required field — and never seeds a
     descriptor default for an unsupplied question. Each supplied value
     is re-validated through its widget validator, mapped to its
-    ``profile_key``, and upserted via :func:`set_active_fields`. A
+    ``profile_key``, and CAS-published as one authenticated command. A
     question with no ``profile_key`` is not a profile fact and is
     skipped.
     """
@@ -209,7 +235,14 @@ def persist_patch(
     facts = tuple(
         UserProfileFact(path=path, value=value) for path, value in profile_values_from_patch(flow, supplied).items()
     )
-    return set_active_fields(state, facts)
+    from ...core import require_active_bucket_id
+
+    apply_wizard_fact_changes(
+        profile_id=require_active_bucket_id(),
+        changes=facts,
+        event_type="profile.wizard.patch.applied",
+    )
+    return state
 
 
 def project_answers(flow: WizardFlow, values: Mapping[str, str]) -> BaseModel:

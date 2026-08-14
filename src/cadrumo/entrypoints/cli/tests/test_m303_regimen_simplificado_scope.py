@@ -11,7 +11,6 @@ from pathlib import Path
 import pytest
 
 from ....application.calculations import IvaWalletDecisionRepository
-from ....application.user_profile import ProfileRecordRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.deadlines import M303RegimeComposition
@@ -19,6 +18,7 @@ from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from .envelope_helpers import unwrap_schema_envelope
 
@@ -39,10 +39,9 @@ def _store_current_profile(
     *,
     composition: M303RegimeComposition,
 ) -> None:
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=runtime_profile.repository).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="M303 CLI scope profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="M303"),
@@ -60,7 +59,9 @@ def _store_current_profile(
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             ),
-        )
+        ),
+        root=runtime_profile.storage_root,
+        label="M303 CLI scope profile",
     )
 
 

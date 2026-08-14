@@ -9,7 +9,7 @@ categories held. No mocks.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -17,15 +17,11 @@ from click.testing import Result
 
 from ....domain.user_profile import UserProfilePortableExport
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ._isolated_profile_storage_fixtures import _isolated_source
+
+__all__ = ["_isolated_source"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_source(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
 
 
 def _invoke(args: Sequence[str]) -> Result:
@@ -64,7 +60,7 @@ def test_subject_access_request_writes_parsable_archive(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     assert out.is_file()
     bundle = UserProfilePortableExport.model_validate_json(out.read_text(encoding="utf-8"))
-    assert bundle.profile.display_name == "subject"
+    assert any(fact.path == "identity.name" and fact.value == "Subject" for fact in bundle.profile.facts)
 
 
 def test_subject_access_request_envelope_lists_data_categories(tmp_path: Path) -> None:

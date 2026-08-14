@@ -128,7 +128,7 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
 
 
 def _active_profile_tax_id(bucket_id: str) -> str | None:
-    record = ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+    record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     value = record_to_path_values(record).get("identity.tax_id")
     return value.strip().upper() if value is not None and value.strip() else None
 

@@ -59,6 +59,7 @@ from ._errors import (
     PdfExtractionCoverageMixin,
     PdfModeloImportError,
 )
+from ._protocols import JustificanteRepositoryProtocol
 from ._schema import Justificante, JustificanteParserBackend
 
 __all__ = [
@@ -67,6 +68,7 @@ __all__ = [
     "JustificanteError",
     "JustificanteParseError",
     "JustificanteParserBackend",
+    "JustificanteRepositoryProtocol",
     "JustificanteVerificationError",
     "PdfExtractionCoverageMixin",
     "PdfModeloImportError",

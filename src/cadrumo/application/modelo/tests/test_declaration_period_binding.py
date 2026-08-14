@@ -30,9 +30,9 @@ from ....domain.calculations.registry import BindingId
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
-from ...user_profile import ProfileRecordRepository
 from .. import calculate_modelo_revision, create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -63,7 +63,6 @@ def _seed_taxpayer_profile(objects: SecureObjectRepository) -> None:
     the work-unit taxpayer identity."""
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value=_TAXPAYER_NIF),
             UserProfileFact(path="identity.name", value="Test"),
@@ -85,7 +84,7 @@ def _seed_taxpayer_profile(objects: SecureObjectRepository) -> None:
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(record)
+    seed_test_profile_record(record)
 
 
 def _repositories():

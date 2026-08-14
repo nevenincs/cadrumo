@@ -91,9 +91,9 @@ from ....domain.transactions import (
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.filing_evidence import general_m303_filing_evidence
+from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations import CalculationObservationRepository, IvaWalletDecisionRepository
 from ...invoices import build_catalogue_invoice
-from ...user_profile import ProfileRecordRepository
 from .. import (
     ModeloCrossPeriodCleanStateError,
     ModeloExportCommand,
@@ -427,10 +427,9 @@ def _wallet_decision(
 
 def _store_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed the ready taxpayer profile the M303 gates read."""
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="Laura - Taller Sol",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),
                 UserProfileFact(path="identity.name", value="Laura"),
@@ -460,10 +459,9 @@ def _store_profile(secure_objects: SecureObjectRepository) -> None:
 
 def _store_irene_sl_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed Irene SL's IVA profile for the late-local-file persona path."""
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="Irene SL",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_IRENE_TAX_ID),
                 UserProfileFact(path="identity.legal_name", value="Irene SL"),

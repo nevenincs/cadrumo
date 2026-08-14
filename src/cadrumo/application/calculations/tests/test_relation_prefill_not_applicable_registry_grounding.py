@@ -35,8 +35,8 @@ import pytest
 from ....core import Modelo
 from ....core.resources import resources
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import ProfileRecordRepository
 from .._relation_prefill import (
     _economic_activity_conditional_source_modelos,
     _not_applicable_source_modelos_for_bucket,
@@ -62,7 +62,6 @@ def _save_profile(bucket_id: str, extra_facts: tuple[UserProfileFact, ...]) -> N
     """Persist a real encrypted bucket profile carrying ``extra_facts``."""
     record = UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="00000000T"),
             UserProfileFact(path="identity.legal_name", value="Relation Prefill Grounding"),
@@ -73,7 +72,7 @@ def _save_profile(bucket_id: str, extra_facts: tuple[UserProfileFact, ...]) -> N
         created_at=_T0,
         updated_at=_T0,
     )
-    ProfileRecordRepository(bucket_id=bucket_id).save(record)
+    seed_test_profile_record(record)
 
 
 class TestCandidateSetIsRegistryGrounded:

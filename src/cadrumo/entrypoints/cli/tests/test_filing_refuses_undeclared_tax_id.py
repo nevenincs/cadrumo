@@ -77,19 +77,19 @@ def _persist_facts(*, include_tax_id: bool) -> None:
     entry: the path is simply never among the facts written, which is what makes
     absence unambiguous.
     """
-    from ....application.user_profile import ProfileRecordRepository, profile_storage_session
+    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
+    from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None, "profile create must install an active-profile pointer"
     with profile_storage_session(bucket_id):
-        repository = ProfileRecordRepository(bucket_id=bucket_id)
-        record = repository.load(bucket_id)
+        record = load_test_profile_record(bucket_id)
         kept = {fact.path: fact for fact in record.facts if fact.path != "identity.tax_id"}
         kept.update({fact.path: fact for fact in _SUPPORTING_FACTS})
         if include_tax_id:
             kept["identity.tax_id"] = UserProfileFact(path="identity.tax_id", value=_TAX_ID)
-        repository.save(
+        replace_test_profile_record(
             record.model_copy(
                 update={
                     "facts": tuple(kept[path] for path in sorted(kept)),
@@ -100,13 +100,14 @@ def _persist_facts(*, include_tax_id: bool) -> None:
 
 
 def _active_record():
-    from ....application.user_profile import ProfileRecordRepository, profile_storage_session
+    from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
+    from ....tests.profile_capsule import load_test_profile_record
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     with profile_storage_session(bucket_id):
-        return ProfileRecordRepository(bucket_id=bucket_id).load(bucket_id)
+        return load_test_profile_record(bucket_id)
 
 
 def _export_result():

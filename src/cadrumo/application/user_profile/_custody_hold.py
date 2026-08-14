@@ -12,14 +12,13 @@ from ...core import StorageCategory, storage_location
 from ...core.paths import effective_storage_root
 from ...core.time import validate_utc_aware
 from .._profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
+from ._custody_hold_models import ProfileCustodyHoldEvidence, evidence_from_owner_projection
 from ._custody_transactions import (
     ProfileCustodyHoldAssessment,
-    ProfileCustodyHoldEvidence,
     ProfileCustodyTransactionCorruptError,
     ProfileCustodyTransactionError,
     ProfileCustodyTransactionRefusalError,
     canonical_model_bytes,
-    evidence_from_owner_projection,
 )
 
 

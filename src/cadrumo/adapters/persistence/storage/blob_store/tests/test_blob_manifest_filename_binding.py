@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import json
 import secrets
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -48,12 +47,6 @@ _LAYOUTS = (
     pytest.param(SensitivityClass.CORPUS, id="plaintext-corpus"),
     pytest.param(SensitivityClass.FINANCIAL, id="ciphertext-financial"),
 )
-
-
-@pytest.fixture
-def store(tmp_path: Path) -> Iterator[EncryptedBlobStore]:
-    provider = EphemeralMasterKeyProvider(key=secrets.token_bytes(KEY_SIZE))
-    yield EncryptedBlobStore(root_dir=tmp_path / "blob-store", master_key_provider=provider)
 
 
 def _manifest_path(store: EncryptedBlobStore, digest: str) -> Path:

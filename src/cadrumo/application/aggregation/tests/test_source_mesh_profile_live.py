@@ -20,10 +20,10 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionSourceResolver, reconcile_iva_compensation_wallet
 from ...modelo import resolve_profile_sourced_bindings
-from ...user_profile import ProfileRecordRepository
 from .. import CalculationSourceContext, ProfileSourceResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -65,7 +65,6 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
     return UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Renta perfil Ñandú",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Ñ"),
             UserProfileFact(path="tax_residence.ccaa", value=ccaa),
@@ -79,7 +78,6 @@ def _registered_modelo_profile() -> UserProfileRecord:
     """Supply one calculation-relevant fact for every registered modelo profile surface."""
     return UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Profile resolver cross-model smoke",
         facts=(
             UserProfileFact(path="censo.status", value="alta"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
@@ -160,7 +158,7 @@ def test_profile_source_resolver_fingerprints_storage_loaded_profile(
     secure_profile_backend: None,
 ) -> None:
     snapshot = _modelo_100_snapshot()
-    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(_profile_with_ccaa("madrid"))
+    seed_test_profile_record(_profile_with_ccaa("madrid"))
 
     resolution = ProfileSourceResolver(registry_snapshot=snapshot).resolve(
         CalculationSourceContext(

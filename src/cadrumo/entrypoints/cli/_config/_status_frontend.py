@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from .._common import _format_of
+from .._common import format_of
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -55,7 +55,7 @@ def present_status_tui(ctx: typer.Context) -> bool:
     from ....application.flows import detect_frontend_capability
     from ....core.flows import FrontendCapability
 
-    if _format_of(ctx) == "json":
+    if format_of(ctx) == "json":
         return False
     if detect_frontend_capability() is not FrontendCapability.FULL_SCREEN:
         return False
@@ -83,7 +83,7 @@ def build_status_page_data() -> StatusPageData:
     return StatusPageData(
         active_profile_label=active_label,
         facts=_build_fact_rows(record),
-        profiles=_build_profile_rows(active_uuid),
+        profiles=_build_profile_rows(active_uuid, record=record),
         auth=_build_auth_view(state, active_uuid=active_uuid),
         recovery=_build_recovery_view(),
         notices=build_active_profile_notices(record) if active_uuid is not None else (),
@@ -146,14 +146,18 @@ def _read_active_record(state: WorkflowState | None) -> UserProfileRecord | None
         return None
 
 
-def _build_profile_rows(active_uuid: str | None) -> tuple[StatusProfileRow, ...]:
+def _build_profile_rows(
+    active_uuid: str | None,
+    *,
+    record: UserProfileRecord | None = None,
+) -> tuple[StatusProfileRow, ...]:
     """Project the profile bucket scan into rows, degrading to empty on failure."""
     from ....adapters.inbound.tui import StatusProfileRow
     from ....application.workflow import list_profile_buckets
 
     try:
         pointers = sorted(
-            list_profile_buckets(include_tombstoned=True).values(),
+            list_profile_buckets().values(),
             key=lambda pointer: pointer.label.casefold(),
         )
     except _guarded_read_errors():
@@ -161,7 +165,7 @@ def _build_profile_rows(active_uuid: str | None) -> tuple[StatusProfileRow, ...]
     return tuple(
         StatusProfileRow(
             label=pointer.label,
-            status=str(pointer.status.value),
+            setup_state=(record.setup_state.value if record is not None and pointer.bucket_id == active_uuid else None),
             active=pointer.bucket_id == active_uuid,
         )
         for pointer in pointers

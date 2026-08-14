@@ -8,68 +8,29 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .. import UserProfileFact, UserProfileRecord, UserProfileSnapshot, UserProfileStatus
+from .. import ProfileSetupState, UserProfileFact, UserProfileRecord, UserProfileSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PROFILE_ID = "8d87424d-0b5a-469e-b802-02ffdad316f1"
 _ACTIVE_PROFILE_ID = "503a9d70-8308-4cf8-9f56-0dd357f88594"
-_REMOVED_PROFILE_ID = "6903a7e2-6312-49ef-a54e-dcfe7a520faf"
 
 
-def test_profile_record_is_strict_frozen_and_tombstones_live_root() -> None:
+def test_profile_record_is_strict_frozen_and_carries_setup_state() -> None:
     created_at = datetime(2026, 5, 7, 10, 0, tzinfo=UTC)
-    removed_at = datetime(2026, 5, 7, 11, 0, tzinfo=UTC)
     profile = UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Default",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+        setup_state=ProfileSetupState.COMPLETE,
         created_at=created_at,
         updated_at=created_at,
     )
 
-    tombstoned = profile.tombstone(removed_at=removed_at)
-
-    assert tombstoned.status is UserProfileStatus.TOMBSTONED
-    assert tombstoned.removed_at == removed_at
-    assert tombstoned.updated_at == removed_at
-    assert profile.status is UserProfileStatus.ACTIVE
+    assert profile.setup_state is ProfileSetupState.COMPLETE
+    assert len(profile.content_digest) == 64
 
     with pytest.raises(ValidationError, match="frozen_instance"):
-        profile.display_name = "Changed"
-
-
-def test_reactivate_is_the_symmetric_inverse_of_tombstone() -> None:
-    """``reactivate`` clears ``removed_at`` and flips status back to active.
-
-    A tombstone -> reactivate round trip restores exactly the lifecycle
-    invariant a freshly-created active profile carries (no ``removed_at``),
-    while leaving every other field (facts, created_at, display_name)
-    untouched.
-    """
-    created_at = datetime(2026, 5, 7, 10, 0, tzinfo=UTC)
-    removed_at = datetime(2026, 5, 7, 11, 0, tzinfo=UTC)
-    reactivated_at = datetime(2026, 5, 7, 12, 0, tzinfo=UTC)
-    profile = UserProfileRecord(
-        profile_id=_PROFILE_ID,
-        display_name="Default",
-        facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
-        created_at=created_at,
-        updated_at=created_at,
-    )
-
-    tombstoned = profile.tombstone(removed_at=removed_at)
-    reactivated = tombstoned.reactivate(reactivated_at=reactivated_at)
-
-    assert reactivated.status is UserProfileStatus.ACTIVE
-    assert reactivated.removed_at is None
-    assert reactivated.updated_at == reactivated_at
-    assert reactivated.created_at == created_at
-    assert reactivated.facts == profile.facts
-    assert reactivated.display_name == profile.display_name
-    # The intermediate tombstoned copy is untouched (strict-frozen, and
-    # the reactivate call built a fresh copy rather than mutating it).
-    assert tombstoned.status is UserProfileStatus.TOMBSTONED
+        profile.setup_state = ProfileSetupState.INCOMPLETE
 
 
 @pytest.mark.parametrize(
@@ -77,23 +38,21 @@ def test_reactivate_is_the_symmetric_inverse_of_tombstone() -> None:
     (
         (
             {
-                "profile_id": _REMOVED_PROFILE_ID,
-                "display_name": "Removed",
-                "status": "tombstoned",
+                "profile_id": _ACTIVE_PROFILE_ID,
+                "status": "active",
             },
-            "tombstoned profiles must carry removed_at",
+            "extra_forbidden",
         ),
         (
             {
                 "profile_id": _ACTIVE_PROFILE_ID,
                 "display_name": "Active",
-                "removed_at": datetime(2026, 5, 7, tzinfo=UTC),
             },
-            "active profiles must not carry removed_at",
+            "extra_forbidden",
         ),
     ),
 )
-def test_profile_record_rejects_invalid_lifecycle_state(
+def test_profile_record_rejects_removed_lifecycle_fields(
     payload: dict[str, object],
     expected_message: str,
 ) -> None:
@@ -162,11 +121,10 @@ def test_json_restoration_still_recovers_canonical_decimal_and_zero(
     assert isinstance(reloaded.value, Decimal)
 
 
-def test_snapshot_is_canonical_and_rejects_tombstoned_profiles() -> None:
+def test_snapshot_is_canonical_and_rejects_incomplete_profiles() -> None:
     created_at = datetime(2026, 5, 7, 10, 0, tzinfo=UTC)
     profile = UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Default",
         facts=(
             UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.50")),
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -185,8 +143,11 @@ def test_snapshot_is_canonical_and_rejects_tombstoned_profiles() -> None:
     assert first.canonical_hash == second.canonical_hash
     assert [fact.path for fact in first.facts] == ["identity.tax_id", "usage_ratios.business_ratio"]
 
-    with pytest.raises(ValueError, match="cannot snapshot a tombstoned profile"):
-        UserProfileSnapshot.from_profile(profile.tombstone(removed_at=created_at), snapshot_id="snapshot-3")
+    with pytest.raises(ValueError, match="cannot snapshot an incomplete profile record"):
+        UserProfileSnapshot.from_profile(
+            profile.model_copy(update={"setup_state": ProfileSetupState.INCOMPLETE}),
+            snapshot_id="snapshot-3",
+        )
 
 
 def test_snapshot_hash_is_canonical_for_duplicate_same_window_facts() -> None:
@@ -197,7 +158,6 @@ def test_snapshot_hash_is_canonical_for_duplicate_same_window_facts() -> None:
     )
     profile = UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Default",
         facts=facts,
         created_at=created_at,
         updated_at=created_at,

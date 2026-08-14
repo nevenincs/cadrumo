@@ -8,7 +8,6 @@ from typing import Any, TypedDict
 import pytest
 from pydantic import ValidationError
 
-from ......domain.user_profile import UserProfileStatus
 from .._manifest import BucketKeySchedule, BucketManifest, ManifestKdfParams
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -34,9 +33,7 @@ class _ManifestPayloadArgs(TypedDict, total=False):
     created_at: datetime
     last_unlocked_at: datetime | None
     kdf_params: ManifestKdfParams
-    recovery_enrolled: bool
     schema_version: int
-    status: UserProfileStatus
     idle_lock_minutes: int | None
     key_schedule: Any
 
@@ -91,10 +88,8 @@ def _manifest_payload(**overrides: object) -> dict[str, object]:
         "created_at": _CREATED_AT,
         "last_unlocked_at": None,
         "kdf_params": _kdf(),
-        "recovery_enrolled": False,
         "key_schedule": BucketKeySchedule.BUCKET_DEK_V1,
         "schema_version": 1,
-        "status": UserProfileStatus.ACTIVE,
     }
 
     # Apply overrides by checking each known key
@@ -111,12 +106,8 @@ def _manifest_payload(**overrides: object) -> dict[str, object]:
             payload["last_unlocked_at"] = overrides["last_unlocked_at"]
         if "kdf_params" in overrides and isinstance(overrides["kdf_params"], ManifestKdfParams):
             payload["kdf_params"] = overrides["kdf_params"]
-        if "recovery_enrolled" in overrides and isinstance(overrides["recovery_enrolled"], bool):
-            payload["recovery_enrolled"] = overrides["recovery_enrolled"]
         if "schema_version" in overrides and isinstance(overrides["schema_version"], int):
             payload["schema_version"] = overrides["schema_version"]
-        if "status" in overrides and isinstance(overrides["status"], UserProfileStatus):
-            payload["status"] = overrides["status"]
         if "idle_lock_minutes" in overrides and (
             isinstance(overrides["idle_lock_minutes"], int) or overrides["idle_lock_minutes"] is None
         ):
@@ -142,10 +133,8 @@ def _manifest(**overrides: object) -> BucketManifest:
         "created_at": _CREATED_AT,
         "last_unlocked_at": None,
         "kdf_params": _kdf(),
-        "recovery_enrolled": False,
         "key_schedule": BucketKeySchedule.BUCKET_DEK_V1,
         "schema_version": 1,
-        "status": UserProfileStatus.ACTIVE,
     }
 
     # Apply overrides by checking each known key
@@ -162,12 +151,8 @@ def _manifest(**overrides: object) -> BucketManifest:
             payload["last_unlocked_at"] = overrides["last_unlocked_at"]
         if "kdf_params" in overrides and isinstance(overrides["kdf_params"], ManifestKdfParams):
             payload["kdf_params"] = overrides["kdf_params"]
-        if "recovery_enrolled" in overrides and isinstance(overrides["recovery_enrolled"], bool):
-            payload["recovery_enrolled"] = overrides["recovery_enrolled"]
         if "schema_version" in overrides and isinstance(overrides["schema_version"], int):
             payload["schema_version"] = overrides["schema_version"]
-        if "status" in overrides and isinstance(overrides["status"], UserProfileStatus):
-            payload["status"] = overrides["status"]
         if "idle_lock_minutes" in overrides and (
             isinstance(overrides["idle_lock_minutes"], int) or overrides["idle_lock_minutes"] is None
         ):
@@ -192,8 +177,15 @@ def test_rejects_unknown_keys() -> None:
     assert "unexpected" in str(excinfo.value)
 
 
+def test_rejects_the_removed_manifest_recovery_mirror() -> None:
+    with pytest.raises(ValidationError) as excinfo:
+        BucketManifest.model_validate(_manifest_payload(recovery_enrolled=False))
+
+    assert "recovery_enrolled" in str(excinfo.value)
+
+
 def test_rejects_missing_required_manifest_fields() -> None:
-    for missing_field in ("bucket_id", "status"):
+    for missing_field in ("bucket_id", "label"):
         payload = _manifest_payload()
         del payload[missing_field]
 

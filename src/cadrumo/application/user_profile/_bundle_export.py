@@ -43,6 +43,7 @@ from ...core.locks_errors import LockAcquisitionError
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.user_profile import ProfileExportError, ProfileNotFoundError
+from ..profile_custody import default_profile_bucket_event_history_repository
 from ._bundle_export_contracts import (
     ProfileBundleExportPurpose,
     ProfileBundleExportReconcileFailure,
@@ -197,15 +198,15 @@ def prepare_profile_export(
     hold the recorded digest, clears the staged path it names (whether that file
     exists, is half-written, or was never created), and emits no event.
     """
-    from ._orchestration import profile_export_runtime
+    from ._profile_record_repository import require_profile_record_session
 
     repository = journal or ProfileBundleExportJournalRepository()
     target = ProfileBundleExportTarget(destination=request.destination)
     pointer = _resolve_export_profile(request.profile_name)
     _refuse_link_target(request.destination)
-    with profile_export_runtime(pointer.bucket_id):
-        bundle = _serialize_export_bundle(pointer.bucket_id)
-        payload = _render_export_payload(bundle, request=request)
+    require_profile_record_session(pointer.bucket_id)
+    bundle = _serialize_export_bundle(pointer.bucket_id)
+    payload = _render_export_payload(bundle, request=request)
     payload_bytes = payload.encode(UTF_8_ENCODING)
     categories = bundle_data_categories(bundle)
     excluded_categories = bundle_excluded_data_categories(bundle)
@@ -630,26 +631,26 @@ def _emit_export_event(operation: ProfileBundleExportOperation) -> None:
     entry.
     """
     from ...domain.buckets import BucketEventObjectType, BucketEventType, emit_bucket_event
-    from ._orchestration import profile_export_runtime
+    from ._profile_record_repository import require_profile_record_session
 
-    with profile_export_runtime(operation.profile_id) as event_repository:
-        emit_bucket_event(
-            repository=event_repository,
-            bucket_id=operation.profile_id,
-            event_type=BucketEventType.PROFILE_EXPORTED,
-            occurred_at=operation.event_occurred_at,
-            actor=_PROFILE_BUNDLE_EVENT_ACTOR,
-            object_type=BucketEventObjectType.PROFILE,
-            object_id=operation.profile_id,
-            payload={
-                "display_name": operation.display_name,
-                "out": operation.destination,
-                "purpose": operation.purpose.value,
-                "schema_version": str(operation.bundle_schema_version),
-                "transport": operation.transport.value,
-            },
-            payload_version=_PROFILE_BUNDLE_EVENT_PAYLOAD_VERSION,
-        )
+    require_profile_record_session(operation.profile_id)
+    emit_bucket_event(
+        repository=default_profile_bucket_event_history_repository(),
+        bucket_id=operation.profile_id,
+        event_type=BucketEventType.PROFILE_EXPORTED,
+        occurred_at=operation.event_occurred_at,
+        actor=_PROFILE_BUNDLE_EVENT_ACTOR,
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=operation.profile_id,
+        payload={
+            "display_name": operation.display_name,
+            "out": operation.destination,
+            "purpose": operation.purpose.value,
+            "schema_version": str(operation.bundle_schema_version),
+            "transport": operation.transport.value,
+        },
+        payload_version=_PROFILE_BUNDLE_EVENT_PAYLOAD_VERSION,
+    )
 
 
 __all__ = [

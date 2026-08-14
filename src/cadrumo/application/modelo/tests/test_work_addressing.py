@@ -30,9 +30,9 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import ProfileRecordRepository
 from .. import (
     CalculationRevisionNotFoundError,
     ModeloCalculationRevisionSelector,
@@ -72,10 +72,9 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
-    ProfileRecordRepository(bucket_id=bucket_id, objects=objects).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Modelo work addressing profile",
             facts=_READY_PROFILE_FACTS,
             created_at=_T0,
             updated_at=_T0,

@@ -4,17 +4,21 @@ from __future__ import annotations
 
 import os
 import stat
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import ExitStack
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
-from pydantic import ValidationError
-
 from .....core import StorageCategory, is_link_like, storage_location
 from .....core.paths import effective_storage_root
+from ._capsule_data import (
+    read_committed_data_file_posix as _read_committed_data_file_posix,
+)
+from ._capsule_data import (
+    read_committed_data_file_windows as _read_committed_data_file_windows,
+)
 from ._capsule_data import (
     read_password_envelope as _read_password_envelope,
 )
@@ -28,6 +32,12 @@ from ._capsule_data import (
     read_sentinel_fd as _read_sentinel_fd,
 )
 from ._capsule_data import (
+    replace_data_file as _replace_data_file,
+)
+from ._capsule_data import (
+    validate_committed_data_member as _validate_committed_data_member,
+)
+from ._capsule_data import (
     validate_data_file_inventory as _validate_data_file_inventory,
 )
 from ._capsule_data import (
@@ -36,7 +46,10 @@ from ._capsule_data import (
 from ._capsule_data import (
     write_posix_data_files as _write_posix_data_files,
 )
-from ._capsule_discovery import anchored_current_capsule_ids
+from ._capsule_discovery import (
+    anchored_current_capsule_ids,
+    refuse_retired_profile_custody_paths,
+)
 from ._capsule_records import (
     PROFILE_CUSTODY_COMMIT_MAX_BYTES,
     PROFILE_CUSTODY_COMMIT_SCHEMA_VERSION,
@@ -44,13 +57,12 @@ from ._capsule_records import (
     PROFILE_CUSTODY_LABEL_FILENAME,
     PROFILE_CUSTODY_LABEL_MAX_BYTES,
     PROFILE_CUSTODY_LAYOUT_VERSION,
+    ProfileCustodyCapsuleLabel,
     ProfileCustodyCommit,
     ProfileCustodyDeletionMarker,
     ProfileCustodyPasswordMaterial,
+    parse_profile_custody_capsule_label,
     parse_profile_custody_commit,
-)
-from ._capsule_records import (
-    ProfileCustodyCapsuleLabel as _ProfileCapsuleLabel,
 )
 from ._capsule_records import (
     parse_profile_custody_deletion_marker as _parse_profile_custody_deletion_marker,
@@ -378,6 +390,7 @@ def publish_profile_custody_capsule(
     root: Path | None = None,
     published_at: datetime | None = None,
     stage_only: bool = False,
+    stage_initializer: Callable[[Path], None] | None = None,
 ) -> Path:
     """Build a complete sibling staging capsule and optionally publish it with one rename.
 
@@ -410,6 +423,7 @@ def publish_profile_custody_capsule(
             recovery_envelope=recovery_envelope,
             published_at=published_at,
             stage_only=stage_only,
+            stage_initializer=stage_initializer,
         )
     staging = profile_custody_staging_path(
         profile_id=profile_id,
@@ -444,6 +458,8 @@ def publish_profile_custody_capsule(
                 )
             write_profile_custody_sentinel(data_root / PROFILE_CUSTODY_SENTINEL_FILENAME, sentinel)
             _write_data_files(data_root, data_files)
+            if stage_initializer is not None:
+                stage_initializer(staging)
             _fsync_directory(custody_root)
             _fsync_directory(data_root)
             commit = ProfileCustodyCommit.create(
@@ -499,6 +515,7 @@ def _publish_profile_custody_capsule_posix(
     recovery_envelope: ProfileCustodyRecoveryEnvelope | None,
     published_at: datetime | None,
     stage_only: bool,
+    stage_initializer: Callable[[Path], None] | None,
 ) -> Path:
     """Publish through descriptor-relative POSIX operations only."""
     staging_name = f".{profile_id}.staging-{transaction_id}"
@@ -526,6 +543,8 @@ def _publish_profile_custody_capsule_posix(
                     )
                 _write_exclusive_fsynced_fd(data_fd, PROFILE_CUSTODY_SENTINEL_FILENAME, sentinel.canonical_json_bytes())
                 _write_posix_data_files(data_fd, data_files)
+                if stage_initializer is not None:
+                    stage_initializer(capsules_root / staging_name)
                 os.fsync(custody_fd)
                 os.fsync(data_fd)
             finally:
@@ -675,6 +694,7 @@ def list_current_profile_custody_capsule_ids(
     capsules_root = storage_root / storage_location(StorageCategory.BUCKETS).relative_path()
     if not os.path.lexists(capsules_root):
         return ()
+    refuse_retired_profile_custody_paths(capsules_root)
     return anchored_current_capsule_ids(
         capsules_root,
         parse_commit=parse_profile_custody_commit,
@@ -697,13 +717,13 @@ def profile_custody_staging_path(
     return destination.parent / f".{profile_id}.staging-{transaction_id}"
 
 
-def load_committed_profile_custody_label(
+def load_committed_profile_custody_label_record(
     profile_id: UUID,
     *,
     settings: Settings | None = None,
     root: Path | None = None,
-) -> str:
-    """Load the canonical non-secret label bound inside one committed capsule.
+) -> ProfileCustodyCapsuleLabel:
+    """Load the provenance-authenticated label bound inside one committed capsule.
 
     The label is staged with the capsule and becomes visible only through the
     same commit proof as password material.  A malformed or rewritten label is
@@ -713,7 +733,7 @@ def load_committed_profile_custody_label(
     capsule_path = recognize_current_profile_capsule(profile_id, settings=settings, root=root)
     if capsule_path is None:
         raise ProfileCustodyRecordError("profile capsule is not committed")
-    return _load_profile_custody_label_from_verified_capsule(capsule_path)
+    return _load_profile_custody_label_from_verified_capsule(capsule_path, profile_id=profile_id)
 
 
 def load_committed_profile_custody_data_file(
@@ -725,55 +745,60 @@ def load_committed_profile_custody_data_file(
     root: Path | None = None,
 ) -> bytes:
     """Read one regular capsule ``data/`` member after current-marker proof."""
-    if maximum_bytes < 1:
-        raise ValueError("profile custody data read maximum must be positive")
-    parts = tuple(relative_name.split("/"))
-    if not parts or any(part in {"", ".", ".."} for part in parts):
-        raise ProfileCustodyRecordError("profile custody data member path is invalid")
+    parts = _validate_committed_data_member(relative_name, maximum_bytes=maximum_bytes)
     capsule_path = recognize_current_profile_capsule(profile_id, settings=settings, root=root)
     if capsule_path is None:
         raise ProfileCustodyRecordError("profile capsule is not committed")
     data_path = capsule_path / "data"
     member_path = data_path.joinpath(*parts)
     if os.name != "nt":
-        with _posix_directory_fd(capsule_path) as capsule_fd:
-            data_fd = _posix_open_child_directory(capsule_fd, "data")
-            directory_fd = data_fd
-            try:
-                for segment in parts[:-1]:
-                    child_fd = _posix_open_child_directory(directory_fd, segment)
-                    if directory_fd != data_fd:
-                        os.close(directory_fd)
-                    directory_fd = child_fd
-                return _read_regular_file_fd(
-                    directory_fd,
-                    parts[-1],
-                    display_path=member_path,
-                    maximum_bytes=maximum_bytes,
-                    trace=[],
-                )
-            finally:
-                if directory_fd != data_fd:
-                    os.close(directory_fd)
-                os.close(data_fd)
+        return _read_committed_data_file_posix(
+            capsule_path,
+            parts,
+            member_path=member_path,
+            maximum_bytes=maximum_bytes,
+        )
+    return _read_committed_data_file_windows(
+        capsule_path,
+        parts,
+        member_path=member_path,
+        maximum_bytes=maximum_bytes,
+    )
+
+
+def replace_committed_profile_custody_data_file(
+    profile_id: UUID,
+    relative_name: str,
+    payload: bytes,
+    *,
+    expected_sha256: str,
+    settings: Settings | None = None,
+    root: Path | None = None,
+) -> None:
+    """CAS-replace one physical record only after recognizing its capsule.
+
+    This is deliberately not a generic filesystem write API.  The lifecycle
+    passes the canonical current-record name, holds the profile transaction
+    lock, and supplies the digest of the authenticated record it is replacing.
+    """
+    capsule_path = recognize_current_profile_capsule(profile_id, settings=settings, root=root)
+    if capsule_path is None:
+        raise ProfileCustodyRecordError("profile record command requires a committed capsule")
+    data_path = capsule_path / "data"
     with ExitStack() as anchors:
         _anchor_directory(anchors, capsule_path)
         _anchor_directory(anchors, data_path)
-        parent = data_path
-        for segment in parts[:-1]:
-            parent = parent / segment
-            _anchor_directory(anchors, parent)
-        return _read_regular_file(member_path, maximum_bytes=maximum_bytes, trace=[])
+        _replace_data_file(data_path, relative_name, payload, expected_sha256=expected_sha256)
 
 
-def load_staged_profile_custody_label(
+def load_staged_profile_custody_label_record(
     profile_id: UUID,
     transaction_id: UUID,
     *,
     settings: Settings | None = None,
     root: Path | None = None,
-) -> str:
-    """Load the canonical label from one verified, transaction-owned stage.
+) -> ProfileCustodyCapsuleLabel:
+    """Load the provenance-authenticated label from a transaction-owned stage.
 
     Recovery consumes the same bytes that eventual publication exposes.  The
     inventory proof prevents a journal from binding a label that differs from
@@ -791,11 +816,15 @@ def load_staged_profile_custody_label(
         settings=settings,
         root=root,
     )
-    return _load_profile_custody_label_from_verified_capsule(stage_path)
+    return _load_profile_custody_label_from_verified_capsule(stage_path, profile_id=profile_id)
 
 
-def _load_profile_custody_label_from_verified_capsule(capsule_path: Path) -> str:
-    """Read a label only after the caller established the capsule identity."""
+def _load_profile_custody_label_from_verified_capsule(
+    capsule_path: Path,
+    *,
+    profile_id: UUID,
+) -> ProfileCustodyCapsuleLabel:
+    """Read the UUID-bound label record after capsule identity verification."""
     label_path = capsule_path / "data" / PROFILE_CUSTODY_LABEL_FILENAME
     if os.name != "nt":
         with _posix_directory_fd(capsule_path) as capsule_fd:
@@ -816,12 +845,11 @@ def _load_profile_custody_label_from_verified_capsule(capsule_path: Path) -> str
             _anchor_directory(anchors, capsule_path / "data")
             payload = _read_regular_file(label_path, maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES, trace=[])
     try:
-        decoded = payload.decode("utf-8", errors="strict")
-        label = _ProfileCapsuleLabel(label=decoded).label
-    except (UnicodeDecodeError, ValidationError, ValueError, TypeError) as exc:
+        label = parse_profile_custody_capsule_label(payload)
+    except (ProfileCustodyRecordError, ValueError, TypeError) as exc:
         raise ProfileCustodyRecordError("profile capsule label is invalid") from exc
-    if label.encode("utf-8") != payload:
-        raise ProfileCustodyRecordError("profile capsule label is not canonically encoded")
+    if label.profile_id != profile_id:
+        raise ProfileCustodyRecordError("profile capsule label UUID differs from its committed capsule")
     return label
 
 
@@ -922,9 +950,9 @@ __all__ = [
     "inventory_committed_profile_custody_capsule",
     "list_current_profile_custody_capsule_ids",
     "load_committed_profile_custody_data_file",
-    "load_committed_profile_custody_label",
+    "load_committed_profile_custody_label_record",
     "load_committed_profile_password_material",
-    "load_staged_profile_custody_label",
+    "load_staged_profile_custody_label_record",
     "parse_profile_custody_commit",
     "profile_custody_deletion_path",
     "profile_custody_staging_path",
@@ -932,6 +960,7 @@ __all__ = [
     "recognize_current_profile_capsule",
     "remove_profile_custody_deletion_tombstone",
     "rename_profile_custody_capsule_for_deletion",
+    "replace_committed_profile_custody_data_file",
     "verify_profile_custody_deletion_marker",
     "verify_profile_custody_deletion_tombstone",
     "write_profile_custody_deletion_marker",

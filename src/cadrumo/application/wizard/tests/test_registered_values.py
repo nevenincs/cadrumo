@@ -63,7 +63,6 @@ def _choice_label_key(question_id: str, token: str) -> str:
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
     return UserProfileRecord(
         profile_id=new_profile_id(),
-        display_name="Operator",
         facts=facts,
     )
 

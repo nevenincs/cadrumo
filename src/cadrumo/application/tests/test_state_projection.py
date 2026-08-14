@@ -21,9 +21,10 @@ from __future__ import annotations
 import logging
 from collections.abc import Iterator, Mapping
 from contextlib import ExitStack
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 from pydantic import SecretStr
@@ -36,24 +37,29 @@ from ...adapters.persistence.storage.bucket import (
     provision_bucket_directory,
     write_manifest,
 )
+from ...adapters.persistence.storage.custody import load_committed_profile_password_material, unlock_profile_custody
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core import Period
-from ...core.config import SecretStoreBackend, override_settings
+from ...core.config import SecretStoreBackend, Settings, override_settings
 from ...domain.categories import SpendingCategory
 from ...domain.transactions import BusinessClassification, TransactionDirection
-from ...domain.user_profile import UserProfileStatus
-from ...tests.secure_sql import dev_test_database_password
 from ...tests.user_profile import register_minimal_profile
 from ..auth import inspect_operator_auth
 from ..auth import test_operator_auth as probe_operator_auth
 from ..ledger import ManualLedgerTransactionCommand, create_manual_transaction
 from ..modelo import create_work_unit, discard_work_unit, resolve_registry_revision_for_work_target
 from ..overview import build_overview_status_report
+from ..profile_custody import (
+    profile_bind_bucket_session,
+    profile_bucket_session_open_resumed,
+    profile_close_bucket_session,
+)
 from ..state_projection import (
     ModeloReadinessRequest,
     build_operator_state_projection,
     modelo_requires_ledger_preflight,
 )
+from ..user_profile import close_active_profile_record_session, register_profile_with_credentials
 from ..wizard import WIZARD_FLOWS
 from ..workflow import WorkflowState, workflow_state_repository
 
@@ -61,14 +67,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False
+_ACTIVE_PROFILE_ID: str | None = None
 _STAGED_MANIFEST_CREATED_AT = datetime(2026, 5, 28, 15, 30, tzinfo=UTC)
+_OPERATOR_PASSPHRASE = "state projection test passphrase 123"  # noqa: S105 - test-only credential
 
 
 @pytest.fixture(autouse=True)
 def isolated_storage(tmp_path: Path) -> Iterator[None]:
     """Bind a real isolated filesystem root per test."""
 
-    global _ACTIVE_STORAGE_STACK, _PROFILE_SPAN_OPEN
+    global _ACTIVE_STORAGE_STACK, _ACTIVE_PROFILE_ID, _PROFILE_SPAN_OPEN
 
     assert WIZARD_FLOWS
     dispose_engine()
@@ -78,30 +86,19 @@ def isolated_storage(tmp_path: Path) -> Iterator[None]:
                 cadrumo_local_storage_root=tmp_path,
                 cadrumo_active_profile=None,
                 cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-                cadrumo_secret_passphrase=SecretStr(dev_test_database_password()),
+                cadrumo_secret_passphrase=SecretStr(_OPERATOR_PASSPHRASE),
             ),
         )
         _ACTIVE_STORAGE_STACK = stack
+        _ACTIVE_PROFILE_ID = None
         _PROFILE_SPAN_OPEN = False
         try:
             yield
         finally:
             dispose_engine()
+            _ACTIVE_PROFILE_ID = None
             _PROFILE_SPAN_OPEN = False
             _ACTIVE_STORAGE_STACK = None
-
-
-def _ensure_operator_storage_span() -> None:
-    global _PROFILE_SPAN_OPEN
-
-    if _PROFILE_SPAN_OPEN:
-        return
-    if _ACTIVE_STORAGE_STACK is None:
-        raise RuntimeError("state projection test storage span is not active")
-    from ..user_profile import profile_create_storage_span
-
-    _ACTIVE_STORAGE_STACK.enter_context(profile_create_storage_span("11111111-1111-4111-8111-111111111111"))
-    _PROFILE_SPAN_OPEN = True
 
 
 def _active_registry_revision_id(*, modelo: str, filing_year: int, period: str) -> str:
@@ -124,10 +121,19 @@ def _active_registry_revision_id(*, modelo: str, filing_year: int, period: str) 
 
 
 def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> str:
-    """Register and activate a minimal profile; return its bucket id."""
+    """Create one current capsule, then bind its authenticated live session."""
 
-    _ensure_operator_storage_span()
+    global _ACTIVE_PROFILE_ID, _PROFILE_SPAN_OPEN
+
+    if _PROFILE_SPAN_OPEN:
+        if _ACTIVE_PROFILE_ID is None:
+            raise RuntimeError("state projection profile span lost its active capsule UUID")
+        return _ACTIVE_PROFILE_ID
+    if _ACTIVE_STORAGE_STACK is None:
+        raise RuntimeError("state projection test storage span is not active")
+
     profile_overrides = {
+        "identity.tax_id": "00000000T",
         "iva.m303_regime_composition": "general",
         "iva.redeme_enrolled": "false",
         "iva.cash_accounting_regime_enrolled": "false",
@@ -136,15 +142,37 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
     }
     if overrides:
         profile_overrides.update(overrides)
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(
-            state,
-            profile_id="11111111-1111-4111-8111-111111111111",
-            overrides=profile_overrides,
-        ),
+
+    outcome = register_profile_with_credentials(
+        label="state projection operator",
+        passphrase=_OPERATOR_PASSPHRASE,
     )
+    storage_root = Settings().cadrumo_local_storage_root
+    material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
+    unlocked = unlock_profile_custody(material.envelope, _OPERATOR_PASSPHRASE, sentinel=material.sentinel)
+    instant = datetime.now(UTC)
+    session = profile_bucket_session_open_resumed(
+        bucket_id=outcome.profile_id,
+        dek=unlocked.dek,
+        idle_minutes=15,
+        opened_at=instant,
+        idle_deadline=instant + timedelta(minutes=15),
+        absolute_deadline=instant + timedelta(hours=4),
+        storage_root=storage_root,
+    )
+    profile_bind_bucket_session(session)
+    _ACTIVE_STORAGE_STACK.callback(profile_close_bucket_session)
+    _ACTIVE_STORAGE_STACK.callback(close_active_profile_record_session)
+    register_minimal_profile(
+        WorkflowState(),
+        profile_id=outcome.profile_id,
+        overrides=profile_overrides,
+    )
+
     bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     assert bucket_id is not None
+    _ACTIVE_PROFILE_ID = bucket_id
+    _PROFILE_SPAN_OPEN = True
     return bucket_id
 
 
@@ -176,10 +204,8 @@ def _stage_profile_manifest(root: Path, bucket_id: str) -> None:
                 salt=b"0123456789abcdef",
                 output_length=32,
             ),
-            recovery_enrolled=False,
             key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
             schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-            status=UserProfileStatus.ACTIVE,
         ),
     )
 

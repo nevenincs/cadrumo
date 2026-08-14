@@ -39,9 +39,10 @@ from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
 from ....domain.modelos import Modelo184MemberRow
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import DEFERRED_SOURCE_KINDS, ForeignAssetClass, ForeignAssetIngestObservation
-from ...user_profile import ProfileRecordRepository, build_profile_preflight_requirement
+from ...user_profile import build_profile_preflight_requirement
 from .. import (
     BucketAggregationCalculationResult,
     ModeloAggregationBindingError,
@@ -105,11 +106,10 @@ _ATTRIBUTION_PROFILE_FACTS = (
 )
 
 
-def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_ID) -> None:
-    ProfileRecordRepository(bucket_id=bucket_id, objects=objects).save(
+def _seed_ready_profile(*, bucket_id: str = _BUCKET_ID) -> None:
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Source boundary ready profile",
             facts=_READY_PROFILE_FACTS,
             created_at=_T0,
             updated_at=_T0,
@@ -117,11 +117,10 @@ def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str = _BU
     )
 
 
-def _seed_attribution_entity_profile(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_ID) -> None:
-    ProfileRecordRepository(bucket_id=bucket_id, objects=objects).save(
+def _seed_attribution_entity_profile(*, bucket_id: str = _BUCKET_ID) -> None:
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Source boundary attribution profile",
             facts=_ATTRIBUTION_PROFILE_FACTS,
             created_at=_T0,
             updated_at=_T0,
@@ -132,7 +131,7 @@ def _seed_attribution_entity_profile(objects: SecureObjectRepository, *, bucket_
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        _seed_ready_profile(profile.repository)
+        _seed_ready_profile()
         yield profile.repository
 
 
@@ -229,7 +228,7 @@ def test_s08_atribucion_member_profile_source_resolves_m184_rows(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """M184 ``atribucion_member`` rows resolve from real attribution-entity profile facts."""
-    _seed_attribution_entity_profile(secure_objects)
+    _seed_attribution_entity_profile()
     wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
     work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2015-y-siguientes")
 
@@ -289,11 +288,9 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        profile_repository = ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects)
-        profile_repository.save(
+        seed_test_profile_record(
             UserProfileRecord(
                 profile_id=_BUCKET_ID,
-                display_name="M184 attribution profile",
                 facts=profile_facts,
                 created_at=_T0,
                 updated_at=_T0,
@@ -302,10 +299,9 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
         wu_repo, cr_repo, tx_repo, invoice_repo = _repos(objects)
         work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2015-y-siguientes")
 
-        profile_repository.save(
+        seed_test_profile_record(
             UserProfileRecord(
                 profile_id=_BUCKET_ID,
-                display_name="M184 attribution profile",
                 facts=incomplete_facts,
                 created_at=_T0,
                 updated_at=_T0,
@@ -558,7 +554,7 @@ def test_s16_foreign_asset_source_kind_is_enrolled_not_deferred(tmp_path: Path) 
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile(objects)
+        _seed_ready_profile()
         wu_repo, cr_repo, tx_repo, invoice_repo = (
             WorkUnitCatalogueRepository(objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),

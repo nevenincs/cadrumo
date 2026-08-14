@@ -17,7 +17,6 @@ No mocks. Real ``isolated_profile_storage_root`` fixture, real
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -25,16 +24,13 @@ from click.testing import Result
 
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ._isolated_profile_storage_fixtures import _isolated_source
+
+__all__ = ["_isolated_source"]
 from .envelope_helpers import unwrap_envelope_notices, unwrap_schema_envelope
 from .privacy_helpers import assert_public_profile_id_not_leaked, assert_public_profile_payload_redacted
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_source(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
 
 
 def _invoke(args: list[str]) -> Result:

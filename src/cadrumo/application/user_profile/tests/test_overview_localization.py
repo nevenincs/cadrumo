@@ -25,9 +25,9 @@ import pytest
 from ....core.config import override_settings
 from ....domain.user_profile import (
     ProfileFieldType,
+    ProfileSetupState,
     UserProfileFact,
     UserProfileRecord,
-    UserProfileStatus,
     load_user_profile_schema,
     profile_field_label_key,
 )
@@ -67,8 +67,7 @@ def _record() -> UserProfileRecord:
     """A minimal record; the walk is schema-driven so facts are incidental."""
     return UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Localization probe",
-        status=UserProfileStatus.ACTIVE,
+        setup_state=ProfileSetupState.COMPLETE,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
 
@@ -123,18 +122,25 @@ def test_every_field_label_is_localized() -> None:
     assert not identical, f"field labels identical under en and es without an exemption: {identical[:10]}"
 
 
-def test_the_identical_by_nature_exemption_is_narrow_and_real() -> None:
-    """The exemption names real fields and does not swallow the schema.
+def test_the_identical_by_nature_exemption_matches_current_labels() -> None:
+    """The exemption names exactly the currently identical declared labels.
 
-    Anti-vacuity for the gate above: an exemption set that grew to cover
-    everything, or that named paths the schema does not declare, would make
-    that assertion pass over a fully untranslated catalogue.
+    A fully localized schema legitimately has no such labels. Conversely, a
+    non-empty exemption must name only declared fields whose labels really
+    remain identical; otherwise it is stale permission rather than a current
+    catalogue declaration.
     """
     exempt = _identical_by_nature("es")
     declared = set(load_user_profile_schema().field_paths)
+    english = {field.path: field.label for section in _overview_in("en").sections for field in section.fields}
+    spanish = {field.path: field.label for section in _overview_in("es").sections for field in section.fields}
+    identical = frozenset(path for path in english if english[path] == spanish[path])
 
-    assert exempt, "no exemption resolved; the gate above would be asserting nothing new"
     assert exempt <= declared, f"exemption names paths the schema does not declare: {sorted(exempt - declared)}"
+    assert exempt == identical, (
+        "identical-by-nature exemptions must match exactly the current identical labels: "
+        f"missing={sorted(identical - exempt)}, stale={sorted(exempt - identical)}"
+    )
     assert len(exempt) < len(declared) // 10, "the identical-by-nature carve-out has grown into a blanket bypass"
 
 

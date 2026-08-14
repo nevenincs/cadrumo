@@ -20,18 +20,12 @@ cannot be tightened past what the store's own writer produces.
 
 from __future__ import annotations
 
-import secrets
-from collections.abc import Iterator
-from pathlib import Path
-
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ......core.classification import SensitivityClass
 from ......core.hashing import sha256_hex
 from ......core.identity import ContentDigest
-from ......tests.master_key import EphemeralMasterKeyProvider
-from ...crypto import KEY_SIZE
 from .._blob_store import BlobManifest, BlobReference, EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -64,12 +58,6 @@ def _canonical_verdict(value: str) -> str | None:
         return _digest_adapter.validate_python(value)
     except ValidationError:
         return None
-
-
-@pytest.fixture
-def store(tmp_path: Path) -> Iterator[EncryptedBlobStore]:
-    provider = EphemeralMasterKeyProvider(key=secrets.token_bytes(KEY_SIZE))
-    yield EncryptedBlobStore(root_dir=tmp_path / "blob-store", master_key_provider=provider)
 
 
 def _manifest(digest: str, *, ciphertext_digest: str | None = None) -> BlobManifest:

@@ -146,7 +146,6 @@ def test_profile_preflight_reports_irnr_country_as_missing_before_modelo_work() 
     schema = resources().user_profile_schema.singleton
     record = UserProfileRecord(
         profile_id="88888888-8888-4888-8888-888888888888",
-        display_name="IRNR no country",
         facts=(
             UserProfileFact(path="identity.tax_id", value="X1234567L"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),

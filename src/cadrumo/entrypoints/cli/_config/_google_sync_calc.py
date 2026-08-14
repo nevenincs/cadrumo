@@ -83,7 +83,7 @@ _YearArg = Annotated[
 ]
 
 
-def _resolve_credentials_and_root(profile: str) -> tuple[object, str]:
+def resolve_credentials_and_root(profile: str) -> tuple[object, str]:
     """Hydrate refreshable Google credentials + the configured Drive root."""
     settings = load_settings()
     credentials = build_google_credentials(profile=profile)
@@ -95,7 +95,7 @@ def _resolve_credentials_and_root(profile: str) -> tuple[object, str]:
     return credentials, root_folder_id
 
 
-def _filing_period_or_refusal(*, modelo: str, period: str, year: int) -> Period:
+def filing_period_or_refusal(*, modelo: str, period: str, year: int) -> Period:
     try:
         return Period.from_year_and_code(year, period)
     except ValueError as exc:
@@ -105,7 +105,7 @@ def _filing_period_or_refusal(*, modelo: str, period: str, year: int) -> Period:
         ) from exc
 
 
-def _load_snapshot(modelo: str, period: Period) -> RegistrySnapshot:
+def load_snapshot(modelo: str, period: Period) -> RegistrySnapshot:
     authority = _bundled_authority()
     if modelo not in {candidate.id for candidate in authority.modelos}:
         available = ", ".join(sorted(candidate.id for candidate in authority.modelos))
@@ -147,11 +147,11 @@ def _pull_operator_edits_for_command(
         raise _google_refusal(exc) from exc
 
     try:
-        credentials, _ = _resolve_credentials_and_root(active)
+        credentials, _ = resolve_credentials_and_root(active)
     except (GoogleAuthError, OutboundStorageError) as exc:
         raise _google_refusal(exc) from exc
 
-    snapshot = _load_snapshot(modelo, _filing_period_or_refusal(modelo=modelo, period=period, year=year))
+    snapshot = load_snapshot(modelo, filing_period_or_refusal(modelo=modelo, period=period, year=year))
 
     try:
         result: PullResult = pull_operator_edits(
@@ -198,12 +198,12 @@ def google_sync_calc_export(
         raise _google_refusal(exc) from exc
 
     try:
-        credentials, root_folder_id = _resolve_credentials_and_root(active)
+        credentials, root_folder_id = resolve_credentials_and_root(active)
     except (GoogleAuthError, OutboundStorageError) as exc:
         raise _google_refusal(exc) from exc
 
-    filing_period = _filing_period_or_refusal(modelo=modelo, period=period, year=year)
-    snapshot = _load_snapshot(modelo, filing_period)
+    filing_period = filing_period_or_refusal(modelo=modelo, period=period, year=year)
+    snapshot = load_snapshot(modelo, filing_period)
     if prefill_relations:
         plan = build_export_plan(
             snapshot,
@@ -385,11 +385,11 @@ def google_sync_calc_verify(
         raise _google_refusal(exc) from exc
 
     try:
-        credentials, root_folder_id = _resolve_credentials_and_root(active)
+        credentials, root_folder_id = resolve_credentials_and_root(active)
     except (GoogleAuthError, OutboundStorageError) as exc:
         raise _google_refusal(exc) from exc
 
-    snapshot = _load_snapshot(modelo, _filing_period_or_refusal(modelo=modelo, period=period, year=year))
+    snapshot = load_snapshot(modelo, filing_period_or_refusal(modelo=modelo, period=period, year=year))
 
     if scenario_path is None:
         scenario = OperatorInputScenario(scenario_label="empty-defaults")

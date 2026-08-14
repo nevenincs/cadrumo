@@ -95,7 +95,6 @@ def _full_m100_profile() -> UserProfileRecord:
     """
     return UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Binding pin test taxpayer",
         facts=(
             # 0006 renta-2025-profile-tax-id
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -254,7 +253,6 @@ def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date
     snapshot = _modelo_100_snapshot()
     record = UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Single binding pin taxpayer",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
@@ -294,7 +292,6 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
 
     record = UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Registered pareja de hecho binding pin taxpayer",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
@@ -322,7 +319,6 @@ def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved()
     snapshot = _modelo_100_snapshot()
     record = UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Married binding pin taxpayer",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),

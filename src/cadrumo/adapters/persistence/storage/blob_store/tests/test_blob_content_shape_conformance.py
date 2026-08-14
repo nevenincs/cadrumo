@@ -11,25 +11,13 @@ string would not have caught that gap either; this drives a real
 
 from __future__ import annotations
 
-import secrets
-from collections.abc import Iterator
-from pathlib import Path
-
 import pytest
 
 from ......core.classification import SensitivityClass
 from ......tests import assert_path_matches_grammar
-from ......tests.master_key import EphemeralMasterKeyProvider
-from ...crypto import KEY_SIZE
 from .._blob_store import EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-@pytest.fixture
-def store(tmp_path: Path) -> Iterator[EncryptedBlobStore]:
-    provider = EphemeralMasterKeyProvider(key=secrets.token_bytes(KEY_SIZE))
-    yield EncryptedBlobStore(root_dir=tmp_path / "blob-store", master_key_provider=provider)
 
 
 def test_a_corpus_blob_lands_at_the_declared_plaintext_shape(store: EncryptedBlobStore) -> None:

@@ -16,26 +16,72 @@ that surface it to the operator can refuse with a typed
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
-from datetime import UTC, datetime
+from base64 import b64encode
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
+from ....adapters.persistence.storage.custody import (
+    ProfileCustodyEnvelope,
+    ProfileCustodyKdfParameters,
+    ProfileCustodyWrappedDek,
+    create_profile_custody_sentinel,
+)
+from ....application.user_profile._capsule_record import ProfileRecordSession
+from ....application.user_profile._lifecycle import ProfileCapsuleLifecycle
+from ....application.user_profile._profile_record_repository import bound_profile_record_session
 from ....core import BucketPointer, pointer_path, read_pointer, resolve_active_bucket_id, write_pointer
 from ....core.config import override_settings
 from ....core.errors import NoActiveProfileError, get_registered_error_code
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests.secure_sql import isolated_runtime_profile
 from ... import wizard as _wizard  # noqa: F401
-from ...user_profile import ProfileRecordRepository
 from .._models import WorkflowState
 from .._profile_bucket_scan import resolve_profile_bucket
 from .._profile_health import assess_active_profile_health, repair_active_profile_pointer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_MANIFEST_CREATED_AT = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
+_PROFILE_DEK = bytes(range(32))
+
+
+def _current_profile_session(profile_id: str, *, root: Path, label: str) -> ProfileRecordSession:
+    """Create one real committed current capsule and return its live record session."""
+    identity = UUID(profile_id)
+    seed = identity.bytes + identity.bytes
+    envelope = ProfileCustodyEnvelope.create(
+        profile_id=identity,
+        password_generation=1,
+        dek_epoch=b64encode(seed[:16]).decode("ascii"),
+        kdf=ProfileCustodyKdfParameters(
+            algorithm="argon2id",
+            version=19,
+            memory_mib=19,
+            iterations=2,
+            parallelism=1,
+            salt_b64=b64encode(seed[16:]).decode("ascii"),
+            output_bytes=32,
+        ),
+        wrapped_dek=ProfileCustodyWrappedDek(
+            nonce_b64=b64encode(seed[:12]).decode("ascii"),
+            ciphertext_b64=b64encode(seed).decode("ascii"),
+            tag_b64=b64encode(seed[:16]).decode("ascii"),
+        ),
+    )
+    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=_PROFILE_DEK)
+    ProfileCapsuleLifecycle(root=root).create(
+        label=label,
+        profile_id=identity,
+        password_envelope=envelope,
+        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_PROFILE_DEK),
+        data_files={},
+        initial_record=UserProfileRecord(
+            profile_id=str(identity),
+            facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+        ),
+        record_session=session,
+    )
+    return session
 
 
 def test_workflow_models_do_not_expose_active_bucket_resolver_shims() -> None:
@@ -75,15 +121,19 @@ def test_no_active_profile_error_has_registered_error_code() -> None:
 
 
 def test_active_profile_record_logs_missing_secure_record(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
-    """A missing active secure profile record returns None but is not silent."""
+    """A pointer without a current capsule returns no record but is not silent."""
 
-    bucket_id = "missing-record-profile"
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
+    bucket_id = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
+    write_pointer(tmp_path, BucketPointer(bucket_id=bucket_id, schema_version=1))
+    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
         caplog.set_level(logging.DEBUG, logger="cadrumo.application.workflow._models")
 
         assert WorkflowState().active_profile_record() is None
 
-    assert "active profile record resolution returned no profile record: ProfileNotFoundError" in caplog.text
+    assert (
+        "active profile record resolution returned no profile record: selected profile has no live bucket"
+        in caplog.text
+    )
     assert bucket_id not in caplog.text
 
 
@@ -92,37 +142,31 @@ def test_label_override_resolves_real_record_and_masks_dangling_pointer_repair(t
 
     bucket_id = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
     dangling_id = "62d2ab08-39f2-4811-bd2a-fe48fd105e4a"
-    record = UserProfileRecord(
-        profile_id=bucket_id,
-        display_name="Operator",
-        facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
-    )
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id, label="Operator") as profile:
-        ProfileRecordRepository(bucket_id=bucket_id, objects=profile.repository).save(record)
-        write_pointer(profile.storage_root, BucketPointer(bucket_id=dangling_id, schema_version=1))
-        target = pointer_path(profile.storage_root)
+    session = _current_profile_session(bucket_id, root=tmp_path, label="Operator")
+    try:
+        write_pointer(tmp_path, BucketPointer(bucket_id=dangling_id, schema_version=1))
+        target = pointer_path(tmp_path)
         dangling_bytes = target.read_bytes()
 
-        with override_settings(cadrumo_active_profile="operator"):
+        with (
+            override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile="operator"),
+            bound_profile_record_session(session),
+        ):
             state = WorkflowState()
             assert state.active_profile_bucket_id() == bucket_id
-            assert state.active_profile_record() == record
+            assert state.active_profile_record() is not None
 
             protected_health = assess_active_profile_health(state)
-            protected_repair = repair_active_profile_pointer(clear_active=True, confirmed=True)
 
             assert protected_health.active_profile == bucket_id
             assert protected_health.source == "env_override"
-            assert protected_health.status == "ready"
+            assert protected_health.status == "incomplete"
             assert protected_health.registered_bucket is True
             assert protected_health.profile_record_present is True
             assert protected_health.repairable_by_clearing_pointer is False
-            assert protected_repair.dry_run is True
-            assert protected_repair.cleared_pointer is False
             assert target.read_bytes() == dangling_bytes
 
-        with override_settings(cadrumo_active_profile=None):
+        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
             exposed_health = assess_active_profile_health()
             repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
 
@@ -135,95 +179,23 @@ def test_label_override_resolves_real_record_and_masks_dangling_pointer_repair(t
         assert repaired.cleared_pointer is True
         assert repaired.after is not None
         assert repaired.after.status == "none"
-        assert read_pointer(profile.storage_root) is None
+        assert read_pointer(tmp_path) is None
+    finally:
+        session.close()
 
 
-def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
-    """Write a real live bucket manifest at ``<root>/buckets/<bucket_id>/``.
+def test_resolve_profile_bucket_refuses_a_retired_manifest_without_reading_it(tmp_path: Path) -> None:
+    """A retired manifest is a typed custody refusal, not an alternate discovery route."""
+    from ....adapters.persistence.storage.custody import ProfileCustodyRefusal, ProfileCustodyRefusedError
 
-    No mock: a plaintext ``manifest.toml`` carrying the immutable UUID
-    ``bucket_id`` and the operator ``label``, exactly as ``profile create``
-    materialises it.
-    """
-    from ....adapters.persistence.storage.bucket import (
-        BUCKET_MANIFEST_SCHEMA_VERSION,
-        BucketKeySchedule,
-        BucketManifest,
-        bucket_paths,
-        provision_bucket_directory,
-        write_manifest,
-    )
-    from ....adapters.persistence.storage.master_key import KdfParams
-    from ....domain.user_profile import UserProfileStatus
+    retired = tmp_path / "buckets" / "51c1fa97-28e1-4700-ac1e-ed7cf094d37b" / "manifest.toml"
+    retired.parent.mkdir(parents=True)
+    retired.write_bytes(b"this retired document is deliberately malformed")
 
-    provision_bucket_directory(root, bucket_id)
-    write_manifest(
-        bucket_paths(root, bucket_id),
-        BucketManifest(
-            bucket_id=bucket_id,
-            label=label,
-            created_at=_MANIFEST_CREATED_AT,
-            last_unlocked_at=None,
-            kdf_params=KdfParams.default().to_manifest_params(),
-            recovery_enrolled=False,
-            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-            status=UserProfileStatus.ACTIVE,
-        ),
-    )
+    with pytest.raises(ProfileCustodyRefusedError) as captured:
+        resolve_profile_bucket("operator", root=tmp_path)
 
-
-def _tombstone_bucket(root: Path, *, bucket_id: str, label: str) -> None:
-    """Write a real tombstoned bucket manifest at ``<root>/buckets/<bucket_id>/``."""
-    from ....adapters.persistence.storage.bucket import (
-        BUCKET_MANIFEST_SCHEMA_VERSION,
-        BucketKeySchedule,
-        BucketManifest,
-        bucket_paths,
-        provision_bucket_directory,
-        write_manifest,
-    )
-    from ....adapters.persistence.storage.master_key import KdfParams
-    from ....domain.user_profile import UserProfileStatus
-
-    provision_bucket_directory(root, bucket_id)
-    write_manifest(
-        bucket_paths(root, bucket_id),
-        BucketManifest(
-            bucket_id=bucket_id,
-            label=label,
-            created_at=_MANIFEST_CREATED_AT,
-            last_unlocked_at=None,
-            kdf_params=KdfParams.default().to_manifest_params(),
-            recovery_enrolled=False,
-            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-            status=UserProfileStatus.TOMBSTONED,
-        ),
-    )
-
-
-def test_resolve_profile_bucket_uuid_respects_lifecycle_filter(tmp_path: Path) -> None:
-    """UUID resolution respects the live-surface lifecycle filter."""
-    cases: tuple[tuple[Callable[..., None], bool, bool], ...] = (
-        (_write_live_bucket, False, True),
-        (_tombstone_bucket, False, False),
-        (_tombstone_bucket, True, True),
-    )
-
-    for index, (bucket_writer, include_tombstoned, expected_found) in enumerate(cases):
-        case_root = tmp_path / f"lifecycle-{index}"
-        uuid = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
-        bucket_writer(case_root, bucket_id=uuid, label="operator")
-
-        pointer = resolve_profile_bucket(uuid, root=case_root, include_tombstoned=include_tombstoned)
-
-        if expected_found:
-            assert pointer is not None
-            assert pointer.bucket_id == uuid
-            assert pointer.label == "operator"
-        else:
-            assert pointer is None
+    assert captured.value.refusal is ProfileCustodyRefusal.LEGACY_CUSTODY_DETECTED
 
 
 def test_resolve_profile_bucket_resolves_an_active_profile_by_display_name(tmp_path: Path) -> None:
@@ -231,15 +203,14 @@ def test_resolve_profile_bucket_resolves_an_active_profile_by_display_name(tmp_p
 
     This is the real operator path: ``CADRUMO_ACTIVE_PROFILE=operator`` (or any
     active-profile pointer carrying the operator label the user chose at
-    ``profile create``, never the UUID they never see). The by-UUID-direct
-    lookup misses on the label, so resolution falls back to the
-    manifest-scan-by-label and returns the correct bucket. Without the
-    fallback this raises a "no manifest" / "unknown profile" refusal on every
-    profile-scoped command.
+    registration, never the UUID they never see). The by-UUID-direct lookup
+    misses on the label, so the same committed-capsule projection resolves the
+    label and returns the correct immutable identity.
     """
 
     uuid = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
-    _write_live_bucket(tmp_path, bucket_id=uuid, label="operator")
+    session = _current_profile_session(uuid, root=tmp_path, label="operator")
+    session.close()
 
     pointer = resolve_profile_bucket("operator", root=tmp_path)
 
@@ -251,27 +222,34 @@ def test_resolve_profile_bucket_resolves_an_active_profile_by_display_name(tmp_p
 def test_resolve_profile_bucket_returns_none_for_an_unknown_identifier(tmp_path: Path) -> None:
     """Neither a UUID-shaped nor a label-shaped unknown identifier resolves."""
 
-    _write_live_bucket(tmp_path, bucket_id="51c1fa97-28e1-4700-ac1e-ed7cf094d37b", label="operator")
+    session = _current_profile_session(
+        "51c1fa97-28e1-4700-ac1e-ed7cf094d37b",
+        root=tmp_path,
+        label="operator",
+    )
+    session.close()
 
     assert resolve_profile_bucket("nonexistent", root=tmp_path) is None
 
 
-def test_resolve_profile_bucket_raises_on_an_ambiguous_label(tmp_path: Path) -> None:
-    """Two live buckets sharing a label raise ProfileLabelAmbiguousError, never a pick.
+def test_duplicate_label_is_refused_before_a_second_capsule_can_enter_discovery(tmp_path: Path) -> None:
+    """Current projections never carry a legacy ambiguous-label state."""
+    from ...user_profile._custody_transactions import ProfileCustodyTransactionConflictError
 
-    A wrong silent pick on a tax profile is a data-integrity hazard, so the
-    label fallback refuses an ambiguous label rather than choosing one bucket.
-    The raised type is ProfileLabelAmbiguousError — a WorkflowError, NOT a
-    ValueError — which the CLI / diagnostics catch sites must match exactly to
-    surface a clean refusal instead of a raw traceback.
-    """
-    from .._errors import ProfileLabelAmbiguousError
-
-    _write_live_bucket(tmp_path, bucket_id="51c1fa97-28e1-4700-ac1e-ed7cf094d37b", label="operator")
-    _write_live_bucket(tmp_path, bucket_id="62d2ab08-39f2-4811-bd2a-fe48fd105e4a", label="operator")
-
-    assert not issubclass(ProfileLabelAmbiguousError, ValueError), (
-        "ProfileLabelAmbiguousError is NOT a ValueError; `except ValueError` would not catch it"
+    first = _current_profile_session(
+        "51c1fa97-28e1-4700-ac1e-ed7cf094d37b",
+        root=tmp_path,
+        label="operator",
     )
-    with pytest.raises(ProfileLabelAmbiguousError):
-        resolve_profile_bucket("operator", root=tmp_path)
+    first.close()
+
+    with pytest.raises(ProfileCustodyTransactionConflictError):
+        _current_profile_session(
+            "62d2ab08-39f2-4811-bd2a-fe48fd105e4a",
+            root=tmp_path,
+            label="operator",
+        )
+
+    resolved = resolve_profile_bucket("operator", root=tmp_path)
+    assert resolved is not None
+    assert resolved.bucket_id == "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"

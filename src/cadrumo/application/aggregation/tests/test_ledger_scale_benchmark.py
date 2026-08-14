@@ -103,9 +103,9 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import ProfileRecordRepository
 from .. import (
     aggregate_iva_ledger_observations_from_repositories,
     aggregate_renta_ledger_expenses_from_repositories,
@@ -325,7 +325,6 @@ def _seed_taxpayer_profile() -> None:
     """
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value=_TAX_ID),
             UserProfileFact(path="identity.name", value="Scale"),
@@ -347,7 +346,7 @@ def _seed_taxpayer_profile() -> None:
         created_at=datetime(_FIRST_YEAR, 1, 1, tzinfo=UTC),
         updated_at=datetime(_FIRST_YEAR, 1, 1, tzinfo=UTC),
     )
-    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(record)
+    seed_test_profile_record(record)
 
 
 def _p95(samples: list[float]) -> float:

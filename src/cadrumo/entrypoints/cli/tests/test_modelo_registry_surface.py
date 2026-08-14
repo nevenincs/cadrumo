@@ -50,13 +50,12 @@ _UUID_TEXT_RE = re.compile(
 
 
 def _seed_modelo_130_ready_profile(bucket_id: str) -> None:
-    from ....application.user_profile import ProfileRecordRepository
     from ....domain.user_profile import UserProfileFact, UserProfileRecord
+    from ....tests.profile_capsule import seed_test_profile_record
 
-    ProfileRecordRepository(bucket_id=bucket_id).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Modelo 130 guidance profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="Test"),
@@ -75,6 +74,7 @@ def _seed_modelo_130_ready_profile(bucket_id: str) -> None:
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             ),
         ),
+        label="Modelo 130 guidance profile",
     )
 
 
@@ -431,16 +431,15 @@ def test_work_calculate_missing_m200_m202_relation_prefill_is_advisory(tmp_path)
     """The live M200 relation-prefill path warns rather than refusing calculation."""
 
     from ....application.modelo import create_work_unit
-    from ....application.user_profile import ProfileRecordRepository
     from ....core import Period
     from ....domain.user_profile import UserProfileFact, UserProfileRecord
+    from ....tests.profile_capsule import seed_test_profile_record
     from ....tests.secure_sql import isolated_runtime_profile
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="0c200000-0000-4000-8000-000000000002") as runtime:
-        ProfileRecordRepository(bucket_id=runtime.bucket_id, objects=runtime.repository).save(
+        seed_test_profile_record(
             UserProfileRecord(
                 profile_id=runtime.bucket_id,
-                display_name="M200 relation guidance profile",
                 facts=(
                     UserProfileFact(path="identity.tax_id", value="B12345674"),
                     UserProfileFact(path="identity.legal_name", value="M200 Relation Guidance SL"),
@@ -459,6 +458,8 @@ def test_work_calculate_missing_m200_m202_relation_prefill_is_advisory(tmp_path)
                     UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 ),
             ),
+            root=runtime.storage_root,
+            label="M200 relation guidance profile",
         )
         unit = create_work_unit(
             bucket_id=runtime.bucket_id,

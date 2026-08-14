@@ -23,14 +23,14 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage import (
+    WORKFLOW_RUN_NAMESPACE,
     ClassificationError,
     secure_object_repository_for_bucket,
 )
 from ....core.classification import SensitivityClass
 from ....domain.user_profile import CarriedSecureObject
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_runtime_profile
 from .._custody_carry import restore_carried_objects
-from .._orchestration import profile_create_storage_span
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -40,6 +40,7 @@ _BUCKET_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 # rejected row below reuses the namespace and changes only the class, so the
 # refusal is the write policy's and nothing else differs between the rows.
 _NAMESPACE = "cadrumo.application.workflow.runs"
+_NAMESPACE_SCHEMA_VERSION = WORKFLOW_RUN_NAMESPACE.schema_version
 _DECLARED_CLASS = SensitivityClass.FINANCIAL
 _WRONG_CLASS = SensitivityClass.IDENTITY
 _WRITTEN_AT = datetime(2026, 4, 1, 10, 0, 0, tzinfo=UTC)
@@ -50,7 +51,7 @@ def _carried(object_key: str, classification: SensitivityClass) -> CarriedSecure
         namespace=_NAMESPACE,
         object_key=object_key,
         classification=classification,
-        schema_version=1,
+        schema_version=_NAMESPACE_SCHEMA_VERSION,
         written_at=_WRITTEN_AT,
         payload_b64="eyJhIjogMX0=",  # {"a": 1}
     )
@@ -61,7 +62,7 @@ def _stored(object_key: str):
         _NAMESPACE,
         object_key,
         expected_class=_DECLARED_CLASS,
-        max_supported_version=1,
+        max_supported_version=_NAMESPACE_SCHEMA_VERSION,
     )
 
 
@@ -107,8 +108,5 @@ def test_a_restore_is_replayable_after_a_refusal() -> None:
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(_BUCKET_ID),
-    ):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         yield

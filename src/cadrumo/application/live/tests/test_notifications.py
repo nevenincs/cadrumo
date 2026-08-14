@@ -10,7 +10,6 @@ risk -- so the literal stays.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
@@ -42,12 +41,6 @@ _NOTIFICATIONS_SUMMARY_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.notificatio
 _NOTIFICATIONS_QUERY_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.notifications_query.removesuffix('?VEZ=BUSCAR1')}"
 _BUCKET_A_ID = "58585858-5858-4858-8858-585858585858"
 _BUCKET_B_ID = "59595959-5959-4959-8959-595959595959"
-
-
-@pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        yield profile
 
 
 def _service(profile: TestRuntimeProfile) -> NotificationsService:

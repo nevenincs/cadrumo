@@ -27,7 +27,6 @@ from ....domain.modelos import (
     upsert_calculation_revision,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import ProfileRecordRepository
 from .._action_errors import StoredCalculationDriftError
 from .._calculation_actions import calculate_modelo_revision
 from .._verification_actions import verify_modelo_revision
@@ -65,10 +64,7 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over a fresh isolated profile."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile(
-            ProfileRecordRepository(bucket_id=_PROFILE_ID, objects=objects),
-            bucket_id=_PROFILE_ID,
-        )
+        _seed_ready_profile(bucket_id=_PROFILE_ID)
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
         vr = VerificationReportCatalogueRepository(objects=objects)
@@ -349,11 +345,7 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     cantidad positiva consignada en la casilla 10".
     """
     wu_repo, cr_repo, vr_repo, bv_repo = repos
-    _seed_ready_profile(
-        ProfileRecordRepository(bucket_id=_PROFILE_ID),
-        bucket_id=_PROFILE_ID,
-        irpf_estimation_regime="objetiva",
-    )
+    _seed_ready_profile(bucket_id=_PROFILE_ID, irpf_estimation_regime="objetiva")
 
     work_unit = create_work_unit(
         bucket_id=_PROFILE_ID,

@@ -58,7 +58,6 @@ def _resolved(*descendientes: DescendantInfo) -> dict[str, Decimal]:
     """Resolve the profile-sourced bindings for a record carrying *descendientes*."""
     record = UserProfileRecord(
         profile_id=_BUCKET,
-        display_name="guarderia monthly probe",
         facts=tuple(
             UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)
         ),
@@ -216,7 +215,6 @@ def test_an_unparseable_stored_birth_date_still_refuses_by_index() -> None:
     """
     record = UserProfileRecord(
         profile_id=_BUCKET,
-        display_name="guarderia monthly probe",
         facts=(
             UserProfileFact(path="renta_family.descendiente.0.birth_date", value="not-a-date"),
             UserProfileFact(path="renta_family.descendientes_count", value="1"),

@@ -64,11 +64,11 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...live import persist_filed_calculation_observation
 from ...modelo import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics, create_work_unit
-from ...user_profile import ProfileRecordRepository
 from .._observations_repository import CalculationObservationRepository, ObservationSourceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -159,11 +159,10 @@ def _pull_the_m130_history() -> tuple[str, ...]:
     return tuple(persist_filed_calculation_observation(_synthetic_register_row(period)) for period in _M130_QUARTERS)
 
 
-def _seed_taxpayer_profile(secure_objects: SecureObjectRepository, *, bucket_id: str) -> None:
+def _seed_taxpayer_profile(*, bucket_id: str) -> None:
     """Seed the declared profile facts the annual M100 revision's profile bindings need."""
     record = UserProfileRecord(
         profile_id=bucket_id,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value=_SYNTHETIC_TAX_ID),
             UserProfileFact(path="identity.name", value="Test"),
@@ -196,7 +195,7 @@ def _seed_taxpayer_profile(secure_objects: SecureObjectRepository, *, bucket_id:
         created_at=_T0,
         updated_at=_T0,
     )
-    ProfileRecordRepository(bucket_id=bucket_id, objects=secure_objects).save(record)
+    seed_test_profile_record(record)
 
 
 def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> None:
@@ -261,7 +260,7 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository, *, bucket_id:
     authority and passed to work-unit creation, which asserts rather than selects
     on it, so the law determines which revision computes.
     """
-    _seed_taxpayer_profile(secure_objects, bucket_id=bucket_id)
+    _seed_taxpayer_profile(bucket_id=bucket_id)
     _seed_prior_year_m100_zero_carry(secure_objects)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)

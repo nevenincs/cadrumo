@@ -15,9 +15,9 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import ProfileRecordRepository
 from ....domain.categories import SpendingCategory
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._ledger_support import _resolve_business_pct_with_censo
 
@@ -34,15 +34,15 @@ def runtime(tmp_path: Path) -> Iterator[None]:
 
 
 def _declare_vivienda_office() -> None:
-    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="Classify censo pct profile",
             facts=(
                 UserProfileFact(path="vivienda_office.total_m2", value=Decimal("100")),
                 UserProfileFact(path="vivienda_office.office_m2", value=Decimal("20")),
             ),
         ),
+        label="Classify censo pct profile",
     )
 
 

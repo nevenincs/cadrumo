@@ -670,7 +670,6 @@ def _profile_with_iva_regime(*iva_facts: UserProfileFact) -> UserProfileRecord:
     """Build a user-profile record from explicitly supplied IVA facts."""
     return UserProfileRecord(
         profile_id="44444444-4444-4444-8444-444444444444",
-        display_name="M130 IVA Regime Tester",
         facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *iva_facts),
     )
 

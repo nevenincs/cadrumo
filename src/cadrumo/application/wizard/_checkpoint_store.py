@@ -6,28 +6,28 @@ the profile domain's implementation. There is no bespoke checkpoint object,
 no stored cursor, and no answer-map artefact: the in-progress answers persist
 as effective-dated :class:`~cadrumo.domain.user_profile.UserProfileFact` rows
 through the profile lifecycle authority, exactly like every committed answer,
-and the record's ``SETUP_INCOMPLETE`` lifecycle state is the resume-eligibility
+and the record's ``ProfileSetupState.INCOMPLETE`` setup state is the
+resume-eligibility flag.
 flag.
 
 Lifecycle of a create-mode checkpoint:
 
 * **save** — projects the current canonical answer map to facts and persists
   them through the lifecycle authority. The first save with a validated
-  ``tax-id`` mints the profile early in ``SETUP_INCOMPLETE`` state (so
+  ``tax-id`` mints the profile early in ``incomplete`` state (so
   ``_refuse_duplicate_tax_id`` fires at genuine minting); later saves upsert
   onto the live record. Sensitive answers ride only this authority into the
   encrypted secure-object store — never a plaintext sink, never a log.
-* **load** — offers a resume ONLY while the active profile's status is
-  ``SETUP_INCOMPLETE``, re-projecting the on-record facts back to a page-keyed
+* **load** — offers a resume ONLY while the active profile's setup state is
+  ``incomplete``, re-projecting the on-record facts back to a page-keyed
   answer map. ``resume_flow`` recomputes everything derived (cursor, staleness,
   validation) against the *current* definition; a completed or absent profile
   returns ``None`` (no resume).
 * **discard** — explicit operator abandonment erases the incomplete profile
-  through the existing lifecycle/composition arms (soft tombstone + directory
-  erase), never a parallel delete path.
+  through the existing capsule lifecycle, never a parallel delete path.
 
-Completion (the ``SETUP_INCOMPLETE`` → ``ACTIVE`` flip at the flow's final
-commit) is the domain-owned completion discard: the status flip ends
+Completion (the ``incomplete`` → ``complete`` flip at the flow's final commit)
+is the domain-owned completion transition: the setup-state flip ends
 resume-eligibility, so there is nothing else to erase. It is driven by the
 command through :func:`~cadrumo.application.user_profile.complete_setup_with_lifecycle_span`,
 not by this store.
@@ -37,7 +37,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from ...domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ._descendant_group import DESCENDANTS_COUNT_PAGE_ID
 from ._models import WizardFlow
 
@@ -164,7 +164,7 @@ class ProfileFactsCheckpointStore:
     spans (mint or upsert), so the caller never opens a create span around
     it. The store records whether its :meth:`save` port was invoked so the
     command can distinguish a frontend-driven save-and-exit (leave the
-    profile ``SETUP_INCOMPLETE``) from a normal submit (complete the setup).
+    profile ``incomplete``) from a normal submit (complete the setup).
     """
 
     def __init__(self, flow: WizardFlow, *, profile_id: str, profile_name: str) -> None:
@@ -184,7 +184,7 @@ class ProfileFactsCheckpointStore:
         The substrate's ``save_checkpoint`` calls this from a frontend's
         save-and-exit affordance. The persistence is idempotent with the
         completion path (both upsert the same facts); the recorded flag is
-        what lets the command leave the profile ``SETUP_INCOMPLETE`` rather
+        what lets the command leave the profile ``incomplete`` rather
         than completing it.
         """
         del flow_id
@@ -194,123 +194,73 @@ class ProfileFactsCheckpointStore:
     def persist(self, answers: Mapping[str, str]) -> None:
         """Mint-if-absent then persist the answer map's facts through the authority.
 
-        The first persist mints the profile in ``SETUP_INCOMPLETE`` state
+        The first persist mints the profile in ``incomplete`` state
         (running the duplicate-tax-id refusal at genuine minting); later
         persists upsert onto the live record. Both routes write through the
         single profile-lifecycle writer into encrypted storage.
         """
-        from ..user_profile import (
-            profile_create_storage_span,
-            register_active_profile,
-            set_active_fields,
-        )
-        from ..workflow import WorkflowState, read_profile_bucket_by_id, workflow_state_repository
+        from ..user_profile import ProfileRecordRepository, ProfileRegistrationError
+        from ..workflow import read_profile_bucket_by_id
+        from ._persistence import apply_wizard_fact_changes
 
         facts = checkpoint_facts_from_answers(self._flow, answers)
         pointer = read_profile_bucket_by_id(self._profile_id)
         if pointer is None:
-            with profile_create_storage_span(self._profile_id):
-                workflow_state_repository().update(
-                    lambda state: register_active_profile(
-                        state,
-                        profile_id=self._profile_id,
-                        display_name=self._profile_name,
-                        facts=facts,
-                        status=UserProfileStatus.SETUP_INCOMPLETE,
-                    ),
-                )
-            return
+            raise ProfileRegistrationError(
+                "wizard checkpoint creation is unavailable; register with credentials before setup",
+            )
         if not facts:
             return
-        with self._existing_profile_span():
-
-            def _apply(state: WorkflowState) -> WorkflowState:
-                # Replace the descendant namespace atomically: upsert the
-                # projected facts and clear any orphaned rows the fresh
-                # projection no longer covers (a shrunk count), so the record
-                # never carries a descendant index above the answered count.
-                clearing = descendant_clearing_facts(state.active_profile_record(), answers)
-                return set_active_fields(state, (*facts, *clearing))
-
-            workflow_state_repository().update(_apply)
+        record = ProfileRecordRepository.for_current_session(self._profile_id).load(self._profile_id)
+        clearing = descendant_clearing_facts(record, answers)
+        apply_wizard_fact_changes(
+            profile_id=self._profile_id,
+            changes=(*facts, *clearing),
+            event_type="profile.wizard.checkpoint.applied",
+        )
 
     def load(self, flow_id: str) -> Mapping[str, str] | None:
         """Return the in-progress answer map, or ``None`` when no resume is offered.
 
-        A resume is offered ONLY while the profile is ``SETUP_INCOMPLETE``:
-        a completed (``ACTIVE``), tombstoned, or absent profile returns
+        A resume is offered ONLY while the profile is ``incomplete``:
+        a completed or absent profile returns
         ``None``. The returned map is page-keyed and re-projected from the
         on-record facts for :func:`~cadrumo.application.flows.resume_flow`.
 
-        Eligibility is decided by the ENCRYPTED RECORD, reached through the
-        one load that verifies the plaintext manifest against it. Reading the
-        manifest mirror instead granted a resume on an unverified value: under
-        a torn completion (record written ``ACTIVE`` first, manifest mirror
-        second) the mirror still says ``SETUP_INCOMPLETE``, and this method
-        re-projected a completed profile's facts and let them be written back
-        over the live record, failing only at the final commit -- after the
-        writes had landed. The manifest may be used to EXCLUDE a profile; it
-        may not be used to GRANT a capability.
-
-        Raises:
-            ProfileIntegrityError: When the manifest and the encrypted record
-                disagree. Deliberately propagated rather than reported as "no
-                resume": the stores are inconsistent, which is not the same
-                fact as an ineligible profile.
+        Eligibility is decided by the encrypted current record. The committed
+        capsule projection may only exclude an absent profile; its label never
+        grants a resume capability. A profile resumes only when its current
+        record is still ``INCOMPLETE``.
         """
         del flow_id
         from ...domain.user_profile import ProfileNotFoundError
-        from ..user_profile import ProfileIntegrityError, ProfileRecordRepository
+        from ..user_profile import ProfileRecordRepository
         from ..workflow import read_profile_bucket_by_id
 
-        # The mirror is still consulted, but only to EXCLUDE: an absent bucket
-        # has nothing to resume and opening a storage span on it would raise
-        # for want of a manifest rather than answering the question. What the
-        # mirror may not do is GRANT, which is why eligibility below is decided
-        # on the record.
+        # The committed projection can exclude an absent profile, but the
+        # authenticated current record is the sole resume authority.
         if read_profile_bucket_by_id(self._profile_id) is None:
             return None
         try:
-            with self._existing_profile_span():
-                record = ProfileRecordRepository.for_current_session(self._profile_id).load(self._profile_id)
-        except ProfileIntegrityError:
-            # Ordered BEFORE the not-found arm on purpose: this subclasses it,
-            # so a single ``except ProfileNotFoundError`` would convert "the
-            # stores disagree about this profile" into "no resume available"
-            # and re-open exactly the hole this method is being fixed for.
-            raise
+            record = ProfileRecordRepository.for_current_session(self._profile_id).load(self._profile_id)
         except ProfileNotFoundError:
             return None
-        if record.status is not UserProfileStatus.SETUP_INCOMPLETE:
+        if record.setup_state is not ProfileSetupState.INCOMPLETE:
             return None
         return checkpoint_answers_from_record(self._flow, record)
 
     def discard(self, flow_id: str) -> None:
         """Erase the in-progress profile through the lifecycle authority.
 
-        Explicit operator abandonment: the incomplete profile is soft
-        tombstoned and its bucket directory erased, reusing the existing
-        composition arms rather than a parallel delete. A no-op when the
-        profile was never minted.
+        Current-capsule discard is unavailable until its deletion flow is
+        rebuilt. A no-op when the profile was never minted.
         """
         del flow_id
-        from ..user_profile import (
-            delete_profile_with_lifecycle_span,
-            remove_profile_bucket_directory,
+        from ..user_profile import ProfileRegistrationError
+
+        raise ProfileRegistrationError(
+            "wizard checkpoint discard is unavailable until current-capsule deletion is rebuilt",
         )
-        from ..workflow import read_profile_bucket_by_id
-
-        pointer = read_profile_bucket_by_id(self._profile_id)
-        if pointer is None:
-            return
-        delete_profile_with_lifecycle_span(self._profile_id)
-        remove_profile_bucket_directory(self._profile_id)
-
-    def _existing_profile_span(self):
-        """Open an application-owned storage session for the minted profile."""
-        from ..user_profile import profile_storage_session
-
-        return profile_storage_session(self._profile_id)
 
 
 __all__ = [

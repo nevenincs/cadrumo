@@ -27,8 +27,8 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import ProfileRecordRepository
 from .. import (
     ModeloAggregationBindingError,
     calculate_modelo_revision_from_bucket_aggregation,
@@ -73,10 +73,9 @@ _READY_PROFILE_FACTS = (
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
-        ProfileRecordRepository(bucket_id=_BUCKET, objects=profile.repository).save(
+        seed_test_profile_record(
             UserProfileRecord(
                 profile_id=_BUCKET,
-                display_name="Source mesh ready profile",
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,
                 updated_at=_T0,

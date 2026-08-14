@@ -259,10 +259,9 @@ def _m100_activity_expense_transaction(
 
 
 def _seed_m100_profile_facts(bucket_id: str) -> None:
-    from ....application.user_profile import ProfileRecordRepository
+    from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
 
-    repository = ProfileRecordRepository(bucket_id=bucket_id)
-    record = repository.load(bucket_id)
+    record = load_test_profile_record(bucket_id)
     additions = (
         UserProfileFact(path="tax_residence.ccaa", value="madrid"),
         UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
@@ -290,7 +289,7 @@ def _seed_m100_profile_facts(bucket_id: str) -> None:
     )
     facts_by_path = {fact.path: fact for fact in record.facts}
     facts_by_path.update({fact.path: fact for fact in additions})
-    repository.save(
+    replace_test_profile_record(
         record.model_copy(
             update={
                 "facts": tuple(facts_by_path[path] for path in sorted(facts_by_path)),

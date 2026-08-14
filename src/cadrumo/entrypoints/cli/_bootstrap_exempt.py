@@ -100,24 +100,15 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     "config storage",
     # Tombstoning a profile opens its OWN session scoped to the target, the
     # same shape as ``config login`` and the custody verbs above:
-    # ``delete_profile_with_lifecycle_span`` wraps the mutation in
-    # ``profile_storage_session(profile_id)``. The root callback's session is
-    # therefore redundant, and gating on it refused the verb before the body
-    # that already knew how to open the right one could run — so an operator
-    # could not retire a profile without first logging into it. The label is
-    # resolved by a plaintext manifest scan, so an unknown name still refuses
-    # as "unknown profile" rather than as a session diagnostic, and ``--yes``
-    # remains mandatory.
+    # The physical custody deletion transaction authenticates its target
+    # itself. The root callback must not demand an unrelated active session
+    # before that operation can make its own authorization decision.
     "config profile delete",
     # The rest of the target-scoped profile verbs, on the same grounds as
-    # ``delete`` above: each names the profile it operates on and opens that
-    # bucket's own session, so blocking on the ACTIVE bucket's session was a
-    # precondition mismatch rather than a security boundary. ``rename`` goes
-    # through BucketMaintenanceService, which wraps it in
-    # ``profile_storage_session``; ``duplicate`` reads its source through the
-    # same self-scoped span. Explicit ``validate NAME`` is the read-only twin
-    # of ``show NAME`` and is carved out by the root callback; its unnamed
-    # active-profile form deliberately remains gated.
+    # ``delete`` above: each names the profile it operates on and decides
+    # custody authorization at its own boundary. Explicit ``validate NAME``
+    # is the read-only twin of ``show NAME`` and is carved out by the root
+    # callback; its unnamed active-profile form deliberately remains gated.
     # Credentials are still required — they are just supplied to the target
     # rather than demanded as a prior login into an unrelated profile.
     #

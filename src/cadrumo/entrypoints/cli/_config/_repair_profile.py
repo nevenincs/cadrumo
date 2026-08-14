@@ -247,10 +247,10 @@ def _emit_profile_record_status(
     payload = {
         "profile_id": profile_id,
         "bucket_id": profile_id,
-        "display_name": record.display_name,
+        "display_name": pointer.label,
         "registered_bucket": True,
         "profile_record_present": True,
-        "status": record.status.value,
+        "setup_state": record.setup_state,
     }
     repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
     _emit_envelope(
@@ -259,12 +259,12 @@ def _emit_profile_record_status(
         result=repair_payload,
         lines=(
             "readiness\tready",
-            f"display_name\t{record.display_name}",
+            f"display_name\t{pointer.label}",
             f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}",
             f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}",
             "registered_bucket\tpresent",
             "profile_record\tpresent",
-            f"status\t{record.status.value}",
+            f"setup_state\t{record.setup_state.value}",
         ),
     )
 

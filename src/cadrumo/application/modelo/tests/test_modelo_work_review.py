@@ -28,7 +28,7 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....domain.user_profile import UserProfileFact
-from ...user_profile import ProfileRecordRepository
+from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
 from .. import (
     ModeloWorkProgress,
     ModeloWorkProgressDenominator,
@@ -299,9 +299,8 @@ def test_review_progress_fields_do_not_express_a_ratio() -> None:
 def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos) -> None:
     work_repo, calculation_repo, filing_repo, verification_repo, bucket_event_repo = repos
     work_unit = _persist_work_unit(repos)
-    profile_repository = ProfileRecordRepository(bucket_id=_BUCKET_ID)
-    profile = profile_repository.load(_BUCKET_ID)
-    profile_repository.save(
+    profile = load_test_profile_record(_BUCKET_ID)
+    replace_test_profile_record(
         profile.model_copy(
             update={
                 "facts": (

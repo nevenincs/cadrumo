@@ -15,16 +15,21 @@ import pytest
 from ......core import StorageCategory
 from ......core.config import Settings
 from .. import (
+    ProfileCustodyCapsuleLabel,
     ProfileCustodyCommit,
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyRecordError,
     ProfileCustodyRecoveryArtifact,
     ProfileCustodyRecoveryEnvelope,
+    ProfileCustodyRecoveryGuidance,
+    ProfileCustodyRefusal,
+    ProfileCustodyRefusedError,
     ProfileCustodyWrappedDek,
     create_profile_custody_password_envelope,
     create_profile_custody_recovery_envelope,
     create_profile_custody_sentinel,
+    detect_retired_profile_custody_member_paths,
     export_profile_custody_recovery_artifact,
     import_profile_custody_recovery_artifact,
     list_current_profile_custody_capsule_ids,
@@ -338,6 +343,50 @@ def test_uncommitted_or_identity_mixed_capsules_are_not_usable(tmp_path: Path) -
         load_committed_profile_password_material(_PROFILE_ID, settings=settings)
 
 
+def test_discovery_refuses_a_retired_manifest_by_stat_only_without_opening_its_bytes(tmp_path: Path) -> None:
+    """Retired custody is a typed refusal; its untrusted contents are never read."""
+    settings = _settings(tmp_path)
+    retired = tmp_path / "buckets" / str(_PROFILE_ID) / "manifest.toml"
+    retired.parent.mkdir(parents=True)
+    retired.write_bytes(b"retired manifest bytes must never be parsed")
+    opened_retired_paths: list[object] = []
+
+    def record_open(event: str, arguments: tuple[object, ...]) -> None:
+        if event != "open" or not arguments:
+            return
+        candidate = arguments[0]
+        if isinstance(candidate, (str, bytes, os.PathLike)) and os.fspath(candidate) == os.fspath(retired):
+            opened_retired_paths.append(os.fspath(candidate))
+
+    sys.addaudithook(record_open)
+    assert detect_retired_profile_custody_member_paths(tmp_path / "buckets") == ("manifest.toml",)
+    with pytest.raises(ProfileCustodyRefusedError) as captured:
+        list_current_profile_custody_capsule_ids(settings=settings)
+
+    assert captured.value.refusal is ProfileCustodyRefusal.LEGACY_CUSTODY_DETECTED
+    assert captured.value.recovery_guidance == (
+        ProfileCustodyRecoveryGuidance.DESTRUCTIVE_RESET,
+        ProfileCustodyRecoveryGuidance.REENROLL_PROFILE,
+    )
+    assert captured.value.context == {
+        "refusal": "LEGACY_CUSTODY_DETECTED",
+        "recovery_guidance": ("DESTRUCTIVE_RESET", "REENROLL_PROFILE"),
+        "retired_member_paths": ("manifest.toml",),
+    }
+    assert opened_retired_paths == []
+
+
+def test_discovery_refuses_an_invalid_current_marker_instead_of_skipping_it(tmp_path: Path) -> None:
+    """A UUID candidate with a marker is current-format integrity state, never absence."""
+    settings = _settings(tmp_path)
+    marker = tmp_path / "buckets" / str(_PROFILE_ID) / "profile.commit.v1.json"
+    marker.parent.mkdir(parents=True)
+    marker.write_bytes(b"not a current profile commit")
+
+    with pytest.raises(ProfileCustodyRecordError):
+        list_current_profile_custody_capsule_ids(settings=settings)
+
+
 def test_committed_capsule_enumeration_refuses_linked_candidate_and_unsafe_root_ancestry(tmp_path: Path) -> None:
     """Discovery is anchored at the custody root and never follows a UUID-named link."""
     settings = _settings(tmp_path)
@@ -349,7 +398,12 @@ def test_committed_capsule_enumeration_refuses_linked_candidate_and_unsafe_root_
         publication_kind="enroll",
         password_envelope=envelope,
         sentinel=sentinel,
-        data_files={"profile-label.v1.txt": b"Anchored operator"},
+        data_files={
+            "profile-label.v1.json": ProfileCustodyCapsuleLabel.create(
+                profile_id=_PROFILE_ID,
+                label="Anchored operator",
+            ).canonical_json_bytes()
+        },
         settings=settings,
     )
     other_profile = uuid4()

@@ -15,9 +15,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period
-from ....core.config import SecretStoreBackend
 from ....core.resources import resources
-from ....domain.user_profile import UserProfileStatus
+from ....domain.user_profile import ProfileSetupState
 from .._config_payloads import ConfigLoginResult, ConfigProfilePreflightResult, ConfigProfileValidateResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -29,7 +28,7 @@ def _validate_kwargs(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "profile_id": "11111111-1111-4111-8111-111111111111",
         "display_name": "MyCo",
-        "status": UserProfileStatus.ACTIVE,
+        "setup_state": ProfileSetupState.COMPLETE,
         "valid": True,
         "schema_version": 1,
         "issues": [],
@@ -42,7 +41,7 @@ def test_validate_result_accepts_a_real_projection() -> None:
     """A genuine profile-validation projection validates cleanly."""
     result = ConfigProfileValidateResult.model_validate(_validate_kwargs())
 
-    assert result.status is UserProfileStatus.ACTIVE
+    assert result.setup_state is ProfileSetupState.COMPLETE
 
 
 def test_validate_result_rejects_a_blank_profile_id() -> None:
@@ -51,10 +50,10 @@ def test_validate_result_rejects_a_blank_profile_id() -> None:
         ConfigProfileValidateResult.model_validate(_validate_kwargs(profile_id=""))
 
 
-def test_validate_result_rejects_an_unknown_status() -> None:
-    """A status outside the closed ``UserProfileStatus`` vocabulary is refused."""
+def test_validate_result_rejects_an_unknown_setup_state() -> None:
+    """A setup state outside the closed vocabulary is refused."""
     with pytest.raises(ValidationError):
-        ConfigProfileValidateResult.model_validate({**_validate_kwargs(), "status": "bogus"})
+        ConfigProfileValidateResult.model_validate({**_validate_kwargs(), "setup_state": "bogus"})
 
 
 def test_validate_result_rejects_a_non_positive_schema_version() -> None:
@@ -73,7 +72,6 @@ def _login_kwargs(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "profile_id": "bucket-1",
         "active_profile": "myco",
-        "backend_kind": SecretStoreBackend.KEYRING,
         "authenticated_at": _INSTANT,
         "idle_deadline": _INSTANT,
         "absolute_deadline": _INSTANT,
@@ -88,7 +86,7 @@ def test_login_result_accepts_a_real_projection() -> None:
     """A genuine login outcome projects and validates cleanly."""
     result = ConfigLoginResult.model_validate(_login_kwargs())
 
-    assert result.backend_kind is SecretStoreBackend.KEYRING
+    assert result.session_persisted is True
 
 
 def test_login_result_rejects_a_blank_active_profile() -> None:
@@ -97,8 +95,8 @@ def test_login_result_rejects_a_blank_active_profile() -> None:
         ConfigLoginResult.model_validate(_login_kwargs(profile_id=""))
 
 
-def test_login_result_rejects_an_unknown_backend_kind() -> None:
-    """A backend outside the closed ``SecretStoreBackend`` vocabulary is refused."""
+def test_login_result_refuses_retired_backend_metadata() -> None:
+    """Normal password custody does not project a retired provider backend."""
     with pytest.raises(ValidationError):
         ConfigLoginResult.model_validate({**_login_kwargs(), "backend_kind": "bogus"})
 

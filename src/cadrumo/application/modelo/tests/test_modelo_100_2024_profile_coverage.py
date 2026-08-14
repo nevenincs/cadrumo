@@ -101,7 +101,6 @@ def _snapshot_2024() -> RegistrySnapshot:
 def _full_profile() -> UserProfileRecord:
     return UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Modelo 100 2024 profile coverage",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="identity.surnames", value="Garcia Lopez"),

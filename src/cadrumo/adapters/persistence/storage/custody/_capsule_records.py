@@ -32,17 +32,157 @@ PROFILE_CUSTODY_COMMIT_SCHEMA_VERSION: Final = 1
 PROFILE_CUSTODY_LAYOUT_VERSION: Final = 1
 PROFILE_CUSTODY_COMMIT_MAX_BYTES: Final = 512
 PROFILE_CUSTODY_DELETION_FILENAME: Final = "profile.deletion.v1.json"
-PROFILE_CUSTODY_LABEL_FILENAME: Final = "profile-label.v1.txt"
+PROFILE_CUSTODY_LABEL_FILENAME: Final = "profile-label.v1.json"
 PROFILE_CUSTODY_LABEL_MAX_BYTES: Final = 512
 _COMMIT_TIME_RE: Final = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z\Z")
 
 
-class ProfileCustodyCapsuleLabel(BaseModel):
-    """Typed canonical label payload used inside a committed data directory."""
+class _ProfileCustodyCapsuleLabelPayload(BaseModel):
+    """The immutable label lineage excluding its two derived digests."""
 
     model_config = _STRICT_FROZEN
 
+    schema_version: Literal[1]
+    profile_id: UUID
     label: ProfileLabel
+    label_revision: int
+    previous_label_digest: str | None
+
+    @field_validator("label_revision")
+    @classmethod
+    def _validate_label_revision(cls, value: int) -> int:
+        if value < 1:
+            raise ValueError("profile capsule label revision must be at least one")
+        return value
+
+    @field_validator("previous_label_digest")
+    @classmethod
+    def _validate_previous_label_digest(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return _validate_label_digest(value, subject="profile capsule previous label digest")
+
+    @model_validator(mode="after")
+    def _validate_label_lineage(self) -> _ProfileCustodyCapsuleLabelPayload:
+        if self.label_revision == 1 and self.previous_label_digest is not None:
+            raise ValueError("first profile capsule label revision must not carry a predecessor")
+        if self.label_revision > 1 and self.previous_label_digest is None:
+            raise ValueError("later profile capsule label revision must carry the previous label digest")
+        return self
+
+
+def _validate_label_digest(value: str, *, subject: str) -> str:
+    if (
+        len(value) != 71
+        or not value.startswith("sha256:")
+        or any(character not in "0123456789abcdef" for character in value[7:])
+    ):
+        raise ValueError(f"{subject} must be a lowercase sha256 digest")
+    return value
+
+
+class ProfileCustodyCapsuleLabel(_ProfileCustodyCapsuleLabelPayload):
+    """UUID-bound, revisioned canonical label provenance in capsule data.
+
+    The label remains separately readable while a profile is locked, but is
+    never a loose presentation string: its strict canonical record binds it to
+    one capsule UUID and carries both content and self-authentication digests.
+    """
+
+    content_digest: str
+    self_digest: str
+
+    @field_validator("content_digest")
+    @classmethod
+    def _validate_content_digest(cls, value: str) -> str:
+        return _validate_label_digest(value, subject="profile capsule label content digest")
+
+    @field_validator("self_digest")
+    @classmethod
+    def _validate_self_digest(cls, value: str) -> str:
+        return _validate_label_digest(value, subject="profile capsule label self digest")
+
+    @model_validator(mode="after")
+    def _verify_digests(self) -> ProfileCustodyCapsuleLabel:
+        if self.content_digest != self.computed_content_digest:
+            raise ValueError("profile capsule label content digest does not match")
+        if self.self_digest != self.computed_self_digest:
+            raise ValueError("profile capsule label self digest does not match")
+        return self
+
+    @property
+    def content_payload(self) -> dict[str, object]:
+        payload = cast(dict[str, object], self.model_dump(mode="json"))
+        del payload["content_digest"]
+        del payload["self_digest"]
+        return payload
+
+    @property
+    def self_payload(self) -> dict[str, object]:
+        payload = cast(dict[str, object], self.model_dump(mode="json"))
+        del payload["self_digest"]
+        return payload
+
+    @property
+    def computed_content_digest(self) -> str:
+        return canonical_custody_digest(
+            self.content_payload,
+            maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
+            subject="profile capsule label content",
+        )
+
+    @property
+    def computed_self_digest(self) -> str:
+        return canonical_custody_digest(
+            self.self_payload,
+            maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
+            subject="profile capsule label",
+        )
+
+    def canonical_json_bytes(self) -> bytes:
+        return canonical_custody_json_bytes(
+            self.model_dump(mode="json"),
+            maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
+            subject="profile capsule label",
+        )
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        profile_id: UUID,
+        label: str,
+        label_revision: int = 1,
+        previous_label_digest: str | None = None,
+    ) -> ProfileCustodyCapsuleLabel:
+        try:
+            payload = _ProfileCustodyCapsuleLabelPayload(
+                schema_version=1,
+                profile_id=profile_id,
+                label=label,
+                label_revision=label_revision,
+                previous_label_digest=previous_label_digest,
+            ).model_dump(mode="json")
+            content_digest = canonical_custody_digest(
+                payload,
+                maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
+                subject="profile capsule label content",
+            )
+            with_content = {**payload, "content_digest": content_digest}
+            self_digest = canonical_custody_digest(
+                with_content,
+                maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
+                subject="profile capsule label",
+            )
+            return cls.model_validate_json(
+                canonical_custody_json_bytes(
+                    {**with_content, "self_digest": self_digest},
+                    maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
+                    subject="profile capsule label",
+                )
+            )
+        except (ValidationError, ValueError, TypeError) as exc:
+            raise ProfileCustodyRecordError("cannot construct a profile capsule label") from exc
 
 
 class _ProfileCustodyCommitPayload(BaseModel):
@@ -233,6 +373,32 @@ def parse_profile_custody_commit(value: bytes) -> ProfileCustodyCommit:
         raise ProfileCustodyRecordError("profile capsule commit is not a valid current-format record") from exc
 
 
+def parse_profile_custody_capsule_label(value: bytes) -> ProfileCustodyCapsuleLabel:
+    """Parse exactly one bounded, UUID-bound canonical label provenance record."""
+    if len(value) > PROFILE_CUSTODY_LABEL_MAX_BYTES:
+        raise ProfileCustodyRecordError("profile capsule label exceeds its canonical byte limit")
+    try:
+        parsed = json.loads(
+            value.decode("utf-8", errors="strict"),
+            object_pairs_hook=reject_duplicate_custody_members,
+            parse_constant=reject_custody_json_constant,
+        )
+        if not isinstance(parsed, dict):
+            raise ValueError("profile capsule label must be a JSON object")
+        label = ProfileCustodyCapsuleLabel.model_validate_json(
+            canonical_custody_json_bytes(
+                cast(dict[str, object], parsed),
+                maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
+                subject="profile capsule label",
+            )
+        )
+        if label.canonical_json_bytes() != value:
+            raise ValueError("profile capsule label is not canonical")
+        return label
+    except (UnicodeDecodeError, ValidationError, ValueError, TypeError) as exc:
+        raise ProfileCustodyRecordError("profile capsule label is not a valid current-format record") from exc
+
+
 @dataclass(frozen=True, slots=True)
 class ProfileCustodyPasswordMaterial:
     """The exact normal-password read set, intentionally excluding optional recovery."""
@@ -265,6 +431,7 @@ __all__ = [
     "ProfileCustodyCommit",
     "ProfileCustodyDeletionMarker",
     "ProfileCustodyPasswordMaterial",
+    "parse_profile_custody_capsule_label",
     "parse_profile_custody_commit",
     "parse_profile_custody_deletion_marker",
 ]

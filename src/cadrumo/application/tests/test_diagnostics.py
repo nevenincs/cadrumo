@@ -430,13 +430,13 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
     three workflow states (no provider, provider only, fully
     authenticated) and asserting the report shape across each.
     """
+    from ...tests.profile_capsule import open_test_profile_session
     from ..auth import update_auth
-    from ..user_profile import profile_create_storage_span
     from ..workflow import WorkflowState, workflow_state_repository
 
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
+        open_test_profile_session("11111111-1111-4111-8111-111111111111"),
     ):
         base = register_minimal_profile(
             WorkflowState(),

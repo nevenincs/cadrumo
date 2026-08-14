@@ -34,9 +34,9 @@ from ....domain.modelos import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import ProfileRecordRepository
 from .._action_errors import M303FilingEvidenceError
 from .._m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 
@@ -152,10 +152,9 @@ def _store_profile(
     composition: M303RegimeComposition = M303RegimeComposition.GENERAL,
     iae_epigraph: str | None = None,
 ) -> None:
-    ProfileRecordRepository(bucket_id=_BUCKET_ID).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="M303 filing evidence validation",
             facts=(
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.m303_regime_composition", value=composition.value),

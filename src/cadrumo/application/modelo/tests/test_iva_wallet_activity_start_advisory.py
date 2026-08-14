@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 
 from ....domain.iva_compensation import IvaCompensationDecisionReason
+from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
 from ...calculations import IvaWalletDecisionRepository
-from ...user_profile import ProfileRecordRepository
 from .._iva_wallet_gate import lazily_reconcile_local_iva_compensation_for_work_unit
 from ._iva_wallet_engine_support import (
     _BUCKET_ID,
@@ -57,9 +57,8 @@ def test_missing_activity_start_still_blocks_the_first_period_zero(tmp_path: Pat
     """Absence remains fail-closed; the advisory must not become a grant."""
     with _secure_backend(tmp_path):
         _store_operator_profile()
-        profiles = ProfileRecordRepository(bucket_id=_BUCKET_ID)
-        profile = profiles.load(_BUCKET_ID)
-        profiles.save(
+        profile = load_test_profile_record(_BUCKET_ID)
+        replace_test_profile_record(
             profile.model_copy(
                 update={
                     "facts": tuple(fact for fact in profile.facts if fact.path != "censo.activity_start_date"),

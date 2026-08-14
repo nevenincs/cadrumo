@@ -77,32 +77,31 @@ def _store_profile_with_nif(nif: str, *, bucket_id: str = _SEED_BUCKET_ID) -> No
     verb's active-bucket NIF resolver relies on. ``bucket_id`` must therefore
     be the same UUIDv4 the paired :func:`isolated_runtime_profile` activates.
     """
-    from ....application.user_profile import ProfileRecordRepository
     from ....domain.user_profile import UserProfileFact, UserProfileRecord
+    from ....tests.profile_capsule import seed_test_profile_record
 
     created_at = datetime(2025, 1, 1, 12, 0, tzinfo=UTC)
-    ProfileRecordRepository(bucket_id=bucket_id).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Test runtime profile",
             facts=(UserProfileFact(path="identity.tax_id", value=nif),),
             created_at=created_at,
             updated_at=created_at,
         ),
+        label="Test runtime profile",
     )
 
 
 def _seed_full_autonomo_profile_for_guidance(bucket_id: str) -> None:
     """Persist a minimal autonomo profile sufficient for M303 work-unit applicability."""
-    from ....application.user_profile import ProfileRecordRepository
-    from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+    from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+    from ....tests.profile_capsule import seed_test_profile_record
 
     created_at = datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
-    ProfileRecordRepository(bucket_id=bucket_id).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Test runtime profile",
-            status=UserProfileStatus.ACTIVE,
+            setup_state=ProfileSetupState.COMPLETE,
             facts=(
                 UserProfileFact(path="identity.name", value="Guidance Test Autonomo"),
                 UserProfileFact(path="identity.surnames", value="Guidance Tester"),
@@ -128,4 +127,5 @@ def _seed_full_autonomo_profile_for_guidance(bucket_id: str) -> None:
             created_at=created_at,
             updated_at=created_at,
         ),
+        label="Guidance Test Autonomo",
     )

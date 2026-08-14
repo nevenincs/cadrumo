@@ -38,7 +38,7 @@ from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.user_profile import UserProfileFact
-from ._orchestration import build_lifecycle_service, require_active, set_active_fields
+from ._profile_record_repository import ProfileRecordRepository
 
 if TYPE_CHECKING:
     from ...domain.censo import CertificadoSituacionCensal
@@ -251,8 +251,7 @@ def apply_cotejo(
 ) -> WorkflowState:
     """Commit a cotejo reconciliation: adopt certificate values, record divergences.
 
-    Persists, in one atomic sequence through the sanctioned
-    :func:`~cadrumo.application.user_profile.set_active_fields` write path:
+    Publishes, in one revision-bound record command:
 
     * clearing facts (``value=None``) for every ``censo.divergencia.*`` path
       currently on record that the fresh set does not re-declare — the
@@ -268,20 +267,29 @@ def apply_cotejo(
     :class:`~cadrumo.application.workflow.WorkflowState`; the caller persists
     it through the workflow repository like every other fact mutation.
     """
-    record = state.active_profile_record()
-    profile_id = require_active(state)
+    from ...core import require_active_bucket_id
+
+    profile_id = require_active_bucket_id()
+    repository = ProfileRecordRepository.for_current_session(profile_id)
+    record = repository.load(profile_id)
     fresh = divergence_facts(divergences)
     fresh_paths = {fact.path for fact in fresh}
     clearing = tuple(
         UserProfileFact(path=path, value=None) for path in _existing_divergence_paths(record) if path not in fresh_paths
     )
-    updated = set_active_fields(state, (*clearing, *tuple(adopted), *fresh))
-    build_lifecycle_service(bucket_id=profile_id).record_censo_applied(
+    replacement = repository.apply_fact_changes(
         profile_id,
-        adopted_count=len(tuple(adopted)),
-        divergence_count=len(divergences),
+        facts=(*record.facts, *clearing, *tuple(adopted), *fresh),
+        expected_revision=record.record_revision,
+        expected_content_digest=record.content_digest,
+        event_type="profile.censo.applied",
+        event_payload={
+            "adopted_count": str(len(tuple(adopted))),
+            "divergence_count": str(len(divergences)),
+        },
     )
-    return updated
+    assert replacement.record_revision == record.record_revision + 1
+    return state
 
 
 __all__ = [

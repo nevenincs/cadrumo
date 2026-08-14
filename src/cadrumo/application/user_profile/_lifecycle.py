@@ -4,18 +4,29 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
+from sqlite3 import DatabaseError
 from uuid import UUID, uuid4
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from ...core import BucketPointer
-from ...domain.user_profile import UserProfileRecord
+from ...domain.user_profile import ProfileCustodyLabelAuthorityProtocol, UserProfileRecord
 from ._aggregate import CommittedProfileView
-from ._capsule_record import PROFILE_RECORD_DATA_FILENAME, ProfileRecordSession
+from ._capsule_record import (
+    ProfileRecordCommandEvent,
+    ProfileRecordIntegrityError,
+    ProfileRecordSession,
+    ProfileRecordStore,
+    stage_initial_profile_record_database,
+    validate_staged_profile_record_database,
+)
 from ._custody_ports import (
     ProfileCustodyEnvelopePort,
     ProfileCustodyRecoveryEnvelopePort,
     ProfileCustodySentinelPort,
 )
-from ._custody_service import ProfileCustodyTransactionService
+from ._custody_repository import profile_custody_transaction_lock
+from ._custody_service import _ProfileCustodyTransactionCapability
 from ._custody_transactions import (
     ProfileCustodyDeleteConfirmation,
     ProfileCustodyTransactionJournal,
@@ -36,7 +47,8 @@ class ProfileCapsuleLifecycle:
 
     def __init__(self, *, root: Path | None = None) -> None:
         self._profiles = CommittedProfileRepository(root=root)
-        self._transactions = ProfileCustodyTransactionService(root=self._profiles.root)
+        self._transactions = _ProfileCustodyTransactionCapability(root=self._profiles.root)
+        self._label_authority: ProfileCustodyLabelAuthorityProtocol = self._transactions
 
     @property
     def root(self) -> Path:
@@ -59,17 +71,21 @@ class ProfileCapsuleLifecycle:
             raise ValueError("profile lifecycle create material must bind the lifecycle UUID")
         if record_session.profile_id != identity:
             raise ValueError("profile lifecycle record session must bind the lifecycle UUID")
-        if PROFILE_RECORD_DATA_FILENAME in data_files:
-            raise ValueError("profile lifecycle refuses caller-supplied profile record bytes")
-        staged_record = record_session.create_initial(initial_record)
+        record_session.assert_initial_record(initial_record)
         self._transactions.create_capsule(
             profile_id=identity,
             password_envelope=password_envelope,
             sentinel=sentinel,
-            data_files={**data_files, PROFILE_RECORD_DATA_FILENAME: staged_record},
+            data_files=data_files,
             label=label,
             recovery_envelope=recovery_envelope,
             publication_kind="enroll",
+            stage_initializer=lambda stage_path: stage_initial_profile_record_database(
+                stage_path=stage_path,
+                root=self.root,
+                session=record_session,
+                record=initial_record,
+            ),
         )
         return self._profiles.load(identity)
 
@@ -80,11 +96,19 @@ class ProfileCapsuleLifecycle:
         password_envelope: ProfileCustodyEnvelopePort,
         sentinel: ProfileCustodySentinelPort,
         data_files: Mapping[str, bytes],
+        record_session: ProfileRecordSession,
+        database_bytes: bytes,
         recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None = None,
     ) -> CommittedProfileView:
         identity = password_envelope.profile_id
         if sentinel.profile_id != identity:
             raise ValueError("profile lifecycle restore material must bind one UUID")
+        if record_session.profile_id != identity:
+            raise ValueError("profile lifecycle restore session must bind the capsule UUID")
+        if data_files:
+            raise ValueError("profile lifecycle restore refuses arbitrary capsule data files")
+        if not database_bytes:
+            raise ValueError("profile lifecycle restore requires its canonical profile database")
         self._transactions.create_capsule(
             profile_id=identity,
             password_envelope=password_envelope,
@@ -93,8 +117,74 @@ class ProfileCapsuleLifecycle:
             label=label,
             recovery_envelope=recovery_envelope,
             publication_kind="restore",
+            stage_initializer=lambda stage_path: self._stage_and_validate_restore_database(
+                stage_path=stage_path,
+                record_session=record_session,
+                database_bytes=database_bytes,
+            ),
         )
         return self._profiles.load(identity)
+
+    def _replace_record_for_profile_command(
+        self,
+        *,
+        profile_id: UUID,
+        record_session: ProfileRecordSession,
+        replacement: UserProfileRecord,
+        event: ProfileRecordCommandEvent,
+        expected_revision: int,
+        expected_content_digest: str,
+    ) -> UserProfileRecord:
+        """Private CAS collaboration for explicit ``ProfileRecordRepository`` commands."""
+        if record_session.profile_id != profile_id:
+            raise ValueError("profile lifecycle record session must bind the replacement UUID")
+        with profile_custody_transaction_lock(self.root, profile_id):
+            return ProfileRecordStore(session=record_session, root=self.root).replace(
+                replacement=replacement,
+                event=event,
+                expected_revision=expected_revision,
+                expected_content_digest=expected_content_digest,
+            )
+
+    def rename_label(
+        self,
+        *,
+        profile_id: UUID,
+        label: str,
+        expected_label_revision: int,
+        expected_content_digest: str,
+    ) -> CommittedProfileView:
+        """Delegate label mutation to the canonical custody transaction owner."""
+        self._label_authority.rename_label(
+            profile_id=profile_id,
+            label=label,
+            expected_label_revision=expected_label_revision,
+            expected_content_digest=expected_content_digest,
+        )
+        return self._profiles.load(profile_id)
+
+    def _stage_and_validate_restore_database(
+        self,
+        *,
+        stage_path: Path,
+        record_session: ProfileRecordSession,
+        database_bytes: bytes,
+    ) -> None:
+        """Stage a supplied canonical DB and authenticate it before publication."""
+        database = stage_path / "db" / "cadrumo.db"
+        database.parent.mkdir(mode=0o700, exist_ok=False)
+        database.write_bytes(database_bytes)
+        (stage_path / "blobs").mkdir(mode=0o700, exist_ok=False)
+        try:
+            validate_staged_profile_record_database(
+                stage_path=stage_path,
+                root=self.root,
+                session=record_session,
+            )
+        except (DatabaseError, OSError, SQLAlchemyError, ValueError) as exc:
+            raise ProfileRecordIntegrityError(
+                "profile lifecycle restore database fails authenticated current-record validation"
+            ) from exc
 
     def select(self, value: str) -> CommittedProfileView:
         aggregate = self._profiles.resolve(value)

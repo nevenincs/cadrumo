@@ -29,15 +29,12 @@ decrypts cleanly.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
 from .....domain.buckets import BucketExportError, BucketImportError
-from .....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
-from .. import BUCKETS_DIRNAME
 from ..bucket import ExportArchiveHeader, read_sealed_archive, write_sealed_archive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -115,75 +112,3 @@ class TestBundleExportCrashWindow:
 
         with pytest.raises(BucketExportError):
             _write_valid_archive(archive)
-
-
-class TestBundleImportCrashWindow:
-    @pytest.fixture
-    def backend(self, tmp_path: Path) -> Iterator[Path]:
-        with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-            yield storage_root
-
-    def test_corrupted_import_provisions_no_bucket(self, backend: Path, tmp_path: Path) -> None:
-        # A corrupted archive is rejected at the reader boundary the import
-        # service calls first, before writing any bucket store: no partial
-        # bucket is provisioned.
-        from .....application.bucket_maintenance import BucketMaintenanceService, ImportBucketCommand
-        from .....application.workflow import read_profile_bucket_by_id
-
-        archive = tmp_path / "import-source.cadrumo-bucket.tar.gz"
-        _write_valid_archive(archive)
-        _corrupt_midstream(archive)
-
-        with pytest.raises(BucketImportError):
-            BucketMaintenanceService().import_(ImportBucketCommand(source_path=archive))
-
-        assert read_profile_bucket_by_id(_BUCKET_ID) is None
-        buckets_root = backend / BUCKETS_DIRNAME
-        assert not buckets_root.exists() or not any(buckets_root.iterdir())
-
-    def test_near_complete_truncation_is_refused_by_aead_before_provisioning(self, tmp_path: Path) -> None:
-        # A near-complete truncation that still decompresses to the expected
-        # members passes the reader; the AEAD tag on the encrypted payload then
-        # fails when the importer decrypts it, and that check precedes any
-        # bucket provisioning. Built under the active bucket's master key so the
-        # AEAD is genuinely exercised.
-        from .....application.bucket_maintenance import BucketMaintenanceService, ImportBucketCommand
-        from .....application.bucket_maintenance._service import _archive_associated_data
-        from .....application.workflow import read_profile_bucket_by_id
-        from ..crypto import EncryptedBlob, decrypt_record, encrypt_record
-        from ..master_key import get_active_master_key
-
-        fresh_id = "12121212-1212-4121-8121-121212121212"
-        payload = b"known sealed payload plaintext bytes " * 128
-        archive = tmp_path / "near-complete.cadrumo-bucket.tar.gz"
-
-        with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-            _: TestRuntimeProfile = profile
-            master_key = get_active_master_key()
-            aad = _archive_associated_data(fresh_id, _MANIFEST_DIGEST)
-            encrypted = encrypt_record(payload, key=master_key, associated_data=aad)
-            _write_valid_archive(archive, payload=encrypted.to_wire(), bucket_id=fresh_id)
-
-            # Anti-tautology: the INTACT payload authenticates under the AEAD,
-            # so the truncated refusal below is caused by the truncation, not by
-            # a key or AAD mismatch.
-            intact = read_sealed_archive(archive)
-            assert (
-                decrypt_record(
-                    EncryptedBlob.from_wire(intact.payload_envelope_bytes),
-                    key=master_key,
-                    associated_data=aad,
-                )
-                == payload
-            )
-
-            # Near-complete truncation (97% kept): decompresses, but the payload
-            # ciphertext is short so the AEAD tag fails at import.
-            _truncate(archive, keep_fraction=0.97)
-
-            with pytest.raises(BucketImportError):
-                BucketMaintenanceService().import_(ImportBucketCommand(source_path=archive))
-
-            # No bucket was provisioned for the archive's id — the aborted
-            # import left no manifest pointer behind.
-            assert read_profile_bucket_by_id(fresh_id) is None

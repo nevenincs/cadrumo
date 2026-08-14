@@ -20,8 +20,8 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import NoRecoveryOutcome, Period
 from ....domain.modelos import WorkUnit, WorkUnitState
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...user_profile import ProfileRecordRepository
 from .._action_errors import WorkUnitMutationRefusedError
 from .._work_lifecycle import create_work_unit, discard_work_unit, list_work_units
 
@@ -55,10 +55,9 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
-    ProfileRecordRepository(bucket_id=bucket_id, objects=objects).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Work unit discard refusal profile",
             facts=_READY_PROFILE_FACTS,
             created_at=_T0,
             updated_at=_T0,

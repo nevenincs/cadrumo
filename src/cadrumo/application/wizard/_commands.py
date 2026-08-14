@@ -42,7 +42,6 @@ from typing import TYPE_CHECKING, Annotated
 if TYPE_CHECKING:
     from ...core.errors import CadrumoError
     from ...core.json_contract import Notice
-    from ..workflow import WorkflowState
     from ._results import ConfigProfileCreateResult, ConfigProfileEditResult
 
 import contextlib
@@ -987,40 +986,30 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     every other stored field is left untouched. No full-flow walk, no
     ``SetupAnswers`` model construction, no descriptor-default seeding.
     """
-    from ..user_profile import profile_storage_session, record_to_path_values
-    from ..workflow import workflow_state_repository
-    from ._persistence import persist_patch, profile_values_from_patch, project_answers
+    from ...domain.user_profile import UserProfileFact
+    from ..user_profile import ProfileRecordRepository, record_to_path_values
+    from ._persistence import apply_wizard_fact_changes, profile_values_from_patch, project_answers
 
     patched_values = profile_values_from_patch(flow, explicit_flags)
-    merged_values: dict[str, str] | None = None
-
-    with profile_storage_session(profile_id):
-        repository = workflow_state_repository()
-
-        def _persist_if_filing_baseline_survives(state: WorkflowState) -> WorkflowState:
-            nonlocal merged_values
-            values = record_to_path_values(state.active_profile_record())
-            values.update(patched_values)
-            merged_values = values
-            missing_baseline = _missing_filing_baseline_flags(flow, project_answers(flow, values))
-            if missing_baseline:
-                raise WizardMissingFlagError(
-                    translated_message="application.wizard.errors.edit_missing_filing_baseline",
-                    context={
-                        "flow_id": flow.id,
-                        "missing": missing_baseline,
-                        "missing_flags": _format_missing_flags(missing_baseline),
-                    },
-                )
-            return persist_patch(flow, explicit_flags, state=state)
-
-        repository.update(_persist_if_filing_baseline_survives)
-    return merged_values or patched_values
-
-
-def _all_question_ids(flow: WizardFlow) -> frozenset[str]:
-    """Return every question id declared by the flow."""
-    return frozenset(question.id for section in flow.sections for question in section.questions)
+    record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+    merged_values = record_to_path_values(record)
+    merged_values.update(patched_values)
+    missing_baseline = _missing_filing_baseline_flags(flow, project_answers(flow, merged_values))
+    if missing_baseline:
+        raise WizardMissingFlagError(
+            translated_message="application.wizard.errors.edit_missing_filing_baseline",
+            context={
+                "flow_id": flow.id,
+                "missing": missing_baseline,
+                "missing_flags": _format_missing_flags(missing_baseline),
+            },
+        )
+    apply_wizard_fact_changes(
+        profile_id=profile_id,
+        changes=tuple(UserProfileFact(path=path, value=value) for path, value in patched_values.items()),
+        event_type="profile.wizard.patch.applied",
+    )
+    return merged_values
 
 
 def _run_full_flow(
@@ -1045,19 +1034,18 @@ def _run_full_flow(
     question is collected even when its ``visible_when`` gate would
     hide it, so an explicitly-given flag value is always honoured.
 
-    ``checkpoint_store`` is supplied only for an interactive ``create``:
-    the facts persist incrementally through it (mint-early, save-and-exit)
-    and completion flips the profile ``ACTIVE``, so that path bypasses the
-    end-of-flow ``register_active_profile`` used by every other persistence
-    route.
+    ``checkpoint_store`` is not a creation authority. Interactive creation
+    is unavailable until credential registration has established the current
+    authenticated profile.
     """
-    from ..user_profile import (
-        profile_create_storage_span,
-        profile_storage_session,
-        record_to_path_values,
-    )
-    from ..workflow import workflow_state_repository
-    from ._persistence import persist_answers, project_answers, serialise_answers
+    from ...domain.user_profile import UserProfileFact
+    from ..user_profile import ProfileRecordRepository, ProfileRegistrationError, record_to_path_values
+    from ._persistence import apply_wizard_fact_changes, project_answers, serialise_answers
+
+    if mode == "create":
+        raise ProfileRegistrationError(
+            "wizard profile creation is unavailable; register with credentials before setup",
+        )
 
     if accept_defaults:
         seeded: dict[str, str] = {
@@ -1087,7 +1075,6 @@ def _run_full_flow(
             mode=mode,
             explicit_question_ids=explicit_question_ids,
         )
-        supplied_question_ids = _all_question_ids(flow)
     elif accept_defaults:
         answers = _run_scripted_walk(
             flow,
@@ -1095,7 +1082,6 @@ def _run_full_flow(
             mode=mode,
             explicit_question_ids=explicit_question_ids,
         )
-        supplied_question_ids = _all_question_ids(flow)
     else:
         # There is no interactive walk here any more. An operator at a
         # capable terminal was already diverted to the profile manager
@@ -1118,55 +1104,28 @@ def _run_full_flow(
     # (``supplied_question_ids``); the full serialisation here feeds the
     # filing-baseline survival check and the success payload.
     profile_values = serialise_answers(flow, answers)
-    if mode == "create":
-        missing_baseline = _missing_filing_baseline_flags(flow, answers)
-        if missing_baseline:
-            raise WizardMissingFlagError(
-                translated_message="application.wizard.errors.create_missing_filing_baseline",
-                context={
-                    "flow_id": flow.id,
-                    "missing": missing_baseline,
-                    "missing_flags": _format_missing_flags(missing_baseline),
-                },
-            )
+    record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+    values = record_to_path_values(record)
+    values.update({path: value for path, value in profile_values.items() if value})
+    missing_baseline = _missing_filing_baseline_flags(flow, project_answers(flow, values))
+    if missing_baseline:
+        raise WizardMissingFlagError(
+            translated_message="application.wizard.errors.edit_missing_filing_baseline",
+            context={
+                "flow_id": flow.id,
+                "missing": missing_baseline,
+                "missing_flags": _format_missing_flags(missing_baseline),
+            },
+        )
+    from ...domain.deadlines import taxpayer_profile_from_mapping
 
-    span = profile_create_storage_span(profile_id) if mode == "create" else profile_storage_session(profile_id)
-    with span as routing_profile_id:
-
-        def _persist_if_filing_baseline_survives(state: WorkflowState) -> WorkflowState:
-            values = profile_values
-            if mode == "edit":
-                values = record_to_path_values(state.active_profile_record())
-                values.update({path: value for path, value in profile_values.items() if value})
-                missing_baseline = _missing_filing_baseline_flags(flow, project_answers(flow, values))
-                if missing_baseline:
-                    raise WizardMissingFlagError(
-                        translated_message="application.wizard.errors.edit_missing_filing_baseline",
-                        context={
-                            "flow_id": flow.id,
-                            "missing": missing_baseline,
-                            "missing_flags": _format_missing_flags(missing_baseline),
-                        },
-                    )
-            from ...domain.deadlines import taxpayer_profile_from_mapping
-
-            taxpayer_profile_from_mapping(
-                values,
-                tax_id_default=values.get("identity.tax_id", ""),
-            )
-            return persist_answers(
-                flow,
-                answers,
-                state=state,
-                profile_name=profile_name,
-                profile_id=profile_id,
-                mode=mode,
-                supplied_question_ids=supplied_question_ids,
-                routing_profile_id=routing_profile_id if mode == "create" else None,
-            )
-
-        workflow_state_repository().update(_persist_if_filing_baseline_survives)
-    return profile_values
+    taxpayer_profile_from_mapping(values, tax_id_default=values.get("identity.tax_id", ""))
+    apply_wizard_fact_changes(
+        profile_id=profile_id,
+        changes=tuple(UserProfileFact(path=path, value=value) for path, value in profile_values.items() if value),
+        event_type="profile.wizard.answers.applied",
+    )
+    return values
 
 
 def _enter_requested_output_language(kwargs: dict[str, object], language_stack: contextlib.ExitStack) -> None:
@@ -1203,20 +1162,16 @@ def _require_profile_name(flow: WizardFlow, raw_profile_name: object) -> str:
 def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, profile_name: str) -> str:
     """Resolve or mint the immutable profile id for the requested wizard mode.
 
-    A ``create`` for a label whose profile is ``SETUP_INCOMPLETE`` resolves
-    to that in-progress bucket so the walk RESUMES it rather than refusing
-    as a duplicate — the facts-as-checkpoint re-entry. A label carried by an
-    ``ACTIVE`` profile still refuses (finish then edit), and a genuinely new
-    label mints a fresh id.
+    A ``create`` always addresses a fresh capsule. Existing labels are
+    refused by the canonical label owner; setup-state resume is granted only
+    after the capsule record has been authenticated by the checkpoint store.
+    A genuinely new label mints a fresh id.
     """
-    from ...domain.user_profile import UserProfileStatus, new_profile_id
+    from ...domain.user_profile import new_profile_id
     from ..user_profile import refuse_duplicate_label, require_registered_label
     from ..workflow import read_profile_bucket
 
     if mode == "create":
-        pointer = read_profile_bucket(profile_name)
-        if pointer is not None and pointer.status is UserProfileStatus.SETUP_INCOMPLETE:
-            return pointer.bucket_id
         refuse_duplicate_label(profile_name)
         return new_profile_id()
 

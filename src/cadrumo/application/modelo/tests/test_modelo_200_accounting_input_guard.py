@@ -34,7 +34,7 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ...user_profile import ProfileRecordRepository
+from ....tests.profile_capsule import seed_test_profile_record
 from .. import (
     BucketAggregationCalculationResult,
     ModeloAggregationBindingError,
@@ -64,7 +64,6 @@ _CUOTA_EJERCICIO: CasillaId = validated_casilla_id("DP200014B:00599", surface="_
 def _seed_m200_legal_entity_profile(objects: SecureObjectRepository) -> None:
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
             UserProfileFact(path="identity.legal_name", value="Beatriz Test SL"),
@@ -87,7 +86,7 @@ def _seed_m200_legal_entity_profile(objects: SecureObjectRepository) -> None:
         created_at=_T0,
         updated_at=_T0,
     )
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=objects).save(record)
+    seed_test_profile_record(record)
 
 
 def _raw_transaction(

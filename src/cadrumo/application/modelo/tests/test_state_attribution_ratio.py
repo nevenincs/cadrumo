@@ -72,7 +72,6 @@ def test_injector_overwrites_legacy_ratio_from_explicit_scope() -> None:
 def _common_profile() -> UserProfileRecord:
     return UserProfileRecord(
         profile_id="27272727-2727-4272-8272-272727272727",
-        display_name="State attribution test taxpayer",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
@@ -87,7 +86,6 @@ def _common_profile() -> UserProfileRecord:
 def _profile_without_jurisdiction_scope() -> UserProfileRecord:
     return UserProfileRecord(
         profile_id="27272727-2727-4272-8272-272727272727",
-        display_name="State attribution test taxpayer",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),

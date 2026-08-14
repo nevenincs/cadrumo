@@ -160,8 +160,12 @@ if TYPE_CHECKING:
 
 __all__ = [
     "active_profile_label",
+    "bad",
+    "emit_envelope",
     "emit_help_text",
     "emit_progress_line",
+    "format_of",
+    "no_active_profile_refusal",
     "notice_lines",
     "parse_decimal_amount",
     "parse_optional_decimal_amount",
@@ -479,6 +483,9 @@ def _format_of(ctx: typer.Context) -> OutputFormat:
     return OutputFormat(format_value)
 
 
+format_of = _format_of
+
+
 def emit_help_text(ctx: typer.Context) -> None:
     """Emit Click/Typer help text through the shared CLI output boundary."""
     typer.echo(ctx.get_help())
@@ -714,6 +721,9 @@ def _emit_envelope(
         if sandbox_notice is not None:
             rendered_lines = (sandbox_banner_line(sandbox_notice), *rendered_lines)
     _render_and_echo(format_name=output_format.value, payload=result, lines=rendered_lines)
+
+
+emit_envelope = _emit_envelope
 
 
 def resolve_notice_action(
@@ -1051,6 +1061,9 @@ def _bad(message: str) -> typer.BadParameter:
     return typer.BadParameter(message)
 
 
+bad = _bad
+
+
 def _no_active_profile_refusal() -> Exception:
     """Return the canonical no-active-profile refusal exception.
 
@@ -1088,6 +1101,9 @@ def _no_active_profile_refusal() -> Exception:
     else:
         error = CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     return attach_cli_policy_verdict(error, verdict=verdict)
+
+
+no_active_profile_refusal = _no_active_profile_refusal
 
 
 def _state() -> WorkflowState:

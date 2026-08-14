@@ -28,7 +28,6 @@ from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import load_settings
 from ....core.identity import nif_check_letter
-from ....domain.user_profile import UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.user_profile import register_minimal_profile
 
@@ -81,10 +80,8 @@ def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
                 salt=b"0123456789abcdef",
                 output_length=32,
             ),
-            recovery_enrolled=False,
             key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
             schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-            status=UserProfileStatus.ACTIVE,
         ),
     )
     # Clear the active-profile pointer after provisioning so the staged
@@ -105,10 +102,6 @@ def seed(name: str = "default", *, tax_id: str | None = None) -> None:
     # bucket and activates a real session so the profile lifecycle service
     # can resolve the file-backed secure-object repository.
     #
-    # enforce_unique_tax_id=False avoids the cross-bucket scan: in
-    # per-bucket-storage mode each profile's encrypted record lives in
-    # its own SQLite file, so loading another bucket's record while a
-    # different session is active would fail. Matches the CLI path.
     overrides = {"identity.tax_id": tax_id} if tax_id is not None else None
     profile_id = _profile_id_for_label(name)
     with profile_create_storage_span(profile_id):
@@ -118,7 +111,6 @@ def seed(name: str = "default", *, tax_id: str | None = None) -> None:
                 profile_id=profile_id,
                 display_name=name,
                 overrides=overrides,
-                enforce_unique_tax_id=False,
             ),
         )
 

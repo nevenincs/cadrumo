@@ -3,8 +3,8 @@
 The config CLI calls this module for the recovery-code lifecycle (status,
 create, rotate, verify), passphrase change, and recovery. Storage primitives
 stay in :mod:`cadrumo.adapters.persistence.storage`; this layer resolves
-:class:`~cadrumo.core.config.Settings`, updates the active profile manifest
-when recovery is enrolled, and returns typed application result records.
+:class:`~cadrumo.core.config.Settings` and returns typed application result
+records.
 
 Plaintext recovery words never appear on any result record: enrollment hands
 the candidate mnemonic to the caller-supplied ``confirm`` callback exactly
@@ -155,17 +155,10 @@ def inspect_recovery_status(settings: Settings | None = None) -> CustodyRecovery
     """Inspect whether the configured recovery wrapper exists and return a :class:`CustodyRecoveryStatus`.
 
     The envelope file on disk is the single source of truth for whether
-    recovery is enrolled. The active profile manifest also carries a
-    ``recovery_enrolled`` mirror of that fact, written in a separate,
-    necessarily non-atomic step after the envelope is installed — so a
-    process killed between the two writes leaves the mirror disagreeing
-    with disk. Reading the status reconciles the mirror against the
-    envelope, in both directions, so the drift is self-healing on the
-    natural read path rather than persisting until the next enrollment.
+    recovery is enrolled.
     """
     path = recovery_wrap_path(settings)
     status = recovery_status(path=path)
-    _reconcile_active_profile_recovery_flag(settings=_settings(settings), enrolled=status.enrolled)
     return CustodyRecoveryStatus(
         recovery_path=path,
         recovery_enrolled=status.enrolled,
@@ -220,52 +213,6 @@ def _emit_custody_event(
             event_type.value,
             exc_info=True,
         )
-
-
-def _reconcile_active_profile_recovery_flag(*, settings: Settings, enrolled: bool) -> None:
-    """Align the active profile manifest's ``recovery_enrolled`` mirror with ``enrolled``.
-
-    ``enrolled`` is the ground truth read from the recovery envelope on
-    disk. The manifest flag is only a mirror: it is written in a separate
-    step from the envelope install, and two files in different directories
-    cannot be written atomically together, so the mirror can drift in
-    either direction — a process killed after the envelope lands leaves it
-    reading false while a genuinely enrolled envelope exists, and an
-    envelope removed out of band leaves it reading true with nothing behind
-    it. Reconciling from the envelope repairs both, and does so no matter
-    what caused the drift.
-
-    Writes only on an actual mismatch, so the common path is a read.
-
-    Best-effort by design. The mirror feeds operator-facing status display,
-    never a security gate — the recovery status and verify authorities both
-    read the envelope directly — so a locked, absent, or unreadable profile
-    store must never turn a read-only status query into a failure. Any such
-    condition is logged and the reported status still stands on the
-    envelope.
-    """
-    from ...adapters.persistence.storage.bucket import bucket_paths, read_manifest, write_manifest
-
-    active_profile = resolve_active_bucket_id()
-    if active_profile is None:
-        return
-    try:
-        paths = bucket_paths(Path(settings.cadrumo_local_storage_root), active_profile)
-        manifest = read_manifest(paths)
-        if manifest.recovery_enrolled is enrolled:
-            return
-        write_manifest(paths, manifest.model_copy(update={"recovery_enrolled": enrolled}))
-    except (OSError, StorageValidationError):
-        _log.debug(
-            "recovery-enrollment manifest mirror not reconciled to %s: profile storage unavailable",
-            enrolled,
-            exc_info=True,
-        )
-
-
-def _mark_active_profile_recovery_enrolled(settings: Settings) -> None:
-    """Mirror recovery enrollment into the active profile manifest."""
-    _reconcile_active_profile_recovery_flag(settings=settings, enrolled=True)
 
 
 def _configured_passphrase_callback(settings: Settings) -> PassphraseCallback:
@@ -383,7 +330,6 @@ def _enroll_recovery_code(
             "rotated": str(outcome.rotated).lower(),
         },
     )
-    _mark_active_profile_recovery_enrolled(resolved)
     return CustodyRecoveryEnrollmentResult(
         recovery_path=path,
         recovery_fingerprint=outcome.recovery_fingerprint,

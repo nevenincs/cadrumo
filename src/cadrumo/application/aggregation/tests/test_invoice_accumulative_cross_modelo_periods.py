@@ -74,6 +74,7 @@ from ....domain.transactions import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import CalculationObservationRepository, IvaWalletDecisionRepository
 from ...invoices import build_catalogue_invoice, link_invoice_transaction_catalogues
@@ -82,7 +83,6 @@ from ...modelo import (
     create_work_unit,
     persist_filed_revision_observation,
 )
-from ...user_profile import ProfileRecordRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -174,12 +174,11 @@ _M303_MANUAL_RESULTADO_CASILLA_ZEROS: dict[str, Decimal] = {
 }
 
 
-def _seed_taxpayer_profile(secure_objects: SecureObjectRepository) -> None:
+def _seed_taxpayer_profile() -> None:
     """Seed the one taxpayer profile both M303 and M100/M130 bindings read."""
-    ProfileRecordRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=_TAX_ID),
                 UserProfileFact(path="identity.name", value="Marta"),
@@ -500,7 +499,7 @@ def test_one_invoice_life_lands_in_one_period_on_both_modelo_pairs(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """A quarterly invoice's IVA and income reach both M390 and M100 exactly once, in one period each."""
-    _seed_taxpayer_profile(secure_objects)
+    _seed_taxpayer_profile()
     _persist_invoice_life(secure_objects)
     _seed_prior_year_m100(secure_objects)
 

@@ -11,9 +11,6 @@ See Also:
     :class:`~application.user_profile.CommittedProfileView`
         Application aggregate that carries the immutable profile UUID alongside
         mutable operator-facing labels.
-    :func:`~application.user_profile.verify_profile_integrity`
-        Cross-store read gate that compares profile UUID copies across physical
-        stores.
 """
 
 from __future__ import annotations

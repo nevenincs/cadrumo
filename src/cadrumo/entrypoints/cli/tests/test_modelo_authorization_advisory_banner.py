@@ -22,11 +22,11 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import ProfileRecordRepository
 from ....core.access_gate import AuthorizationState
 from ....core.resources import resources
-from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from .envelope_helpers import unwrap_envelope_notices, unwrap_schema_envelope
 
@@ -54,8 +54,7 @@ def _store_capital_withholding_profile(runtime_profile: TestRuntimeProfile) -> N
         schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
-        display_name="Unauthorized backend advisory profile",
-        status=UserProfileStatus.ACTIVE,
+        setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.name", value="Advisory Operator"),
             UserProfileFact(path="identity.surnames", value="Calculation"),
@@ -76,11 +75,7 @@ def _store_capital_withholding_profile(runtime_profile: TestRuntimeProfile) -> N
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )
-    lifecycle = ProfileRecordRepository(
-        bucket_id=_PROFILE_ID,
-        objects=runtime_profile.repository,
-    )
-    lifecycle.save(record)
+    seed_test_profile_record(record, root=runtime_profile.storage_root, label="Unauthorized backend advisory profile")
 
 
 def _create_modelo_117_work_unit() -> str:

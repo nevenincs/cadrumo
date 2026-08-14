@@ -19,7 +19,7 @@ from ...core import STRICT_FROZEN_CONFIG, Hex64Str
 from ...core.identity import BucketId, ContentDigest
 from ...core.time import UtcInstant
 from ...domain.retention import RetentionFloorAssessment
-from ...domain.user_profile import UserProfileStatus
+from ...domain.user_profile import ProfileSetupState
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
 
 
@@ -35,9 +35,9 @@ class BucketDeletionAssessment(BaseModel):
     """Assessment of an explicit bucket target before deletion.
 
     The existing and absent forms are mutually exclusive. An existing
-    assessment carries the bucket label, lifecycle status, deletion
-    fingerprint, and :class:`RetentionFloorAssessment`; an absent assessment
-    carries none of those values.
+    assessment carries the bucket label, optional profile setup state,
+    deletion fingerprint, and :class:`RetentionFloorAssessment`; an absent
+    assessment carries none of those values.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -45,15 +45,15 @@ class BucketDeletionAssessment(BaseModel):
     bucket_id: BucketId
     exists: bool
     label: str | None = Field(default=None, min_length=1, max_length=160)
-    status: UserProfileStatus | None = None
+    setup_state: ProfileSetupState | None = None
     fingerprint: BucketDeletionFingerprint | None = None
     retention: RetentionFloorAssessment | None = None
 
     @model_validator(mode="after")
     def _validate_existence_shape(self) -> BucketDeletionAssessment:
-        present_fields = (self.label, self.status, self.fingerprint, self.retention)
+        present_fields = (self.label, self.fingerprint, self.retention)
         if self.exists and any(value is None for value in present_fields):
-            raise ValueError("existing deletion assessment requires label, status, fingerprint, and retention")
+            raise ValueError("existing deletion assessment requires label, fingerprint, and retention")
         if not self.exists and any(value is not None for value in present_fields):
             raise ValueError("absent deletion assessment cannot carry bucket metadata")
         return self

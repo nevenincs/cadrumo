@@ -37,13 +37,12 @@ from ...application.user_profile import (
 )
 from ...application.workflow import ProfileHealthStatus, ProfileSource
 from ...core import HEX_PATTERN_64, Period
-from ...core.config import SecretStoreBackend
 from ...core.errors import BaseSeverity
 from ...core.identity import BucketId, ContentDigest, ProfileId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 from ...core.time import validate_utc_aware
 from ...domain.calculations.registry import RevisionId
-from ...domain.user_profile import UserProfileStatus
+from ...domain.user_profile import ProfileSetupState
 
 # The two wizard-owned profile result schemas register at their own producer
 # through the schema decorator, NOT here: the `config` group imports this
@@ -102,19 +101,17 @@ class ProfilePointerPayload(OutputSchema):
     :class:`ProfileFactPayload` in the
     profile-show envelope.
 
-    ``status`` mirrors the manifest lifecycle marker
-    (:class:`~cadrumo.domain.user_profile.UserProfileStatus`) so the
-    listing distinguishes a workable ``active`` profile from a
-    ``setup_incomplete`` one still completing its interactive setup — the
-    latter is listed and resumable but not yet workable. ``name`` and
-    ``bucket_id`` carry the same bounds :class:`ProfileBucketPointer`
-    enforces, so a blank label or bucket id is refused rather than listed.
+    The pointer is deliberately limited to the committed capsule's
+    operator-facing label and bucket identity. Setup readiness belongs to
+    the authenticated :class:`UserProfileRecord` projection, not to this
+    unauthenticated listing row. ``name`` and ``bucket_id`` carry the same
+    bounds :class:`ProfileBucketPointer` enforces, so a blank label or bucket
+    id is refused rather than listed.
     """
 
     name: str = Field(min_length=1, max_length=160)
     bucket_id: BucketId
     active: bool
-    status: UserProfileStatus
 
 
 class ProfileIssuePayload(OutputSchema):
@@ -370,8 +367,7 @@ class ConfigLoginResult(OutputSchema):
     """JSON envelope for ``aeat config login``.
 
     Reports the authenticated profile's immutable identity, its operator
-    label, the custody backend that performed the unwrap, and the two
-    session deadlines. ``session_persisted`` is ``False`` on a host with no
+    label and the two session deadlines. ``session_persisted`` is ``False`` on a host with no
     usable OS keychain, where the login is process-scoped only.
     ``already_authenticated`` marks the idempotent no-op that resumed a
     still-valid session without re-prompting, and
@@ -382,7 +378,6 @@ class ConfigLoginResult(OutputSchema):
 
     profile_id: BucketId
     active_profile: str
-    backend_kind: SecretStoreBackend
     authenticated_at: datetime
     idle_deadline: datetime
     absolute_deadline: datetime
@@ -492,18 +487,16 @@ class ConfigProfileShowResult(OutputSchema):
     the success path. Optional fields accommodate each branch. Successful rows
     project :class:`UserProfileRecord` facts through
     :class:`ProfileFactPayload`, bounded exactly as the canonical record's
-    ``profile_id`` / ``display_name`` / ``schema_version`` / ``status`` --
-    a malformed lifecycle status or a non-positive schema version is
-    refused rather than reported as a valid profile. Failures report
-    pointer and record readiness without dumping encrypted profile
-    contents; ``status`` also carries the readiness-branch
-    ``profile_record_unreadable`` sentinel, which is not itself a
-    :class:`UserProfileStatus` lifecycle state.
+    ``profile_id`` / ``setup_state`` / ``schema_version``. Failures report
+    pointer and record readiness without dumping encrypted profile contents;
+    ``status`` is reserved for the readiness-branch
+    ``profile_record_unreadable`` sentinel.
     """
 
     profile_id: ProfileId | None = None
     display_name: str | None = Field(default=None, min_length=1, max_length=160)
-    status: UserProfileStatus | Literal["profile_record_unreadable"] | None = None
+    setup_state: ProfileSetupState | None = None
+    status: Literal["profile_record_unreadable"] | None = None
     valid: bool | None = None
     schema_version: int | None = Field(default=None, ge=1)
     issues: list[ProfileIssuePayload] | None = None
@@ -534,7 +527,7 @@ class ConfigProfileValidateResult(OutputSchema):
 
     profile_id: ProfileId
     display_name: str = Field(min_length=1, max_length=160)
-    status: UserProfileStatus
+    setup_state: ProfileSetupState
     valid: bool
     schema_version: int = Field(ge=1)
     issues: list[ProfileIssuePayload]
@@ -602,7 +595,7 @@ class ConfigProfileDeleteResult(OutputSchema):
 
     profile_id: BucketId
     display_name: str = Field(min_length=1, max_length=160)
-    status: UserProfileStatus
+    setup_state: ProfileSetupState
     active_profile_cleared: bool
 
 
@@ -654,7 +647,7 @@ class ConfigResetTargetPayload(OutputSchema):
 
     bucket_id: BucketId
     label: str | None = Field(default=None, min_length=1, max_length=160)
-    status_at_snapshot: UserProfileStatus | None = None
+    setup_state_at_snapshot: ProfileSetupState | None = None
     exists_at_snapshot: bool
     phase: ConfigResetTargetPhase
     retention_blocks_erase: bool | None
@@ -748,7 +741,7 @@ class ConfigResetOperationPayload(OutputSchema):
             ConfigResetTargetPayload(
                 bucket_id=target.bucket_id,
                 label=target.label,
-                status_at_snapshot=target.status_at_snapshot,
+                setup_state_at_snapshot=target.setup_state_at_snapshot,
                 exists_at_snapshot=target.exists_at_snapshot,
                 phase=target.phase,
                 retention_blocks_erase=(target.retention.blocks_erase if target.retention is not None else None),
@@ -1247,7 +1240,8 @@ class RepairProfileResult(OutputSchema):
     display_name: str | None = None
     registered_bucket: bool | None = None
     profile_record_present: bool | None = None
-    status: str | None = None
+    setup_state: ProfileSetupState | None = None
+    status: Literal["missing_profile_record", "profile_record_unreadable"] | None = None
     error: str | None = None
     precondition_action: ResolvedPreconditionAction | None = None
 

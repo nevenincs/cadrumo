@@ -35,12 +35,12 @@ from ....domain.modelos import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
 from ...modelo import (
     create_work_unit,
     import_external_filing_evidence,
 )
-from ...user_profile import ProfileRecordRepository
 from .. import (
     CalculationObservationRepository,
     CrossPeriodCleanStateBlocker,
@@ -73,10 +73,9 @@ def _store_ready_profile(
     profile_id: str = _PROFILE_ID,
     tax_id: str = "X1234567L",
 ) -> None:
-    ProfileRecordRepository(bucket_id=bucket_id).save(
+    seed_test_profile_record(
         UserProfileRecord(
             profile_id=profile_id,
-            display_name="Cross-period clean-state test profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value=tax_id),
                 UserProfileFact(path="identity.name", value="Ready"),

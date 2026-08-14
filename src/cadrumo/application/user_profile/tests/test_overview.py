@@ -25,10 +25,10 @@ from ....domain.user_profile import (
     ProfileRemovePolicy,
     ProfileSchemaDefinition,
     ProfileSectionDefinition,
+    ProfileSetupState,
     ProfileSnapshotPolicy,
     UserProfileFact,
     UserProfileRecord,
-    UserProfileStatus,
 )
 from .. import MASKED_PLACEHOLDER, build_profile_overview
 
@@ -89,8 +89,7 @@ def _schema() -> ProfileSchemaDefinition:
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
     return UserProfileRecord(
         profile_id=_PROFILE_ID,
-        display_name="Overview Subject",
-        status=UserProfileStatus.SETUP_INCOMPLETE,
+        setup_state=ProfileSetupState.INCOMPLETE,
         facts=facts,
     )
 
