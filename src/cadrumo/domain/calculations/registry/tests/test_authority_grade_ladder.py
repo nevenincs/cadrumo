@@ -89,11 +89,54 @@ def test_an_undeclared_grade_refuses_on_the_absence_and_not_as_a_filing_claim(
     assert ungraded, "an ungraded revision was not refused, so silence still buys the weakest treatment"
     assert "authority_grade" in ungraded[0]
     assert ungraded != as_filing, "the ungraded refusal is indistinguishable from the filing-overreach refusal"
-    assert RegistryAuthorityGrade.FILING.value not in ungraded[0], (
-        "the ungraded revision was refused as though it had claimed filing grade, which is the "
-        "specific misreading this test exists to prevent"
+    # Keyed on the overreach refusal's own signature rather than on the word
+    # 'filing', which the absence refusal legitimately contains: it explains what
+    # each rung commits to, so a reader is not left picking the cheapest.
+    assert "blocked pending evidence" not in ungraded[0], (
+        "the ungraded revision was refused for unresolved families, which is the overreach "
+        "diagnostic. It made no claim to overrun; refusing it that way sends the reader to "
+        "populate families when the actual repair is to declare the intended rung"
+    )
+    assert "blocked pending evidence" in as_filing[0], (
+        "the control no longer produces the overreach diagnostic, so the two failures can no "
+        "longer be told apart by this test"
     )
     assert as_filing, "the control failed: a filing claim over unresolved families must still refuse"
+
+
+def test_the_absence_refusal_states_each_rung_and_forbids_deriving_it_from_content(
+    revision_with_unresolved_families,
+) -> None:
+    """The refusal must carry its two substantive instructions, not merely refuse.
+
+    Both are load-bearing and neither is decoration. A reader who is told only
+    that a grade is missing will pick the cheapest rung that clears, so the
+    refusal names what each rung commits to. And a reader who fills the grade by
+    reading off which families the revision already has makes the claim agree
+    with the content by construction, which would leave this validator unable to
+    fail and inert again -- harder to spot than the silence it replaced, because
+    every number would agree.
+
+    Asserted on PROPERTIES rather than on wording. An earlier version of this
+    proof pinned the literal phrase and broke when the message was improved,
+    while a change that quietly dropped the instruction would have passed it --
+    exactly inverted from what a proof is for. Wording may be rewritten freely;
+    losing either instruction fails.
+    """
+    modelo_id, revision = revision_with_unresolved_families
+    message = validate_authority_grade_section("r", modelo_id=modelo_id, revision=_graded(revision, None))[0]
+
+    assert "DO NOT" in message, "the refusal no longer forbids anything explicitly"
+    assert "currently has" in message or "present content" in message, (
+        "the refusal no longer names deriving the grade from what the revision already contains "
+        "as forbidden, which is the cheapest possible route to green and the one that would make "
+        "this validator inert"
+    )
+    for rung in RegistryAuthorityGrade:
+        assert rung.value in message, (
+            f"the refusal does not say what {rung.value!r} commits to, so a reader must guess "
+            "which rung to declare and will reach for whichever one clears"
+        )
 
 
 def test_filing_grade_refuses_while_any_family_is_pending(revision_with_unresolved_families) -> None:

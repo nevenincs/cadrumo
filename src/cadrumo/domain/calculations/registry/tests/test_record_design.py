@@ -874,3 +874,38 @@ def test_registry_import_does_not_load_the_pdf_and_xls_parser_backends() -> None
         f"importing the registry loaded deferred parser backends: {completed.stdout.strip()}; "
         "keep these imports inside the extraction functions that call them"
     )
+
+
+def test_header_matching_ignores_an_abbreviating_full_stop_on_either_side() -> None:
+    """A header token means the same thing with or without AEAT's trailing stop.
+
+    Pinned as a PROPERTY rather than as the accepted string set, because the set
+    is what went wrong: ``posic.`` and ``oblig.`` were enrolled with their stop
+    and ``lon`` without, so Modelo 115 -- which writes ``Lon`` on one sheet and
+    ``Lon.`` on the next, inside ONE workbook -- matched the first and missed the
+    second. A test naming the literal spellings would have been satisfied by the
+    broken set. This one fails for any token whose two spellings disagree.
+    """
+    for token in ("lon", "posic", "tipo", "descripcion", "oblig", "validacion", "contenido"):
+        with_stop = record_design_module._optional_header_index((f"{token}.",), token)
+        without_stop = record_design_module._optional_header_index((token,), token)
+        assert with_stop == without_stop == 0, token
+        # And the expected side may carry the stop just as the cell may.
+        assert record_design_module._optional_header_index((token,), f"{token}.") == 0, token
+
+
+def test_a_workbook_mixing_both_header_spellings_yields_every_sheet() -> None:
+    """The real Modelo 115 binary: ``Lon`` on one sheet, ``Lon.`` on the other.
+
+    The regression this locks is not a parse error -- it is a SILENT one. The
+    body sheet was skipped for its header spelling, the remaining 13-field sheet
+    was classified as an auxiliary envelope, and a healthy 1422-row design
+    presented as carrying no record sheets at all.
+    """
+    design = next(
+        path for path in sorted((_RECORD_DESIGN_ROOT / "modelo_115" / "files").glob("*.xlsx")) if path.is_file()
+    )
+    sheets = extract_record_design(design)
+
+    assert len(sheets) == 2, [sheet.name for sheet in sheets]
+    assert all(sheet.fields for sheet in sheets), {sheet.name: len(sheet.fields) for sheet in sheets}

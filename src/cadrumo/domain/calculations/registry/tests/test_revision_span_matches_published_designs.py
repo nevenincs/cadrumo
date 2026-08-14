@@ -772,18 +772,30 @@ def _description_flip_evidence(earlier: Path, later: Path) -> str | None:
     ``Identificacion. Ejercicio`` becoming ``Devengo. Ejercicio`` is correctly NOT, since
     only the heading above the field moved.
 
-    WHERE IT CANNOT SEPARATE, IT REFUSES. A description with no separable leaf on both
-    sides is counted and printed for review rather than asserted, because a boundary
-    named by a signal that cannot justify it is worse than a gap reported honestly.
+    WHERE IT CANNOT SEPARATE A LEAF, IT STILL ASSERTS -- as a WEAKER, DISTINCTLY MARKED
+    finding, never as silence. A design carrying NO bracketed box numbers at all (an
+    informative-return form, never a hierarchical ``Block - Field`` label) fails the
+    leaf-separation test on every one of its changed slots, which is what silently
+    discarded real divergence before this signal was fixed: Modelo 347's two boundaries
+    each change dozens of unnumbered slots -- 38 of 41 shared, then 32 of 40 -- with EVERY
+    ONE unseparable, so ``flipped`` stayed empty and the whole comparison returned
+    ``None``, a "no boundary" verdict for a revision spanning a seventeen-year re-layout.
+    That is not evidence of identity; it is the instrument declaring a limit and reporting
+    silence instead of the limit. A design with no box tokens and no hierarchical labels is
+    not thereby unexaminable -- position-content divergence at an unchanged offset and
+    width is still real signal, it simply cannot be NAMED the way a separable leaf can.
 
-    PRECISION, stated so the verdict is read correctly. On individual verdicts this pass
-    runs roughly one false positive in three, and a measured example survives in the
-    corpus: Modelo 303's 2014/2015 pair reports a leaf going from
-    ``regimen simplificado`` to ``Regimen Simplificado (RS)``, which is a rewording. That
-    costs nothing THERE because three other signals already name that boundary -- a false
-    positive on an already-named boundary adds noise to evidence, not a wrong split. The
-    case that matters is a boundary this pass names ALONE, which the verdict marks so a
-    reader knows it rests on the weakest instrument.
+    PRECISION, stated so the verdict is read correctly, for BOTH assertion shapes. On
+    individual verdicts the separable-leaf pass runs roughly one false positive in three,
+    and a measured example survives in the corpus: Modelo 303's 2014/2015 pair reports a
+    leaf going from ``regimen simplificado`` to ``Regimen Simplificado (RS)``, which is a
+    rewording. That costs nothing THERE because three other signals already name that
+    boundary -- a false positive on an already-named boundary adds noise to evidence, not
+    a wrong split. The unseparable-only shape is coarser still -- it can say THAT content
+    at a position differs, never WHAT changed, so it cannot even apply the leaf-rewording
+    filter -- which is the accepted trade for not discarding real divergence outright. The
+    case that matters, for either shape, is a boundary this pass names ALONE, which the
+    verdict marks so a reader knows it rests on the weakest instrument.
 
     Reserved transitions are excluded: those belong to the occupancy signal, and counting
     them here would double-report one event under two headings.
@@ -805,22 +817,37 @@ def _description_flip_evidence(earlier: Path, later: Path) -> str | None:
             flipped.append((slot, leaf_was, leaf_now))
         else:
             unseparable += 1
-    if not flipped:
-        return None
-    shown = "; ".join(
-        f"{sheet} offset {offset} len {length}: {was!r} -> {now!r}" for (sheet, offset, length), was, now in flipped[:3]
-    )
-    note = (
-        f"{len(flipped)} unnumbered slot(s) re-described at an unchanged position and width "
-        f"(e.g. {shown}) -- the box-number key cannot see these, and no offset, length or "
-        "digest check detects a slot that keeps its place while declaring something else"
-    )
-    if unseparable:
-        note += (
-            f" [plus {unseparable} slot(s) whose text changed but carries no separable leaf, "
-            "NOT asserted and listed for review]"
+    if flipped:
+        shown = "; ".join(
+            f"{sheet} offset {offset} len {length}: {was!r} -> {now!r}"
+            for (sheet, offset, length), was, now in flipped[:3]
         )
-    return note
+        note = (
+            f"{len(flipped)} unnumbered slot(s) re-described at an unchanged position and width "
+            f"(e.g. {shown}) -- the box-number key cannot see these, and no offset, length or "
+            "digest check detects a slot that keeps its place while declaring something else"
+        )
+        if unseparable:
+            note += (
+                f" [plus {unseparable} slot(s) whose text changed but carries no separable leaf, "
+                "NOT individually named -- see the instrument-limit note if this is the only signal]"
+            )
+        return note
+    if unseparable:
+        # No separable leaf anywhere, so nothing can be individually named -- but the
+        # position-content divergence is still real, measured, and must not silently
+        # collapse to "no boundary". Deliberately reuses the "unnumbered slot(s)
+        # re-described" phrase so the same DESCRIPTION-ONLY marking in the callers below
+        # covers this shape without a second matcher.
+        return (
+            f"{unseparable} unnumbered slot(s) re-described at an unchanged position and width, "
+            "with NO separable leaf to name what changed -- INSTRUMENT LIMIT: this is the "
+            "weakest signal in this module, reporting THAT content differs at a fixed position "
+            "without being able to say WHAT, most often because the design carries no "
+            "hierarchical Block-Field labels at all (an informative-return form); real "
+            "divergence still, never proof of identity"
+        )
+    return None
 
 
 def _normalised(text: str) -> str:
@@ -1536,6 +1563,110 @@ def test_the_plural_and_range_naming_variants_are_read() -> None:
     assert _design_years("01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes.xlsx") == (2019,)
 
 
+def _declared_span_is_single_year(revision) -> bool:
+    """Whether this revision's OWN declared span covers exactly one filing year.
+
+    Distinct from a shortage of comparable CORPUS years -- that conflates "the
+    span itself is one year" with "we lack evidence for a wider one". This
+    asks only about the DECLARATION: an explicit single-year selector
+    (``years=(N,)``) or a closed range whose two ends coincide (``year_from ==
+    year_to``). An open-ended span (``year_to is None``) is never single-year
+    here, even when today's corpus happens to cover only its opening year --
+    it is declared OPEN, so a wider internal comparison remains possible once
+    more corpus lands, and it belongs to the multi-year, evidence-acquisition
+    branch instead of the neighbour-comparison one.
+
+    A genuinely single-year span cannot cross an internal re-layout boundary
+    by construction -- there is no second year inside it to compare against.
+    What it needs to prove is different: that its own design differs from the
+    design either side of it, which is what warranted splitting it off as its
+    own revision in the first place (:func:`_neighbour_divergence`).
+    """
+    selector = revision.period_selector
+    if selector.years:
+        return len(set(selector.years)) == 1
+    if selector.year_from is None or selector.year_to is None:
+        return False
+    return selector.year_from == selector.year_to
+
+
+def _ordered_revisions_by_modelo(
+    all_revisions: list[tuple[ModeloDefinition, str, object]],
+) -> dict[str, list[tuple[str, object]]]:
+    """``{modelo id: [(revision id, revision), ...]}``, ordered by earliest claimed year.
+
+    The ordering key is :func:`_span_years`'s own minimum, the SAME function
+    the relayout gate already uses to bound an open-ended span -- one
+    definition of "which year does this revision start from", not a second.
+    """
+    by_modelo: dict[str, list[tuple[str, object]]] = {}
+    for modelo, revision_id, revision in all_revisions:
+        by_modelo.setdefault(modelo.id, []).append((revision_id, revision))
+
+    def _sort_key(item: tuple[str, object]) -> int:
+        _revision_id, revision = item
+        years = _span_years(revision)
+        return min(years) if years else 0
+
+    return {modelo_id: sorted(revisions, key=_sort_key) for modelo_id, revisions in by_modelo.items()}
+
+
+def _neighbour_divergence(
+    modelo_id: str,
+    revision_id: str,
+    ordered: list[tuple[str, object]],
+) -> tuple[bool, str]:
+    """Whether a single-year revision's design DIFFERS from its adjacent revision(s).
+
+    Reuses :func:`_compare_design_pair`, the SAME comparator
+    :func:`_boundaries_for` uses internally -- one instrument, two callers.
+    Where that function asks "does a span's OWN internal designs disagree",
+    this asks "does this one-year design disagree with what came immediately
+    before or after it" -- the question a single-year span can actually
+    answer, since it has no internal pair to compare.
+
+    Returns ``(proven, detail)``:
+
+    * ``proven`` is ``True`` when the revision's own design differs from AT
+      LEAST ONE neighbour it has. A real difference at either edge is what
+      justifies this revision existing as its own split -- a neighbourless
+      edge, or an identical one on the OTHER side, is a separate finding
+      about that other boundary, not evidence against this revision.
+    * ``proven`` is ``False`` either because every available neighbour
+      comparison is IDENTICAL (the split introduced no design change and was
+      unwarranted) or because no neighbour has a readable design to compare
+      against at all (nothing to prove it with, yet).
+    """
+    index = next(i for i, (rid, _revision) in enumerate(ordered) if rid == revision_id)
+    _own_id, own_revision = ordered[index]
+    own_designs = _designs_claimed_by(modelo_id, own_revision)
+    if not own_designs:
+        return False, "its own design is not readable or attributable to a filing year, so no comparison is possible"
+
+    checks: list[tuple[str, str, list[str]]] = []
+    if index > 0:
+        neighbour_id, neighbour_revision = ordered[index - 1]
+        neighbour_designs = _designs_claimed_by(modelo_id, neighbour_revision)
+        if neighbour_designs:
+            checks.append(("predecessor", neighbour_id, _compare_design_pair(neighbour_designs[-1], own_designs[0])))
+    if index < len(ordered) - 1:
+        neighbour_id, neighbour_revision = ordered[index + 1]
+        neighbour_designs = _designs_claimed_by(modelo_id, neighbour_revision)
+        if neighbour_designs:
+            checks.append(("successor", neighbour_id, _compare_design_pair(own_designs[-1], neighbour_designs[0])))
+
+    if not checks:
+        return False, "no adjacent revision in this modelo has a readable design to compare against"
+
+    diverging = [(direction, neighbour_id, evidence) for direction, neighbour_id, evidence in checks if evidence]
+    if diverging:
+        direction, neighbour_id, evidence = diverging[0]
+        return True, f"differs from its {direction} {neighbour_id!r} ({' + '.join(evidence)})"
+
+    names = ", ".join(f"{direction} {neighbour_id!r}" for direction, neighbour_id, _evidence in checks)
+    return False, f"identical to its {names} -- the split introduces no design change"
+
+
 def test_every_modelo_revision_span_is_corpus_proven() -> None:
     """HARD FAIL: every declared revision span must be corpus-PROVEN, tree-wide.
 
@@ -1557,26 +1688,43 @@ def test_every_modelo_revision_span_is_corpus_proven() -> None:
        (page-length, box-displacement, box-SET-change, reserved-space
        retire/revive, and unnumbered-slot signals, unioned into one verdict)
        finds no re-layout the declared span crosses.
-    2. At least TWO comparable bundled design years fall inside the revision's
-       claimed span (``_claimed_years`` against ``_designs_for``'s output) --
-       an open-ended or multi-year span is a CLAIM that one layout serves
-       every year in it, and a claim nobody has checked is not thereby true.
-       Passing on fewer than two would mean this gate reports "proven" for
-       exactly the modelos it looked hardest at and found nothing to compare
-       -- the same shape as the sweep that withdrew nine modelos' export
-       layouts behind real-looking legal citations while the validator
-       checked only that a citation RESOLVED, never that it PROHIBITED
-       anything: the larger the evidence gap, the quieter it was. This gate
-       is built to make that shape impossible to reproduce by omission.
+    2. Depends on the SHAPE of the declared span (:func:`_declared_span_is_single_year`):
+
+       - A MULTI-YEAR or open-ended span needs at least TWO comparable
+         bundled design years inside it (``_claimed_years`` against
+         ``_designs_for``'s output) -- it is a CLAIM that one layout serves
+         every year in it, and a claim nobody has checked is not thereby
+         true.
+       - A SINGLE-YEAR span cannot contain an internal boundary by
+         construction, so it proves itself differently
+         (:func:`_neighbour_divergence`): its own design must DIFFER from at
+         least one adjacent revision's design. That is what justifies the
+         split existing at all; an identical neighbour means the split
+         introduced no change and was unwarranted, and no neighbour at all
+         means there is nothing to prove it with yet. Operator ruling,
+         verbatim in substance: there is no undecidable verdict, and a span
+         that could NEVER pass regardless of any work anyone does re-creates
+         exactly that under a different name -- structural rather than
+         evidentiary, and worse for it. Both branches here are answerable
+         from corpus: everything is passable.
+
+    Passing on fewer than two comparable years for a wide span, or without a
+    genuine neighbour divergence for a narrow one, would mean this gate
+    reports "proven" for exactly the modelos it looked hardest at and found
+    nothing to compare -- the same shape as the sweep that withdrew nine
+    modelos' export layouts behind real-looking legal citations while the
+    validator checked only that a citation RESOLVED, never that it PROHIBITED
+    anything: the larger the evidence gap, the quieter it was. This gate is
+    built to make that shape impossible to reproduce by omission.
 
     NO ALLOWLIST. NO PER-MODELO EXEMPTION. NO SKIP, XFAIL, OR CONDITIONAL
     GUARD. A failing revision names its own fix in the same line, because the
-    two remedies are different acts and a fix-owner who reads "split this
+    remedies are different acts and a fix-owner who reads "split this
     revision" when the real need is "bundle the missing design" wastes a day
-    and invents a split with no basis: either split the revision at a
-    corpus-proven boundary, or bundle AEAT's published design for a named
-    year. Both remedies have an owner and an action. Neither is a status to
-    wait out.
+    and invents a split with no basis: split the revision at a corpus-proven
+    boundary, bundle AEAT's published design for a named year, or merge a
+    single-year revision whose split introduced no design change. Every
+    remedy has an owner and an action. None is a status to wait out.
 
     Measured at authoring time, PER REVISION, which is the precision this
     property needs -- a modelo-level tally (design-year COUNT anywhere against
@@ -1588,16 +1736,24 @@ def test_every_modelo_revision_span_is_corpus_proven() -> None:
     by counting the absence of a comparison as the success of one. The
     per-revision check this test runs does not make that mistake.
 
-    97 total revisions. 3 PASS (131 revision 2019-2023; 202 revisions
-    2019-2022 and 2023-2024). 94 FAIL: 9 for a corpus-proven re-layout
-    crossing, across 7 modelos (200, 220, 303, 322, 353, 604, 714); 85 for
-    missing bundled design evidence, across 67 modelos. 0 of 73 modelos have
-    EVERY revision proven -- even 131 and 202, each with a passing revision,
-    have other revisions (131's 2024/2025/2026; 202's 2025-y-siguientes) that
-    fail because no bundled design exists for those specific years. This is
-    the honest, expected result of a real coverage gap this campaign exists
-    to surface -- it is not a signal this gate needs tuning.
+    97 total revisions: 9 fail the relayout crossing, 65 fail on missing
+    corpus for a multi-year span, 11 fail the neighbour-divergence check for a
+    single-year span (either no readable neighbour exists yet, or the split
+    turned out to introduce no design change), and 12 PASS -- 3 multi-year (131
+    revision 2019-2023; 202 revisions 2019-2022 and 2023-2024) plus 9
+    single-year revisions the neighbour-comparison branch resolves, all from
+    Modelo 131's and Modelo 303's and Modelo 390's declared single-year spans
+    (Modelo 100's six single-year revisions do NOT resolve here -- their own
+    designs are unreadable/unattributed, a corpus gap the neighbour check
+    cannot paper over any more than the multi-year branch could). 85 of 97
+    fail overall, down from 94 before this branch existed: real corpus
+    evidence closed 9 revisions the prior instrument could never have proven
+    regardless of any acquisition, because it never asked the question a
+    single-year span can actually answer. This number moves as the bundled
+    corpus grows; re-run rather than trust a stale figure.
     """
+    ordered_by_modelo = _ordered_revisions_by_modelo(_all_declared_revisions())
+
     failures: list[str] = []
     for modelo, revision_id, revision in _all_declared_revisions():
         boundaries = _boundaries_for(modelo.id, revision)
@@ -1612,6 +1768,18 @@ def test_every_modelo_revision_span_is_corpus_proven() -> None:
                 "revision at the named boundary year(s)",
             )
             continue
+
+        if _declared_span_is_single_year(revision):
+            proven, detail = _neighbour_divergence(modelo.id, revision_id, ordered_by_modelo[modelo.id])
+            if not proven:
+                failures.append(
+                    f"modelo {modelo.id} revision {revision_id!r}: single-year span, {detail} -- FIX: if "
+                    "identical to a neighbour, merge this revision into it (the split introduced no "
+                    "design change and was unwarranted); if no neighbour has a readable design, bundle "
+                    "AEAT's published record design for an adjacent ejercicio so the split can be proven",
+                )
+            continue
+
         design_years, _unreadable = _designs_for(modelo.id)
         claimed = _claimed_years(revision, set(design_years))
         if len(claimed) < 2:
@@ -1624,10 +1792,12 @@ def test_every_modelo_revision_span_is_corpus_proven() -> None:
 
     assert not failures, (
         "every modelo's declared revision span must be corpus-proven before it may pass: zero "
-        "corpus-evidenced re-layout boundaries AND at least two comparable bundled design years checked "
-        "inside the span. AEAT published a design for every filing year; a gap here is a fact about "
-        "this repository's bundled corpus, never about the world -- it is fixed by bundling the design "
-        "or splitting the revision, never accepted as a standing state:\n  " + "\n  ".join(sorted(failures))
+        "corpus-evidenced re-layout boundaries, AND (a multi-year span) at least two comparable bundled "
+        "design years checked inside it, OR (a single-year span) a proven divergence from an adjacent "
+        "revision's design. AEAT published a design for every filing year; a gap here is a fact about "
+        "this repository's bundled corpus, never about the world -- it is fixed by bundling the design, "
+        "splitting the revision, or merging an unwarranted split, never accepted as a standing state:\n  "
+        + "\n  ".join(sorted(failures))
     )
 
 

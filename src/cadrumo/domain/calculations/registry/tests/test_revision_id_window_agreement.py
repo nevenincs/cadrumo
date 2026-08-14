@@ -144,5 +144,11 @@ def test_the_gate_refuses_a_constructed_contradiction_and_passes_its_open_twin()
     validate_revision_id_window_agreement(refusing, prefix="modelo TEST", revision=closed)
 
     assert len(refusing) == 1
-    assert "claims an open-ended window" in refusing[0]
-    assert "valid_to = 2025-12-31" in refusing[0]
+    # Keyed on the two facts the refusal must carry -- which axis closed the window
+    # and at what value -- rather than on the rendered "axis = value" string. The
+    # formatting may be rewritten; a refusal that stops naming the axis or the
+    # value sends the reader looking for a closure it never identified.
+    message = refusing[0]
+    assert "open-ended" in message, "the refusal no longer says what the id claimed"
+    assert "valid_to" in message, "the refusal does not name the axis that closed the window"
+    assert "2025-12-31" in message, "the refusal does not name the value the window closed at"
