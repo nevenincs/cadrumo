@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-14'
-body_hash: 'sha256:968ca734afa67ea07b8e292594223bc431127babb8cd3e544a04f350873ff6c9'
+body_hash: 'sha256:c390e3a79af1ef30e46b47f7fa594e2409b8344eeff60be552161c8cd69b05fc'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -79,7 +79,7 @@ Remove substitutable secure runtime and repository fixtures while preserving lif
 
 Consolidate repeated profile and schema setup only within constraint-compatible ownership boundaries.
 
-- [ ] `W07.P19.S57` - Canonicalize isolated profile-storage fixtures used by wizard and CLI profile tests; `src/cadrumo/application/wizard/tests, src/cadrumo/entrypoints/cli/tests`.
+- [x] `W07.P19.S57` - Canonicalize isolated profile-storage fixtures used by wizard and CLI profile tests; `src/cadrumo/application/wizard/tests, src/cadrumo/entrypoints/cli/tests`.
 - [x] `W07.P19.S58` - Canonicalize the overview CLI backend fixture shape at its narrowest owner; `src/cadrumo/entrypoints/cli/tests/test_overview_verbs.py, src/cadrumo/entrypoints/cli/conftest.py`.
 - [x] `W07.P19.S59` - Canonicalize the open-bucket CLI backend shape without merging storage lifecycles; `src/cadrumo/entrypoints/cli/tests/test_ledger_view_ux.py, src/cadrumo/entrypoints/cli/conftest.py`.
 - [x] `W07.P19.S60` - Canonicalize schema-loader fixtures while preserving proven scope; `src/cadrumo/domain/user_profile/tests`.
