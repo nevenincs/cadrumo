@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
+
+from ...ci.lane_reachability import resolve_just_executable
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -19,8 +20,7 @@ _DISTRIBUTIONS = (
 
 
 def _render_recipe(recipe: str, *args: str) -> str:
-    just = shutil.which("just")
-    assert just is not None, "just is required to validate release recipes"
+    just = resolve_just_executable()
     result = subprocess.run(  # noqa: S603 - execute the resolved real just binary against repository recipes.
         [just, "--dry-run", recipe, *args],
         cwd=_REPO_ROOT,
@@ -33,8 +33,7 @@ def _render_recipe(recipe: str, *args: str) -> str:
 
 
 def _recipe_summary() -> set[str]:
-    just = shutil.which("just")
-    assert just is not None
+    just = resolve_just_executable()
     result = subprocess.run(  # noqa: S603 - resolved real just binary.
         [just, "--summary"],
         cwd=_REPO_ROOT,

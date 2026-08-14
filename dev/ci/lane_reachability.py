@@ -457,6 +457,22 @@ def configured_marker_expression(root: Path) -> str | None:
     return inner.group(1) if inner else None
 
 
+def resolve_just_executable() -> str:
+    """Return the absolute path to ``just`` on PATH.
+
+    The sole canonical resolution point for this repository's tooling. Fails
+    closed: a missing ``just`` raises rather than returning ``None`` or an
+    empty string for a caller to silently treat as "nothing to check" --
+    exactly the failure mode the module docstring's reachability rationale
+    warns against, generalised to every ``just``-dependent gate and script.
+    """
+    executable = shutil.which("just")
+    if executable is None:
+        message = "just is not on PATH"
+        raise RuntimeError(message)
+    return executable
+
+
 def _just_variables(root: Path) -> dict[str, str]:
     """Return every top-level justfile variable, resolved by ``just`` itself.
 
@@ -476,10 +492,7 @@ def _just_variables(root: Path) -> dict[str, str]:
     falling back to the unresolved text, because a silent fallback is
     indistinguishable from a correct empty result.
     """
-    just = shutil.which("just")
-    if just is None:
-        message = "just is not on PATH, so justfile variables cannot be resolved"
-        raise RuntimeError(message)
+    just = resolve_just_executable()
     completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no caller input
         [just, "--evaluate"],
         cwd=root,

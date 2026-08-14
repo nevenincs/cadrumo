@@ -33,6 +33,14 @@ import subprocess
 import sys
 from pathlib import Path
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+if not __package__:
+    __package__ = "dev.containers"
+
+from dev.ci.lane_reachability import resolve_just_executable  # noqa: E402
+
 _VENV_ROOT = Path("/workspace/.venv")
 
 
@@ -73,13 +81,14 @@ def _check_project_import() -> None:
 
 def _check_just() -> None:
     """Confirm `just` is present for the devcontainer postCreateCommand."""
-    executable = shutil.which("just")
-    if executable is None:
+    try:
+        executable = resolve_just_executable()
+    except RuntimeError as error:
         raise SystemExit(
             "FAIL: `just` is not on PATH in the image, but devcontainer.json's "
             "postCreateCommand is `just install && just env-setup` — the image would "
             "build and then fail at container creation."
-        )
+        ) from error
     completed = subprocess.run(  # noqa: S603 - `shutil.which`-resolved executable, fixed argv, no caller input
         [executable, "--version"], capture_output=True, text=True, check=False
     )
