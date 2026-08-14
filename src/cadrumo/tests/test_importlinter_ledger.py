@@ -175,7 +175,6 @@ _RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES = frozenset(
         "cadrumo.application.user_profile._custody",
         "cadrumo.application.user_profile._custody_carry",
         "cadrumo.application.user_profile._language_resolver",
-        "cadrumo.application.user_profile._lifecycle",
         "cadrumo.application.user_profile._login_session",
         "cadrumo.application.user_profile._orchestration",
         "cadrumo.application.user_profile._profile_repository",
