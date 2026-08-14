@@ -40,6 +40,21 @@ so a new writer picks one deliberately instead of inventing a fifth dialect:
   the publication, and callers open-coding that pattern were re-implementing
   the staging dialect around it.
 
+- **Deferred-publish tier** (:func:`hardened_staged_publication`): the hardened
+  tier's staging and publication with the write itself left to the caller, for
+  a producer that cannot hand over a ``bytes`` payload -- it needs a real file
+  on disk to build incrementally or to read back before the result becomes
+  operator-visible, or it must complete unrelated work between the write and
+  the publication. The staging sibling carries the same unguessable
+  ``{name}.{pid}.{token_hex}.tmp`` name, the same ``O_EXCL`` reservation and
+  the same ``0o600`` mode; publication is the same fsync/replace/parent-fsync
+  sequence, requested explicitly so the caller can translate a publication
+  failure into its own domain error. It exists because callers needing that
+  shape were open-coding a predictable ``{name}.tmp`` sibling and a bare
+  :func:`os.replace` next to the operator's chosen destination, which is a
+  guessable name, an unsynced publication, and -- with a narrow ``except`` --
+  a staged file that survives an interrupt.
+
 - **Best-effort tier** (:func:`atomic_write_best_effort_bytes`,
   :func:`atomic_write_best_effort_text`): the same tempfile-sibling-plus-
   :func:`os.replace` mechanics as the standard tier, but deliberately WITHOUT
@@ -83,6 +98,7 @@ from .logging import get_logger
 
 __all__ = [
     "DurableWriteBatch",
+    "StagedPublication",
     "atomic_write_best_effort_bytes",
     "atomic_write_best_effort_text",
     "atomic_write_bytes",
@@ -92,11 +108,36 @@ __all__ = [
     "atomic_write_stream",
     "atomic_write_text",
     "durable_write_batch",
+    "hardened_staged_publication",
 ]
 
 _log = get_logger(__name__)
 
 _HARDENED_DEFAULT_MODE = 0o600
+
+
+def _hardened_staging_path(path: Path) -> Path:
+    """Return the collision-hardened staging sibling name for ``path``.
+
+    The ``{pid}`` segment separates concurrent processes and the
+    :func:`secrets.token_hex` segment makes the name unguessable, so a staging
+    file next to an operator-chosen destination cannot be predicted, pre-created
+    or waited on by anything that merely knows where the export is going.
+    """
+    return path.with_name(f"{path.name}.{os.getpid()}.{secrets.token_hex(4)}.tmp")
+
+
+def _hardened_staging_flags() -> int:
+    """Return the ``os.open`` flags shared by every hardened staging open."""
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    flags |= getattr(os, "O_NOINHERIT", 0)
+    flags |= getattr(os, "O_CLOEXEC", 0)
+    # O_BINARY is required on Windows: an fd opened without it is in text mode,
+    # so os.write() translates every 0x0A byte to CRLF and silently corrupts
+    # binary payloads (ciphertext, keys, PDFs) that contain a newline byte. The
+    # flag is absent on POSIX, where getattr resolves to 0 (a no-op).
+    flags |= getattr(os, "O_BINARY", 0)
+    return flags
 
 
 def _write_all(fd: int, data: bytes) -> None:
@@ -375,15 +416,8 @@ def atomic_write_hardened_bytes(
             cleaned up first.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = path.with_name(f"{path.name}.{os.getpid()}.{secrets.token_hex(4)}.tmp")
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-    flags |= getattr(os, "O_NOINHERIT", 0)
-    flags |= getattr(os, "O_CLOEXEC", 0)
-    # O_BINARY is required on Windows: an fd opened without it is in text mode,
-    # so os.write() translates every 0x0A byte to CRLF and silently corrupts
-    # binary payloads (ciphertext, keys, PDFs) that contain a newline byte. The
-    # flag is absent on POSIX, where getattr resolves to 0 (a no-op).
-    flags |= getattr(os, "O_BINARY", 0)
+    tmp_path = _hardened_staging_path(path)
+    flags = _hardened_staging_flags()
     created = False
     try:
         fd = os.open(tmp_path, flags, mode)
@@ -491,11 +525,8 @@ def atomic_write_publish_once_bytes(
             staging is always a sibling of ``path``.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = path.with_name(f"{path.name}.{os.getpid()}.{secrets.token_hex(4)}.tmp")
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-    flags |= getattr(os, "O_NOINHERIT", 0)
-    flags |= getattr(os, "O_CLOEXEC", 0)
-    flags |= getattr(os, "O_BINARY", 0)
+    tmp_path = _hardened_staging_path(path)
+    flags = _hardened_staging_flags()
     created = False
     refused_existing_target = False
     try:
@@ -531,6 +562,127 @@ def atomic_write_publish_once_bytes(
     finally:
         if created:
             tmp_path.unlink(missing_ok=True)
+
+
+class StagedPublication:
+    """A reserved hardened staging file awaiting an explicit publication.
+
+    Yielded by :func:`hardened_staged_publication`. The caller writes the
+    payload at :attr:`path` by whatever means its producer requires, then calls
+    :meth:`publish` to move those bytes atomically onto the target. Leaving the
+    context without publishing discards the staged file, so an interrupt, a
+    refusal raised between the write and the publication, or an early return
+    can never leave the payload stranded next to the target under a name the
+    caller never told anyone about.
+
+    Publication is a method rather than an automatic action on clean exit
+    because the callers that need this tier write sensitive artefacts and must
+    translate a publication ``OSError`` into their own typed refusal. A context
+    manager that published on exit would raise from the ``with`` statement
+    itself, where the caller can no longer distinguish a publication failure
+    from a failure in its own body.
+    """
+
+    __slots__ = ("_published", "_staging_path", "_target_path")
+
+    def __init__(self, *, staging_path: Path, target_path: Path) -> None:
+        """Bind a reserved ``staging_path`` to the ``target_path`` it publishes onto."""
+        self._staging_path = staging_path
+        self._target_path = target_path
+        self._published = False
+
+    @property
+    def path(self) -> Path:
+        """The reserved staging file the caller writes its payload to."""
+        return self._staging_path
+
+    @property
+    def target_path(self) -> Path:
+        """The destination :meth:`publish` moves the staged bytes onto."""
+        return self._target_path
+
+    @property
+    def published(self) -> bool:
+        """Whether :meth:`publish` has already moved the staged bytes into place."""
+        return self._published
+
+    def publish(self) -> None:
+        """Atomically move the staged bytes onto the target and sync its directory.
+
+        Raises:
+            OSError: When the replace or the directory sync fails. The staged
+                file is left in place for the enclosing context manager to
+                discard, so a failed publication never strands the payload.
+            RuntimeError: When called a second time. One staging file publishes
+                once; a second call would replace the target with a path the
+                first call already consumed.
+        """
+        if self._published:
+            raise RuntimeError("staged publication has already been published")
+        _replace_and_fsync(self._staging_path, self._target_path)
+        self._published = True
+
+
+@contextmanager
+def hardened_staged_publication(
+    target_path: Path,
+    *,
+    mode: int = _HARDENED_DEFAULT_MODE,
+) -> Iterator[StagedPublication]:
+    """Reserve a hardened staging sibling of ``target_path`` for a caller-driven write.
+
+    The deferred-publish tier. Reserves an unguessable
+    ``{name}.{pid}.{token_hex}.tmp`` sibling with the hardened tier's
+    ``O_EXCL`` open at file mode ``mode``, yields it, and discards it on any
+    exit that did not publish -- including a :class:`BaseException` such as the
+    operator interrupting the work, which is precisely the case a narrow
+    ``except OSError`` around a hand-rolled staging file misses.
+
+    Use this tier when the payload cannot be handed over as ``bytes``: the
+    producer builds the file incrementally, reads it back to verify it before
+    it becomes operator-visible, or must complete unrelated work between the
+    write and the publication. When the payload *is* in hand, use
+    :func:`atomic_write_hardened_bytes` instead -- it is the same guarantees in
+    one call.
+
+    The reservation matters as much as the name. Opening with ``O_EXCL``
+    refuses to adopt anything already sitting at the staging path, so the name
+    handed to the caller is one this call claimed rather than one it inherited.
+    A caller that writes in place keeps that inode; a caller that stages
+    through its own replace supersedes it, and in both cases the name was
+    never available to anyone else in between.
+
+    Args:
+        target_path: Destination the staged bytes are published onto. Its
+            parent directory is created if absent; the target itself is not
+            touched until :meth:`StagedPublication.publish` runs.
+        mode: POSIX file mode for the reserved staging file (and, transitively,
+            the published target). Defaults to ``0o600``.
+
+    Yields:
+        A :class:`StagedPublication` bound to the reserved staging file.
+
+    Raises:
+        OSError: When the parent directory or the staging reservation cannot be
+            created (including ``FileExistsError`` from an ``O_EXCL``
+            collision).
+    """
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    staging_path = _hardened_staging_path(target_path)
+    os.close(os.open(staging_path, _hardened_staging_flags(), mode))
+    staged = StagedPublication(staging_path=staging_path, target_path=target_path)
+    try:
+        yield staged
+    except BaseException as exc:
+        _log.error(
+            "atomic_write: deferred-publish staging discarded target=%s error_type=%s",
+            target_path,
+            type(exc).__name__,
+        )
+        raise
+    finally:
+        if not staged.published:
+            staging_path.unlink(missing_ok=True)
 
 
 def _replace_and_fsync(tmp_path: Path, target: Path) -> None:

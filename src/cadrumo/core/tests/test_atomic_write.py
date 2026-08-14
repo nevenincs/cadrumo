@@ -46,6 +46,7 @@ from ..atomic_write import (
     atomic_write_stream,
     atomic_write_text,
     durable_write_batch,
+    hardened_staged_publication,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -747,3 +748,150 @@ def test_publish_once_creates_parents_and_publishes_at_the_requested_mode(tmp_pa
     assert target.parent.is_dir()
     if os.name != "nt":
         assert stat.S_IMODE(target.stat().st_mode) == 0o600
+
+
+def test_staged_publication_reserves_an_unguessable_sibling_rather_than_a_predictable_one(
+    tmp_path: Path,
+) -> None:
+    """The staging name must not be derivable from the destination the caller chose.
+
+    A destination is frequently operator-supplied, so ``{name}.tmp`` beside it
+    is a name anything watching that directory can compute in advance. Assert
+    the negative directly -- the predictable sibling is never created -- and
+    assert two successive reservations for the SAME destination differ, which a
+    hard-coded "unpredictable-looking" constant would fail.
+    """
+    target = tmp_path / "declaracion.txt"
+    predictable = target.with_name(target.name + ".tmp")
+
+    with hardened_staged_publication(target) as first:
+        first_path = first.path
+        assert first_path != predictable
+        assert not predictable.exists(), "the predictable sibling name must never be reserved"
+        assert first_path.parent == target.parent, "staging must stay on the destination's filesystem"
+        assert first_path.exists(), "the staging name must be reserved before the caller writes"
+        assert first_path.read_bytes() == b"", "the reservation must be an empty file the caller owns"
+
+    with hardened_staged_publication(target) as second:
+        assert second.path != first_path, "two reservations for one destination must not share a name"
+
+    assert list(tmp_path.iterdir()) == [], "an unpublished reservation must leave nothing behind"
+
+
+def test_staged_publication_reservation_refuses_a_pre_existing_staging_file(tmp_path: Path) -> None:
+    """``O_EXCL`` must refuse to adopt a file the caller did not create.
+
+    Reserving with ``O_CREAT`` alone would silently write the payload into
+    whatever already occupied the staging name. The name is unguessable, so
+    this is reached by planting the exact reserved name and re-reserving it.
+    """
+    target = tmp_path / "declaracion.txt"
+    with hardened_staged_publication(target) as staged:
+        reserved = staged.path
+        staged.path.write_bytes(b"PAYLOAD")
+        staged.publish()
+
+    reserved.write_bytes(b"PLANTED")
+    with (
+        _replacing(atomic_write, "_hardened_staging_path", lambda _path: reserved),
+        pytest.raises(FileExistsError),
+        hardened_staged_publication(target),
+    ):
+        pass
+
+    assert reserved.read_bytes() == b"PLANTED", "a refused reservation must not truncate the occupant"
+    assert target.read_bytes() == b"PAYLOAD", "a refused reservation must not touch the destination"
+
+
+def test_staged_publication_publishes_the_caller_written_bytes_and_removes_the_staging_file(
+    tmp_path: Path,
+) -> None:
+    """The whole point of the tier: the caller writes the file, the tier moves it."""
+    target = tmp_path / "nested" / "declaracion.txt"
+
+    with hardened_staged_publication(target) as staged:
+        assert staged.target_path == target
+        assert not staged.published
+        with staged.path.open("ab") as handle:
+            handle.write(b"<T3030")
+            handle.write(b"1>PAYLOAD")
+        assert not target.exists(), "the destination must stay untouched until publication"
+        staged.publish()
+        assert staged.published
+
+    assert target.read_bytes() == b"<T30301>PAYLOAD"
+    assert {child.name for child in target.parent.iterdir()} == {"declaracion.txt"}
+    if os.name != "nt":
+        assert stat.S_IMODE(target.stat().st_mode) == 0o600
+
+
+def test_staged_publication_discards_cleartext_staging_on_an_interrupt(tmp_path: Path) -> None:
+    """A ``BaseException`` mid-work must not strand the staged payload on disk.
+
+    This is the case a caller-owned ``except OSError`` or ``except Exception``
+    around a hand-rolled staging file misses entirely: the operator interrupts
+    the export after the sensitive bytes are written but before they are
+    published, the narrow handler never runs, and a complete cleartext artefact
+    survives beside the destination under a name nothing will ever clean up.
+    """
+    target = tmp_path / "declaracion.txt"
+    sensitive = b"<T30301>99999999R" + b"9" * 200
+
+    with pytest.raises(KeyboardInterrupt), hardened_staged_publication(target) as staged:
+        staged.path.write_bytes(sensitive)
+        raise KeyboardInterrupt
+
+    assert not target.exists(), "an interrupted export must publish nothing"
+    residue = [child for child in tmp_path.rglob("*") if child.is_file()]
+    assert residue == [], f"cleartext staging survived an interrupt: {residue}"
+
+
+def test_staged_publication_discards_the_staging_file_when_the_caller_never_publishes(
+    tmp_path: Path,
+) -> None:
+    """An early return that skips publication is as much a leak as a raised error."""
+    target = tmp_path / "declaracion.txt"
+
+    def _abandon() -> None:
+        with hardened_staged_publication(target) as staged:
+            staged.path.write_bytes(b"SENSITIVE")
+            return
+
+    _abandon()
+
+    assert not target.exists()
+    assert list(tmp_path.iterdir()) == [], "an abandoned staging file must not survive the context"
+
+
+def test_staged_publication_refuses_a_second_publish(tmp_path: Path) -> None:
+    """The staging path is consumed by the first publish; a second call has no source."""
+    target = tmp_path / "declaracion.txt"
+
+    with hardened_staged_publication(target) as staged:
+        staged.path.write_bytes(b"PAYLOAD")
+        staged.publish()
+        with pytest.raises(RuntimeError):
+            staged.publish()
+
+    assert target.read_bytes() == b"PAYLOAD"
+
+
+def test_staged_publication_leaves_the_staging_file_for_the_context_when_publication_fails(
+    tmp_path: Path,
+) -> None:
+    """A real publication failure must surface unwrapped and still leave no residue.
+
+    The obstruction is real -- a directory occupying the destination -- so
+    ``os.replace`` genuinely refuses rather than being made to.
+    """
+    target = tmp_path / "declaracion.txt"
+    target.mkdir()
+    (target / "occupant").write_bytes(b"held")
+
+    with pytest.raises(OSError), hardened_staged_publication(target) as staged:
+        staged.path.write_bytes(b"SENSITIVE")
+        staged.publish()
+
+    assert target.is_dir(), "the refused publication must leave the obstruction untouched"
+    residue = [child for child in tmp_path.rglob("*") if child.is_file() and child.name != "occupant"]
+    assert residue == [], f"a failed publication stranded cleartext staging: {residue}"

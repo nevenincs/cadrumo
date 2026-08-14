@@ -65,9 +65,9 @@ from ...core import (
     RefundElection,
     ResultDisposition,
 )
+from ...core.atomic_write import StagedPublication, hardened_staged_publication
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, WorkUnitId
-from ...core.logging import get_logger
 from ...core.resources import resources
 from ...core.time import now as _utc_now
 from ...domain import filing as filing_domain
@@ -185,7 +185,6 @@ from ._verification_actions import (
 #: per submission tool, not per release.
 _PROGRAM_VERSION_CODE = "A001"
 
-_LOGGER = get_logger(__name__)
 _LOCAL_EXPORT_EVIDENCE_STATUS = "local_export_not_official_aeat_filing_evidence"
 _LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE = (
     "Local export wrote an AEAT-compatible fichero-BOE file only; it is not official AEAT filing evidence. "
@@ -273,8 +272,8 @@ class ModeloExportOutputPathError(ModeloExportError):
     unusable destination (empty path, an existing directory, a missing or
     unwritable parent directory) is refused with a typed, operator-facing
     message instead of surfacing a raw ``OSError`` traceback from the
-    atomic-rename write — and crucially before any cleartext financial
-    bytes touch disk.
+    staged write — and crucially before any cleartext financial bytes
+    touch disk.
     """
 
 
@@ -413,11 +412,10 @@ def _validate_output_path(output_path: Path) -> None:
     """Refuse an unusable ``--output`` destination before writing any bytes.
 
     A clean typed refusal here is the only safe place to reject a bad
-    destination: once the atomic-rename write has run, real fichero-BOE
-    financial bytes already exist in the sibling ``.tmp`` file, and a
-    late ``OSError`` at ``Path.replace`` would both surface a raw
-    traceback and (without the cleanup guard) strand those cleartext
-    bytes on disk.
+    destination: once the staged write has run, real fichero-BOE financial
+    bytes already exist in the staging sibling, and a late ``OSError`` at
+    publication would surface a raw traceback for a destination that was
+    unusable before a single byte was rendered.
 
     Raises:
         ModeloExportOutputPathError: When the path is empty, names an
@@ -445,21 +443,6 @@ def _validate_output_path(output_path: Path) -> None:
         raise ModeloExportOutputPathError(
             translated_message="application.modelo.errors.export_output_path_invalid",
             context={"output_path": str(output_path), "reason": "parent path is not a directory"},
-        )
-
-
-def _discard_tmp_output_after_failure(tmp_output: Path, *, stage: str) -> None:
-    """Best-effort cleanup that never masks the original export failure."""
-    if not tmp_output.exists():
-        return
-    try:
-        tmp_output.unlink()
-    except OSError as exc:
-        _LOGGER.debug(
-            "modelo export temporary output cleanup failed stage=%s error_type=%s",
-            stage,
-            type(exc).__name__,
-            exc_info=True,
         )
 
 
@@ -1117,43 +1100,50 @@ def _persist_exported_draft(
         if export_layout is not None and export_layout.format is ExportLayoutFormat.XML_DICTIONARY
         else {}
     )
-    receipt = _write_export_tmp(
-        command=command,
-        approved=approved,
-        producer_snapshot=producer_snapshot,
-        dictionary_values=dictionary_values,
-        prior_domiciliation_election=prior_domiciliation_election.election,
-        product_software_identity=command.product_software_identity,
-        schema_provider=schema_provider,
-    )
-    event = _emit_export_event(
-        command=command,
-        work_unit=work_unit,
-        receipt=receipt,
-        iva_wallet_provenance=iva_wallet_provenance,
-        resolved_result_disposition=resolved_result_disposition,
-        prior_domiciliation_election=prior_domiciliation_election,
-        exported_at=exported_at,
-        bucket_event_repository=bucket_event_repository,
-    )
-    tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
-    # Defence in depth: even though _validate_output_path refused an
-    # existing-directory / unwritable destination up front, a concurrent
-    # change to the destination (a TOCTOU race) can still make this atomic
-    # rename fail with an OSError. Sensitive fichero-BOE bytes already exist
-    # in tmp_output at this point, so any failure here MUST remove them
-    # (sensitive-financial-data-secure-storage) and surface a typed refusal
-    # rather than a raw traceback that strands cleartext financial data.
-    try:
-        tmp_output.replace(command.output_path)
-    except OSError as exc:
-        _discard_tmp_output_after_failure(tmp_output, stage="atomic-rename")
-        raise ModeloExportOutputPathError(
-            translated_message="application.modelo.errors.export_output_path_invalid",
-            context={"output_path": str(command.output_path), "reason": str(exc)},
-        ) from exc
+    # The fichero-BOE bytes are staged, the MODELO_EXPORTED event is committed,
+    # and only then does the artefact become operator-visible: a crash between
+    # the write and the event leaves a staged file carrying no provenance
+    # rather than a filing artefact no event accounts for. The staging file is
+    # an unguessable sibling reserved by the shared deferred-publish tier,
+    # which discards it on EVERY exit that does not publish -- including an
+    # operator interrupt -- so cleartext financial data cannot outlive a failed
+    # export next to the destination the operator chose.
+    with hardened_staged_publication(command.output_path) as staged:
+        receipt = _write_export_staging(
+            staged=staged,
+            command=command,
+            approved=approved,
+            producer_snapshot=producer_snapshot,
+            dictionary_values=dictionary_values,
+            prior_domiciliation_election=prior_domiciliation_election.election,
+            product_software_identity=command.product_software_identity,
+            schema_provider=schema_provider,
+        )
+        event = _emit_export_event(
+            command=command,
+            work_unit=work_unit,
+            receipt=receipt,
+            iva_wallet_provenance=iva_wallet_provenance,
+            resolved_result_disposition=resolved_result_disposition,
+            prior_domiciliation_election=prior_domiciliation_election,
+            exported_at=exported_at,
+            bucket_event_repository=bucket_event_repository,
+        )
+        # Defence in depth: even though _validate_output_path refused an
+        # existing-directory / unwritable destination up front, a concurrent
+        # change to the destination (a TOCTOU race) can still make the
+        # publication fail with an OSError. Translate it to the same typed
+        # refusal that destination check raises, rather than surfacing a raw
+        # traceback from inside the write substrate.
+        try:
+            staged.publish()
+        except OSError as exc:
+            raise ModeloExportOutputPathError(
+                translated_message="application.modelo.errors.export_output_path_invalid",
+                context={"output_path": str(command.output_path), "reason": str(exc)},
+            ) from exc
 
-    # The receipt below was measured against ``tmp_output``, and the result and
+    # The receipt below was measured against the staging file, and the result and
     # the durable MODELO_EXPORTED event both publish those numbers against
     # ``command.output_path`` instead. Re-bind them to the artefact that
     # actually landed, through the same check the draft writer used, so the
@@ -1221,8 +1211,9 @@ def _persist_exported_draft(
     )
 
 
-def _write_export_tmp(
+def _write_export_staging(
     *,
+    staged: StagedPublication,
     command: ModeloExportCommand,
     approved: ModeloDraft,
     producer_snapshot: FilingProducerSnapshot,
@@ -1231,16 +1222,10 @@ def _write_export_tmp(
     product_software_identity: AeatProductSoftwareIdentity | None,
     schema_provider: RegistrySchemaAccessor,
 ) -> DeclaracionExportResult:
-    # Atomic-rename: write the fichero-BOE artefact to a sibling .tmp
-    # path, append the MODELO_EXPORTED event, and only rename into the
-    # operator-visible output path after the event commits. A crash
-    # between the file write and the event persistence leaves only the
-    # .tmp file, which carries no provenance and is safe to discard.
-    tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
     try:
         return export_draft(
             approved,
-            output_path=tmp_output,
+            output_path=staged.path,
             producer_snapshot=producer_snapshot,
             dictionary_values=dictionary_values,
             prior_domiciliation_election=prior_domiciliation_election,
@@ -1248,7 +1233,6 @@ def _write_export_tmp(
             schema_provider=schema_provider,
         )
     except filing_domain.FilingExportError as exc:
-        _discard_tmp_output_after_failure(tmp_output, stage="draft-write")
         # Surface the underlying FilingExportError cause in the typed context
         # (aeat-cli-contract: structured provenance
         # rides on context). The generic write-failed message otherwise masks
@@ -1283,9 +1267,9 @@ def _emit_export_event(
     # ``BucketEventHistoryRepository.save``), which is exactly what
     # export needs — there is no second persisted record to bundle,
     # so the multi-write co-transactional pattern does not apply here.
-    # The atomic-rename ordering is preserved: the event commits inside
-    # the helper before ``tmp_output.replace`` runs, and a failure in
-    # the helper unwinds the .tmp file before propagating.
+    # The staging ordering is preserved: the event commits inside the
+    # helper before the caller publishes, and a failure here propagates
+    # out of the staging context, which discards the staged file.
     event_payload = {
         "calculation_revision_id": command.calculation_revision_id,
         "work_unit_id": work_unit.work_unit_id,
@@ -1339,21 +1323,16 @@ def _emit_export_event(
                 "iva_wallet_authority_source_refs": ",".join(iva_wallet_provenance.authority_source_refs),
             },
         )
-    tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
-    try:
-        return _emit_bucket_event(
-            repository=bucket_event_repository,
-            bucket_id=work_unit.bucket_id,
-            event_type=BucketEventType.MODELO_EXPORTED,
-            occurred_at=exported_at,
-            actor=command.actor,
-            object_type=BucketEventObjectType.CALCULATION_REVISION,
-            object_id=command.calculation_revision_id,
-            payload=event_payload,
-        )
-    except Exception:
-        _discard_tmp_output_after_failure(tmp_output, stage="bucket-event")
-        raise
+    return _emit_bucket_event(
+        repository=bucket_event_repository,
+        bucket_id=work_unit.bucket_id,
+        event_type=BucketEventType.MODELO_EXPORTED,
+        occurred_at=exported_at,
+        actor=command.actor,
+        object_type=BucketEventObjectType.CALCULATION_REVISION,
+        object_id=command.calculation_revision_id,
+        payload=event_payload,
+    )
 
 
 def _raise_if_deductible_iva_evidence_missing(revision: CalculationRevision) -> None:
@@ -1639,9 +1618,9 @@ def export_modelo_revision(
     approves a transient :class:`~domain.filing.ModeloDraft`, builds one typed
     filing producer snapshot, serializes through
     :func:`~cadrumo.application.filing.export_draft`, appends ``MODELO_EXPORTED`` to
-    the bucket-event-history catalogue, and finally atomically renames the
-    sibling ``.tmp`` file into place. Any write, event, or rename failure removes
-    the temporary cleartext artefact before raising.
+    the bucket-event-history catalogue, and finally publishes the staged
+    artefact onto the operator's path. Any write, event, or publication failure
+    discards the staged cleartext artefact before raising.
 
     Returns:
         :class:`~cadrumo.application.modelo.ModeloExportResult`: The export
@@ -1668,7 +1647,7 @@ def export_modelo_revision(
     # Validate the destination before touching the catalogue or writing any
     # bytes: an unusable --output (empty, existing directory, missing parent)
     # is a clean typed refusal here, never a raw OSError traceback at the
-    # late atomic-rename — and never after cleartext financial bytes exist.
+    # late publication — and never after cleartext financial bytes exist.
     _validate_output_path(command.output_path)
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
