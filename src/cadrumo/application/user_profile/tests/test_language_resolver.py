@@ -17,12 +17,9 @@ from ....core.config import override_settings
 from ....core.i18n import output_language
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from .. import register_profile_with_credentials
+from .. import login_profile, register_profile_with_credentials
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_TEST_PASSPHRASE = "output-language-resolver-test-secret"  # noqa: S105 - synthetic test fixture
-
 
 @pytest.fixture
 def isolated_language_state(tmp_path: Path) -> Iterator[str]:
@@ -33,11 +30,16 @@ def isolated_language_state(tmp_path: Path) -> Iterator[str]:
     resolver a real backing store to read from.
     """
 
-    with override_settings(cadrumo_output_language=""), isolated_profile_storage_root(tmp_path=tmp_path):
+    test_value = f"output-language-resolver-{tmp_path.name}"
+    with (
+        override_settings(cadrumo_output_language="", cadrumo_secret_passphrase=test_value),
+        isolated_profile_storage_root(tmp_path=tmp_path),
+    ):
         outcome = register_profile_with_credentials(
             label="Output language resolver",
-            passphrase=_TEST_PASSPHRASE,
+            passphrase=test_value,
         )
+        login_profile(name=outcome.label, passphrase_callback=test_value.__str__)
         yield outcome.profile_id
 
 

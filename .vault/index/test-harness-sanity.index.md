@@ -6,7 +6,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-14'
 body_schema: 'body-v1'
-body_hash: 'sha256:f5fb9ffa6b724580676d33c94415d4ce1a3356622e4475ff8eaf0816184df9c1'
+body_hash: 'sha256:1ce29f106af13955e247ae05766837d8efac263d2a3cbf031e46fbdafc8e132b'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -43,6 +43,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P24-S81]]'
   - '[[2026-08-14-test-harness-sanity-W07-P24-S82]]'
   - '[[2026-08-14-test-harness-sanity-W07-P25-S84]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P25-S85]]'
   - '[[2026-08-14-test-harness-sanity-W07-P25-S86]]'
   - '[[2026-08-14-test-harness-sanity-audit]]'
   - '[[2026-08-14-test-harness-sanity-plan]]'
@@ -101,6 +102,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W07-P24-S81` - Move full-corpus collectability out of unit while retaining bounded controls
 - `2026-08-14-test-harness-sanity-W07-P24-S82` - Align worker tests with repository-owned six-worker authority and explicit overrides
 - `2026-08-14-test-harness-sanity-W07-P25-S84` - Move and rename the core i18n default-language test to its owner
+- `2026-08-14-test-harness-sanity-W07-P25-S85` - Move profile output-language integration tests to their application owner
 - `2026-08-14-test-harness-sanity-W07-P25-S86` - Replace stale naked-test rationale with current distributed visibility requirements
 
 ### plan
