@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-14'
-body_hash: 'sha256:7aa13eddc86101754cedbb425a736f9ca63dd811d082c3a7160751a26cf8156b'
+body_hash: 'sha256:767a6d4375d744e866605dd1eb7284ebd8f7232b0df364d69811b62b85801aea'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -79,7 +79,7 @@ Persist safe lifecycle state and ordered events atomically while keeping confide
 Implement authoritative submission, observation, response, cancellation, deadlines, settlement, and startup reconciliation.
 
 - [x] `W02.P05.S22` - Implement submit, start, inspect, observe, await, respond, reject, request-cancel, detach, settle, and reconcile operations with a durable idempotent claim under the journal lock, schema-v2 migration before lease acquisition, persisted pending and consumed interaction checkpoints with safe events, exact single-use response binding across restart, conflict-scope lease addressing, definition-bound executor context that refuses undeclared phase, effect, and typed cleanup-family registration before mutation, encrypted content-addressed secure references, and full journal and lease compare-and-swap invariants; `src/cadrumo/application/operations/_models.py, src/cadrumo/application/operations/_events.py, src/cadrumo/application/operations/_interactions.py, src/cadrumo/application/operations/_leases.py, src/cadrumo/application/operations/_journal.py, src/cadrumo/application/operations/_executor.py, src/cadrumo/application/operations/_supervisor.py, src/cadrumo/application/operations/__init__.py, src/cadrumo/adapters/persistence/operations/_lease.py, src/cadrumo/adapters/persistence/operations/_journal.py, src/cadrumo/adapters/persistence/operations/_secure_refs.py, src/cadrumo/adapters/persistence/operations/__init__.py, and focused application and real-filesystem persistence tests`.
-- [ ] `W02.P05.S16` - Prove through the production supervisor executor context that duplicate registry identities and definition-undeclared effects, phases, and resource-family ownership are refused before event or journal mutation; `src/cadrumo/application/operations/tests/test_executor_contract.py`.
+- [x] `W02.P05.S16` - Prove through the production supervisor executor context that duplicate registry identities and definition-undeclared effects, phases, and resource-family ownership are refused before event or journal mutation; `src/cadrumo/application/operations/tests/test_executor_contract.py`.
 - [ ] `W02.P05.S23` - Implement cursor replay and bounded live observation without making subscriber connectivity operation authority; `src/cadrumo/application/operations/_supervisor.py`.
 - [ ] `W02.P05.S24` - Implement aggregate deadline, cooperative cancellation acknowledgement, irreversible-section protection, and cleanup deadlines; `src/cadrumo/application/operations/_supervisor.py`.
 - [ ] `W02.P05.S25` - Normalize expected refusals and unexpected failures into safe terminal diagnostics while retaining correlation evidence; `src/cadrumo/application/operations/_supervisor.py`.
