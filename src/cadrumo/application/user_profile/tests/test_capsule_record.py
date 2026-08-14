@@ -12,7 +12,7 @@ from ....adapters.persistence.storage.custody import (
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
 )
-from ....domain.user_profile import UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileRecord
 from .._capsule_record import ProfileRecordConflictError, ProfileRecordSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -45,7 +45,7 @@ def _envelope() -> ProfileCustodyEnvelope:
 
 def test_initial_record_is_encrypted_and_bound_to_the_exact_envelope_session() -> None:
     session = ProfileRecordSession.from_envelope(envelope=_envelope(), dek=_DEK)
-    record = UserProfileRecord(profile_id=str(_PROFILE_ID), display_name="Initial operator")
+    record = UserProfileRecord(profile_id=str(_PROFILE_ID))
 
     payload = session.create_initial(record)
     restored, artifact = session.decode_current(payload, expected_revision=1)
@@ -57,9 +57,12 @@ def test_initial_record_is_encrypted_and_bound_to_the_exact_envelope_session() -
 
 def test_record_compare_and_swap_carries_the_previous_current_digest() -> None:
     session = ProfileRecordSession.from_envelope(envelope=_envelope(), dek=_DEK)
-    initial = UserProfileRecord(profile_id=str(_PROFILE_ID), display_name="Initial operator")
+    initial = UserProfileRecord(profile_id=str(_PROFILE_ID), setup_state=ProfileSetupState.INCOMPLETE)
     current, current_artifact = session.decode_current(session.create_initial(initial))
-    replacement = current.model_copy(update={"display_name": "Changed operator"})
+    replacement = UserProfileRecord.model_validate(
+        current.model_dump(mode="json", exclude={"content_digest"})
+        | {"setup_state": ProfileSetupState.COMPLETE.value, "record_revision": 2, "previous_record_digest": current.content_digest}
+    )
 
     next_payload = session.prepare_replace(
         current_artifact,
@@ -82,7 +85,7 @@ def test_record_compare_and_swap_carries_the_previous_current_digest() -> None:
 
 def test_record_refuses_a_session_for_a_different_current_envelope() -> None:
     initial_session = ProfileRecordSession.from_envelope(envelope=_envelope(), dek=_DEK)
-    payload = initial_session.create_initial(UserProfileRecord(profile_id=str(_PROFILE_ID), display_name="Operator"))
+    payload = initial_session.create_initial(UserProfileRecord(profile_id=str(_PROFILE_ID)))
     changed_envelope = _envelope().model_copy(update={"password_generation": 8})
     changed_session = ProfileRecordSession.from_envelope(envelope=changed_envelope, dek=_DEK)
 

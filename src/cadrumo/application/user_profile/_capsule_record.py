@@ -226,7 +226,7 @@ class ProfileRecordSession:
             record = UserProfileRecord.model_validate_json(plaintext)
         except (ValidationError, ValueError) as exc:
             raise ProfileRecordIntegrityError("profile record cannot be authenticated and decoded") from exc
-        if UUID(str(record.profile_id)) != self.profile_id or _digest(_record_bytes(record)) != artifact.content_digest:
+        if UUID(str(record.profile_id)) != self.profile_id or f"sha256:{record.content_digest}" != artifact.content_digest:
             raise ProfileRecordIntegrityError("profile record plaintext differs from its authenticated identity or digest")
         return record, artifact
 
@@ -243,6 +243,8 @@ class ProfileRecordSession:
             raise ProfileRecordConflictError("profile record revision compare-and-swap failed")
         if UUID(str(record.profile_id)) != self.profile_id:
             raise ProfileRecordIntegrityError("replacement profile record UUID differs from its custody session")
+        if record.record_revision != current.revision + 1 or record.previous_record_digest != current.content_digest[7:]:
+            raise ProfileRecordIntegrityError("replacement record does not carry the next revision and current digest")
         return _encode_artifact(
             session=self,
             record=record,
@@ -259,7 +261,7 @@ def _encode_artifact(
     previous_record_digest: str | None,
 ) -> bytes:
     record_bytes = _record_bytes(record)
-    content_digest = _digest(record_bytes)
+    content_digest = f"sha256:{record.content_digest}"
     aad = _aad(
         profile_id=session.profile_id,
         envelope_digest=session.envelope_digest,

@@ -64,7 +64,7 @@ def test_lifecycle_projects_only_its_committed_capsule_and_owns_selection(tmp_pa
         password_envelope=envelope,
         sentinel=sentinel,
         data_files=data_files,
-        initial_record=UserProfileRecord(profile_id=str(_PROFILE_ID), display_name="Capsule operator"),
+        initial_record=UserProfileRecord(profile_id=str(_PROFILE_ID)),
         record_session=ProfileRecordSession.from_envelope(envelope=envelope, dek=dek),
     )
 
