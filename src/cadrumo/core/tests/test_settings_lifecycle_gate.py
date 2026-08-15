@@ -46,6 +46,7 @@ from pathlib import Path
 
 import pytest
 
+from .. import scan_directory
 from .._storage_taxonomy import (
     EXTERNAL_PATH_SETTINGS_FIELDS,
     ROOT_DERIVED_STORAGE_FIELDS,
@@ -141,7 +142,7 @@ _LITERAL_OWNERS = frozenset(
 def _production_modules() -> list[Path]:
     """Every shipped module, excluding test trees and the taxonomy owners."""
     modules = []
-    for path in _PRODUCTION_ROOT.rglob("*.py"):
+    for path in scan_directory(_PRODUCTION_ROOT, pattern="*.py", recursive=True):
         rel = path.relative_to(_PRODUCTION_ROOT).as_posix()
         if "/tests/" in f"/{rel}" or rel.startswith("tests/") or rel in _LITERAL_OWNERS:
             continue

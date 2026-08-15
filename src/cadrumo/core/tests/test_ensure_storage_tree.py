@@ -23,6 +23,7 @@ from typing import Final
 
 import pytest
 
+from .. import iter_directory
 from ..config import ensure_storage_tree, load_settings, override_settings
 from ..errors import CoreValidationError
 
@@ -171,7 +172,7 @@ def test_a_directory_removed_after_materialisation_is_rebuilt(tmp_path: Path) ->
         removable = next(
             target
             for target in storage_tree_targets(settings)
-            if target.is_dir() and target != root and not any(target.iterdir())
+            if target.is_dir() and target != root and not any(iter_directory(target))
         )
         removable.rmdir()
         assert not removable.exists()

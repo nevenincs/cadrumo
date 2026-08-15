@@ -128,6 +128,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.resources import bundled_path
 from ._manual_oracle_support import read_manual_worked_example
@@ -145,10 +146,10 @@ def _payload_names() -> tuple[str, ...]:
     ``modelo-*.json`` rather than ``*.json``, and that is the production reader's own
     pattern rather than a convenience: the directory also holds oracles of other shapes
     that :class:`ManualWorkedExamplePayload` does not parse and the fold never reads. A
-    gate that widened the glob would measure a different population than the contract it
-    is gating, and would refuse a file no consumer of this model ever sees.
+    gate that widened the pattern would measure a different population than the contract
+    it is gating, and would refuse a file no consumer of this model ever sees.
     """
-    return tuple(sorted(path.name for path in _payload_directory().glob("modelo-*.json")))
+    return tuple(sorted(path.name for path in scan_directory(_payload_directory(), pattern="modelo-*.json")))
 
 
 #: Payloads that have not yet declared their scenario inputs, each with its reason.

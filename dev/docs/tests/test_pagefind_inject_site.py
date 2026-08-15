@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 from ._http_serve_support import serve_directory
@@ -39,7 +40,7 @@ def _fixture_site(tmp_path: Path, *, pages: int = 3) -> Path:
     """Copy a small real built-HTML subset + the pagefind.yml into tmp."""
     site = tmp_path / "site"
     site.mkdir()
-    html = sorted(_BUILT_HTML.rglob("*.html"))[:pages]
+    html = scan_directory(_BUILT_HTML, pattern="*.html", recursive=True)[:pages]
     for source in html:
         dest = site / source.relative_to(_BUILT_HTML)
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -77,7 +78,7 @@ def test_injection_lands_one_record_per_concept_in_primary_language(
     assert stats.languages == ("en",)
 
     pf = site / "pagefind"
-    languages = {p.name.split("_")[0] for p in pf.rglob("*.pf_index")}
+    languages = {p.name.split("_")[0] for p in scan_directory(pf, pattern="*.pf_index", recursive=True)}
     assert "en" in languages
 
 
@@ -106,7 +107,7 @@ def test_sorted_by_weight_returns_only_injected_cards(tmp_path: Path) -> None:
     with serve_directory(site) as (_httpd, port):
         from playwright.sync_api import sync_playwright
 
-        page_name = sorted(p.name for p in site.glob("*.html"))[0]
+        page_name = sorted(p.name for p in scan_directory(site, pattern="*.html"))[0]
         with sync_playwright() as pw:
             browser = pw.chromium.launch()
             page = browser.new_page()

@@ -11,7 +11,7 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ......adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ......core import CasillaId, CasillaValueKind, Period, validated_casilla_id
+from ......core import CasillaId, CasillaValueKind, Period, scan_directory, validated_casilla_id
 from ......core.config import Settings
 from ......tests.secure_sql import TestRuntimeProfile
 from .._errors import SedeValidationError
@@ -73,7 +73,9 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
     assert stored.storage_ref.startswith("secure-object:financial:")
     assert store.load_artefact(stored.storage_ref) == body
     assert store.load_observation(manifest_path) == observation
-    persisted_bytes = b"\n".join(path.read_bytes() for path in root.rglob("*") if path.is_file())
+    persisted_bytes = b"\n".join(
+        path.read_bytes() for path in scan_directory(root, pattern="*", recursive=True) if path.is_file()
+    )
     assert body not in persisted_bytes
     assert b"12345678Z" not in persisted_bytes
     assert b"12.34" not in persisted_bytes
@@ -85,7 +87,9 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
     assert b"12345678Z" not in database_bytes
     assert b"12.34" not in database_bytes
     assert b"202610013522222A" not in database_bytes
-    persisted_paths = "\n".join(str(path.relative_to(root).as_posix()) for path in root.rglob("*"))
+    persisted_paths = "\n".join(
+        str(path.relative_to(root).as_posix()) for path in scan_directory(root, pattern="*", recursive=True)
+    )
     assert "12345678Z" not in persisted_paths
     assert "202610013522222A" not in persisted_paths
     assert "130/2026/1T" not in persisted_paths

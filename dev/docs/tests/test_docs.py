@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -150,7 +151,9 @@ def _markdown_docs() -> tuple[Path, ...]:
     corpus each reports exactly what a clean corpus reports, so the proof of
     scan belongs here, once, rather than at each call site.
     """
-    pages = tuple(sorted(path for path in _DOCS_ROOT.rglob("*.md") if "_build" not in path.parts))
+    pages = tuple(
+        path for path in scan_directory(_DOCS_ROOT, pattern="*.md", recursive=True) if "_build" not in path.parts
+    )
     assert pages, f"no markdown documentation pages found under {_DOCS_ROOT}"
     return pages
 

@@ -47,6 +47,7 @@ from typing import Literal
 
 import pytest
 
+from .....core import DirectoryEntryKind, scan_directory
 from .....core.resources import bundled_path
 from .. import extract_record_design
 
@@ -85,7 +86,7 @@ class _Outcome:
 
     modelo: str
     design: str
-    kind: Literal["complete", "partial", "refused"]
+    kind: Literal["complete", "corrected", "partial", "refused"]
     detail: str
 
 
@@ -98,7 +99,9 @@ def _bundled_designs() -> tuple[Path, ...]:
     """
     root = bundled_path(*_DESIGN_ROOT_PARTS)
     return tuple(
-        sorted(path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in _PARSEABLE_SUFFIXES)
+        path
+        for path in scan_directory(root, recursive=True, select=DirectoryEntryKind.FILES)
+        if path.suffix.lower() in _PARSEABLE_SUFFIXES
     )
 
 
@@ -120,6 +123,20 @@ def _classify(path: Path) -> _Outcome:
         # exception types currently known would let a new one escape as an error
         # rather than appear on the worklist, which is the silence being removed.
         return _Outcome(modelo=modelo, design=path.name, kind="refused", detail=_cause_class(str(exc)))
+    if extraction.corrections:
+        # Checked BEFORE ``is_complete``, and never merged into "complete": a
+        # design that reads only because a declared, sourced correction fixed
+        # a blank cell AEAT's own publication omitted is not the artefact AEAT
+        # published, so it must never look identical to one that is.
+        return _Outcome(
+            modelo=modelo,
+            design=path.name,
+            kind="corrected",
+            detail="; ".join(
+                f"{item.sheet!r} row {item.source_row}: {item.corrected_type!r} -- {item.reason}"
+                for item in extraction.corrections
+            ),
+        )
     if extraction.is_complete:
         return _Outcome(modelo=modelo, design=path.name, kind="complete", detail="")
     return _Outcome(
@@ -230,7 +247,13 @@ def test_no_bundled_design_is_unreadable_or_only_partly_read() -> None:
     outcomes = _outcomes()
     grouped: dict[str, list[str]] = defaultdict(list)
     for outcome in outcomes:
-        if outcome.kind == "complete":
+        # A "corrected" design is READ -- not a refusal or a partial read -- so
+        # it belongs off this worklist exactly like "complete". Its visibility
+        # lives in a dedicated test below, never here, because folding it into
+        # this list would mean the ONLY way to see a correction fired is to
+        # notice a red gate go green, which is worse than the silence "complete"
+        # already avoids.
+        if outcome.kind in {"complete", "corrected"}:
             continue
         label = outcome.detail if outcome.kind == "refused" else "partial read: sheets skipped"
         grouped[f"{outcome.kind.upper()} -- {label}"].append(f"modelo {outcome.modelo} {outcome.design!r}")
@@ -239,9 +262,52 @@ def test_no_bundled_design_is_unreadable_or_only_partly_read() -> None:
         f"  [{len(entries)}] {label}\n" + "\n".join(f"      {entry}" for entry in sorted(entries))
         for label, entries in sorted(grouped.items())
     )
-    readable = sum(1 for outcome in outcomes if outcome.kind == "complete")
+    readable = sum(1 for outcome in outcomes if outcome.kind in {"complete", "corrected"})
     assert not grouped, (
         f"{len(outcomes) - readable} of {len(outcomes)} bundled designs are not fully read. Each is "
         "a parser gap or a corpus defect and either way it is work; the grouping is by the class a "
         "fix would address:\n" + report
     )
+
+
+def test_every_correction_is_visibly_distinct_from_complete_and_carries_its_grounding() -> None:
+    """A design read via a correction is never silently indistinguishable from one AEAT published cleanly.
+
+    This is the property the worklist test above cannot see: it treats
+    "corrected" as read (correctly -- the values are right either way), but
+    that test alone would let a correction fire invisibly, with no trace
+    except a shrinking worklist. This test is the trace: every corrected
+    design is named, and every correction it carries states which editions
+    were read and why AEAT's own publication omitted the value -- never a
+    bare "trust me".
+    """
+    outcomes = _outcomes()
+    corrected = [outcome for outcome in outcomes if outcome.kind == "corrected"]
+
+    assert corrected, (
+        "no bundled design is currently classified 'corrected'. If a correction sidecar was removed "
+        "or its target design now reads cleanly without it, this assertion should be updated "
+        "deliberately -- not left to pass vacuously over an empty list."
+    )
+
+    complete_designs = {outcome.design for outcome in outcomes if outcome.kind == "complete"}
+    corrected_designs = {outcome.design for outcome in outcomes if outcome.kind == "corrected"}
+    assert not (complete_designs & corrected_designs), (
+        "a design is classified as both 'complete' and 'corrected', so a correction is silently "
+        "indistinguishable from a clean read -- exactly the outcome this classification exists to prevent"
+    )
+
+    for outcome in corrected:
+        assert outcome.detail, f"modelo {outcome.modelo} {outcome.design!r} is 'corrected' with no stated grounding"
+        matches = [path for path in _bundled_designs() if path.name == outcome.design]
+        assert matches, f"corrected design {outcome.design!r} no longer resolves to a bundled file"
+        extraction = extract_record_design(matches[0])
+        for correction in extraction.corrections:
+            assert correction.editions_read, (
+                f"modelo {outcome.modelo} {outcome.design!r} sheet {correction.sheet!r} row "
+                f"{correction.source_row} names no editions read"
+            )
+            assert correction.reason.strip(), (
+                f"modelo {outcome.modelo} {outcome.design!r} sheet {correction.sheet!r} row "
+                f"{correction.source_row} states no reason"
+            )

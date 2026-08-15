@@ -37,6 +37,8 @@ from pathlib import Path
 
 import pytest
 
+from ..core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 #: Declared layer order, highest first. Mirrors the ``layers`` contract in
@@ -205,7 +207,7 @@ def _resolve_target_layer(relative: str, node: ast.ImportFrom) -> str | None:
 def _production_modules() -> list[Path]:
     """Every production module under the layered packages."""
     found: list[Path] = []
-    for path in sorted(_SRC_ROOT.rglob("*.py")):
+    for path in scan_directory(_SRC_ROOT, pattern="*.py", recursive=True):
         relative = path.relative_to(_SRC_ROOT).as_posix()
         if "/tests/" in relative or relative.startswith("tests/") or "conftest" in relative:
             continue

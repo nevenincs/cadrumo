@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 from .....core import (
     FilingProducerKey,
+    scan_directory,
     M303Exonerado390OperacionesTercerosProjectionRef,
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
@@ -425,9 +426,7 @@ def test_projection_ref_compiler_has_only_the_two_canonical_loader_callers() -> 
     root = Path(__file__).resolve().parents[6]
     caller_paths: set[Path] = set()
     for source_root in (root / "src" / "cadrumo", root / "dev" / "registry"):
-        for module_path in source_root.rglob("*.py"):
-            if "tests" in module_path.parts:
-                continue
+        for module_path in scan_directory(source_root, pattern="*.py", recursive=True, prune_directories=("tests",)):
             tree = ast.parse(module_path.read_text(encoding="utf-8"))
             if any(
                 isinstance(node, ast.Call)

@@ -28,6 +28,7 @@ from ....domain.iva import IvaCategory
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_runner import invoke_cached_cli
 from ._isolated_profile_storage_fixtures import llm_profile_isolated_backend
+from ._ledger_llm_support import _import_one_transaction as _shared_import_one_transaction
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["llm_profile_isolated_backend"]
@@ -42,23 +43,13 @@ def _json_object(value: object) -> dict[str, object]:
 
 
 def _import_one_transaction(tmp_path: Path) -> str:
-    csv_content = (
-        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
-        "2026-04-01,Proveedor SL,material,-121.00,EUR,sat-001\n"
+    return _shared_import_one_transaction(
+        tmp_path,
+        payee="Proveedor SL",
+        reference="material",
+        amount="-121.00",
+        marker="sat-001",
     )
-    csv_path = tmp_path / "import.csv"
-    csv_path.write_text(csv_content, encoding="utf-8")
-    result = _invoke(["app", "ledger", "import", "--file", str(csv_path), "--provider", "csv"])
-    assert result.exit_code == 0, result.output
-    listed = _invoke(["--format", "json", "app", "ledger", "list"])
-    assert listed.exit_code == 0, listed.output
-    payload = _json_object(_json_result(listed))
-    rows = payload["rows"]
-    assert isinstance(rows, list) and rows
-    row = _json_object(rows[0])
-    transaction_id = row["transaction_id"]
-    assert isinstance(transaction_id, str)
-    return transaction_id
 
 
 def _row_by_id(transaction_id: str) -> dict[str, object]:

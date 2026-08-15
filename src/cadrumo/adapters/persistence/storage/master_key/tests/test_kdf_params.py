@@ -7,7 +7,6 @@ import secrets
 import pytest
 from pydantic import ValidationError
 
-from ...bucket import ManifestKdfParams
 from .._kdf_params import KdfParams
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -30,15 +29,6 @@ def test_default_emits_distinct_salts() -> None:
     a = KdfParams.default()
     b = KdfParams.default()
     assert a.salt != b.salt
-
-
-def test_default_converts_to_manifest_shape() -> None:
-    params = KdfParams.default()
-
-    manifest_params = params.to_manifest_params()
-
-    assert isinstance(manifest_params, ManifestKdfParams)
-    assert manifest_params.model_dump() == params.model_dump()
 
 
 def test_rejects_memory_cost_zero() -> None:

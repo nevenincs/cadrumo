@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import scan_directory
 from ....core.resources import resources
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
@@ -452,7 +453,7 @@ def test_no_parallel_bindings_typer_outside_canonical_module() -> None:
     )
     offenders: list[Path] = []
     scanned = 0
-    for py_file in cli_root.rglob("*.py"):
+    for py_file in scan_directory(cli_root, pattern="*.py", recursive=True):
         if py_file == canonical:
             continue
         if py_file.name.startswith("test_"):

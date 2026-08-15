@@ -24,6 +24,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 from ..pagefind_index import build_search_index
@@ -38,7 +39,7 @@ _PAGEFIND_YML = _REPO_ROOT / "docs" / "pagefind.yml"
 
 def _site(tmp_path: Path) -> Path:
     """Assemble a small real page corpus to index."""
-    pages = sorted(_BUILT_HTML.glob("*.html"))[:2] if _BUILT_HTML.is_dir() else []
+    pages = scan_directory(_BUILT_HTML, pattern="*.html")[:2] if _BUILT_HTML.is_dir() else ()
     if len(pages) < 2:
         pytest.fail(
             f"need built documentation HTML under {_BUILT_HTML} to index; "
@@ -63,12 +64,12 @@ def test_the_index_pass_writes_nothing_into_the_working_directory(tmp_path: Path
     workdir = tmp_path / "cwd"
     workdir.mkdir()
     site = _site(workdir)
-    before = {entry.name for entry in workdir.iterdir()}
+    before = {entry.name for entry in scan_directory(workdir)}
 
     with contextlib.chdir(workdir):
         build_search_index(site, inject=None)
 
-    after = {entry.name for entry in workdir.iterdir()}
+    after = {entry.name for entry in scan_directory(workdir)}
     assert after == before, f"the index pass created {sorted(after - before)} in the working directory"
 
 
@@ -85,6 +86,6 @@ def test_the_index_still_lands_in_the_site(tmp_path: Path) -> None:
     with contextlib.chdir(workdir):
         build_search_index(site, inject=None)
 
-    fragments = list((site / "pagefind" / "fragment").rglob("*.pf_fragment"))
+    fragments = scan_directory(site / "pagefind" / "fragment", pattern="*.pf_fragment", recursive=True)
     assert (site / "pagefind" / "pagefind-entry.json").is_file(), "the site carries no built index entry"
     assert fragments, "the site index carries no fragments; the write was aimed away rather than aimed correctly"

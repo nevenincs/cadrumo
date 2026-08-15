@@ -8,7 +8,7 @@ import pytest
 
 from ... import core
 from ...tests._inventory import modules_declaring_class
-from .. import EstadoCasillaOficial
+from .. import DirectoryEntryKind, EstadoCasillaOficial, scan_directory
 from .. import _estado_casilla_oficial as owner
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -77,8 +77,8 @@ def _retired_family_occurrences(*roots: Path) -> set[tuple[str, str]]:
     candidates = {
         path
         for root in roots
-        for path in root.rglob("*")
-        if path.is_file() and path.suffix.lower() in _TEXT_BEARING_SUFFIXES
+        for path in scan_directory(root, recursive=True, select=DirectoryEntryKind.FILES)
+        if path.suffix.lower() in _TEXT_BEARING_SUFFIXES
     }
     retired = _retired_family()
     occurrences: set[tuple[str, str]] = set()

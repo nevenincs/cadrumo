@@ -20,6 +20,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from ......core import scan_directory
 from ......core.config import Settings
 from ......tests import FIXTURES_DIR
 from .. import (
@@ -65,7 +66,7 @@ def _load_case(path: Path, *, default_status: int) -> tuple[int, dict[str, str],
 
 def _fixture_files(state_dir: str) -> tuple[Path, ...]:
     folder = _FIXTURES_ROOT / state_dir
-    return tuple(sorted(folder.glob("*.html")))
+    return scan_directory(folder, pattern="*.html")
 
 
 _MANTENIMIENTO_FILES = _fixture_files("mantenimiento")

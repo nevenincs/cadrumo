@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 from ....tests.storage_scope import relocated_storage_path, storage_overrides
-from ... import StorageCategory
+from ... import DirectoryEntryKind, StorageCategory, scan_directory
 from ...config import override_settings
 from .._models import RunOutcome, RunTrace
 from .._store import EVENTS_FILENAME, TRACE_FILENAME, prune_run_traces, save_trace
@@ -164,7 +164,7 @@ def test_prune_enforces_total_size_ceiling_oldest_first(tmp_path: Path) -> None:
     assert not oldest.exists()
     assert middle.exists()
     assert newest.exists()
-    total = sum(f.stat().st_size for f in runs_dir.rglob("*") if f.is_file())
+    total = sum(f.stat().st_size for f in scan_directory(runs_dir, recursive=True, select=DirectoryEntryKind.FILES))
     assert total <= 2100
 
 

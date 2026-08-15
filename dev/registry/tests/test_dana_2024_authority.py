@@ -43,7 +43,7 @@ from urllib.parse import urlsplit
 
 import pytest
 
-from cadrumo.core import normalise_corpus_text, resolve_anchored_extracted_unit
+from cadrumo.core import normalise_corpus_text, resolve_anchored_extracted_unit, scan_directory
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     LegalReference,
@@ -479,7 +479,7 @@ def test_no_registry_value_enumerates_the_anexo_instead_of_citing_it() -> None:
     )
 
     offenders: list[str] = []
-    for toml_path in sorted(bundled_path("registry", "aeat").rglob("*.toml")):
+    for toml_path in scan_directory(bundled_path("registry", "aeat"), pattern="*.toml", recursive=True):
         body = _REQUIRED_TEXT_ARRAY.sub(" ", toml_path.read_text(encoding="utf-8"))
         if len(set(named_anywhere.findall(normalise_corpus_text(body)))) < _ENUMERATION_THRESHOLD:
             continue

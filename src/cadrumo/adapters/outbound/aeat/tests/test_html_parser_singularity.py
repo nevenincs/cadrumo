@@ -20,6 +20,8 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _ADAPTER_ROOT = Path(__file__).resolve().parent.parent
@@ -37,7 +39,9 @@ def _python_sources() -> list[Path]:
     directly so the exemption cannot hide a backend change.
     """
     excluded = {_CONSTRUCTOR, Path(__file__).resolve()}
-    return sorted(p for p in _ADAPTER_ROOT.rglob("*.py") if p.resolve() not in excluded)
+    return sorted(
+        p for p in scan_directory(_ADAPTER_ROOT, pattern="*.py", recursive=True) if p.resolve() not in excluded
+    )
 
 
 def test_only_the_constructor_builds_a_soup() -> None:

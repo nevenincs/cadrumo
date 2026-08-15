@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from ..core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _CADRUMO_ROOT = Path(__file__).resolve().parents[1]
@@ -30,7 +32,7 @@ def test_dead_application_verification_strings_have_no_consumers() -> None:
     consumers: list[str] = []
 
     for root in searched_roots:
-        for path in root.rglob("*"):
+        for path in scan_directory(root, pattern="*", recursive=True):
             if path.suffix not in suffixes:
                 continue
             text = path.read_text(encoding="utf-8")
@@ -45,7 +47,7 @@ def test_registry_has_no_deleted_application_consumer() -> None:
     consumer_declaration = f'consumer = "{_DEAD_MODULE}"'
     consumers = [
         path.relative_to(_REPO_ROOT).as_posix()
-        for path in registry_root.rglob("*.toml")
+        for path in scan_directory(registry_root, pattern="*.toml", recursive=True)
         if consumer_declaration in path.read_text(encoding="utf-8")
     ]
 

@@ -37,6 +37,7 @@ from pathlib import Path
 
 import pytest
 
+from ..core import scan_directory
 from ._inventory import REPO_ROOT, SRC_CADRUMO
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -132,7 +133,7 @@ def built_wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
         text=True,
         check=True,
     )
-    wheels = sorted(out_dir.glob("cadrumo-*.whl"))
+    wheels = scan_directory(out_dir, pattern="cadrumo-*.whl")
     if len(wheels) != 1:
         raise AssertionError(f"expected exactly one cadrumo-*.whl in {out_dir}; got {[w.name for w in wheels]!r}")
     return wheels[0]

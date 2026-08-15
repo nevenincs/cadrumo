@@ -48,6 +48,8 @@ from typing import override
 
 import pytest
 
+from ....core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _SRC_ROOT = Path(__file__).resolve().parents[3]
@@ -147,7 +149,7 @@ class OutputCall:
 def _production_modules() -> tuple[Path, ...]:
     modules: list[Path] = []
     for root in (_CLI_ROOT, _DIAGNOSTICS_ROOT, *_APPLICATION_OUTPUT_ROOTS):
-        for path in root.rglob("*.py"):
+        for path in scan_directory(root, pattern="*.py", recursive=True):
             relative = path.relative_to(_SRC_ROOT)
             if relative in _EXCLUDED_MODULES:
                 continue

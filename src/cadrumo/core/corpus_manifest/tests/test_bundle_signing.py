@@ -45,6 +45,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
+from ... import scan_directory
 from .. import (
     CorpusBundleSigningError,
     CorpusBundleSigningKeyNotFoundError,
@@ -316,7 +317,7 @@ class TestSigningKeyPersistenceClosesThePermissionWindow:
         assert witness_content == _PLACEHOLDER_KEY_FILE_CONTENT
         assert keypair.private_key_hex not in witness_content
         assert key_path.stat().st_ino != witness.stat().st_ino
-        assert sorted(tmp_path.glob("*.tmp")) == []
+        assert scan_directory(tmp_path, pattern="*.tmp") == ()
 
     def test_persisted_key_is_owner_only_on_posix(self, tmp_path: Path) -> None:
         """The persisted key ends at ``0o600``.

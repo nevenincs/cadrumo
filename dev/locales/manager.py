@@ -16,7 +16,7 @@ from typing import IO, Any, cast, override
 
 import yaml
 
-from cadrumo.core import normalise_product_identity_references
+from cadrumo.core import iter_directory, normalise_product_identity_references, scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 from cadrumo.core.i18n import extract_placeholders
 from cadrumo.core.logging import get_logger
@@ -233,7 +233,7 @@ class LocaleManager:
 
         keys: set[str] = set()
         for root in (self.src_dir, *self.extra_src_dirs):
-            for py_file in root.rglob("*.py"):
+            for py_file in iter_directory(root, pattern="*.py", recursive=True):
                 if _is_test_module(py_file):
                     continue
                 try:
@@ -297,7 +297,7 @@ class LocaleManager:
 
     def _load_audit_leaves(self) -> dict[str, dict[str, object]]:
         """Flatten every catalogue's raw leaves keyed by locale file name."""
-        locale_paths = tuple(sorted(self.locales_dir.glob("*.yml")))
+        locale_paths = scan_directory(self.locales_dir, pattern="*.yml")
         return {path.name: _flatten_raw_locale_leaves(self.load_locale(path)) for path in locale_paths}
 
     def _audit_namespace_prefixes(self) -> tuple[str, ...]:
@@ -364,7 +364,7 @@ class LocaleManager:
         )
 
         with catalogue_write_guard(self.locales_dir) as guard:
-            for f in self.locales_dir.glob("*.yml"):
+            for f in scan_directory(self.locales_dir, pattern="*.yml"):
                 try:
                     data = _parse_locale(guard.read_text(f))
                 except (OSError, yaml.YAMLError, LocaleError) as exc:
@@ -395,7 +395,9 @@ class LocaleManager:
             Paths whose parsed locale content changed.
         """
         locale_paths = (
-            (self._locale_path(locale.value),) if locale is not None else tuple(sorted(self.locales_dir.glob("*.yml")))
+            (self._locale_path(locale.value),)
+            if locale is not None
+            else scan_directory(self.locales_dir, pattern="*.yml")
         )
         updated_paths: list[Path] = []
         with catalogue_write_guard(self.locales_dir) as guard:
@@ -412,7 +414,7 @@ class LocaleManager:
         """Resolve a locale code to a contained locale file path."""
         if locale != Path(locale).name or Path(locale).suffix:
             raise LocaleError(f"Invalid locale code: {locale!r}")
-        allowed_locales = {path.stem for path in self.locales_dir.glob("*.yml")}
+        allowed_locales = {path.stem for path in iter_directory(self.locales_dir, pattern="*.yml")}
         if locale not in allowed_locales:
             raise LocaleError(f"Locale file not found: {locale!r}")
 

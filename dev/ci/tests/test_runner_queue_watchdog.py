@@ -24,6 +24,7 @@ from typing import Any, Final
 import pytest
 import yaml
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 from ..runner_queue_watchdog import (
@@ -249,7 +250,7 @@ def test_occupancy_counts_only_running_jobs() -> None:
 
 
 def _workflow_documents() -> list[tuple[Path, dict[str, Any]]]:
-    paths = sorted({*_WORKFLOWS_DIR.glob("*.yml"), *_WORKFLOWS_DIR.glob("*.yaml")})
+    paths = sorted({*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")})
     assert paths, f"no workflows found to gate under {_WORKFLOWS_DIR}"
     return [(path, yaml.safe_load(path.read_text(encoding="utf-8"))) for path in paths]
 

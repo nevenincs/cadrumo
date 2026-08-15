@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .....core.config import override_settings
 from .....llm import LLMProvider, LLMRequest, LLMResponse
 from .. import LLMCache
@@ -137,7 +138,9 @@ def test_cache_hit_miss_and_stats(tmp_path: Path) -> None:
     # under the shared tmp root is the active bucket's encrypted-DEK keystore
     # (cadrumo-storage/keystore/.../bucket.dek.json) — storage infrastructure, not
     # a cache entry — so exclude that subtree from the no-plaintext assertion.
-    cache_entries = [p for p in tmp_path.rglob("*.json") if "cadrumo-storage" not in p.parts]
+    cache_entries = [
+        p for p in scan_directory(tmp_path, pattern="*.json", recursive=True) if "cadrumo-storage" not in p.parts
+    ]
     assert not cache_entries, f"cache must not materialise plaintext entries: {cache_entries}"
 
 
@@ -224,7 +227,7 @@ def test_cache_payload_canary_is_encrypted_in_database(tmp_path: Path) -> None:
     # confirm the canary text is absent from every encrypted file.
     from .....tests.secure_sql import read_db_at_rest_bytes
 
-    db_files = list(tmp_path.rglob("*.db"))
+    db_files = list(scan_directory(tmp_path, pattern="*.db", recursive=True))
     assert db_files, "expected at least one database file under tmp_path after cache write"
     for db_path in db_files:
         # Scan the main file AND its -wal sidecar: under WAL a just-written row

@@ -22,7 +22,7 @@ from PIL import Image
 
 from ....adapters.inbound.einvoice import EInvoiceXmlParseError, parse_einvoice_document
 from ....adapters.inbound.pdf import extract_pages_text_from_bytes
-from ....core import STR_KEYED_MAPPING_ADAPTER, STRUCTURED_DOCUMENT_SHAPES, DocumentShape
+from ....core import STR_KEYED_MAPPING_ADAPTER, STRUCTURED_DOCUMENT_SHAPES, DocumentShape, scan_directory
 from ....llm import LLMPdfRasterisationError, rasterise_pdf_pages_to_base64_png
 from ....tests.fixtures import (
     FIXTURE_PROVENANCE_REAL,
@@ -115,7 +115,7 @@ def test_empty_pdf_raises_not_crashes() -> None:
 
 
 def _corpus_fixtures() -> list[Path]:
-    return [p for p in _CORPUS.iterdir() if not p.name.endswith(".provenance.json")]
+    return [p for p in scan_directory(_CORPUS) if not p.name.endswith(".provenance.json")]
 
 
 def _sidecar_of(fixture: Path) -> dict[str, object]:

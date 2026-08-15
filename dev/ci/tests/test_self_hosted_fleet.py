@@ -21,6 +21,7 @@ from typing import Any, Final
 import pytest
 import yaml
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -56,7 +57,7 @@ def _runner_targets(job: dict[str, Any]) -> list[object]:
 
 def _collect_violations(workflows_dir: Path) -> list[tuple[str, str, object]]:
     """Return every (workflow, job, target) whose runner is not self-hosted."""
-    workflows = sorted({*workflows_dir.glob("*.yml"), *workflows_dir.glob("*.yaml")})
+    workflows = sorted({*scan_directory(workflows_dir, pattern="*.yml"), *scan_directory(workflows_dir, pattern="*.yaml")})
     assert workflows, f"no workflows found to gate under {workflows_dir}"
     violations: list[tuple[str, str, object]] = []
     for workflow in workflows:

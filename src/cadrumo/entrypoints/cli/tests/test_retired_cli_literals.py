@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 PROJECT_ROOT = Path(__file__).resolve().parents[5]
@@ -51,7 +53,7 @@ def _runtime_text_files() -> list[Path]:
     for root in RUNTIME_SURFACES:
         if not root.exists():
             continue
-        for path in root.rglob("*"):
+        for path in scan_directory(root, pattern="*", recursive=True):
             if path.suffix not in TEXT_SUFFIXES:
                 continue
             if "__pycache__" in path.parts:

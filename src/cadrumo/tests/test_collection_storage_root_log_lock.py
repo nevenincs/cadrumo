@@ -28,6 +28,7 @@ from pathlib import Path
 
 import pytest
 
+from ..core import scan_directory
 from ._collection_storage_root import _release_log_handlers_under
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -144,5 +145,5 @@ def test_registered_cleanup_removes_a_root_with_a_real_atexit_ordered_log_handle
     )
     assert completed.returncode == 0, f"probe failed:\n{completed.stdout}\n{completed.stderr}"
     assert not root.exists(), (
-        f"the registered atexit cleanup left its root behind: {sorted(p.as_posix() for p in root.rglob('*'))}"
+        f"the registered atexit cleanup left its root behind: {sorted(p.as_posix() for p in scan_directory(root, pattern='*', recursive=True))}"
     )

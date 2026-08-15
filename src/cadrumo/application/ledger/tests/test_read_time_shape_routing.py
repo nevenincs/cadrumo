@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import PDF_CONTAINER_SHAPES, DocumentShape
+from ....core import PDF_CONTAINER_SHAPES, DocumentShape, scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -75,7 +75,7 @@ def test_no_read_path_branches_on_the_two_member_media_kind() -> None:
     """
     offences: list[str] = []
     scanned = 0
-    for path in sorted(_LEDGER.rglob("*.py")):
+    for path in scan_directory(_LEDGER, pattern="*.py", recursive=True):
         if path.name.startswith("test_") or path.name in _STORAGE_SIDE_MODULES:
             continue
         scanned += 1

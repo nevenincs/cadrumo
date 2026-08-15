@@ -26,6 +26,8 @@ from pathlib import Path
 
 import pytest
 
+from ..core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PRODUCTION_ROOT = Path(__file__).resolve().parent.parent
@@ -53,7 +55,11 @@ _RATE_BLIND_CONSTRUCTORS = ("IvaLedgerCandidate",)
 
 
 def _production_files() -> list[Path]:
-    return [path for path in _PRODUCTION_ROOT.rglob("*.py") if "tests" not in path.parts and "_data" not in path.parts]
+    return [
+        path
+        for path in scan_directory(_PRODUCTION_ROOT, pattern="*.py", recursive=True)
+        if "tests" not in path.parts and "_data" not in path.parts
+    ]
 
 
 def _enclosing_function(tree: ast.Module, target: ast.Call) -> str:

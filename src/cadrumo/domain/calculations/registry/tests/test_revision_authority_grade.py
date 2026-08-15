@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
+from .....core import UNDECLARED_REGISTRY_AUTHORITY_GRADE, DirectoryEntryKind, RegistryAuthorityGrade, scan_directory
 from .....core.resources import bundled_path
 from .._errors import RegistryLoadError
 from .._loader import load_modelo_directory, load_registry_tree
@@ -193,7 +193,7 @@ def test_a_planted_grade_reds_a_copy_of_a_real_shipped_revision(tmp_path: Path) 
 def _first_bundled_fragmented_modelo() -> Path:
     """Return the first bundled modelo directory carrying a fragmented revision."""
     modelos_dir = bundled_path("registry", "aeat") / "modelos"
-    for candidate in sorted(entry for entry in modelos_dir.iterdir() if entry.is_dir()):
+    for candidate in scan_directory(modelos_dir, select=DirectoryEntryKind.DIRECTORIES):
         if any((candidate / "revisions").glob("*/revision.toml")):
             return candidate
     raise AssertionError(f"no bundled modelo under {modelos_dir} uses the fragmented revision layout")

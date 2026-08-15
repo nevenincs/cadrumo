@@ -17,9 +17,11 @@ from .. import (
     BucketPointer,
     capture_pointer,
     clear_pointer,
+    iter_directory,
     pointer_path,
     read_pointer,
     restore_pointer,
+    scan_directory,
     write_pointer,
 )
 from .._bucket_pointer import POINTER_SCHEMA_VERSION
@@ -188,7 +190,7 @@ def test_pointer_capture_restore_and_clear_preserve_exact_bytes(tmp_path: Path) 
     target = pointer_path(tmp_path)
     assert target.read_bytes() == payload
     assert capture_pointer(tmp_path) == payload
-    assert list(tmp_path.glob("active-profile.*.tmp")) == []
+    assert scan_directory(tmp_path, pattern="active-profile.*.tmp") == ()
     if os.name != "nt":
         assert stat.S_IMODE(target.stat().st_mode) == 0o600
 
@@ -225,9 +227,8 @@ def test_interrupted_restore_never_exposes_torn_pointer(tmp_path: Path) -> None:
         observed_temp: Path | None = None
         deadline = time.monotonic() + _CHILD_TIMEOUT_SECONDS
         while time.monotonic() < deadline and process.is_alive():
-            child_temps = list(tmp_path.glob(temp_pattern))
-            if child_temps:
-                observed_temp = child_temps[0]
+            observed_temp = next(iter_directory(tmp_path, pattern=temp_pattern), None)
+            if observed_temp is not None:
                 break
             process.join(timeout=0.001)
 
@@ -251,6 +252,6 @@ def test_interrupted_restore_never_exposes_torn_pointer(tmp_path: Path) -> None:
             if process.is_alive():
                 process.kill()
                 process.join(timeout=_CHILD_TIMEOUT_SECONDS)
-        for child_temp in tmp_path.glob(temp_pattern):
+        for child_temp in scan_directory(tmp_path, pattern=temp_pattern):
             child_temp.unlink(missing_ok=True)
         process.close()

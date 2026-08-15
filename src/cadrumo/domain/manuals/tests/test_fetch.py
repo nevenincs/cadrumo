@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
+from ....core import scan_directory
 from ....core.external_constants import load_external_constants
 from ....core.resources import bundled_path
 from .. import (
@@ -93,7 +94,7 @@ class TestManifestIO:
         with pytest.raises(ManifestError, match=r"cannot write manifest"):
             write_manifest(directory_target, manifest)
 
-        assert sorted(tmp_path.glob("*.tmp")) == []
+        assert scan_directory(tmp_path, pattern="*.tmp") == ()
 
     def test_write_manifest_replaces_the_authoritative_file_atomically(self, tmp_path: Path) -> None:
         """A prior manifest is swapped out, never overwritten in place.
@@ -117,7 +118,7 @@ class TestManifestIO:
         assert witness.read_text(encoding="utf-8") == prior_content
         assert "b" * 64 not in witness.read_text(encoding="utf-8")
         assert path.stat().st_ino != witness.stat().st_ino
-        assert sorted(tmp_path.glob("*.tmp")) == []
+        assert scan_directory(tmp_path, pattern="*.tmp") == ()
 
     def test_load_manifest_missing_raises(self, tmp_path: Path) -> None:
         """load_manifest raises ManifestError when the file is absent."""
@@ -167,7 +168,7 @@ class TestBundledManualCorpus:
         """Every committed manual manifest rejects synthetic placeholders and rehashes cleanly."""
         manuals_root = bundled_path("corpus", "manuals")
         manifest_paths = sorted(
-            manuals_root.glob("**/manifest.json"),
+            scan_directory(manuals_root, pattern='manifest.json', recursive=True),
             key=lambda path: path.relative_to(manuals_root).as_posix(),
         )
         checked: list[str] = []

@@ -33,7 +33,7 @@ from pathlib import Path
 import pytest
 
 from ....tests.storage_scope import storage_overrides
-from ... import StorageCategory
+from ... import StorageCategory, scan_directory
 from ...config import override_settings
 from .. import (
     RunOutcome,
@@ -89,7 +89,7 @@ class TestSaveTraceReplacesAtomically:
             assert '"run_id"' in target.read_text(encoding="utf-8")
             assert witness.read_text(encoding="utf-8") == _STALE_ARTIFACT
             assert target.stat().st_ino != witness.stat().st_ino
-            assert sorted(target.parent.glob("*.tmp")) == []
+            assert scan_directory(target.parent, pattern="*.tmp") == ()
 
     def test_real_replace_failure_leaves_no_temporary_file(self, tmp_path: Path) -> None:
         """A directory occupying ``trace.json`` is a real ``os.replace`` refusal."""
@@ -103,7 +103,7 @@ class TestSaveTraceReplacesAtomically:
 
             assert target.is_dir()
             assert (target / "marker.txt").read_text(encoding="utf-8") == "still a directory"
-            assert sorted(target.parent.glob("*.tmp")) == []
+            assert scan_directory(target.parent, pattern="*.tmp") == ()
 
 
 class TestSaveEnvelopeReplacesAtomically:
@@ -119,7 +119,7 @@ class TestSaveEnvelopeReplacesAtomically:
             assert '"status"' in target.read_text(encoding="utf-8")
             assert witness.read_text(encoding="utf-8") == _STALE_ARTIFACT
             assert target.stat().st_ino != witness.stat().st_ino
-            assert sorted(target.parent.glob("*.tmp")) == []
+            assert scan_directory(target.parent, pattern="*.tmp") == ()
 
     def test_real_replace_failure_leaves_no_temporary_file(self, tmp_path: Path) -> None:
         """A directory occupying ``envelope.json`` is a real ``os.replace`` refusal."""
@@ -133,7 +133,7 @@ class TestSaveEnvelopeReplacesAtomically:
 
             assert target.is_dir()
             assert (target / "marker.txt").read_text(encoding="utf-8") == "still a directory"
-            assert sorted(target.parent.glob("*.tmp")) == []
+            assert scan_directory(target.parent, pattern="*.tmp") == ()
 
 
 __all__: list[str] = []

@@ -26,6 +26,8 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
@@ -97,7 +99,7 @@ def test_only_allowed_modules_present_in_package() -> None:
     with rationale or remove the file.
     """
 
-    found_files = {entry.name for entry in _PACKAGE_ROOT.iterdir() if entry.is_file() and entry.suffix == ".py"}
+    found_files = {entry.name for entry in scan_directory(_PACKAGE_ROOT) if entry.is_file() and entry.suffix == ".py"}
     unexpected = sorted(found_files - _ALLOWED_MODULES)
     missing_tests = sorted(name for name in _ALLOWED_MODULES - found_files if name.startswith("test_"))
     assert unexpected == [], (

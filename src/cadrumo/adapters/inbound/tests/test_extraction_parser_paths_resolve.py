@@ -35,6 +35,8 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 # Sanctioned parser authorities: the two inbound-PDF parser packages, plus the
@@ -52,7 +54,7 @@ _PARSER_LINE_RE = re.compile(r'^\s*parser\s*=\s*"([^"]+)"', re.MULTILINE)
 def _declared_parser_paths() -> list[str]:
     """Every distinct ``parser =`` dotted path declared in the bundled registry TOML."""
     paths: set[str] = set()
-    for toml_path in _REGISTRY_ROOT.rglob("*.toml"):
+    for toml_path in scan_directory(_REGISTRY_ROOT, pattern="*.toml", recursive=True):
         paths.update(_PARSER_LINE_RE.findall(toml_path.read_text(encoding="utf-8")))
     return sorted(paths)
 

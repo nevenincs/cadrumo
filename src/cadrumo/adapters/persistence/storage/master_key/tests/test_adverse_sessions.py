@@ -9,20 +9,11 @@ from pathlib import Path
 import pytest
 
 from ......core.config import SecretStoreBackend, Settings, override_settings
-from ......core.external_constants import UTF_8_ENCODING
 from ...bucket import (
-    BUCKET_MANIFEST_SCHEMA_VERSION,
-    BucketKeySchedule,
     BucketLockedError,
-    BucketManifest,
-    ManifestKdfParams,
-    bucket_paths,
-    manifest_path,
-    write_manifest,
 )
 from ...errors import (
     MasterKeyPassphraseMismatchError,
-    StorageValidationError,
 )
 from .. import (
     FileFallbackMasterKeyProvider,
@@ -157,28 +148,6 @@ def _settings_with_store(tmp_path: Path) -> Settings:
 
 def _write_registered_bucket(root: Path, bucket_id: str) -> None:
     # Publication owns the bucket directory: it arrives by the capsule's
-    # no-replace rename, never by provisioning it first.
+    # no-replace rename, never by provisioning it first. The plaintext manifest
+    # this also wrote is retired, and nothing in production read it back.
     _publish_registration_capsule(root, bucket_id)
-    paths = bucket_paths(root, bucket_id)
-    write_manifest(
-        paths,
-        BucketManifest(
-            bucket_id=bucket_id,
-            # Derived, never the bare id: ProfileLabel refuses a UUID-shaped
-            # label so an operator label can never be read as a machine id.
-            label=f"profile-{bucket_id}",
-            created_at=_OPENED_AT,
-            last_unlocked_at=None,
-            kdf_params=ManifestKdfParams(
-                algorithm="argon2id",
-                version=19,
-                memory_cost=19_456,
-                time_cost=2,
-                parallelism=1,
-                salt=b"0123456789abcdef",
-                output_length=32,
-            ),
-            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-        ),
-    )

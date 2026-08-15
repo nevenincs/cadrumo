@@ -37,6 +37,7 @@ from pydantic import ValidationError
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import scan_directory
 from ....core.config import Settings
 from ....domain.attachments import load_attachment
 from ....domain.invoices import InvoiceValidationError
@@ -260,7 +261,7 @@ class TestExtractInvoiceDraftFromEvidence:
             settings=isolated_settings,
         )
 
-        assert list(empty_dir.iterdir()) == []
+        assert scan_directory(empty_dir) == ()
 
 
 def _scan_only_pdf_bytes() -> bytes:
@@ -381,7 +382,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
             )
 
         _run_against_loopback_ollama(self._extraction_json(), _call)
-        assert list(empty_dir.iterdir()) == []
+        assert scan_directory(empty_dir) == ()
 
     def test_llm_vision_disabled_refuses_instructively_not_silently(
         self,
@@ -707,7 +708,7 @@ class TestConfirmInvoiceDraftFromEvidence:
             invoice_repository=repo,
         )
 
-        assert list(empty_dir.iterdir()) == []
+        assert scan_directory(empty_dir) == ()
 
     def test_confirm_by_evidence_id_auto_links_the_source_attachment_to_the_invoice(
         self,

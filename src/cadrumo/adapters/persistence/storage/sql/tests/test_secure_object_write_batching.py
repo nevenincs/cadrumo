@@ -33,11 +33,9 @@ from sqlalchemy import event
 
 from ......core import SecureObjectWrite
 from ......core.classification import SensitivityClass
-from ......core.config import Settings
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import DecryptionError, SecureObjectRevisionConflictError
-from .._orm import Base
-from ..engine import create_engine_from_settings
+from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from ..secure_objects import SecureObjectRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -53,8 +51,7 @@ def _ephemeral_secure_repo(
 ) -> Iterator[tuple[Path, Any, SecureObjectRepository]]:
     db_path = tmp_path / database_name
     with EphemeralMasterKeyProvider():
-        engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
+        engine = bootstrap_sqlite_engine(db_path)
         try:
             yield db_path, engine, SecureObjectRepository(engine=engine)
         finally:

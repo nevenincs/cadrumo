@@ -20,13 +20,11 @@ from ......core import SecureObjectWrite
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...crypto import secure_object_key_digest
 from ...errors import SecureObjectRevisionConflictError
+from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from .._secure_object_records import SecureObjectDeletion
 from ._secure_objects_support import (
-    Base,
     SecureObjectRepository,
     SensitivityClass,
-    Settings,
-    create_engine_from_settings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -48,10 +46,7 @@ def _write(key: str, body: bytes, *, expected_revision_id: str | None = None) ->
 
 @contextmanager
 def _repo(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    engine = create_engine_from_settings(
-        Settings(cadrumo_database_url=f"sqlite:///{(tmp_path / 'batch.db').as_posix()}")
-    )
-    Base.metadata.create_all(engine)
+    engine = bootstrap_sqlite_engine(tmp_path / "batch.db")
     try:
         yield SecureObjectRepository(engine=engine)
     finally:

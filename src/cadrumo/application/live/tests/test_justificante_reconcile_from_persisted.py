@@ -11,7 +11,7 @@ from ...tests._profile_backend_fixtures import _isolated_backend
 
 __all__ = ["_isolated_backend"]
 
-from ....core import Modelo
+from ....core import Modelo, scan_directory
 from ...modelo import ModeloReconciliationVerdict, ReconciliationEvidenceInvalidError, list_modelo_reconciliations
 from .._justificante import JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE, reconcile_capture
 from ._justificante_reconcile_support import (
@@ -131,7 +131,7 @@ def _scan_for_plaintext(root: Path, needle: bytes) -> _PlaintextScan:
     matches: list[Path] = []
     unreadable: list[Path] = []
     scanned = 0
-    for path in sorted(item for item in root.rglob("*") if item.is_file()):
+    for path in (item for item in scan_directory(root, recursive=True) if item.is_file()):
         try:
             body = path.read_bytes()
         except OSError:

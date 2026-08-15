@@ -55,6 +55,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from ..core import scan_directory
 from ._inventory import SRC_CADRUMO, production_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -85,7 +86,7 @@ def _first_party_roots() -> frozenset[str]:
     than listed, so a new subpackage is judged the day it appears.
     """
     return frozenset(
-        entry.name for entry in SRC_CADRUMO.iterdir() if entry.is_dir() and (entry / "__init__.py").exists()
+        entry.name for entry in scan_directory(SRC_CADRUMO) if entry.is_dir() and (entry / "__init__.py").exists()
     )
 
 

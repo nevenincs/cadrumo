@@ -7,6 +7,7 @@ from dev.audit import dead_code, report, semantic
 from dev.audit.complexity import collect_cc, load_baseline
 from dev.corpus import build_evidence_corpus
 
+from ..core import scan_directory
 from ._inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -15,7 +16,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def test_code_health_scanners_target_the_live_cadrumo_tree_non_vacuously() -> None:
     """The composed report scans real Cadrumo modules rather than a retired empty root."""
     source_root = REPO_ROOT / report._PRODUCT_SOURCE_ROOT
-    production_files = tuple(source_root.rglob("*.py"))
+    production_files = tuple(scan_directory(source_root, pattern="*.py", recursive=True))
     cyclomatic = collect_cc(report._PRODUCTION_EXCLUDE)
 
     assert source_root == REPO_ROOT / "src" / "cadrumo"

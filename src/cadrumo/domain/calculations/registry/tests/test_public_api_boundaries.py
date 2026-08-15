@@ -24,6 +24,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .....tests import REPO_ROOT
 from ... import registry
 
@@ -95,7 +96,7 @@ def test_registry_parameter_resolution_is_public_api() -> None:
 def test_source_tree_does_not_use_absolute_registry_private_imports() -> None:
     offenders = sorted(
         f"{path.relative_to(REPO_ROOT)} imports {module_name}"
-        for path in _REGISTRY_SOURCE_ROOT.rglob("*.py")
+        for path in scan_directory(_REGISTRY_SOURCE_ROOT, pattern="*.py", recursive=True)
         for module_name in _absolute_registry_private_imports(path)
     )
 
@@ -105,7 +106,7 @@ def test_source_tree_does_not_use_absolute_registry_private_imports() -> None:
 def test_modelo_registry_tests_use_public_registry_api_boundaries() -> None:
     offenders = sorted(
         f"{path.name} imports .{module_name}"
-        for path in _REGISTRY_TEST_ROOT.glob("test_modelo_*_registry.py")
+        for path in scan_directory(_REGISTRY_TEST_ROOT, pattern="test_modelo_*_registry.py")
         for module_name in _relative_private_imports(path)
         if module_name in _MODELO_REGISTRY_PRIVATE_MODULES
     )

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .....core.resources import bundled_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -19,7 +20,7 @@ _SOURCE_RE = re.compile(r"diccionario-declaracion-individual-ejercicio-(?P<year>
 def test_generated_casilla_schema_headers_match_revision_directory() -> None:
     offenders: list[str] = []
 
-    for path in sorted(_M100_REVISIONS.rglob("*.toml")):
+    for path in scan_directory(_M100_REVISIONS, pattern="*.toml", recursive=True):
         text = path.read_text(encoding="utf-8")
         matches = list(_HEADER_RE.finditer(text))
         if not matches:

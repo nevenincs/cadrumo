@@ -31,7 +31,7 @@ from ....application.provisioning import (
     SystemMemoryReading,
     probe_hardware_profile,
 )
-from ....core import LOCAL_TRANSPORT_LABEL, AcceleratorKind
+from ....core import LOCAL_TRANSPORT_LABEL, AcceleratorKind, scan_directory
 from ....core.config import load_settings, override_settings
 from ....domain.iva import InvoiceKind
 from ....tests.pdf_fixtures import text_pdf_bytes
@@ -288,7 +288,7 @@ def test_the_run_writes_nothing_outside_secure_storage(
     def outside_storage() -> dict[Path, bytes]:
         return {
             path: path.read_bytes()
-            for path in tmp_path.rglob("*")
+            for path in scan_directory(tmp_path, recursive=True)
             if path.is_file() and storage_root not in path.resolve().parents
         }
 
@@ -328,7 +328,7 @@ def test_no_decrypted_document_bytes_reach_any_file_outside_secure_storage(
     storage_root = runtime_profile.storage_root.resolve()
     leaked = [
         path
-        for path in tmp_path.rglob("*")
+        for path in scan_directory(tmp_path, recursive=True)
         if path.is_file()
         and path != source
         and storage_root not in path.resolve().parents

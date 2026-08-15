@@ -17,7 +17,7 @@ from typing import Protocol
 import pytest
 
 from ....tests.storage_scope import storage_overrides
-from ... import StorageCategory, storage_path
+from ... import StorageCategory, scan_directory, storage_path
 from ...config import override_settings
 from .. import (
     GenericPayload,
@@ -165,14 +165,16 @@ class TestRunContextRunIdValidation:
 
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             for bad_run_id in bad_run_ids:
-                before = set(tmp_path.iterdir())
+                before = scan_directory(tmp_path)
                 with (
                     pytest.raises(RunTraceValidationError, match=r"invalid run_id"),
                     run_context(entrypoint="cadrumo test", arguments=(), run_id=bad_run_id),
                 ):
                     pass
                 # No directory must have been created by the rejected enter.
-                assert set(tmp_path.iterdir()) == before, f"rejected run_id {bad_run_id!r} left debris under {tmp_path}"
+                assert scan_directory(tmp_path) == before, (
+                    f"rejected run_id {bad_run_id!r} left debris under {tmp_path}"
+                )
 
     def test_caller_supplied_valid_run_id_accepted(
         self,

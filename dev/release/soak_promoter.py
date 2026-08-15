@@ -31,6 +31,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 from ._asset_transport import (
@@ -218,7 +219,7 @@ def readiness_for_sealed_cohort(
     tarball = raw / "cadrumo-release-cohort.tar.gz"
     with tarfile.open(tarball) as archive:
         archive.extractall(cohort, filter="data")
-    for row in raw.glob("*.json"):
+    for row in scan_directory(raw, pattern="*.json"):
         if row.name != "evidence-manifest.json" and not row.name.startswith("debug-"):
             shutil.copy(row, rows / row.name)
 

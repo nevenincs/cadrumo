@@ -27,6 +27,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import scan_directory
 from ....core.resources import bundled_path
 from .._retencion_parameters import (
     RirpfArt95RetencionRates,
@@ -97,7 +98,7 @@ def test_the_cited_provision_resolves_in_the_bundled_legal_catalogue() -> None:
     """The cited id must exist as a legal entry with a corpus_ref."""
     legal_root = bundled_path("registry", "aeat", "legal")
     entries: dict[str, object] = {}
-    for path in sorted(legal_root.glob("*.toml")):
+    for path in scan_directory(legal_root, pattern="*.toml"):
         with path.open("rb") as handle:
             payload = tomllib.load(handle)
         legal_table = payload.get("legal")
@@ -146,7 +147,7 @@ def test_no_feature_module_redeclares_the_retencion_rates_as_literals() -> None:
     package_root = bundled_path().parent
     offenders = [
         str(path.relative_to(package_root))
-        for path in package_root.rglob("*.py")
+        for path in scan_directory(package_root, pattern="*.py", recursive=True)
         if retired_literal in path.read_text(encoding="utf-8")
     ]
     assert offenders == [], f"retired retención-rate literal reintroduced in: {offenders}"

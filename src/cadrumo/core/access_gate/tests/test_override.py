@@ -83,11 +83,15 @@ def test_override_does_not_mutate_os_environ() -> None:
     import os
 
     sentinel = "settings-di-test-do-not-set-this"
-    os.environ.pop("CADRUMO_LIVE_TESTS_ENABLED", None)
-    with override_settings(cadrumo_live_tests_enabled=sentinel):
+    previous = os.environ.pop("CADRUMO_LIVE_TESTS_ENABLED", None)
+    try:
+        with override_settings(cadrumo_live_tests_enabled=sentinel):
+            assert os.environ.get("CADRUMO_LIVE_TESTS_ENABLED") is None
+            assert load_settings().cadrumo_live_tests_enabled == sentinel
         assert os.environ.get("CADRUMO_LIVE_TESTS_ENABLED") is None
-        assert load_settings().cadrumo_live_tests_enabled == sentinel
-    assert os.environ.get("CADRUMO_LIVE_TESTS_ENABLED") is None
+    finally:
+        if previous is not None:
+            os.environ["CADRUMO_LIVE_TESTS_ENABLED"] = previous
 
 
 # Defensive re-import to surface a circular-import regression early.

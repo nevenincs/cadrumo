@@ -34,8 +34,8 @@ from typing import Any
 
 import pytest
 
-from .. import atomic_write
 from ...tests.attribute_scope import scoped_attribute
+from .. import DirectoryEntryKind, atomic_write, scan_directory
 from ..atomic_write import (
     _write_all,
     atomic_write_best_effort_bytes,
@@ -111,7 +111,7 @@ _EXIT_READER_FAILURE = 23
 
 
 def _tmp_leftovers(directory: Path) -> list[Path]:
-    return sorted(directory.glob("*.tmp"))
+    return list(scan_directory(directory, pattern="*.tmp"))
 
 
 def _close_fd(fd: int) -> None:
@@ -712,7 +712,7 @@ def test_publish_once_refuses_an_existing_target_and_leaves_it_untouched(tmp_pat
         atomic_write_publish_once_bytes(target, b"SECOND")
 
     assert target.read_bytes() == b"FIRST", "the refused write must not have replaced the target"
-    assert {child.name for child in tmp_path.iterdir()} == {"hardened.json", "publish_once.json"}, (
+    assert {child.name for child in scan_directory(tmp_path)} == {"hardened.json", "publish_once.json"}, (
         "a refused or successful publish must not leave its staging sibling behind"
     )
 
@@ -757,7 +757,7 @@ def test_staged_publication_reserves_an_unguessable_sibling_rather_than_a_predic
     with hardened_staged_publication(target) as second:
         assert second.path != first_path, "two reservations for one destination must not share a name"
 
-    assert list(tmp_path.iterdir()) == [], "an unpublished reservation must leave nothing behind"
+    assert scan_directory(tmp_path) == (), "an unpublished reservation must leave nothing behind"
 
 
 def test_staged_publication_reservation_refuses_a_pre_existing_staging_file(tmp_path: Path) -> None:
@@ -802,7 +802,7 @@ def test_staged_publication_publishes_the_caller_written_bytes_and_removes_the_s
         assert staged.published
 
     assert target.read_bytes() == b"<T30301>PAYLOAD"
-    assert {child.name for child in target.parent.iterdir()} == {"declaracion.txt"}
+    assert {child.name for child in scan_directory(target.parent)} == {"declaracion.txt"}
     if os.name != "nt":
         assert stat.S_IMODE(target.stat().st_mode) == 0o600
 
@@ -824,7 +824,7 @@ def test_staged_publication_discards_cleartext_staging_on_an_interrupt(tmp_path:
         raise KeyboardInterrupt
 
     assert not target.exists(), "an interrupted export must publish nothing"
-    residue = [child for child in tmp_path.rglob("*") if child.is_file()]
+    residue = list(scan_directory(tmp_path, recursive=True, select=DirectoryEntryKind.FILES))
     assert residue == [], f"cleartext staging survived an interrupt: {residue}"
 
 
@@ -842,7 +842,7 @@ def test_staged_publication_discards_the_staging_file_when_the_caller_never_publ
     _abandon()
 
     assert not target.exists()
-    assert list(tmp_path.iterdir()) == [], "an abandoned staging file must not survive the context"
+    assert scan_directory(tmp_path) == (), "an abandoned staging file must not survive the context"
 
 
 def test_staged_publication_refuses_a_second_publish(tmp_path: Path) -> None:
@@ -875,5 +875,9 @@ def test_staged_publication_leaves_the_staging_file_for_the_context_when_publica
         staged.publish()
 
     assert target.is_dir(), "the refused publication must leave the obstruction untouched"
-    residue = [child for child in tmp_path.rglob("*") if child.is_file() and child.name != "occupant"]
+    residue = [
+        child
+        for child in scan_directory(tmp_path, recursive=True, select=DirectoryEntryKind.FILES)
+        if child.name != "occupant"
+    ]
     assert residue == [], f"a failed publication stranded cleartext staging: {residue}"

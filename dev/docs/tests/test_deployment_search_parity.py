@@ -50,6 +50,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
@@ -97,7 +98,7 @@ def _fixture_site(tmp_path: Path, *, pages: int = 3) -> Path:
         )
     site = tmp_path / "site"
     site.mkdir()
-    html = sorted(_BUILT_HTML.rglob("*.html"))[:pages]
+    html = scan_directory(_BUILT_HTML, pattern="*.html", recursive=True)[:pages]
     if not html:
         pytest.fail(f"built documentation HTML at {_BUILT_HTML} contains no pages.")
     for source in html:
@@ -118,7 +119,7 @@ def _kinds_in_built_index(site: Path) -> dict[str, int]:
     with serve_directory(site) as (_httpd, port):
         from playwright.sync_api import sync_playwright
 
-        page_name = sorted(p.name for p in site.glob("*.html"))[0]
+        page_name = sorted(p.name for p in scan_directory(site, pattern="*.html"))[0]
         with sync_playwright() as pw:
             browser = pw.chromium.launch()
             page = browser.new_page()
@@ -269,7 +270,7 @@ def test_the_gate_reads_the_artefact_not_the_configuration(tmp_path: Path) -> No
     site = _fixture_site(tmp_path)
     _build_deployed_index(site)
 
-    fragments = sorted((site / "pagefind" / "fragment").rglob("*.pf_fragment"))
+    fragments = scan_directory(site / "pagefind" / "fragment", pattern="*.pf_fragment", recursive=True)
     assert fragments, "the built index wrote no fragments"
 
     on_disk: set[str] = set()
@@ -348,12 +349,14 @@ def _root_page_corpus(root: Path, language: str) -> Path:
     site = root / f"site-{language}"
     site.mkdir(parents=True)
     localized_root = _BUILT_HTML / language
-    sources = sorted(localized_root.rglob("*.html")) if language != OutputLanguage.EN.value else []
+    sources = (
+        scan_directory(localized_root, pattern="*.html", recursive=True) if language != OutputLanguage.EN.value else ()
+    )
     if len(sources) >= _PAGES_PER_ROOT:
         for source in sources[:_PAGES_PER_ROOT]:
             (site / source.name).write_bytes(source.read_bytes())
     else:
-        english = sorted(_BUILT_HTML.glob("*.html"))[:_PAGES_PER_ROOT]
+        english = scan_directory(_BUILT_HTML, pattern="*.html")[:_PAGES_PER_ROOT]
         if len(english) < _PAGES_PER_ROOT:
             pytest.fail(
                 f"need {_PAGES_PER_ROOT} built pages under {_BUILT_HTML} to assemble a root corpus; "
@@ -488,7 +491,7 @@ def _search_urls(site: Path, queries: tuple[str, ...]) -> dict[str, list[str]]:
     with serve_directory(site) as (_httpd, port):
         from playwright.sync_api import sync_playwright
 
-        page_name = sorted(p.name for p in site.glob("*.html"))[0]
+        page_name = sorted(p.name for p in scan_directory(site, pattern="*.html"))[0]
         with sync_playwright() as pw:
             browser = pw.chromium.launch()
             page = browser.new_page()

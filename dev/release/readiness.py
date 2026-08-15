@@ -53,7 +53,7 @@ from typing import Final, cast
 
 from pydantic import ValidationError
 
-from cadrumo.core import PRODUCT_IDENTITY
+from cadrumo.core import PRODUCT_IDENTITY, scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 from ..docs.download_matrix import load_descriptor, required_evidence_rows
@@ -492,7 +492,7 @@ def check_distribution_evidence_set(
             f"distribution evidence directory is missing: {evidence_root}",
         )
 
-    paths = tuple(sorted(evidence_root.glob("*.json")))
+    paths = scan_directory(evidence_root, pattern="*.json")
     if not paths:
         return ReadinessCheck(
             "distribution-evidence-complete",

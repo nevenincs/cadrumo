@@ -12,7 +12,7 @@ import tomllib
 
 import pytest
 
-from ....core import ConceptLifecycle
+from ....core import ConceptLifecycle, scan_directory
 from ....core.external_constants import UTF_8_ENCODING
 from .._errors import CorpusSearchInputError
 from .._terminology import (
@@ -66,7 +66,7 @@ def test_every_stored_token_in_the_tree_is_a_declared_member() -> None:
     # drift gate between the authored tree and the core-declared value set, so
     # it must see the raw token rather than an already-hydrated member.
     stored: set[str] = set()
-    for path in sorted(_terminology_root().glob("*.toml")):
+    for path in scan_directory(_terminology_root(), pattern="*.toml"):
         payload = tomllib.loads(path.read_text(encoding=UTF_8_ENCODING))
         concept = payload.get("concept")
         assert isinstance(concept, dict), path.name

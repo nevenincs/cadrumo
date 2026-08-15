@@ -46,6 +46,8 @@ from pathlib import Path
 
 import pytest
 
+from ..core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 #: Case transforms that mint a comparison form. ``strip`` is deliberately absent:
@@ -102,7 +104,7 @@ def _production_modules() -> list[Path]:
     canonical = _REPO_ROOT / _CANONICAL
     return [
         path
-        for path in sorted(_PRODUCTION_ROOT.rglob("*.py"))
+        for path in scan_directory(_PRODUCTION_ROOT, pattern="*.py", recursive=True)
         if "tests" not in path.parts and "__pycache__" not in path.parts and path != canonical
     ]
 

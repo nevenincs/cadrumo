@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import DirectoryEntryKind, scan_directory
 from .. import (
     RecordDesignCompositeRelativeClosing,
     RecordDesignRelativeSuffixMarker,
@@ -903,9 +904,9 @@ def test_a_workbook_mixing_both_header_spellings_yields_every_sheet() -> None:
     was classified as an auxiliary envelope, and a healthy 1422-row design
     presented as carrying no record sheets at all.
     """
-    design = next(
-        path for path in sorted((_RECORD_DESIGN_ROOT / "modelo_115" / "files").glob("*.xlsx")) if path.is_file()
-    )
+    design = scan_directory(
+        _RECORD_DESIGN_ROOT / "modelo_115" / "files", pattern="*.xlsx", select=DirectoryEntryKind.FILES
+    )[0]
     sheets = extract_record_design(design).accept_partial()
 
     assert len(sheets) == 2, [sheet.name for sheet in sheets]
@@ -950,9 +951,9 @@ def test_a_design_read_in_full_reports_complete_and_hands_over_its_sheets() -> N
     above; wrong in the strict direction it would make every complete design refuse,
     which is the more expensive failure and the easier one to ship unnoticed.
     """
-    design = next(
-        path for path in sorted((_RECORD_DESIGN_ROOT / "modelo_115" / "files").glob("*.xlsx")) if path.is_file()
-    )
+    design = scan_directory(
+        _RECORD_DESIGN_ROOT / "modelo_115" / "files", pattern="*.xlsx", select=DirectoryEntryKind.FILES
+    )[0]
     extraction = extract_record_design(design)
 
     assert extraction.skipped == ()
@@ -971,9 +972,9 @@ def test_every_sheet_of_a_source_is_either_read_or_named_as_skipped() -> None:
     """
     from openpyxl import load_workbook
 
-    design = next(
-        path for path in sorted((_RECORD_DESIGN_ROOT / "modelo_232" / "files").glob("*.xlsx")) if path.is_file()
-    )
+    design = scan_directory(
+        _RECORD_DESIGN_ROOT / "modelo_232" / "files", pattern="*.xlsx", select=DirectoryEntryKind.FILES
+    )[0]
     workbook = load_workbook(design, read_only=True, data_only=True)
     try:
         present = {worksheet.title.strip() for worksheet in workbook.worksheets}

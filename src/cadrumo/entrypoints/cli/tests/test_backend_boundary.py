@@ -21,6 +21,7 @@ import pytest
 import typer
 
 from ....application.review import LedgerReviewFilterKey
+from ....core import scan_directory
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import discover_modelo_sources
 from ....tests import REPO_ROOT
@@ -106,7 +107,7 @@ def _all_cli_modules() -> tuple[Path, ...]:
     tree. Asserting a floor at the corpus source means every consumer inherits the
     proof that the walk actually reached the CLI surface.
     """
-    modules = tuple(sorted(_CLI_ROOT.rglob("*.py")))
+    modules = scan_directory(_CLI_ROOT, pattern="*.py", recursive=True)
     assert len(modules) > 100, (
         f"scanned only {len(modules)} CLI modules under {_CLI_ROOT}; the scan corpus "
         "collapsed (a package relocation or rename), so an empty offender list below would "
@@ -116,7 +117,7 @@ def _all_cli_modules() -> tuple[Path, ...]:
 
 
 def _iter_cli_test_files() -> tuple[Path, ...]:
-    files = tuple(sorted(_CLI_ROOT.rglob("test_*.py")))
+    files = scan_directory(_CLI_ROOT, pattern="test_*.py", recursive=True)
     assert len(files) > 100, (
         f"scanned only {len(files)} CLI test modules under {_CLI_ROOT}; the scan corpus "
         "collapsed (a package relocation or rename), so an empty offence list would mean "
@@ -194,7 +195,7 @@ def test_manual_ledger_import_and_review_boundaries_stay_backend_owned() -> None
     # ledger backend package so the backend-owned tokens are found wherever the
     # decomposition relocated them.
     ledger_backend = "\n".join(
-        path.read_text(encoding="utf-8") for path in sorted((REPO_ROOT / "src/cadrumo/application/ledger").glob("*.py"))
+        path.read_text(encoding="utf-8") for path in scan_directory(REPO_ROOT / "src/cadrumo/application/ledger", pattern="*.py")
     )
     forbidden_cli_tokens = (
         "CsvProvider",
@@ -408,7 +409,7 @@ def test_profile_backend_schema_deleted_package_has_no_surviving_imports() -> No
         REPO_ROOT / "src" / "cadrumo" / "application",
         REPO_ROOT / "src" / "cadrumo" / "entrypoints",
     )
-    scanned_files = [path for root in search_roots for path in sorted(root.rglob("*.py")) if path != Path(__file__)]
+    scanned_files = [path for root in search_roots for path in scan_directory(root, pattern="*.py", recursive=True) if path != Path(__file__)]
     assert len(scanned_files) > 500, (
         f"scanned only {len(scanned_files)} modules under application/ and entrypoints/; the "
         "scan corpus collapsed (a package relocation or rename), so an empty offender list "

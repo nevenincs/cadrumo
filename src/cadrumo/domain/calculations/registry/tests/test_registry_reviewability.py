@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .....core.resources import bundled_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -68,7 +69,7 @@ class _TomlSize:
 
 def _toml_sizes() -> list[_TomlSize]:
     sizes: list[_TomlSize] = []
-    for path in sorted(_REGISTRY_ROOT.rglob("*.toml")):
+    for path in scan_directory(_REGISTRY_ROOT, pattern="*.toml", recursive=True):
         lines = path.read_text(encoding="utf-8").splitlines()
         sizes.append(
             _TomlSize(
@@ -111,7 +112,7 @@ def test_registry_reviewability_baseline_remains_well_below_hard_cap() -> None:
 
 def test_registry_validator_modules_stay_below_complexity_baselines() -> None:
     oversize: list[str] = []
-    for path in sorted(_REGISTRY_PACKAGE_ROOT.glob("_validate*.py")):
+    for path in scan_directory(_REGISTRY_PACKAGE_ROOT, pattern="_validate*.py"):
         line_count = len(path.read_text(encoding="utf-8").splitlines())
         ceiling = _VALIDATOR_MODULE_LINE_BASELINES.get(path.name, _MAX_NEW_VALIDATOR_MODULE_LINES)
         if line_count > ceiling:

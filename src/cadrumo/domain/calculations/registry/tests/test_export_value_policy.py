@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....core import scan_directory
 from .. import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -241,9 +242,8 @@ def test_runtime_policy_tokens_have_one_production_owner_and_consumers_import_th
     tokens = frozenset(policy.value for policy in ExportValuePolicy)
     redeclarations = {
         path.as_posix(): declared
-        for path in src_root.rglob("*.py")
+        for path in scan_directory(src_root, pattern="*.py", recursive=True, prune_directories=("tests",))
         if path != owner
-        if "tests" not in path.parts
         for declared in _export_policy_declarations(path.read_text(encoding="utf-8"), tokens=tokens)
     }
     assert redeclarations == {}

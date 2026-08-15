@@ -21,6 +21,8 @@ _ROOT = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
+from cadrumo.core import iter_directory, scan_directory  # noqa: E402
+
 from ..packaging._hashing import sha256_path  # noqa: E402
 
 _CORPUS = _ROOT / "src/cadrumo/_data/corpus/aeat_official/disenos_registro"
@@ -244,7 +246,7 @@ def _valid_signature(extension: str, data: bytes) -> bool:
 
 def _load_manifests() -> dict[str, _Manifest]:
     manifests: dict[str, _Manifest] = {}
-    for model_dir in _CORPUS.glob("modelo_*"):
+    for model_dir in scan_directory(_CORPUS, pattern="modelo_*"):
         path = model_dir / "manifest.json"
         if path.exists():
             manifests[model_dir.name.removeprefix("modelo_")] = json.loads(path.read_text(encoding=_UTF_8))
@@ -373,7 +375,7 @@ def _pull() -> None:
             local_match = next(
                 (
                     candidate
-                    for candidate in files_dir.glob(f"*{extension}")
+                    for candidate in iter_directory(files_dir, pattern=f"*{extension}")
                     if candidate.stat().st_size == len(data) and sha256_path(candidate) == digest
                 ),
                 None,

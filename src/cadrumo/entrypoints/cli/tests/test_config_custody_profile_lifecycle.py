@@ -21,6 +21,7 @@ from typing import Final
 import pytest
 
 from ....adapters.persistence.storage import BUCKET_MANIFEST_FILENAME
+from ....core import scan_directory
 from ....core.config import load_settings
 from ....tests import REPO_ROOT
 from ....tests.subprocess_cli import run_cadrumo_subprocess
@@ -94,7 +95,7 @@ def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: 
     # The per-store salt lives inside master.kdf (salt_b64); no standalone
     # salt artefact is written.
     assert not (secret_dir / "salt").is_file()
-    bucket_dirs = list((tmp_path / "buckets").iterdir())
+    bucket_dirs = list(scan_directory(tmp_path / "buckets"))
     assert len(bucket_dirs) == 1
     manifest = tomllib.loads((bucket_dirs[0] / BUCKET_MANIFEST_FILENAME).read_text(encoding="utf-8"))
     assert manifest["key_schedule"] == "bucket-dek-v1"

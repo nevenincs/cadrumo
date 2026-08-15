@@ -393,7 +393,9 @@ def build_from_clean_source(
     )
     write_manifest(output, manifest)
     declared = {record.path for record in manifest.artifacts} | {"release-cohort.json"}
-    observed = {path.relative_to(output).as_posix() for path in scan_directory(output, recursive=True) if path.is_file()}
+    observed = {
+        path.relative_to(output).as_posix() for path in scan_directory(output, recursive=True) if path.is_file()
+    }
     if observed != declared:
         raise SystemExit(
             "release cohort contains undeclared or missing files: "

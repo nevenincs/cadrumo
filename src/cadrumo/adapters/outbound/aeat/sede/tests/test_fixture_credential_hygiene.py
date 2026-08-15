@@ -24,6 +24,7 @@ from pathlib import Path
 
 import pytest
 
+from ......core import scan_directory
 from ......tests import FIXTURES_DIR
 from ......tests.aeat_literal_fixtures import configured_path
 
@@ -91,7 +92,7 @@ def scan_fixture_root(root: Path) -> tuple[str, ...]:
     fail; a scanner that has never been shown failing is not evidence.
     """
     findings: list[str] = []
-    for path in sorted(root.rglob("*.html")):
+    for path in scan_directory(root, pattern="*.html", recursive=True):
         for value in credential_shaped_input_values(path.read_text(encoding="utf-8", errors="replace")):
             findings.append(f"{path.relative_to(root)}: {value}")
     return tuple(findings)
@@ -99,7 +100,7 @@ def scan_fixture_root(root: Path) -> tuple[str, ...]:
 
 def _committed_fixtures() -> Iterator[Path]:
     """Yield the sede fixture files tracked in the repository."""
-    yield from sorted(_FIXTURE_ROOT.rglob("*.html"))
+    yield from scan_directory(_FIXTURE_ROOT, pattern="*.html", recursive=True)
 
 
 class TestCredentialDiscriminator:

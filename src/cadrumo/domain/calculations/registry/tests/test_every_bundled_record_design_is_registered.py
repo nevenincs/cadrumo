@@ -31,6 +31,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import DirectoryEntryKind, scan_directory
 from .....core.resources import bundled_path
 from ._catalogue_verification_support import _catalogues
 
@@ -47,7 +48,9 @@ def _bundled_design_files() -> tuple[Path, ...]:
     """Every design-suffixed file under ``disenos_registro/``, enumerated independently."""
     root = bundled_path(*_DESIGN_ROOT_PARTS)
     return tuple(
-        sorted(path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in _DESIGN_SUFFIXES)
+        path
+        for path in scan_directory(root, recursive=True, select=DirectoryEntryKind.FILES)
+        if path.suffix.lower() in _DESIGN_SUFFIXES
     )
 
 

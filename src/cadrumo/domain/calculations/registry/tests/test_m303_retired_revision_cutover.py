@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .....core.resources import resources
 from .....tests import SRC_CADRUMO, package_python_files, repo_relative
 
@@ -36,7 +37,7 @@ def _retired_identifier_from_single_refusal_assertion() -> str:
 def _cutover_surface_files() -> tuple[Path, ...]:
     """Return executable, test, fixture, and locale surfaces outside registry data."""
     package_files = package_python_files()
-    locale_files = tuple(sorted((SRC_CADRUMO / "locales").glob("*.yml")))
+    locale_files = scan_directory(SRC_CADRUMO / "locales", pattern="*.yml")
     return tuple(sorted((*package_files, *locale_files)))
 
 

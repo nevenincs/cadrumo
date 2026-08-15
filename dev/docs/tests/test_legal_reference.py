@@ -12,6 +12,7 @@ import pytest
 from docutils import nodes
 from docutils.core import publish_doctree
 
+from cadrumo.core import iter_directory, scan_directory
 from dev._paths import REPO_ROOT
 
 from ..legal_reference import LegalProvisionRecord, generate_legal_reference, render_legal_reference

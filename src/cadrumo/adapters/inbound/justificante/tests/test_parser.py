@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from .....core import Period, is_aeat_csv
+from .....core import Period, is_aeat_csv, scan_directory
 from .....domain.justificante import (
     Justificante,
     JustificanteCsvNotFoundError,
@@ -175,8 +175,8 @@ def _real_corpus_pdfs() -> list[Path]:
     ``{ejercicio}-{period}.pdf`` per the per-modelo subdirectory.
     """
     pdfs: list[Path] = []
-    for modelo_dir in sorted(p for p in FIXTURES_DIR.iterdir() if p.is_dir()):
-        for pdf in sorted(modelo_dir.glob("*.pdf")):
+    for modelo_dir in sorted(p for p in scan_directory(FIXTURES_DIR) if p.is_dir()):
+        for pdf in scan_directory(modelo_dir, pattern="*.pdf"):
             pdfs.append(pdf)
     return pdfs
 

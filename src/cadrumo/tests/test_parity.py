@@ -13,6 +13,7 @@ from dev.locales import (
 )
 from dev.locales.cli import app
 
+from ..core import scan_directory
 from ..core.external_constants import OutputLanguage
 from .cli_runner import invoke_typer_app
 
@@ -57,7 +58,7 @@ def manager():
 @pytest.fixture(scope="module")
 def locales_state(manager):
     codebase_keys = manager.get_codebase_keys()
-    files = list(manager.locales_dir.glob("*.yml"))
+    files = list(scan_directory(manager.locales_dir, pattern="*.yml"))
     locale_keys_map = {}
 
     for f in files:
@@ -69,7 +70,7 @@ def locales_state(manager):
 
 def test_locale_integrity(manager):
     """Test 3: No duplicate keys, sections, or unparseable data."""
-    files = list(manager.locales_dir.glob("*.yml"))
+    files = list(scan_directory(manager.locales_dir, pattern="*.yml"))
     errors = []
     for f in files:
         try:
@@ -435,7 +436,7 @@ def test_canonicalize_product_identity_cli_rejects_invalid_locale_without_writin
             encoding="utf-8",
         )
     manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
-    before = {path.name: path.read_bytes() for path in sorted(locales_dir.glob("*.yml"))}
+    before = {path.name: path.read_bytes() for path in scan_directory(locales_dir, pattern="*.yml")}
 
     result = invoke_typer_app(
         app,
@@ -445,7 +446,7 @@ def test_canonicalize_product_identity_cli_rejects_invalid_locale_without_writin
 
     assert result.exit_code != 0
     assert "Invalid value" in result.output
-    assert {path.name: path.read_bytes() for path in sorted(locales_dir.glob("*.yml"))} == before
+    assert {path.name: path.read_bytes() for path in scan_directory(locales_dir, pattern="*.yml")} == before
 
 
 def test_canonicalize_product_identity_cli_omission_updates_every_catalogue(tmp_path: Path) -> None:
@@ -842,7 +843,7 @@ def test_fstring_registry_all_keys_present_in_all_locales(manager: LocaleManager
 
     registered_keys = get_registered_keys()
     errors = []
-    for locale_file in sorted(manager.locales_dir.glob("*.yml")):
+    for locale_file in scan_directory(manager.locales_dir, pattern="*.yml"):
         data = manager.load_locale(locale_file)
         yaml_keys = manager.get_yaml_keys(data)
         missing = registered_keys - yaml_keys

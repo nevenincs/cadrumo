@@ -747,15 +747,15 @@ review_status = "reviewed"
 # but not expressible here without inventing a date split neither file states;
 # left unresolved rather than guessed, not a schema change made unilaterally.
 #
-# REAL CAPABILITY GAP, not merely unresolved: resolve_record_design_binary
-# selects by modelo/date window alone and has no axis to choose between these
-# two entries for a query landing inside 2018. Anything needing specifically
-# the 4T-2018 design (aeat-dr-303-2018-salvo-ultimo-periodo) cannot select it
-# over the whole-year one (aeat-dr-303-2018) at the source-registration layer.
-# Registration here does not imply resolvability. Pairs with the analogous
-# 2021 hasta/desde-periodo-07 pair below and with SourceReference.corpus_tier
-# as a second, independent axis gap on the same model -- proposed together as
-# one finding, not implemented.
+# RESOLVED: SourceReference now carries period_selector, reusing the same
+# PeriodSelector/RegistrySelectorPeriodCode grammar the revision-level
+# period_selector above already uses. Both designs share one 2018 date
+# window; the period axis is what a resolve_record_design_binary caller
+# would need to choose between them -- grounded directly in each file's own
+# stated title ("todo el ejercicio" vs "salvo el ultimo periodo, 12M/4T"),
+# quarterly-only per this catalogue's own convention for a quarterly modelo
+# (see modelo 131/136 revision.toml). Pairs with the analogous 2021
+# hasta/desde-periodo-07 pair below.
 [sources."aeat-dr-303-2018"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -766,6 +766,7 @@ bytes = 298223
 retrieved_at = 2026-05-03
 applies_from = 2018-01-01
 applies_to = 2018-12-31
+period_selector = { years = [2018], periods = ["1T", "2T", "3T", "4T"] }
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e18v10_40.xlsx"
 review_status = "reviewed"
 
@@ -779,6 +780,7 @@ bytes = 298775
 retrieved_at = 2026-05-03
 applies_from = 2018-01-01
 applies_to = 2018-12-31
+period_selector = { years = [2018], periods = ["1T", "2T", "3T"] }
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e18v10_10.xlsx"
 review_status = "reviewed"
 
@@ -805,6 +807,7 @@ bytes = 343400
 retrieved_at = 2026-07-21
 applies_from = 2021-01-01
 applies_to = 2021-12-31
+period_selector = { years = [2021], periods = ["1T", "2T"] }
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_21/DR303e21v103.xlsx"
 review_status = "reviewed"
 
@@ -818,6 +821,7 @@ bytes = 341383
 retrieved_at = 2026-07-21
 applies_from = 2021-01-01
 applies_to = 2021-12-31
+period_selector = { years = [2021], periods = ["3T", "4T"] }
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_21/DR303e21v200.xlsx"
 review_status = "reviewed"
 

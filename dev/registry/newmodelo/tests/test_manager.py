@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
 from cadrumo.domain.calculations.registry import RegistryLoadError
 
 from ..checklist import CHECKLIST, render_checklist
@@ -46,7 +47,7 @@ def test_scaffold_writes_full_skeleton_and_is_idempotent(tmp_path: Path) -> None
     ):
         section_dir = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID / section
         assert section_dir.is_dir(), f"missing scaffolded section directory: {section}"
-        fragments = list(section_dir.glob("*.toml"))
+        fragments = scan_directory(section_dir, pattern="*.toml")
         assert fragments, f"section {section} has no scaffolded fragment file"
 
     locales_dir = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID / "locales"
@@ -113,7 +114,7 @@ def test_scaffold_rejects_malformed_modelo_id(tmp_path: Path) -> None:
     for bad_modelo_id in ("", "AB", "12", "1234", "abc"):
         with pytest.raises(NewModeloError):
             manager.scaffold(bad_modelo_id, _THROWAWAY_REVISION_ID)
-        assert not tuple(tmp_path.iterdir()), bad_modelo_id
+        assert not scan_directory(tmp_path), bad_modelo_id
 
 
 def test_scaffold_rejects_malformed_revision_id(tmp_path: Path) -> None:

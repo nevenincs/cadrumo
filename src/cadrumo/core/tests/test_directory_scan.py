@@ -15,6 +15,7 @@ a tree that lost the interesting entries.
 
 from __future__ import annotations
 
+import inspect
 import os
 import shutil
 from pathlib import Path
@@ -346,6 +347,45 @@ def test_the_lazy_shape_validates_its_pattern_before_returning(tree: Path) -> No
 
 
 # ── Facade ────────────────────────────────────────────────────────────────
+
+
+def test_the_root_is_always_an_argument_and_never_a_repo_anchor() -> None:
+    """Neither entry point may grow a default root, and the module holds no anchor.
+
+    ``dev/`` tooling imports this primitive and scans the repo root, ``dev/``,
+    ``docs/``, build outputs and temp directories. A convenience default
+    pointing at the package tree -- the shape
+    ``cadrumo/tests/_inventory.py`` legitimately uses, because it is test
+    scaffolding that may know the repo layout -- would make this production
+    module know a layout it has no business knowing.
+    """
+    for entry_point in (scan_directory, iter_directory):
+        root_parameter = inspect.signature(entry_point).parameters["root"]
+        assert root_parameter.default is inspect.Parameter.empty, f"{entry_point.__name__} grew a default root"
+
+    module = inspect.getmodule(scan_directory)
+    assert module is not None
+    anchors = {name: value for name, value in vars(module).items() if isinstance(value, Path)}
+    assert not anchors, f"module-level Path anchors would bind the primitive to a layout: {anchors}"
+
+
+def test_a_relative_root_is_scanned_and_kept_relative(tree: Path) -> None:
+    """A relative root works and its results stay relative, exactly as pathlib's do.
+
+    ``dev/`` callers routinely pass ``Path("dev")`` rather than an absolute
+    path. Resolving the root here would hand those callers absolute results
+    where ``Path.glob`` gave them relative ones.
+    """
+    origin = Path.cwd()
+    os.chdir(tree)
+    try:
+        scanned = scan_directory(Path("sub"), pattern="*.toml")
+
+        assert scanned == tuple(sorted(Path("sub").glob("*.toml")))
+        assert scanned == (Path("sub/c.toml"),)
+        assert not scanned[0].is_absolute()
+    finally:
+        os.chdir(origin)
 
 
 def test_the_primitive_is_reachable_through_the_core_facade() -> None:

@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import ExternalOracleCorpus
+from .....core import ExternalOracleCorpus, scan_directory
 from .....core.resources import bundled_path
 from .._errors import RegistryValidationError
 from .._external_grounding import (
@@ -44,9 +44,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _YEAR_LESS_NAME = "modelo-303-prorrata-definitiva.json"
 
 
-def _bundled_payloads(corpus: ExternalOracleCorpus) -> list[Path]:
+def _bundled_payloads(corpus: ExternalOracleCorpus) -> tuple[Path, ...]:
     """Return every bundled payload of ``corpus``, read the way the fold reads them."""
-    return sorted(Path(bundled_path(*_ORACLE_CORPUS_DIRECTORIES[corpus])).glob("modelo-*.json"))
+    return scan_directory(Path(bundled_path(*_ORACLE_CORPUS_DIRECTORIES[corpus])), pattern="modelo-*.json")
 
 
 def _stage(

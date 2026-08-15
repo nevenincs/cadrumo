@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from ...core import build_provenance_stamp
+from ...core import build_provenance_stamp, scan_directory
 from ...core.config import LLMProvider
 from ...tests import non_test_package_python_files, repo_relative
 
@@ -103,7 +103,7 @@ def test_every_reader_builds_its_stamp_through_the_constructor() -> None:
     """
     package = Path(__file__).resolve().parents[1]
     routed: dict[str, bool] = {}
-    for path in sorted(package.glob("*.py")):
+    for path in scan_directory(package, pattern="*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if not isinstance(node, ast.FunctionDef) or node.name != "decided_by":

@@ -142,7 +142,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import PeriodKind, registry_period_kind
+from .....core import DirectoryEntryKind, PeriodKind, registry_period_kind, scan_directory
 from .....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
 from .....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from .....core.resources import bundled_path
@@ -590,11 +590,12 @@ def _design_sources(modelo_id: str) -> list[Path]:
     directory-shape assumption that happened to hold for all but one modelo, which
     is the shape of assumption that survives longest unnoticed.
     """
-    directory = _design_dir(modelo_id)
-    if not directory.is_dir():
-        return []
     return sorted(
-        (path for path in directory.rglob("*") if path.is_file() and path.suffix.lower() in _DESIGN_SUFFIXES),
+        (
+            path
+            for path in scan_directory(_design_dir(modelo_id), recursive=True, select=DirectoryEntryKind.FILES)
+            if path.suffix.lower() in _DESIGN_SUFFIXES
+        ),
         key=lambda path: (path.name, path.suffix.lower()),
     )
 
@@ -1694,14 +1695,18 @@ def test_no_bundled_design_file_disappears_from_the_inventory() -> None:
     # cannot run while another part of the tree is mid-edit is unavailable exactly when
     # a withheld file is most likely to slip in unnoticed.
     design_root = bundled_path(*_DESIGN_ROOT_PARTS)
-    for directory in sorted(path for path in design_root.glob("modelo_*") if path.is_dir()):
+    for directory in scan_directory(design_root, pattern="modelo_*", select=DirectoryEntryKind.DIRECTORIES):
         modelo_id = directory.name.removeprefix("modelo_")
         # Recursive, matching _design_sources. The two derivations stayed independent
         # in their SET logic while sharing one glob SHAPE, so a design outside
         # ``files/`` was invisible to the inventory AND to the guard that exists to
         # catch the inventory dropping a file. Two derivations of one fact protect
         # nothing where both inherit the same blind spot.
-        on_disk = {path for path in directory.rglob("*") if path.is_file() and path.suffix.lower() in _DESIGN_SUFFIXES}
+        on_disk = {
+            path
+            for path in scan_directory(directory, recursive=True, select=DirectoryEntryKind.FILES)
+            if path.suffix.lower() in _DESIGN_SUFFIXES
+        }
         if not on_disk:
             continue
         seen_any += len(on_disk)
@@ -2064,7 +2069,7 @@ def test_a_design_title_never_contradicts_a_trustworthy_filename_year() -> None:
     compared = 0
     conflicts: list[str] = []
     design_root = bundled_path(*_DESIGN_ROOT_PARTS)
-    for directory in sorted(path for path in design_root.glob("modelo_*") if path.is_dir()):
+    for directory in scan_directory(design_root, pattern="modelo_*", select=DirectoryEntryKind.DIRECTORIES):
         modelo_id = directory.name.removeprefix("modelo_")
         for path in _design_sources(modelo_id):
             filename_years = set(_design_years(path.name))
@@ -2119,7 +2124,7 @@ def test_a_bundled_design_whose_coverage_cannot_be_read_is_reported_unmeasured()
     unattributed: list[str] = []
     attributed = 0
     design_root = bundled_path(*_DESIGN_ROOT_PARTS)
-    for directory in sorted(path for path in design_root.glob("modelo_*") if path.is_dir()):
+    for directory in scan_directory(design_root, pattern="modelo_*", select=DirectoryEntryKind.DIRECTORIES):
         modelo_id = directory.name.removeprefix("modelo_")
         for path in _design_sources(modelo_id):
             if _design_coverage_years(path):

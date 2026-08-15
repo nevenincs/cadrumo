@@ -33,7 +33,7 @@ from ....application.modelo import (
     list_work_units,
     rename_work_unit,
 )
-from ....core import Period
+from ....core import Period, scan_directory
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry import RevisionId
@@ -572,7 +572,7 @@ def test_no_parallel_work_unit_model_outside_canonical_module() -> None:
     canonical = source_root / "domain" / "modelos" / "_work_unit.py"
     forbidden = "class WorkUnit("
     offenders = []
-    for py_file in source_root.rglob("*.py"):
+    for py_file in scan_directory(source_root, pattern="*.py", recursive=True):
         if py_file == canonical:
             continue
         if py_file.name.startswith("test_"):
@@ -616,7 +616,7 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
     }
     forbidden_namespace = '"cadrumo.domain.modelos.work_units"'
     offenders = []
-    for py_file in source_root.rglob("*.py"):
+    for py_file in scan_directory(source_root, pattern="*.py", recursive=True):
         if py_file in allowlisted:
             continue
         if py_file.name.startswith("test_"):

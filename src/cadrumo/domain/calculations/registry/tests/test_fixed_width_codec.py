@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....core import scan_directory
 from .....core.decimal import coerce_fixed_width_decimal
 from .. import (
     ExportEncoding,
@@ -549,8 +550,7 @@ def test_allowed_values_enforcement_has_one_canonical_codec_owner() -> None:
     production_root = Path("src/cadrumo")
     owners = tuple(
         path
-        for path in production_root.rglob("*.py")
-        if "tests" not in path.parts
+        for path in scan_directory(production_root, pattern="*.py", recursive=True, prune_directories=("tests",))
         if "def _require_allowed_value" in path.read_text(encoding="utf-8")
     )
 

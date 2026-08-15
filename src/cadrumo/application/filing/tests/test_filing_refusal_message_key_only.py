@@ -41,7 +41,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core import Period, scan_directory
 from ....domain.filing import ModeloBuilderError, ModeloImportError
 from ....domain.submission import ModeloDraftStatus
 from .._calculate import DeclaracionCalculateNextAction, DeclaracionCalculateSummary
@@ -116,7 +116,7 @@ def test_the_declared_module_rosters_still_name_real_modules() -> None:
     Without this anchor a renamed module would drop out of the swept set and the
     sweep would pass vacuously on the producers it stopped seeing.
     """
-    present = {path.name for path in _FILING_PACKAGE.glob("*.py")}
+    present = {path.name for path in scan_directory(_FILING_PACKAGE, pattern="*.py")}
     missing_swept = sorted(name for name in _SWEPT_MODULES if name not in present)
     missing_unswept = sorted(name for name in _UNSWEPT_MODULES if name not in present)
 
@@ -131,7 +131,7 @@ def test_the_filing_owned_error_roster_still_names_reachable_errors() -> None:
     keeping every assertion green.
     """
     referenced: set[str] = set()
-    for path in _FILING_PACKAGE.glob("*.py"):
+    for path in scan_directory(_FILING_PACKAGE, pattern="*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.Name):

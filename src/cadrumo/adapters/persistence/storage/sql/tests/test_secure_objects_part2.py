@@ -9,9 +9,9 @@ from typing import Any, cast
 import pytest
 
 from ......tests.master_key import EphemeralMasterKeyProvider
+from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from ._secure_objects_support import (
     UTC,
-    Base,
     Path,
     SecureObjectNamespaceDefinition,
     SecureObjectNamespaceIntegrity,
@@ -21,14 +21,12 @@ from ._secure_objects_support import (
     SecureObjectUnreadable,
     SecureObjectWrite,
     SensitivityClass,
-    Settings,
     StorageCustodyDisposition,
     StorageHierarchyRegistry,
     StorageNamespaceScope,
     StorageValidationError,
     ValidationError,
     _seed_under_key,
-    create_engine_from_settings,
     datetime,
     event,
     hashlib,
@@ -44,8 +42,7 @@ def _ephemeral_secure_repo_at(
     db_path: Path,
 ) -> Iterator[tuple[Any, SecureObjectRepository]]:
     with EphemeralMasterKeyProvider():
-        engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
+        engine = bootstrap_sqlite_engine(db_path)
         try:
             yield engine, SecureObjectRepository(engine=engine)
         finally:

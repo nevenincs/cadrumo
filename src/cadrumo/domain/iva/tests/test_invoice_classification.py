@@ -10,7 +10,7 @@ from typing import Any, cast, override
 import pytest
 from pydantic import ValidationError
 
-from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, scan_directory
 from ....core.resources import resources
 from ...calculations.registry import IvaLedgerObservation
 from ...invoices import IvaRate
@@ -450,7 +450,7 @@ def test_invoice_iva_bridge_callers_supply_explicit_deduction_authority_or_refus
     bridge_calls: list[tuple[str, str | None, set[str]]] = []
     observation_calls: list[tuple[str, int, set[str]]] = []
 
-    for path in source_root.rglob("*.py"):
+    for path in scan_directory(source_root, pattern="*.py", recursive=True):
         source = path.read_text(encoding="utf-8")
         if "invoice_line_to_iva_observation" not in source and "IvaLedgerObservation(" not in source:
             continue

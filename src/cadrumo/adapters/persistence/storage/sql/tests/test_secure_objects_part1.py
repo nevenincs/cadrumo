@@ -10,9 +10,9 @@ from ......core import SecureObjectWrite
 from ......core.errors import CoreValidationError
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import DecryptionError
+from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from ._secure_objects_support import (
     UTC,
-    Base,
     ClassificationError,
     EnvelopeVersionError,
     Path,
@@ -21,11 +21,9 @@ from ._secure_objects_support import (
     SecureObjectUnreadable,
     SecureObjectUnreadableError,
     SensitivityClass,
-    Settings,
     StorageValidationError,
     _ephemeral_secure_repo,
     _seed_under_key,
-    create_engine_from_settings,
     datetime,
     logging,
     sqlite3,
@@ -401,8 +399,7 @@ def test_secure_object_table_materializes_revision_integrity_columns(tmp_path: P
     """
 
     db_path = tmp_path / "revision-schema.db"
-    engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-    Base.metadata.create_all(engine)
+    engine = bootstrap_sqlite_engine(db_path)
     try:
         with sqlite3.connect(db_path) as con:
             table_info = con.execute("PRAGMA table_info(secure_objects)").fetchall()
@@ -623,8 +620,7 @@ def test_list_records_fails_closed_when_any_row_is_unreadable(
 
     # Reopen under the NEW key and add a row that ought to be readable.
     with key_new:
-        engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
+        engine = bootstrap_sqlite_engine(db_path)
         try:
             repo = SecureObjectRepository(engine=engine)
             repo.save(
@@ -737,8 +733,7 @@ def test_list_records_rejects_unreadable_row_before_readable_subset(
     )
 
     with key_new:
-        engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
+        engine = bootstrap_sqlite_engine(db_path)
         try:
             repo = SecureObjectRepository(engine=engine)
             repo.save(
@@ -791,8 +786,7 @@ def test_iter_records_with_failures_yields_typed_outcomes_for_each_row(
         )
 
     with key_new:
-        engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
+        engine = bootstrap_sqlite_engine(db_path)
         try:
             SecureObjectRepository(engine=engine).save(
                 namespace=namespace,

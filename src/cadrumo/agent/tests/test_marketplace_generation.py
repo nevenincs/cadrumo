@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pytest
 
+from ...core import scan_directory
 from .._workspace import materialise_marketplace, materialise_plugin
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -65,8 +66,16 @@ def test_served_plugin_equals_the_standalone_plugin_emission(tmp_path: Path) -> 
     materialise_plugin(standalone_dir, version="1.2.3")
 
     served_root = marketplace_dir / "plugins" / "cadrumo"
-    served = {p.relative_to(served_root).as_posix(): p for p in sorted(served_root.rglob("*")) if p.is_file()}
-    standalone = {p.relative_to(standalone_dir).as_posix(): p for p in sorted(standalone_dir.rglob("*")) if p.is_file()}
+    served = {
+        p.relative_to(served_root).as_posix(): p
+        for p in scan_directory(served_root, pattern="*", recursive=True)
+        if p.is_file()
+    }
+    standalone = {
+        p.relative_to(standalone_dir).as_posix(): p
+        for p in scan_directory(standalone_dir, pattern="*", recursive=True)
+        if p.is_file()
+    }
     assert served.keys() == standalone.keys()
     for relative, served_path in served.items():
         assert served_path.read_bytes() == standalone[relative].read_bytes(), relative

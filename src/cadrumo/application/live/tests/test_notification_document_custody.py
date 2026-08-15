@@ -38,6 +38,7 @@ from sqlalchemy import select
 from ....adapters.outbound.aeat.sede import SedeNavigationError
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRow
+from ....core import scan_directory
 from ....core.hashing import sha256_hex
 from ....domain.attachments import AttachmentKind, load_attachment
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
@@ -463,7 +464,7 @@ def test_no_file_anywhere_under_the_profile_root_carries_the_plaintext_document(
         document = _document()
         record = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=document).record
 
-        files = [path for path in tmp_path.rglob("*") if path.is_file()]
+        files = [path for path in scan_directory(tmp_path, recursive=True) if path.is_file()]
         # Anti-vacuity: the walk must find the real artefacts this cycle
         # writes (the database plus at least its keystore and secret-store
         # siblings), never an accidentally empty or single-file tree.

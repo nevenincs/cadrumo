@@ -39,6 +39,7 @@ from pathlib import Path
 
 import pytest
 
+from ..core import scan_directory
 from ._inventory import REPO_ROOT
 from ._size_budget import (
     CALLABLE_POLICY,
@@ -166,7 +167,7 @@ def test_module_ratchet_reports_growth_past_its_limit(tmp_path: Path) -> None:
     _write_module(tmp_path, "grew.py", over)
     _write_module(tmp_path, "held.py", MODULE_POLICY.default_limit)
 
-    actuals = scan_module_lines(files=sorted(tmp_path.rglob("*.py")), root=tmp_path)
+    actuals = scan_module_lines(files=scan_directory(tmp_path, pattern="*.py", recursive=True), root=tmp_path)
     assert actuals == {"grew.py": over, "held.py": MODULE_POLICY.default_limit}
 
     verdict = evaluate_budget(actuals, {}, MODULE_POLICY)
@@ -183,7 +184,7 @@ def test_module_ratchet_reports_a_limit_that_drifted_above_its_subject(tmp_path:
     """
     actual = MODULE_POLICY.default_limit + 10
     _write_module(tmp_path, "shrank.py", actual)
-    actuals = scan_module_lines(files=sorted(tmp_path.rglob("*.py")), root=tmp_path)
+    actuals = scan_module_lines(files=scan_directory(tmp_path, pattern="*.py", recursive=True), root=tmp_path)
 
     inside = MODULE_POLICY.limit_for(actual)
     assert evaluate_budget(actuals, {"shrank.py": inside}, MODULE_POLICY).stale == ()
@@ -199,7 +200,7 @@ def test_module_ratchet_reports_a_limit_the_default_already_covers(tmp_path: Pat
     """Positive control: an override for a module now under the default is dead weight."""
     actual = MODULE_POLICY.default_limit - 300
     _write_module(tmp_path, "split.py", actual)
-    actuals = scan_module_lines(files=sorted(tmp_path.rglob("*.py")), root=tmp_path)
+    actuals = scan_module_lines(files=scan_directory(tmp_path, pattern="*.py", recursive=True), root=tmp_path)
 
     stale = evaluate_budget(actuals, {"split.py": MODULE_POLICY.default_limit + 400}, MODULE_POLICY).stale
     assert len(stale) == 1
@@ -209,7 +210,7 @@ def test_module_ratchet_reports_a_limit_the_default_already_covers(tmp_path: Pat
 def test_module_ratchet_reports_a_limit_whose_subject_left_the_tree(tmp_path: Path) -> None:
     """Positive control: a limit naming a vanished module is reported, not ignored."""
     _write_module(tmp_path, "present.py", 10)
-    actuals = scan_module_lines(files=sorted(tmp_path.rglob("*.py")), root=tmp_path)
+    actuals = scan_module_lines(files=scan_directory(tmp_path, pattern="*.py", recursive=True), root=tmp_path)
 
     stale = evaluate_budget(actuals, {"deleted.py": 1400}, MODULE_POLICY).stale
     assert stale == ("deleted.py: pinned at 1400 but absent from the scanned corpus",)
@@ -222,7 +223,7 @@ def test_callable_ratchet_reports_growth_past_its_limit(tmp_path: Path) -> None:
     _write_callable_module(tmp_path, "held.py", "held", CALLABLE_POLICY.default_limit - 1)
 
     items = tuple(
-        (candidate, ast.parse(candidate.read_text(encoding="utf-8"))) for candidate in sorted(tmp_path.rglob("*.py"))
+        (candidate, ast.parse(candidate.read_text(encoding="utf-8"))) for candidate in scan_directory(tmp_path, pattern="*.py", recursive=True)
     )
     actuals = scan_callable_lines(items=items, root=tmp_path)
     measured = len(path.read_text(encoding="utf-8").splitlines())

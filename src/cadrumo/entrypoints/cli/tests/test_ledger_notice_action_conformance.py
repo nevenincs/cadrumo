@@ -12,6 +12,7 @@ from types import ModuleType
 import pytest
 from dev.locales import LocaleManager, LocaleNode
 
+from ....core import scan_directory
 from .. import (
     _ledger,
     _ledger_business_invoice_cli,
@@ -164,7 +165,7 @@ def test_ledger_payloads_do_not_redeclare_notice_or_recovery_prose() -> None:
     failures: list[str] = []
     payload_directory = Path(inspect.getfile(_ledger_payloads)).parent
     forbidden_suffixes = ("_notice", "_hint", "_suggestion", "_recovery")
-    for path in sorted(payload_directory.glob("_ledger*payload*.py")):
+    for path in scan_directory(payload_directory, pattern="_ledger*payload*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
@@ -257,7 +258,7 @@ def test_every_ledger_translation_is_catalogue_owned_without_a_runtime_fallback(
     """Every ledger translation resolves from the authored locale catalogues."""
     ledger_directory = Path(inspect.getfile(_ledger)).parent
     failures: list[str] = []
-    for path in sorted(ledger_directory.glob("_ledger*.py")):
+    for path in scan_directory(ledger_directory, pattern="_ledger*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for call in ast.walk(tree):
             if not isinstance(call, ast.Call) or not isinstance(call.func, ast.Name) or call.func.id != "tr":
@@ -343,7 +344,7 @@ def test_ledger_locale_key_sets_match_source_and_each_other() -> None:
     """Ledger catalogue leaves are complete, symmetric, and consumed by source."""
     manager = LocaleManager(_PACKAGE_ROOT, _LOCALES_DIR)
     source_keys: set[str] = set(_REGISTERED_LEDGER_LOCALE_KEYS)
-    for path in sorted(_PACKAGE_ROOT.rglob("*.py")):
+    for path in scan_directory(_PACKAGE_ROOT, pattern="*.py", recursive=True):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         source_keys.update(
             node.value

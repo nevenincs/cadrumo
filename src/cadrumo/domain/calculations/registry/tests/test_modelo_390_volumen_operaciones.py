@@ -43,6 +43,7 @@ from pathlib import Path
 import pytest
 from openpyxl import load_workbook
 
+from .....core import scan_directory
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
 from .. import (
@@ -114,7 +115,7 @@ def _official_fields(path: Path) -> tuple[tuple[str, str], ...]:
 
 
 def _designs() -> tuple[Path, ...]:
-    return tuple(sorted(_DISENO_DIR.glob("*.xlsx")))
+    return scan_directory(_DISENO_DIR, pattern="*.xlsx")
 
 
 def _observation(

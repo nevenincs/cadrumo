@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import CasillaId, Period, scan_directory, validated_casilla_id
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     LegalRefId,
@@ -110,7 +110,7 @@ def _legal_ref_literal_value(node: ast.AST) -> ast.AST | None:
 
 def _application_literal_legal_refs() -> frozenset[str]:
     refs: set[str] = set()
-    for path in sorted(_APPLICATION_ROOT.rglob("*.py")):
+    for path in scan_directory(_APPLICATION_ROOT, pattern="*.py", recursive=True):
         if "tests" in path.relative_to(_APPLICATION_ROOT).parts:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"))

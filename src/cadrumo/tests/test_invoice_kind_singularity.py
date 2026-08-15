@@ -55,6 +55,8 @@ from pathlib import Path
 
 import pytest
 
+from ..core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 #: The one module permitted to derive an invoice kind from a bank direction.
@@ -133,7 +135,7 @@ def _production_modules() -> list[Path]:
     """Return every production module, test packages excluded."""
     return [
         path
-        for path in sorted(_PRODUCTION_ROOT.rglob("*.py"))
+        for path in scan_directory(_PRODUCTION_ROOT, pattern="*.py", recursive=True)
         if "tests" not in path.parts and "__pycache__" not in path.parts
     ]
 

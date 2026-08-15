@@ -10,7 +10,7 @@ import pytest
 import rtoml
 from pydantic import ValidationError
 
-from cadrumo.core import FilingProducerKey
+from cadrumo.core import FilingProducerKey, scan_directory
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     CasillaFieldKind,
@@ -318,7 +318,7 @@ def test_render_profile_digest_is_order_independent_and_evidence_sensitive() -> 
 
 
 def test_wire_authority_profiles_have_one_unambiguous_class_home() -> None:
-    production_paths = tuple((Path(__file__).parents[1]).glob("*.py"))
+    production_paths = scan_directory(Path(__file__).parents[1], pattern="*.py")
     class_homes: dict[str, list[str]] = {"RenderProfile": [], "ExportTreeTransportProfile": []}
     for path in production_paths:
         tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -1033,7 +1033,7 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
 def test_real_profile_fragments_stay_below_the_reviewability_line_cap() -> None:
     """Deterministic partitioning keeps every authored fragment reviewable."""
     profile_directory = Path(__file__).parents[1] / "render_profiles" / "modelo_200" / "2025"
-    paths = tuple(profile_directory.glob("*.toml"))
+    paths = scan_directory(profile_directory, pattern="*.toml")
     assert paths
     assert all(len(path.read_text(encoding="utf-8").splitlines()) <= 500 for path in paths)
 

@@ -19,6 +19,8 @@ from dev.quality.import_hygiene_scan import (
     generate_tui_migration_manifest,
 )
 
+from ..core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
@@ -70,7 +72,9 @@ def test_generated_manifest_matches_real_module_and_export_multiplicity() -> Non
     """Direct filesystem and AST facts must exactly equal generated declarations."""
     rows = generate_tui_migration_manifest()
     production_modules = [
-        path for path in LEGACY_TUI_ROOT.rglob("*.py") if "tests" not in path.relative_to(LEGACY_TUI_ROOT).parts
+        path
+        for path in scan_directory(LEGACY_TUI_ROOT, pattern="*.py", recursive=True)
+        if "tests" not in path.relative_to(LEGACY_TUI_ROOT).parts
     ]
     direct_modules = Counter(
         (_module_name(path, SRC_ROOT), None, f"{path.relative_to(REPO_ROOT).as_posix()}:1")

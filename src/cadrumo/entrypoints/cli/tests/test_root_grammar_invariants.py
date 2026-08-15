@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
 from ....tests.cli_runner import invoke_cached_cli
 from ._isolated_profile_storage_fixtures import _isolated_state
 
@@ -147,17 +148,17 @@ def test_retired_custody_spellings_absent_from_source_and_docs() -> None:
 
     scanned: list[Path] = []
     src_root = REPO_ROOT / "src" / "cadrumo"
-    scanned.extend(src_root.rglob("*.py"))
-    scanned.extend((src_root / "locales").glob("*.yml"))
+    scanned.extend(scan_directory(src_root, pattern="*.py", recursive=True))
+    scanned.extend(scan_directory(src_root / "locales", pattern="*.yml"))
     docs_root = REPO_ROOT / "docs"
-    scanned.extend(docs_root.glob("*.md"))
+    scanned.extend(scan_directory(docs_root, pattern="*.md"))
     for sub in ("how-to", "explanation", "reference", "verification", "architecture"):
         subdir = docs_root / sub
         if subdir.is_dir():
-            scanned.extend(subdir.rglob("*.md"))
+            scanned.extend(scan_directory(subdir, pattern="*.md", recursive=True))
     sequences = docs_root / "_sequences"
     if sequences.is_dir():
-        scanned.extend(sequences.rglob("*.seq"))
+        scanned.extend(scan_directory(sequences, pattern="*.seq", recursive=True))
 
     # Floor the scan corpus: a relocation of the source tree or docs would empty
     # this walk and pass identically to a clean tree, so the retired-spelling guard
@@ -266,17 +267,17 @@ def test_retired_reset_and_sandbox_spellings_absent_from_source_and_docs() -> No
 
     scanned: list[Path] = []
     src_root = REPO_ROOT / "src" / "cadrumo"
-    scanned.extend(src_root.rglob("*.py"))
-    scanned.extend((src_root / "locales").glob("*.yml"))
+    scanned.extend(scan_directory(src_root, pattern="*.py", recursive=True))
+    scanned.extend(scan_directory(src_root / "locales", pattern="*.yml"))
     docs_root = REPO_ROOT / "docs"
-    scanned.extend(docs_root.glob("*.md"))
+    scanned.extend(scan_directory(docs_root, pattern="*.md"))
     for sub in ("how-to", "explanation", "reference", "verification", "architecture"):
         subdir = docs_root / sub
         if subdir.is_dir():
-            scanned.extend(subdir.rglob("*.md"))
+            scanned.extend(scan_directory(subdir, pattern="*.md", recursive=True))
     sequences = docs_root / "_sequences"
     if sequences.is_dir():
-        scanned.extend(sequences.rglob("*.seq"))
+        scanned.extend(scan_directory(sequences, pattern="*.seq", recursive=True))
 
     # Floor the scan corpus: a relocation of the source tree or docs would empty
     # this walk and pass identically to a clean tree, so the retired-spelling guard

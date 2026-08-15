@@ -100,6 +100,7 @@ from typing import Final
 
 import yaml
 
+from cadrumo.core import scan_directory
 from dev._paths import UTF_8
 
 _UTF_8: Final[str] = UTF_8
@@ -406,7 +407,7 @@ def ci_invoked_recipes(root: Path) -> frozenset[str]:
     reached: set[str] = set()
     workflow_dir = root / _WORKFLOW_DIR
     if workflow_dir.is_dir():
-        for workflow in sorted(workflow_dir.glob("*.yml")):
+        for workflow in scan_directory(workflow_dir, pattern="*.yml"):
             reached |= _recipes_invoked_by(_workflow_run_commands(workflow.read_text(encoding=_UTF_8)))
 
     # Close over recipe-to-recipe calls until nothing new is reached.
@@ -571,7 +572,7 @@ def declared_lanes(root: Path) -> tuple[Lane, ...]:
 
     workflow_dir = root / _WORKFLOW_DIR
     if workflow_dir.is_dir():
-        for workflow in sorted(workflow_dir.glob("*.yml")):
+        for workflow in scan_directory(workflow_dir, pattern="*.yml"):
             lanes.extend(
                 _pytest_invocations(
                     workflow.read_text(encoding=_UTF_8),
@@ -721,12 +722,7 @@ def expression_selects(expression: str | None, markers: frozenset[str]) -> bool:
 
 def discover_test_files(root: Path) -> tuple[Path, ...]:
     """Return every runnable test module under ``root``."""
-    found: list[Path] = []
-    for path in root.rglob("test_*.py"):
-        if any(part in _PRUNED for part in path.parts):
-            continue
-        found.append(path)
-    return tuple(sorted(found))
+    return scan_directory(root, pattern="test_*.py", recursive=True, prune_directories=_PRUNED)
 
 
 def analyse_reachability(

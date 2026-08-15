@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
 from .._regimen_simplificado_rows import (
     ActividadAgricolaSimplificado,
     ActividadNoAgricolaSimplificado,
@@ -39,7 +40,7 @@ def _constructor_sites() -> list[tuple[str, int, str, frozenset[str]]]:
     """Return every direct S59 constructor call in shipped code and its tests."""
     root = _package_root()
     sites: list[tuple[str, int, str, frozenset[str]]] = []
-    for path in sorted(root.rglob("*.py")):
+    for path in scan_directory(root, pattern="*.py", recursive=True):
         source = path.read_text(encoding="utf-8")
         tree = ast.parse(source, filename=str(path))
         relative = path.relative_to(root).as_posix()

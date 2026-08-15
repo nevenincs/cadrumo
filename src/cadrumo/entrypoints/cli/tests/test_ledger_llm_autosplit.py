@@ -25,6 +25,7 @@ from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli
 from .._ledger_llm_cli import split_recommendation_notice
 from ._isolated_profile_storage_fixtures import llm_profile_isolated_backend
+from ._ledger_llm_support import _import_one_transaction as _shared_import_one_transaction
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["llm_profile_isolated_backend"]
@@ -39,21 +40,13 @@ def _json_object(value: object) -> dict[str, object]:
 
 
 def _import_one_transaction(tmp_path: Path) -> str:
-    csv_content = (
-        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
-        "2026-04-01,Proveedor Mixto SL,mixed invoice,-121.00,EUR,auto-001\n"
+    return _shared_import_one_transaction(
+        tmp_path,
+        payee="Proveedor Mixto SL",
+        reference="mixed invoice",
+        amount="-121.00",
+        marker="auto-001",
     )
-    csv_path = tmp_path / "import.csv"
-    csv_path.write_text(csv_content, encoding="utf-8")
-    result = _invoke(["app", "ledger", "import", "--file", str(csv_path), "--provider", "csv"])
-    assert result.exit_code == 0, result.output
-    listed = _invoke(["--format", "json", "app", "ledger", "list"])
-    assert listed.exit_code == 0, listed.output
-    rows = _json_object(_json_result(listed))["rows"]
-    assert isinstance(rows, list) and rows
-    transaction_id = _json_object(rows[0])["transaction_id"]
-    assert isinstance(transaction_id, str)
-    return transaction_id
 
 
 def _import_two_transactions(tmp_path: Path) -> tuple[str, str]:

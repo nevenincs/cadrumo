@@ -9,6 +9,7 @@ from shutil import rmtree
 
 import pytest
 
+from cadrumo.core import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import hash_file
 from cadrumo.domain.calculations.registry import ExportEncoding, RegistryValidationError
 
@@ -37,8 +38,7 @@ def _tree_hashes(root: Path) -> dict[str, str]:
     """Observe existing target bytes using the production hashing utility."""
     return {
         path.relative_to(root).as_posix(): hash_file(path)[0]
-        for path in sorted(root.rglob("*"), key=lambda item: item.as_posix())
-        if path.is_file()
+        for path in scan_directory(root, recursive=True, select=DirectoryEntryKind.FILES)
     }
 
 

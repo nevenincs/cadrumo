@@ -34,6 +34,8 @@ import sys
 import pytest
 import yaml
 
+from ..core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SRC_ROOT = pathlib.Path(__file__).parent.parent
@@ -62,7 +64,7 @@ def _wizard_descriptor_translation_keys() -> set[str]:
 def test_wizard_status_locale_key_exists_in_all_locales() -> None:
     """The key application.wizard.output_labels.status must exist in all locale files."""
     locales_dir = _SRC_ROOT / "locales"
-    for locale_file in sorted(locales_dir.glob("*.yml")):
+    for locale_file in scan_directory(locales_dir, pattern="*.yml"):
         content = yaml.safe_load(locale_file.read_text(encoding="utf-8")) or {}
         application = content.get("application", {})
         wizard = application.get("wizard", {}) if isinstance(application, dict) else {}

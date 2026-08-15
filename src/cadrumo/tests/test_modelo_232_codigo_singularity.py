@@ -29,7 +29,7 @@ from typing import get_type_hints
 
 import pytest
 
-from ..core import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
+from ..core import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion, scan_directory
 from ..domain.calculations.registry import RelatedPartyOperationObservation
 from ..domain.modelos import Modelo232VinculadaRow
 
@@ -173,7 +173,7 @@ def _modules_declaring_the_literal_set(codes: frozenset[str], *, root: Path | No
     """
     declaring: set[str] = set()
     source_root = root if root is not None else _SRC_ROOT
-    for path in source_root.rglob("*.py"):
+    for path in scan_directory(source_root, pattern="*.py", recursive=True):
         if "tests" in path.parts:
             continue
         try:

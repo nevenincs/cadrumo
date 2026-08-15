@@ -5,30 +5,58 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:a36557a945326b6b3a56a8ca84866c7baca339d25d0e40b03fcba0105ef6cd66'
+body_hash: 'sha256:01540f99e7ec79482f2d718c5afd0da9337b6bcdbdee9d56355d0a1eaa83465c'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
   - '[[2026-08-13-profile-password-custody-research]]'
 ---
-# `profile-password-custody` adr: `the bucket key schedule must report enrolled custody, not capsule existence` | (**status:** `proposed`)
+# `profile-password-custody` adr: `the bucket key schedule must report enrolled custody, not capsule existence` | (**status:** `rejected`)
 
 ## Problem Statement
 
-A profile created through the surviving credential door cannot have any of its
-records read. The bucket is discoverable, its capsule is recognised, and its
-password custody material loads — and every record route refuses.
+**Rejected: the problem this record proposes to solve does not exist. The
+original problem statement was wrong, and the error was in how it was
+measured.**
 
-The decision is needed now because the ordering this depends on was never
-decided. There is no ADR governing when a bucket's wrapped key is minted. The
-nearest candidate, `2026-07-26-compatibility-enrollment-deadlock-adr`, governs
-*format* enrollment for the compatibility checkpoint and states in its own
-consequences that it "touched no key derivation, wrapping". So what exists is
-not a decision to overturn but a gap left when the capsule cutover moved custody
-and the schedule resolver kept answering the previous question.
+It claimed that a profile created through the surviving credential door cannot
+have any of its records read. That claim came from a probe which created a
+profile and then immediately attempted a record read -- **without logging in.**
+Registration deliberately closes the record session in a `finally` and returns
+`setup_state = INCOMPLETE` (`application/user_profile/_registration.py`), so a
+freshly created profile is LOCKED, not broken. Authentication is the design, not
+a missing step. The probe observed the lock and reported it as a defect.
 
-The change itself is owner-gated under `no-legacy-compatibility`, which places
-key-schedule and DEK-derivation changes outside autonomous authority. This
-record exists so that ruling can be made without re-deriving the evidence.
+The corrected measurement uses production symbols only and runs the whole door:
+create through `register_profile_with_credentials`, authenticate through
+`login_profile`, then read. It succeeds --
+`secure_object_repository_for_active_bucket()` returns a live repository,
+`list_namespaces()` returns the real namespaces, and
+`workflow_state_repository().load()` returns a `WorkflowState`. Instrumenting
+`load_or_mint_bucket_dek` to record every call showed it entered **zero** times
+across that path, and no `bucket.dek.json` was ever written: the keystore holds
+only the acceleration receipt. The schedule resolver's answer was never
+consulted on the working path, so there was nothing here for a decision to
+repair.
+
+That measurement outlived the record. It is what established the retired
+keystore route as dead in production, and it is the evidence the deletion of
+that route rests on.
+
+The gap this record opens with was real: no ADR governed when a bucket's wrapped
+key is minted, and the nearest candidate,
+`2026-07-26-compatibility-enrollment-deadlock-adr`, genuinely governs *format*
+enrollment rather than key derivation, stating in its own consequences that it
+"touched no key derivation, wrapping". That gap closed by deletion rather than
+by decision -- with the master-key keystore route gone, a bucket has one custody
+and there is no schedule left to resolve.
+
+**What survives rejection, and why this record is kept rather than deleted.**
+The Rationale below refuses to mint a second wrapped copy of the same DEK under
+a different key-encryption key, because a keychain compromise would then open a
+bucket without the operator's passphrase. That argument never depended on the
+false premise and remains the reason the never-mint guard must stay unweakened.
+The ownership and exposure reasoning is the durable part; only the defect that
+prompted it was imaginary.
 
 ## Considerations
 
@@ -48,7 +76,7 @@ record exists so that ruling can be made without re-deriving the evidence.
 
 ## Considered options
 
-**A — the resolver reports enrolled custody (chosen).** `bucket_key_schedule`
+**A — the resolver reports enrolled custody (not adopted; see Problem Statement).** `bucket_key_schedule`
 reads the custody a bucket is actually enrolled in rather than inferring a
 master-key schedule from capsule existence, and the DEK route for
 capsule-enrolled buckets resolves through the capsule's own custody material.
@@ -76,7 +104,11 @@ resolver's mis-statement in place.
 
 ## Implementation
 
-Two layers, and only the first carries the decision.
+**Not implemented.** This section is retained as authored, describing what the
+change would have been, so a later reader can see what was weighed rather than
+only that it was dropped. Nothing below was built.
+
+Two layers, and only the first would have carried the decision.
 
 The schedule resolver stops equating registration with a master-key schedule. A
 capsule proves the bucket is registered; it does not establish which key opens
@@ -89,9 +121,11 @@ and loads today; a bucket carrying a wrapped DEK file continues through
 `BUCKET_DEK_V1` unchanged. Nothing new is written, and no second wrapped copy of
 any key comes into existence.
 
-The reproduction is pinned by
-`master_key/tests/test_bucket_created_through_the_sanctioned_door_can_read_records.py`,
-which fails today and is expected to fail until this is ruled on.
+The test that pinned the supposed reproduction is gone. It asserted a record
+read without an intervening login, which is not the contract, so it encoded the
+measurement error rather than a defect. Deleting it was part of rejecting this
+record; nothing replaced it here, because the property worth pinning belongs to
+the keystore deletion instead -- that the working path needs no keystore route.
 
 ## Rationale
 

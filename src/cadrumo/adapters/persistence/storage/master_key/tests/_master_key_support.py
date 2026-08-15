@@ -1,19 +1,10 @@
 from __future__ import annotations
 
 import base64
-from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID, uuid4
 
 from ......core.config import SecretStoreBackend, Settings
-from ...bucket import (
-    BUCKET_MANIFEST_SCHEMA_VERSION,
-    BucketKeySchedule,
-    BucketManifest,
-    ManifestKdfParams,
-    bucket_paths,
-    write_manifest,
-)
 from ...custody import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
@@ -80,39 +71,13 @@ def _settings_with_store(tmp_path: Path, backend: SecretStoreBackend) -> Setting
     )
 
 
-def _write_registered_bucket(
-    root: Path,
-    bucket_id: str,
-    *,
-    idle_lock_minutes: int | None = None,
-    session_absolute_minutes: int | None = None,
-    key_schedule: BucketKeySchedule = BucketKeySchedule.BUCKET_DEK_V1,
-) -> None:
+def _write_registered_bucket(root: Path, bucket_id: str) -> None:
+    """Register a bucket the way production does: publish its capsule, nothing else.
+
+    This wrote a plaintext manifest beside the capsule until that format was
+    retired. Nothing in production ever read it back, so provisioning one here
+    handed the tests a surface the application does not have.
+    """
     # Publication owns the bucket directory: it arrives by the capsule's
     # no-replace rename, never by provisioning it first.
     _publish_registration_capsule(root, bucket_id)
-    paths = bucket_paths(root, bucket_id)
-    write_manifest(
-        paths,
-        BucketManifest(
-            bucket_id=bucket_id,
-            # Derived, never the bare id: ProfileLabel refuses a UUID-shaped
-            # label so an operator label can never be read as a machine id.
-            label=f"profile-{bucket_id}",
-            created_at=datetime(2026, 5, 22, 12, 0, 0, tzinfo=UTC),
-            last_unlocked_at=None,
-            kdf_params=ManifestKdfParams(
-                algorithm="argon2id",
-                version=19,
-                memory_cost=19_456,
-                time_cost=2,
-                parallelism=1,
-                salt=b"0123456789abcdef",
-                output_length=32,
-            ),
-            idle_lock_minutes=idle_lock_minutes,
-            session_absolute_minutes=session_absolute_minutes,
-            key_schedule=key_schedule,
-            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-        ),
-    )

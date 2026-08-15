@@ -34,6 +34,8 @@ from typing import Final
 
 import pytest
 
+from ..core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SOURCE_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
@@ -71,7 +73,7 @@ def _stored_tipo_actividad_fields() -> list[tuple[str, str, str]]:
     parameters and return annotations are not homes for the fact and are ignored.
     """
     found: list[tuple[str, str, str]] = []
-    for path in _SOURCE_ROOT.rglob("*.py"):
+    for path in scan_directory(_SOURCE_ROOT, pattern="*.py", recursive=True):
         relative = path.relative_to(_SOURCE_ROOT).as_posix()
         if "/tests/" in f"/{relative}" or relative.startswith("tests/"):
             continue

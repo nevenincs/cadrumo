@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pytest
 
+from ..core import scan_directory
 from ._collection_storage_root import (
     _ABANDONED_AFTER_SECONDS,
     _STALE_AFTER_SECONDS,
@@ -286,7 +287,7 @@ def test_the_sweep_is_safe_to_run_concurrently(tmp_path: Path) -> None:
         worker.join(timeout=_SUBPROCESS_TIMEOUT_SECONDS)
 
     assert not failures, f"concurrent sweeps raised: {failures}"
-    assert not [path for path in tmp_path.glob(f"{_STEM}*") if path != live]
+    assert not [path for path in scan_directory(tmp_path, pattern=f"{_STEM}*") if path != live]
     assert (live / "cadrumo.db").read_text(encoding="utf-8") == "held throughout"
 
 
@@ -348,7 +349,7 @@ def test_the_reclaim_runs_at_startup_and_not_only_at_exit(tmp_path: Path) -> Non
     assert (live_sibling / "cadrumo.db").read_text(encoding="utf-8") == "a concurrent session's store", (
         "the startup sweep reclaimed a running session's store"
     )
-    survivors = {path.name for path in parent.glob(f"{_STEM}*")}
+    survivors = {path.name for path in scan_directory(parent, pattern=f"{_STEM}*")}
     assert live_sibling.name in survivors
     assert survivors - {live_sibling.name}, (
         "the child's own root should have been LEFT behind -- it exited without running its "

@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
@@ -26,7 +28,7 @@ _MONETARY_TREATMENTS = ["none", "taxpayer_regime", "supplier_regime"]
 
 
 def _constructor_calls(name: str) -> Iterator[tuple[str, ast.Call]]:
-    for path in _CADRUMO_ROOT.rglob("*.py"):
+    for path in scan_directory(_CADRUMO_ROOT, pattern="*.py", recursive=True):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         relative_path = path.relative_to(_CADRUMO_ROOT).as_posix()
         for node in ast.walk(tree):
@@ -90,7 +92,7 @@ def test_direct_iva_ledger_constructors_declare_the_required_role() -> None:
 def test_every_ledger_iva_aggregation_selector_declares_role_and_treatment() -> None:
     bindings = tuple(
         binding
-        for path in _MODELOS_ROOT.rglob("*.toml")
+        for path in scan_directory(_MODELOS_ROOT, pattern="*.toml", recursive=True)
         for binding in _binding_records(tomllib.loads(path.read_text(encoding="utf-8")))
     )
 

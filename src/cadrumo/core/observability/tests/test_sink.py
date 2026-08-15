@@ -30,7 +30,7 @@ import pytest
 
 from ....tests.path_obstruction import obstructed_path
 from ....tests.storage_scope import storage_overrides
-from ... import StorageCategory, storage_path
+from ... import StorageCategory, iter_directory, storage_path
 from ...config import override_settings
 from .. import (
     NavigationPayload,
@@ -226,7 +226,7 @@ class TestStoreRunIdValidation:
             with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
                 load_trace("not-a-valid-run")
             # The crafted run_id must never have resulted in a new directory.
-            assert not any(tmp_path.iterdir()), "rejected run_id must not create dirs"
+            assert not any(iter_directory(tmp_path)), "rejected run_id must not create dirs"
 
     def test_load_trace_missing_does_not_pollute_runs_dir(
         self,

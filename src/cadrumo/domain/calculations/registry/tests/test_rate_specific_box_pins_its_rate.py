@@ -67,6 +67,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .....core.resources import bundled_path
 from .._authority import ValidatedRegistryAuthority
 from .._record_design_coverage import _CASILLA_TAG_RE
@@ -90,13 +91,13 @@ def _authority() -> ValidatedRegistryAuthority:
     return ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
 
 
-def _design_files(modelo_id: str) -> list[Path]:
-    # rglob, not the fixed-depth "files/*.extracted.md": the same directory-shape
-    # assumption already dropped Modelo 210's dr210_2011.pdf from other design
-    # enumerations in this module family. No sidecar sits outside files/ today
-    # (converged pre-emptively, dormant when converged, not a bug fix).
+def _design_files(modelo_id: str) -> tuple[Path, ...]:
+    # Recursive, not the fixed-depth "files/*.extracted.md": the same
+    # directory-shape assumption already dropped Modelo 210's dr210_2011.pdf from
+    # other design enumerations in this module family. No sidecar sits outside
+    # files/ today (converged pre-emptively, dormant when converged, not a bug fix).
     directory = bundled_path("corpus", "aeat_official", "disenos_registro", f"modelo_{modelo_id}")
-    return sorted(directory.rglob("*.extracted.md")) if directory.is_dir() else []
+    return scan_directory(directory, pattern="*.extracted.md", recursive=True)
 
 
 def _rate_specific_boxes(modelo_id: str) -> set[str]:

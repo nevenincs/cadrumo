@@ -73,6 +73,7 @@ from typing import Any, Final
 
 import yaml
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 _GH_TIMEOUT_SECONDS: Final[float] = 30.0
@@ -209,7 +210,7 @@ def _workflow_files(repo_root: Path) -> tuple[Path, ...]:
     workflows_dir = repo_root / ".github" / "workflows"
     if not workflows_dir.is_dir():
         return ()
-    return tuple(sorted(workflows_dir.glob("*.yml")))
+    return scan_directory(workflows_dir, pattern="*.yml")
 
 
 def environments_referenced_by_workflows(repo_root: Path) -> Mapping[str, tuple[str, ...]]:

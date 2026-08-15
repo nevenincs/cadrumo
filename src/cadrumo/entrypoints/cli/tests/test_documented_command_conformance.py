@@ -89,6 +89,7 @@ from typing import cast
 import click
 import pytest
 
+from ....core import scan_directory
 from ....tests import REPO_ROOT
 from ....tests.cli_runner import cadrumo_click_command
 
@@ -133,16 +134,16 @@ def _flat_docs() -> list[Path]:
     for pat in _FLAT_DOC_GLOBS:
         docs.extend(sorted(REPO_ROOT.glob(pat)))
     for d in _TREE_DOC_DIRS:
-        docs.extend(sorted((REPO_ROOT / d).rglob("*.md")))
+        docs.extend(scan_directory(REPO_ROOT / d, pattern="*.md", recursive=True))
     readme = REPO_ROOT / "README.md"
     if readme.is_file():
         docs.append(readme)
     return docs
 
 
-def _sequence_contracts() -> list[Path]:
+def _sequence_contracts() -> tuple[Path, ...]:
     """Return every private CLI sequence contract in stable path order."""
-    return sorted((REPO_ROOT / "docs" / "_sequences" / "contracts").rglob("*.seq"))
+    return scan_directory(REPO_ROOT / "docs" / "_sequences" / "contracts", pattern="*.seq", recursive=True)
 
 
 def _command_surfaces() -> list[Path]:
@@ -537,7 +538,7 @@ def _user_doc_pages() -> list[Path]:
     docs = REPO_ROOT / "docs"
     pages: list[Path] = []
     for tree in _USER_DOC_TREE_DIRS:
-        pages.extend(sorted((docs / tree).rglob("*.md")))
+        pages.extend(scan_directory(docs / tree, pattern="*.md", recursive=True))
     for flat in _USER_DOC_FLAT_FILES:
         page = docs / flat
         if page.is_file():

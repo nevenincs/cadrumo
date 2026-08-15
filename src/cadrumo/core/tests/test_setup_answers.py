@@ -33,6 +33,8 @@ from pathlib import Path
 
 import pytest
 
+from .. import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
@@ -77,7 +79,7 @@ def test_profile_registration_error_names_have_distinct_canonical_declarations()
         "ProfileRegistrationError": set(),
         "ProjectAnswersRegistrationError": set(),
     }
-    for path in source_root.rglob("*.py"):
+    for path in scan_directory(source_root, pattern="*.py", recursive=True):
         module = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(module):
             if isinstance(node, ast.ClassDef) and node.name in declarations:

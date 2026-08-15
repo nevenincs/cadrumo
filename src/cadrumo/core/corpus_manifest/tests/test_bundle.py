@@ -21,6 +21,7 @@ from pathlib import Path
 
 import pytest
 
+from ... import scan_directory
 from .. import (
     CorpusBundleError,
     CorpusBundleVerificationError,
@@ -284,4 +285,4 @@ def test_build_corpus_bundle_overwrites_existing_output_atomically(tmp_path: Pat
     result = verify_corpus_bundle(output_path)
     assert result.is_clean is True
     # The rename leaves no stray temp file behind.
-    assert list(output_path.parent.glob("*.tmp")) == []
+    assert scan_directory(output_path.parent, pattern="*.tmp") == ()

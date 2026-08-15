@@ -16,7 +16,7 @@ from typing import Annotated, Final, Literal
 import rtoml
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 
-from cadrumo.core import is_link_like
+from cadrumo.core import is_link_like, scan_directory
 from cadrumo.core.hashing import content_hash_hex, sha256_file
 from cadrumo.domain.calculations.registry import (
     ExportValuePolicy,
@@ -342,7 +342,7 @@ def load_render_profile(profile_directory: Path) -> RenderProfile:
     if not profile_directory.is_dir() or profile_directory.is_symlink() or profile_directory.is_junction():
         raise RegistryValidationError(f"render profile path must be a real directory: {profile_directory}")
     try:
-        paths = tuple(sorted(profile_directory.iterdir(), key=lambda path: path.name))
+        paths = tuple(sorted(scan_directory(profile_directory, require_root=True), key=lambda path: path.name))
     except OSError as exc:
         raise RegistryValidationError(f"cannot inspect render profile directory: {profile_directory}") from exc
     if not paths:

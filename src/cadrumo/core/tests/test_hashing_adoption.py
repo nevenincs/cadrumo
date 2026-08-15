@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from .. import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 # __file__ = src/cadrumo/core/tests/test_hashing_adoption.py
@@ -89,7 +91,7 @@ def _reducible_one_shot_sites(tree: ast.AST, relpath: str) -> list[tuple[str, in
 def _production_reducible_counts() -> dict[str, int]:
     """Count reducible one-shot sha256 bodies per production module (tests + helper excluded)."""
     counts: Counter[str] = Counter()
-    for path in _CADRUMO_ROOT.rglob("*.py"):
+    for path in scan_directory(_CADRUMO_ROOT, pattern="*.py", recursive=True):
         if "tests" in path.parts:
             continue
         relpath = path.relative_to(_CADRUMO_ROOT).as_posix()

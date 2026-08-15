@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import iter_directory
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     RegistryValidationError,
@@ -134,6 +135,6 @@ def test_justificante_corpus_root_exists_so_the_guard_is_not_dormant() -> None:
     guard would pass vacuously.
     """
     fixture_dir = _JUSTIFICANTE_CORPUS_ROOT / _MODELO_303
-    assert fixture_dir.is_dir() and any(fixture_dir.glob("*.pdf")), (
+    assert fixture_dir.is_dir() and any(iter_directory(fixture_dir, pattern="*.pdf")), (
         f"no M303 justificante corpus PDF at {fixture_dir}; the round-trip gate guard is dormant"
     )

@@ -62,6 +62,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
 from ._ledger_ux_support import _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -370,7 +371,7 @@ def test_confirm_never_writes_a_file_to_disk(tmp_path_factory: pytest.TempPathFa
         ],
     )  # fmt: skip
     assert confirmed.exit_code == 0, confirmed.output
-    assert list(empty_dir.iterdir()) == []
+    assert list(scan_directory(empty_dir)) == []
 
 
 # -- the supply-nature answer channel, at the operator's end ----------------

@@ -7,6 +7,7 @@ from functools import cache
 
 import pytest
 
+from .....core import scan_directory
 from .....core.aggregation import BindingSourceKind
 from .....core.resources import bundled_path
 from .. import _bindings
@@ -76,7 +77,7 @@ def _shared_catalogues() -> RegistryCatalogues:
     legal = {}
     sources = {}
     parameters = {}
-    for path in sorted(bundled_path("registry", "aeat", "legal").glob("*.toml")):
+    for path in scan_directory(bundled_path("registry", "aeat", "legal"), pattern="*.toml"):
         catalogue = load_catalogue_file(path)
         legal.update(catalogue.legal)
         sources.update(catalogue.sources)

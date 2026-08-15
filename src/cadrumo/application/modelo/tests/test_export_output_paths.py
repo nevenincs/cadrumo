@@ -18,7 +18,14 @@ from ....application.calculations import (
     ObservationSourceKind,
     ResultDispositionProjection,
 )
-from ....core import ObservedHeaderFact, PaymentElection, Period, PriorDomiciliationElection, ResultDisposition
+from ....core import (
+    ObservedHeaderFact,
+    PaymentElection,
+    Period,
+    PriorDomiciliationElection,
+    ResultDisposition,
+    iter_directory,
+)
 from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.deadlines import (
@@ -573,7 +580,7 @@ def test_export_refuses_existing_directory_output_and_leaves_no_tmp_orphan(
 
     assert existing_dir.is_dir()
     assert not tmp_sibling.exists(), "orphaned .tmp with cleartext financial bytes must not remain"
-    assert not any(p.suffix == ".tmp" for p in tmp_path.rglob("*")), "no .tmp orphan anywhere under output root"
+    assert not any(p.suffix == ".tmp" for p in iter_directory(tmp_path, recursive=True)), "no .tmp orphan anywhere under output root"
 
 
 def test_export_refuses_empty_output_path(
@@ -596,7 +603,7 @@ def test_export_refuses_empty_output_path(
             bucket_event_repository=event_repo,
             clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
         )
-    assert not any(p.suffix == ".tmp" for p in tmp_path.rglob("*"))
+    assert not any(p.suffix == ".tmp" for p in iter_directory(tmp_path, recursive=True))
 
 
 def test_export_success_path_is_idempotent_overwrite(

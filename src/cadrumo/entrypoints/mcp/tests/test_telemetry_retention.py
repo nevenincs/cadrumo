@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
 from .._telemetry import (
     SessionTelemetryWriter,
     TelemetryRetention,
@@ -38,7 +39,7 @@ def _session_file(directory: Path, name: str, *, age_days: float, now: float) ->
 
 
 def _names(directory: Path) -> set[str]:
-    return {path.name for path in directory.glob("*.jsonl")}
+    return {path.name for path in scan_directory(directory, pattern="*.jsonl")}
 
 
 def test_prune_bounds_session_count_dropping_the_oldest(tmp_path: Path) -> None:
@@ -130,7 +131,7 @@ def test_writer_refuses_session_ids_with_path_segments(tmp_path: Path, session_i
     with pytest.raises(ValueError, match="safe telemetry filename"):
         SessionTelemetryWriter(session_id=session_id, directory=tmp_path)
 
-    assert tuple(tmp_path.rglob("*.jsonl")) == ()
+    assert tuple(scan_directory(tmp_path, pattern="*.jsonl", recursive=True)) == ()
 
 
 def test_writer_refuses_an_absolute_session_id_without_creating_an_outside_file(tmp_path: Path) -> None:

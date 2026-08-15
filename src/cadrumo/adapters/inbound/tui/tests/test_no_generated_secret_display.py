@@ -29,6 +29,8 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 #: The callables that MINT recovery words. Each returns only after the candidate
@@ -54,7 +56,9 @@ _TUI_PACKAGE = Path(__file__).resolve().parent.parent
 
 def _tui_modules() -> tuple[Path, ...]:
     return tuple(
-        path for path in sorted(_TUI_PACKAGE.glob("*.py")) if path.name != "__init__.py" or path.parent == _TUI_PACKAGE
+        path
+        for path in scan_directory(_TUI_PACKAGE, pattern="*.py")
+        if path.name != "__init__.py" or path.parent == _TUI_PACKAGE
     )
 
 

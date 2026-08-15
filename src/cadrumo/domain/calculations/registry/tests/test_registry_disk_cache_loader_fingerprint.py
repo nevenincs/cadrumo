@@ -30,7 +30,7 @@ from typing import Literal
 import pytest
 from pydantic import BaseModel
 
-from .....core import AuthProviderKind, Modelo
+from .....core import AuthProviderKind, Modelo, scan_directory
 from .....core.config import override_settings
 from .....core.resources import bundled_path
 from .._compiled_cache import (
@@ -194,7 +194,7 @@ def test_loader_fingerprint_incorporates_embedded_foreign_module_source() -> Non
 
     registry_only = hashlib.sha256()
     package_dir = Path(__file__).resolve().parents[1]  # the registry package dir
-    for path in sorted(p for p in package_dir.rglob("*.py") if "tests" not in p.relative_to(package_dir).parts):
+    for path in scan_directory(package_dir, pattern="*.py", recursive=True, prune_directories=("tests",)):
         registry_only.update(path.relative_to(package_dir).as_posix().encode("utf-8"))
         registry_only.update(path.read_bytes())
 

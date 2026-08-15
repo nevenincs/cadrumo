@@ -34,6 +34,7 @@ from pathlib import Path
 
 import pytest
 
+from ..core import scan_directory
 from ..core.hashing import sha256_file
 from ..core.resources import bundled_path
 
@@ -51,7 +52,7 @@ _SIZE_TOKEN: re.Pattern[str] = re.compile(r"(\d+)[-\s]*kb")
 
 def _manifest_rows() -> list[tuple[Path, dict[str, object]]]:
     rows: list[tuple[Path, dict[str, object]]] = []
-    for manifest in sorted(_DISENOS_ROOT.rglob("manifest.json")):
+    for manifest in scan_directory(_DISENOS_ROOT, pattern="manifest.json", recursive=True):
         payload = json.loads(manifest.read_text(encoding="utf-8"))
         artefacts = payload.get("artefacts")
         if not isinstance(artefacts, list):

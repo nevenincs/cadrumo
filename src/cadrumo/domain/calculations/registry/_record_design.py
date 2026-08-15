@@ -7,9 +7,10 @@ can be compared against the registry declarations.
 
 from __future__ import annotations
 
+import json
 import re
 import warnings
-from collections.abc import Generator, Iterator
+from collections.abc import Generator, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -55,6 +56,7 @@ from ._record_design_schema import (
     RecordDesignCompositeRelativeClosing,
     RecordDesignExtraction,
     RecordDesignField,
+    RecordDesignFieldTypeCorrection,
     RecordDesignRelativeSuffixMarker,
     RecordDesignSheet,
     RecordDesignSkippedSheet,
@@ -98,6 +100,47 @@ class _WorkbookSheetRows:
     relative_suffix_marker_rows: list[int] = field(default_factory=list)
     variable_total_marker_rows: list[int] = field(default_factory=list)
     mixed_total_rows: list[int] = field(default_factory=list)
+    corrections_applied: list[RecordDesignFieldTypeCorrection] = field(default_factory=list)
+
+
+type _TypeCorrectionIndex = Mapping[tuple[str, int], RecordDesignFieldTypeCorrection]
+
+_TYPE_CORRECTION_SUFFIX: Final[str] = ".type-correction.json"
+
+
+def _load_type_corrections(source_path: Path) -> _TypeCorrectionIndex:
+    """Load a hand-authored, per-binary sidecar declaring blank-type corrections.
+
+    Colocated with the exact source binary it corrects, named
+    ``<binary-name>.type-correction.json`` -- a distinct suffix from the
+    parser's own generated ``.extracted.json``/``.extracted.md`` cache, so a
+    hand-authored grounding declaration is never confused with, or
+    overwritten by, machine output. Absent for the overwhelming majority of
+    bundled binaries, which read as AEAT published them; this returns an
+    empty mapping for those, so the parser's behaviour is unchanged unless a
+    sidecar is deliberately authored.
+    """
+    sidecar_path = source_path.with_name(source_path.name + _TYPE_CORRECTION_SUFFIX)
+    if not sidecar_path.is_file():
+        return {}
+    payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    entries = payload.get("corrections") if isinstance(payload, dict) else None
+    if not isinstance(entries, list):
+        raise RegistryValidationError(f"{sidecar_path}: type-correction sidecar must declare a 'corrections' list")
+    corrections: dict[tuple[str, int], RecordDesignFieldTypeCorrection] = {}
+    for entry in entries:
+        # ``strict=False`` here only: JSON has no tuple literal, so the sidecar's
+        # ``editions_read`` array arrives as a ``list`` and needs the ordinary
+        # list-to-tuple coercion. Every field's own type is still checked --
+        # this does not relax ``min_length``, blank-string, or shape checks.
+        correction = RecordDesignFieldTypeCorrection.model_validate(entry, strict=False)
+        key = (correction.sheet, correction.source_row)
+        if key in corrections:
+            raise RegistryValidationError(
+                f"{sidecar_path}: duplicate correction for sheet {correction.sheet!r} row {correction.source_row}",
+            )
+        corrections[key] = correction
+    return corrections
 
 
 def extract_record_design(path: Path) -> RecordDesignExtraction:
@@ -183,6 +226,7 @@ def _extract_record_design_workbook_cached(
     from openpyxl import load_workbook
 
     source_path = Path(path)
+    corrections = _load_type_corrections(source_path)
     with _ignore_openpyxl_header_footer_metadata_warnings():
         workbook = load_workbook(source_path, read_only=True, data_only=True)
         try:
@@ -190,7 +234,7 @@ def _extract_record_design_workbook_cached(
             skipped: list[RecordDesignSkippedSheet] = []
             for worksheet in workbook.worksheets:
                 try:
-                    sheets.append(_extract_sheet(worksheet))
+                    sheets.append(_extract_sheet(worksheet, corrections))
                 except ValueError as exc:
                     if "has no record-design header" not in str(exc):
                         raise
@@ -317,7 +361,7 @@ def _extract_record_design_pdf_stream(
         raise
 
 
-def _extract_sheet(worksheet: Worksheet) -> RecordDesignSheet:
+def _extract_sheet(worksheet: Worksheet, corrections: _TypeCorrectionIndex | None = None) -> RecordDesignSheet:
     header = _find_header(worksheet)
     return _extract_sheet_rows(
         worksheet.title,
@@ -326,6 +370,7 @@ def _extract_sheet(worksheet: Worksheet) -> RecordDesignSheet:
             worksheet.iter_rows(min_row=header.row_number + 1, values_only=True),
             start=header.row_number + 1,
         ),
+        corrections,
     )
 
 
@@ -342,6 +387,7 @@ def _extract_sheet_rows(
     sheet_name: str,
     header: _WorkbookHeader,
     rows: Iterator[tuple[int, tuple[object, ...]]],
+    corrections: _TypeCorrectionIndex | None = None,
 ) -> RecordDesignSheet:
     # AEAT Diseño workbooks occasionally carry surrounding whitespace on a
     # sheet tab (e.g. 'DP200026 '). The sheet name is the record-segment
@@ -349,7 +395,7 @@ def _extract_sheet_rows(
     # completeness derivation match against, so the raw tab whitespace
     # must not leak into that identity.
     sheet_name = sheet_name.strip()
-    parsed_rows = _scan_sheet_rows(sheet_name, header, rows)
+    parsed_rows = _scan_sheet_rows(sheet_name, header, rows, corrections or {})
     terminal_extent = _require_contiguous_field_geometry(sheet_name, parsed_rows.fields)
     if parsed_rows.total_positions is not None and terminal_extent != parsed_rows.total_positions:
         raise RegistryValidationError(
@@ -368,6 +414,7 @@ def _extract_sheet_rows(
         total_positions=parsed_rows.total_positions,
         variable_envelope=variable_envelope,
         auxiliary_envelope_header=auxiliary_envelope_header,
+        corrections=tuple(parsed_rows.corrections_applied),
     )
 
 
@@ -375,6 +422,7 @@ def _scan_sheet_rows(
     sheet_name: str,
     header: _WorkbookHeader,
     rows: Iterator[tuple[int, tuple[object, ...]]],
+    corrections: _TypeCorrectionIndex | None = None,
 ) -> _WorkbookSheetRows:
     parsed_rows = _WorkbookSheetRows()
     trailing_blank_rows = 0
@@ -388,7 +436,7 @@ def _scan_sheet_rows(
         trailing_blank_rows = 0
         if _consume_total_row(sheet_name, parsed_rows, row_number, values):
             continue
-        _consume_field_row(sheet_name, parsed_rows, header, row_number, values)
+        _consume_field_row(sheet_name, parsed_rows, header, row_number, values, corrections or {})
     return parsed_rows
 
 
@@ -429,6 +477,7 @@ def _consume_field_row(
     header: _WorkbookHeader,
     row_number: int,
     values: tuple[object, ...],
+    corrections: _TypeCorrectionIndex,
 ) -> None:
     # ``RecordDesignField.ordinal`` is the printed LABEL (``ordinal_text``), never
     # an arithmetic value -- it is now representable verbatim, so there is no more
@@ -458,7 +507,11 @@ def _consume_field_row(
         return
     if offset is None or length is None:
         return
-    field = _record_design_field(sheet_name, header, row_number, values, ordinal_text, offset, length)
+    field, applied_correction = _record_design_field(
+        sheet_name, header, row_number, values, ordinal_text, offset, length, corrections,
+    )
+    if applied_correction is not None:
+        parsed_rows.corrections_applied.append(applied_correction)
     parent_index = _matching_component_parent_index(parsed_rows.fields, ordinal_text, offset, length)
     if parent_index is not None:
         parent = parsed_rows.fields[parent_index]
@@ -551,19 +604,26 @@ def _record_design_field(
     ordinal: str | None,
     offset: int,
     length: int,
-) -> RecordDesignField:
+    corrections: _TypeCorrectionIndex,
+) -> tuple[RecordDesignField, RecordDesignFieldTypeCorrection | None]:
     validation, content, description = _field_texts(sheet_name, header, row_number, values)
-    return RecordDesignField(
-        sheet=sheet_name,
-        row=row_number,
-        ordinal=ordinal,
-        offset=offset,
-        length=length,
-        type_code=_required_text(_cell(values, header.type_index), sheet_name, row_number, "type"),
-        complementary=_optional_header_text(values, header.complementary_index),
-        description=description,
-        validation=validation,
-        content=content,
+    type_code, applied_correction = _required_type_code(
+        _cell(values, header.type_index), sheet_name, row_number, corrections,
+    )
+    return (
+        RecordDesignField(
+            sheet=sheet_name,
+            row=row_number,
+            ordinal=ordinal,
+            offset=offset,
+            length=length,
+            type_code=type_code,
+            complementary=_optional_header_text(values, header.complementary_index),
+            description=description,
+            validation=validation,
+            content=content,
+        ),
+        applied_correction,
     )
 
 
@@ -940,6 +1000,29 @@ def _required_text(value: object | None, sheet: str, row: int, field: str) -> st
     if not cleaned:
         raise RegistryValidationError(f"{sheet!r} row {row} missing {field}")
     return cleaned
+
+
+def _required_type_code(
+    value: object | None,
+    sheet: str,
+    row: int,
+    corrections: _TypeCorrectionIndex,
+) -> tuple[str, RecordDesignFieldTypeCorrection | None]:
+    """Return the row's ``Tipo`` value, applying a declared correction for a blank cell.
+
+    A correction fires ONLY when the cell is genuinely blank AND a sidecar
+    declares one for this exact ``(sheet, row)`` -- never as a fallback for a
+    present-but-unreadable value, which stays a hard refusal exactly as
+    before. This is the sole read path that can turn a "missing type" refusal
+    into a read.
+    """
+    cleaned = coerce_cell_text(value)
+    if cleaned:
+        return cleaned, None
+    correction = corrections.get((sheet, row))
+    if correction is not None:
+        return correction.corrected_type, correction
+    raise RegistryValidationError(f"{sheet!r} row {row} missing type")
 
 
 def _field_description_text(
@@ -1830,6 +1913,7 @@ __all__ = [
     "RecordDesignCompositeRelativeClosing",
     "RecordDesignExtraction",
     "RecordDesignField",
+    "RecordDesignFieldTypeCorrection",
     "RecordDesignRelativeSuffixMarker",
     "RecordDesignSheet",
     "RecordDesignSkippedSheet",

@@ -21,6 +21,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
 from cadrumo.core.resources import bundled_path, resources
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
@@ -29,7 +30,7 @@ _REPLAY_DIR = bundled_path("corpus", "parity_replays", "renta_web_open")
 
 
 def _oracle_payloads() -> list[Path]:
-    return sorted(p for p in _REPLAY_DIR.glob("modelo-100-*.json"))
+    return list(scan_directory(_REPLAY_DIR, pattern="modelo-100-*.json"))
 
 
 def _m100_computed_grounded_ids() -> dict[str, bool]:

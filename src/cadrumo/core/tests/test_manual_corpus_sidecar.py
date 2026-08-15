@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .. import scan_directory
 from ..manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_SCHEMA_VERSION,
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
@@ -27,7 +28,7 @@ _MANUAL_CORPUS_TEXT_ROOT = Path(__file__).resolve().parents[1].parent / "_data" 
 
 
 def _first_committed_sidecar_payload() -> dict[str, object]:
-    sidecars = sorted(_MANUAL_CORPUS_TEXT_ROOT.rglob(f"*{MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX}"))
+    sidecars = scan_directory(_MANUAL_CORPUS_TEXT_ROOT, pattern=f"*{MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX}", recursive=True)
     assert sidecars, "no committed manual corpus text sidecars found"
     payload: dict[str, object] = json.loads(sidecars[0].read_text(encoding="utf-8"))
     return payload
@@ -43,7 +44,7 @@ def test_every_committed_sidecar_satisfies_the_shared_contract() -> None:
     here against the actually-committed corpus rather than degrading silently
     to on-demand PDF extraction on end-user machines.
     """
-    sidecars = sorted(_MANUAL_CORPUS_TEXT_ROOT.rglob(f"*{MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX}"))
+    sidecars = scan_directory(_MANUAL_CORPUS_TEXT_ROOT, pattern=f"*{MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX}", recursive=True)
     assert sidecars, "no committed manual corpus text sidecars found"
 
     for sidecar_path in sidecars:

@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from .. import logging as _logging_mod
+from .. import scan_directory
 from ..config import override_settings
 from ..logging import configure_logging
 
@@ -74,7 +75,7 @@ def test_log_rolls_over_and_bounds_backups(tmp_path: Path) -> None:
             assert base.exists(), "the active log file must exist"
             # Rollover produced at least one backup, and the backup count is
             # bounded by the configured ceiling (no unbounded growth).
-            backups = sorted(log_dir.glob("cadrumo.log.*"))
+            backups = scan_directory(log_dir, pattern="cadrumo.log.*")
             assert backups, "writing past the cap must produce at least one rotated backup"
             assert len(backups) <= 2, "retained backups must not exceed cadrumo_log_file_backup_count"
     finally:

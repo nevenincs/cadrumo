@@ -36,7 +36,7 @@ from pathlib import Path
 
 import tomlkit
 
-from cadrumo.core import Modelo
+from cadrumo.core import DirectoryEntryKind, Modelo, scan_directory
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     ApplicabilityRuleDefinition,
@@ -94,7 +94,7 @@ def _revision_dirs(modelo: str) -> tuple[Path, ...]:
     revisions_dir = MODELOS_ROOT / modelo / "revisions"
     if not revisions_dir.is_dir():
         raise AssertionError(f"modelo {modelo!r}: expected directory-mode revisions/ under {revisions_dir}")
-    return tuple(sorted(path for path in revisions_dir.iterdir() if path.is_dir()))
+    return scan_directory(revisions_dir, select=DirectoryEntryKind.DIRECTORIES)
 
 
 def _write_fragment(revision_dir: Path, rule: ModeloApplicabilityRule) -> Path:

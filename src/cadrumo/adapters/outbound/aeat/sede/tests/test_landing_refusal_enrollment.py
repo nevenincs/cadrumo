@@ -34,6 +34,8 @@ from pathlib import Path
 
 import pytest
 
+from ......core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _SEDE_ROOT = Path(__file__).resolve().parent.parent
@@ -102,7 +104,7 @@ def _production_modules() -> tuple[Path, ...]:
     """Every production .py in the sede package, tests and caches excluded."""
     return tuple(
         path
-        for path in sorted(_SEDE_ROOT.rglob("*.py"))
+        for path in scan_directory(_SEDE_ROOT, pattern="*.py", recursive=True)
         if "__pycache__" not in path.parts and "tests" not in path.parts
     )
 

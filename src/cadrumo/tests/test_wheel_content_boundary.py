@@ -38,6 +38,7 @@ from pathlib import Path
 
 import pytest
 
+from ..core import scan_directory
 from ._inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -83,7 +84,7 @@ def wheel_members(tmp_path_factory: pytest.TempPathFactory) -> frozenset[str]:
         text=True,
         check=True,
     )
-    wheels = sorted(out_dir.glob("cadrumo-*.whl"))
+    wheels = scan_directory(out_dir, pattern="cadrumo-*.whl")
     if len(wheels) != 1:
         raise AssertionError(f"expected exactly one cadrumo-*.whl in {out_dir}; got {[w.name for w in wheels]!r}")
     with zipfile.ZipFile(wheels[0]) as archive:
@@ -107,7 +108,7 @@ def sdist_members(tmp_path_factory: pytest.TempPathFactory) -> frozenset[str]:
         text=True,
         check=True,
     )
-    archives = sorted(out_dir.glob("cadrumo-*.tar.gz"))
+    archives = scan_directory(out_dir, pattern="cadrumo-*.tar.gz")
     if len(archives) != 1:
         raise AssertionError(f"expected exactly one cadrumo-*.tar.gz in {out_dir}; got {[p.name for p in archives]!r}")
     with tarfile.open(archives[0], mode="r:gz") as archive:

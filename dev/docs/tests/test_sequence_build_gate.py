@@ -23,6 +23,7 @@ from typing import cast
 import pytest
 from sphinx.application import Sphinx
 
+from cadrumo.core import scan_directory
 from cadrumo.tests.env_scope import scoped_env_var
 from dev._paths import REPO_ROOT
 
@@ -139,7 +140,7 @@ def test_no_golden_carries_a_version_literal() -> None:
     back to the running version when the page is rendered, so the reader sees a
     real version that is derived rather than frozen.
     """
-    goldens = sorted((_REPO_ROOT / "docs" / "_sequences").rglob("*.json"))
+    goldens = scan_directory(_REPO_ROOT / "docs" / "_sequences", pattern="*.json", recursive=True)
     assert goldens, "no sequence goldens were found; this gate would pass over an empty corpus"
 
     offenders = [

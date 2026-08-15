@@ -14,6 +14,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
+
 from .. import load_scenario, run_golden_scenario
 from ._real_cli_support import valid_cli_commands
 
@@ -21,7 +23,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _SCENARIOS_DIR = Path(__file__).resolve().parent.parent / "scenarios"
 _SCENARIO = _SCENARIOS_DIR / "modelo_130.toml"
-_ALL_SCENARIOS = sorted(_SCENARIOS_DIR.glob("*.toml"))
+_ALL_SCENARIOS = scan_directory(_SCENARIOS_DIR, pattern="*.toml")
 
 
 @pytest.mark.parametrize("scenario_path", _ALL_SCENARIOS, ids=lambda p: p.stem)

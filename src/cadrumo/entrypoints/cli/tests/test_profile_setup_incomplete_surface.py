@@ -1,20 +1,24 @@
-"""CLI projections keep setup state on authenticated records, not pointers."""
+"""The CLI surfaces a retired-custody refusal cleanly, rather than leaking it.
+
+A bucket directory carrying the retired plaintext ``manifest.toml`` makes
+capsule discovery refuse with ``LEGACY_CUSTODY_DETECTED`` and destructive-reset
+guidance.  That refusal is deliberate: the discovery guard reports no parsed
+attributes and no candidate identity, so a caller may act only on the refusal
+and never on an inferred retired profile.
+
+These tests assert the OPERATOR-FACING half of it.  The refusal itself is
+covered at the custody layer; what is covered nowhere else is that a CLI verb
+renders it as a clean refusal rather than an unhandled traceback -- the same
+discrimination the ambiguous-label surface tests make.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import UTC, datetime
 
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.storage.bucket import (
-    BUCKET_MANIFEST_SCHEMA_VERSION,
-    BucketKeySchedule,
-    BucketManifest,
-    ManifestKdfParams,
-    write_manifest,
-)
 from ....core.config import load_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage
@@ -26,53 +30,59 @@ from ._profile_lifecycle_support import create_profile_via_cli
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LEGACY_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
-_STAGED_CREATED_AT = datetime(2026, 6, 1, 9, 0, tzinfo=UTC)
+
+#: The exception type whose NAME in the output means the refusal escaped to the
+#: global boundary instead of being rendered as an operator refusal.
+_LEAKED_EXCEPTION_NAME = "ProfileCustodyRefusedError"
 
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
 
 
-def _stage_legacy_manifest(*, bucket_id: str, label: str) -> None:
-    """Materialise a manifest that has no committed profile capsule."""
+def _stage_retired_custody_member(*, bucket_id: str) -> None:
+    """Put the retired plaintext manifest into a real bucket directory.
+
+    This is the guard's intended stimulus rather than manufactured corruption:
+    capsule discovery refuses on the member's PRESENCE, so the file's content is
+    irrelevant and the manifest model it once parsed has itself been retired.
+    Writing a stub is therefore more truthful than reconstructing a schema that
+    nothing reads any more.
+    """
     root = load_settings().cadrumo_local_storage_root
+    assert root is not None
     paths = provision_bucket_directory(root, bucket_id)
-    write_manifest(
-        paths,
-        BucketManifest(
-            bucket_id=bucket_id,
-            label=label,
-            created_at=_STAGED_CREATED_AT,
-            last_unlocked_at=None,
-            kdf_params=ManifestKdfParams(
-                algorithm="argon2id",
-                version=0x13,
-                memory_cost=19_456,
-                time_cost=2,
-                parallelism=1,
-                salt=b"0123456789abcdef",
-                output_length=32,
-            ),
-            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-        ),
+    (paths.bucket_dir / "manifest.toml").write_text(
+        f'bucket_id = "{bucket_id}"\n',
+        encoding="utf-8",
     )
 
 
-def test_config_list_excludes_a_manifest_without_a_committed_capsule() -> None:
+def _assert_clean_retired_custody_refusal(result: Result) -> None:
+    """Assert a non-zero exit carrying the refusal and its guidance, not a traceback."""
+    combined = result.output
+    stderr = getattr(result, "stderr", None)
+    if stderr:
+        combined = f"{combined}\n{stderr}"
+    assert result.exit_code != 0, combined
+    assert "LEGACY_CUSTODY_DETECTED" in combined, combined
+    assert "DESTRUCTIVE_RESET" in combined, combined
+    assert "manifest.toml" in combined, combined
+    assert _LEAKED_EXCEPTION_NAME not in combined, combined
+
+
+def test_config_list_refuses_cleanly_on_a_retired_custody_member() -> None:
+    """`config profile list` renders the retired-custody refusal, not a traceback."""
     create_profile_via_cli("workable")
-    _stage_legacy_manifest(bucket_id=_LEGACY_BUCKET_ID, label="onboarding")
+    _stage_retired_custody_member(bucket_id=_LEGACY_BUCKET_ID)
 
-    result = _invoke(("config", "profile", "list"))
-
-    assert result.exit_code == 0, result.output
-    assert "workable" in result.output
-    assert "onboarding" not in result.output
+    _assert_clean_retired_custody_refusal(_invoke(("config", "profile", "list")))
 
 
-def test_overview_calendar_does_not_project_a_manifest_without_a_record() -> None:
+def test_overview_calendar_refuses_cleanly_on_a_retired_custody_member() -> None:
+    """The overview calendar renders the same refusal rather than leaking it."""
     create_profile_via_cli("filer")
-    _stage_legacy_manifest(bucket_id=_LEGACY_BUCKET_ID, label="onboarding")
+    _stage_retired_custody_member(bucket_id=_LEGACY_BUCKET_ID)
 
     result = _invoke(
         (

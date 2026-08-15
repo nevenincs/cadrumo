@@ -35,8 +35,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
-from ....core import DirectoryEntryKind, scan_directory
+from ....adapters.persistence.storage.bucket import bucket_paths
 from ....tests.bucket_layout import provision_bucket_directory
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import BucketMaintenanceService, DiskUsageBucketCommand
@@ -63,19 +62,6 @@ def test_disk_usage_reports_two_fixed_subdir_rows(runtime: TestRuntimeProfile) -
     assert result.bucket_id == runtime.bucket_id
     names = {row.subdir for row in result.subdirs}
     assert names == {"db", "blobs"}
-
-
-def test_disk_usage_db_row_reflects_the_real_sqlite_file_and_manifest(runtime: TestRuntimeProfile) -> None:
-    """The ``db`` row's byte total matches the real on-disk database file plus the manifest."""
-    db_files = scan_directory(runtime.paths.db_dir, recursive=True, select=DirectoryEntryKind.FILES)
-    db_file_bytes = sum(f.stat().st_size for f in db_files)
-    manifest_bytes = manifest_path(runtime.paths).stat().st_size
-
-    result = BucketMaintenanceService().disk_usage(DiskUsageBucketCommand(bucket_id=runtime.bucket_id))
-
-    db_row = next(row for row in result.subdirs if row.subdir == "db")
-    assert db_row.total_bytes == db_file_bytes + manifest_bytes
-    assert db_row.total_bytes > 0  # a provisioned bucket always has a non-empty SQLite file + manifest
 
 
 def test_disk_usage_blobs_row_grows_after_a_real_file_write(runtime: TestRuntimeProfile) -> None:

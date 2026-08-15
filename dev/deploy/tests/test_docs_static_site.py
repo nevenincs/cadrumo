@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.tests.env_scope import scoped_env_var
 
@@ -305,7 +306,7 @@ def test_validate_language_roots_refuses_an_empty_pagefind_index(tmp_path: Path)
     for language in _localized_languages():
         _materialise_language_root(tmp_path, language)
     empty = _localized_languages()[0]
-    for chunk in (tmp_path / empty / "pagefind" / "index").rglob("*.pf_index"):
+    for chunk in scan_directory(tmp_path / empty / "pagefind" / "index", pattern="*.pf_index", recursive=True):
         chunk.write_bytes(b"")
     with pytest.raises(SystemExit, match="no substantive generated index data"):
         _validate_language_roots(tmp_path)

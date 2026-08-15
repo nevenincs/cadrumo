@@ -14,6 +14,7 @@ from ._profile_storage_fixtures import isolated_profile_storage
 __all__ = ["isolated_profile_storage"]
 from click.testing import Result
 
+from ....core import scan_directory
 from ....tests import REPO_ROOT, leaf_name
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ._runtime_profile_cli_fixture import _isolated_cli_state
@@ -192,7 +193,7 @@ def test_typer_help_sources_are_direct_translations() -> None:
     # a relative corpus scans nothing whenever the working directory is not the
     # repo root, greening this gate by walking an empty tree. The floor below is
     # the tripwire for that collapse and for a package relocation.
-    for module in (REPO_ROOT / "src" / "cadrumo").rglob("*.py"):
+    for module in scan_directory(REPO_ROOT / "src" / "cadrumo", pattern="*.py", recursive=True):
         if module.name.startswith(("test_", "_test_")):
             continue
         scanned += 1

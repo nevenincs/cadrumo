@@ -43,11 +43,7 @@ def _stored(tmp_path: Path, payload: bytes) -> tuple[LocalFileSystemProvider, Pa
     provider.put(_NAMESPACE, _HMAC, payload, content_hash=f"sha256-{sha256_hex(payload)}", label="obj")
     root = tmp_path / "vault"
     sidecar = next(iter_directory(root, pattern="*.json", recursive=True))
-    blob = next(
-        p
-        for p in iter_directory(root, recursive=True, select=DirectoryEntryKind.FILES)
-        if p.suffix != ".json"
-    )
+    blob = next(p for p in iter_directory(root, recursive=True, select=DirectoryEntryKind.FILES) if p.suffix != ".json")
     return provider, blob, sidecar
 
 

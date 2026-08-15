@@ -29,7 +29,7 @@ from dev.packaging._smoke_common import (
 )
 
 from ... import llm
-from ...core import LLM_EXTRA
+from ...core import LLM_EXTRA, scan_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter, pytest.mark.serial]
 
@@ -75,7 +75,7 @@ def _guarded_definition_names() -> frozenset[str]:
     package = Path(__file__).resolve().parents[1]
     exported = frozenset(llm.__all__)
     derived: set[str] = set()
-    for path in sorted(package.rglob("*.py")):
+    for path in scan_directory(package, pattern="*.py", recursive=True):
         if "tests" in path.relative_to(package).parts:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))

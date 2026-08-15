@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from openpyxl.cell.cell import Cell, MergedCell
     from openpyxl.worksheet.worksheet import Worksheet
 
-from cadrumo.core import CasillaId
+from cadrumo.core import CasillaId, DirectoryEntryKind, scan_directory
 from cadrumo.core.decimal import coerce_decimal
 from cadrumo.core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from cadrumo.core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
@@ -222,7 +222,11 @@ def discover_workbooks(root: Path) -> tuple[Path, ...]:
     resolved = root.resolve()
     if not resolved.exists():
         raise RegistryValidationError(f"workbook root does not exist: {root}")
-    return tuple(sorted(p for p in resolved.rglob("*") if p.suffix.lower() in _WORKBOOK_SUFFIXES and p.is_file()))
+    return tuple(
+        p
+        for p in scan_directory(resolved, recursive=True, select=DirectoryEntryKind.FILES)
+        if p.suffix.lower() in _WORKBOOK_SUFFIXES
+    )
 
 
 def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None = None) -> WorkbookArtefactReport:
@@ -682,7 +686,7 @@ def _converted_binary_xls_path(
         except subprocess.CalledProcessError as exc:
             detail = "\n".join(part for part in (exc.stdout, exc.stderr) if part)
             raise _BinaryXlsConversionError(f"LibreOffice binary XLS conversion failed: {detail}") from exc
-        outputs = tuple(output_dir.glob("*.xlsx"))
+        outputs = scan_directory(output_dir, pattern="*.xlsx")
         if len(outputs) != 1:
             detail = "\n".join(part for part in (completed.stdout, completed.stderr) if part)
             raise _BinaryXlsConversionError(f"LibreOffice did not produce exactly one XLSX workbook: {detail}")

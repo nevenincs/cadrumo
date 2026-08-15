@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from dev.locales import LocaleManager
 
+from .....core import scan_directory
 from .....core.i18n import tr
 from .....tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from ._isolated_storage_fixture import config_check_backend
@@ -77,7 +78,7 @@ _CONFIG_MODULE_NAMES = frozenset(
 
 
 def _production_modules() -> tuple[Path, ...]:
-    discovered = {path.name for path in _CONFIG_ROOT.glob("*.py")}
+    discovered = {path.name for path in scan_directory(_CONFIG_ROOT, pattern="*.py")}
     assert discovered == _CONFIG_MODULE_NAMES, (
         "The S89 config action audit has an incomplete or stale source scope. "
         f"missing={sorted(_CONFIG_MODULE_NAMES - discovered)} "
