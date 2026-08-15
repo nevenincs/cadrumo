@@ -68053,6 +68053,8 @@ modelo:
               label: Número total de registros de perceptor declarados
             x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
               label: Total importe de la retención o ingreso a cuenta
+            x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
+              label: Clave de personalidad del perceptor no residente
             x-e1in4opedpkmc:
               label: NIF del perceptor
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
@@ -68062,6 +68064,8 @@ modelo:
             x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
               label: Apellidos y nombre, razón social o denominación del representante
                 del perceptor
+            x-e1in4opeehkn0rpde1in4or5e1q6usg:
+              label: Tipo de perceptor
           construct:
             modelo-270-informative:
               field:

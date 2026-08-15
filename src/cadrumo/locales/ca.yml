@@ -65712,6 +65712,8 @@ modelo:
               label: Nombre total de registres de perceptor declarats
             x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
               label: Total import de la retenció o ingrés a compte
+            x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
+              label: Clau de personalitat del perceptor no resident
             x-e1in4opedpkmc:
               label: Número d'identificació fiscal (NIF) del perceptor
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
@@ -65721,6 +65723,8 @@ modelo:
             x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
               label: Cognoms i nom, raó social o denominació del representant del
                 perceptor
+            x-e1in4opeehkn0rpde1in4or5e1q6usg:
+              label: Tipus de perceptor
           construct:
             modelo-270-informative:
               field:

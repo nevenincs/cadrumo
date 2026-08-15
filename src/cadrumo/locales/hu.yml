@@ -65772,6 +65772,8 @@ modelo:
             x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
               label: A kedvezményezett képviselőjének vezeték- és utóneve, cégneve
                 vagy elnevezése
+            x-e1in4opeehkn0rpde1in4or5e1q6usg:
+              label: A kedvezményezett típusa
           construct:
             modelo-270-informative:
               field:

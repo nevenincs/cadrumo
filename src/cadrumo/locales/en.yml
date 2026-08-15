@@ -65255,6 +65255,8 @@ modelo:
               label: Total number of declared payee records
             x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
               label: Total amount of withholding or payment on account
+            x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
+              label: Legal personality code of the non-resident payee
             x-e1in4opedpkmc:
               label: Payee tax identification number
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
@@ -65264,6 +65266,8 @@ modelo:
             x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
               label: Surnames and given name, legal name or business name of the payee's
                 representative
+            x-e1in4opeehkn0rpde1in4or5e1q6usg:
+              label: Payee type
           construct:
             modelo-270-informative:
               field:
