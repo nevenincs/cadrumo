@@ -60,12 +60,24 @@ from pydantic import BaseModel, Field
 
 from ...core import HEX_PATTERN_16, HEX_PATTERN_64, STRICT_FROZEN_CONFIG, Period
 from ...core.identity import CalculationRevisionId, WorkUnitId
-from ...domain.calculations.registry import RevisionId
 from ._errors import WorkflowError
 from ._models import WorkflowAbortReason, WorkflowObligationFacts, WorkflowResult, WorkflowStage
 from ._persistence import list_runs, load_run
 
 if TYPE_CHECKING:
+    #: ``RevisionId`` is an ``Annotated[str, ...]`` alias, but importing it from
+    #: the registry package executes that package, and the whole registry --
+    #: 153 modules -- comes with it. This module is imported eagerly by the
+    #: workflow package, so a bare ``cadrumo --help`` paid a full registry
+    #: import for one type alias used only in annotations.
+    #:
+    #: Safe to defer here and checked rather than assumed: this module carries
+    #: ``from __future__ import annotations`` so annotations are never
+    #: evaluated at runtime, the three functions annotated with it are
+    #: undecorated, and the pydantic models in this module use
+    #: ``CalculationRevisionId`` instead -- a pydantic field WOULD need the
+    #: symbol at model-build time and could not be deferred this way.
+    from ...domain.calculations.registry import RevisionId
     from ...domain.modelos import WorkUnit
     from ..modelo import ModeloResolvedRevisionProjection, ModeloWorkTarget
 
