@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#profile-password-custody'
 date: '2026-08-13'
-modified: '2026-08-14'
-body_hash: 'sha256:34c7373cac2f12a11427945cc78c678bd80ea049557adcd4350970564e807746'
+modified: '2026-08-15'
+body_hash: 'sha256:8fd773bbe4b01eb7616e314fa5917f42ecc55ca4aec4c1485324e5616bcfb635'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -73,6 +73,8 @@ Authenticate a candidate profile without disturbing the active one, then publish
 - [x] `W02.P04.S57` - Have Terra XHigh stop the auth session fallback raising where it is documented to degrade, since a profile created through credential registration holds a random custody key and no master-key-wrapped bucket key, no production site enrols one, and the fallback therefore raises a missing-material error that the surrounding handler does not catch, so it propagates instead of returning empty authority facts; `src/cadrumo/application/auth/_sessions.py and src/cadrumo/adapters/outbound/aeat/auth/_clave_movil.py`.
 - [x] `W02.P04.S58` - Have Terra XHigh make the profile-record authority re-derive on liveness as well as identity, since a latched session that has been zeroised in place is still returned for the same profile and there is no closed predicate to detect it, which turns a clean refusal into an integrity error for any caller entering after an unrelated closed span; `src/cadrumo/application/user_profile/_profile_record_repository.py`.
 - [ ] `W02.P04.S74` - Have Terra XHigh remove the latent hazard in the persisted profile record whose setup-state field defaults to the completed value, so a record constructed without stating it silently claims completion, noting that all three production construction sites state it explicitly today which makes this latent rather than live, and that changing a persisted-model default is a shape change wanting its own deliberate commit; `src/cadrumo/application/user_profile/_capsule_record.py`.
+- [ ] `W02.P04.S81` - Have Terra XHigh revoke the retired profile's session material on the DURABLE POINTER unioned with the live session, since the handover derives the profile to retire solely from the live in-process session and every command-line invocation is a fresh process, so in the ordinary operator flow no session is live, the revocation gate never fires, and the retired profile's bucket key remains recoverable with no passphrase, four of the five crash phases leaking identically, mirroring the union the logout path five hundred lines above already performs, and note the handover journal's stored identity is NOT a usable substitute because it is populated from the same live-session value and is therefore absent in exactly the failing cases; `src/cadrumo/application/user_profile/_login_session.py`.
+- [ ] `W02.P04.S82` - Have Terra XHigh re-site the non-resurrection proof across SEPARATE PROCESSES and extend it over the crash parametrisation, since the current test runs both logins in one process, which is the single configuration in which the revocation works, so it verifies the property only where its precondition holds and cannot fail on the defect it exists to refuse; `src/cadrumo/application/user_profile/tests/test_login_handover.py`.
 
 ## Wave `W03` - restorative transport and operator surfaces
 
