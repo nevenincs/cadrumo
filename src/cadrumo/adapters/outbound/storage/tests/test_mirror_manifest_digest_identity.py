@@ -34,6 +34,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _NAMESPACE = "cadrumo.mirror.digest"
 _NOW = datetime(2026, 1, 1, tzinfo=UTC)
 
+#: Pins the manifest shape under test; claims nothing about what production
+#: stamps, so this file deliberately does not import the application constant.
+_MANIFEST_SCHEMA_VERSION_UNDER_TEST = 1
+
 #: 64 characters, so a length-only constraint admits both; neither is hex.
 _NON_HEX = "z" * 64
 _UPPERCASE = "A" * 64
@@ -101,6 +105,7 @@ def test_namespace_manifest_latest_revision_matches_canonical_verdict(malformed:
     """The parent manifest's latest-revision pointer is bound by the same shape."""
     with pytest.raises(ValidationError):
         RemoteMirrorNamespaceManifest(
+            manifest_schema_version=_MANIFEST_SCHEMA_VERSION_UNDER_TEST,
             namespace=_NAMESPACE,
             object_count=0,
             latest_revision_id=malformed,
@@ -118,6 +123,7 @@ def test_producer_output_round_trips_through_the_tightened_manifest() -> None:
     """
     entry = _object_manifest()
     manifest = RemoteMirrorNamespaceManifest(
+        manifest_schema_version=_MANIFEST_SCHEMA_VERSION_UNDER_TEST,
         namespace=_NAMESPACE,
         object_count=1,
         latest_revision_id=entry.storage_revision_id,

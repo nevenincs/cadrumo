@@ -29,6 +29,7 @@ from ._custody_repository import (
     profile_custody_transaction_lock,
 )
 from ._custody_transactions import (
+    CUSTODY_RECEIPT_SCHEMA_VERSION,
     ProfileCustodyDeleteConfirmation,
     ProfileCustodyInventoryWitness,
     ProfileCustodyOwnerReceipt,
@@ -866,6 +867,7 @@ class _ProfileCustodyTransactionCapability:
             raise ProfileCustodyTransactionConflictError(error_message) from exc
         self._repository.write_owner_receipt(
             ProfileCustodyOwnerReceipt.create(
+                schema_version=CUSTODY_RECEIPT_SCHEMA_VERSION,
                 transaction_id=journal.transaction_id,
                 profile_id=journal.profile_id,
                 owner=owner,

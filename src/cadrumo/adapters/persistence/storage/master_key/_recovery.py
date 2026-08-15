@@ -1,24 +1,35 @@
 """Recovery-key generation, encoding, and master-key wrapping.
 
-The recovery-key story for the secure-persistence substrate is two-
-fold:
+This module holds two separable halves, and the distinction is
+load-bearing because they have different futures:
 
-1. **Mnemonic encoding**: a 32-byte recovery key is encoded as a
-   24-word BIP-39 English mnemonic for human-readability. The
-   operator prints the mnemonic at provision time and stores it
-   somewhere safe; lost passphrase / lost keychain implies recovery
-   via this mnemonic. The substrate never persists the mnemonic on
-   disk.
+1. **Mnemonic encoding** — :class:`RecoveryKey`,
+   :func:`generate_recovery_key`, :func:`encode_mnemonic` and
+   :func:`decode_mnemonic`. A 32-byte recovery key is encoded as a
+   24-word BIP-39 English mnemonic so a human can transcribe it. This
+   half is a pure codec over high-entropy bytes: it is bound to no
+   custody architecture, no file layout and no key schedule, and it is
+   the only thing in the substrate that can mint a recovery secret
+   strong enough to resist offline guessing once material derived from
+   it has left the machine. The substrate never persists the mnemonic.
 
-2. **Recovery-key wrapping**: at provision time, the master key is
-   wrapped under an HKDF-SHA256-derived KEK seeded by the recovery
-   key, and the wrapped ciphertext is persisted as
-   ``master.recovery.key``. When the active master-key provider
-   becomes unavailable (forgotten passphrase, locked keychain,
-   broken keyring), operator key-management code supplies the
-   recovery mnemonic and the substrate uses the wrapping to mint a
-   fresh ``master.key`` + ``master.kdf`` + ``salt`` triplet under the
-   chosen new backend.
+2. **Master-key wrapping** — :class:`WrappedMasterKey`,
+   :func:`wrap_master_key`, :func:`unwrap_master_key` and the
+   ``master.recovery.key`` load/save/install helpers. This half wraps a
+   single process-wide master key under an HKDF-SHA256 KEK seeded by
+   the recovery key. It belongs to the shared-master custody surface,
+   which per-profile password custody supersedes: a profile's own
+   recovery envelope wraps that profile's DEK under its own supervised
+   Argon2id parameters and does not route through here.
+
+No caller in the tree currently invokes either half. Neither is
+reachable from a live unwrap path, and no code path writes
+``master.recovery.key``, so the wrapping half guards no material this
+build can have produced. The codec is retained deliberately rather than
+as an oversight: a per-profile recovery secret is an opaque string, the
+codec is exactly the generator that makes such a string unguessable, and
+rebuilding a checksummed codec plus its canonical wordlist is far more
+expensive than carrying 13 KB of public-domain word data.
 
 This module exports the cryptographic primitives only; command wiring
 must remain outside the storage substrate.

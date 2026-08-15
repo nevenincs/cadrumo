@@ -63,6 +63,7 @@ from ...core import (
     AuthProviderKind,
     Modelo,
     Period,
+    ProfileRecordUnavailability,
 )
 from ...core import (
     require_active_bucket_id as _require_active_bucket_id,
@@ -216,6 +217,90 @@ def declaration_key(modelo: str, period: Period) -> str:
     declaration state never keys by a combined token such as ``2025Q1``.
     """
     return f"{modelo.strip()}:{_period_identity_segment(period)}"
+
+
+class ActiveProfileRecordResolution(BaseModel):
+    """One active-profile record read, together with WHY it produced nothing.
+
+    The record read has three outcomes an operator would act on differently --
+    a record, a locked profile, and an absent one -- and a bare ``None`` for
+    the last two erases the difference at exactly the boundary that reports it.
+    :attr:`unavailability` carries the reason instead, so a projection can say
+    "log in" where logging in is the remedy and reserve the absent-record
+    finding for a record that is genuinely not there.
+
+    Exactly one of :attr:`record` and :attr:`unavailability` is populated.
+
+    See Also:
+        :class:`~cadrumo.core.ProfileRecordUnavailability`
+            Closed set of reasons the record did not resolve.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    record: UserProfileRecord | None = None
+    unavailability: ProfileRecordUnavailability | None = None
+
+    @model_validator(mode="after")
+    def _validate_exactly_one_outcome(self) -> ActiveProfileRecordResolution:
+        if (self.record is None) == (self.unavailability is None):
+            raise ValueError("an active-profile record resolution carries either a record or one reason, never both")
+        return self
+
+
+def _active_profile_selection() -> tuple[str | None, str | None]:
+    """Return the raw active selector and its canonical live bucket UUID."""
+    identifier = _resolve_active_bucket_id()
+    if identifier is None:
+        return None, None
+    pointer = resolve_profile_bucket(identifier)
+    return identifier, pointer.bucket_id if pointer is not None else None
+
+
+def resolve_active_profile_record() -> ActiveProfileRecordResolution:
+    """Read the active profile's record and name the reason when there is none.
+
+    The active selector resolves via the precedence chain in
+    :func:`cadrumo.core.resolve_active_bucket_id` (env var > pointer file
+    fallback), then the committed-capsule projection resolves a display label
+    to its immutable bucket UUID before secure storage is addressed.
+
+    Session availability is asked STRUCTURALLY, through
+    :func:`~cadrumo.application.user_profile.profile_record_session_if_authenticated`,
+    ahead of the read rather than inferred afterwards from a refusal. A locked
+    profile is the ordinary logged-out state and its capsule is untouched, so
+    it must not be reported as an absent record; only a selector that resolves
+    to no committed capsule is that.
+
+    ``secure_objects`` (a :class:`SecureObjectRepository` override) and
+    ``schema`` are optional overrides forwarded to the record repository; a
+    per-bucket store and the bundled schema are resolved when ``None``.
+    """
+    from ...domain.user_profile import ProfileNotFoundError
+    from ..user_profile import ProfileRecordRepository, profile_record_session_if_authenticated
+
+    identifier, bucket_id = WorkflowState._active_profile_selection()  # noqa: SLF001 - own class
+    if bucket_id is None:
+        if identifier is not None:
+            _log.debug("active profile record resolution found no live bucket for the selected profile")
+        return ActiveProfileRecordResolution(unavailability=ProfileRecordUnavailability.NO_LIVE_CAPSULE)
+
+    with override_settings(cadrumo_active_profile=bucket_id):
+        session = profile_record_session_if_authenticated(bucket_id)
+        if session is None:
+            _log.debug("active profile record resolution found no authenticated session for the committed capsule")
+            return ActiveProfileRecordResolution(unavailability=ProfileRecordUnavailability.SESSION_REQUIRED)
+        try:
+            record = ProfileRecordRepository(session=session).load(bucket_id)
+        except ProfileNotFoundError as exc:
+            # The only remaining refusal shape is a bound authority addressed to
+            # another identity: the capsule and its row are untouched, so this
+            # is a readability failure rather than an absent record.
+            _log.debug("active profile record resolution hit a mis-addressed session: %s", type(exc).__name__)
+            return ActiveProfileRecordResolution(
+                unavailability=ProfileRecordUnavailability.SESSION_IDENTITY_MISMATCH,
+            )
+    return ActiveProfileRecordResolution(record=record)
 
 
 class WorkflowState(BaseModel):

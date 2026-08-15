@@ -51,4 +51,29 @@ class ProfileSessionRefusalReason(StrEnum):
     """AEAD tag verification failed (metadata or ciphertext altered)."""
 
 
-__all__ = ["ProfileSessionRefusalReason"]
+class ProfileRecordUnavailability(StrEnum):
+    """Closed enumeration of why the active profile's record did not resolve.
+
+    Every value names a DIFFERENT operator situation with a different remedy,
+    which is the whole reason this type exists: the resolution once returned a
+    bare ``None`` for all of them, and the health projection could only read
+    that as an absent record.  An operator whose profile was merely locked was
+    therefore told their record was gone.
+
+    ``SESSION_REQUIRED`` is the ordinary benign state -- the capsule is
+    committed and its record is intact, and nobody has logged in yet, so
+    nothing about the record is knowable until they do.  It is emphatically
+    not a data-loss finding.
+    """
+
+    NO_LIVE_CAPSULE = "no_live_capsule"
+    """The active selector resolves to no committed capsule at all."""
+
+    SESSION_REQUIRED = "session_required"
+    """The capsule is committed but no authenticated session serves it."""
+
+    SESSION_IDENTITY_MISMATCH = "session_identity_mismatch"
+    """A session is authenticated, but for a different profile identity."""
+
+
+__all__ = ["ProfileRecordUnavailability", "ProfileSessionRefusalReason"]

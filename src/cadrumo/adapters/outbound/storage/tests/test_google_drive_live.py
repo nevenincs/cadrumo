@@ -158,6 +158,7 @@ def test_remote_mirror_manifest_round_trips_against_real_drive_contents() -> Non
         revision_written_at=revision_written_at,
     )
     manifest = RemoteMirrorNamespaceManifest(
+        manifest_schema_version=1,
         namespace=_PROBE_NAMESPACE,
         object_count=1,
         latest_revision_id=entry.storage_revision_id,
