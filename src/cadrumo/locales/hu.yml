@@ -65806,6 +65806,8 @@ modelo:
               label: A forrásadó vagy adóelőleg alapja
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
               label: A külföldi illetőségű kedvezményezett jogi személyiségének kódja
+            x-e1in4opecpim6q315ln62or9dlkmarjkds:
+              label: A külföldi illetőségű kedvezményezett születési ideje
             x-e1in4opecpim6q315lo62prf:
               label: A nyeremény kifizetésének időpontja
             x-e1in4opecpim6q315lpmusjkclng:

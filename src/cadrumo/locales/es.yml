@@ -68106,6 +68106,8 @@ modelo:
               label: Gestor de cobro del premio
             x-e1in4oped5mn0rriehiiqs3iclmmiro:
               label: Importe íntegro del premio o valor individual del premio en especie
+            x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
+              label: Lugar de nacimiento del perceptor no residente
             x-e1in4opedpkmc:
               label: NIF del perceptor
             x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
