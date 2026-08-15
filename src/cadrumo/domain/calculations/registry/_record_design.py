@@ -1881,10 +1881,17 @@ def _naturaleza_or_none(value: str) -> str | None:
     unrecognised naturaleza must not become a field's type_code, because that is
     how a line of prose turns into a position.
     """
-    normalised = unicodedata.normalize("NFKD", value.strip(" .")).encode("ascii", "ignore").decode("ascii").lower()
+    raw = value.strip(" .")
+    # The dash naturaleza is tested on the RAW token, before normalisation.
+    # Stripping accents encodes to ASCII, which discards an en-dash entirely and
+    # leaves an empty string, so testing it afterwards silently rejected every
+    # genuine "226-487 - BLANCOS." row in the corpus.
+    if raw and set(raw) <= {"-", "–"}:
+        return "Blancos"
+    normalised = unicodedata.normalize("NFKD", raw).encode("ascii", "ignore").decode("ascii").lower()
     if not normalised:
         return None
-    if set(value.strip(" .")) <= {"-", "–"} or normalised == "blank":
+    if normalised == "blank":
         return "Blancos"
     if normalised.startswith(("alfanum", "alphanum")):
         return "Alfanumérico"
