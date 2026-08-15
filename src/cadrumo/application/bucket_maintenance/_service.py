@@ -11,11 +11,18 @@ from __future__ import annotations
 from collections.abc import Generator, Iterable
 from contextlib import ExitStack, contextmanager
 from pathlib import Path
+from uuid import UUID
 
+from ...adapters.persistence.storage.custody import inventory_committed_profile_custody_capsule
 from ...core import StorageCategory, require_active_bucket_id, storage_location
+from ...core.hashing import CONTENT_DIGEST_PREFIX
 from ...core.paths import directory_byte_total
+from ...core.time import now
 from ...domain.buckets import BucketDeleteRefusedError
+from ...domain.retention import RetentionFloorAssessment
 from ...domain.user_profile import ProfileNotFoundError
+from .._bucket_deletion_contracts import BucketDeletionFingerprint
+from ..filing import FilingRetentionAuthority
 from ..profile_custody import default_profile_bucket_storage, default_profile_secure_object_inventory
 from ..workflow import read_profile_bucket_by_id
 from ._contracts import (
@@ -93,13 +100,21 @@ class BucketMaintenanceService:
             yield
 
     def assess_deletion(self, command: AssessBucketDeletionCommand) -> BucketDeletionAssessment:
-        """Return an existence/fingerprint observation without lifecycle state.
+        """Observe one deletion target: existence, label, contents and retention.
 
-        Retention requires decrypting the exact profile record under an
-        authenticated session.  This read-only surface therefore reports no
-        setup-state or retention claim; a future destructive command must bind
-        those facts through the custody lifecycle rather than infer them from
-        a manifest.
+        Retention is answered WITHOUT a session, and the distinction matters
+        because it is why this surface can answer at all. Producing the filing
+        retention position still needs the bucket's key -- it summarises the
+        encrypted filing catalogue -- so the filing owner records a plaintext
+        snapshot at the two moments a session is held by construction, profile
+        creation and filing persistence. A deletion preflight runs against
+        profiles it has NOT unlocked, so it reads that snapshot rather than the
+        modelo records, which are encrypted under a key nobody here holds.
+
+        ``setup_state`` stays absent for the same reason it always did: it lives
+        inside the encrypted profile record and no unauthenticated read can
+        reach it. The field is optional on the assessment precisely so this
+        surface can decline it rather than guess.
         """
         from ...core.config import load_settings
 
@@ -113,14 +128,27 @@ class BucketMaintenanceService:
                 "bucket deletion assessment refuses a linked target",
                 context={"bucket_id": command.bucket_id},
             ) from exc
-        if read_profile_bucket_by_id(command.bucket_id) is None:
+        bucket = read_profile_bucket_by_id(command.bucket_id)
+        if bucket is None:
             raise BucketDeleteRefusedError(
                 "current custody target has no committed label projection",
                 context={"bucket_id": command.bucket_id},
             )
-        raise BucketDeleteRefusedError(
-            "current custody deletion requires an authenticated retention assessment",
-            context={"bucket_id": command.bucket_id},
+        profile_id = UUID(command.bucket_id)
+        return BucketDeletionAssessment(
+            bucket_id=command.bucket_id,
+            exists=True,
+            label=bucket.label,
+            fingerprint=_observed_deletion_fingerprint(
+                root=root,
+                profile_id=profile_id,
+                bucket_id=command.bucket_id,
+            ),
+            retention=_assessed_filing_retention(
+                root=root,
+                profile_id=profile_id,
+                bucket_id=command.bucket_id,
+            ),
         )
 
     def browse(self, command: BrowseBucketCommand) -> BrowseBucketResult:

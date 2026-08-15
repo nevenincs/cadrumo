@@ -253,13 +253,14 @@ def _retired_spelling_citations() -> list[tuple[str, str | None, str]]:
             offset = haystack.find(spelling)
             if offset < 0:
                 continue
-            citations.append(
-                (
-                    resolved.relative_to(REPO_ROOT).as_posix(),
-                    _enclosing_function(resolved, offset),
-                    spelling,
-                ),
-            )
+            # Report repo-relative where possible, absolute otherwise: a probe
+            # may feed this scan a file from outside the tree, and a display
+            # concern must never decide whether an offender is reported.
+            try:
+                display = resolved.relative_to(REPO_ROOT).as_posix()
+            except ValueError:
+                display = resolved.as_posix()
+            citations.append((display, _enclosing_function(resolved, offset), spelling))
     return citations
 
 
@@ -318,10 +319,12 @@ def test_every_retired_spelling_exemption_is_still_load_bearing() -> None:
     """
     live = {(path, function) for path, function, _spelling in _retired_spelling_citations()}
     stale = [
-        f"{path}::{function} ({reason})" for path, function, reason in _SPELLING_EXEMPTIONS if (path, function) not in live
+        f"{path}::{function} ({reason})"
+        for path, function, reason in _SPELLING_EXEMPTIONS
+        if (path, function) not in live
     ]
-    assert stale == [], (
-        "retired-spelling exemptions no longer match a real citation; remove them:\n  " + "\n  ".join(stale)
+    assert stale == [], "retired-spelling exemptions no longer match a real citation; remove them:\n  " + "\n  ".join(
+        stale
     )
 
 

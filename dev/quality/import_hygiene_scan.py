@@ -1522,8 +1522,7 @@ def _named_by_any_string(path: Path, mod: str, rel: str, string_pool: Iterable[s
     suffix = f".{path.stem}"
     filename = path.name
     return any(
-        text == mod or text == rel or text == filename or text.endswith(suffix) or text.endswith(f"/{filename}")
-        for text in string_pool
+        text in (mod, rel, filename) or text.endswith(suffix) or text.endswith(f"/{filename}") for text in string_pool
     )
 
 

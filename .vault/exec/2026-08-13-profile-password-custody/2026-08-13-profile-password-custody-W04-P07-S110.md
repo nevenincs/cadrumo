@@ -5,14 +5,11 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:d1b67a9cdb40a3bbe45232f54c29078ce98e912d6e481dd76254c204c65089a4'
+body_hash: 'sha256:2e04f8f857d8ce962f1c9d4370ee00f5d4b4eefc1299b9a074e8e283afce7063'
 step_id: 'S110'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
-
-
-
 
 # Have Sol Medium rule on the bucket key enrolment ordering defect, since a bucket counts as registered purely because its capsule exists rather than by any stored enrolment, and registration permanently refuses minting by tested design, so the only window to mint the wrapped bucket key closes at capsule publication while the enrolment flag that opens it defaults false and is passed true by no production code anywhere, leaving no path that creates a bucket the storage layer will open
 

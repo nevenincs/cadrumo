@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:3922d8c48c3e40140a532d6f52e18f2e7cc6916a8012aa5041a4fb2549303df0'
+body_hash: 'sha256:729858213772eb76c85109612634094e27aa00e984e535279b26b618566949d1'
 step_id: 'S31'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -16,6 +16,21 @@ related:
 ## Scope
 
 - `src/cadrumo/adapters/persistence/storage/`
+- `src/cadrumo/application/user_profile/_bundle_encryption.py` and its tests (extension, recorded
+  below)
+
+### Recorded scope extension
+
+The third of the three models this row names does not live under the row's scope line. It sits in
+the profile package, and the row's scope declares only the storage adapter. The extension was
+raised before any edit and granted explicitly by the dispatching agent, with the reasoning that
+the model IS one of the three the row names, so it falls inside the row's INTENT even though the
+scope line under-declares where its own subject lives; fragmenting one row's subject across two
+executors to honour that clause would be the worse error.
+
+This is recorded rather than taken silently because the row's scope line is the artefact that was
+wrong, and a scope clause that does not cover the paths its own subject has moved into is a known
+open defect class in this campaign. Nothing else outside the scope line was touched.
 
 ## Description
 
@@ -27,6 +42,12 @@ related:
   facade, and export the Argon2 version marker from that facade.
 - Re-point the on-disk `master.kdf` record's window import at the enrolment record beside it and
   drop the private-alias spelling, since the constants now have one public home.
+- Promote the six window constants onto the master-key facade and the KDF salt length onto the
+  storage facade, as the precondition of the consuming change rather than as a follow-up.
+- Constrain the bundle-export envelope's three cost axes and its salt against that same window,
+  reading it from the record the writer stamps from rather than restating it.
+- Give the previously untested envelope a real test module covering the window, the salt, the
+  round-trip and the on-disk anti-tautology proofs.
 - Regenerate the API stubs so the removed module's orphan stub cannot crash the next nitpicky
   autodoc build.
 
@@ -57,26 +78,47 @@ Model two, `_KdfParameters` in
 declaration. It too is already constrained, and produces no weaker derivation.
 
 Model three is `EncryptedProfileBundleExport` in
-`src/cadrumo/application/user_profile/_bundle_encryption.py`. It carries kibibytes and it is the
-one model that is genuinely unconstrained: `memory_cost`, `time_cost` and `parallelism` are bare
-integers with no bound, and `salt_b64` carries no length rule. Its read path hands all four
-straight to the Argon2 derivation helper.
+`src/cadrumo/application/user_profile/_bundle_encryption.py`. It carries kibibytes and it was the
+one model that was genuinely unconstrained: `memory_cost`, `time_cost` and `parallelism` were bare
+integers with no bound, and `salt_b64` carried no length rule, while sibling fields on the same
+model already carried a minimum. Its read path handed all four straight to the Argon2 derivation
+helper. It now carries the same window as models one and two; the fix is described below.
 
-**The weaker-derivation finding, stated first because it outranks the refactor.**
+**The weaker-derivation finding, stated first because it outranks the refactor. Now fixed.**
 
-Only model three can express a below-floor parameter set, and it can express an arbitrarily weak
-one: one kibibyte, one iteration, a one-byte salt. That is the same pair of defects the on-disk
-record's own docstring records as having been closed on its sibling, reproduced verbatim on a
-third surface.
+Only model three could express a below-floor parameter set, and it could express an arbitrarily
+weak one. This was confirmed by construction rather than by reading: the model accepted an
+envelope declaring eight kibibytes, one iteration and a one-byte salt without complaint.
 
-The honest severity is a hardening gap, not a live weakening of operator data. The write path
-always stamps the canonical default, so every bundle this application emits sits at the OWASP
-floor; and a tampered envelope's weak parameters only reproduce a key the tamperer already chose,
-because the authenticated-encryption tag still gates the plaintext. What is lost is that a
-re-exported envelope can circulate as an application-grade encrypted bundle while being
-brute-forceable, and that a short salt escapes as a raw third-party hashing error rather than a
-typed refusal. The module is outside this row's scope line and outside this executor's declared
-ownership, so it is reported to the dispatching agent for assignment rather than edited here.
+The honest severity is a hardening gap, not a live weakening of operator data, and it should not
+be inflated beyond that. The write path always stamps the canonical default, so every bundle this
+application emits sits at the OWASP floor; and a tampered envelope's weak parameters only
+reproduce a key the tamperer already chose, because the authenticated-encryption tag still gates
+the plaintext. The concrete loss is nonetheless real: a re-exported envelope could circulate as an
+application-grade encrypted bundle while declaring a brute-forceable derivation, and a
+structurally invalid salt was indistinguishable at the boundary from a wrong passphrase, sending
+an operator to recover a passphrase that was never wrong.
+
+**One part of the original report was wrong and is corrected here.** It claimed a short salt
+escaped as a raw third-party hashing error. It does not. A probe against the live code shows the
+derivation helper already converts the library's error into the typed storage error, and the
+decrypt boundary already converts that into this module's registered error; no raw exception
+reaches an operator. That claim had been carried across from the sibling record's docstring, which
+describes its OWN historical defect, rather than established against this module. The real defect
+at that boundary is misattribution, not leakage, and it is the misattribution that the salt
+constraint removes.
+
+The fix constrains the three cost axes and the salt against the same window the writer stamps
+from, read from that declaration rather than restated, so a cost bump moves the bound and the
+stamped parameters together instead of leaving two numbers to agree by luck. No version bump and
+no upgrader were introduced: the compatibility regime is still pre-release, floors may chase the
+current version, and fabricating an old-version fixture or upgrader for a shape nothing wrote is
+explicitly forbidden. Tightening the model is the whole change.
+
+The one recorded decision sitting nearby, the comment explaining why the Argon2 algorithm version
+is compared against the version marker rather than the file-backed provider's record-shape
+version, governs that comparison only. It licenses nothing about the cost axes, so this
+tightening contradicts no recorded decision, and that reasoning was left untouched.
 
 **Why no model folds: the substitutability reasoning.**
 
@@ -132,12 +174,44 @@ inside one package, so no cross-package edge exists to become a cycle. No deferr
 function-local import was added anywhere, and none was needed. The removed module leaves no
 reference behind in source, in the generated reference, or in the harness.
 
+**Proof that the tightening bites, and that it does not bite the writer.**
+
+The positive control is the one that matters, because a window refusing this build's own bundles
+would be a worse defect than the one it closes. A real portable export is encrypted, serialised,
+re-parsed through the constrained model with strict equality, and decrypted back to a payload
+equal to the original. The writer's stamped parameters sit on the inclusive lower bound, so they
+validate rather than fall on the wrong side of it.
+
+The refusal side is proved on the persisted form rather than on constructor arguments: a genuine
+envelope is serialised, one field of the resulting document is corrupted, and the reload is
+required to refuse. That covers a far-below-floor memory cost, an off-by-one below the floor, a
+below-floor iteration count, an over-ceiling lane count, and four salts that are not exactly one
+KDF salt including a one-byte, a one-short, a double-length and a non-base64 value. The
+off-by-one case is what proves the bound is the OWASP baseline itself rather than some looser
+number that merely rejects an absurd value.
+
+A separate test covers the backstop: an envelope built through pydantic's documented validation
+bypass still meets this module's registered error at the decrypt boundary rather than a raw
+third-party one. That is the property the original report mis-stated, now pinned so it cannot
+silently stop being true.
+
+All of these were first built and run from outside the repository, then landed in the production
+test path, because the module had no test coverage at all before this row and scratch proofs are
+ephemeral. One further test was written and then deleted rather than kept: it compared the field's
+declared bound against the same constant the production code reads, which is a test of the code
+against itself and cannot fail meaningfully.
+
 **Verification.**
 
 The custody and master-key suites, the capsule-lifecycle and active-profile-resolution suites, and
 the hard-cutover absence gate ran together: 320 passed, one failed. That one failure is the
 pre-declared, already-red detector-vocabulary test tracked by a separate row; its assertion
 compares an unrelated symbol name set and is unchanged by this work.
+
+The profile and domain profile suites ran with the custody and master-key suites after the
+envelope change: 729 passed, 40 failed, and the new envelope module passed in full. No failure
+references the envelope, any of its fields, or any promoted constant; the export-import failure
+whose name looked closest reports an unknown command-line verb, which is a peer's surface change.
 
 The wider storage suite reports 39 failures. None is attributable here: every failing module was
 checked against the symbols this row touched and none references them, the dominant cause is the
@@ -158,9 +232,18 @@ baseline unchanged.
 ## Notes
 
 The three-model premise in the originating row is partly stale: two of the three were already
-constrained by earlier work in this campaign, and only the bundle-export envelope remains open.
-That one is outside this row's scope line, so it is reported rather than fixed, and it is the
-finding that should outlive this record.
+constrained by earlier work in this campaign, and only the bundle-export envelope was still open.
+That one is now closed under the recorded scope extension above.
+
+The envelope had no test coverage whatsoever before this row, which is why an unconstrained
+persisted KDF record survived in a package whose two sibling records had both been hardened. The
+gap was in coverage, not in review attention.
+
+The envelope's decrypt half has no production consumer today: the package exports a bundle but has
+no import path, so the read side is exercised only by tests. That does not weaken the case for
+constraining the record, since the constraint belongs to the persisted format rather than to any
+one caller, but it is the reason the operator-facing severity stays low and it should be known by
+whoever eventually builds the import verb.
 
 The row's instruction to fold is not followed, and deliberately so. The evidence refuses it on the
 pre-filter, on data-stranding grounds, and on wire-format grounds independently. Recording the

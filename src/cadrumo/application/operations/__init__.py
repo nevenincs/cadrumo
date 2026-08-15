@@ -36,6 +36,7 @@ from ._events import (
     OperationReconciliationEvent,
     OperationTerminalEvent,
 )
+from ._execution_context import OperationDeclarationError
 from ._executor import (
     OperationCancellationScope,
     OperationCleanupOwner,
@@ -114,6 +115,7 @@ __all__ = [
     "OperationConsumedInteraction",
     "OperationDeadline",
     "OperationDeadlineAccess",
+    "OperationDeclarationError",
     "OperationDefinition",
     "OperationDefinitionId",
     "OperationDiagnosticEvent",

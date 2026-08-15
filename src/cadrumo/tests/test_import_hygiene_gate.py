@@ -106,16 +106,16 @@ from dev.quality.import_hygiene_scan import (
     TuiBoundaryViolationKind,
     discover_facades,
     find_dangling_first_party_imports,
-    find_orphaned_modules,
-    first_party_census_files,
     find_delegate_wrapper_shims,
     find_dev_tooling_import_violations,
     find_multi_sourced_symbols,
+    find_orphaned_modules,
     find_private_import_violations,
     find_registry_loader_import_violations,
     find_shim_modules,
     find_tui_boundary_violations,
     find_underscore_in_all_violations,
+    first_party_census_files,
     generate_tui_migration_manifest,
     is_shipped_module,
     iter_dynamic_import_targets,
@@ -1205,8 +1205,7 @@ def test_family8_has_no_dangling_first_party_import_targets() -> None:
     dangling = find_dangling_first_party_imports(_package_import_sites())
 
     rendered = [
-        f"{d.importer_path}:{d.lineno} -> {d.target_mod}" + (f" :: {d.symbol}" if d.symbol else "")
-        for d in dangling
+        f"{d.importer_path}:{d.lineno} -> {d.target_mod}" + (f" :: {d.symbol}" if d.symbol else "") for d in dangling
     ]
     assert rendered == [], (
         "first-party import target(s) that no longer resolve — a deletion landed without its "
@@ -1345,8 +1344,11 @@ def test_family9_has_no_orphaned_reexport_bridges() -> None:
     orphans = find_orphaned_modules(
         _package_py_files(),
         first_party_census_files(),
-        (shim.path for shim in find_shim_modules(_package_py_files(), discover_facades())
-         if shim.reason == "pure_reexport_shape"),
+        (
+            shim.path
+            for shim in find_shim_modules(_package_py_files(), discover_facades())
+            if shim.reason == "pure_reexport_shape"
+        ),
     )
 
     bridges = [o.path for o in orphans if o.is_reexport_surface]
@@ -1387,9 +1389,7 @@ def test_family9_counts_a_module_named_only_by_a_string(tmp_path: Path) -> None:
             "cadrumo/registered.py": "VALUE = 2\n",
             "cadrumo/probed.py": "VALUE = 3\n",
             "cadrumo/reacher.py": (
-                'SUBPROCESS = "cadrumo.dotted_target"\n'
-                'TABLE = (("app", "cmd", ".registered"),)\n'
-                'PROBE = "probed.py"\n'
+                'SUBPROCESS = "cadrumo.dotted_target"\nTABLE = (("app", "cmd", ".registered"),)\nPROBE = "probed.py"\n'
             ),
         },
     )

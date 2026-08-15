@@ -5,14 +5,11 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:acd17de4d65aeb5aa4589a56457b269b01137fafb0d41090e2338a6e1d3195a9'
+body_hash: 'sha256:e72d2fad1c7497969d14660d73f67963d4a07559b1c1eddba1dc0c53051acd67'
 step_id: 'S111'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
-
-
-
 
 # Have Sol Medium author the decision record for which custody a bucket is enrolled in and pin the defect with a failing regression that reaches an actual record read through the sanctioned door, stating both the resolver-reads-stored-custody option and the rejected mint-a-second-wrapped-copy option with the exposure-widening argument that defeats it, and establishing whether any profile on real disk is currently in the unopenable state since that decides whether a migration question exists at all
 

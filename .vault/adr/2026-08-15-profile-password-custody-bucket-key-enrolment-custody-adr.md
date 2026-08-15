@@ -5,10 +5,11 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:04187174dd537cbd43621b7d6e8326846aeaf9bcafedc0ac5641359a510b52f2'
+body_hash: 'sha256:767697703db12ada2cd232e606d1923ce2800b6521f12e4a39b7c242216c47d1'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
   - "[[2026-08-15-profile-password-custody-bucket-key-schedule-custody-mismatch-adr]]"
+  - '[[2026-08-13-profile-password-custody-research]]'
 ---
 # `profile-password-custody` adr: `bucket key enrolment custody` | (**status:** `accepted`)
 
@@ -143,6 +144,35 @@ The refusal the third test pins names the current format rather than reaching
 for an older one, which is the no-legacy posture stated as a test: a custody
 envelope that does not parse as the current record is corruption now, not a
 shape to tolerate.
+
+## Rationale
+
+**Option B loses on a security property rather than on effort, and that is the
+knockout.** A second wrapped copy of the same DEK under a different
+key-encryption key would exist permanently, for every profile, and a keychain
+or master-key compromise would then open the bucket **without the operator's
+passphrase**. That is the precise property the capsule cutover was undertaken
+to establish, so B pays for an ordering convenience with the guarantee the
+whole campaign exists to buy. It also enrols every bucket in two schedules at
+once, which is the one ambiguity a key schedule exists to remove. This argument
+never depended on the premise being true, which is why it is restated here
+rather than retired with the claim it was first written to answer.
+
+**Option A wins on a fact rather than on preference: the key is not missing.**
+It is present, wrapped under the operator's passphrase, exactly where the
+cutover put it, and the measurement recorded in the S110 execution record shows
+the records it protects decrypting after authentication. Once that is
+established, B is manufacturing a second key to solve a problem the first key
+does not have, and C is weakening a guard to make room for it. A is also the
+only option that leaves the never-mint guard both correct and untouched,
+because a bucket under one custody never needs minting.
+
+**Option D — treating the row as authoritative and repairing the defect —
+loses to the same measurement, and is worth naming because it was the default
+action.** The row is specific and confident, and acting on it would have looked
+like execution. It would have written a change against a tree state that does
+not exist, on the strength of a probe that stopped one step short. A record
+that reports the premise dead is the smaller and truer deliverable.
 
 ## Consequences
 

@@ -265,8 +265,7 @@ class LiteralVersionAuthoringSite(NamedTuple):
 
     def format(self) -> str:
         return (
-            f"  {self.display_path}:{self.lineno} {self.class_name}.{self.field} "
-            f"authors {self.value!r} ({self.form})"
+            f"  {self.display_path}:{self.lineno} {self.class_name}.{self.field} authors {self.value!r} ({self.form})"
         )
 
 
