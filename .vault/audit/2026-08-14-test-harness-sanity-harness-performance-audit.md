@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:3c2b158f7f0d7a946f6482e7b415234b200d37e592ae3d037fc4d6d0abd69400'
+body_hash: 'sha256:3e07b4e1c09a554de1233456184f5d5199de8662c2580197468ac649eb9dd8af'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -292,4 +292,3 @@ path segments, and drops an import name only when the AST reports zero remaining
 `Name` loads of it. It then re-parses and refuses to write unless the accessor is
 imported exactly once, is actually called, and no docstring contains the import
 text. A dry-run diff was read before applying.
-

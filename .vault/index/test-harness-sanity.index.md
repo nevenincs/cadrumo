@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:3c01c129f51d88406afe1755bfd962f4e92022f827ecb40ec7b68054e0eb90ef'
+body_hash: 'sha256:433d10cecfdbcb65a1ea38ea9f96ccb25b51ae89e0fe52205093a3db7eecb215'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -79,6 +79,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
   - '[[2026-08-14-test-harness-sanity-two-lane-campaign-research]]'
   - '[[2026-08-14-test-harness-sanity-w08-canonical-home-regressions-audit]]'
+  - '[[2026-08-15-test-harness-sanity-fixture-census-audit]]'
   - '[[2026-08-15-test-harness-sanity-monkeypatch-criterion-deferral-audit]]'
 ---
 
@@ -98,6 +99,7 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-harness-performance-audit` - `test-harness-sanity` audit: harness performance
 - `2026-08-14-test-harness-sanity-semantic-test-corpus-drift-audit` - `test-harness-sanity` audit: semantic sweep of test-corpus drift
 - `2026-08-14-test-harness-sanity-w08-canonical-home-regressions-audit` - `test-harness-sanity` audit: W08 close review, canonical-home regressions
+- `2026-08-15-test-harness-sanity-fixture-census-audit` - `test-harness-sanity` audit: `fixture census`
 - `2026-08-15-test-harness-sanity-monkeypatch-criterion-deferral-audit` - `test-harness-sanity` audit: the one monkeypatch the no-monkeypatch gate cannot absorb
 
 ### exec
