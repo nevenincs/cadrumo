@@ -470,6 +470,8 @@ aggregation:
         no puede resolverse.
   service:
     errors:
+      currency_conversion_required: El importe en moneda extranjera requiere una conversión
+        a euros antes de poder agregarse.
       envelope_modelo_mismatch: El modelo del envoltorio no coincide con el modelo
         esperado.
       envelope_period_mismatch: El periodo del envoltorio no coincide con el periodo
@@ -605,6 +607,10 @@ application:
         requires_custody_session: La operación de autenticación apunta al perfil '%{bucket_id}'
           en %{storage_root}, pero ese perfil no tiene una sesión de custodia abierta.
           Ejecute aeat config login para ese perfil y vuelva a intentarlo.
+        revoke_requires_custody_session: La sesión de la AEAT del perfil '%{bucket_id}'
+          NO se ha revocado. Está guardada cifrada dentro de ese perfil, por lo que
+          desbloquear el perfil es lo que la revoca. Ejecute aeat config login para
+          este perfil y repita el comando. Hasta entonces la sesión sigue activa.
         scope_conflict: Elige --provider o --all, pero no ambos.
         unreadable_active_profile: 'El perfil activo ''%{active_profile}'' tiene un
           manifiesto de bucket pero no tiene un registro de perfil legible (status=%{status}).

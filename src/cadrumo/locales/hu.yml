@@ -438,6 +438,8 @@ aggregation:
         nem oldható fel.
   service:
     errors:
+      currency_conversion_required: A külföldi pénznemű összeget euróra kell váltani,
+        mielőtt összesíthető lenne.
       envelope_modelo_mismatch: Az aggregációs modell nem egyezik az eredmény modellel.
       envelope_period_mismatch: Az aggregációs időszak nem egyezik az eredmény időszakával.
       envelope_provider_payload_mismatch: A szolgáltató nem egyezik az aggregációs
@@ -566,6 +568,10 @@ application:
           célozza itt: %{storage_root}, de ehhez a profilhoz nincs nyitott letéti
           munkamenet. Futtassa az aeat config login parancsot erre a profilra, majd
           próbálja újra.'
+        revoke_requires_custody_session: A(z) '%{bucket_id}' profil AEAT-munkamenete
+          NEM lett visszavonva. Titkosítva, a profilon belül tárolódik, ezért a profil
+          feloldása vonja vissza. Futtassa az aeat config login parancsot erre a profilra,
+          majd ismételje meg a parancsot. Addig a munkamenet használható marad.
         scope_conflict: Válassza a --provider vagy a --all lehetőséget, de ne mindkettőt.
         unreadable_active_profile: 'Az aktív profil (%{active_profile}) rendelkezik
           bucket-manifeszttel, de nincs olvasható profil-rekorddal (állapot=%{status}).

@@ -56,6 +56,30 @@ def _create_profile(profile_id: str, *, provider: str | None = None) -> None:
             configure_operator_auth(provider)
 
 
+def _logout(*, unlock: str | None = None, **kwargs):
+    """Revoke with the profile unlocked, which is what the operator must now do.
+
+    The AEAT session is an encrypted row inside the profile's own store, so
+    revoking it requires the profile open -- there is no key-free half to
+    perform from a cold pointer. Every result assertion in this module is
+    unchanged; only the premise moved, from "no session is bound" to "the
+    operator has unlocked the profile they are revoking".
+    """
+    with open_test_profile_session(unlock or kwargs.get("target_bucket_id") or _PROFILE_A):
+        return logout_operator_auth(**kwargs)
+
+
+def _reset(*, unlock: str | None = None, **kwargs):
+    """Reset with the profile unlocked, for the same reason as :func:`_logout`.
+
+    An explicit ``target_bucket_id`` names the profile being revoked, so that is
+    the one unlocked -- revoking B while only A is open is precisely what the
+    custody guard refuses.
+    """
+    with open_test_profile_session(unlock or kwargs.get("target_bucket_id") or _PROFILE_A):
+        return reset_operator_auth(**kwargs)
+
+
 def test_auth_mutation_uses_canonical_bucket_lock(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _create_profile(_PROFILE_A)
@@ -97,13 +121,16 @@ def test_logout_reopens_pointer_profile_and_is_idempotent(tmp_path: Path) -> Non
                 ),
             )
 
+        # The revocation opens and closes its own session; the caller's
+        # context holds none before or after, which is what stops a mutation
+        # leaking an unlocked profile into whatever runs next.
         assert has_active_bucket_session() is False
-        first = logout_operator_auth(provider="certificate")
+        first = _logout(provider="certificate")
         assert has_active_bucket_session() is False
 
         with open_test_profile_session(_PROFILE_A):
             after_first = workflow_state_repository().load()
-        second = logout_operator_auth(provider="certificate")
+        second = _logout(provider="certificate")
         with open_test_profile_session(_PROFILE_A):
             after_second = workflow_state_repository().load()
 
@@ -123,13 +150,13 @@ def test_logout_and_reset_require_unambiguous_scope(tmp_path: Path) -> None:
         _create_profile(_PROFILE_A)
 
         with pytest.raises(AuthProviderNotConfiguredError):
-            logout_operator_auth()
+            _logout()
         with pytest.raises(AuthProviderNotConfiguredError):
-            reset_operator_auth()
+            _reset()
         with pytest.raises(AuthOperationScopeConflictError):
-            logout_operator_auth(provider="certificate", all_providers=True)
+            _logout(provider="certificate", all_providers=True)
         with pytest.raises(AuthOperationScopeConflictError):
-            reset_operator_auth(provider="certificate", all_providers=True)
+            _reset(provider="certificate", all_providers=True)
 
 
 @pytest.mark.parametrize(
@@ -171,8 +198,8 @@ def test_reserved_provider_reset_is_an_idempotent_noop(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _create_profile(_PROFILE_A, provider="certificate")
 
-        first = reset_operator_auth(provider="clave_pin")
-        second = reset_operator_auth(provider="clave_pin")
+        first = _reset(provider="clave_pin")
+        second = _reset(provider="clave_pin")
         with open_test_profile_session(_PROFILE_A):
             state = workflow_state_repository().load()
 
@@ -190,7 +217,7 @@ def test_logout_deletes_real_clave_permanente_session(tmp_path: Path) -> None:
             _session_store.save(path, storage_state={}, metadata={"provider_kind": "clave_permanente"})
             assert _session_store.exists(path)
 
-        result = logout_operator_auth(provider="clave_permanente")
+        result = _logout(provider="clave_permanente")
 
         with open_test_profile_session(_PROFILE_A):
             assert _session_store.exists(path) is False
@@ -254,7 +281,7 @@ def test_certificate_logout_removes_session_and_preserves_certificate_configurat
         source_registration_before = before.auth.certificate_sources["personal"]
         secret_value_before = secret_before.get_secret_value()
 
-        result = logout_operator_auth(provider="certificate")
+        result = _logout(provider="certificate")
 
         with open_test_profile_session(_PROFILE_A):
             after = workflow_state_repository().load()
@@ -283,7 +310,7 @@ def test_logout_all_emits_events_only_for_affected_providers(tmp_path: Path) -> 
             path = storage_state_paths(AuthProviderKind.CLAVE_PERMANENTE).storage_state
             _session_store.save(path, storage_state={}, metadata={"provider_kind": "clave_permanente"})
 
-        result = logout_operator_auth(all_providers=True)
+        result = _logout(all_providers=True)
         with open_test_profile_session(_PROFILE_A):
             after = workflow_state_repository().load()
 
@@ -305,8 +332,8 @@ def test_reset_removes_certificate_registry_and_secure_secret(tmp_path: Path) ->
             set_operator_certificate_source_secret(name="personal", secret=SecretStr("do-not-leak"))
             assert resolve_certificate_source_secret(name="personal", bucket_id=_PROFILE_A) is not None
 
-        first = reset_operator_auth(provider="certificate")
-        second = reset_operator_auth(provider="certificate")
+        first = _reset(provider="certificate")
+        second = _reset(provider="certificate")
         with open_test_profile_session(_PROFILE_A):
             state = workflow_state_repository().load()
             secret = resolve_certificate_source_secret(name="personal", bucket_id=_PROFILE_A)
@@ -338,7 +365,7 @@ def test_certificate_reset_clears_path_without_removing_other_provider(tmp_path:
                 ),
             )
 
-        result = reset_operator_auth(provider="certificate")
+        result = _reset(provider="certificate")
         with open_test_profile_session(_PROFILE_A):
             state = workflow_state_repository().load()
 
@@ -368,7 +395,7 @@ def test_reset_uses_token_directory_from_supplied_settings(tmp_path: Path) -> No
                 operation="test-reset-token-root",
             ):
                 assert lock_path.is_file()
-                result = reset_operator_auth(provider="certificate", settings=settings)
+                result = _reset(provider="certificate", settings=settings)
                 assert lock_path.exists() is False
 
         assert result.cleared_locks == 1
@@ -386,7 +413,7 @@ def test_explicit_target_bucket_restores_unrelated_ambient_session(tmp_path: Pat
             assert ambient_before.bucket_id == _PROFILE_A
             state_a_before = workflow_state_repository().load()
 
-            result = reset_operator_auth(
+            result = _reset(
                 provider="clave_movil",
                 target_bucket_id=_PROFILE_B,
             )
@@ -401,3 +428,31 @@ def test_explicit_target_bucket_restores_unrelated_ambient_session(tmp_path: Pat
         assert result.bucket_id == _PROFILE_B
         assert result.cleared_provider_configuration is True
         assert state_b.auth.provider is None
+
+
+def test_revoking_a_locked_profile_refuses_and_says_the_session_is_still_live(tmp_path: Path) -> None:
+    """The contract that replaced the cold-pointer premise, pinned rather than implied.
+
+    An AEAT session is an encrypted row inside the profile's own store, so
+    revoking it requires the profile open. There is no key-free half to perform
+    first: clearing locks revokes nothing, and a partial that reported success
+    would tell the operator their session was gone while the row survived on
+    disk. The refusal is therefore the honest surface, and what it must carry is
+    the fact the operator cannot otherwise discover -- that the session is still
+    usable -- rather than that the profile is locked, which they already know.
+    """
+    from ....core.errors import resolve_error_message
+    from .. import AuthOperationRequiresCustodySessionError
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile(_PROFILE_A, provider="certificate")
+
+        with override_settings(cadrumo_active_profile=_PROFILE_A):
+            assert has_active_bucket_session() is False
+
+            with pytest.raises(AuthOperationRequiresCustodySessionError) as raised:
+                logout_operator_auth(provider="certificate")
+
+    message = resolve_error_message(raised.value)
+    assert _PROFILE_A in message
+    assert "aeat config login" in message

@@ -421,6 +421,8 @@ aggregation:
         resolve.
   service:
     errors:
+      currency_conversion_required: Foreign-currency amount requires an EUR conversion
+        before it can be aggregated.
       envelope_modelo_mismatch: Aggregation modelo does not match result modelo.
       envelope_period_mismatch: Aggregation period does not match result period.
       envelope_provider_payload_mismatch: Provider does not match aggregation payload
@@ -545,6 +547,10 @@ application:
         requires_custody_session: Auth operation targets profile '%{bucket_id}' at
           %{storage_root}, but that profile has no open custody session. Run aeat
           config login for that profile, then retry.
+        revoke_requires_custody_session: The AEAT session for profile '%{bucket_id}'
+          was NOT revoked. It is stored encrypted inside that profile, so unlocking
+          the profile is what revokes it. Run aeat config login for this profile and
+          repeat the command. Until then the session remains usable.
         scope_conflict: Choose either --provider or --all, not both.
         unreadable_active_profile: Active profile '%{active_profile}' has a bucket
           manifest but no readable profile record (status=%{status}). Run `%{next_action}`

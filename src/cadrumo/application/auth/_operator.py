@@ -27,6 +27,7 @@ See Also:
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
@@ -94,6 +95,7 @@ from ._operator_results import (
     AuthLoginPreconditionError,
     AuthLoginResult,
     AuthLogoutResult,
+    AuthOperationRequiresCustodySessionError,
     AuthProviderReservedError,
     AuthProvidersReport,
     AuthResetResult,
@@ -839,6 +841,39 @@ def _verified_session_update(
     )
 
 
+@contextmanager
+def _revocation_storage_span(
+    settings: Settings,
+    *,
+    target_bucket_id: str | None = None,
+):
+    """Enter the auth storage span, naming the unrevoked session when it refuses.
+
+    Logout and reset revoke an AEAT session that lives as an encrypted row inside
+    the profile's own store, so revoking it genuinely requires the profile to be
+    unlocked -- there is no key-free half to perform first. The generic custody
+    refusal tells the operator the profile is locked, which reads as a
+    permissions problem and leaves the important fact unsaid: the session is
+    still there and still usable. This narrows the message to say so.
+
+    Only the span's own entry refusal is rewritten. A refusal raised by the
+    operation running inside the span is a different failure and keeps its own
+    message.
+    """
+    entered = False
+    try:
+        with _active_profile_storage_span(settings, target_bucket_id=target_bucket_id) as bucket_id:
+            entered = True
+            yield bucket_id
+    except AuthOperationRequiresCustodySessionError as exc:
+        if entered:
+            raise
+        raise AuthOperationRequiresCustodySessionError(
+            translated_message="application.auth.operator.errors.revoke_requires_custody_session",
+            context=exc.context,
+        ) from exc
+
+
 def logout_operator_auth(
     *,
     provider: str | None = None,
@@ -848,7 +883,7 @@ def logout_operator_auth(
 ) -> AuthLogoutResult:
     """Terminate persisted sessions while preserving provider configuration."""
     if settings is not None:
-        with _active_profile_storage_span(settings, target_bucket_id=target_bucket_id):
+        with _revocation_storage_span(settings, target_bucket_id=target_bucket_id):
             return logout_operator_auth(
                 provider=provider,
                 all_providers=all_providers,
@@ -856,7 +891,7 @@ def logout_operator_auth(
                 settings=None,
             )
     resolved_settings = load_settings()
-    with _active_profile_storage_span(resolved_settings, target_bucket_id=target_bucket_id) as bucket_id:
+    with _revocation_storage_span(resolved_settings, target_bucket_id=target_bucket_id) as bucket_id:
         if bucket_id is None:
             raise AuthConfigureNoActiveBucketError(
                 translated_message="application.auth.operator.errors.no_active_bucket",
@@ -998,7 +1033,7 @@ def reset_operator_auth(
 ) -> AuthResetResult:
     """Remove auth custody through one durable, resumable reset operation."""
     if settings is not None:
-        with _active_profile_storage_span(settings, target_bucket_id=target_bucket_id):
+        with _revocation_storage_span(settings, target_bucket_id=target_bucket_id):
             return reset_operator_auth(
                 provider=provider,
                 all_providers=all_providers,
@@ -1006,7 +1041,7 @@ def reset_operator_auth(
                 settings=None,
             )
     resolved_settings = load_settings()
-    with _active_profile_storage_span(resolved_settings, target_bucket_id=target_bucket_id) as bucket_id:
+    with _revocation_storage_span(resolved_settings, target_bucket_id=target_bucket_id) as bucket_id:
         if bucket_id is None:
             raise AuthConfigureNoActiveBucketError(
                 translated_message="application.auth.operator.errors.no_active_bucket",
