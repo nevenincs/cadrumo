@@ -68179,6 +68179,9 @@ modelo:
                 registros de perceptor, en euros.
               label: Total importe de la retención o ingreso a cuenta
             x-e1in4opec9gn6p9de9in8pbecdkmurg:
+              help: Base de retención o ingreso a cuenta determinada conforme a los
+                apartados 3 y 6 de la disposición adicional trigésima tercera de la
+                Ley 35/2006, reguladora del IRPF.
               label: Base de retención o ingreso a cuenta
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
               help: 'Solo se cumplimenta cuando el tipo de perceptor es la clave 5:
@@ -68188,12 +68191,20 @@ modelo:
             x-e1in4opecpim6q315ln62or9dlkmarjkds:
               label: Fecha de nacimiento del perceptor no residente
             x-e1in4opecpim6q315lo62prf:
+              help: Fecha en la que se haya satisfecho o abonado al perceptor el premio
+                obtenido.
               label: Fecha de pago del premio
             x-e1in4opecpim6q315lpmusjkclng:
+              help: Fecha en la que se haya celebrado el sorteo o haya tenido lugar
+                el evento sobre el cual se haya realizado la apuesta que determina
+                la obtención del premio.
               label: Fecha de celebración del sorteo o apuesta
             x-e1in4opectin6t3fe8mm6rr2e9ng:
               label: Gestor de cobro del premio
             x-e1in4oped5mn0rriehiiqs3iclmmiro:
+              help: Parte del importe íntegro del premio dinerario o del valor del
+                premio en especie que corresponde individualmente al perceptor. Si
+                en un mismo sorteo obtuvo varios premios, la suma de todos ellos.
               label: Importe íntegro del premio o valor individual del premio en especie
             x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
               label: Lugar de nacimiento del perceptor no residente
@@ -68223,6 +68234,10 @@ modelo:
             x-e1in4opee1gmispde9in6qb4cln66qb1:
               label: País o territorio de residencia fiscal del perceptor
             x-e1in4opee1p6utj9dphmio8:
+              help: Dos dígitos de la provincia o ciudad autónoma del domicilio del
+                perceptor. Se consignan los dígitos 98 para contribuyentes del IRPF
+                con residencia habitual en el extranjero y 99 cuando el tipo de perceptor
+                es la clave 5.
               label: Código de provincia del domicilio del perceptor
             x-e1in4opee9in8pbecdkmurg:
               label: Importe de la retención o ingreso a cuenta
@@ -75980,15 +75995,6 @@ modelo:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: Ejercicio al que se refiere la autoliquidación
-            x-chim6r1ee1in4qbfchng:
-              help: null
-              label: Periodo (mes natural)
-          construct:
-            modelo-604-autoliquidacion:
-              field:
-                title: Modelo 604 autoliquidación del Impuesto sobre las Transacciones
-                  Financieras
         2024-y-siguientes:
           casilla:
             x-c5n6au3f5pn7arb5e9niqqjledq6ipj9cdgmst35:

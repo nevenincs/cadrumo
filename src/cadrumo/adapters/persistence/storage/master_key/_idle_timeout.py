@@ -1,10 +1,10 @@
 """Idle-timeout evaluation for `BucketSession`.
 
-Every CLI invocation runs `evaluate_idle(session, now, configured_minutes)`
-before granting access to the session. The configured value lives in
-the bucket manifest (`ManifestKdfParams` is plaintext; `idle_lock_minutes` is
-read from the durable config profile. The default is
-15 minutes.
+Every CLI invocation runs `evaluate_idle(session, now)` before granting access
+to the session. The window it evaluates was fixed when the session was opened,
+from `cadrumo_bucket_default_idle_lock_minutes`; the default is 15 minutes.
+There is no per-bucket override to read: the plaintext bucket manifest that
+once declared one is retired, and nothing replaced it.
 
 The evaluator is a pure function over the session's idle deadline and
 the supplied `now`; it never mutates the session. Mutation happens
@@ -51,10 +51,11 @@ def evaluate_idle(
     Args:
         session: The session whose idle deadline to evaluate.
         now: UTC timestamp at which the evaluation runs.
-        configured_minutes: Operator-configured idle-lock window in
-            minutes (read from the bucket manifest). Defaults to
-            `DEFAULT_IDLE_LOCK_MINUTES` (15).
-            Strict positive integer; non-positive values raise.
+        configured_minutes: Idle-lock window in minutes, defaulting to
+            `DEFAULT_IDLE_LOCK_MINUTES` (15). Validated as a strict positive
+            integer and otherwise unused: the deadlines this function compares
+            were computed when the session opened, so the value bounds nothing
+            here. The live caller passes none.
 
     Returns:
         An :class:`IdleEvaluation` record carrying `expired` and the

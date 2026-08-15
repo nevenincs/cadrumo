@@ -65831,6 +65831,9 @@ modelo:
                 registres de perceptor, en euros.
               label: Total import de la retenció o ingrés a compte
             x-e1in4opec9gn6p9de9in8pbecdkmurg:
+              help: Base de retenció o ingrés a compte determinada conforme als apartats
+                3 i 6 de la disposició addicional trenta-tresena de la Llei 35/2006,
+                reguladora de l'IRPF.
               label: Base de retenció o ingrés a compte
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
               help: 'Només s''emplena quan el tipus de perceptor és la clau 5: F si
@@ -65840,12 +65843,18 @@ modelo:
             x-e1in4opecpim6q315ln62or9dlkmarjkds:
               label: Data de naixement del perceptor no resident
             x-e1in4opecpim6q315lo62prf:
+              help: Data en què s'hagi satisfet o abonat al perceptor el premi obtingut.
               label: Data de pagament del premi
             x-e1in4opecpim6q315lpmusjkclng:
+              help: Data en què s'hagi celebrat el sorteig o hagi tingut lloc l'esdeveniment
+                sobre el qual s'hagi fet l'aposta que determina l'obtenció del premi.
               label: Data de celebració del sorteig o aposta
             x-e1in4opectin6t3fe8mm6rr2e9ng:
               label: Gestor de cobrament del premi
             x-e1in4oped5mn0rriehiiqs3iclmmiro:
+              help: Part de l'import íntegre del premi dinerari o del valor del premi
+                en espècie que correspon individualment al perceptor. Si en un mateix
+                sorteig va obtenir diversos premis, la suma de tots.
               label: Import íntegre del premi o valor individual del premi en espècie
             x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
               label: Lloc de naixement del perceptor no resident
@@ -73364,17 +73373,7 @@ modelo:
         2021-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
               label: Exercici a què es refereix l'autoliquidació
-            x-chim6r1ee1in4qbfchng:
-              help: null
-              label: Període (mes natural)
-          construct:
-            modelo-604-autoliquidacion:
-              field:
-                title: null
-          field:
-            label: null
         2024-y-siguientes:
           casilla:
             x-c5n6au3f5pn7arb5e9niqqjledq6ipj9cdgmst35:

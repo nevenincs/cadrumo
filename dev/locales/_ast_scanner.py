@@ -165,13 +165,28 @@ def _translation_call_names(tree: ast.AST) -> frozenset[str]:
 
 
 def _extract_locale_constant_keys(tree: ast.AST) -> set[str]:
-    """Find dotted locale keys declared in explicit locale-key constants."""
+    """Find dotted locale keys declared in explicit locale-key constants.
+
+    Recognizes two independent declaration shapes: a constant NAMED as a
+    locale-key registry (:func:`_declares_locale_key_constant`, suffix-based,
+    which then trusts every dotted literal nested under its value), and a
+    dict literal SHAPED as one (:func:`_is_locale_key_dict_literal`, values
+    all dotted-key strings) regardless of what its target is named. The
+    second shape is what let a status-token-to-key mapping orphan invisibly
+    when it carried neither a suffixed name nor a literal ``tr()`` call
+    site — see :func:`dict_constant_naming_violations_in_tree` for the
+    companion naming HAZARD this shape also earns.
+    """
     findings: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
-            if any(_declares_locale_key_constant(target) for target in node.targets):
+            if any(_declares_locale_key_constant(target) for target in node.targets) or _is_locale_key_dict_literal(
+                node.value,
+            ):
                 _collect_dotted_literals(node.value, findings)
-        elif isinstance(node, ast.AnnAssign) and _declares_locale_key_constant(node.target):
+        elif isinstance(node, ast.AnnAssign) and (
+            _declares_locale_key_constant(node.target) or _is_locale_key_dict_literal(node.value)
+        ):
             _collect_dotted_literals(node.value, findings)
     return findings
 
@@ -191,6 +206,31 @@ def _declares_locale_key_constant(target: ast.expr) -> bool:
     if not isinstance(target, ast.Name):
         return False
     return target.id.endswith(_LOCALE_KEY_CONSTANT_SUFFIXES)
+
+
+def _is_locale_key_dict_literal(node: ast.expr | None) -> bool:
+    """Return True when ``node`` is a dict literal shaped as a locale-key registry.
+
+    Structural, not name-based: a dict literal mapping arbitrary keys (often
+    short status/enum tokens resolved only at runtime) to translation keys is
+    unambiguously a locale-key registry BY SHAPE alone, independent of what
+    its assignment target is named. Requires at least one entry and EVERY
+    value to be a dotted-key-shaped string constant — a dict with even one
+    non-matching value is not treated as a locale-key mapping, which keeps
+    the false-positive rate low against an ordinary lookup table that merely
+    happens to carry one dotted-looking string.
+
+    This is the exact shape that orphaned invisibly in production: a dict
+    constant named without the ``_LOCALE_KEY``/``_LOCALE_KEYS`` suffix,
+    read through a lowercase local variable (``SOME_DICT.get(token)``) into
+    ``tr(...)``. Neither the declaration-side suffix check nor the call-site
+    naming gate (which explicitly excludes lowercase/mixed-case arguments as
+    genuinely dynamic values) can see it; recognizing the dict BY SHAPE closes
+    the discovery gap without requiring any rename.
+    """
+    if not isinstance(node, ast.Dict) or not node.values:
+        return False
+    return all(_dotted_literal_value(value) is not None for value in node.values)
 
 
 def _collect_dotted_literals(node: ast.expr | None, findings: set[str]) -> None:
@@ -595,8 +635,65 @@ def find_tr_constant_naming_violations(root: Path) -> list[str]:
     return violations
 
 
+def dict_constant_naming_violations_in_tree(tree: ast.AST) -> Iterator[tuple[int, str]]:
+    """Yield ``(lineno, constant_name)`` for an un-suffixed locale-key dict.
+
+    The DECLARATION-side counterpart to
+    :func:`tr_constant_naming_violations_in_tree`. That function holds a
+    ``tr(CONSTANT)`` CALL SITE to the naming contract the declaration side
+    already enforces; this one holds the DECLARATION itself to the same
+    contract when it is a dict literal shaped as a locale-key registry
+    (:func:`_is_locale_key_dict_literal`) but named without the required
+    suffix.
+
+    Key DISCOVERY already resolves such a dict's values structurally —
+    :func:`_extract_locale_constant_keys` matches by shape, not only by name
+    — so this is a naming HAZARD gate, not a discovery feed: an un-suffixed
+    but shape-matched dict is exactly the concealed form that let a
+    status-token-to-key mapping orphan invisibly in production (the
+    constant carried neither the suffix nor a literal ``tr()`` call site, so
+    every downstream coverage/parity audit had no signal at all). Flagging
+    the declaration surfaces the hazard to a human even though discovery no
+    longer depends on the rename.
+
+    Only a bare ``Name`` target is considered (a tuple-unpacking or
+    attribute target cannot be a module-level locale-key registry by this
+    project's convention, matching :func:`_declares_locale_key_constant`).
+    """
+    for node in ast.walk(tree):
+        target: ast.expr | None = None
+        value: ast.expr | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target = node.targets[0]
+            value = node.value
+        elif isinstance(node, ast.AnnAssign):
+            target = node.target
+            value = node.value
+        if not isinstance(target, ast.Name) or not _is_locale_key_dict_literal(value):
+            continue
+        if target.id.endswith(_LOCALE_KEY_CONSTANT_SUFFIXES):
+            continue
+        yield node.lineno, target.id
+
+
+def find_dict_constant_naming_violations(root: Path) -> list[str]:
+    """Walk ``root`` for `.py` files and return formatted dict-naming violations.
+
+    Each returned entry is a ``path:line: 'CONSTANT_NAME'`` string naming a
+    dict-literal locale-key registry whose declared name does not carry the
+    ``_LOCALE_KEY``/``_LOCALE_KEYS`` suffix. See
+    :func:`dict_constant_naming_violations_in_tree` for the full rationale.
+    """
+    violations: list[str] = []
+    for module, tree in _iter_parseable_python_modules(root):
+        for lineno, name in dict_constant_naming_violations_in_tree(tree):
+            violations.append(f"{module}:{lineno}: {name!r}")
+    return violations
+
+
 __all__ = [
     "declares_locale_keys",
+    "find_dict_constant_naming_violations",
     "find_tr_constant_naming_violations",
     "scan_namespace_markers",
     "scan_namespace_markers_in_text",
