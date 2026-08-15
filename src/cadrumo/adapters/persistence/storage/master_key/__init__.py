@@ -45,6 +45,20 @@ throttle riding beside it (:class:`LoginThrottleState`,
 
 from __future__ import annotations
 
+from ._acceleration_receipt import (
+    PROFILE_SESSION_KEYCHAIN_SERVICE,
+    PROFILE_SESSION_SCHEMA_VERSION,
+    PersistedProfileSession,
+    ProfileSessionResumeOutcome,
+    advance_persisted_profile_session_idle_deadline,
+    advance_profile_session_idle_deadline,
+    delete_profile_session,
+    mint_profile_session,
+    profile_session_path,
+    resume_profile_session,
+    unwrap_profile_session_dek,
+    wrap_profile_session_dek,
+)
 from ._active_session import (
     NoActiveBucketSessionError,
     activate_session,
@@ -99,20 +113,6 @@ from ._master_key_derivation import (
     derive_kek_with_params,
 )
 from ._master_key_io import PassphraseCallback
-from ._persisted_session import (
-    PROFILE_SESSION_KEYCHAIN_SERVICE,
-    PROFILE_SESSION_SCHEMA_VERSION,
-    PersistedProfileSession,
-    ProfileSessionResumeOutcome,
-    advance_persisted_profile_session_idle_deadline,
-    advance_profile_session_idle_deadline,
-    delete_profile_session,
-    mint_profile_session,
-    profile_session_path,
-    resume_profile_session,
-    unwrap_profile_session_dek,
-    wrap_profile_session_dek,
-)
 from ._provider_session import exit_provider_session
 from ._recovery import (
     RecoveryKey,

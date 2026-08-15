@@ -1,4 +1,11 @@
-"""Persisted cross-process profile session: session-wrapped DEK custody.
+"""Profile acceleration receipt: cross-process custody of a wrapped bucket DEK.
+
+This is NOT a session. It has no counterparty and no protocol: it is a
+locally held wrap of an already-unlocked DEK, carrying a deadline, that lets a
+later process skip the passphrase. The AEAT authority session -- an encrypted
+row inside the bucket, revocable only with the key -- is the artefact that
+owns the word "session" in this codebase, and conflating the two has produced
+a wrong architectural premise more than once.
 
 The "logged in" state minted by ``aeat config login`` survives across CLI
 processes as two split-knowledge artefacts, either of which is useless
@@ -95,7 +102,15 @@ from ._zeroise import zeroise as _zeroise
 _log = get_logger(__name__)
 
 PROFILE_SESSION_KEYCHAIN_SERVICE: Final[str] = "cadrumo:profile-session:v2"
-"""OS-keychain service name for current profile-session keys."""
+"""OS-keychain service name for current profile acceleration-receipt keys.
+
+The token deliberately lags the concept name. It addresses entries in the OS
+credential store, OUTSIDE the storage root, so a rename orphans every existing
+entry: deleting the storage root cannot reap them, and code that deleted under
+the old token first would be exactly the migration path this project forbids.
+Permanent credential residue on real machines is the worse outcome, so the
+wire identifier stays fixed while the code name says what the artefact is.
+"""
 
 PROFILE_SESSION_SCHEMA_VERSION: Final[int] = 2
 """Current persisted-session record schema version.
@@ -157,7 +172,7 @@ class PersistedProfileSession(BaseModel):
         return validate_utc_aware(value)
 
 
-class _PersistedSessionDocument(BaseModel):
+class _AccelerationReceiptDocument(BaseModel):
     """On-disk JSON envelope for one persisted profile session."""
 
     model_config = _STRICT_FROZEN
@@ -175,7 +190,7 @@ class _PersistedSessionDocument(BaseModel):
     tag_b64: str = Field(min_length=1)
 
 
-class _PendingSessionRetirementDocument(BaseModel):
+class _PendingReceiptRetirementDocument(BaseModel):
     """Bounded exact-byte receipt for an interrupted session-key rotation.
 
     ``predecessor_b64`` is absent only for the first mint.  Keeping both
@@ -310,7 +325,7 @@ def wrap_profile_session_dek(
     # cryptography library's ciphertext-with-tag) is split into
     # PersistedProfileSession.ciphertext/.tag at the same 32-byte boundary
     # _dek_wrap does, so every previously-wrapped session record remains
-    # readable and the persisted PersistedProfileSession/_PersistedSessionDocument
+    # readable and the persisted PersistedProfileSession/_AccelerationReceiptDocument
     # shapes do not change.
     try:
         blob = encrypt_record(dek, key=session_key, associated_data=aad)
@@ -613,8 +628,8 @@ def _ensure_profile_session_directory(path: Path) -> None:
     ensure_profile_custody_local_directory(path.parent)
 
 
-def _document_from_record(record: PersistedProfileSession) -> _PersistedSessionDocument:
-    return _PersistedSessionDocument(
+def _document_from_record(record: PersistedProfileSession) -> _AccelerationReceiptDocument:
+    return _AccelerationReceiptDocument(
         schema_version=record.schema_version,
         profile_id=record.profile_id,
         session_id=record.session_id,
@@ -629,7 +644,7 @@ def _document_from_record(record: PersistedProfileSession) -> _PersistedSessionD
     )
 
 
-def _record_from_document(document: _PersistedSessionDocument) -> PersistedProfileSession:
+def _record_from_document(document: _AccelerationReceiptDocument) -> PersistedProfileSession:
     """Hydrate the strict record from an on-disk document.
 
     Raises:
@@ -681,7 +696,7 @@ def _receipt_bytes(record: PersistedProfileSession) -> bytes:
 
 
 def _record_from_canonical_receipt(payload: bytes) -> PersistedProfileSession:
-    document = cast(_PersistedSessionDocument, _parse_canonical_document(payload, _PersistedSessionDocument))
+    document = cast(_AccelerationReceiptDocument, _parse_canonical_document(payload, _AccelerationReceiptDocument))
     return _record_from_document(document)
 
 
@@ -733,7 +748,7 @@ def _write_acceleration_receipt(
 def _pending_retirement_bytes(*, profile_id: UUID, predecessor: bytes | None, successor: bytes) -> bytes:
     """Encode the bounded exact-byte retirement decision before publication."""
     return _canonical_document_bytes(
-        _PendingSessionRetirementDocument(
+        _PendingReceiptRetirementDocument(
             schema_version=_PROFILE_SESSION_RETIREMENT_SCHEMA_VERSION,
             profile_id=profile_id,
             predecessor_b64=None if predecessor is None else _b64encode(predecessor),
@@ -748,8 +763,8 @@ def _read_pending_retirement(path: Path, *, profile_id: UUID) -> tuple[bytes, by
     if payload is None:
         return None
     document = cast(
-        _PendingSessionRetirementDocument,
-        _parse_canonical_document(payload, _PendingSessionRetirementDocument),
+        _PendingReceiptRetirementDocument,
+        _parse_canonical_document(payload, _PendingReceiptRetirementDocument),
     )
     if document.schema_version != _PROFILE_SESSION_RETIREMENT_SCHEMA_VERSION:
         raise StorageValidationError("profile-session retirement receipt schema is not current")

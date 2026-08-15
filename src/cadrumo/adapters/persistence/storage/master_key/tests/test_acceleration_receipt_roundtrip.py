@@ -37,7 +37,7 @@ from .. import (
     unwrap_profile_session_dek,
     wrap_profile_session_dek,
 )
-from .._persisted_session import (
+from .._acceleration_receipt import (
     PROFILE_SESSION_RECORD_MAX_BYTES,
     _pending_retirement_bytes,
     _profile_session_retirement_path,
