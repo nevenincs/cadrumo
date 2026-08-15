@@ -17,6 +17,7 @@ import pytest
 
 from ....core.i18n import tr
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.user_profile import register_cli_profile
 from ....tests.secure_sql import isolated_profile_storage
 
 __all__ = ["isolated_profile_storage"]
@@ -324,24 +325,28 @@ def test_legal_entity_profile_create_and_edit_exposes_legal_name() -> None:
 def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
     """A branch-changing edit must not persist a legal entity without legal name."""
 
-    result = _create_profile(
-        "branch-to-legal",
-        "--entity-type",
-        "natural_person",
-        "--tax-id",
-        "12345678Z",
-        "--name",
-        "Branch",
-        "--surnames",
-        "Operator",
-        "--activity",
-        "consultoria",
-        *_COMMON_TERRITORY_ARGS,
-        "--iva-regime",
-        "GENERAL",
-        *_M303_IVA_FACT_ARGS,
+    # The profile is registered through the credential door rather than the
+    # creation verb. The subject here is the EDIT refusal, which is unchanged
+    # and still reachable; only the fixture's route had to move, because
+    # non-interactive creation is retired and refuses before this test's own
+    # assertion is ever reached.
+    register_cli_profile(
+        label="branch-to-legal",
+        facts={
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Branch",
+            "identity.surnames": "Operator",
+            "activities.description": "consultoria",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.regime": "GENERAL",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+        },
     )
-    assert result.exit_code == 0, result.output
 
     edit = _edit_profile(
         "branch-to-legal",
@@ -360,24 +365,28 @@ def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
 def test_edit_refuses_legal_entity_branch_change_without_surnames() -> None:
     """A branch-changing edit must not persist a natural person without surnames."""
 
-    result = _create_profile(
-        "branch-to-natural",
-        "--entity-type",
-        "legal_entity",
-        "--legal-entity-form",
-        "sl",
-        "--tax-id",
-        "B66012345",
-        "--legal-name",
-        "Branch Legal SL",
-        "--activity",
-        "asesoria",
-        *_COMMON_TERRITORY_ARGS,
-        "--iva-regime",
-        "GENERAL",
-        *_M303_IVA_FACT_ARGS,
+    # The profile is registered through the credential door rather than the
+    # creation verb. The subject here is the EDIT refusal, which is unchanged
+    # and still reachable; only the fixture's route had to move, because
+    # non-interactive creation is retired and refuses before this test's own
+    # assertion is ever reached.
+    register_cli_profile(
+        label="branch-to-natural",
+        facts={
+            "taxpayer_type.entity_type": "legal_entity",
+            "taxpayer_type.legal_entity_form": "sl",
+            "identity.tax_id": "B66012345",
+            "identity.legal_name": "Branch Legal SL",
+            "activities.description": "asesoria",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.regime": "GENERAL",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+        },
     )
-    assert result.exit_code == 0, result.output
 
     edit = _edit_profile(
         "branch-to-natural",
