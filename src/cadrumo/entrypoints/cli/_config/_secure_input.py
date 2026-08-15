@@ -24,10 +24,11 @@ already owning stdin, has nowhere to put the passphrase but the environment,
 and an environment variable is inherited by every child process, survives for
 the whole process lifetime, and is readable from a crash dump or a CI log. A
 descriptor is none of those: it is passed to one process, read once, and closed.
-:func:`read_secrets_fd` enforces the "once" half — the descriptor is closed
-after its single read and a second attempt on the same number refuses instead
-of returning the empty payload a re-read would produce, which would otherwise
-be indistinguishable from a caller supplying an empty secret.
+:func:`read_secrets_fd` enforces the "once" half by closing the descriptor as
+soon as it has been read, including on every refusal path. A second read of a
+still-closed number then fails at the operating system and refuses as
+unreadable, rather than returning the empty payload that would otherwise be
+indistinguishable from a caller supplying an empty secret.
 
 The descriptor must be inherited from the parent. POSIX callers pass one with
 ``os.pipe()`` plus ``pass_fds``. On Windows arbitrary descriptors are not
@@ -69,14 +70,6 @@ readable descriptor, and refusing it would make ``--secrets-fd 0`` behave
 differently from the ``--secrets-stdin`` spelling of the same thing.
 """
 
-_consumed_secret_descriptors: set[int] = set()
-"""Descriptor numbers already read by :func:`read_secrets_fd` in this process.
-
-The one-shot guarantee is enforced here rather than trusted from the close:
-descriptor numbers are reused by the operating system, so a closed number can be
-reopened onto something else entirely, and a second read must refuse loudly
-rather than return whatever now sits behind it.
-"""
 
 
 def _reject_duplicate_object_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -188,10 +181,21 @@ def read_secrets_fd[SecretsModelT: BaseModel](model: type[SecretsModelT], *, des
 
     The one-shot contract is the reason this exists as its own channel rather
     than a stdin variant: the descriptor is closed as soon as it has been read,
-    and its number is recorded so a second call refuses instead of returning the
-    empty payload a re-read of a closed or reopened descriptor would produce.
-    Silently reading empty would surface as "missing required fields", pointing
-    the operator at their payload when the real fault is a double read.
+    on the success path and on every refusal path alike, so the secret is not
+    left behind a descriptor the process still holds open.
+
+    The close IS the enforcement, and deliberately no process-local register of
+    consumed descriptor numbers stands beside it. Such a register looks like a
+    stronger guarantee and is in fact a false one: the operating system reissues
+    a freed descriptor number immediately, so the number a caller staged a
+    SECOND, genuinely different secret behind is very often the number the first
+    read just released. A number-keyed guard refuses that legitimate second
+    channel and blames the caller for a collision the platform created — which
+    is exactly what a verb collecting two secrets, a bundle passphrase and a new
+    profile passphrase, would hit on its first run. The case the register was
+    meant to catch is already covered more precisely: reading a closed
+    descriptor fails at the operating system and surfaces as
+    ``secrets_fd_unreadable``, never as an empty payload.
 
     ``descriptor`` itself is a small integer on ``argv``; the secret is not.
     Standard output and standard error are refused (:data:`_RESERVED_OUTPUT_DESCRIPTORS`)
@@ -206,12 +210,6 @@ def read_secrets_fd[SecretsModelT: BaseModel](model: type[SecretsModelT], *, des
             translated_message="cli.config.custody.errors.secrets_fd_reserved_stream",
             context={"descriptor": str(descriptor)},
         )
-    if descriptor in _consumed_secret_descriptors:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.custody.errors.secrets_fd_already_consumed",
-            context={"descriptor": str(descriptor)},
-        )
-    _consumed_secret_descriptors.add(descriptor)
     try:
         raw = _read_descriptor_to_bound(descriptor, maximum_bytes=_MAX_SECRETS_BYTES)
     except OSError as exc:
