@@ -20,7 +20,6 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ._enums import ExpenseCategory, UseType
 from ._errors import FincaValidationError
 
-
 #: Current write version for each rental-register record shape.
 #:
 #: Named here, in the layer that DECLARES the shape, rather than repeated as a
