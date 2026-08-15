@@ -1,24 +1,21 @@
-# KNOWN GAP, documented rather than papered over (2026-08-15): this revision
-# is bounded 2015-2022 (valid_to = 2022-12-31), and no AEAT Diseño de
-# Registro predating 2023 is bundled for modelo 151 -- the only registered
-# design, aeat-dr-151-2023, applies_from 2023-01-01 and does not cover this
-# era. Redirecting this reference to it would assert a design applied to
-# years it was not yet published for, which is the same defect this whole
-# sweep exists to remove, just relocated. boe-modelo-151-layout was retiered
-# to official_source_guidance (it was never real layout content regardless
-# of era), so this workbook_parity_ref currently has NO honest
-# layout-authority source to cite and correctly fails registry validation
-# until an era-appropriate 2015-2022 design is acquired.
+# Redirected 2026-08-15 to the real bundled Diseño de Registro
+# (aeat-dr-151-2015, era-matching this revision's 2015-2022 span) after the
+# prior workbook_source (boe-modelo-151-layout, a 915-byte orden excerpt)
+# was found to carry no layout content. This was checked as a candidate
+# harvest gap before accepting a permanent gap: AEAT's historical index does
+# publish a 2015-2022 Modelo 151 design (Orden HAP/2783/2015), it had simply
+# never been bundled -- so the fix is a genuine re-point, not an
+# unsatisfiable-condition writeoff.
 
 [[revisions."2015-y-siguientes".workbook_parity_refs]]
 id = "modelo-151-cuota-escala"
-workbook_source = "boe-modelo-151-layout"
+workbook_source = "aeat-dr-151-2015"
 fixture_id = "modelo-151-cuota-integra-general-escala"
 formula_coverage = "static_layout"
 runner_required = false
 tolerance = "0.00"
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["boe-modelo-151-layout"]
+source_refs = ["aeat-dr-151-2015"]
 
 # Cuota-íntegra escala parity (art. 93.2.e.1º): the cuota = lookup_bracket over
 # the 24/47 two-tramo table. The enrolling E2E asserts the cuota against a

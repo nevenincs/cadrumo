@@ -71,16 +71,14 @@ def test_modelo_151_form_order_is_boe_corpus_backed() -> None:
     assert reference.article == "modelo 151"
 
 
-def test_modelo_151_2015_workbook_parity_has_no_era_appropriate_layout_source() -> None:
-    """The 2015-y-siguientes revision (bounded 2015-2022) has no honest layout source.
+def test_modelo_151_2015_workbook_parity_uses_era_matching_record_design() -> None:
+    """The 2015-y-siguientes revision (bounded 2015-2022) cites its own-era design.
 
     ``boe-modelo-151-layout`` was retiered to ``official_source_guidance`` (a
-    915-byte orden excerpt with no annex/layout content); the only bundled
-    record design, ``aeat-dr-151-2023``, applies_from 2023 and would be a
-    temporally-false citation for this era. This is a documented, known gap
-    -- not silently papered over -- so this reference stays pointed at the
-    retiered source and the modelo's registry validation is expected to
-    refuse until an era-appropriate 2015-2022 design is acquired.
+    915-byte orden excerpt with no annex/layout content). AEAT's historical
+    Diseños de Registro index does publish an era-appropriate design for
+    2015-2022 (Orden HAP/2783/2015); it had simply never been bundled, so
+    this is a genuine acquisition and re-point, not a permanent gap.
     """
     modelo, catalogues = _load_modelo_151()
     revision = modelo.revisions["2015-y-siguientes"]
@@ -90,12 +88,13 @@ def test_modelo_151_2015_workbook_parity_has_no_era_appropriate_layout_source() 
     assert catalogues.sources["aeat-modelo-151-procedure"].evidence_tier == "official_source_guidance"
     assert workbook.id == "modelo-151-cuota-escala"
     assert workbook.formula_coverage == "static_layout"
-    assert workbook.workbook_source == "boe-modelo-151-layout"
-    assert workbook.source_refs == ("boe-modelo-151-layout",)
+    assert workbook.workbook_source == "aeat-dr-151-2015"
+    assert workbook.source_refs == ("aeat-dr-151-2015",)
 
     source = catalogues.sources[workbook.workbook_source]
-    assert source.evidence_tier == "official_source_guidance"
-    assert source.kind == "form_spec"
+    assert source.evidence_tier == "layout_authority"
+    assert source.kind == "record_design"
+    assert source.applies_from is not None and source.applies_from.year == 2015
 
 
 def test_modelo_151_2025_workbook_parity_uses_era_matching_record_design() -> None:

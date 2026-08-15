@@ -175,12 +175,34 @@ _AUTHORITY_CHECKED_STATUSES: frozenset[ConstructEvidenceStatus] = frozenset({"gr
 
 
 class _AuthorityCheckProof:
-    """Opaque proof object held only by the validated audit fold."""
+    """Proof held only by the validated audit fold, naming the tier that backs it.
 
-    __slots__ = ()
+    The instances are module-private and enumerated in
+    :data:`_AUTHORITY_CHECK_PROOFS`; membership is tested by identity, so no
+    caller outside this module can forge one. Carrying ``review_tier`` is what
+    keeps the claim honest now that agent review suffices to reach the fold: a
+    reader of the ledger learns which standard established the authority rather
+    than inferring a human signoff that may not have happened.
+    """
+
+    __slots__ = ("review_tier",)
+
+    def __init__(self, review_tier: RevisionReviewStatus) -> None:
+        self.review_tier = review_tier
 
 
-_AUTHORITY_CHECK_PROOF = _AuthorityCheckProof()
+_AGENT_REVIEWED_PROOF = _AuthorityCheckProof(RevisionReviewStatus.AGENT_REVIEWED)
+_OPERATOR_REVIEWED_PROOF = _AuthorityCheckProof(RevisionReviewStatus.OPERATOR_REVIEWED)
+
+#: Every proof this module may issue. Identity membership is the forgery guard.
+_AUTHORITY_CHECK_PROOFS: frozenset[_AuthorityCheckProof] = frozenset(
+    {_AGENT_REVIEWED_PROOF, _OPERATOR_REVIEWED_PROOF},
+)
+
+_PROOF_BY_TIER: dict[RevisionReviewStatus, _AuthorityCheckProof] = {
+    RevisionReviewStatus.AGENT_REVIEWED: _AGENT_REVIEWED_PROOF,
+    RevisionReviewStatus.OPERATOR_REVIEWED: _OPERATOR_REVIEWED_PROOF,
+}
 
 
 class ConstructEvidenceRow(CoverageModel):

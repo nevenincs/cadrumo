@@ -154,16 +154,10 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G416.s
 review_status = "reviewed"
 
 # Retiered 2026-08-15: this 915-byte orden excerpt carries no annex section
-# and no record-layout vocabulary, so it was never layout authority. The
-# real Diseño de Registro is aeat-dr-151-2023 below, but it only covers
-# ejercicio 2023 onward (applies_from 2023-01-01) -- it era-matches the
-# 2025-y-siguientes revision's workbook_parity_ref, which is redirected to
-# it. The 2015-y-siguientes revision (bounded 2015-2022) has NO
-# era-appropriate layout-authority source bundled: no AEAT design predating
-# 2023 is registered for this modelo, so its workbook_parity_ref stays
-# pointed at this now-honestly-retiered source and its own fragment
-# documents that gap explicitly rather than citing a 2023 design that would
-# not have applied. This excerpt remains a genuine official_source_guidance
+# and no record-layout vocabulary, so it was never layout authority. Both
+# M151 revisions now redirect to a real bundled Diseño de Registro instead
+# (aeat-dr-151-2023 for 2025-y-siguientes, aeat-dr-151-2015 for
+# 2015-y-siguientes). This excerpt remains a genuine official_source_guidance
 # citation (the orden that approves the form), just not the layout's home.
 [sources."boe-modelo-151-layout"]
 evidence_tier = "official_source_guidance"
@@ -189,6 +183,32 @@ bytes = 1521664
 retrieved_at = 2026-07-21
 applies_from = 2023-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR151E2023.xls"
+review_status = "reviewed"
+
+# Modelo 151 diseño de registro for ejercicios 2015-2022 (Orden HAP/2783/2015).
+# This was NOT a genuine publication gap: AEAT's historical Diseños de
+# Registro index (ejercicios-anteriores-modelos-100-199.html) lists it, and
+# it had been fetched and classified as a historical exclusion without
+# checking whether it was actually superseded -- it was not, it is the sole
+# design covering the 2015-y-siguientes revision's own era, previously
+# unbundled. Acquired 2026-08-15: fetched live, signature verified (OLE/xls),
+# bytes read back from disk before this entry was authored, content
+# extracted directly and confirmed the canonical AEAT positional table
+# ("N° | Posic. | Lon | Tipo | Descripción | Validación | Contenido") with
+# "Ejercicio devengo (AAAA)" = 2015 and "Período (PP)" = "0A" in the header
+# rows -- genuine Modelo 151 layout for this era, not a mis-filed document.
+[sources."aeat-dr-151-2015"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2015"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls"
+sha256 = "997dc9cf5230a374716d04a5ae9aed0e9c659ee9352451843dbc5232d3f2137a"
+bytes = 1206784
+retrieved_at = 2026-08-15
+applies_from = 2015-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/dr151e15v12.xls"
 review_status = "reviewed"
 
 

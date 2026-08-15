@@ -278,7 +278,6 @@ def _package_import_sites() -> list[ImportSite]:
 
 def _current_production_family1_sites() -> tuple[_BaselineSite, ...]:
     """Re-run the real scanner against the live ``src/cadrumo`` tree."""
-    py_files = _package_py_files()
     all_sites = _package_import_sites()
     violations = find_private_import_violations(all_sites)
     non_test = [v for v in violations if not v.is_test]
@@ -399,7 +398,6 @@ def _current_test_only_underscore_sites() -> tuple[_BaselineSite, ...]:
     Every entry here is individually reasoned in
     ``dev/quality/import_hygiene_test_debt.json``; this is not a bulk ceiling.
     """
-    py_files = _package_py_files()
     all_sites = _package_import_sites()
     violations = find_private_import_violations(all_sites)
     test_only = [v for v in violations if v.is_test]
@@ -725,7 +723,6 @@ def test_family3_genuine_duplicate_symbols_are_exactly_the_pinned_set() -> None:
     tolerated_entries = baseline["family3_pinned_duplicate_symbols"]["tolerated_multi_sourced_symbols"]
     tolerated = {entry["symbol"]: entry["confidence"] for entry in tolerated_entries}
 
-    py_files = _package_py_files()
     facades = discover_facades()
     all_sites = _package_import_sites()
     multi_sourced = find_multi_sourced_symbols(facades, all_sites)
