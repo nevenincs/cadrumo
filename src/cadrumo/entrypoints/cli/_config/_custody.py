@@ -51,8 +51,12 @@ def _hint_via_label(name: str) -> str | None:
 
     Returns ``None`` when the name matches no live profile, which is the
     correct outcome for a UUID that simply carries no hint and for a label
-    that names nothing. The manifest scan reads plaintext files, so it does
-    not depend on the target bucket's DEK being intact.
+    that names nothing. ``read_profile_bucket`` resolves the label against
+    the committed custody capsule projection (``CommittedProfileRepository``,
+    seeded by ``list_current_profile_custody_capsule_ids``), whose commit
+    marker and label record are plain committed files read without
+    unwrapping the bucket's DEK, so this does not depend on the target
+    bucket's DEK being intact.
     """
     from ....application.user_profile import resolve_profile_output_language_hint
     from ....application.workflow import read_profile_bucket
@@ -77,9 +81,11 @@ def _pin_render_language_to_target_bucket(ctx: typer.Context, *, bucket_id: str)
 
     ``bucket_id`` carries whatever the operator typed, which is a label at
     least as often as a UUID. A label resolves no bucket-local hint on its
-    own, so it is resolved to its UUID through the manifest scan first: that
-    scan reads plaintext ``manifest.toml`` files and so stays readable under
-    exactly the corrupt-DEK condition this helper exists to serve.
+    own, so it is resolved to its UUID through the committed custody capsule
+    projection first: ``read_profile_bucket`` reads the capsule's commit
+    marker and label record directly off disk, neither of which needs the
+    bucket's DEK, so it stays readable under exactly the corrupt-DEK
+    condition this helper exists to serve.
     """
     if _settings_has_explicit_output_language():
         return
@@ -228,8 +234,8 @@ def _login_through_the_prompt(
         # label resolve a bucket-local hint here: login owns label
         # resolution internally and does not surface the resolved id on the
         # failure path, so the helper re-resolves a label through the
-        # plaintext manifest scan, which stays readable while the target's
-        # DEK is corrupt.
+        # committed custody capsule projection, which stays readable while
+        # the target's DEK is corrupt.
         if name is not None:
             _pin_render_language_to_target_bucket(ctx, bucket_id=name)
         raise

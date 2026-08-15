@@ -5864,6 +5864,8 @@ cli:
       next_heading: Que escriure ara
       next_step:
         command_guide: Torna a la guia de comandes.
+        create_profile: Crea un perfil de contribuent abans d'importar dades o iniciar
+          una declaració.
         import_transactions: Importa un extracte bancari per registrar els teus moviments.
         modelo_210_sede_only: El Modelo 210 és visible per a descobriment IRNR, però
           la creació local d'unitats de treball encara no està suportada; presenta
@@ -5871,7 +5873,10 @@ cli:
         repair_storage: Executa el diagnòstic d'emmagatzematge per veure el detall.
           No posis files en quarantena tret que vulguis arxivar deliberadament dades
           locals antigues il·legibles.
+        resume_work_unit: Reprèn una unitat de treball existent.
         review_ledger: Revisa les files importades.
+        start_another_work_unit: Inicia una altra unitat de treball per a un model
+          diferent.
         start_work_unit_from_ledger: Inicia una declaració de model a partir de les
           dades del teu llibre.
       profile_active: Esteu treballant al perfil `%{profile}`.
@@ -6109,6 +6114,8 @@ docs:
         del pagament fraccionat
       ledger_renta_income_aggregation: des dels seus ingressos registrats
       ledger_transaction: des dels seus moviments registrats
+      m303_regimen_simplificado_annual_summary: des del resum anual del règim simplificat
+        del model 303
       manual_input: des d'un valor que vostè aporta
       payable_invoice: des de les factures rebudes
       previous_filing: des de la seva declaració anterior
@@ -7889,6 +7896,8 @@ flows:
             pagament fraccionat
           ledger_renta_income_aggregation: Totals d'ingressos
           ledger_transaction: Moviment del llibre
+          m303_regimen_simplificado_annual_summary: Resum règim simplificat (model
+            303)
           manual_input: Entrada manual
           payable_invoice: Factura rebuda
           previous_filing: Declaració anterior

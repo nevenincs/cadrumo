@@ -1253,6 +1253,315 @@ def find_registry_loader_import_violations(
 
 
 # ---------------------------------------------------------------------------
+# Violation family 8: dangling first-party import targets
+# ---------------------------------------------------------------------------
+
+
+FIRST_PARTY_ROOT: Final[str] = "cadrumo"
+
+
+class DanglingImportKind(StrEnum):
+    """Which half of an import edge no longer resolves."""
+
+    MISSING_MODULE = "missing_module"
+    MISSING_EXPORT = "missing_export"
+
+
+@dataclass(frozen=True)
+class DanglingImportTarget:
+    """One first-party import edge whose target no longer exists.
+
+    The two halves of a deletion that landed without its consumer sweep.
+    ``MISSING_MODULE`` is the module itself gone with an importer left behind;
+    ``MISSING_EXPORT`` is the module still present but the named symbol dropped
+    from it -- the subtler half, and the one that reproduced live on this tree.
+
+    This family exists because the mechanism that already computes the same
+    fact tree-wide -- the type checker, over ``src`` with
+    ``allowed-unresolved-imports = []`` -- carries hundreds of unrelated
+    diagnostics at rest, so one new dangling edge is indistinguishable from the
+    standing noise. A family scoped to exactly this rule can hold a clean floor
+    and therefore actually bite. It is deliberately NOT a second import
+    resolver: it answers one question the whole-tree checker answers too, but
+    at a granularity that can be gated at zero.
+    """
+
+    importer_mod: str
+    importer_path: str
+    lineno: int
+    target_mod: str
+    symbol: str | None
+    kind: DanglingImportKind
+    is_test: bool
+
+
+def first_party_module_path(mod: str, *, src_root: Path = SRC_ROOT) -> Path | None:
+    """Resolve a dotted first-party module name to its file, or ``None``.
+
+    Returns the package ``__init__.py`` for a package and the plain module
+    file otherwise, mirroring the import system's own preference order.
+    """
+    rel = Path(*mod.split("."))
+    package_init = src_root / rel / "__init__.py"
+    if package_init.is_file():
+        return package_init
+    plain = src_root / rel.with_suffix(".py")
+    if plain.is_file():
+        return plain
+    return None
+
+
+def module_export_surface(path: Path) -> tuple[frozenset[str], bool]:
+    """Return every module-level name a module binds, and whether that is complete.
+
+    Completeness is the load-bearing half. A module answering attribute access
+    through a PEP 562 ``__getattr__``, or re-exporting through ``from x import
+    *``, binds names no AST walk can enumerate, so its surface is reported
+    NOT enumerable and :func:`find_dangling_first_party_imports` declines to
+    judge any symbol against it. Declining is the only sound answer there: a
+    detector that guessed would report every lazily-resolved export as
+    dangling.
+
+    The walk is deliberately generous about binding forms -- tuple unpacking
+    (``a, b = factory()``), PEP 695 ``type`` aliases, ``for``/``with`` targets,
+    walrus bindings, and import aliases all bind a module-level name, and each
+    was observed as a false positive before it was handled.
+    """
+    try:
+        tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        return frozenset(), False
+
+    names: set[str] = set()
+    enumerable = True
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            names.add(node.name)
+            if node.name == "__getattr__":
+                enumerable = False
+        elif isinstance(node, ast.Assign):
+            for target in node.targets:
+                names.update(sub.id for sub in ast.walk(target) if isinstance(sub, ast.Name))
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            names.add(node.target.id)
+        elif isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
+            names.add(node.name.id)
+        elif isinstance(node, (ast.For, ast.AsyncFor, ast.With, ast.AsyncWith, ast.NamedExpr)):
+            names.update(
+                sub.id for sub in ast.walk(node) if isinstance(sub, ast.Name) and isinstance(sub.ctx, ast.Store)
+            )
+        elif isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                if alias.name == "*":
+                    enumerable = False
+                else:
+                    names.add(alias.asname or alias.name)
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                names.add(alias.asname or alias.name.split(".")[0])
+    return frozenset(names), enumerable
+
+
+def _is_first_party(mod: str) -> bool:
+    return mod == FIRST_PARTY_ROOT or mod.startswith(FIRST_PARTY_ROOT + ".")
+
+
+def find_dangling_first_party_imports(
+    all_sites: Iterable[ImportSite], *, src_root: Path = SRC_ROOT
+) -> list[DanglingImportTarget]:
+    """Return every first-party import edge whose target no longer resolves.
+
+    Args:
+        all_sites: Import sites to scan, from :func:`walk_module_imports`.
+        src_root: Source root the first-party names resolve against;
+            injectable so a caller can scan a synthetic tree.
+    """
+    dangling: list[DanglingImportTarget] = []
+    surfaces: dict[str, tuple[frozenset[str], bool]] = {}
+
+    for site in all_sites:
+        target = site.target_mod
+        if not _is_first_party(target):
+            continue
+        importer_path = str(site.importer_path).replace("\\", "/")
+        target_path = first_party_module_path(target, src_root=src_root)
+        if target_path is None:
+            dangling.append(
+                DanglingImportTarget(
+                    importer_mod=site.importer_mod,
+                    importer_path=importer_path,
+                    lineno=site.lineno,
+                    target_mod=target,
+                    symbol=None,
+                    kind=DanglingImportKind.MISSING_MODULE,
+                    is_test=site.is_test,
+                )
+            )
+            continue
+
+        if target not in surfaces:
+            surfaces[target] = module_export_surface(target_path)
+        surface, enumerable = surfaces[target]
+        if not enumerable:
+            continue
+
+        is_package = target_path.name == "__init__.py"
+        for name in site.imported_names:
+            if name == "*" or (name.startswith("__") and name.endswith("__")):
+                continue
+            if name in surface:
+                continue
+            # `from package import submodule` binds a module, not a name in
+            # the package body; it resolves whenever the submodule file exists.
+            if is_package and first_party_module_path(f"{target}.{name}", src_root=src_root) is not None:
+                continue
+            dangling.append(
+                DanglingImportTarget(
+                    importer_mod=site.importer_mod,
+                    importer_path=importer_path,
+                    lineno=site.lineno,
+                    target_mod=target,
+                    symbol=name,
+                    kind=DanglingImportKind.MISSING_EXPORT,
+                    is_test=site.is_test,
+                )
+            )
+    return sorted(dangling, key=lambda d: (d.importer_path, d.lineno, d.symbol or ""))
+
+
+# ---------------------------------------------------------------------------
+# Violation family 9: orphaned modules (the other end of the same edge)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class OrphanedModule:
+    """A shipped module nothing in the first-party tree reaches.
+
+    The opposite direction of :class:`DanglingImportTarget`: family 8 finds the
+    consumer left behind by a deleted module, family 9 finds the module left
+    behind by a deleted consumer. Both are one deletion landing without its
+    sweep, and neither is visible to the other's check.
+
+    ``is_reexport_surface`` marks the subset the "no standing non-``__init__``
+    re-export bridge modules" rule names directly: a bridge whose last importer
+    is gone forwards nothing to nobody, and unlike a module with real
+    definitions there is no reading under which it is dormant-but-intended.
+    """
+
+    mod: str
+    path: str
+    is_reexport_surface: bool
+    is_test: bool
+
+
+#: Filenames a running system reaches without any module importing them: a
+#: package body, a ``python -m`` entry point, and pytest's own two path-loaded
+#: shapes. A zero-importer verdict on these says nothing, so they are excluded
+#: by SHAPE rather than by name -- there is no per-module allowlist here.
+_NON_IMPORTED_REACH_FILENAMES: Final[frozenset[str]] = frozenset({"__init__.py", "__main__.py", "conftest.py"})
+
+
+def _string_constants(path: Path) -> set[str]:
+    """Return every string constant in a module, for dynamic-reach detection."""
+    try:
+        tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        return set()
+    return {node.value for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)}
+
+
+def first_party_census_files(*, repo_root: Path = REPO_ROOT) -> list[tuple[Path, Path]]:
+    """Return every first-party ``.py`` file that can reach a shipped module.
+
+    Each entry pairs the file with the source root its own dotted name is
+    taken relative to, because the three first-party trees do not share one:
+    the package sits under ``src/``, the harness distribution vendors its own
+    ``src/`` root, and the development tooling is rooted at the repository.
+    Resolving a tree against the wrong root silently mis-resolves its relative
+    imports, which drops real reach and manufactures orphans.
+    """
+    roots = (
+        (repo_root / "src" / "cadrumo", repo_root / "src"),
+        (repo_root / "src" / "cadrumo-harness" / "src", repo_root / "src" / "cadrumo-harness" / "src"),
+        (repo_root / "dev", repo_root),
+    )
+    census: list[tuple[Path, Path]] = []
+    for tree, src_root in roots:
+        if not tree.is_dir():
+            continue
+        census.extend(
+            (path, src_root)
+            for path in scan_directory(tree, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
+        )
+    return census
+
+
+def find_orphaned_modules(
+    package_files: Iterable[Path],
+    census_files: Iterable[tuple[Path, Path]],
+    reexport_paths: Iterable[str],
+    *,
+    repo_root: Path = REPO_ROOT,
+) -> list[OrphanedModule]:
+    """Return every module under the package that nothing reaches.
+
+    Args:
+        package_files: The candidate modules -- the shipped package tree.
+        census_files: ``(file, source root)`` pairs for every file that may
+            REACH a candidate, from :func:`first_party_census_files`. This
+            must span the whole first-party tree, not just the package: a
+            module read as orphaned purely because its only importers lived in
+            a sibling distribution and the development tooling, and a
+            false-orphan verdict is the one failure that would get a live
+            module deleted.
+        reexport_paths: Repo-relative paths of the pure-re-export modules
+            family 2 found, used to mark the bridge subset.
+        repo_root: Root the reported paths are relative to.
+
+    A module counts as reached by a static import, by a dynamic
+    ``importlib.import_module`` target, or by ANY string constant naming it --
+    a lazy CLI command table, a subprocess ``-m`` target and a path-based test
+    probe all reach a module through a string the import graph cannot see, and
+    each was observed on this tree.
+    """
+    census = list(census_files)
+    reached: set[str] = set()
+    string_pool: set[str] = set()
+
+    for path, census_src_root in census:
+        for site in walk_module_imports(path, src_root=census_src_root):
+            reached.add(site.target_mod)
+            for name in site.imported_names:
+                reached.add(f"{site.target_mod}.{name}")
+        for _lineno, target in iter_dynamic_import_targets(path):
+            reached.add(target)
+        string_pool |= _string_constants(path)
+
+    bridges = frozenset(reexport_paths)
+    orphans: list[OrphanedModule] = []
+    for path in package_files:
+        if path.name in _NON_IMPORTED_REACH_FILENAMES or path.name.startswith("test_"):
+            continue
+        mod = module_name_for(path)
+        if mod in reached:
+            continue
+        rel = str(path.relative_to(repo_root)).replace("\\", "/")
+        leaf = f".{path.stem}"
+        if any(text == mod or text == rel or text.endswith(leaf) for text in string_pool):
+            continue
+        orphans.append(
+            OrphanedModule(
+                mod=mod,
+                path=rel,
+                is_reexport_surface=rel in bridges,
+                is_test=is_test_module(mod, path),
+            )
+        )
+    return sorted(orphans, key=lambda o: o.path)
+
+
+# ---------------------------------------------------------------------------
 # Violation family 2: shim / pure re-export / alias modules
 # ---------------------------------------------------------------------------
 
@@ -2258,6 +2567,12 @@ def main() -> int:
     dev_tooling_imports = find_dev_tooling_import_violations(py_files)
     dev_path_reaches = find_dev_path_reach_violations(py_files)
     registry_loader_imports = find_registry_loader_import_violations(all_sites)
+    dangling_imports = find_dangling_first_party_imports(all_sites)
+    orphaned_modules = find_orphaned_modules(
+        py_files,
+        first_party_census_files(),
+        (s.path for s in shims if s.reason == "pure_reexport_shape"),
+    )
     # The accepted-census pin is enforced after reporting, not here: it refuses any
     # change to one sub-census, and raising mid-run discarded the six unrelated
     # families already computed above without printing any of them.
@@ -2363,6 +2678,26 @@ def main() -> int:
         print(f"  {v.importer_path}:{v.lineno} imports {v.imported_names} from {REGISTRY_LOADER_PACKAGE}")
     print()
 
+    print(f"=== FAMILY 8: dangling first-party import targets: {len(dangling_imports)} total ===")
+    print("  (a deletion that landed without its consumer sweep, seen from the consumer end;")
+    print("   the whole-tree type checker computes the same fact but carries too much unrelated")
+    print("   noise at rest for one new edge to be visible in it)")
+    for d in dangling_imports:
+        symbol = f" :: {d.symbol}" if d.symbol else ""
+        print(f"  [{d.kind}][{'test' if d.is_test else 'prod'}] {d.importer_path}:{d.lineno} -> {d.target_mod}{symbol}")
+    print()
+
+    print(f"=== FAMILY 9: orphaned modules (nothing in the first-party tree reaches them): {len(orphaned_modules)} ===")
+    print("  (the same deletion seen from the other end: the module left behind when its last")
+    print("   consumer went. Reach counts static imports, dynamic importlib targets and any")
+    print("   string constant naming the module, across src/, the harness distribution and dev/)")
+    orphan_bridges = [o for o in orphaned_modules if o.is_reexport_surface]
+    print(f"  of which pure re-export bridges: {len(orphan_bridges)}")
+    for o in orphaned_modules:
+        kind = "reexport-bridge" if o.is_reexport_surface else "defines-its-own"
+        print(f"  [{kind}][{'test' if o.is_test else 'prod'}] {o.path}")
+    print()
+
     print(f"=== FIX STRATEGY: precondition promotions vs. simple consumer rewrites ({len(fix_classes)} pairs) ===")
     needs_promotion = [f for f in fix_classes if not f.already_in_facade]
     simple_rewrite = [f for f in fix_classes if f.already_in_facade]
@@ -2409,6 +2744,8 @@ def main() -> int:
     print(f"  shipped modules importing dev/ tooling (Family 5): {len(dev_tooling_imports)}")
     print(f"  shipped modules reaching a dev/ path (Family 6): {len(dev_path_reaches)}")
     print(f"  production imports of a demoted registry raw-loader symbol (Family 7): {len(registry_loader_imports)}")
+    print(f"  dangling first-party import targets (Family 8): {len(dangling_imports)}")
+    print(f"  orphaned modules (Family 9): {len(orphaned_modules)}")
     print(f"  exact legacy TUI migration rows: {len(tui_migration_rows)}")
     print()
 
@@ -2502,6 +2839,27 @@ def main() -> int:
                     "imported_names": v.imported_names,
                 }
                 for v in registry_loader_imports
+            ],
+            "dangling_first_party_imports": [
+                {
+                    "importer_mod": d.importer_mod,
+                    "importer_path": d.importer_path,
+                    "lineno": d.lineno,
+                    "target_mod": d.target_mod,
+                    "symbol": d.symbol,
+                    "kind": str(d.kind),
+                    "is_test": d.is_test,
+                }
+                for d in dangling_imports
+            ],
+            "orphaned_modules": [
+                {
+                    "mod": o.mod,
+                    "path": o.path,
+                    "is_reexport_surface": o.is_reexport_surface,
+                    "is_test": o.is_test,
+                }
+                for o in orphaned_modules
             ],
             "tui_migration_manifest": tui_manifest,
         }

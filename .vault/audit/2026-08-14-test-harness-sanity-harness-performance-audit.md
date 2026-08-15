@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:fa719bb87925bcf56e47bb353bb51b11fdab209b9ef8d3475bec5ce87867aba9'
+body_hash: 'sha256:15da050b3cbb33ffdf49993921e625e05b7b3c34b0283dcfd0c5ad512b9dd84e'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -679,3 +679,59 @@ of getting it wrong is the worst kind this campaign has catalogued: a cached
 scan makes a locale gate pass over stale keys, silently. Recorded with the
 measurement so the next pass starts from the number and the hazard rather than
 rediscovering both.
+
+## Round: the `get_codebase_keys` memo, taken safely
+
+The previous round measured `LocaleManager.get_codebase_keys()` at ~9s a call
+(41,926 keys) and DECLINED to memoise it, because roughly twelve of the fourteen
+construction sites build a manager over a planted temporary source tree and a
+process-level memo keyed on `src_dir` could serve stale keys to a locale gate.
+
+The declination was right about the hazard and wrong about the only available
+shape. A memo scoped to the INSTANCE is safe by construction: it cannot outlive
+the object whose `src_dir` it describes, a caller wanting a fresh scan simply
+builds a new manager, and no keying scheme has to be trusted. That removes the
+twelve-site audit entirely rather than performing it.
+
+Two facts make it sound, and both were checked rather than assumed:
+
+- `get_codebase_keys` reads SOURCE while `scaffold()` writes CATALOGUES, so the
+  answer cannot move across `scaffold()`-then-`audit()` -- the one sequence that
+  calls it twice on one manager, and the reason
+  `test_scaffold_surfaces_fstring_registry_keys_as_missing` paid ~9s twice.
+- An AST scan of every function constructing a manager found **34 such
+  functions and ZERO** issuing a filesystem mutation after construction. So no
+  instance is asked twice across a source change.
+
+A fresh `set` is returned per call: the memo holds a `frozenset`, and a planted
+mutation on one caller's result was confirmed NOT to reach the next caller.
+
+    src/cadrumo/tests/test_parity.py : 193.25s before, 130.25s after
+
+with identical failure sets by name (7 failed, 25 passed both sides). The
+baseline snapshot was pinned to `de045bd45a`, chosen because it carries the C
+loader from the previous round but NOT the memo, so the figure isolates this
+change instead of re-reporting the last one.
+
+### Two instrument failures in one round, both caught by their own guards
+
+The first scan for "functions mutating the filesystem after constructing a
+manager" reported a clean zero. It had found **zero files** to scan -- a shell
+quoting error had emptied the file list -- so the clean result was vacuous. It
+was caught only because the rewritten scan asserted its own denominator and
+refused to print a verdict over an empty corpus. A clean result and a broken
+instrument are the same output; only the denominator separates them.
+
+The second is subtler and worth carrying. The guard confirming a baseline
+snapshot LACKED this change grepped for `_codebase_keys` -- which is a SUBSTRING
+of `get_codebase_keys`, the method that has existed all along. Every revision in
+history "contained" it, including a snapshot from a week before the change
+existed. The guard reported "already swept" for every commit it was pointed at,
+and would have reported it just as confidently for a tree that predated the work
+by a month.
+
+The conclusion it reached happened to be correct, which is exactly what makes it
+dangerous: a guard that is right by luck is indistinguishable from one that
+works until the day it is not. Pinned by re-checking with `self._codebase_keys`,
+which is 4 in the working copy and 0 a week earlier. A guard against a private
+attribute must match the attribute, not a fragment of a public method's name.

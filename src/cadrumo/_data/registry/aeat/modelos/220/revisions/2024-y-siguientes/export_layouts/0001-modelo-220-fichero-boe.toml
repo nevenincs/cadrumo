@@ -1,0 +1,128 @@
+# Modelo 220 envelope header, transcribed from the bundled official Diseño de
+# Registro (source "aeat-dr-220-2025",
+# corpus/aeat_official/disenos_registro/modelo_220/files/01-220-ejercicio-2025.xlsx,
+# sheet "T220000000"). Same generic AEAT "<T...><AUX>...</AUX>" declaration
+# envelope as modelos 122/222. Position table (Posic./Lon): 1(2) constante
+# "<T"; 3(3) modelo constante "220"; 6(1) discriminante -- NOT a constant here
+# ("(*)[A|E|I|0]", disposition-dependent, so not declared as a literal); 7(4)
+# ejercicio de devengo; 11(2) periodo constante "0A" (this revision's
+# period_selector carries only "0A"); 13(5) constante "0000>"; 18(5) constante
+# "<AUX>"; ...; 323(6) constante "</AUX>"; 329+ contenido variable. Only the
+# fixed, unambiguous envelope coordinates are transcribed; the disposition-
+# dependent discriminante, the reserved/version/NIF-desarrollador positions
+# and the closing tag at the variable offset after content are left
+# undeclared rather than fabricated. The revision's own comment already
+# records that the money-closure casillas of the group declaration are
+# deferred until the box-number mapping is authored -- this layout does not
+# change that; it only stops the revision from declaring no export layout at
+# all.
+
+[[revisions."2024-y-siguientes".export_layouts]]
+id = "modelo-220-fichero-boe"
+legal_refs = ["orden-hac-657-2025:art-3"]
+source_refs = ["aeat-dr-220-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records]]
+id = "modelo-220-envelope"
+record_type = "envelope"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "none"
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-220-env-open-tag"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-657-2025:art-3"]
+source_refs = ["aeat-dr-220-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-220-env-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "220"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-657-2025:art-3"]
+source_refs = ["aeat-dr-220-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-220-env-ejercicio"
+offset = 7
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-657-2025:art-3"]
+source_refs = ["aeat-dr-220-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-220-env-periodo"
+offset = 11
+length = 2
+kind = "literal"
+literal = "0A"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-657-2025:art-3"]
+source_refs = ["aeat-dr-220-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-220-env-header-close"
+offset = 13
+length = 5
+kind = "literal"
+literal = "0000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-657-2025:art-3"]
+source_refs = ["aeat-dr-220-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-220-env-aux-open"
+offset = 18
+length = 5
+kind = "literal"
+literal = "<AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-657-2025:art-3"]
+source_refs = ["aeat-dr-220-2025"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-220-env-aux-close"
+offset = 323
+length = 6
+kind = "literal"
+literal = "</AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-657-2025:art-3"]
+source_refs = ["aeat-dr-220-2025"]

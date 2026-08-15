@@ -48,8 +48,8 @@ class _KdfParameters(BaseModel):
     """On-disk record of the Argon2id parameters used to derive the KEK.
 
     The Argon2 cost fields carry the same OWASP-baseline validation window as the
-    enrolment record :class:`~._kdf_params.KdfParams` beside it -- read from that
-    module rather than restated -- so a tampered or buggy ``master.kdf`` that
+    enrolment record :class:`KdfParams` beside it -- read from that module
+    rather than restated -- so a tampered or buggy ``master.kdf`` that
     declares a below-floor cost is refused on read instead of silently deriving a
     weakened KEK.
 

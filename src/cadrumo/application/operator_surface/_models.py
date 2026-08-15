@@ -228,10 +228,17 @@ class SourceKindAlias(BaseModel):
 class MountedCommandFamily(BaseModel):
     """One accepted command-family declaration and its backend owner.
 
-    Families bind a root surface, child token, domain, backend service owner,
-    curated command tuple, and :class:`OperatorMutability`. The command tuple is
-    a contract summary used by help/conformance checks, not a replacement for
-    live command-tree traversal.
+    A family declares only what the live command tree cannot supply: which
+    ``root`` it hangs from, its ``child`` token, its :class:`MountedCommandDomain`,
+    the ``operator_question`` it answers, its backend ``service_owner``, and its
+    :class:`OperatorMutability`.
+
+    It deliberately declares NO command inventory. Which verbs a family contains
+    is established solely by the live command tree, projected once as the
+    registered command-schema keys the manifest carries; group them with
+    :meth:`OperatorSurfaceManifest.commands_for_family`. A second, hand-authored
+    inventory here would be a restatement of that authority, and a restatement
+    is a thing that can disagree.
     """
 
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
@@ -241,7 +248,6 @@ class MountedCommandFamily(BaseModel):
     child: str = Field(min_length=1)
     operator_question: str = Field(min_length=1)
     service_owner: str = Field(pattern=r"^cadrumo\.(application|domain|adapters|core)(\.[a-z_][a-z0-9_]*)*$")
-    commands: tuple[str, ...] = Field(min_length=1)
     mutability: OperatorMutability
 
     @field_validator("child")
@@ -249,15 +255,6 @@ class MountedCommandFamily(BaseModel):
     def _child_is_kebab(cls, value: str) -> str:
         if value != value.strip().lower() or " " in value:
             raise ValueError("mounted command child must be a lower-case command token")
-        return value
-
-    @field_validator("commands")
-    @classmethod
-    def _commands_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        if len(set(value)) != len(value):
-            raise ValueError("mounted command names must be unique")
-        if any(not command.strip() for command in value):
-            raise ValueError("mounted command names must not be blank")
         return value
 
 
