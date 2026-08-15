@@ -1,14 +1,16 @@
 """Operator agent-harness: read accessor for the shipped operating layer.
 
 The agent-harness operating layer - operator rules, tax-advisor personas, and
-workflow skills - is reviewed markdown product data under ``cadrumo/_data/agent/``,
-shipped inside the wheel and read here through the bundled-data boundary so it
-resolves identically under an editable install and a built wheel.
+workflow skills - is reviewed markdown product data under
+``cadrumo_harness/_data/agent/``, shipped inside this package's own wheel and
+read here through the bundled-data boundary so it resolves identically under an
+editable install and a built wheel.
 
 This package is a read accessor only. It carries no tax logic and computes no
 value; it hands the operating-layer text to whatever drives the agent (a prompt
 assembler, the MCP server, or an operator-workspace materialiser). The capability
-catalogue the agent reads first is emitted by ``aeat app contract --format json``.
+catalogue the agent reads first is emitted by ``cadrumo.application.operator_surface``
+(surfaced by the `cadrumo` CLI).
 """
 
 from __future__ import annotations
@@ -19,10 +21,10 @@ from collections.abc import Iterator
 from importlib.resources.abc import Traversable
 from typing import TYPE_CHECKING
 
-from ..core.external_constants import UTF_8_ENCODING as _UTF_8
-from ..core.resources import packaged_data as _packaged_data
+from ._resources import packaged_data as _packaged_data
 from ._skill_metadata import parse_skill_metadata
 
+_UTF_8 = "utf-8"
 _AGENT_SUBTREE = "agent"
 _RULES = "rules"
 _PERSONAS = "personas"
@@ -43,7 +45,7 @@ if TYPE_CHECKING:
 
 
 def harness_root() -> Traversable:
-    """Return the bundled ``cadrumo/_data/agent`` harness data root."""
+    """Return the bundled ``cadrumo_harness/_data/agent`` harness data root."""
     return _packaged_data(_AGENT_SUBTREE)
 
 

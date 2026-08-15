@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:ac7767ba661db63565678b7cd3ce15726fd766d991333a04f7235b950df097b8'
+body_hash: 'sha256:a816064de37dd1d65d0fc6deb5b20134ac5e3fc4876127c386521a22c3b00f92'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
   - "[[2026-08-14-test-harness-sanity-successor-adr]]"
@@ -280,3 +280,48 @@ Grounding queries used: `uvx vaultspec-rag search "resolve the on-disk directory
 - Re-run the `application/calculations/tests/` and `domain/calculations/registry/tests/` failure-set diffs one more time from a fully quiesced tree (no concurrent peer writes) before this wave is declared closeable, given how many peer batches are landing on the same shared worktree concurrently with this record's own verification runs.
 - Treat the consumer-count corrections above (`_repo_at`/`_ephemeral_secure_repo`: 10 not 8; `serve_directory`: 7 not 5; `_match`/`_oracle_rules`: 11 not 7) as the census superseding the original assignment tallies, not as errors in either — the assignment counts likely predate later call sites landing on the same shared clusters.
 - The 9/5/4 non-consolidation tallies (AEAT write-refusal guards, standalone gate files, extractor tamper tests) need a dedicated enumeration pass by whoever owns that part of the campaign; this record establishes the pattern is real and load-bearing but does not certify the counts.
+
+
+### `_period` / `_p` | census | CLOSED — 3 aggregation sites converged, 1 documented delegating wrapper, 1 deliberate non-consolidation
+
+The census reported a `_period` alias recurring across `application/aggregation/tests/` and `application/workflow/tests/`. Every body was the same one-line delegation to the public canonical constructor `Period.from_year_and_code(year, code)`, so the cluster is real but the correct remedy differs by side.
+
+**Aggregation (closed):** `_renta_income_aggregation_support.py:19` is the canonical home; `test_renta_ledger_aggregation.py` and `test_renta_ledger_helpers.py` now import it. `test_aggregation_period_for_modelo.py:64` keeps a local `_period(code, *, year=2025)` that delegates to the canonical builder under an explicit docstring reason — the argument ORDER is the payload there (that module is code-first throughout), so collapsing it would rewrite every call site to gain nothing. Recorded as a sanctioned delegating wrapper, consistent with the `helper_body_census` delegating-wrapper ruling above.
+
+**Workflow (closed, and NOT by the route originally approved):** the pre-approved scope was a new `application/workflow/tests/` support module with `test_resume.py` canonical and `test_models.py` keeping its defaults in a thin wrapper. Reading both files whole changed the answer, and no support module was created:
+
+- `test_resume.py` already called `Period.from_year_and_code(...)` DIRECTLY at five sites (529, 545, 561, 576, 596) while routing eight others through its own `_period` alias — the alias earned nothing even inside its own file. The alias is deleted and all eight sites inlined; the file is now internally consistent on one spelling.
+- `test_models.py:61` `_period(year=2026, code="1T")` is **deliberately left alone**. Its DEFAULTS are the payload — nine of its ten call sites are the bare `_period()` — so it is a defaulted local factory, not a copy of a helper that exists elsewhere. It shares only a name with the deleted alias, which is the `isolated_backend_family` name-collision shape this record already documents at length.
+
+**The standing principle this reinforces:** a one-line alias over an *already public canonical constructor* does not need a shared home — it needs deleting. Inventing a support module to host an alias of `Period.from_year_and_code` would have added an indirection layer carrying zero behaviour, which is the same reporting-the-solution-as-the-problem error the delegating-wrapper correction fixed in the census itself.
+
+**Verification:** `uv run --no-sync ruff check src/cadrumo/application/workflow/tests/test_resume.py` clean; no `_period` reference survives in that file. `src/cadrumo/application/workflow/tests/test_resume.py` currently reports 22 setup ERRORs, **all pre-existing and unrelated** — they raise `ProfileCustodyRecordError: profile capsule destination already exists` inside the autouse `_patch_secure_backend` fixture (line 117), which executes before any test body and therefore cannot reach `_period` at all. Cause is recorded separately below.
+
+### custody inventory regression | live-defect | an uncommitted peer edit makes the Windows capsule inventory under-report committed capsules
+
+Surfaced while verifying the `_period` change; **not caused by it, and deliberately not fixed here** — the owning file is another agent's in-flight uncommitted work.
+
+`src/cadrumo/adapters/persistence/storage/custody/_inventory.py:189` (uncommitted) swaps `path.iterdir()` for `iter_directory(path, require_root=True)` inside `_inventory_windows_directory`. Downstream, `seed_test_profile_record` (`src/cadrumo/tests/profile_capsule.py:283`) guards capsule creation on `if identity not in list_current_profile_custody_capsule_ids(...)`. With the new walk the listing no longer reports a capsule that `isolated_runtime_profile` has already published, so the guard passes, a second create is attempted, and the directory rename fails closed with `profile capsule destination already exists` (`custody/_filesystem.py:1227`).
+
+**Why this matters beyond a red test:** the failing surface is the inventory of committed profile custody capsules — the listing that tells a writer what already exists. An inventory that under-reports is the precondition for a create path clobbering real encrypted data; here it fails closed, which is the correct direction, but the underlying disagreement between "what the inventory lists" and "what the destination path resolves to" is the defect, not the refusal.
+
+**Blast radius observed:** `src/cadrumo/adapters/persistence/storage/tests` is broadly red (33 failed / 238 passed), including `test_storage_path_directory_agreement_gate.py` and `test_schema_lineage.py`. Sibling workflow files that use `isolated_runtime_profile` WITHOUT nesting `seed_test_profile_record` inside it (`test_run_persistence_roundtrip.py`, `test_per_bucket_engine_isolation.py`) pass — 14/14 — which localises the fault to the listing-versus-destination disagreement rather than to `isolated_runtime_profile` generally.
+
+**Action:** owner of the `_inventory.py` change to confirm `iter_directory(..., require_root=True)` reproduces `path.iterdir()` semantics under the anchored-handle walk before landing it, and to add a regression pinning that a capsule published by `isolated_runtime_profile` is visible to `list_current_profile_custody_capsule_ids` in the same process.
+
+
+### W09 close-phase honesty review | close-gate | independent read-only re-derivation, no regressions, two corrections landed
+
+Run as an independent fresh-context pass against the live tree, briefed to believe none of the wave's checked claims and to treat every checked step as a claim to verify. Read-only; it fixed nothing.
+
+**The check that mattered most — safety non-consolidations — came back clean.** The deliberately-unmerged duplications are all still standing as independent code: the AEAT live-write refusal guards (`test_gate.py`, `test_clave_permanente_live.py`, `test_errors.py`, `test_no_write_surface.py`, `test_read_landing_guard.py` — five distinct files across the auth, export and sede adapter modules, each still asserting independently, no shared helper introduced), and `_seed_corpus` (still three independently-signed functions — `test_bundle.py:41` and `test_manifest.py:44` returning `dict[str, bytes]`, `test_bundle_signing.py:68` returning `None`; genuinely different contracts, not merged). No REGRESSION, no STALE, no HALF-DONE. `S145` is correctly left unchecked with no false-complete claim.
+
+**Independently re-derived counts, all matching:** observation-lookup 13, `scoped_attribute` 10, convenio rate 12, `serve_directory` 7, isolated-backend family 8 (not 37), `_seed_corpus` 3 signatures, AEAT guard files 5.
+
+**Two corrections landed from this review:**
+
+1. `W09.P29.S114`'s step PROSE said "the eight convenio rate resolvers" while the real figure — recorded correctly in this census and re-derived live — is twelve. A wording drift in the Step text, not a work defect. The step action has been corrected to "twelve" so the plan and the census agree.
+2. The `aliased_behaviour_count` recorded above as **225** now reads **224** live. Re-run independently and confirmed: `helper_count=7987` (was 7990), `delegating_wrapper_count=1676` (was 1672), `aliased_behaviour_count=224` (was 225). This is concurrent-worktree drift from peer commits landing between the census write and the re-run, not an error in either figure — the census's own notes flag this tree as heavily contended. **The 309 → 225 correction is confirmed real and live; only its last digit has moved since.** Treat 225 as "as-of the census write" rather than a standing invariant, and re-derive before quoting.
+
+**Explicitly still unverified, carried forward rather than assumed:** the exact tallies "9 AEAT live-write refusal guards" and "4 extractor tamper tests" were not exhaustively enumerated by this review either — the review confirmed the qualitative safety property (all separate, none merged) but not the precise counts, which is the same limitation this record already declares for those two figures. The historical "66 modelo-131 clone tests" figure likewise remains unconfirmed from git history; the `@pytest.mark.parametrize` decorators over `_FASE_1_CASES` and `_FASE_4_CASES` are confirmed present, the pre-consolidation count is not.
+

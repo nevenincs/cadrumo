@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-15'
-body_hash: 'sha256:47d8bc1d9f65c3e420813437c801280ce1e11c75f6e77a55c414f39e7e2cdf0b'
+body_hash: 'sha256:0cebb136ad1825c7ba9b8b1acd0d8587e3e35007efa85c0c15974614cb40b799'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -193,7 +193,7 @@ Twenty-five file-disjoint batches of byte-identical helper bodies, partitioned b
 - [x] `W09.P29.S111` - Partition the body-keyed rescan into file-disjoint batches by union-find over the task-to-file graph and assert no file appears in two batches; `scratchpad census artefacts`.
 - [x] `W09.P29.S112` - Consolidate the thirteen observation-lookup helpers into one narrowest-owner helper carrying the return annotation every original lacked; `src/cadrumo/application/calculations/tests/_observation_lookup_support.py`.
 - [x] `W09.P29.S113` - Consolidate the ten attribute-replacement context managers onto the documented submodule-direct convention and preserve the monkeypatch-ban rationale; `src/cadrumo/tests/attribute_scope.py`.
-- [x] `W09.P29.S114` - Consolidate the eight convenio rate resolvers and prove every per-country treaty rate and legal citation stayed in its own file; `src/cadrumo/application/calculations/tests/_convenio_rate_support.py`.
+- [x] `W09.P29.S114` - Consolidate the twelve convenio rate resolvers and prove every per-country treaty rate and legal citation stayed in its own file; `src/cadrumo/application/calculations/tests/_convenio_rate_support.py`.
 - [x] `W09.P29.S115` - Consolidate the five secure-object repository builders into the existing support module and remove the unused imports a prior slice left behind; `src/cadrumo/adapters/persistence/storage/sql/tests/_secure_objects_support.py`.
 - [x] `W09.P29.S116` - Consolidate the five docs HTTP server helpers to the strictest cleanup form and close the listening socket every copy leaked; `dev/docs/tests/_http_serve_support.py`.
 - [x] `W09.P29.S117` - Collapse the sixty-six structurally identical modelo 131 modulos tests into parametrized cases without losing a single expected value or IAE citation; `src/cadrumo/domain/calculations/registry/tests/test_modelo_131_modulos_engine*.py`.
