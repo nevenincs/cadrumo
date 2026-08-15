@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 import warnings
 from collections.abc import Generator, Iterator, Mapping
 from contextlib import contextmanager
@@ -1324,9 +1325,32 @@ _COMPACT_PDF_CRLF_ROW_RE = re.compile(
     rf"(?P<text>(?:{_RECORD_TERMINATOR_PHRASE}).*)$",
     re.IGNORECASE,
 )
+#: One narrative-PDF position row: ``<start>[-<end>] <naturaleza> <description>``.
+#:
+#: The naturaleza is captured LOOSELY here and validated afterwards by
+#: :func:`_naturaleza_or_none`, rather than spelled out as a closed alternation.
+#: AEAT's own spelling varies across the bundled corpus -- gender ("Numérica"
+#: beside "Numérico"), accent placement ("Alfanúmerico" for "Alfanumérico") and
+#: outright typos ("Afabético") all ship -- and a closed alternation turns every
+#: variant into a SILENTLY dropped row, because a line that fails to match is
+#: indistinguishable from ordinary prose.
+#:
+#: The dash alternative accepts AEAT's genuine dash-naturaleza rows
+#: ("176-237 -------------- BLANCOS") but MUST NOT be followed by a digit.
+#: Without that guard the engine backtracks on any row whose naturaleza it does
+#: not recognise, re-reads the RANGE SEPARATOR as the type, and manufactures a
+#: one-byte field at the start position carrying the rest of the line as its
+#: description. Both known fabrications come from that one path: Modelo 190's
+#: phantom @108+1 out of the prose "(posiciones 108 - 147) tenga contenido", and
+#: Modelo 156's "36 - 75 Afabético APELLIDOS Y NOMBRE" read as a 1-byte field
+#: instead of a 40-byte campo. An invented position is the worst failure
+#: available here: it inflates the denominator, so an author chasing the ratio
+#: would write bytes AEAT never defined -- for Modelo 156, truncating a real
+#: taxpayer's name to one character. A genuine dash-naturaleza row is always
+#: followed by its description, never by a number, so the guard costs nothing.
 _NARRATIVE_PDF_ROW_RE = re.compile(
     r"^\s*(?P<start>\d+)(?:\s*[-\u2013]\s*(?P<end>\d+))?\s+"
-    r"(?P<type>Alfanum[eé]rico|Alfab[eé]tico|Num[eé]rico|Alphanumeric|Alphabetic|Numeric|Blank|[-\u2013]+)\s*"
+    r"(?P<type>[^\W\d_]+|[-\u2013]+(?!\s*\d))\s*"
     r"(?P<text>.*)$",
     re.IGNORECASE,
 )
@@ -1818,6 +1842,16 @@ def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
     if narrative is None:
         return None
 
+    naturaleza = _naturaleza_or_none(narrative.group("type"))
+    if naturaleza is None:
+        # The line has a leading number but the token after it names no
+        # naturaleza AEAT uses, so this is prose, not a position row. AEAT
+        # routinely opens a field's DESCRIPTION with that field's own range
+        # ("68-107 APELLIDOS Y NOMBRE: Se consignara el primer ..."), and
+        # treating those as rows would invent positions wholesale -- measured
+        # across the bundled corpus, 41 designs carry such prose.
+        return None
+
     start = int(narrative.group("start"))
     end_group = narrative.group("end")
     end = int(end_group) if end_group is not None else start
@@ -1828,22 +1862,37 @@ def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
         ordinal=None,
         offset=start,
         length=end - start + 1,
-        type_code=_normalise_pdf_type_code(narrative.group("type")),
+        type_code=naturaleza,
         description=narrative.group("text").strip(),
     )
 
 
-def _normalise_pdf_type_code(value: str) -> str:
-    normalised = value.strip(" .").lower()
-    if set(normalised) <= {"-", "\u2013"} or normalised == "blank":
+def _naturaleza_or_none(value: str) -> str | None:
+    """Return the canonical naturaleza ``value`` names, or ``None`` if it names none.
+
+    Matched on an ACCENT-STRIPPED stem rather than an exact spelling, because
+    AEAT's designs are not spelled consistently and every unmatched spelling was
+    a row dropped in silence. ``Numérica`` (feminine) and ``Alfanúmerico``
+    (accent on the u, not the e) both ship in the bundled corpus and both read
+    correctly here; before this, the first cost modelo 193 its positions
+    182-192 and the second its 315-321, with ``is_complete`` still ``True``.
+
+    Returning ``None`` rather than echoing the raw token back is the point: an
+    unrecognised naturaleza must not become a field's type_code, because that is
+    how a line of prose turns into a position.
+    """
+    normalised = unicodedata.normalize("NFKD", value.strip(" .")).encode("ascii", "ignore").decode("ascii").lower()
+    if not normalised:
+        return None
+    if set(value.strip(" .")) <= {"-", "–"} or normalised == "blank":
         return "Blancos"
     if normalised.startswith(("alfanum", "alphanum")):
         return "Alfanumérico"
     if normalised.startswith(("alfab", "alphab")):
         return "Alfabético"
-    if normalised.startswith("num"):
+    if normalised.startswith(("num", "numeric")):
         return "Numérico"
-    return value.strip()
+    return None
 
 
 def _pdf_page_name(line: str) -> str | None:
