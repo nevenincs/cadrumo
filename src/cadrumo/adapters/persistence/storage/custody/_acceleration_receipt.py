@@ -894,9 +894,7 @@ def delete_profile_session(*, storage_root: Path, profile_id: UUID) -> None:
                     session_id=record.session_id,
                     suppress_unavailable=True,
                 )
-            if not _clear_captured_receipt(
-                path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES
-            ):
+            if not _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES):
                 raise AccelerationReceiptRevocationError(
                     translated_message="errors.fail.fail_acceleration_receipt_revocation",
                     context={"profile_id": str(profile_id)},

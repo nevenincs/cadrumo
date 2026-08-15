@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:4e656b6cd260e1421cfbf34802f7f2144aa2cf5f0ea05ce3ca2ffb14693a9595'
+body_hash: 'sha256:a6df57be2c79f027f0983cfadbe4807dfe28cba539410376cd57ae393f1424d9'
 step_id: 'S34'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -52,3 +52,5 @@ Handed back, not fixed here (outside `src/cadrumo/application/bucket_maintenance
 Verification run: `pytest src/cadrumo/application/bucket_maintenance/ src/cadrumo/application/tests/test_config_reset.py -q` — 9 passed (both `bucket_maintenance/tests/` modules green, confirming this Step's edits did not regress them), 6 failed, all six pre-existing and attributable to the still-open `_service.py::assess_deletion` refusal (S154's scope, not touched here). `pytest src/cadrumo/application/ --collect-only -q` — 8695/9062 collected cleanly (367 deselected by markers), confirming the `_contracts.py` deletions left no import break anywhere under `application/`. `python -c "import cadrumo.application.bucket_maintenance as m; print(m.__all__)"` — imports clean, unchanged `__all__`. `entrypoints/cli/tests/test_profile_archive_roundtrip.py -m integration` run read-only to confirm the archive-inspect finding (6/7 failing), not to fix it.
 
 Row not marked complete: it names four capabilities and requires a per-capability verdict, which this record gives, but the row's own bar — "give it a successor owner, or record it as deliberately retired with the operator route that replaces it" — is not fully met for bucket delete (successor named, no operator route exists to name) or archive inspect (no successor, no route, honestly recorded as a gap rather than invented). Whether that counts as the row's contract discharged is the team lead's call; the honest state is on record either way.
+
+While this Step was in flight, an out-of-band commit (`31b8592ec4`, message "registry: continue authority-grade sweep (round 45, official source guidance)") swept the entire working tree, including this Step's still-uncommitted edits to `_contracts.py` and `__init__.py` alongside unrelated registry/locale changes and other agents' exec-record scaffolds. Neither edit was committed by this Step; the sweep landed them under an unrelated message. Content verified identical to what this record describes (`git show 31b8592ec4 -- src/cadrumo/application/bucket_maintenance/`), so nothing here was altered by the capture, but the attribution is worth the team lead's attention as a live instance of the broad-commit hazard `aeat-worktree-safety` names.

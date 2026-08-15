@@ -692,9 +692,14 @@ def list_current_profile_custody_capsule_ids(
     """
     storage_root = effective_storage_root(root, settings=settings)
     capsules_root = storage_root / storage_location(StorageCategory.BUCKETS).relative_path()
+    keystore_root = storage_root / storage_location(StorageCategory.BUCKET_KEYSTORE).relative_path()
+    # The refusal precedes the empty-store shortcut deliberately: retired key
+    # material lives outside the buckets tree, so a store whose buckets root is
+    # absent can still be a retired store, and returning "no profiles" for it
+    # would route the operator to enrol beside key material nothing can read.
+    refuse_retired_profile_custody_paths(capsules_root, keystore_root=keystore_root)
     if not os.path.lexists(capsules_root):
         return ()
-    refuse_retired_profile_custody_paths(capsules_root)
     return anchored_current_capsule_ids(
         capsules_root,
         parse_commit=parse_profile_custody_commit,

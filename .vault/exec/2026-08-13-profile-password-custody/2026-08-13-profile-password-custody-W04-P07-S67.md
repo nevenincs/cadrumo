@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:bb7de5beeeb89ffb0d5a10ca4a3bc73d88c52992d92b5881567dceb13e84be3c'
+body_hash: 'sha256:f0da2016ea1c094256702f72dee451c4c3a04c2f0474377153fa465cd90b6181'
 step_id: 'S67'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -95,10 +95,38 @@ with a single import line each. The failures are the in-flight custody cutover
 showing through, and they were equally red at the old location.
 
 The commit token was held elsewhere, so this Step's change was left complete in the
-working tree rather than committed by its executor. The orchestrator landed it,
-bundled with concurrent peer work, under a commit retiring the setup package and
-folding its tests into the profile package, with the regenerated stubs following in
-a paired documentation commit.
+working tree rather than committed by its executor. It was landed by another
+session, bundled with concurrent peer work, under a commit retiring the setup
+package and folding its tests into the profile package, with the regenerated stubs
+following in a paired documentation commit. The landed content is this Step's work
+rather than an independent parallel deletion, and the commit itself is the evidence:
+rename detection records the four valuable modules moving at ninety-eight to one
+hundred percent similarity, the two atomic-create modules carrying exactly the
+one-line facade repoint each that this Step authored, the renamed CLI-surface module
+byte-identical, the typing test deleted with no rename pair, and the two consumer
+sweeps present at the exact line counts this Step removed.
+
+A second verification pass was run against the tree three commits later, because the
+subject had been committed out from under the working copy and a landed change is
+only worth as much as its state at head. The re-derivation confirmed the retirement
+is atomically complete. Both in-suite string references are gone. A sweep of every
+non-vault surface — the whole source tree, the development tree, the built
+documentation, the build manifest and task file, and the agent harness data — finds
+the package named nowhere except the two generated quality manifests already
+reported. The three retired symbols survive only in one of those same manifests.
+Separating genuine deletions from renames confirms nothing valuable was dropped:
+every module this Step classified as MOVED has a rename pair, and the only test
+deleted outright is the one classified as DELETED. The import-smoke inventory, the
+emission-contract gate and the integration rollback proofs run green together at
+head.
+
+One difference from what this Step authored is a peer improvement layered onto the
+re-homed emission-contract gate in the same commit: the profile-values-updated
+member moved from the tracked-gap tuple into the required-emission table, pointed at
+the wizard persistence module, with a needle naming the emission rather than the
+bare symbol precisely because a bare symbol is satisfied by the module's own prose.
+That is a strengthening of the gate by its wizard-side owner, not damage from the
+move, and it passes.
 
 Two generated manifests under the development quality tree still name the deleted
 package: a fixture-ownership record for a fixture that moved with its module, and a
@@ -112,3 +140,11 @@ work into this Step's change. They need a regeneration pass once the tree is qui
 The API stub regeneration is tree-wide, not change-scoped. It also retired two
 registry stubs and one filing stub and emitted three new registry stubs belonging to
 other agents. Those were left in place for their owners rather than reverted.
+
+The head-state collection sweep reported two errors, both in the calculations
+fidelity suite and both reading as the registry directory changing during cache
+fingerprinting while concurrent registry writes were in flight — the tree's head at
+the time was itself a registry sweep commit. Re-collecting those two modules
+sequentially yields twenty-three tests and a clean exit, which is the loader-cache
+race the local-execution discipline predicts rather than a regression, and it has no
+relationship to the retired package.

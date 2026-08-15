@@ -1988,12 +1988,6 @@ application:
       no_active_profile_selected: No hay un perfil activo seleccionado.
       profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
         login NAME para activarlo o aeat config profile delete NAME primero.
-      profile_manifest_missing: El perfil '%{profile}' no tiene manifiesto de bucket
-        registrado en %{bucket_dir}.
-      profile_not_registered: El perfil '%{profile}' no existe; ejecuta `aeat config
-        profile create NAME` para crearlo.
-      profile_tombstoned_not_selectable: El perfil '%{profile}' está eliminado y no
-        puede seleccionarse.
       registration_label_blank: El nombre del perfil no puede estar vacío.
       registration_passphrase_too_short: La contraseña debe tener al menos {minimum_length}
         caracteres.
@@ -2003,10 +1997,6 @@ application:
       repository_profile_bucket_mismatch: El perfil %{profile_id} no pertenece al
         bucket %{bucket_id}; un bucket de perfil contiene exactamente una identidad
         de perfil.
-      repository_profile_record_missing: No se encontró el registro de perfil en el
-        bucket activo.
-      repository_profile_record_version_unsupported: La versión del esquema del registro
-        de perfil no es compatible con esta aplicación.
       repository_profile_snapshot_missing: No se encontró la instantánea de perfil
         en el bucket activo.
       repository_profile_snapshot_version_unsupported: La versión del esquema de la
@@ -5710,9 +5700,6 @@ cli:
           CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
           y CADRUMO_SECRET_PASSPHRASE; los logs quedan por defecto bajo ese directorio
           de almacenamiento.
-        profile_delete: Eliminar un perfil de contribuyente.
-        profile_duplicate: Duplicar un perfil de contribuyente existente.
-        profile_export: Exporta un paquete portátil del perfil.
         profile_history: Inspecciona el historial append-only de eventos del perfil.
         profile_list: Listar los perfiles de contribuyente disponibles.
         profile_login: Inicia sesión en un perfil y lo convierte en el activo.

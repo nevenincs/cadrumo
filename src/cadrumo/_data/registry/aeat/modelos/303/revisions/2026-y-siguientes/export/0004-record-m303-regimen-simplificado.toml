@@ -1,0 +1,876 @@
+[[revisions.2026-y-siguientes.export_layouts]]
+id = 'generated-modelo-303-2026-fichero'
+
+[[revisions.2026-y-siguientes.export_layouts.records]]
+id = 'm303-regimen-simplificado'
+record_type = 'regimen-simplificado'
+order = 1
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f128'
+offset = 1305
+length = 4
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'personal_no_asalariado_horas_titular'
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f129'
+offset = 1309
+length = 1
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'personal_no_asalariado_titular_discapacidad_33'
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f130'
+offset = 1310
+length = 4
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'personal_no_asalariado_horas_conyuge'
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f131'
+offset = 1314
+length = 7
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'personal_no_asalariado_horas_hijos_menores_18'
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f132'
+offset = 1321
+length = 2
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'mesas_capacidad'
+sub_index = 1
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f133'
+offset = 1323
+length = 4
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'mesas_numero'
+sub_index = 1
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f134'
+offset = 1327
+length = 3
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'mesas_dias_cuarto_trimestre'
+sub_index = 1
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f135'
+offset = 1330
+length = 2
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'mesas_capacidad'
+sub_index = 2
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f136'
+offset = 1332
+length = 4
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'mesas_numero'
+sub_index = 2
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f137'
+offset = 1336
+length = 3
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'mesas_dias_cuarto_trimestre'
+sub_index = 2
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f138'
+offset = 1339
+length = 2
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'mesas_capacidad'
+sub_index = 3
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f139'
+offset = 1341
+length = 4
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'mesas_numero'
+sub_index = 3
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f140'
+offset = 1345
+length = 3
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'mesas_dias_cuarto_trimestre'
+sub_index = 3
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f141'
+offset = 1348
+length = 2
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'mesas_capacidad'
+sub_index = 4
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f142'
+offset = 1350
+length = 4
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'mesas_numero'
+sub_index = 4
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f143'
+offset = 1354
+length = 3
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'mesas_dias_cuarto_trimestre'
+sub_index = 4
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f144'
+offset = 1357
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'agricola'
+slot = 1
+fact = 'cuotas_soportadas_cuarto_trimestre'
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f145'
+offset = 1374
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'agricola'
+slot = 1
+fact = 'compensaciones_reagp_cuarto_trimestre'
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f146'
+offset = 1391
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'agricola'
+slot = 2
+fact = 'cuotas_soportadas_cuarto_trimestre'
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f147'
+offset = 1408
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'agricola'
+slot = 2
+fact = 'compensaciones_reagp_cuarto_trimestre'
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f148'
+offset = 1425
+length = 110
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f149'
+offset = 1535
+length = 7
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 1
+fact = 'superficie_horno_cuarto_trimestre'
+sub_index = 1
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f150'
+offset = 1542
+length = 3
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 1
+fact = 'superficie_horno_dias_cuarto_trimestre'
+sub_index = 1
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f151'
+offset = 1545
+length = 7
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 1
+fact = 'superficie_horno_cuarto_trimestre'
+sub_index = 2
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f152'
+offset = 1552
+length = 3
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 1
+fact = 'superficie_horno_dias_cuarto_trimestre'
+sub_index = 2
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f153'
+offset = 1555
+length = 7
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 1
+fact = 'superficie_horno_cuarto_trimestre'
+sub_index = 3
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f154'
+offset = 1562
+length = 3
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 1
+fact = 'superficie_horno_dias_cuarto_trimestre'
+sub_index = 3
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f155'
+offset = 1565
+length = 7
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 1
+fact = 'superficie_horno_cuarto_trimestre'
+sub_index = 4
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f156'
+offset = 1572
+length = 3
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 1
+fact = 'superficie_horno_dias_cuarto_trimestre'
+sub_index = 4
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f157'
+offset = 1575
+length = 7
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'superficie_horno_cuarto_trimestre'
+sub_index = 1
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f158'
+offset = 1582
+length = 3
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'superficie_horno_dias_cuarto_trimestre'
+sub_index = 1
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f159'
+offset = 1585
+length = 7
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'superficie_horno_cuarto_trimestre'
+sub_index = 2
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f160'
+offset = 1592
+length = 3
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'superficie_horno_dias_cuarto_trimestre'
+sub_index = 2
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f161'
+offset = 1595
+length = 7
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'superficie_horno_cuarto_trimestre'
+sub_index = 3
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f162'
+offset = 1602
+length = 3
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'superficie_horno_dias_cuarto_trimestre'
+sub_index = 3
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f163'
+offset = 1605
+length = 7
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'superficie_horno_cuarto_trimestre'
+sub_index = 4
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f164'
+offset = 1612
+length = 3
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'superficie_horno_dias_cuarto_trimestre'
+sub_index = 4
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f165'
+offset = 1615
+length = 274
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f166'
+offset = 1889
+length = 12
+kind = 'literal'
+literal = '</T30302000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.row_field_casilla_ids]
