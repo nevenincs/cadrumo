@@ -4,8 +4,14 @@ Every registered class is a strict :class:`OutputSchema` transport shape for a
 config command result. Field sets match the production emit sites in
 :mod:`_config` and its submodules; sequence fields use ``list`` so JSON-mode
 pydantic dumps stay arrays. Application services remain authoritative for
-profile, auth, apoderado, repair, diagnostics, and workflow semantics. Sandbox
-payloads live in the cohesive sibling :mod:`_config_sandbox_payloads`.
+profile, auth, apoderado, repair, diagnostics, and workflow semantics.
+
+A few keys here declare a schema for a verb the tree does not register. Those are
+not oversights: each is listed in
+:data:`~cadrumo.entrypoints.mcp._input_schema.DECLARED_UNIMPLEMENTED_SURFACES`
+with the reason it is held, because deleting the declaration would erase the only
+visible evidence that a capability lost its door. A declaration with no verb and
+no entry there is residue and should go.
 """
 
 from __future__ import annotations
@@ -38,7 +44,7 @@ from ...application.user_profile import (
 from ...application.workflow import ProfileHealthStatus, ProfileSource
 from ...core import HEX_PATTERN_64, Period
 from ...core.errors import BaseSeverity
-from ...core.identity import BucketId, ContentDigest, ProfileId
+from ...core.identity import BucketId, ProfileId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 from ...core.time import validate_utc_aware
 from ...domain.calculations.registry import RevisionId
