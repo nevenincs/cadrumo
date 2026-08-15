@@ -1,3 +1,12 @@
+# `aeat-modelo-100-procedure` is deliberately absent from the source_refs below.
+# It is AEAT's live Renta procedure landing page, retrieved 2026-05-05 and
+# applying from 2025-01-01, so it cannot evidence a filing for this ejercicio.
+#
+# The per-year revision split did not create that mismatch, it EXPOSED it. Under
+# the previous open-ended "2021-y-siguientes" revision the citation was valid only
+# by accident: the revision's window happened to stretch far enough to contain
+# 2025. A 2025-onward procedure page never evidenced a 2021 filing. The grounding
+# here is the standing legal articles, which are year-appropriate on their own.
 [[revisions."2021".relations]]
 id = "m714-rel-100-base-imponible-general"
 kind = "cross_model_output"
@@ -11,7 +20,7 @@ source_periods = ["0A"]
 target_periods = ["0A"]
 aggregation = { op = "copy" }
 legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-48"]
-source_refs = ["aeat-modelo-100-procedure", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2021".relations]]
 id = "m714-rel-100-base-imponible-ahorro"
@@ -26,7 +35,7 @@ source_periods = ["0A"]
 target_periods = ["0A"]
 aggregation = { op = "copy" }
 legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-49"]
-source_refs = ["aeat-modelo-100-procedure", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2021".relations]]
 id = "m714-rel-100-cuota-integra-estatal"
@@ -41,7 +50,7 @@ source_periods = ["0A"]
 target_periods = ["0A"]
 aggregation = { op = "copy" }
 legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-63"]
-source_refs = ["aeat-modelo-100-procedure", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2021".relations]]
 id = "m714-rel-100-cuota-integra-autonomica"
@@ -56,4 +65,4 @@ source_periods = ["0A"]
 target_periods = ["0A"]
 aggregation = { op = "copy" }
 legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-74"]
-source_refs = ["aeat-modelo-100-procedure", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]

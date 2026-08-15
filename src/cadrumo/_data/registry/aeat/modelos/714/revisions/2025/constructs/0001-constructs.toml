@@ -1,3 +1,12 @@
+# `aeat-modelo-100-procedure` is deliberately absent from the source_refs below.
+# It is AEAT's live Renta procedure landing page, retrieved 2026-05-05 and
+# applying from 2025-01-01, so it cannot evidence a filing for this ejercicio.
+#
+# The per-year revision split did not create that mismatch, it EXPOSED it. Under
+# the previous open-ended "2021-y-siguientes" revision the citation was valid only
+# by accident: the revision's window happened to stretch far enough to contain
+# 2025. A 2025-onward procedure page never evidenced a 2021 filing. The grounding
+# here is the standing legal articles, which are year-appropriate on their own.
 # Ejercicio 2025. The art. 30 escala estatal, the art. 28 minimo exento
 # framework and the art. 31 percentages are the same as 2021's because the LAW
 # is the same, not because 2021 was copied. Read from the BOE consolidated text
@@ -36,7 +45,7 @@ legal_refs = [
     "ley-35-2006:art-74",
     "orden-hac-277-2026:art-4",
 ]
-source_refs = ["aeat-modelo-100-procedure", "aeat-modelo-714-procedure", "boe-modelo-714-layout", "aeat-dr-714-2025"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout", "aeat-dr-714-2025"]
 casilla_ids = [
     "decl.ejercicio",
     "decl.periodo",
