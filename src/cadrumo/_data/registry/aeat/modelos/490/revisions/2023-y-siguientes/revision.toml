@@ -10,11 +10,11 @@ authority_grade = "applicability"
 # one era. Every boundary below is read off AEAT's own index title for the
 # artefact, never chosen to make a window check pass.
 #
-# TWO of the three boundaries fall MID-YEAR (2022-1T|2T and nothing else at
+# TWO of the three boundaries fall MID-YEAR (2022-1t|2t and nothing else at
 # 2023), which a year-granular period_selector cannot express on its own. They
-# are carried by PERIOD narrowing instead: '2021' and '2022-1T' both consume the
+# are carried by PERIOD narrowing instead: '2021' and '2022-1t' both consume the
 # same design but are separate revisions because one covers a whole year and the
-# other a single quarter, and '2022-1T' / '2022-2T-4T' share filing year 2022
+# other a single quarter, and '2022-1t' / '2022-2t-4t' share filing year 2022
 # with disjoint period lists. select_revision resolves on (year, period) so the
 # pair is unambiguous; select_revision_for_year deliberately refuses a year-only
 # answer here, naming this exact case.
