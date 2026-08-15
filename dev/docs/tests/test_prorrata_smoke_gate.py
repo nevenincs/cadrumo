@@ -34,18 +34,15 @@ Run it with::
 
 from __future__ import annotations
 
-import http.server
 import io
-import socketserver
-import threading
 import urllib.request
-from functools import partial
 from pathlib import Path
 
 import pytest
 
 from dev._paths import REPO_ROOT
 
+from ._http_serve_support import serve_directory
 from ..glossary_reference import generate_glossary_reference
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records, _Materialised
@@ -121,14 +118,6 @@ def _prorrata_records() -> _Materialised:
     return _Materialised(records=records)
 
 
-def _serve(directory: Path) -> tuple[socketserver.TCPServer, int]:
-    handler = partial(http.server.SimpleHTTPRequestHandler, directory=str(directory))
-    httpd = socketserver.TCPServer(("127.0.0.1", 0), handler)
-    port = httpd.server_address[1]
-    threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    return httpd, port
-
-
 def test_prorrata_end_to_end_palette_smoke(tmp_path: Path) -> None:
     """Ctrl-K -> prorrata -> concept card + M303 casilla + how-to + 4 languages."""
     out = tmp_path / "site"
@@ -149,9 +138,8 @@ def test_prorrata_end_to_end_palette_smoke(tmp_path: Path) -> None:
 
     build_search_index(build, inject=inject)
 
-    httpd, port = _serve(build)
-    base = f"http://127.0.0.1:{port}"
-    try:
+    with serve_directory(build) as (_httpd, port):
+        base = f"http://127.0.0.1:{port}"
         from playwright.sync_api import sync_playwright
 
         with sync_playwright() as pw:
@@ -220,5 +208,3 @@ def test_prorrata_end_to_end_palette_smoke(tmp_path: Path) -> None:
                 assert concepts, f"{language} probe {probe!r} found no concept card"
 
             browser.close()
-    finally:
-        httpd.shutdown()

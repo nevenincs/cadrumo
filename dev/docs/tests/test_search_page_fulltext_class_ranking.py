@@ -32,10 +32,6 @@ seconds, ``integration`` marked.
 
 from __future__ import annotations
 
-import http.server
-import socketserver
-import threading
-from functools import partial
 from pathlib import Path
 
 import pytest
@@ -43,6 +39,7 @@ import pytest
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
+from ._http_serve_support import serve_directory
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records, _Materialised
 from ..terminology import (
@@ -142,14 +139,6 @@ def _build_fulltext_site(build: Path) -> None:
     (build / "palette.html").write_text(_TRIGGER_PAGE, encoding="utf-8")
 
 
-def _serve(directory: Path) -> tuple[socketserver.TCPServer, int]:
-    handler = partial(http.server.SimpleHTTPRequestHandler, directory=str(directory))
-    httpd = socketserver.TCPServer(("127.0.0.1", 0), handler)
-    port = httpd.server_address[1]
-    threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    return httpd, port
-
-
 def test_fulltext_user_doc_ranks_above_dev_machinery(tmp_path: Path) -> None:
     """A ``how-to/`` page leads an ``api/`` page even though api matches stronger."""
     build = tmp_path / "html"
@@ -166,9 +155,8 @@ def test_fulltext_user_doc_ranks_above_dev_machinery(tmp_path: Path) -> None:
 
     build_search_index(build, inject=inject)
 
-    httpd, port = _serve(build)
-    base = f"http://127.0.0.1:{port}"
-    try:
+    with serve_directory(build) as (_httpd, port):
+        base = f"http://127.0.0.1:{port}"
         from playwright.sync_api import sync_playwright
 
         with sync_playwright() as pw:
@@ -197,8 +185,6 @@ def test_fulltext_user_doc_ranks_above_dev_machinery(tmp_path: Path) -> None:
                 "els => els.length",
             )
             browser.close()
-    finally:
-        httpd.shutdown()
 
     howto_index = next(
         (i for i, href in enumerate(page_hrefs) if href and "how-to/import.html" in href),

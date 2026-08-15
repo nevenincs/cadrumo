@@ -23,7 +23,6 @@ from ......tests.master_key import EphemeralMasterKeyProvider
 from ._secure_objects_support import (
     UTC,
     Path,
-    SecureObjectRepository,
     SensitivityClass,
     _repo_at,
     datetime,

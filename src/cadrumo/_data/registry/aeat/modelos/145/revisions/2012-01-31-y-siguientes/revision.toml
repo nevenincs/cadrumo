@@ -1,4 +1,5 @@
 [revisions."2012-01-31-y-siguientes"]
+authority_grade = "filing"
 valid_from = 2012-01-31
 period_selector = { year_from = 2012, periods = ["comunicacion", "variacion"] }
 legal_refs = [
@@ -8,6 +9,21 @@ legal_refs = [
     "resolucion-dgt-2014-12-18-modelo-145:amendment",
 ]
 orden_aplicabilidad = [
+    "resolucion-dgt-2011-01-03-modelo-145:aprobacion",
+    "resolucion-dgt-2013-12-17-modelo-145:amendment",
+    "resolucion-dgt-2014-12-18-modelo-145:amendment",
+]
+source_refs = [
+    "aeat-modelo-145-procedure",
+    "aeat-modelo-145-obligaciones-retenedor",
+    "aeat-modelo-145-form",
+    "aeat-dr-145-v20",
+]
+
+
+[revisions."2012-01-31-y-siguientes".family_dispositions.formulas]
+reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
+legal_refs = [
     "resolucion-dgt-2011-01-03-modelo-145:aprobacion",
     "resolucion-dgt-2013-12-17-modelo-145:amendment",
     "resolucion-dgt-2014-12-18-modelo-145:amendment",

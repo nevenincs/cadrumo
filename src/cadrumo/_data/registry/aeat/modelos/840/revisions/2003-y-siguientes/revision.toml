@@ -1,4 +1,5 @@
 [revisions."2003-y-siguientes"]
+authority_grade = "filing"
 # valid_from is canonicalised to the ejercicio-start convention (January 1 of
 # period_selector.year_from), not the orden's own effective date -- that fact
 # already has its home on orden-hac-85-2003:art-1's legal.effective_from.
@@ -20,3 +21,15 @@ source_refs = [
     "boe-modelo-840-2003-form",
 ]
 
+
+
+[revisions."2003-y-siguientes".family_dispositions.formulas]
+reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
+legal_refs = [
+    "orden-hac-2572-2003:apartado-1",
+]
+source_refs = [
+    "aeat-dr-840",
+    "aeat-modelo-840-procedure",
+    "boe-modelo-840-2003-form",
+]

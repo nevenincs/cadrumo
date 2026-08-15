@@ -30,7 +30,6 @@ from .._secure_object_records import SecureObjectRawRow, SecureObjectRecord
 from ._secure_objects_support import (
     UTC,
     Path,
-    SecureObjectRepository,
     SensitivityClass,
     _repo_at,
     datetime,

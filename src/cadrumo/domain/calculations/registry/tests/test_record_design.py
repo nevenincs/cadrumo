@@ -620,10 +620,10 @@ def test_generated_compact_record_design_pdf_round_trips_from_path_and_bytes(tmp
     assert sheet.name == "Pág. 1"
     assert sheet.total_positions == 12
     assert [(field.ordinal, field.offset, field.length, field.type_code) for field in sheet.fields] == [
-        (1, 1, 3, "An"),
-        (2, 4, 2, "Num"),
-        (3, 6, 5, "An"),
-        (4, 11, 2, "An"),
+        ("1", 1, 3, "An"),
+        ("2", 4, 2, "Num"),
+        ("3", 6, 5, "An"),
+        ("4", 11, 2, "An"),
     ]
 
 
@@ -1196,7 +1196,7 @@ def test_envelope_composition_order_is_checked_by_source_position_not_by_ordinal
     )
 
     def field(row: int) -> RecordDesignField:
-        return RecordDesignField(sheet="S", row=row, ordinal=1, offset=1, length=1, type_code="An", description="d")
+        return RecordDesignField(sheet="S", row=row, ordinal="1", offset=1, length=1, type_code="An", description="d")
 
     def body(row: int) -> RecordDesignVariableBodyMarker:
         return RecordDesignVariableBodyMarker(
@@ -1223,7 +1223,7 @@ def test_envelope_composition_order_is_checked_by_source_position_not_by_ordinal
             pytest.fail(f"{label} was accepted; the row check does not cover it")
 
 
-def test_an_unnumbered_row_is_admitted_and_a_printed_label_still_refuses() -> None:
+def test_an_unnumbered_row_is_admitted_and_a_printed_label_is_admitted_verbatim() -> None:
     """The ordinal CELL decides, not the parse result -- both directions.
 
     AEAT leaves the ordinal blank for rows it declines to number: Modelo 036 writes
@@ -1231,12 +1231,13 @@ def test_an_unnumbered_row_is_admitted_and_a_printed_label_still_refuses() -> No
     sharing casilla ``[C71]``. Dropping them put their eight bytes into a downstream
     geometry gap whose message blamed the design.
 
-    THE NEGATIVE CONTROL IS THE POINT. ``_int_or_none`` collapses "cell is empty"
-    and "cell says 14bis" to the same ``None``, so accepting every unreadable
-    ordinal would admit a ``14bis`` row while silently discarding the label AEAT
-    printed -- representing LESS than the source declares, which is the same defect
-    class as the dropped terminator. A printed-but-unrepresentable ordinal must keep
-    refusing until the type can hold it.
+    THE OTHER DIRECTION IS THE POINT THIS TEST NOW COVERS. ``ordinal`` is
+    ``str | None`` precisely because AEAT's ordinal is a PRINTED LABEL, not an
+    arithmetic value: Modelo 303 prints ``14bis`` beside its ``14`` to insert a
+    field without renumbering. A ``14bis`` row is now admitted VERBATIM as its
+    own peer field -- not absorbed into anything, not discarding the label -- and
+    representable exactly as AEAT printed it, closing the gap the earlier,
+    ``int``-typed ordinal could not represent.
     """
     root = _RECORD_DESIGN_ROOT
     unnumbered = (
@@ -1258,7 +1259,56 @@ def test_an_unnumbered_row_is_admitted_and_a_printed_label_still_refuses() -> No
     # Their bytes are now part of the record rather than a phantom gap.
     assert {item.offset for item in unnumbered_fields} == {1294, 1296, 1298}
 
-    # The other half: a row whose ordinal cell is NON-EMPTY but unreadable keeps
-    # refusing, so `14bis` is not admitted as though AEAT had left it blank.
-    with pytest.raises(RegistryValidationError, match="has a gap"):
-        extract_record_design(printed_label)
+    # The other half: a row whose ordinal cell is NON-EMPTY is admitted verbatim as
+    # its own peer field, `14bis` included -- no longer refused, and not absorbed
+    # into `14` or `15` either (it is contiguous with, never nested inside, either).
+    printed_extraction = extract_record_design(printed_label)
+    printed_sheets = printed_extraction.require_complete()
+    dp30303 = next(item for item in printed_sheets if item.name == "DP30303")
+    fourteen = next(item for item in dp30303.fields if item.ordinal == "14")
+    fourteen_bis = next(item for item in dp30303.fields if item.ordinal == "14bis")
+    fifteen = next(item for item in dp30303.fields if item.ordinal == "15")
+    assert fourteen_bis.components == ()
+    assert "Reservado" in fourteen_bis.description
+    # Contiguous with its neighbours, a genuine peer rather than a nested detail.
+    assert fourteen.offset + fourteen.length == fourteen_bis.offset
+    assert fourteen_bis.offset + fourteen_bis.length == fifteen.offset
+
+
+def test_a_dotted_ordinal_is_absorbed_as_a_component_not_a_peer() -> None:
+    """Modelo 576's ``19.1``..``19.8`` desglosa (break out) their parent's own span.
+
+    THE DISCRIMINATOR IS CONJUNCTIVE, both conditions required together: a
+    dotted ordinal's integer prefix must match the IMMEDIATELY PRECEDING field's
+    own ordinal, AND its byte span must fall entirely inside that field's own
+    already-declared offset/length. Neither condition alone is enough -- a
+    coincidental prefix match elsewhere in the sheet must not absorb an
+    unrelated field, and an in-span row with a non-matching prefix must not be
+    silently swallowed either.
+
+    ADDITIVE, NOT REPLACING: the parent's own ``offset``/``length`` continue to
+    span the whole 40-byte group exactly as before components existed, so a
+    consumer reading only ``offset``/``length`` -- the contiguity check, the IR
+    projection -- sees exactly what it saw when these rows were still invisible.
+    """
+    root = _RECORD_DESIGN_ROOT
+    path = root / "modelo_576" / "files" / "01-576-diseno-de-registro-vigente.xlsx"
+    assert path.is_file(), f"corpus anchor moved: {path}"
+
+    extraction = extract_record_design(path)
+    sheets = extraction.require_complete()
+    parent = next(item for sheet in sheets for item in sheet.fields if item.ordinal == "19")
+
+    assert parent.offset == 514
+    assert parent.length == 40
+    assert [component.ordinal for component in parent.components] == [f"19.{n}" for n in range(1, 9)]
+    # Zero remainder: the eight components exactly tile the parent's own span.
+    assert parent.components[0].offset == parent.offset
+    assert parent.components[-1].offset + parent.components[-1].length == parent.offset + parent.length
+    for left, right in zip(parent.components, parent.components[1:], strict=True):
+        assert left.offset + left.length == right.offset, "components must themselves be contiguous"
+
+    # A component is never counted as a top-level peer -- the outer sheet sees
+    # only the parent at this position, exactly as before components existed.
+    all_ordinals = [item.ordinal for sheet in sheets for item in sheet.fields]
+    assert "19.1" not in all_ordinals

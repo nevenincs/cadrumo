@@ -31,17 +31,14 @@ palette's compose ladder); this one owns the page the palette hands off to.
 
 from __future__ import annotations
 
-import http.server
 import io
-import socketserver
-import threading
-from functools import partial
 from pathlib import Path
 
 import pytest
 
 from dev._paths import REPO_ROOT
 
+from ._http_serve_support import serve_directory
 from ..pagefind_index import build_search_index
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -127,14 +124,6 @@ def _build_search_site(out: Path) -> Path:
     return build
 
 
-def _serve(directory: Path) -> tuple[socketserver.TCPServer, int]:
-    handler = partial(http.server.SimpleHTTPRequestHandler, directory=str(directory))
-    httpd = socketserver.TCPServer(("127.0.0.1", 0), handler)
-    port = httpd.server_address[1]
-    threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    return httpd, port
-
-
 @pytest.fixture(scope="module")
 def search_site(tmp_path_factory: pytest.TempPathFactory) -> object:
     """The built, indexed, served search site. Built once for every case."""
@@ -143,11 +132,8 @@ def search_site(tmp_path_factory: pytest.TempPathFactory) -> object:
     (build / "pagefind.yml").write_bytes((_DOCS / "pagefind.yml").read_bytes())
     build_search_index(build)
 
-    httpd, port = _serve(build)
-    try:
+    with serve_directory(build) as (_httpd, port):
         yield f"http://127.0.0.1:{port}"
-    finally:
-        httpd.shutdown()
 
 
 def _read_search_page(base: str, query_string: str) -> tuple[str, str]:

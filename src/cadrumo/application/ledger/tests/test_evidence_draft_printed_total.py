@@ -22,7 +22,6 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from decimal import Decimal
-from io import BytesIO
 from pathlib import Path
 from typing import Any
 
@@ -34,6 +33,7 @@ from ....core import FindingResolutionAction
 from ....core.config import Settings
 from ....domain.invoices import InvoiceClass
 from ....domain.iva import InvoiceKind, IvaCategory
+from ....tests.pdf_fixtures import text_pdf_bytes
 from .._confirmation_gate import FindingResolution, confirmation_blockers
 from .._evidence_draft import confirm_invoice_draft_from_evidence, extract_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
@@ -122,20 +122,6 @@ def _loopback_reader() -> Iterator[None]:
         yield
 
 
-def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfgen import canvas
-
-    buf = BytesIO()
-    page = canvas.Canvas(buf, pagesize=A4)
-    y = 760
-    for line in lines:
-        page.drawString(72, y, line)
-        y -= 20
-    page.save()
-    return buf.getvalue()
-
-
 def _operator_attestations(
     *,
     evidence_id: str,
@@ -178,7 +164,7 @@ def _confirm(
     filename: str,
 ):
     pdf_path = tmp_path / filename
-    pdf_path.write_bytes(_text_pdf_bytes(lines))
+    pdf_path.write_bytes(text_pdf_bytes(lines))
     svc = _make_svc(isolated_settings, secure_objects)
     record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
     return confirm_invoice_draft_from_evidence(
@@ -262,7 +248,7 @@ def test_the_guarded_no_op_retry_still_reports_the_discrepancy(
     result for a document that still disagrees with its record.
     """
     pdf_path = tmp_path / "factura_recargo.pdf"
-    pdf_path.write_bytes(_text_pdf_bytes(_RECARGO_INVOICE_LINES))
+    pdf_path.write_bytes(text_pdf_bytes(_RECARGO_INVOICE_LINES))
     svc = _make_svc(isolated_settings, secure_objects)
     record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
 
@@ -300,7 +286,7 @@ def _confirm_with(
 ):
     """Confirm with operator overrides, the boundary's widened parameter set."""
     pdf_path = tmp_path / filename
-    pdf_path.write_bytes(_text_pdf_bytes(lines))
+    pdf_path.write_bytes(text_pdf_bytes(lines))
     svc = _make_svc(isolated_settings, secure_objects)
     record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
     return confirm_invoice_draft_from_evidence(

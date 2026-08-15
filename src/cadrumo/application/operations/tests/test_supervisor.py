@@ -23,7 +23,6 @@ from ....adapters.persistence.storage import (
     SecureObjectNamespaceDefinition,
     SecureObjectRepository,
     StorageCustodyDisposition,
-    StorageHierarchyRegistry,
     StorageNamespaceScope,
 )
 from ....core import STRICT_FROZEN_CONFIG
@@ -31,6 +30,7 @@ from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.classification import SensitivityClass
 from ....core.errors import CoreError, get_registered_error_code
 from ....tests.secure_sql import isolated_ephemeral_secure_sql, isolated_runtime_profile
+from ._test_support import registered_objects as _registered_objects
 from .. import (
     OperationApplyResponse,
     OperationBaselinePolicy,
@@ -626,19 +626,6 @@ def _pending_interaction(identity: OperationIdentity) -> OperationPendingInterac
     )
 
 
-def _registered_objects(profile_objects: SecureObjectRepository) -> SecureObjectRepository:
-    """Register the test-only namespace on the genuine active-profile repository."""
-    registry = profile_objects.namespace_registry
-    assert registry is not None
-    return SecureObjectRepository(
-        engine=profile_objects.engine,
-        namespace_registry=StorageHierarchyRegistry(
-            namespaces=(*registry.namespaces, _NAMESPACE),
-            paths=registry.paths,
-        ),
-    )
-
-
 def _capabilities(
     *,
     cancellation: OperationCancellation = OperationCancellation.UNSUPPORTED,
@@ -753,7 +740,7 @@ def _repositories(
     return (
         OperationJournalRepository(storage_root=storage_root),
         OperationLeaseFilesystemRepository(storage_root=storage_root),
-        OperationSecureReferenceRepository(objects=_registered_objects(profile_objects), namespace=_NAMESPACE),
+        OperationSecureReferenceRepository(objects=_registered_objects(profile_objects, _NAMESPACE), namespace=_NAMESPACE),
     )
 
 

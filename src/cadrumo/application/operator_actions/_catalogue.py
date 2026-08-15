@@ -397,28 +397,6 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="config.storage.init",
         ),
         ActionCatalogueEntry(
-            action_id="operator.profile.sandbox.restore",
-            target_command_key="config.profile.sandbox.restore",
-            argument_specifications=(
-                ActionArgumentBindingSpecification(
-                    argument_name="name",
-                    source=ActionArgumentSource.VERDICT_CONTEXT,
-                    source_key="name",
-                ),
-            ),
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.profile.import",
-            target_command_key="config.profile.import",
-            argument_specifications=(
-                ActionArgumentBindingSpecification(
-                    argument_name="path",
-                    source=ActionArgumentSource.VERDICT_CONTEXT,
-                    source_key="out",
-                ),
-            ),
-        ),
-        ActionCatalogueEntry(
             action_id="operator.overview.status",
             target_command_key="overview.status",
         ),

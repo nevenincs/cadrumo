@@ -20,13 +20,13 @@ See Also:
 from __future__ import annotations
 
 import json
-from io import BytesIO
 from pathlib import Path
 
 import pytest
 
 from ....application.wizard import load_active_taxpayer_profile
 from ....application.workflow import workflow_state_repository
+from ....tests.pdf_fixtures import text_pdf_bytes
 from ._ledger_ux_support import _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -35,20 +35,6 @@ __all__ = ["_open_bucket_session"]
 # A real Spanish CIF distinct from any profile identifier: the legitimate
 # counterparty on a received invoice.
 _SUPPLIER_CIF = "B12345674"
-
-
-def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfgen import canvas
-
-    buf = BytesIO()
-    page = canvas.Canvas(buf, pagesize=A4)
-    y = 760
-    for line in lines:
-        page.drawString(72, y, line)
-        y -= 20
-    page.save()
-    return buf.getvalue()
 
 
 def _invoice_lines(tax_id: str, *, number: str) -> tuple[str, ...]:
@@ -71,7 +57,7 @@ def _own_tax_id() -> str:
 
 def _add_evidence(tmp_path: Path, lines: tuple[str, ...], *, filename: str) -> str:
     pdf = tmp_path / filename
-    pdf.write_bytes(_text_pdf_bytes(lines))
+    pdf.write_bytes(text_pdf_bytes(lines))
     added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", str(pdf), "--supplier", "Acme SL"])
     assert added.exit_code == 0, added.output
     payload = json.loads(added.output)

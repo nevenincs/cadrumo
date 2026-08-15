@@ -18,12 +18,12 @@ from ....adapters.persistence.storage import (
     SecureObjectNamespaceDefinition,
     SecureObjectRepository,
     StorageCustodyDisposition,
-    StorageHierarchyRegistry,
     StorageNamespaceScope,
 )
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.classification import SensitivityClass
 from ....tests.secure_sql import isolated_runtime_profile
+from ._test_support import registered_objects as _registered_objects
 from .. import (
     OperationBaselinePolicy,
     OperationCancellation,
@@ -82,19 +82,6 @@ class ReplayNoticeExecutor:
         del request
         await context.events.notice("operation.replay.notice-one")
         await context.events.notice("operation.replay.notice-two")
-
-
-def _registered_objects(profile_objects: SecureObjectRepository) -> SecureObjectRepository:
-    """Register the operation namespace on the real active-profile repository."""
-    registry = profile_objects.namespace_registry
-    assert registry is not None
-    return SecureObjectRepository(
-        engine=profile_objects.engine,
-        namespace_registry=StorageHierarchyRegistry(
-            namespaces=(*registry.namespaces, _NAMESPACE),
-            paths=registry.paths,
-        ),
-    )
 
 
 def _capabilities() -> OperationCapabilities:
@@ -162,7 +149,7 @@ def test_supervisor_replay_reads_idempotent_bounded_pages_from_the_durable_event
         journal = OperationJournalRepository(storage_root=tmp_path / "durable-state")
         leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "durable-state")
         operands = OperationSecureReferenceRepository(
-            objects=_registered_objects(profile.repository), namespace=_NAMESPACE
+            objects=_registered_objects(profile.repository, _NAMESPACE), namespace=_NAMESPACE
         )
         supervisor = _supervisor(journal=journal, leases=leases, operands=operands)
         operation_id = asyncio.run(

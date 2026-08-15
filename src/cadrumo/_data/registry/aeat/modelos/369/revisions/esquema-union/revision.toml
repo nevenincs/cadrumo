@@ -1,4 +1,5 @@
 [revisions."esquema-union"]
+authority_grade = "filing"
 valid_from = 2021-07-01
 period_selector = { year_from = 2021, periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-hac-610-2021:art-1"]

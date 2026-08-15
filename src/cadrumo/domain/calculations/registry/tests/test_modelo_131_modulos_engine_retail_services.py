@@ -73,513 +73,239 @@ class TestLenceria6513EstimacionObjetiva:
         assert previo == expected_previo == Decimal("14197.06")
 
 
-class TestTextil6511EstimacionObjetiva:
-    """Epígrafe IAE 651.1 (Comercio al por menor de productos textiles)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 1 personal no asalariado, 20 m2 local independiente.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "651.1",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-            modulo_4=Decimal("20"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _TEXTIL_651_1[1] + Decimal("1") * _TEXTIL_651_1[2] + Decimal("20") * _TEXTIL_651_1[4],
-        )
-        assert previo == expected_previo == Decimal("17529.19")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "651.1",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-            modulo_4=Decimal("20"),
-        )
-
-
-class TestMuebles6531EstimacionObjetiva:
-    """Epígrafe IAE 653.1 (Comercio al por menor de muebles)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 1 personal no asalariado, 30 m2 local.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "653.1",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-            modulo_4=Decimal("30"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _MUEBLES_653_1[1] + Decimal("1") * _MUEBLES_653_1[2] + Decimal("30") * _MUEBLES_653_1[4],
-        )
-        assert previo == expected_previo == Decimal("20766.62")
-
-
-class TestRecambios6542EstimacionObjetiva:
-    """Epígrafe IAE 654.2 (Comercio al por menor de accesorios y piezas de recambio para vehículos)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 10 CVF potencia fiscal vehículo.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "654.2",
-            modulo_1=Decimal("1"),
-            modulo_4=Decimal("10"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _RECAMBIOS_654_2[1] + Decimal("10") * _RECAMBIOS_654_2[4],
-        )
-        assert previo == expected_previo == Decimal("9271.52")
-
-
-class TestOptica6593EstimacionObjetiva:
-    """Epígrafe IAE 659.3 (Comercio al por menor de aparatos e instrumentos ópticos y fotográficos)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 1 personal no asalariado.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "659.3",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _OPTICA_659_3[1] + Decimal("1") * _OPTICA_659_3[2],
-        )
-        assert previo == expected_previo == Decimal("26447.86")
-
-
-class TestAmbulanteAlimentacion6631EstimacionObjetiva:
-    """Epígrafe IAE 663.1 (Comercio ambulante de productos alimenticios)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 2 CVF potencia fiscal vehículo.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "663.1",
-            modulo_1=Decimal("1"),
-            modulo_3=Decimal("2"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _AMBULANTE_ALIMENTACION_663_1[1] + Decimal("2") * _AMBULANTE_ALIMENTACION_663_1[3],
-        )
-        assert previo == expected_previo == Decimal("1625.03")
-
-
-class TestHospedajeHotel681EstimacionObjetiva:
-    """Epígrafe IAE 681 (Servicio de hospedaje en hoteles y moteles de una o dos estrellas)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 1 personal no asalariado, 20 plazas.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "681",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("20"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _HOSPEDAJE_HOTEL_681[1]
-            + Decimal("1") * _HOSPEDAJE_HOTEL_681[2]
-            + Decimal("20") * _HOSPEDAJE_HOTEL_681[3],
-        )
-        assert previo == expected_previo == Decimal("34094.40")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "681",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("20"),
-        )
-
-
-class TestReparacionVehiculos6912EstimacionObjetiva:
-    """Epígrafe IAE 691.2 (Reparación de vehículos automóviles, bicicletas y otros)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 30 m2 superficie del local.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "691.2",
-            modulo_1=Decimal("1"),
-            modulo_3=Decimal("30"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _REPARACION_VEHICULOS_691_2[1] + Decimal("30") * _REPARACION_VEHICULOS_691_2[3],
-        )
-        assert previo == expected_previo == Decimal("4969.48")
-
-
-class TestTransporteUrbano7211EstimacionObjetiva:
-    """Epígrafe IAE 721.1 y 3 (Transporte urbano colectivo y de viajeros por carretera)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 2 personal asalariado, 1 personal no asalariado, 30 asientos.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "721.1",
-            modulo_1=Decimal("2"),
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("30"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("2") * _TRANSPORTE_URBANO_721_1[1]
-            + Decimal("1") * _TRANSPORTE_URBANO_721_1[2]
-            + Decimal("30") * _TRANSPORTE_URBANO_721_1[3],
-        )
-        assert previo == expected_previo == Decimal("25621.01")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "721.1",
-            modulo_1=Decimal("2"),
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("30"),
-        )
-
-
-class TestPapeleria6594AEstimacionObjetiva:
-    """Epígrafe IAE 659.4a (Comercio al por menor de libros, periódicos, papelería...)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 1 personal no asalariado, 20 (100 kWh),
-        # 15 m2 local, 1 vehículo (CVF).
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "659.4a",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("20"),
-            modulo_4=Decimal("15"),
-            modulo_5=Decimal("1"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _PAPELERIA_659_4A[1]
-            + Decimal("1") * _PAPELERIA_659_4A[2]
-            + Decimal("20") * _PAPELERIA_659_4A[3]
-            + Decimal("15") * _PAPELERIA_659_4A[4]
-            + Decimal("1") * _PAPELERIA_659_4A[5],
-        )
-        assert previo == expected_previo == Decimal("23981.75")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "659.4a",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("20"),
-            modulo_4=Decimal("15"),
-            modulo_5=Decimal("1"),
-        )
-
-
-class TestQuioscosPrensa6594BEstimacionObjetiva:
-    """Epígrafe IAE 659.4b (Comercio al por menor de prensa, revistas y libros en quioscos)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal no asalariado, 10 (100 kWh), 4 m2 local.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "659.4b",
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("10"),
-            modulo_4=Decimal("4"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _QUIOSCOS_PRENSA_659_4B[2]
-            + Decimal("10") * _QUIOSCOS_PRENSA_659_4B[3]
-            + Decimal("4") * _QUIOSCOS_PRENSA_659_4B[4],
-        )
-        assert previo == expected_previo == Decimal("24627.57")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "659.4b",
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("10"),
-            modulo_4=Decimal("4"),
-        )
-
-    def test_bare_unsuffixed_epigrafe_collision_code_stays_untabled(self) -> None:
-        # The bare "659.4" (no "a"/"b" disambiguating suffix) must NOT resolve
-        # to either collision activity's coefficients — a lookup on the
-        # unsuffixed code would silently misattribute one activity's figures
-        # to the other. It stays untabled behind the advisory guard.
-        previo, minorado, modulos, actividad = _run_modulos_engine(
-            "659.4", modulo_1=Decimal("1"), modulo_2=Decimal("1")
-        )
-        assert previo == Decimal("0")
-        assert minorado == Decimal("0")
-        assert modulos == Decimal("0")
-        assert actividad == Decimal("0")
-
-
-class TestReparacionCalzado6919AEstimacionObjetiva:
-    """Epígrafe IAE 691.9a (Reparación de calzado)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal no asalariado, 20 (100 kWh).
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "691.9a",
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("20"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _REPARACION_CALZADO_691_9A[2] + Decimal("20") * _REPARACION_CALZADO_691_9A[3],
-        )
-        assert previo == expected_previo == Decimal("12534.18")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "691.9a",
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("20"),
-        )
-
-
-class TestReparacionOtrosBienes6919BEstimacionObjetiva:
-    """Epígrafe IAE 691.9b (Reparación de otros bienes de consumo n.c.o.p.)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 25 m2 local.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "691.9b",
-            modulo_1=Decimal("1"),
-            modulo_3=Decimal("25"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _REPARACION_OTROS_BIENES_691_9B[1] + Decimal("25") * _REPARACION_OTROS_BIENES_691_9B[3],
-        )
-        assert previo == expected_previo == Decimal("5227.85")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "691.9b",
-            modulo_1=Decimal("1"),
-            modulo_3=Decimal("25"),
-        )
-
-    def test_bare_unsuffixed_epigrafe_collision_code_stays_untabled(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(
-            "691.9", modulo_1=Decimal("1"), modulo_2=Decimal("1")
-        )
-        assert previo == Decimal("0")
-        assert minorado == Decimal("0")
-        assert modulos == Decimal("0")
-        assert actividad == Decimal("0")
-
-
-class TestEngraseLavado7515EstimacionObjetiva:
-    """Epígrafe IAE 751.5 (Engrase y lavado de vehículos)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 1 personal no asalariado, 40 m2 local.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "751.5",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("40"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _ENGRASE_LAVADO_751_5[1]
-            + Decimal("1") * _ENGRASE_LAVADO_751_5[2]
-            + Decimal("40") * _ENGRASE_LAVADO_751_5[3],
-        )
-        assert previo == expected_previo == Decimal("25068.33")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "751.5",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("40"),
-        )
-
-
-class TestMudanzas757EstimacionObjetiva:
-    """Epígrafe IAE 757 (Servicios de mudanzas)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal no asalariado, 15 toneladas carga vehículos.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "757",
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("15"),
-        )
-        expected_previo = round_to_cents(Decimal("1") * _MUDANZAS_757[2] + Decimal("15") * _MUDANZAS_757[3])
-        assert previo == expected_previo == Decimal("10896.33")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "757",
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("15"),
-        )
-
-
-class TestMensajeria8495EstimacionObjetiva:
-    """Epígrafe IAE 849.5 (Transporte de mensajería y recadería con medios propios)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 3 toneladas carga vehículos.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "849.5",
-            modulo_1=Decimal("1"),
-            modulo_3=Decimal("3"),
-        )
-        expected_previo = round_to_cents(Decimal("1") * _MENSAJERIA_849_5[1] + Decimal("3") * _MENSAJERIA_849_5[3])
-        assert previo == expected_previo == Decimal("3107.22")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "849.5",
-            modulo_1=Decimal("1"),
-            modulo_3=Decimal("3"),
-        )
-
-
-class TestAutoescuela9331EstimacionObjetiva:
-    """Epígrafe IAE 933.1 (Enseñanza de conducción de vehículos)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 1 personal no asalariado, 2 vehículos, 4 CVF.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "933.1",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("2"),
-            modulo_4=Decimal("4"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _AUTOESCUELA_933_1[1]
-            + Decimal("1") * _AUTOESCUELA_933_1[2]
-            + Decimal("2") * _AUTOESCUELA_933_1[3]
-            + Decimal("4") * _AUTOESCUELA_933_1[4],
-        )
-        assert previo == expected_previo == Decimal("26246.27")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "933.1",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("2"),
-            modulo_4=Decimal("4"),
-        )
-
-
-class TestOtrasEnsenanzas9339EstimacionObjetiva:
-    """Epígrafe IAE 933.9 (Otras actividades de enseñanza: idiomas, corte y confección, etc.)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal no asalariado, 40 m2 local.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "933.9",
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("40"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _OTRAS_ENSENANZAS_933_9[2] + Decimal("40") * _OTRAS_ENSENANZAS_933_9[3],
-        )
-        assert previo == expected_previo == Decimal("18222.02")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "933.9",
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("40"),
-        )
-
-
-class TestEscuelasDeporte9672EstimacionObjetiva:
-    """Epígrafe IAE 967.2 (Escuelas y servicios de perfeccionamiento del deporte)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 60 m2 local.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "967.2",
-            modulo_1=Decimal("1"),
-            modulo_3=Decimal("60"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _ESCUELAS_DEPORTE_967_2[1] + Decimal("60") * _ESCUELAS_DEPORTE_967_2[3],
-        )
-        assert previo == expected_previo == Decimal("9076.15")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "967.2",
-            modulo_1=Decimal("1"),
-            modulo_3=Decimal("60"),
-        )
-
-
-class TestTintoreria9711EstimacionObjetiva:
-    """Epígrafe IAE 971.1 (Tinte, limpieza en seco, lavado y planchado)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 1 personal no asalariado, 30 (100 kWh).
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "971.1",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("30"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _TINTORERIA_971_1[1]
-            + Decimal("1") * _TINTORERIA_971_1[2]
-            + Decimal("30") * _TINTORERIA_971_1[3],
-        )
-        assert previo == expected_previo == Decimal("22706.49")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "971.1",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("30"),
-        )
-
-
-class TestInstitutosBelleza9722EstimacionObjetiva:
-    """Epígrafe IAE 972.2 (Salones e institutos de belleza)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal no asalariado, 40 m2 local, 20 (100 kWh).
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "972.2",
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("40"),
-            modulo_4=Decimal("20"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _INSTITUTOS_BELLEZA_972_2[2]
-            + Decimal("40") * _INSTITUTOS_BELLEZA_972_2[3]
-            + Decimal("20") * _INSTITUTOS_BELLEZA_972_2[4],
-        )
-        assert previo == expected_previo == Decimal("19532.01")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "972.2",
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("40"),
-            modulo_4=Decimal("20"),
-        )
-
-
-class TestCopisteria9733EstimacionObjetiva:
-    """Epígrafe IAE 973.3 (Servicios de copias de documentos con máquinas fotocopiadoras)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal no asalariado, 3 KW contratado.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "973.3",
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("3"),
-        )
-        expected_previo = round_to_cents(Decimal("1") * _COPISTERIA_973_3[2] + Decimal("3") * _COPISTERIA_973_3[3])
-        assert previo == expected_previo == Decimal("18669.07")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "973.3",
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("3"),
-        )
+#: Fase 1ª clone-collapsed dataset for the retail/repair/transport/service
+#: split — each entry was a separate hand-forked
+#: ``TestXxxEstimacionObjetiva.test_fase_1_...`` method (identical body,
+#: differing only by epígrafe, coefficient table, módulo units and expected
+#: figure) before the AST clone scan flagged them. ``id=`` carries the IAE
+#: epígrafe citation the removed class docstring held.
+_FASE_1_CASES = [
+    pytest.param(
+        "651.1",
+        _TEXTIL_651_1,
+        {1: Decimal("1"), 2: Decimal("1"), 4: Decimal("20")},
+        Decimal("17529.19"),
+        id="651.1-comercio-al-por-menor-de-productos-textiles",
+    ),
+    pytest.param(
+        "653.1",
+        _MUEBLES_653_1,
+        {1: Decimal("1"), 2: Decimal("1"), 4: Decimal("30")},
+        Decimal("20766.62"),
+        id="653.1-comercio-al-por-menor-de-muebles",
+    ),
+    pytest.param(
+        "654.2",
+        _RECAMBIOS_654_2,
+        {1: Decimal("1"), 4: Decimal("10")},
+        Decimal("9271.52"),
+        id="654.2-comercio-al-por-menor-de-recambios-vehiculos",
+    ),
+    pytest.param(
+        "659.3",
+        _OPTICA_659_3,
+        {1: Decimal("1"), 2: Decimal("1")},
+        Decimal("26447.86"),
+        id="659.3-comercio-al-por-menor-de-aparatos-opticos-y-fotograficos",
+    ),
+    pytest.param(
+        "663.1",
+        _AMBULANTE_ALIMENTACION_663_1,
+        {1: Decimal("1"), 3: Decimal("2")},
+        Decimal("1625.03"),
+        id="663.1-comercio-ambulante-de-productos-alimenticios",
+    ),
+    pytest.param(
+        "681",
+        _HOSPEDAJE_HOTEL_681,
+        {1: Decimal("1"), 2: Decimal("1"), 3: Decimal("20")},
+        Decimal("34094.40"),
+        id="681-hospedaje-en-hoteles-y-moteles-de-una-o-dos-estrellas",
+    ),
+    pytest.param(
+        "691.2",
+        _REPARACION_VEHICULOS_691_2,
+        {1: Decimal("1"), 3: Decimal("30")},
+        Decimal("4969.48"),
+        id="691.2-reparacion-de-vehiculos-automoviles-bicicletas-y-otros",
+    ),
+    pytest.param(
+        "721.1",
+        _TRANSPORTE_URBANO_721_1,
+        {1: Decimal("2"), 2: Decimal("1"), 3: Decimal("30")},
+        Decimal("25621.01"),
+        id="721.1-transporte-urbano-colectivo-y-de-viajeros-por-carretera",
+    ),
+    pytest.param(
+        "659.4a",
+        _PAPELERIA_659_4A,
+        {1: Decimal("1"), 2: Decimal("1"), 3: Decimal("20"), 4: Decimal("15"), 5: Decimal("1")},
+        Decimal("23981.75"),
+        id="659.4a-comercio-al-por-menor-de-libros-periodicos-papeleria",
+    ),
+    pytest.param(
+        "659.4b",
+        _QUIOSCOS_PRENSA_659_4B,
+        {2: Decimal("1"), 3: Decimal("10"), 4: Decimal("4")},
+        Decimal("24627.57"),
+        id="659.4b-comercio-al-por-menor-de-prensa-revistas-y-libros-en-quioscos",
+    ),
+    pytest.param(
+        "691.9a",
+        _REPARACION_CALZADO_691_9A,
+        {2: Decimal("1"), 3: Decimal("20")},
+        Decimal("12534.18"),
+        id="691.9a-reparacion-de-calzado",
+    ),
+    pytest.param(
+        "691.9b",
+        _REPARACION_OTROS_BIENES_691_9B,
+        {1: Decimal("1"), 3: Decimal("25")},
+        Decimal("5227.85"),
+        id="691.9b-reparacion-de-otros-bienes-de-consumo-ncop",
+    ),
+    pytest.param(
+        "751.5",
+        _ENGRASE_LAVADO_751_5,
+        {1: Decimal("1"), 2: Decimal("1"), 3: Decimal("40")},
+        Decimal("25068.33"),
+        id="751.5-engrase-y-lavado-de-vehiculos",
+    ),
+    pytest.param(
+        "757",
+        _MUDANZAS_757,
+        {2: Decimal("1"), 3: Decimal("15")},
+        Decimal("10896.33"),
+        id="757-servicios-de-mudanzas",
+    ),
+    pytest.param(
+        "849.5",
+        _MENSAJERIA_849_5,
+        {1: Decimal("1"), 3: Decimal("3")},
+        Decimal("3107.22"),
+        id="849.5-transporte-de-mensajeria-y-recaderia-con-medios-propios",
+    ),
+    pytest.param(
+        "933.1",
+        _AUTOESCUELA_933_1,
+        {1: Decimal("1"), 2: Decimal("1"), 3: Decimal("2"), 4: Decimal("4")},
+        Decimal("26246.27"),
+        id="933.1-ensenanza-de-conduccion-de-vehiculos",
+    ),
+    pytest.param(
+        "933.9",
+        _OTRAS_ENSENANZAS_933_9,
+        {2: Decimal("1"), 3: Decimal("40")},
+        Decimal("18222.02"),
+        id="933.9-otras-actividades-de-ensenanza",
+    ),
+    pytest.param(
+        "967.2",
+        _ESCUELAS_DEPORTE_967_2,
+        {1: Decimal("1"), 3: Decimal("60")},
+        Decimal("9076.15"),
+        id="967.2-escuelas-y-servicios-de-perfeccionamiento-del-deporte",
+    ),
+    pytest.param(
+        "971.1",
+        _TINTORERIA_971_1,
+        {1: Decimal("1"), 2: Decimal("1"), 3: Decimal("30")},
+        Decimal("22706.49"),
+        id="971.1-tinte-limpieza-en-seco-lavado-y-planchado",
+    ),
+    pytest.param(
+        "972.2",
+        _INSTITUTOS_BELLEZA_972_2,
+        {2: Decimal("1"), 3: Decimal("40"), 4: Decimal("20")},
+        Decimal("19532.01"),
+        id="972.2-salones-e-institutos-de-belleza",
+    ),
+    pytest.param(
+        "973.3",
+        _COPISTERIA_973_3,
+        {2: Decimal("1"), 3: Decimal("3")},
+        Decimal("18669.07"),
+        id="973.3-servicios-de-copias-con-maquinas-fotocopiadoras",
+    ),
+    pytest.param(
+        "675",
+        _QUIOSCOS_SERVICIOS_675,
+        {2: Decimal("1"), 3: Decimal("5"), 4: Decimal("10")},
+        Decimal("15261.45"),
+        id="675-servicios-en-quioscos-cajones-barracas",
+    ),
+]
+
+#: Fase 4ª (5% reducción general) clone-collapsed dataset — same módulo units
+#: as the matching Fase 1ª case above, for the subset of epígrafes that also
+#: carried a hand-forked fase_4 clone.
+_FASE_4_CASES = [
+    pytest.param("651.1", {1: Decimal("1"), 2: Decimal("1"), 4: Decimal("20")}, id="651.1-textil"),
+    pytest.param("681", {1: Decimal("1"), 2: Decimal("1"), 3: Decimal("20")}, id="681-hospedaje-hotel"),
+    pytest.param("721.1", {1: Decimal("2"), 2: Decimal("1"), 3: Decimal("30")}, id="721.1-transporte-urbano"),
+    pytest.param(
+        "659.4a",
+        {1: Decimal("1"), 2: Decimal("1"), 3: Decimal("20"), 4: Decimal("15"), 5: Decimal("1")},
+        id="659.4a-papeleria",
+    ),
+    pytest.param("659.4b", {2: Decimal("1"), 3: Decimal("10"), 4: Decimal("4")}, id="659.4b-quioscos-prensa"),
+    pytest.param("691.9a", {2: Decimal("1"), 3: Decimal("20")}, id="691.9a-reparacion-calzado"),
+    pytest.param("691.9b", {1: Decimal("1"), 3: Decimal("25")}, id="691.9b-reparacion-otros-bienes"),
+    pytest.param("751.5", {1: Decimal("1"), 2: Decimal("1"), 3: Decimal("40")}, id="751.5-engrase-lavado"),
+    pytest.param("757", {2: Decimal("1"), 3: Decimal("15")}, id="757-mudanzas"),
+    pytest.param("849.5", {1: Decimal("1"), 3: Decimal("3")}, id="849.5-mensajeria"),
+    pytest.param("933.1", {1: Decimal("1"), 2: Decimal("1"), 3: Decimal("2"), 4: Decimal("4")}, id="933.1-autoescuela"),
+    pytest.param("933.9", {2: Decimal("1"), 3: Decimal("40")}, id="933.9-otras-ensenanzas"),
+    pytest.param("967.2", {1: Decimal("1"), 3: Decimal("60")}, id="967.2-escuelas-deporte"),
+    pytest.param("971.1", {1: Decimal("1"), 2: Decimal("1"), 3: Decimal("30")}, id="971.1-tintoreria"),
+    pytest.param("972.2", {2: Decimal("1"), 3: Decimal("40"), 4: Decimal("20")}, id="972.2-institutos-belleza"),
+    pytest.param("973.3", {2: Decimal("1"), 3: Decimal("3")}, id="973.3-copisteria"),
+    pytest.param("675", {2: Decimal("1"), 3: Decimal("5"), 4: Decimal("10")}, id="675-quioscos-servicios"),
+]
+
+
+@pytest.mark.parametrize(("epigrafe", "table", "modulos", "expected_previo"), _FASE_1_CASES)
+def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(
+    epigrafe: str,
+    table: dict[int, Decimal],
+    modulos: dict[int, Decimal],
+    expected_previo: Decimal,
+) -> None:
+    previo, _minorado, _modulos, _actividad = _run_modulos_engine(
+        epigrafe,
+        **{f"modulo_{idx}": units for idx, units in modulos.items()},
+    )
+    expected = round_to_cents(sum((units * table[idx] for idx, units in modulos.items()), start=Decimal("0")))
+    assert previo == expected == expected_previo
+
+
+@pytest.mark.parametrize(("epigrafe", "modulos"), _FASE_4_CASES)
+def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(
+    epigrafe: str,
+    modulos: dict[int, Decimal],
+) -> None:
+    _assert_fase4_reduccion_general(epigrafe, **{f"modulo_{idx}": units for idx, units in modulos.items()})
+
+
+@pytest.mark.parametrize(
+    "epigrafe",
+    [
+        pytest.param("659.4", id="659.4-quioscos-prensa-vs-papeleria-ab-suffix-collision"),
+        pytest.param("691.9", id="691.9-reparacion-calzado-vs-otros-bienes-ab-suffix-collision"),
+    ],
+)
+def test_bare_unsuffixed_epigrafe_collision_code_stays_untabled(epigrafe: str) -> None:
+    # The bare epígrafe (no "a"/"b" disambiguating suffix) must NOT resolve to
+    # either collision activity's coefficients — a lookup on the unsuffixed
+    # code would silently misattribute one activity's figures to the other.
+    # It stays untabled behind the advisory guard.
+    previo, minorado, modulos, actividad = _run_modulos_engine(
+        epigrafe, modulo_1=Decimal("1"), modulo_2=Decimal("1")
+    )
+    assert previo == Decimal("0")
+    assert minorado == Decimal("0")
+    assert modulos == Decimal("0")
+    assert actividad == Decimal("0")
 
 
 class TestFrutasVerduras641EstimacionObjetiva:
@@ -610,33 +336,6 @@ class TestFrutasVerduras641EstimacionObjetiva:
             modulo_2=Decimal("1"),
             modulo_3=Decimal("30"),
             modulo_5=Decimal("500"),
-        )
-
-
-class TestQuioscosServicios675EstimacionObjetiva:
-    """Epígrafe IAE 675 (Servicios en quioscos, cajones, barracas u otros locales análogos)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal no asalariado, 5 KW contratado, 10 m2 local.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "675",
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("5"),
-            modulo_4=Decimal("10"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _QUIOSCOS_SERVICIOS_675[2]
-            + Decimal("5") * _QUIOSCOS_SERVICIOS_675[3]
-            + Decimal("10") * _QUIOSCOS_SERVICIOS_675[4],
-        )
-        assert previo == expected_previo == Decimal("15261.45")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "675",
-            modulo_2=Decimal("1"),
-            modulo_3=Decimal("5"),
-            modulo_4=Decimal("10"),
         )
 
 

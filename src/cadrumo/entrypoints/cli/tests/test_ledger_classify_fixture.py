@@ -25,6 +25,7 @@ from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from ._ledger_corpus_support import _match
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -47,14 +48,6 @@ def _rules() -> list[dict[str, object]]:
         assert isinstance(raw_rule, dict)
         rules.append({str(key): value for key, value in raw_rule.items()})
     return rules
-
-
-def _match(description: str, rules: list[dict[str, object]]) -> dict[str, object] | None:
-    for rule in rules:
-        match_val = rule.get("match")
-        if isinstance(match_val, str) and match_val in description:
-            return rule
-    return None
 
 
 def _expected_csv_text() -> str:

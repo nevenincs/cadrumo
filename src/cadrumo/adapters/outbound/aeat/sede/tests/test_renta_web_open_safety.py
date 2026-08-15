@@ -121,11 +121,23 @@ def test_normalise_still_drops_non_ascii_noise_between_letters_of_a_forbidden_wo
 
 def test_matches_forbidden_token_catches_substring_in_button_label() -> None:
     """Real button labels often combine words: 'Presentar declaración',
-    'Firmar y enviar', 'Pagar con tarjeta'. The matcher must catch these."""
-    assert _matches_forbidden_token(_normalise("Presentar declaración")) is not None
-    assert _matches_forbidden_token(_normalise("Firmar y enviar")) is not None
-    assert _matches_forbidden_token(_normalise("Pagar con tarjeta")) is not None
-    assert _matches_forbidden_token(_normalise("Confirmar presentación")) is not None
+    'Firmar y enviar', 'Pagar con tarjeta'. The matcher must catch these --
+    and must catch them for a token the label actually contains, the same
+    match-vs-substring pin ``test_validar_button_label_is_blocked_by_safety_guard``
+    uses above, so a match returned for an unrelated or fabricated token
+    cannot pass under bare ``is not None``."""
+    presentar_declaracion = _matches_forbidden_token(_normalise("Presentar declaración"))
+    firmar_y_enviar = _matches_forbidden_token(_normalise("Firmar y enviar"))
+    pagar_con_tarjeta = _matches_forbidden_token(_normalise("Pagar con tarjeta"))
+    confirmar_presentacion = _matches_forbidden_token(_normalise("Confirmar presentación"))
+    assert presentar_declaracion is not None
+    assert _normalise(presentar_declaracion) in _normalise("Presentar declaración")
+    assert firmar_y_enviar is not None
+    assert _normalise(firmar_y_enviar) in _normalise("Firmar y enviar")
+    assert pagar_con_tarjeta is not None
+    assert _normalise(pagar_con_tarjeta) in _normalise("Pagar con tarjeta")
+    assert confirmar_presentacion is not None
+    assert _normalise(confirmar_presentacion) in _normalise("Confirmar presentación")
     # Read-only labels stay safe
     assert _matches_forbidden_token(_normalise("Continuar con la declaración")) is None
     assert _matches_forbidden_token(_normalise("Apartados declaración")) is None

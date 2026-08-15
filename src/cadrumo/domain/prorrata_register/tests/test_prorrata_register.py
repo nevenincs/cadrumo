@@ -505,8 +505,11 @@ def test_activity_row_rejects_right_bearing_operations_above_total() -> None:
 
 def test_register_entry_for_returns_matching_key() -> None:
     """entry_for resolves the (ejercicio, sector) key, and None when absent."""
-    register = ProrrataRegister(entries=(_carried_entry(2024),))
-    assert register.entry_for(2024) is not None
+    entry = _carried_entry(2024)
+    register = ProrrataRegister(entries=(entry,))
+    found = register.entry_for(2024)
+    assert found is not None
+    assert found == entry
     assert register.entry_for(2023) is None
     assert register.entry_for(2024, sector_id="comercio") is None
 

@@ -26,7 +26,6 @@ from ......tests.master_key import EphemeralMasterKeyProvider
 from ._secure_objects_support import (
     UTC,
     Path,
-    SecureObjectRepository,
     SecureObjectUnreadable,
     SecureObjectUnreadableError,
     SensitivityClass,

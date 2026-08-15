@@ -20,12 +20,12 @@ from ....adapters.persistence.storage import (
     SecureObjectNamespaceDefinition,
     SecureObjectRepository,
     StorageCustodyDisposition,
-    StorageHierarchyRegistry,
     StorageNamespaceScope,
 )
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.classification import SensitivityClass
 from ....tests.secure_sql import isolated_runtime_profile
+from ._test_support import registered_objects as _registered_objects
 from .. import (
     OperationBaselinePolicy,
     OperationCancellation,
@@ -238,19 +238,6 @@ _TERMINAL_CASES = (
 )
 
 
-def _registered_objects(profile_objects: SecureObjectRepository) -> SecureObjectRepository:
-    """Add this operation's namespace to the genuine active-profile repository."""
-    registry = profile_objects.namespace_registry
-    assert registry is not None
-    return SecureObjectRepository(
-        engine=profile_objects.engine,
-        namespace_registry=StorageHierarchyRegistry(
-            namespaces=(*registry.namespaces, _NAMESPACE),
-            paths=registry.paths,
-        ),
-    )
-
-
 def _repositories(
     *,
     storage_root: Path,
@@ -259,7 +246,7 @@ def _repositories(
     return (
         OperationJournalRepository(storage_root=storage_root),
         OperationLeaseFilesystemRepository(storage_root=storage_root),
-        OperationSecureReferenceRepository(objects=_registered_objects(profile_objects), namespace=_NAMESPACE),
+        OperationSecureReferenceRepository(objects=_registered_objects(profile_objects, _NAMESPACE), namespace=_NAMESPACE),
     )
 
 

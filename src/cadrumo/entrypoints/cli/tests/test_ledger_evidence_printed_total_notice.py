@@ -27,7 +27,6 @@ import json
 import re
 from collections.abc import Iterator
 from http import HTTPStatus
-from io import BytesIO
 from pathlib import Path
 from typing import Any, override
 
@@ -41,6 +40,7 @@ from ....tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
+from ....tests.pdf_fixtures import text_pdf_bytes
 from ._ledger_ux_support import _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -155,23 +155,9 @@ def _loopback_reader() -> Iterator[None]:
         yield
 
 
-def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfgen import canvas
-
-    buf = BytesIO()
-    page = canvas.Canvas(buf, pagesize=A4)
-    y = 760
-    for line in lines:
-        page.drawString(72, y, line)
-        y -= 20
-    page.save()
-    return buf.getvalue()
-
-
 def _add_evidence(tmp_path: Path, lines: tuple[str, ...], *, filename: str) -> str:
     pdf = tmp_path / filename
-    pdf.write_bytes(_text_pdf_bytes(lines))
+    pdf.write_bytes(text_pdf_bytes(lines))
     added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", str(pdf), "--supplier", "Acme SL"])
     assert added.exit_code == 0, added.output
     payload = json.loads(added.output)
