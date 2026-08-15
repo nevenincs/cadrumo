@@ -376,52 +376,43 @@ def test_installed_console_refuses_former_product_state_without_a_traceback(tmp_
     assert "incompatible retired `aeat` database named 'aeat.db'" in combined_output
 
 
-def test_installed_console_profile_create_honors_isolated_storage_env(tmp_path: Path) -> None:
+def test_installed_console_honors_isolated_storage_env(tmp_path: Path) -> None:
+    """The installed console script routes storage at the environment's root.
+
+    The profile is registered in-process against the same root, because
+    credential registration is the only creation door and no CLI verb can
+    mint a profile. The claim under test -- that the installed script reads
+    and writes the environment's storage root rather than the operator's real
+    one -- is measured by the two subprocess runs below.
+    """
     cli_executable = _installed_cli_executable()
     env = _console_env(tmp_path)
 
-    create = subprocess.run(
-        [
-            cli_executable,
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "natural_person",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Operator",
-            "--surnames",
-            "Storage",
-            "--irpf-income-categories",
-            "actividad_economica",
-            "--activity",
-            "Design consulting",
-            "--address-postcode",
-            "28015",
-            "--activity-start-date",
-            "2025-01-01",
-            "--tax-residence-ccaa",
-            "madrid",
-            "--iva-regime",
-            "general",
-            "--irpf-estimation-regime",
-            "directa_simplificada",
-        ],
-        cwd=Path.cwd(),
-        env=env,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        timeout=60,
-        check=False,
-    )
-    combined_create = f"{create.stdout}\n{create.stderr}"
-    assert create.returncode == 0, combined_create
+    from ....core.config import SecretStoreBackend, load_settings, override_settings
+    from ....tests.user_profile import register_cli_profile
+
+    with override_settings(
+        cadrumo_local_storage_root=tmp_path / "storage",
+        cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+        cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
+        cadrumo_active_profile=None,
+    ):
+        register_cli_profile(
+            label="operator",
+            facts={
+                "taxpayer_type.entity_type": "natural_person",
+                "identity.tax_id": "12345678Z",
+                "identity.name": "Operator",
+                "identity.surnames": "Storage",
+                "taxpayer_type.irpf_income_categories": "actividad_economica",
+                "activities.description": "Design consulting",
+                "contact.postcode": "28015",
+                "censo.activity_start_date": "2025-01-01",
+                "tax_residence.ccaa": "madrid",
+                "iva.regime": "general",
+                "irpf.estimation_regime": "directa_simplificada",
+            },
+        )
 
     logs = subprocess.run(
         [cli_executable, "config", "repair", "logs"],

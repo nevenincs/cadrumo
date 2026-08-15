@@ -42,6 +42,7 @@ from .._validate_export_layout_coverage import (
     _omissible_reason,
     _read_design_sheets,
     _required_positions,
+    _sheet_constants,
     validate_export_layout_record_coverage,
 )
 
@@ -54,6 +55,13 @@ _OBLIGATORIO = re.compile(r"\bOBLIGATORI[OA]\b", re.IGNORECASE)
 
 #: One ``@offset+length`` coordinate as the refusal enumerates it.
 _ENUMERATED_COORDINATE = re.compile(r"@(\d+)\+(\d+)")
+
+#: AEAT's "this position holds a fixed value" marking, and the quoted value
+#: itself. Re-declared here rather than imported, for the same reason
+#: ``_OBLIGATORIO`` is: a test borrowing the production predicates cannot
+#: disagree with them, and disagreement is the signal.
+_CONSTANT_WORD = re.compile(r"[Cc]onstante")
+_QUOTED_TEXT = re.compile("[\"'«“‘][^\"'»«”’‘“]{1,40}[\"'»”’]")
 
 #: A real bundled layout this gate must refuse. Anchored by name so the module
 #: cannot pass vacuously, and re-derived by
@@ -512,3 +520,80 @@ def test_writing_a_desglosado_parent_as_one_blob_is_refused(
             f"the refusal did not name sub-field @{component.offset}+{component.length}, so an author "
             f"cannot tell which datum the blob swallowed"
         )
+
+
+def _split_constant_rows(
+    modelos: tuple[ModeloDefinition, ...],
+    catalogues: RegistryCatalogues,
+) -> list[tuple[RecordDesignSheet, object]]:
+    """Design rows declaring ``Constante`` in one cell and quoting the value in another."""
+    rows = []
+    for _modelo_id, _revision_id, revision in _revisions_with_fixed_width_layouts(modelos):
+        for layout in _fixed_width_layouts(revision):
+            for sheet in _design_sheets(layout, catalogues):
+                for field in sheet.fields:
+                    together = any(
+                        text and _CONSTANT_WORD.search(text) and _QUOTED_TEXT.search(text)
+                        for text in (field.content, field.description)
+                    )
+                    word = any(text and _CONSTANT_WORD.search(text) for text in (field.content, field.description))
+                    quoted = any(text and _QUOTED_TEXT.search(text) for text in (field.content, field.description))
+                    if word and quoted and not together:
+                        rows.append((sheet, field))
+    return rows
+
+
+def test_a_constant_split_across_cells_is_still_read(
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """AEAT splits ``Constante`` from its value as readily as it keeps them together.
+
+    Modelo 111 writes ``Constante.`` in Descripción and ``"<T"`` in Contenido;
+    Modelo 714's ``714-00`` envelope does the same. Requiring the two adjacent
+    emptied the constant set for those sheets, and a sheet with no constants
+    cannot be joined to its authored record at all -- so the check silently
+    degraded to the weaker layout-wide question with nothing announcing it.
+
+    Pins the implication rather than a tally: every split row must yield a
+    constant at its own coordinate, and the population is asserted non-empty so
+    a corpus that stopped carrying the split shape fails here instead of
+    passing by examining nothing.
+    """
+    modelos, catalogues = registry_tree
+    rows = _split_constant_rows(modelos, catalogues)
+    assert rows, "no bundled design splits a Constante declaration across cells, so this rule is untested"
+    for sheet, field in rows:
+        constants = _sheet_constants(sheet)
+        assert (field.offset, field.length) in constants, (
+            f"{sheet.name!r} @{field.offset}+{field.length} declares a constant across two cells "
+            f"({field.description!r} / {field.content!r}) but no constant was read, so this sheet "
+            f"cannot be joined to its authored record"
+        )
+
+
+def test_a_row_aeat_does_not_mark_constante_yields_no_constant(
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """The word stays required, so an enumeration is never mistaken for a constant.
+
+    Reading a quoted value out of any row would take Modelo 111's período cell
+    (``"01" ... "12" o "1T" … "4T"``) as the constant ``01`` and join the sheet
+    to the WRONG record -- a confident wrong answer, which is worse than the
+    missing one this fix removes. Every constant must come from a row AEAT
+    itself marks ``Constante``.
+    """
+    modelos, catalogues = registry_tree
+    checked = 0
+    for _modelo_id, _revision_id, revision in _revisions_with_fixed_width_layouts(modelos):
+        for layout in _fixed_width_layouts(revision):
+            for sheet in _design_sheets(layout, catalogues):
+                constants = _sheet_constants(sheet)
+                for field in sheet.fields:
+                    if any(text and _CONSTANT_WORD.search(text) for text in (field.content, field.description)):
+                        continue
+                    checked += 1
+                    assert (field.offset, field.length) not in constants, (
+                        f"{sheet.name!r} @{field.offset}+{field.length} yielded a constant although AEAT "
+                        f"does not mark it Constante ({field.description!r} / {field.content!r})"
+                    )
+    assert checked, "no unmarked design row was examined, so this guard proved nothing"

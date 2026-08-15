@@ -57,26 +57,6 @@ _PASSPHRASE_ENV_VAR = "CADRUMO_SECRET_PASSPHRASE"  # noqa: S105 - env var name, 
 #: only an actual ``KEY=value`` leak is a genuine secret disclosure.
 _PASSPHRASE_VALUE_LEAK_PATTERN = re.compile(r"CADRUMO_SECRET_PASSPHRASE\s*=\s*\S")
 
-#: Profile-shape arguments for a non-interactive ``profile create``. Only the
-#: fields the verb requires; the value set is irrelevant to every assertion
-#: here, which is why it is shared by the cold-start refusal control and the
-#: real provisioning step.
-_PROFILE_ARGS = (
-    "--quiet",
-    "--tax-id",
-    "12345678Z",
-    "--name",
-    "Control Operator",
-    "--entity-type",
-    "natural_person",
-    "--surnames",
-    "Operator",
-    "--activity",
-    "design",
-    "--iva-regime",
-    "GENERAL",
-)
-
 
 def _passphraseless_env(tmp_path: Path) -> dict[str, str]:
     """Isolated environment carrying NO secret-store passphrase.
@@ -147,18 +127,43 @@ def _provisioning_passphrase() -> str:
 
 
 def _provision_profile(tmp_path: Path, passphrase: str) -> None:
-    """Create a REAL encrypted profile in the isolated root, with its pointer.
+    """Register a REAL encrypted profile in the isolated root, with its pointer.
 
-    Provisioning goes through the same real console script as every other
-    case, carrying the passphrase on its sanctioned environment channel.
-    A failure here is asserted loudly: a silently unprovisioned root would
-    make the differential control below vacuous.
+    Registration runs in-process rather than through the console script,
+    because credential registration is the only creation door and it takes a
+    passphrase as an argument: no CLI verb can mint a profile. Everything the
+    differential control below actually measures still runs in a subprocess
+    against this root.
+
+    The ``master.key`` assertion this helper carried was dropped with the
+    change. That file belongs to the file-fallback secret store the retired
+    creation path provisioned; a registered profile's custody rides its own
+    capsule envelope, and the whole control below runs against a root that
+    never grows a secrets directory. A silently unprovisioned root would
+    still make the control vacuous, so the successful ``ledger list`` run in
+    the caller -- which cannot pass against an empty root -- is what carries
+    that guarantee now.
     """
-    created = _run(["config", "profile", "create", "control", *_PROFILE_ARGS], tmp_path, passphrase=passphrase)
-    combined = f"{created.stdout}\n{created.stderr}"
-    assert created.returncode == 0, combined
-    assert (tmp_path / "storage" / "fallback-store" / "master.key").is_file(), combined
-    assert passphrase not in combined
+    from ....core.config import SecretStoreBackend, override_settings
+    from ....tests.user_profile import register_cli_profile
+
+    with override_settings(
+        cadrumo_local_storage_root=tmp_path / "storage",
+        cadrumo_secret_store_dir=tmp_path / "storage" / "fallback-store",
+        cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+        cadrumo_secret_passphrase=passphrase,
+        cadrumo_active_profile=None,
+    ):
+        register_cli_profile(
+            label="control",
+            facts={
+                "identity.tax_id": "12345678Z",
+                "taxpayer_type.entity_type": "natural_person",
+                "identity.name": "Control",
+                "identity.surnames": "Operator",
+                "activities.description": "design",
+            },
+        )
 
 
 @pytest.mark.parametrize(
@@ -228,19 +233,25 @@ def test_bare_config_profile_renders_subgroup_help_without_passphrase(tmp_path: 
 def test_store_writing_verb_still_demands_the_passphrase(tmp_path: Path) -> None:
     """Anti-tautology: a verb that writes the store still names the secret channel.
 
-    ``profile create`` is the store-writing verb that reaches master-key
-    resolution from a cold start, so it observes the passphrase gate
-    directly and reports the variable the operator must supply.
+    ``profile edit`` is the store-writing verb here. It replaced
+    ``profile create``, which used to serve this role from a cold start and
+    now refuses every invocation for an unrelated reason -- credential
+    registration is the only creation door -- so it can no longer observe the
+    passphrase gate at all. ``edit`` writes profile facts through the same
+    encrypted store and reaches the same gate, which is the property under
+    test.
 
     If this ever turns green-by-accident (exit 0), the introspection gate
     has started skipping the session for real verb execution and every
     help assertion above is meaningless. Naming the variable is what makes
     the refusal attributable to the SECRET rather than to any other
-    cold-start precondition — a refusal alone would also be produced by an
-    unwritable root or a missing profile, neither of which is the contract
-    under test.
+    precondition — a refusal alone would also be produced by an unwritable
+    root or a missing profile, neither of which is the contract under test,
+    which is why the profile is provisioned first.
     """
-    result = _run(["config", "profile", "create", "control", *_PROFILE_ARGS], tmp_path)
+    _provision_profile(tmp_path, _provisioning_passphrase())
+
+    result = _run(["config", "profile", "edit", "control", "--quiet", "--activity", "consulting"], tmp_path)
     combined = f"{result.stdout}\n{result.stderr}"
     assert result.returncode != 0, combined
     assert _PASSPHRASE_ENV_VAR in combined, combined
