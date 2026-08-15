@@ -1,0 +1,239 @@
+# Modelo 280, ejercicio 2025 -- the official record-design positions that had no
+# casilla. Transcribed from the bundled Diseno de Registro
+# (source aeat-dr-280-2022, corpus/aeat_official/disenos_registro/modelo_280/
+# files/DR_280_2022.pdf, sha256
+# 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701).
+#
+# Six of these fifteen carry no semantic_role. The role the naming convention
+# would give them (m280_<id>) scores above the typo-twin gate's 0.92 similarity
+# threshold against Modelo 189's or Modelo 345's role for the same concept, so
+# declaring it would make the gate report a defect on a modelo that has none.
+# The role is an optional cross-revision index; each campo is fully identified
+# by its id, number and span without one.
+
+# --- REGISTRO DE TIPO 1: REGISTRO DE DECLARANTE ---
+
+# Campo 5. Positions 18-57, alfanumerico. "Se consignara la denominacion
+# completa de la entidad declarante, sin anagrama."
+[[revisions."2025".casillas]]
+id = "declarante-razon-social"
+number = "tipo1.18-57"
+section = ["identificacion_declaracion"]
+data_type = "name"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-280-t1-razon-social"]
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-2"]
+source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+
+# Campo 7. Positions 59-107, alfanumerico de 49 posiciones. The design
+# subdivides the slot (59-67 TELEFONO, 68-107 APELLIDOS Y NOMBRE) but declares
+# ONE top-level campo of 49 bytes, which is the extent declared here.
+[[revisions."2025".casillas]]
+id = "persona-relacion"
+number = "tipo1.59-107"
+section = ["identificacion_declaracion"]
+data_type = "text"
+semantic_role = "m280_persona_relacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-280-t1-persona-relacion"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+
+# Campo 8. Positions 108-120, numerico de 13 posiciones. "Un numero secuencial
+# cuyos tres primeros digitos se corresponderan con el codigo 280."
+[[revisions."2025".casillas]]
+id = "numero-identificativo-declaracion"
+number = "tipo1.108-120"
+section = ["identificacion_declaracion"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-280-t1-numero-identificativo"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+
+# Campo 9. Positions 121-122, alfabetico: 121 declaracion complementaria ("C"),
+# 122 declaracion sustitutiva ("S").
+[[revisions."2025".casillas]]
+id = "declaracion-complementaria-sustitutiva"
+number = "tipo1.121-122"
+section = ["identificacion_declaracion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-280-t1-complementaria-sustitutiva"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+
+# Campo 10. Positions 123-135, numerico de 13 posiciones. Carries content only
+# when campo 9 declares "C" or "S"; "en cualquier otro caso debera rellenarse a
+# ceros".
+[[revisions."2025".casillas]]
+id = "numero-identificativo-anterior"
+number = "tipo1.123-135"
+section = ["identificacion_declaracion"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-280-t1-numero-identificativo-anterior"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+
+# Campo 11. Positions 136-144, numerico de 9 posiciones. "El numero total de
+# registros de declarados, registros de detalle de tipo 2."
+[[revisions."2025".casillas]]
+id = "numero-total-declarados"
+number = "tipo1.136-144"
+section = ["identificacion_declaracion"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-280-t1-numero-total-declarados"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+
+# Campo 12. Positions 145-164, numerico de 20 posiciones: the suma total of the
+# tipo-2 APORTACIONES EFECTUADAS EN EL EJERCICIO. The design subdivides the slot
+# (145-162 parte entera, 163-164 parte decimal) and states the importe "no ira
+# precedido de signo alguno (+/-), ni incluira coma decimal" -- an unsigned
+# amount with two implied decimals filling the whole 20-byte slot.
+[[revisions."2025".casillas]]
+id = "importe-total-aportaciones"
+number = "tipo1.145-164"
+section = ["identificacion_declaracion"]
+data_type = "money"
+semantic_role = "m280_importe_total_aportaciones"
+required = false
+input_kind = "manual"
+constraints = { sign = "non_negative", legal_refs = ["orden-hfp-1822-2016:art-sexto"], source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"] }
+export_refs = ["modelo-280-t1-importe-total-aportaciones"]
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["boe-modelo-280-base-order", "boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"]
+
+# Campo 13. Positions 165-184, numerico de 20 posiciones: the suma of the tipo-2
+# BASE DE LA RETENCION PRACTICADA. Subdivided 165-182 entera, 183-184 decimal.
+[[revisions."2025".casillas]]
+id = "base-retenciones"
+number = "tipo1.165-184"
+section = ["identificacion_declaracion"]
+data_type = "money"
+semantic_role = "m280_base_retenciones"
+required = false
+input_kind = "manual"
+constraints = { sign = "non_negative", legal_refs = ["orden-hfp-1822-2016:art-sexto"], source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"] }
+export_refs = ["modelo-280-t1-base-retenciones"]
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["boe-modelo-280-base-order", "boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"]
+
+# --- REGISTRO DE TIPO 2: REGISTRO DE DECLARADO ---
+
+# Campo 6. Positions 27-35, alfanumerico de 9 posiciones. "Si el declarado es
+# menor de 14 anos ... el numero de identificacion fiscal de su representante
+# legal (padre, madre o tutor). En cualquier otro caso el contenido de este
+# campo se rellenara a espacios."
+[[revisions."2025".casillas]]
+id = "representante-legal-nif"
+number = "tipo2.27-35"
+section = ["declarado"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-280-t2-representante-legal-nif"]
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-2"]
+source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+
+# Campo 8. Position 76, numerico. Claves: 1 SIALP (Seguro Individual de Ahorro a
+# Largo Plazo), 2 CIALP (Cuenta Individual de Ahorro a Largo Plazo).
+[[revisions."2025".casillas]]
+id = "tipo-plan-ahorro"
+number = "tipo2.76"
+section = ["plan_ahorro_largo_plazo", "estado"]
+data_type = "text"
+semantic_role = "m280_tipo_plan_ahorro"
+required = false
+input_kind = "manual"
+constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-hap-2118-2015:art-1"], source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"] }
+export_refs = ["modelo-280-t2-tipo-plan"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+
+# Campo 9. Position 77, alfabetico. Claves: "I" si el Plan se identifica
+# mediante un codigo IBAN, "O" si se aporta otro identificador.
+[[revisions."2025".casillas]]
+id = "tipo-identificador"
+number = "tipo2.77"
+section = ["plan_ahorro_largo_plazo", "estado"]
+data_type = "text"
+semantic_role = "m280_tipo_identificador"
+required = false
+input_kind = "manual"
+constraints = { max_length = 1, enum = ["I", "O"], legal_refs = ["orden-hap-2118-2015:art-1"], source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"] }
+export_refs = ["modelo-280-t2-tipo-identificador"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+
+# Campo 10. Positions 78-101, alfanumerico de 24 posiciones. "El codigo
+# identificativo del CIALP o SIALP cuya titularidad corresponda al declarado."
+[[revisions."2025".casillas]]
+id = "identificador-producto"
+number = "tipo2.78-101"
+section = ["plan_ahorro_largo_plazo", "estado"]
+data_type = "text"
+semantic_role = "m280_identificador_producto"
+required = false
+input_kind = "manual"
+constraints = { max_length = 24, legal_refs = ["orden-hap-2118-2015:art-1"], source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"] }
+export_refs = ["modelo-280-t2-identificador-producto"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+
+# Campo 11. Positions 102-109, numerico. Subdivided 102-105 Ano, 106-107 Mes,
+# 108-109 Dia. "En caso de movilizacion de los derechos economicos del Plan, se
+# tomara la fecha original de su apertura."
+[[revisions."2025".casillas]]
+id = "fecha-apertura"
+number = "tipo2.102-109"
+section = ["plan_ahorro_largo_plazo", "estado"]
+data_type = "text"
+semantic_role = "m280_fecha_apertura"
+required = false
+input_kind = "manual"
+constraints = { max_length = 8, legal_refs = ["orden-hap-2118-2015:art-1"], source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"] }
+export_refs = ["modelo-280-t2-fecha-apertura"]
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+
+# Campo 20. Positions 166-175, numerico de 10 posiciones. Subdivided 166-173
+# entera, 174-175 decimal; unsigned per "no ira precedido de signo alguno".
+[[revisions."2025".casillas]]
+id = "base-retencion-practicada"
+number = "tipo2.166-175"
+section = ["plan_ahorro_largo_plazo", "rendimientos"]
+data_type = "money"
+semantic_role = "m280_base_retencion_practicada"
+required = false
+input_kind = "manual"
+constraints = { sign = "non_negative", legal_refs = ["orden-hfp-1822-2016:art-sexto"], source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"] }
+export_refs = ["modelo-280-t2-base-retencion-practicada"]
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["boe-modelo-280-base-order", "boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"]
+
+# Campo 21. Positions 176-186, alfanumerico de 11 posiciones. Unlike every other
+# amount on this record it carries an explicit sign byte: the design subdivides
+# it as "176. SIGNO: Campo alfabetico: se consignara siempre una 'N'" plus
+# "177-186: RENDIMIENTO NEGATIVO: Campo numerico de diez posiciones", itself
+# subdivided 177-184 entera and 185-186 decimal. Declared as one signed money
+# span so the signo and the magnitude cannot be filled inconsistently.
+[[revisions."2025".casillas]]
+id = "rendimientos-negativos-imputables"
+number = "tipo2.176-186"
+section = ["plan_ahorro_largo_plazo", "rendimientos"]
+data_type = "money"
+semantic_role = "m280_rendimientos_negativos_imputables"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-280-t2-rendimientos-negativos-imputables"]
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["boe-modelo-280-base-order", "boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"]
