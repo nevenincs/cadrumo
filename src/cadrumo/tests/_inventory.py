@@ -65,8 +65,36 @@ def python_files_under(root: Path, *, include_data: bool = True) -> tuple[Path, 
     walk it themselves.
     """
     resolved = root.resolve()
+    return _scan_files(resolved, suffix=".py", prune_data_at=None if include_data else resolved)
+
+
+def iter_files_under(root: Path, *, suffix: str | None = None) -> tuple[Path, ...]:
+    """Return files under *root*, walked with ``scandir`` and NOT cached.
+
+    The sibling of :func:`python_files_under` for a directory that changes: a
+    ``tmp_path`` a test is writing, a build output, an extracted archive. Those
+    callers cannot take the memoised walk -- a cached listing of a directory
+    under construction is simply wrong -- but they can still have the walk
+    itself be ten times cheaper than ``Path.rglob``.
+
+    Splitting the two is the whole point. One function that guessed which
+    directories were safe to cache would eventually guess wrong, and the failure
+    would be a test passing against a stale listing.
+
+    Args:
+        root: Directory to walk.
+        suffix: Restrict to entries ending with this, e.g. ``".py"``.
+
+    Returns:
+        Sorted paths of every matching file beneath *root*.
+    """
+    return _scan_files(root, suffix=suffix)
+
+
+def _scan_files(root: Path, *, suffix: str | None, prune_data_at: Path | None = None) -> tuple[Path, ...]:
+    """Walk *root* with ``os.scandir``, pruning noise directories before descent."""
     found: list[Path] = []
-    stack = [str(resolved)]
+    stack = [str(root)]
     while stack:
         current = stack.pop()
         try:
@@ -77,10 +105,10 @@ def python_files_under(root: Path, *, include_data: bool = True) -> tuple[Path, 
             if entry.is_dir(follow_symlinks=False):
                 if entry.name in _PRUNED_DIRECTORY_NAMES:
                     continue
-                if not include_data and entry.name == "_data" and Path(entry.path).parent == resolved:
+                if prune_data_at is not None and entry.name == "_data" and Path(entry.path).parent == prune_data_at:
                     continue
                 stack.append(entry.path)
-            elif entry.name.endswith(".py"):
+            elif suffix is None or entry.name.endswith(suffix):
                 found.append(Path(entry.path))
     return tuple(sorted(found))
 
