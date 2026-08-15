@@ -68100,6 +68100,8 @@ modelo:
               label: Fecha de pago del premio
             x-e1in4opecpim6q315lpmusjkclng:
               label: Fecha de celebración del sorteo o apuesta
+            x-e1in4opectin6t3fe8mm6rr2e9ng:
+              label: Gestor de cobro del premio
             x-e1in4oped5mn0rriehiiqs3iclmmiro:
               label: Importe íntegro del premio o valor individual del premio en especie
             x-e1in4opedpkmc:
