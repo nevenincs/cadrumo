@@ -148,30 +148,18 @@ def _dispatch_action(
 
 
 def _create_natural_profile(environment: dict[str, str]) -> None:
-    _run_success(
-        environment,
-        [
-            "config",
-            "profile",
-            "create",
-            "operadora-s27",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "natural_person",
-            "--irpf-income-categories",
-            "actividad_economica",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Operadora",
-            "--surnames",
-            "Prueba",
-            "--activity",
-            "actividad",
-            "--has-employees",
-        ],
-        permitted_statuses=frozenset({"success", "warning"}),
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='operadora-s27',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operadora',
+            "identity.surnames": 'Prueba',
+            "activities.description": 'actividad',
+            "withholding.has_employees": 'true',
+        },
     )
 
 
