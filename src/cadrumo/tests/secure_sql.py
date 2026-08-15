@@ -21,8 +21,6 @@ from ..adapters.persistence.storage import (
     KEYSTORE_DIRNAME,
     STORAGE_NAMESPACE_REGISTRY,
     Base,
-    MasterKeyMaterialMissingError,
-    SecretAlreadyExistsError,
     SecureObjectRepository,
     StorageRuntime,
     create_engine_from_settings,
@@ -42,8 +40,6 @@ from ..adapters.persistence.storage.custody import delete_profile_session
 from ..adapters.persistence.storage.master_key import (
     BucketSession,
     activate_session,
-    get_master_key_provider,
-    load_or_mint_bucket_dek,
 )
 from ..adapters.persistence.storage.sql import SecureObjectRow
 from ..adapters.persistence.storage.sql.session import session_scope
@@ -102,52 +98,33 @@ def reap_profile_session_keys(storage_root: Path) -> None:
             continue
 
 
-def _provision_bucket_dek_v1_session(
+def _provision_bucket_session(
     *,
     bucket_id: str,
     label: str,
     storage_root: Path,
     opened_at: datetime,
 ) -> tuple[BucketSession, BucketPaths]:
-    """Provision a genuine ``bucket-dek-v1`` bucket and open its session.
+    """Provision a real encrypted bucket and open its session.
 
-    Mirrors the production mint sequence (``CommittedProfileRepository.create``
-    inside ``open_test_profile_session``): resolve the configured
-    master-key provider, mint the per-bucket wrapped DEK under that
-    provider's resolved key-encryption key (KEK), then open a session keyed
-    by the same KEK and the minted DEK. No manifest is written: a bucket's
-    registration is proven by its published profile capsule.
+    The bucket's keys are derived deterministically from its immutable
+    identity through the one test-owned derivation
+    (:func:`~cadrumo.tests.profile_capsule._test_bucket_key`), which is also
+    what a nested :func:`open_test_profile_session` binds. Sharing that single
+    derivation is what makes the write side and the read side agree; it
+    replaces a persisted keystore artefact no production path writes.
 
-    The caller MUST have already entered an ``override_settings`` block
-    that configures the file backend, secret-store directory, and
-    dev-test passphrase (as :func:`isolated_profile_storage_root` does),
-    so the provider this helper resolves is the same one a nested
-    :func:`open_test_profile_session` re-resolves on the read path. That
-    consistency is what lets the wrapped DEK unwrap under the
-    provider-resolved KEK rather than a divergent raw test key.
+    Nothing here is faked: real 32-byte keys open a real session over really
+    encrypted records. No manifest is written -- a bucket's registration is
+    proven by its published profile capsule.
     """
+    from .profile_capsule import _test_bucket_key
+
     paths = provision_bucket_directory(storage_root, bucket_id)
-    provider = get_master_key_provider()
-    try:
-        master_key = provider.get_master_key()
-    except MasterKeyMaterialMissingError:
-        try:
-            master_key = provider.provision_master_key()
-        except SecretAlreadyExistsError:
-            master_key = provider.get_master_key()
-    # Mint the wrapped DEK through the bootstrap branch of
-    # ``load_or_mint_bucket_dek``, which writes the keystore file and returns
-    # a fresh DEK exactly as the production create span does.
-    dek = load_or_mint_bucket_dek(
-        kek=master_key,
-        storage_root=storage_root,
-        bucket_id=bucket_id,
-        allow_bootstrap_mint=True,
-    )
     session = BucketSession.open(
         bucket_id=bucket_id,
-        kek=master_key,
-        dek=dek,
+        kek=_test_bucket_key(bucket_id, purpose="kek"),
+        dek=_test_bucket_key(bucket_id, purpose="dek"),
         idle_minutes=15,
         opened_at=opened_at,
         storage_root=storage_root,
@@ -452,7 +429,7 @@ def isolated_runtime_profile(
         **storage_overrides(tmp_path, StorageCategory.SECRETS),
     ) as settings:
         dispose_engine(settings)
-        session, paths = _provision_bucket_dek_v1_session(
+        session, paths = _provision_bucket_session(
             bucket_id=bucket_id,
             label=label,
             storage_root=storage_root,
@@ -563,13 +540,13 @@ def isolated_two_bucket_runtime(
         **storage_overrides(tmp_path, StorageCategory.SECRETS),
     ) as settings:
         dispose_engine(settings)
-        primary_session, primary_paths = _provision_bucket_dek_v1_session(
+        primary_session, primary_paths = _provision_bucket_session(
             bucket_id=primary_bucket_id,
             label=primary_label,
             storage_root=storage_root,
             opened_at=opened_at,
         )
-        secondary_session, secondary_paths = _provision_bucket_dek_v1_session(
+        secondary_session, secondary_paths = _provision_bucket_session(
             bucket_id=secondary_bucket_id,
             label=secondary_label,
             storage_root=storage_root,

@@ -9,45 +9,31 @@ the no-network counterpart of the live Google export behavior.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 from openpyxl import load_workbook
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
 _BBVA = _CORPUS / "bbva-business-eur.csv"
 
+_isolated_backend = active_profile_isolated_backend_fixture(
+    bucket_id="00000000-0000-4000-8000-000000000000",
+    dispose_engine_around=True,
+    settings_overrides={"cadrumo_output_language": "en"},
+)
+
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session("00000000-0000-4000-8000-000000000000"),
-    ):
-        try:
-            register_minimal_profile(profile_id="00000000-0000-4000-8000-000000000000")
-            yield
-        finally:
-            dispose_engine()
 
 
 def _import_bbva() -> None:

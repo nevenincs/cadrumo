@@ -2,9 +2,12 @@
 
 The wipe primitive only overwrites a mutable ``bytearray`` and refuses anything
 else, so a key handed back as immutable ``bytes`` is permanently unreachable by
-any wipe and survives in memory at the collector's discretion. Both unwrap
-paths -- the password/KEK envelope and the session acceleration receipt --
-return the live bucket key, so both are on this contract.
+any wipe and survives in memory at the collector's discretion. The session
+acceleration receipt returns the live bucket key, so it is on this contract.
+
+The sibling arm over the retired keystore's KEK-wrap went with that route when
+it was deleted; the contract itself is unchanged, and this is now the one
+unwrap path there is.
 
 The proof deliberately does not stop at "``zeroise`` accepted it". Acceptance
 alone is satisfied by a value that was never immutable in the first place and
@@ -22,7 +25,6 @@ from uuid import UUID
 
 import pytest
 
-from ...master_key._dek_wrap import unwrap_dek, wrap_dek
 from .. import WipeTypeError, zeroise
 from .._acceleration_receipt import unwrap_profile_session_dek, wrap_profile_session_dek
 
@@ -30,7 +32,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _KEK = bytes(range(32))
 _DEK = bytes(range(100, 132))
-_BUCKET = "11111111-1111-4111-8111-111111111111"
 _PROFILE_ID = UUID("11111111-1111-4111-8111-111111111111")
 _SESSION_ID = UUID("22222222-2222-4222-8222-222222222222")
 _ISSUED_AT = datetime(2026, 8, 15, 6, tzinfo=UTC)
@@ -47,23 +48,6 @@ def test_zeroise_refuses_the_immutable_shape_these_tests_rule_out() -> None:
     """
     with pytest.raises(WipeTypeError):
         zeroise(bytes(32))
-
-
-def test_password_envelope_unwrap_returns_a_buffer_that_wipes() -> None:
-    """The KEK-wrapped bucket key comes back mutable, and zeroing it is observable."""
-    wrapped = wrap_dek(kek=_KEK, dek=_DEK, bucket_id=_BUCKET)
-
-    recovered = unwrap_dek(kek=_KEK, wrapped=wrapped, bucket_id=_BUCKET)
-
-    assert isinstance(recovered, bytearray)
-    assert recovered == _DEK
-
-    zeroise(recovered)
-
-    # The load-bearing assertion: a later read sees the overwrite, so the key
-    # material is gone from this buffer rather than merely declared wipeable.
-    assert recovered == bytearray(32)
-    assert recovered != _DEK
 
 
 def test_session_receipt_unwrap_returns_a_buffer_that_wipes() -> None:
@@ -92,5 +76,7 @@ def test_session_receipt_unwrap_returns_a_buffer_that_wipes() -> None:
 
     zeroise(recovered)
 
+    # The load-bearing assertion: a later read sees the overwrite, so the key
+    # material is gone from this buffer rather than merely declared wipeable.
     assert recovered == bytearray(32)
     assert recovered != _DEK

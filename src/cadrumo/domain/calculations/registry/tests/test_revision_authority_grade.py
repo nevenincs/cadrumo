@@ -30,7 +30,8 @@ from .._schema import (
     REVISION_MANIFEST_ONLY_FIELDS,
     ModeloRevision,
 )
-from ._loader_directory_mode_support import _standard_manifest_text
+from ._loader_directory_mode_support import _load_revision as _shared_load_revision
+from ._loader_directory_mode_support import _write_modelo as _shared_write_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -48,32 +49,18 @@ source_refs = ["aeat-manual"]
 """.lstrip()
 
 
-def _revision_manifest_text(extra: str = "") -> str:
-    return (
-        f'[revisions."{_REVISION_ID}"]\n'
-        "valid_from = 2025-01-01\n"
-        'period_selector = { years = [2025], periods = ["0A"] }\n'
-        f'legal_refs = ["{_LEGAL_REF}"]\n'
-        'source_refs = ["aeat-manual"]\n'
-    ) + extra
-
-
 def _write_modelo(root: Path, *, manifest_extra: str = "", fragment_extra: str = "") -> Path:
-    """Materialise a minimal fragmented modelo and return its directory."""
-    modelo_dir = root / "999"
-    revision_dir = modelo_dir / "revisions" / _REVISION_ID
-    (revision_dir / "casillas").mkdir(parents=True)
-    (modelo_dir / "manifest.toml").write_text(_standard_manifest_text("Grade"), encoding="utf-8")
-    (revision_dir / "revision.toml").write_text(_revision_manifest_text(manifest_extra), encoding="utf-8")
-    (revision_dir / "casillas" / "0001-casillas.toml").write_text(
-        _CASILLA_FRAGMENT + fragment_extra,
-        encoding="utf-8",
+    return _shared_write_modelo(
+        root,
+        casilla_fragment=_CASILLA_FRAGMENT,
+        revision_id=_REVISION_ID,
+        manifest_extra=manifest_extra,
+        fragment_extra=fragment_extra,
     )
-    return modelo_dir
 
 
 def _load_revision(modelo_dir: Path) -> ModeloRevision:
-    return load_modelo_directory(modelo_dir).revisions[_REVISION_ID]
+    return _shared_load_revision(modelo_dir, revision_id=_REVISION_ID)
 
 
 @pytest.mark.parametrize("grade", list(RegistryAuthorityGrade))

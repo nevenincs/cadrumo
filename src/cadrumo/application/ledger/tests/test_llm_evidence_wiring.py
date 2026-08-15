@@ -12,7 +12,6 @@ import sys
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from io import BytesIO
 from pathlib import Path
 
 import pytest
@@ -28,6 +27,7 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
+from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._evidence import (
     PurchaseInvoiceEvidence,
@@ -59,15 +59,8 @@ def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 
 def _text_pdf(tmp_path: Path, line: str) -> Path:
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfgen import canvas
-
-    buf = BytesIO()
-    page = canvas.Canvas(buf, pagesize=A4)
-    page.drawString(72, 720, line)
-    page.save()
     out = tmp_path / "invoice.pdf"
-    out.write_bytes(buf.getvalue())
+    out.write_bytes(text_pdf_bytes((line,)))
     return out
 
 

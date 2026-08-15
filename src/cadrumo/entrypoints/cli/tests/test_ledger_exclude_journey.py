@@ -5,49 +5,34 @@ it, and assert the uniform mutation quintet comes back with ``review_status``
 ``excluded`` and a ``ledger.transaction.reviewed_excluded`` event id, and that
 the excluded row then reads as ``excluded`` in the review queue.
 
-Harness mirrors the restore-journey suite: an isolated profile backend via
-``override_settings`` + ``isolated_profile_storage_root`` +
-``open_test_profile_session`` + ``register_minimal_profile``.
+Harness mirrors the restore-journey suite: an isolated profile backend built
+from :func:`~cadrumo.tests.active_profile_isolated_backend_fixture.active_profile_isolated_backend_fixture`.
 """
 
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Sequence
-from pathlib import Path
+from collections.abc import Sequence
 
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core.config import override_settings
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = "00000000-0000-4000-8000-000000000000"
 
+_isolated_backend = active_profile_isolated_backend_fixture(
+    bucket_id=_PROFILE_ID,
+    dispose_engine_around=True,
+    settings_overrides={"cadrumo_output_language": "en"},
+)
+
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_PROFILE_ID),
-    ):
-        try:
-            register_minimal_profile(profile_id=_PROFILE_ID)
-            yield
-        finally:
-            dispose_engine()
 
 
 def _add_row() -> str:

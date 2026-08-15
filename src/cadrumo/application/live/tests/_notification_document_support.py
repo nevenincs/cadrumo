@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import date
+from functools import cache
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select
@@ -65,6 +66,7 @@ SANCION_TEXT_LINES = (
 )
 
 
+@cache
 def sancion_pdf_bytes(lines: tuple[str, ...] = SANCION_TEXT_LINES) -> bytes:
     """Render ``lines`` into a real single-page PDF with an extractable text layer.
 
@@ -72,6 +74,13 @@ def sancion_pdf_bytes(lines: tuple[str, ...] = SANCION_TEXT_LINES) -> bytes:
     through pypdfium2 that the produced bytes really carry the text layer
     before any test relies on it, so what a test asserts on is text a real
     extractor genuinely recovers, not a string the test handed to itself.
+
+    Cached by ``lines``: reportlab stamps a creation timestamp, so two
+    independent builds of the same content are NOT byte-identical, and the
+    custody/service suites re-store the same served document to prove a
+    matching re-store is a byte-identical no-op. The hand-rolled builder this
+    replaced had no clock and was deterministic by construction; caching
+    restores that property without reintroducing it.
     """
     import pypdfium2 as pdfium
 

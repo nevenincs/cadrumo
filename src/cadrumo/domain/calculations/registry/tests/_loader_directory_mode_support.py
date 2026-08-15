@@ -12,9 +12,11 @@ from .. import ModeloDefinition, ModeloSource
 from .._loader import (
     _REVISION_SECTION_FIELDS,
     discover_modelo_sources,
+    load_modelo_directory,
     load_modelo_source,
     load_registry_tree,
 )
+from .._schema import ModeloRevision
 
 _REVISION_HEADER_RE = re.compile(r'^\[\[?revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))(?=[.\]])')
 _REVISION_FIELD_RE = re.compile(r'^\[\[?revisions\.(?:"[^"]+"|[A-Za-z0-9_-]+)\.([A-Za-z0-9_]+)')
@@ -100,14 +102,23 @@ source_refs = ["aeat-manual"]
 """.lstrip()
 
 
-def _standard_revision_preamble_text(source_ref: str = "aeat-manual") -> str:
-    return f"""
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = {{ years = [2025], periods = ["0A"] }}
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["{source_ref}"]
-""".lstrip()
+def _standard_revision_preamble_text(source_ref: str = "aeat-manual", *, declare_legal_refs: bool = True) -> str:
+    """Build the standard ``[revisions."2025"]`` scalar preamble.
+
+    ``declare_legal_refs=False`` omits the ``legal_refs`` line entirely
+    (rather than declaring an empty one) so a caller can prove a
+    redeclaration guard fires only when the manifest already carries the
+    field — a manifest silent on ``legal_refs`` is a different shape than
+    one that names it.
+    """
+    legal_refs_line = 'legal_refs = ["ley-58-2003:art-29"]\n' if declare_legal_refs else ""
+    return (
+        '[revisions."2025"]\n'
+        "valid_from = 2025-01-01\n"
+        'period_selector = { years = [2025], periods = ["0A"] }\n'
+        f"{legal_refs_line}"
+        f'source_refs = ["{source_ref}"]\n'
+    )
 
 
 def _write_standard_manifest(target_dir: Path, title: str) -> None:
@@ -116,6 +127,47 @@ def _write_standard_manifest(target_dir: Path, title: str) -> None:
 
 def _write_standard_revision_preamble(path: Path) -> None:
     path.write_text(_standard_revision_preamble_text(), encoding="utf-8", newline="\n")
+
+
+def _write_modelo(
+    root: Path,
+    *,
+    casilla_fragment: str,
+    revision_id: str = "2025",
+    manifest_extra: str = "",
+    manifest_text: str | None = None,
+    fragment_extra: str = "",
+    declare_legal_refs: bool = True,
+) -> Path:
+    """Materialise a minimal fragmented modelo (``root/999``) and return its directory.
+
+    ``manifest_extra`` is appended to the standard ``revision.toml`` scalar
+    preamble; ``fragment_extra`` is appended to the one casilla-section
+    fragment. Pass ``manifest_text`` to replace the whole ``revision.toml``
+    body outright instead of appending to the standard preamble (for tests
+    proving where a value lives, not just what it says).
+    """
+    modelo_dir = root / "999"
+    revision_dir = modelo_dir / "revisions" / revision_id
+    (revision_dir / "casillas").mkdir(parents=True)
+    _write_standard_manifest(modelo_dir, "Test")
+    (revision_dir / "revision.toml").write_text(
+        (
+            _standard_revision_preamble_text(declare_legal_refs=declare_legal_refs) + manifest_extra
+            if manifest_text is None
+            else manifest_text
+        ),
+        encoding="utf-8",
+    )
+    (revision_dir / "casillas" / "0001-casillas.toml").write_text(
+        casilla_fragment + fragment_extra,
+        encoding="utf-8",
+    )
+    return modelo_dir
+
+
+def _load_revision(modelo_dir: Path, *, revision_id: str = "2025") -> ModeloRevision:
+    return load_modelo_directory(modelo_dir).revisions[revision_id]
 
 
 def _build_directory_layout(

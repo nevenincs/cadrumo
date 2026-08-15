@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from base64 import b64encode
 from collections.abc import Iterable, Iterator
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
@@ -49,16 +49,24 @@ def open_test_profile_session(profile_id: str | UUID) -> Iterator[str]:
 
     The application no longer exposes a create-time or generic storage-span
     helper.  Tests that need to exercise an encrypted bucket still need the
-    same production custody boundary, however: resolve the configured master
-    key provider, enroll/load the target bucket DEK, and bind the resulting
-    :class:`BucketSession` while the operation runs.  This test-owned helper
-    composes that current substrate without making production import test
-    plumbing or reviving either retired application symbol.
+    same production custody boundary, however: obtain the target bucket's data
+    key and bind the resulting :class:`BucketSession` while the operation runs.
+    This test-owned helper composes that current substrate without making
+    production import test plumbing or reviving any retired application symbol.
 
-    ``allow_bucket_dek_enrollment`` is intentionally enabled because most
-    callers use this context while building a synthetic current capsule.  A
-    later read against that capsule still opens the exact durable DEK written
-    by the first call; no key or repository is faked.
+    Two ways in, and the first is what makes a login-first test work.  When a
+    live session already serves this bucket -- because the test authenticated
+    through the real login door -- that session IS the custody span and is
+    reused untouched, so the helper never substitutes a key for one the
+    operator's passphrase unlocked.
+
+    Otherwise the bucket has no custody to unlock (the common case: callers
+    build a synthetic capsule inside this span), and the helper derives the
+    bucket's data key deterministically from its immutable identity.  Nothing
+    is faked: it is a real 32-byte key opening a real session over real
+    encrypted records.  Determinism is what the contract needs -- a later read
+    inside the same test opens the exact key the first call bound -- and it
+    replaces a persisted keystore artefact that no production path writes.
 
     The record authority is retired on both edges because this helper owns
     the custody span the authority is bound to: retiring on entry is exactly
@@ -69,36 +77,45 @@ def open_test_profile_session(profile_id: str | UUID) -> Iterator[str]:
     authority does not serve the requested identity.
     """
     identity = str(UUID(str(profile_id)))
-    from ..adapters.persistence.storage.errors import (
-        MasterKeyMaterialMissingError,
-        SecretAlreadyExistsError,
-    )
     from ..adapters.persistence.storage.master_key import (
-        activate_master_key_provider,
-        get_master_key_provider,
+        BucketSession,
+        activate_session,
     )
     from ..application.user_profile._profile_record_repository import close_active_profile_record_session
     from ..core.config import override_settings
 
-    provider = get_master_key_provider()
-    try:
-        provider.get_master_key()
-    except MasterKeyMaterialMissingError:
-        with suppress(SecretAlreadyExistsError):
-            provider.provision_master_key()
+    live = current_active_bucket_session()
+    if session_serves_bucket(live, identity):
+        with override_settings(cadrumo_active_profile=identity):
+            yield identity
+        return
+
     close_active_profile_record_session()
     try:
-        with (
-            override_settings(cadrumo_active_profile=identity),
-            activate_master_key_provider(
-                provider,
-                fallback_bucket_id=identity,
-                allow_bucket_dek_enrollment=True,
-            ),
-        ):
-            yield identity
+        with override_settings(cadrumo_active_profile=identity):
+            session = BucketSession.open(
+                bucket_id=identity,
+                kek=_test_bucket_key(identity, purpose="kek"),
+                dek=_test_bucket_key(identity, purpose="dek"),
+                idle_minutes=15,
+                opened_at=datetime.now(UTC),
+                storage_root=effective_storage_root(),
+            )
+            with activate_session(session):
+                yield identity
     finally:
         close_active_profile_record_session()
+
+
+def _test_bucket_key(identity: str, *, purpose: str) -> bytes:
+    """Derive one deterministic 32-byte test key for ``identity``.
+
+    Deterministic rather than random so repeated spans over the same bucket
+    inside one test agree, which is exactly the durability the retired
+    keystore file used to supply.  Domain-separated by ``purpose`` so the
+    key-encryption key and the data key are never the same bytes.
+    """
+    return sha256(f"cadrumo-test-bucket:{purpose}:{identity}".encode("ascii")).digest()
 
 
 def _new_test_envelope(profile_id: UUID) -> ProfileCustodyEnvelope:

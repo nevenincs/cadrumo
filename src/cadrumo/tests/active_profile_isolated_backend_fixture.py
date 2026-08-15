@@ -30,7 +30,7 @@ def active_profile_isolated_backend_fixture(
     autouse: bool = True,
     name: str = "_isolated_backend",
     dispose_engine_around: bool = False,
-    settings_overrides: Mapping[str, object] | None = None,
+    settings_overrides: Mapping[str, object] | Callable[[Path], Mapping[str, object]] | None = None,
     profile_overrides: Mapping[str, str] | None = None,
     display_name: str | None = None,
 ) -> Callable[[Path], Iterator[None]]:
@@ -57,7 +57,10 @@ def active_profile_isolated_backend_fixture(
     own ``cadrumo_local_storage_root`` override on top without disturbing
     fields the caller already set, so the two compose regardless of which
     field each touches. Default ``None`` preserves every existing caller's
-    behaviour unchanged.
+    behaviour unchanged. Pass a callable (``lambda tmp_path: {...}``) instead
+    of a plain mapping when an override value must derive from the per-test
+    ``tmp_path`` (e.g. ``cadrumo_live_state_dir=tmp_path / "probe-live-state"``),
+    since a plain mapping is captured once at fixture-construction time.
 
     ``profile_overrides`` is a fourth axis: a small number of sites need a
     non-default profile fact (e.g. ``identity.tax_id``) stamped on the seeded
@@ -74,7 +77,8 @@ def active_profile_isolated_backend_fixture(
     def _active_profile_isolated_backend(tmp_path: Path) -> Iterator[None]:
         if dispose_engine_around:
             dispose_engine()
-        settings_cm = override_settings(**settings_overrides) if settings_overrides else nullcontext()
+        resolved_overrides = settings_overrides(tmp_path) if callable(settings_overrides) else settings_overrides
+        settings_cm = override_settings(**resolved_overrides) if resolved_overrides else nullcontext()
         with (
             settings_cm,
             isolated_profile_storage_root(tmp_path=tmp_path),

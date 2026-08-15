@@ -52,7 +52,7 @@ which is a far weaker claim than "no route into the shared-master package
 remains", and it loses its teeth the moment the surface is renamed or re-wrapped.
 The forwarding layer in ``profile_custody`` is the worked example: it forwards
 ``current_active_bucket_session``, ``BucketSession.open``,
-``load_or_mint_bucket_dek``, ``mint_profile_session``, ``resume_profile_session``
+``get_master_key``, ``mint_profile_session``, ``resume_profile_session``
 and ``zeroise``, none of which a provider-family name list contains, so a
 name-only gate passes it at any scan width.
 
@@ -404,7 +404,7 @@ def test_detector_flags_a_master_key_reach_that_names_no_retired_symbol() -> Non
         "from importlib import import_module\n"
         "def dek() -> bytes:\n"
         '    module = import_module("cadrumo.adapters.persistence.storage.master_key")\n'
-        "    return module.load_or_mint_bucket_dek()\n"
+        "    return module.get_master_key()\n"
     )
     assert _retired_references(dek_only) == {_MASTER_KEY_PACKAGE_ABSOLUTE}
 

@@ -3,11 +3,11 @@
 The ``"buckets"`` and ``"keystore"`` literals below are not arbitrary
 injected values: the subprocess CLI harness sets no bucket-root or
 keystore-dir override, so ``tmp_path / "buckets"`` and
-``tmp_path / "keystore" / bucket_id`` check production's real
-DEFAULT-derived locations -- the on-disk shape the CLI must actually
-produce for the profile lifecycle to be filing-grade. Re-deriving either
-side from the taxonomy accessor would make the assertion agree
-unconditionally with the code path it exists to independently confirm.
+``tmp_path / "keystore"`` check production's real DEFAULT-derived
+locations -- the on-disk shape the CLI must actually produce for the
+profile lifecycle to be filing-grade. Re-deriving either side from the
+taxonomy accessor would make the assertion agree unconditionally with
+the code path it exists to independently confirm.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from typing import Final
 
 import pytest
 
-from ....adapters.persistence.storage import BUCKET_DEK_FILENAME, BUCKET_MANIFEST_FILENAME
+from ....adapters.persistence.storage import BUCKET_MANIFEST_FILENAME
 from ....core.config import load_settings
 from ....tests import REPO_ROOT
 from ....tests.subprocess_cli import run_cadrumo_subprocess
@@ -96,10 +96,8 @@ def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: 
     assert not (secret_dir / "salt").is_file()
     bucket_dirs = list((tmp_path / "buckets").iterdir())
     assert len(bucket_dirs) == 1
-    bucket_id = bucket_dirs[0].name
     manifest = tomllib.loads((bucket_dirs[0] / BUCKET_MANIFEST_FILENAME).read_text(encoding="utf-8"))
     assert manifest["key_schedule"] == "bucket-dek-v1"
-    assert (tmp_path / "keystore" / bucket_id / BUCKET_DEK_FILENAME).is_file()
 
     logged_out = _run_cadrumo(tmp_path, ("config", "logout"))
     assert logged_out.returncode == 0, _combined_output(logged_out)

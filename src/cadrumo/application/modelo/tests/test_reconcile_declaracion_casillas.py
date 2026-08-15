@@ -22,7 +22,6 @@ filing) per the fixture-provenance discipline.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -47,10 +46,8 @@ from ....domain.modelos import (
     upsert_calculation_revision,
     upsert_work_unit,
 )
-from ....tests.profile_capsule import open_test_profile_session
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 from ...workflow import workflow_state_repository
 from .._reconcile import (
     ReconciliationDeclaracionSourceUnsupportedError,
@@ -71,21 +68,14 @@ _FILING_YEAR = 2026
 _PERIOD = "1T"
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session("22222222-2222-4222-8222-222222222222"),
-    ):
-        # Seeded through a detached WorkflowState, never a repository read:
-        # the capsule publishes by an atomic no-replace rename onto
-        # ``buckets/<profile-id>``, which a workflow-state repository
-        # construction would otherwise materialise first and collide with.
-        register_minimal_profile(
-            profile_id="22222222-2222-4222-8222-222222222222",
-            overrides={"identity.tax_id": _PROFILE_TAX_ID},
-        )
-        yield
+# Seeded through a detached WorkflowState, never a repository read: the
+# capsule publishes by an atomic no-replace rename onto ``buckets/<profile-id>``,
+# which a workflow-state repository construction would otherwise materialise
+# first and collide with.
+_isolated_backend = active_profile_isolated_backend_fixture(
+    bucket_id="22222222-2222-4222-8222-222222222222",
+    profile_overrides={"identity.tax_id": _PROFILE_TAX_ID},
+)
 
 
 def _seed_work_unit(*, modelo: str = _MODELO_130, filing_year: int = _FILING_YEAR, period: str = _PERIOD) -> WorkUnit:

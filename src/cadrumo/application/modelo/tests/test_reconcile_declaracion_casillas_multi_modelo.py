@@ -27,7 +27,6 @@ Modelo 130. The synthetic fixture data is declared ``synthetic_generated``
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -52,10 +51,8 @@ from ....domain.modelos import (
     upsert_calculation_revision,
     upsert_work_unit,
 )
-from ....tests.profile_capsule import open_test_profile_session
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 from ...workflow import workflow_state_repository
 from .._reconcile import (
     _reconcile_parsed_declaracion,
@@ -72,21 +69,14 @@ _PROFILE_TAX_ID = "00000000T"
 _CLOCK = datetime(2026, 4, 20, tzinfo=UTC)
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session("33333333-3333-4333-8333-333333333333"),
-    ):
-        # Seeded through a detached WorkflowState, never a repository read:
-        # the capsule publishes by an atomic no-replace rename onto
-        # ``buckets/<profile-id>``, which a workflow-state repository
-        # construction would otherwise materialise first and collide with.
-        register_minimal_profile(
-            profile_id="33333333-3333-4333-8333-333333333333",
-            overrides={"identity.tax_id": _PROFILE_TAX_ID},
-        )
-        yield
+# Seeded through a detached WorkflowState, never a repository read: the
+# capsule publishes by an atomic no-replace rename onto ``buckets/<profile-id>``,
+# which a workflow-state repository construction would otherwise materialise
+# first and collide with.
+_isolated_backend = active_profile_isolated_backend_fixture(
+    bucket_id="33333333-3333-4333-8333-333333333333",
+    profile_overrides={"identity.tax_id": _PROFILE_TAX_ID},
+)
 
 
 def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> WorkUnit:

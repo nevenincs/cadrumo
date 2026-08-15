@@ -16,14 +16,13 @@ from ....adapters.persistence.operations import (
 )
 from ....adapters.persistence.storage import (
     SecureObjectNamespaceDefinition,
-    SecureObjectRepository,
     StorageCustodyDisposition,
     StorageNamespaceScope,
 )
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.classification import SensitivityClass
+from ....tests.secure_namespace_registration import registered_objects as _registered_objects
 from ....tests.secure_sql import isolated_runtime_profile
-from ._test_support import registered_objects as _registered_objects
 from .. import (
     OperationBaselinePolicy,
     OperationCancellation,

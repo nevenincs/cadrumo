@@ -185,7 +185,8 @@ def resolve_dp30302_module_sub_indices(fields: Sequence[RecordDesignIntermediate
             raise RegistryValidationError(
                 f"DP30302 module family {generalized!r} activity {slot} carries duplicate ordinals: {ordinals!r}",
             )
-        for sub_index, member in enumerate(sorted(members, key=lambda field: _numeric_module_ordinal(field.ordinal)), start=1):
+        ordered_members = sorted(members, key=lambda field: _numeric_module_ordinal(field.ordinal))
+        for sub_index, member in enumerate(ordered_members, start=1):
             sub_index_by_ordinal[member.ordinal] = sub_index
     return sub_index_by_ordinal
 

@@ -343,10 +343,6 @@ def test_the_scoped_accessor_resolves_bucket_and_keystore_members(tmp_path: Path
             == keystore_tree / "session.v2.json"
         )
         assert (
-            bucket_scoped_storage_path(StorageCategory.KEYSTORE_BUCKET_DEK, "primary")
-            == keystore_tree / "bucket.dek.json"
-        )
-        assert (
             bucket_scoped_storage_path(StorageCategory.KEYSTORE_LOGIN_THROTTLE, "primary")
             == keystore_tree / "login-throttle.json"
         )

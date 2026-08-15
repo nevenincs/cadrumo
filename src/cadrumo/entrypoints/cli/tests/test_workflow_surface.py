@@ -137,9 +137,6 @@ def _seed_profile(
     matches the operator's state after a quiet profile-create run.
     """
 
-    from ....application.workflow import workflow_state_repository
-
-    repo = workflow_state_repository()
     values = {
         "identity.tax_id": tax_id,
         "identity.name": name,
@@ -155,13 +152,10 @@ def _seed_profile(
     if extra_values:
         values.update(extra_values)
     with open_test_profile_session("00000000-0000-4000-8000-000000000000"):
-        repo.update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id="00000000-0000-4000-8000-000000000000",
-                display_name=name,
-                overrides=values,
-            ),
+        register_minimal_profile(
+            profile_id="00000000-0000-4000-8000-000000000000",
+            display_name=name,
+            overrides=values,
         )
 
 

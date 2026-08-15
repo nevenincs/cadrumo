@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:1a8074c2ab661547e0e832aee7186ccf85b798a710d6f3a7f1adb7c64becdeaa'
+body_hash: 'sha256:4d9a302ae99dd93c6fe2795980dc7a16b71b9a34da7494c581a9669929d369ef'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -81,6 +81,7 @@ Authenticate a candidate profile without disturbing the active one, then publish
 - [x] `W02.P04.S95` - Have Terra XHigh make the receipt deletion honour the clear outcome it already computes, since the discard helper returns whether the compare-and-clear succeeded and the resume path branches on it, while the revocation entry point calls the same helper bare and returns nothing, so a refused clear is silent and a login can report the prior profile as closed while its acceleration receipt survives on disk, the reachability being narrow because the bytes must change under a held per-profile lock but the reporting value already existing; `src/cadrumo/adapters/persistence/storage/master_key/_acceleration_receipt.py`.
 - [ ] `W02.P04.S98` - Have Sol Medium rule who owns the Spanish default-output-language flip and repair the keychain-locked error test, which asserts English operator text with no language override anywhere in its conftest chain while the default at HEAD renders Spanish, so it cannot pass on this tree in any state and has been discounted from three separate suite counts tonight; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key_errors.py`.
 - [ ] `W02.P04.S102` - Have Sol Medium attribute the standing locale parity red that nobody owns, being forty-two catalogue keys with no call site anywhere in the tree and fifteen to sixteen codebase keys absent from every catalogue, symmetric across all four so no single addition produced it, and rule that a catalogue key must land in the same change as the code that consumes it; `src/cadrumo/locales/ and src/cadrumo/tests/test_parity.py`.
+- [ ] `W02.P04.S119` - Have Terra XHigh widen the resume return type to match the wipeable material it now yields, since the unwrap was changed to return a mutable buffer while the enclosing signature still promises immutable bytes, so every caller is typed to receive material it cannot wipe and the call sites lose the property the change existed to give them; `src/cadrumo/adapters/persistence/storage/custody/_acceleration_receipt.py`.
 
 ## Wave `W03` - restorative transport and operator surfaces
 

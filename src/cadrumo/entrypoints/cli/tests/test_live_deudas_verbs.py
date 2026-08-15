@@ -10,10 +10,9 @@ The verb name is ``view``, not ``show``, matching the live convention.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from click.testing import Result
@@ -21,11 +20,8 @@ from click.testing import Result
 from ....adapters.outbound.aeat.sede import Deuda
 from ....application.live import DeudasCapture, DeudasService
 from ....core import DeudaDireccion, ObjetoTributario, Period
-from ....core.config import override_settings
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 
 # INTENTIONAL: integration because it exercises the deudas CLI surface against
 # isolated local storage without contacting AEAT.
@@ -33,16 +29,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET = "00000000-0000-4000-8000-000000000000"
 
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(cadrumo_live_state_dir=tmp_path / "probe-live-state"),
-        open_test_profile_session(_BUCKET),
-    ):
-        register_minimal_profile(profile_id=_BUCKET)
-        yield
+_isolated_backend = active_profile_isolated_backend_fixture(
+    bucket_id=_BUCKET,
+    settings_overrides=lambda tmp_path: {"cadrumo_live_state_dir": tmp_path / "probe-live-state"},
+)
 
 
 def _invoke(args: Sequence[str]) -> Result:

@@ -58,6 +58,7 @@ from typing import Final
 from dev._paths import REPO_ROOT, UTF_8
 from dev.quality.fixture_census import (
     FixtureCensusError,
+    _dotted_name,
     _executable_body,
     _fixture_callee,
     _module_symbol_origins,
@@ -91,6 +92,12 @@ class HelperRecord:
     normalized_body_sha256: str
     body_symbol_origins_sha256: str
     body_performs_no_work: bool
+    #: Sorted dotted decorator names other than a pytest fixture (already
+    #: excluded from candidacy entirely).  Included in the aliasing key: a
+    #: ``@contextmanager``-wrapped body and a bare function sharing the same
+    #: statements run differently, so they must not collapse into one
+    #: behaviour just because the raw AST dump of the body matches.
+    decorators: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,11 +133,11 @@ class HelperCensus:
     @property
     def aliased_behaviours(self) -> tuple[AliasedHelperBehaviour, ...]:
         """Return every helper body reached through more than one site."""
-        by_body: dict[tuple[str, str], list[HelperRecord]] = {}
+        by_body: dict[tuple[str, str, tuple[str, ...]], list[HelperRecord]] = {}
         for record in self.helpers:
             if record.body_performs_no_work:
                 continue
-            key = (record.normalized_body_sha256, record.body_symbol_origins_sha256)
+            key = (record.normalized_body_sha256, record.body_symbol_origins_sha256, record.decorators)
             by_body.setdefault(key, []).append(record)
         return tuple(
             AliasedHelperBehaviour(
@@ -138,7 +145,7 @@ class HelperCensus:
                 function_names=tuple(sorted({record.function_name for record in group})),
                 sites=tuple(sorted(f"{record.path}:{record.line}:{record.qualname}" for record in group)),
             )
-            for (body, _origins), group in sorted(by_body.items())
+            for (body, _origins, _decorators), group in sorted(by_body.items())
             if len({(record.path, record.qualname) for record in group}) > 1
         )
 
@@ -192,13 +199,23 @@ class _HelperVisitor(ast.NodeVisitor):
             is not None
             for decorator in node.decorator_list
         )
-        if _is_candidate_name(node.name) and not is_fixture and not node.decorator_list:
+        if _is_candidate_name(node.name) and not is_fixture:
             executable_body = _executable_body(node.body)
             if executable_body:
                 normalized_body = ast.dump(
                     ast.Module(body=executable_body, type_ignores=[]),
                     annotate_fields=True,
                     include_attributes=False,
+                )
+                decorators = tuple(
+                    sorted(
+                        name
+                        for decorator in node.decorator_list
+                        if (
+                            name := _dotted_name(decorator.func if isinstance(decorator, ast.Call) else decorator)
+                        )
+                        is not None
+                    )
                 )
                 self.records.append(
                     HelperRecord(
@@ -210,6 +227,7 @@ class _HelperVisitor(ast.NodeVisitor):
                         normalized_body_sha256=hashlib.sha256(normalized_body.encode(_UTF_8)).hexdigest(),
                         body_symbol_origins_sha256=_body_symbol_origins_sha256(executable_body, self.symbol_origins),
                         body_performs_no_work=_performs_no_work(executable_body),
+                        decorators=decorators,
                     ),
                 )
         self._qualname.append(node.name)

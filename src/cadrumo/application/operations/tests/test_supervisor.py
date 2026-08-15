@@ -29,8 +29,8 @@ from ....core import STRICT_FROZEN_CONFIG
 from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.classification import SensitivityClass
 from ....core.errors import CoreError, get_registered_error_code
+from ....tests.secure_namespace_registration import registered_objects as _registered_objects
 from ....tests.secure_sql import isolated_ephemeral_secure_sql, isolated_runtime_profile
-from ._test_support import registered_objects as _registered_objects
 from .. import (
     OperationApplyResponse,
     OperationBaselinePolicy,

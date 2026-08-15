@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-15'
-body_hash: 'sha256:28c0b7b6010b22d6e43e4e85bc6be702b18207f5295d7d49df295e24564bedba'
+body_hash: 'sha256:224bd9739ade6781fbe28f1a97bd86591a4d2a0a816af4eda71106fb148245dd'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -218,6 +218,8 @@ The classes the name-keyed census cannot reach. Drift is scored by structural si
 - [ ] `W09.P30.S131` - Rename the worked-example oracle reader to oracle_declared_figures so it stops sharing vocabulary with the manual-input allowlist that governs silent-blank casillas; `src/cadrumo/domain/calculations/registry/tests/_manual_oracle_support.py`.
 - [ ] `W09.P30.S132` - Converge the hand-spelled CLI runtime isolation fixture onto the taxonomy-derived canonical helper, closing a storage-path defect the canonical docstring records as already fixed elsewhere; `src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`.
 - [ ] `W09.P30.S133` - Determine whether any production path rebuilds the transactions or invoices directory from the taxonomy rather than the resolved setting, which would make the drifted override a live defect rather than a self-consistent one; `src/cadrumo/core, src/cadrumo/application`.
+- [x] `W09.P30.S134` - Sweep every test HTTP server for the shutdown-close-join triad and close the socket and thread leaks that accumulate under parallel execution; `dev/docs/tests, src/cadrumo/adapters/outbound`.
+- [ ] `W09.P30.S135` - Move the in-memory engine disposal in the hash-column-width test inside a finally so a failing assertion cannot skip it; `src/cadrumo/adapters/persistence/storage/sql/tests/test_hash_column_widths.py`.
 
 ## Parallelization
 

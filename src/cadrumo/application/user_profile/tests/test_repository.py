@@ -27,9 +27,7 @@ from ....adapters.persistence.storage.custody import (
     unlock_profile_custody,
 )
 from ....adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ....adapters.persistence.storage.master_key import activate_master_key_provider, get_master_key_provider
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.config import override_settings
 from ....core.i18n import tr
 from ....core.time import now
 from ....domain.user_profile import (
@@ -176,30 +174,15 @@ def test_record_authority_re_derives_for_a_second_profile_in_one_process(tmp_pat
                     label=label,
                 )
 
-        provider = get_master_key_provider()
         try:
-            with (
-                override_settings(cadrumo_active_profile=_FIRST_SWITCH_PROFILE_ID),
-                activate_master_key_provider(
-                    provider,
-                    fallback_bucket_id=_FIRST_SWITCH_PROFILE_ID,
-                    allow_bucket_dek_enrollment=True,
-                ),
-            ):
+            with open_test_profile_session(_FIRST_SWITCH_PROFILE_ID):
                 first_repository = ProfileRecordRepository.for_current_session(
                     _FIRST_SWITCH_PROFILE_ID,
                     root=storage_root,
                 )
                 assert first_repository.load(_FIRST_SWITCH_PROFILE_ID).facts == first_facts
 
-            with (
-                override_settings(cadrumo_active_profile=_SECOND_SWITCH_PROFILE_ID),
-                activate_master_key_provider(
-                    provider,
-                    fallback_bucket_id=_SECOND_SWITCH_PROFILE_ID,
-                    allow_bucket_dek_enrollment=True,
-                ),
-            ):
+            with open_test_profile_session(_SECOND_SWITCH_PROFILE_ID):
                 session = require_profile_record_session(_SECOND_SWITCH_PROFILE_ID)
                 assert session.profile_id == UUID(_SECOND_SWITCH_PROFILE_ID)
                 second_repository = ProfileRecordRepository.for_current_session(
@@ -379,16 +362,8 @@ def test_record_authority_re_derives_after_its_latched_session_is_retired(tmp_pa
                 label="Retired authority subject",
             )
 
-        provider = get_master_key_provider()
         try:
-            with (
-                override_settings(cadrumo_active_profile=_FIRST_SWITCH_PROFILE_ID),
-                activate_master_key_provider(
-                    provider,
-                    fallback_bucket_id=_FIRST_SWITCH_PROFILE_ID,
-                    allow_bucket_dek_enrollment=True,
-                ),
-            ):
+            with open_test_profile_session(_FIRST_SWITCH_PROFILE_ID):
                 latched = require_profile_record_session(_FIRST_SWITCH_PROFILE_ID)
                 assert not latched.closed
 
@@ -424,16 +399,8 @@ def test_a_live_latched_authority_is_reused_rather_than_re_derived(tmp_path: Pat
                 label="Live authority subject",
             )
 
-        provider = get_master_key_provider()
         try:
-            with (
-                override_settings(cadrumo_active_profile=_FIRST_SWITCH_PROFILE_ID),
-                activate_master_key_provider(
-                    provider,
-                    fallback_bucket_id=_FIRST_SWITCH_PROFILE_ID,
-                    allow_bucket_dek_enrollment=True,
-                ),
-            ):
+            with open_test_profile_session(_FIRST_SWITCH_PROFILE_ID):
                 first = require_profile_record_session(_FIRST_SWITCH_PROFILE_ID)
                 assert require_profile_record_session(_FIRST_SWITCH_PROFILE_ID) is first
         finally:
