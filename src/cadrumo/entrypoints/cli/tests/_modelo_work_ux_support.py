@@ -11,11 +11,9 @@ from ....application.wizard import _catalogue as _wizard_catalogue
 from ....application.wizard import _persistence as _wizard_persistence
 from ....core.aggregation import BindingSourceKind
 from ....core.resources import bundled_path
-from ....domain.user_profile import UserProfileFact
 from ....domain.calculations.registry import load_registry_tree, select_revision
 from ....tests.cli_runner import invoke_cached_cli
-from ....application.user_profile import register_profile_with_credentials
-from ....core.config import load_settings
+from ....tests.user_profile import register_cli_profile
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 
@@ -32,26 +30,20 @@ def _invoke(args: list[str]):
 
 
 def _create_profile(*, activity_start_date: str | None = None) -> None:
-    """Register the operator profile through the credential-only creation door.
+    """Register the operator profile through the shared CLI registration door.
 
     Creation is a precondition here, not the subject: these tests exercise the
-    modelo work UX against a profile that already exists. The passphrase is the
-    one the isolated CLI backend configures, so the CLI invocations that follow
-    can unlock the custody envelope this registration writes.
+    modelo work UX against a profile that already exists.
     """
-    facts = [
-        UserProfileFact(path="identity.tax_id", value="12345678Z"),
-        UserProfileFact(path="identity.name", value="Operator"),
-        UserProfileFact(path="identity.surnames", value="Readiness"),
-        UserProfileFact(path="activities.description", value="design"),
-    ]
+    facts = {
+        "identity.tax_id": "12345678Z",
+        "identity.name": "Operator",
+        "identity.surnames": "Readiness",
+        "activities.description": "design",
+    }
     if activity_start_date is not None:
-        facts.append(UserProfileFact(path="censo.activity_start_date", value=activity_start_date))
-    register_profile_with_credentials(
-        label=_PROFILE_LABEL,
-        passphrase=load_settings().cadrumo_dev_test_database_password.get_secret_value(),
-        facts=tuple(facts),
-    )
+        facts["censo.activity_start_date"] = activity_start_date
+    register_cli_profile(label=_PROFILE_LABEL, facts=facts)
 
 
 def _create_gb_non_resident_profile() -> None:
