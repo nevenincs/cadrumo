@@ -24,6 +24,13 @@ source_refs = [
     "aeat-modelo-151-procedure",
     "boe-modelo-151-layout",
     "aeat-dr-151-2023",
+    # The edition that actually governs this window: declared
+    # 2015-01-01..2022-12-31, matching the revision exactly. AEAT titles it
+    # "151 - Orden HAP/2783/2015 (Ejercicios 2015-2022)". Without it this
+    # revision cited only the 2023-and-later edition, so every year it
+    # claims read as uncovered. The 2023 citation is left in place: judging
+    # whether it is now redundant here is a separate call.
+    "aeat-dr-151-2015",
 ]
 
 

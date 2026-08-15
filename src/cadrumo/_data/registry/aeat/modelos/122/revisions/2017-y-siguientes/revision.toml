@@ -23,6 +23,10 @@ legal_refs = [
 source_refs = [
     "enrolled-modelo-122-procedure",
     "enrolled-modelo-122-layout",
+    # Already-registered record design. AEAT titles it "122 - Orden
+    # HFP/105/2017 (Ejercicios 2016 y siguientes)", so it governs every year
+    # this revision claims (2017 onward); the revision simply never cited it.
+    "aeat-dr-122-2016",
 ]
 
 
