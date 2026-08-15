@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:3596eb40a1ac317329b5183963f8464c2cbe3b93a5232433b265de5b3e296114'
+body_hash: 'sha256:22307f5499b5c29ae3745a6ba09aaa1d62565cb057e2f300f2b8442451da080c'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -759,3 +759,65 @@ dangerous: a guard that is right by luck is indistinguishable from one that
 works until the day it is not. Pinned by re-checking with `self._codebase_keys`,
 which is 4 in the working copy and 0 a week earlier. A guard against a private
 attribute must match the attribute, not a fragment of a public method's name.
+
+## Round: the remaining `src/cadrumo/tests` targets are already shared
+
+This round produced NO change, and that is the result. The four untouched
+targets left in the durations table were each investigated and each is already
+optimally shared; recording why, with the evidence, so the next pass does not
+re-derive it.
+
+**`test_facade_export_gate` (41.96s setup).** A module-scoped `head_scan`
+fixture already serves four checks from one scan. The remaining `scan()` calls
+were checked and every one takes a DIFFERENT revision -- the resolved HEAD, a
+historical break revision, and three against a temporary fixture repository --
+so there is no duplicate input to collapse. It also reads GIT BLOBS rather than
+the working tree, which is the point of the gate, so it cannot borrow the
+filesystem AST cache at all.
+
+**`test_no_broad_exception_raises` (40.08s setup), `test_mock_inventory`
+(37.25s setup), `test_loopback_llm_singularity` (57.01s).** All three already
+request the session-scoped `source_tree_ast` fixture and resolve trees through
+`ast_for_path`. Their large SETUP figures are not per-module work at all: they
+are the one session-wide prime, attributed by pytest to whichever test in that
+worker happened to trigger it first. Reading the durations table naively here
+would have produced three "fixes" for one cost that is already shared by every
+structural gate in the worker.
+
+That is worth stating as a reading rule. A large `setup` number attributed to a
+test that requests a SESSION-scoped fixture is a bill, not a location. The work
+belongs to the fixture and is already amortised; optimising the named test is
+optimising the wrong thing.
+
+### The shared prime, quantified
+
+Since the prime now underpins most of this slice, it was measured rather than
+left as an assumption:
+
+    package_python_files() : 4906 modules
+    prime                  : 67.9s, holding 1216 MB
+    at the 6-worker default: ~7.3 GB across the run
+
+That is a deliberate and, on the evidence, correct trade: roughly forty
+structural gates would otherwise each re-parse the tree at ~15-20s apiece, so
+the prime repays itself several times over within one worker. It is recorded
+because the cost is real, invisible in any single duration, and would matter on
+a machine narrower than this one (24 cores, 137 GB). The worker cap of 6 already
+exists for exactly this class of pressure -- its own docstring cites workers
+crashing mid-run -- so the two policies are coupled: raising
+`CADRUMO_PYTEST_WORKERS` also multiplies this 1.2 GB.
+
+This is also the missing half of the earlier ruling against a tree-wide AST
+cache. That ruling stands for a cache built PER MODULE; the session-scoped
+version is the shape that works, because one prime is amortised over every gate
+instead of one being paid per gate.
+
+### State of the slice
+
+With this round, the `src/cadrumo/tests` durations table has no remaining
+target whose cost is duplicated work. What remains is either genuinely
+irreducible (a gate executing the thing it certifies), already shared, or an
+oracle whose duplication IS the measurement. Further wins in this campaign have
+to come from elsewhere: the nineteen production `load_registry_tree` sites
+recorded above, which need an owner's decision, or a slice this campaign has not
+yet profiled.
