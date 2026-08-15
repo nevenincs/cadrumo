@@ -68096,6 +68096,8 @@ modelo:
               label: Base de retención o ingreso a cuenta
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
               label: Clave de personalidad del perceptor no residente
+            x-e1in4opecpim6q315ln62or9dlkmarjkds:
+              label: Fecha de nacimiento del perceptor no residente
             x-e1in4opecpim6q315lo62prf:
               label: Fecha de pago del premio
             x-e1in4opecpim6q315lpmusjkclng:
@@ -68106,6 +68108,8 @@ modelo:
               label: Importe íntegro del premio o valor individual del premio en especie
             x-e1in4opedpkmc:
               label: NIF del perceptor
+            x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
+              label: Número de identificación fiscal en el país de residencia fiscal
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               label: NIF del representante legal del perceptor
             x-e1in4opedpnmqojick:

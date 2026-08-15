@@ -65298,14 +65298,20 @@ modelo:
               label: Base for withholding or payment on account
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
               label: Legal personality code of the non-resident payee
+            x-e1in4opecpim6q315ln62or9dlkmarjkds:
+              label: Date of birth of the non-resident payee
             x-e1in4opecpim6q315lo62prf:
               label: Date the prize was paid
             x-e1in4opecpim6q315lpmusjkclng:
               label: Date the draw or bet was held
+            x-e1in4opectin6t3fe8mm6rr2e9ng:
+              label: Prize collection agent
             x-e1in4oped5mn0rriehiiqs3iclmmiro:
               label: Gross prize amount or individual value of the prize in kind
             x-e1in4opedpkmc:
               label: Payee tax identification number
+            x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
+              label: Tax identification number in the country of tax residence
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               label: Tax identification number of the payee's legal representative
             x-e1in4opedpnmqojick:

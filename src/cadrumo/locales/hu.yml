@@ -65810,11 +65810,15 @@ modelo:
               label: A nyeremény kifizetésének időpontja
             x-e1in4opecpim6q315lpmusjkclng:
               label: A sorsolás vagy fogadás időpontja
+            x-e1in4opectin6t3fe8mm6rr2e9ng:
+              label: A nyeremény beszedési megbízottja
             x-e1in4oped5mn0rriehiiqs3iclmmiro:
               label: A nyeremény bruttó összege vagy a természetbeni nyeremény egyedi
                 értéke
             x-e1in4opedpkmc:
               label: A kedvezményezett adóazonosító száma
+            x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
+              label: Adóazonosító szám az adóügyi illetőség szerinti országban
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               label: A kedvezményezett törvényes képviselőjének adóazonosító száma
             x-e1in4opedpnmqojick:

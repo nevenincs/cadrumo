@@ -65758,10 +65758,14 @@ modelo:
               label: Data de pagament del premi
             x-e1in4opecpim6q315lpmusjkclng:
               label: Data de celebració del sorteig o aposta
+            x-e1in4opectin6t3fe8mm6rr2e9ng:
+              label: Gestor de cobrament del premi
             x-e1in4oped5mn0rriehiiqs3iclmmiro:
               label: Import íntegre del premi o valor individual del premi en espècie
             x-e1in4opedpkmc:
               label: Número d'identificació fiscal (NIF) del perceptor
+            x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
+              label: Número d'identificació fiscal al país de residència fiscal
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               label: NIF del representant legal del perceptor
             x-e1in4opedpnmqojick:
