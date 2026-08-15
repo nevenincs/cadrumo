@@ -19,11 +19,15 @@ past that contract:
   key selection for application policies that return translation keys
   to a later caller instead of calling :func:`tr` locally.
 * Dict literals SHAPED as a locale-key registry (every value a
-  dotted-key string) regardless of what their assignment target is
-  named — a status/enum-token-to-key mapping read through a lowercase
-  local (``SOME_DICT.get(token)``) into :func:`tr`. Recognized by shape
-  (:func:`_is_locale_key_dict_literal`), not by the naming convention the
-  previous bullet depends on.
+  dotted-key string) AND actually read into a translator sink, regardless
+  of what their assignment target is named — a status/enum-token-to-key
+  mapping read through a lowercase local (``SOME_DICT.get(token)``) into
+  :func:`tr`. Recognized by shape plus real usage
+  (:func:`_flow_confirmed_locale_key_dicts`), not by the naming convention
+  the previous bullet depends on; shape alone is deliberately NOT
+  sufficient, because this codebase also carries same-shaped dicts (a
+  casilla-to-casilla reconciliation map, a ``Notice.code`` machine-routing
+  table) that never reach the translator.
 
 These findings feed into
 :meth:`locales.manager.LocaleManager.get_codebase_keys` so the
@@ -191,24 +195,32 @@ def _extract_locale_constant_keys(tree: ast.AST) -> set[str]:
     Recognizes two independent declaration shapes: a constant NAMED as a
     locale-key registry (:func:`_declares_locale_key_constant`, suffix-based,
     which then trusts every dotted literal nested under its value), and a
-    dict literal SHAPED as one (:func:`_is_locale_key_dict_literal`, values
-    all dotted-key strings) regardless of what its target is named. The
-    second shape is what let a status-token-to-key mapping orphan invisibly
-    when it carried neither a suffixed name nor a literal ``tr()`` call
-    site — see :func:`dict_constant_naming_violations_in_tree` for the
-    companion naming HAZARD this shape also earns.
+    dict literal SHAPED as one AND actually read into a translator sink
+    (:func:`_flow_confirmed_locale_key_dicts`) regardless of what its target
+    is named. The second shape is what let a status-token-to-key mapping
+    orphan invisibly when it carried neither a suffixed name nor a literal
+    ``tr()`` call site — see :func:`dict_constant_naming_violations_in_tree`
+    for the companion naming HAZARD this shape also earns. Flow confirmation
+    (not shape alone) keeps a same-shaped unrelated lookup table — mapping
+    one dotted identifier to another without ever reaching the translator —
+    from being misread as a locale-key declaration.
     """
     findings: set[str] = set()
+    flow_confirmed = _flow_confirmed_locale_key_dicts(tree)
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
-            if any(_declares_locale_key_constant(target) for target in node.targets) or _is_locale_key_dict_literal(
-                node.value,
-            ):
+            named = any(_declares_locale_key_constant(target) for target in node.targets)
+            shaped = any(
+                isinstance(target, ast.Name) and flow_confirmed.get(target.id) is node.value
+                for target in node.targets
+            )
+            if named or shaped:
                 _collect_dotted_literals(node.value, findings)
-        elif isinstance(node, ast.AnnAssign) and (
-            _declares_locale_key_constant(node.target) or _is_locale_key_dict_literal(node.value)
-        ):
-            _collect_dotted_literals(node.value, findings)
+        elif isinstance(node, ast.AnnAssign):
+            named = _declares_locale_key_constant(node.target)
+            shaped = isinstance(node.target, ast.Name) and flow_confirmed.get(node.target.id) is node.value
+            if named or shaped:
+                _collect_dotted_literals(node.value, findings)
     return findings
 
 
@@ -252,6 +264,137 @@ def _is_locale_key_dict_literal(node: ast.expr | None) -> bool:
     if not isinstance(node, ast.Dict) or not node.values:
         return False
     return all(_dotted_literal_value(value) is not None for value in node.values)
+
+
+def _shape_candidate_locale_key_dicts(tree: ast.AST) -> dict[str, ast.expr]:
+    """Return every ``Name -> dict-literal-value`` pair shaped as a locale-key registry.
+
+    Shape alone (:func:`_is_locale_key_dict_literal`) is necessary but not
+    sufficient: many dicts in this codebase map one dotted-namespaced
+    identifier to another WITHOUT either side being a translation key (a
+    casilla-to-casilla reconciliation map, a ``Notice.code`` machine-routing
+    table). :func:`_flow_confirmed_locale_key_dicts` narrows this candidate
+    set down to the ones actually read into a recognized locale-key sink.
+    """
+    candidates: dict[str, ast.expr] = {}
+    for node in ast.walk(tree):
+        target: ast.expr | None = None
+        value: ast.expr | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target = node.targets[0]
+            value = node.value
+        elif isinstance(node, ast.AnnAssign):
+            target = node.target
+            value = node.value
+        if isinstance(target, ast.Name) and _is_locale_key_dict_literal(value):
+            candidates[target.id] = value
+    return candidates
+
+
+def _dict_access_source(value: ast.expr | None) -> str | None:
+    """Return the dict-constant ``Name`` a ``.get(...)``/subscript access reads.
+
+    Recognizes ``SOME_DICT.get(...)`` and ``SOME_DICT[...]`` where
+    ``SOME_DICT`` is a bare name — the two lookup shapes both real incidents
+    and every judged-legitimate lookup table in this codebase use.
+    """
+    if value is None:
+        return None
+    if isinstance(value, ast.Call) and isinstance(value.func, ast.Attribute) and value.func.attr == "get":
+        base = value.func.value
+        return base.id if isinstance(base, ast.Name) else None
+    if isinstance(value, ast.Subscript) and isinstance(value.value, ast.Name):
+        return value.value.id
+    return None
+
+
+def _call_site_key_argument_exprs(node: ast.Call, tr_names: frozenset[str]) -> list[ast.expr]:
+    """Return ``node``'s argument expressions that are recognized locale-key sinks.
+
+    Mirrors the sink taxonomy :func:`_collect_call_site_keys` already
+    recognizes for LITERAL keys (``tr``/``t`` calls, ``build_entry``,
+    ``ValidationVerdict.failed``, ``*Error``/``*Exception`` constructors, and
+    the translation-key kwargs), so flow confirmation asks exactly the same
+    question that already governs whether a literal value is a genuine
+    locale key — never a narrower or looser one invented for this check
+    alone.
+    """
+    name = _callee_name(node.func)
+    exprs: list[ast.expr] = []
+    if name is not None:
+        if name in tr_names and node.args:
+            exprs.append(node.args[0])
+        elif name == "failed" and node.args:
+            exprs.append(node.args[0])
+        elif (name.endswith("Error") or name.endswith("Exception")) and node.args:
+            exprs.append(node.args[0])
+        elif name == "build_entry":
+            for kw in node.keywords:
+                if kw.arg in {"label", "purpose"}:
+                    exprs.append(kw.value)
+                elif kw.arg == "notes" and isinstance(kw.value, ast.Tuple | ast.List):
+                    exprs.extend(kw.value.elts)
+    for kw in node.keywords:
+        if kw.arg in _TRANSLATION_KEY_KWARGS:
+            exprs.append(kw.value)
+    return exprs
+
+
+def _locale_key_dict_names_read_into_a_sink(tree: ast.AST, candidate_names: frozenset[str]) -> frozenset[str]:
+    """Return the candidate dict names actually read into a recognized locale-key sink.
+
+    Tracks the ``local = SOME_DICT.get(...)`` / ``local = SOME_DICT[...]``
+    indirection one hop per function/method body — the exact shape the
+    concealed incident used (``setup_state_key =
+    _PROFILE_SETUP_STATE_KEYS.get(...)``; ``tr(setup_state_key)``) — plus the
+    direct ``tr(SOME_DICT.get(...))``/``tr(SOME_DICT[...])`` shape. This is
+    what tells a dict that is genuinely a locale-key source apart from a
+    same-shaped lookup table for an unrelated domain that never reaches a
+    translation-key sink: a casilla-to-casilla reconciliation map or a
+    ``Notice.code`` machine-routing table both use the identical
+    dict-of-dotted-strings SHAPE without ever being read by ``tr()``.
+
+    Each function/method body is walked in two passes so confirmation never
+    depends on AST traversal order (``ast.walk`` is breadth-first, not
+    textual order): the first pass fully populates the local-to-dict map,
+    the second checks every call against it.
+    """
+    tr_names = _translation_call_names(tree)
+    confirmed: set[str] = set()
+    for func in ast.walk(tree):
+        if not isinstance(func, ast.FunctionDef | ast.AsyncFunctionDef):
+            continue
+        local_to_dict: dict[str, str] = {}
+        for node in ast.walk(func):
+            if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+                source = _dict_access_source(node.value)
+                if source in candidate_names:
+                    local_to_dict[node.targets[0].id] = source
+        for node in ast.walk(func):
+            if not isinstance(node, ast.Call):
+                continue
+            for argument in _call_site_key_argument_exprs(node, tr_names):
+                direct = _dict_access_source(argument)
+                if direct in candidate_names:
+                    confirmed.add(direct)
+                elif isinstance(argument, ast.Name) and argument.id in local_to_dict:
+                    confirmed.add(local_to_dict[argument.id])
+    return frozenset(confirmed)
+
+
+def _flow_confirmed_locale_key_dicts(tree: ast.AST) -> dict[str, ast.expr]:
+    """Return shape-candidate locale-key dicts actually read into a translator sink.
+
+    Combines :func:`_shape_candidate_locale_key_dicts` (structural
+    candidacy) with :func:`_locale_key_dict_names_read_into_a_sink` (real
+    usage confirmation) so neither signal alone decides: shape alone
+    over-fires on same-shaped unrelated lookup tables, and usage alone
+    cannot be checked without first knowing which names are dict-shaped
+    candidates.
+    """
+    candidates = _shape_candidate_locale_key_dicts(tree)
+    confirmed_names = _locale_key_dict_names_read_into_a_sink(tree, frozenset(candidates))
+    return {name: value for name, value in candidates.items() if name in confirmed_names}
 
 
 def _collect_dotted_literals(node: ast.expr | None, findings: set[str]) -> None:
@@ -663,25 +806,34 @@ def dict_constant_naming_violations_in_tree(tree: ast.AST) -> Iterator[tuple[int
     :func:`tr_constant_naming_violations_in_tree`. That function holds a
     ``tr(CONSTANT)`` CALL SITE to the naming contract the declaration side
     already enforces; this one holds the DECLARATION itself to the same
-    contract when it is a dict literal shaped as a locale-key registry
-    (:func:`_is_locale_key_dict_literal`) but named without the required
-    suffix.
+    contract when it is a dict literal shaped as a locale-key registry AND
+    actually read into a translator sink
+    (:func:`_flow_confirmed_locale_key_dicts`) but named without the
+    required suffix.
 
     Key DISCOVERY already resolves such a dict's values structurally —
-    :func:`_extract_locale_constant_keys` matches by shape, not only by name
-    — so this is a naming HAZARD gate, not a discovery feed: an un-suffixed
-    but shape-matched dict is exactly the concealed form that let a
-    status-token-to-key mapping orphan invisibly in production (the
-    constant carried neither the suffix nor a literal ``tr()`` call site, so
-    every downstream coverage/parity audit had no signal at all). Flagging
-    the declaration surfaces the hazard to a human even though discovery no
-    longer depends on the rename.
+    :func:`_extract_locale_constant_keys` matches the same flow-confirmed
+    set, not only by name — so this is a naming HAZARD gate, not a discovery
+    feed: an un-suffixed but confirmed dict is exactly the concealed form
+    that let a status-token-to-key mapping orphan invisibly in production
+    (the constant carried neither the suffix nor a literal ``tr()`` call
+    site, so every downstream coverage/parity audit had no signal at all).
+    Flagging the declaration surfaces the hazard to a human even though
+    discovery no longer depends on the rename.
 
-    Only a bare ``Name`` target is considered (a tuple-unpacking or
-    attribute target cannot be a module-level locale-key registry by this
-    project's convention, matching :func:`_declares_locale_key_constant`).
+    Only a MODULE-LEVEL bare ``Name`` target is considered (a direct child
+    of the tree's top-level ``body``, matching :func:`ast.Module`'s own
+    statement list) — a dict-literal local variable declared and consumed a
+    few lines apart inside one function is visibly connected to its own use
+    at a glance and is not the "invisible at a distance" hazard class a
+    module constant referenced from elsewhere in the file represents; a
+    tuple-unpacking or attribute target likewise cannot be a module-level
+    locale-key registry by this project's convention (matching
+    :func:`_declares_locale_key_constant`).
     """
-    for node in ast.walk(tree):
+    flow_confirmed = _flow_confirmed_locale_key_dicts(tree)
+    body = getattr(tree, "body", ())
+    for node in body:
         target: ast.expr | None = None
         value: ast.expr | None = None
         if isinstance(node, ast.Assign) and len(node.targets) == 1:
@@ -690,7 +842,7 @@ def dict_constant_naming_violations_in_tree(tree: ast.AST) -> Iterator[tuple[int
         elif isinstance(node, ast.AnnAssign):
             target = node.target
             value = node.value
-        if not isinstance(target, ast.Name) or not _is_locale_key_dict_literal(value):
+        if not isinstance(target, ast.Name) or flow_confirmed.get(target.id) is not value:
             continue
         if target.id.endswith(_LOCALE_KEY_CONSTANT_SUFFIXES):
             continue
