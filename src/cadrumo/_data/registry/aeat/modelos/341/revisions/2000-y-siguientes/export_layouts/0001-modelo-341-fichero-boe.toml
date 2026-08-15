@@ -1,0 +1,608 @@
+# Modelo 341 fichero-BOE export layout, transcribed position by position from the
+# bundled Diseno de Registro, source aeat-dr-341-2016, sha256
+# 7bb06cb80b865993fa60fe6ecceae8d28da1126fae5174b56cbe2cf13b534600.
+#
+# Two records, matching the design's two sheets:
+#   M34100 -- file envelope. Variable total length by design (its campo 14 is the
+#             page payload and its campo 15 has no fixed position), so only the
+#             fixed head positions 1-328 are addressable.
+#   M34101 -- pagina 01. 800 positions; the design's declared field lengths sum to
+#             exactly 800 (verified against its own "TOTAL 800 POSICIONES" row).
+#
+# Render shape follows the design's own notes on sheet M34101:
+#   Nota 2  alphanumeric (An): left-aligned, right-filled with blanks.
+#   Nota 3  numeric (Num): right-aligned, left-filled with zeros.
+#   Nota 4/5 signed numeric (N) carries "N" in position 1 for negatives. Every
+#           numbered slot on this record is declared "Num", not "N", so no field
+#           here is signed.
+# Nota 1 fixes the only admitted tipo de declaracion for batch presentation:
+# "D (Devolucion)".
+
+[[revisions."2000-y-siguientes".export_layouts]]
+id = "modelo-341-fichero-boe"
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "orden-min-2000-12-15-m341:art-2", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+# ---------------------------------------------------------------- M34100
+[[revisions."2000-y-siguientes".export_layouts.records]]
+id = "modelo-341-envelope-header"
+record_type = "envelope_header"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-envelope-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-envelope-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "341"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-envelope-page"
+offset = 6
+length = 1
+kind = "literal"
+literal = "0"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-envelope-year"
+offset = 7
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-envelope-period"
+offset = 11
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "orden-min-2000-12-15-m341:art-2", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-envelope-marker"
+offset = 13
+length = 5
+kind = "literal"
+literal = "0000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-envelope-aux-open"
+offset = 18
+length = 5
+kind = "literal"
+literal = "<AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-envelope-reserved-1"
+offset = 23
+length = 70
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+# Campo 9, "Version del Programa (Nota 1)": Nota 1 assigns it to the entidad
+# desarrolladora ("Debe consignarse el identificador de la version del SW
+# desarrollado por la ED"). Cadrumo is the developing entity for the file it
+# emits, but the design states no format and the registry declares no producer
+# key for a software version, so the slot is rendered as the design's blanks
+# rather than filled with an invented identifier.
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-envelope-program-version"
+offset = 93
+length = 4
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-envelope-reserved-2"
+offset = 97
+length = 4
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+# Campo 11, "NIF Empresa Desarrollo (Nota 1)": the NIF of the entidad
+# desarrolladora del SW. presenter.tax_id is the fact the filing carries for the
+# party that produces and presents the file, and is what the sibling M390
+# envelope writes into the byte-identical slot of the same AEAT envelope grammar.
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-envelope-developer-nif"
+offset = 101
+length = 9
+kind = "header"
+producer_key = "presenter.tax_id"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-envelope-reserved-3"
+offset = 110
+length = 213
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-envelope-aux-close"
+offset = 323
+length = 6
+kind = "literal"
+literal = "</AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+# ---------------------------------------------------------------- M34101
+[[revisions."2000-y-siguientes".export_layouts.records]]
+id = "modelo-341-page-01"
+record_type = "page_01"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "341"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-page"
+offset = 6
+length = 2
+kind = "literal"
+literal = "01"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-identifier-close"
+offset = 8
+length = 4
+kind = "literal"
+literal = "000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-reserved-admin"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+# Campo 6, "Tipo de declaracion". The design's Nota 1 admits exactly one clave
+# for batch presentation: "D (Devolucion)". Modelo 341 IS the solicitud de
+# reintegro, so D is the only value this producer can correctly write.
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-tipo-declaracion"
+offset = 13
+length = 1
+kind = "literal"
+literal = "D"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-nif"
+offset = 14
+length = 9
+kind = "header"
+producer_key = "taxpayer.tax_id"
+# A NIF exactly fills its 9-byte slot, so left_zero never pads a present value,
+# but its parse side strips real leading zeros from a low-numbered DNI.
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+# The design splits identity across two slots -- campo 8 "Apellidos o
+# Denominacion Social" and campo 9 "Nombre" -- so surnames and given name are
+# written separately here rather than through the joined full_name fact that a
+# single-slot design requires.
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-apellidos-razon-social"
+offset = 23
+length = 60
+kind = "header"
+producer_key = "taxpayer.surnames"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-nombre"
+offset = 83
+length = 20
+kind = "header"
+producer_key = "taxpayer.given_name"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-ejercicio"
+offset = 103
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-periodo"
+offset = 107
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "orden-min-2000-12-15-m341:art-2", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-importe-operaciones-01"
+offset = 109
+length = 17
+kind = "casilla"
+casilla_id = "01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-importe-operaciones-02"
+offset = 126
+length = 17
+kind = "casilla"
+casilla_id = "02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-importe-operaciones-03"
+offset = 143
+length = 17
+kind = "casilla"
+casilla_id = "03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+# Campos 15-17: "tres enteros + dos decimales" in a 5-byte Num slot.
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-porcentaje-compensacion-04"
+offset = 160
+length = 5
+kind = "casilla"
+casilla_id = "04"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-porcentaje-compensacion-05"
+offset = 165
+length = 5
+kind = "casilla"
+casilla_id = "05"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-porcentaje-compensacion-06"
+offset = 170
+length = 5
+kind = "casilla"
+casilla_id = "06"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-importe-compensacion-07"
+offset = 175
+length = 17
+kind = "casilla"
+casilla_id = "07"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-importe-compensacion-08"
+offset = 192
+length = 17
+kind = "casilla"
+casilla_id = "08"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-importe-compensacion-09"
+offset = 209
+length = 17
+kind = "casilla"
+casilla_id = "09"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-importe-total-10"
+offset = 226
+length = 17
+kind = "casilla"
+casilla_id = "10"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+# Campos 22-23: the devolucion account. Modelo 341 is a solicitud de reintegro,
+# so this is the slot the refund is paid into.
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-iban"
+offset = 243
+length = 34
+kind = "header"
+producer_key = "selected_account.iban"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+# Campo 23, "SWIFT". The registry declares no producer key for a BIC, so this
+# slot is rendered as blanks rather than filled from an invented fact. It is a
+# real content position and this is a KNOWN GAP, not an omissible slot: AEAT
+# does not mark it reserved or fill. Closing it needs a BIC fact on the selected
+# account, which is a filing-producer change outside this registry lane.
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-swift"
+offset = 277
+length = 11
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-reserved-tail"
+offset = 288
+length = 488
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-sello-electronico"
+offset = 776
+length = 13
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-end-of-record"
+offset = 789
+length = 12
+kind = "literal"
+literal = "</T34101000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
