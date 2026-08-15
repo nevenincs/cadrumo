@@ -268,17 +268,25 @@ def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:
     absent. They are now checked in the retired direction, which is the claim
     that is actually true and which still catches a silent reinstatement.
 
-    ``passphrase`` is deliberately asserted in NEITHER direction. It does not
-    resolve today, but unlike the others its absence is not a ruling: there is
-    no passphrase-change surface anywhere below the command line either, so
-    what is missing is the capability to rotate a profile credential rather
-    than one spelling of a verb. Asserting it mounted fails against the tree;
-    asserting it retired would encode a product decision nobody has taken. The
-    open question is tracked as its own row, and this module makes no claim
-    about it rather than quietly answering it.
+    ``passphrase`` is asserted mounted and CURRENTLY FAILS. That is deliberate
+    and the test is not broken: the verb does not resolve, and unlike the
+    retired spellings its absence is not a ruling. There is no
+    passphrase-change surface anywhere below the command line either -- no
+    application-layer rotation function, only unorchestrated primitives in the
+    custody package -- so what is missing is the capability to rotate a profile
+    credential, not one spelling of a verb.
+
+    Leave this assertion failing until that is decided. Asserting the verb
+    retired would encode a product decision nobody has taken, and deleting the
+    assertion would turn a missing capability into a green module that has
+    forgotten it. A red test naming the gap is the honest state while the
+    question is open.
     """
 
-    for verb in ("login", "logout"):
+    # ``passphrase`` is expected to FAIL here. See the docstring: credential
+    # rotation is absent from every layer, not retired by any decision, and
+    # this assertion is what keeps that visible until someone rules on it.
+    for verb in ("login", "logout", "passphrase"):
         help_result = _run_cadrumo(tmp_path, ("config", verb, "--help"))
         assert help_result.returncode == 0, _combined_output(help_result)
         assert verb in _combined_output(help_result)
