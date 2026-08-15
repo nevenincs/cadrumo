@@ -13,8 +13,8 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from dev.locales import LocaleError, LocaleManager, check_colanding
-from dev.locales._colanding import resolve_change
+
+from dev.locales import LocaleError, LocaleManager, check_colanding, resolve_change
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

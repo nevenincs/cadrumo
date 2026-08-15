@@ -11,6 +11,7 @@ data_type = "name"
 semantic_role = "m189_declarante_razon_social"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t1-razon-social"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
 
@@ -22,6 +23,7 @@ data_type = "text"
 semantic_role = "m189_tipo_soporte"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t1-tipo-soporte"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
 
@@ -33,6 +35,7 @@ data_type = "text"
 semantic_role = "m189_persona_relacion"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t1-persona-relacion"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
 
@@ -44,6 +47,7 @@ data_type = "integer"
 semantic_role = "m189_numero_justificante"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t1-numero-justificante"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
 
@@ -55,6 +59,7 @@ data_type = "text"
 semantic_role = "m189_declaracion_complementaria_sustitutiva"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t1-complementaria-sustitutiva"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
 
@@ -66,6 +71,7 @@ data_type = "integer"
 semantic_role = "m189_numero_identificativo_anterior"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t1-numero-identificativo-anterior"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
 
@@ -77,6 +83,7 @@ data_type = "integer"
 semantic_role = "m189_numero_total_declarados"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t1-numero-total-declarados"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
 
@@ -88,6 +95,7 @@ data_type = "money"
 semantic_role = "m189_valoracion_total"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t1-valoracion-total"]
 legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero"]
 source_refs = [
     "boe-modelo-189-base-order",
@@ -106,6 +114,7 @@ data_type = "nif"
 semantic_role = "m189_representante_legal_nif"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t2-nif-representante-legal"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
 
@@ -117,6 +126,7 @@ data_type = "province_code"
 semantic_role = "m189_codigo_provincia"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t2-codigo-provincia"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
 
@@ -128,6 +138,7 @@ data_type = "text"
 semantic_role = "m189_clave_mercado"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t2-clave-mercado"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
 
@@ -139,6 +150,7 @@ data_type = "text"
 semantic_role = "m189_clave_identificacion"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t2-clave-identificacion"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
 
@@ -150,6 +162,7 @@ data_type = "text"
 semantic_role = "m189_identificacion_valores"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t2-identificacion-valores"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
 
@@ -161,6 +174,7 @@ data_type = "text"
 semantic_role = "m189_clave_representacion"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t2-clave-representacion"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
 
@@ -172,6 +186,7 @@ data_type = "decimal"
 semantic_role = "m189_porcentaje_participacion"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t2-porcentaje-participacion"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
 
@@ -183,5 +198,6 @@ data_type = "text"
 semantic_role = "m189_clave_titularidad"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t2-clave-titularidad"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]

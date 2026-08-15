@@ -463,7 +463,9 @@ def test_root_heading_identity_contract_refuses_a_product_rename() -> None:
     having if it still bites the thing the pin was there for.
     """
 
-    reworded = {"cli": {"operator_surface": {"help": {"root": {"heading": "CADRUMO - anything at all (AEAT)"}}}}}
+    reworded: dict[str, LocaleNode] = {
+        "cli": {"operator_surface": {"help": {"root": {"heading": "CADRUMO - anything at all (AEAT)"}}}}
+    }
     _assert_identity_contract(
         reworded,
         "cli",
@@ -480,9 +482,12 @@ def test_root_heading_identity_contract_refuses_a_product_rename() -> None:
         "CADRUMO - local-first workflow with CADRUMO",
         "CADRUMO - local-first workflow with the AEAT, run aeat config check",
     ):
+        corrupted_catalogue: dict[str, LocaleNode] = {
+            "cli": {"operator_surface": {"help": {"root": {"heading": corrupted}}}}
+        }
         with pytest.raises(AssertionError):
             _assert_identity_contract(
-                {"cli": {"operator_surface": {"help": {"root": {"heading": corrupted}}}}},
+                corrupted_catalogue,
                 "cli",
                 "operator_surface",
                 "help",
@@ -533,9 +538,10 @@ def test_a_mounted_family_may_not_hold_its_catalogue_strings() -> None:
             expected=frozenset({"Cadrumo"}),
         )
 
+    populated: dict[str, LocaleNode] = {"cli": {mounted.root.value: {mounted.child: {"other": "Cadrumo"}}}}
     with pytest.raises(AssertionError, match="absent from the catalogue"):
         _assert_command_family_catalogue_strings(
-            {"cli": {mounted.root.value: {mounted.child: {"other": "Cadrumo"}}}},
+            populated,
             mounted_namespace,
             leaves=("some_prompt",),
             expected=frozenset({"Cadrumo"}),
@@ -545,7 +551,7 @@ def test_a_mounted_family_may_not_hold_its_catalogue_strings() -> None:
 def test_a_held_family_string_still_carries_the_naming_contract() -> None:
     """Held is not unchecked: a present string still answers to the contract."""
 
-    catalogue = {
+    catalogue: dict[str, LocaleNode] = {
         "cli": {
             "config": {
                 "passphrase": {

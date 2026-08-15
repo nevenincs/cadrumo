@@ -27,20 +27,30 @@ _PROFILE_CUSTODY_CATEGORIES: Final[frozenset[StorageCategory]] = frozenset(
 )
 
 
-def profile_custody_directory_name(profile_id: UUID) -> str:
+def profile_custody_directory_name(profile_id: object) -> str:
     """Return the sole directory name a capsule for ``profile_id`` may occupy.
 
-    This is where a profile identity becomes a filesystem name, and the
-    annotation alone does not bind at runtime.  A bucket identity is a plain
-    string in much of the system and its accepted set includes system-scoped
-    sentinels that are not profile UUIDs at all, so a value of the wrong type
-    arriving here would compose a directory beside real capsules -- or, for a
-    relative-path token, one outside the buckets root entirely.  The check is
-    therefore on the value, not on the signature.
+    This is where a profile identity becomes a filesystem name, so the value is
+    treated as untrusted here regardless of what the calling signature claims --
+    the same posture :func:`~._zeroise.zeroise` takes at the wipe boundary, and
+    for the same reason: the damage of an unchecked value is silent. A bucket
+    identity is a plain string in much of the system and its accepted set
+    includes system-scoped sentinels that are not profile UUIDs at all, so a
+    value of the wrong type arriving here would compose a directory beside real
+    capsules -- or, for a relative-path token, one outside the buckets root
+    entirely.
 
     Shape rejection reuses the substrate's :func:`safe_repository_id` rather
     than restating separator and dot-token rules locally, so this boundary
     cannot drift from every other identifier-to-filename boundary.
+
+    Args:
+        profile_id: Must be a :class:`~uuid.UUID`. Any other value, including a
+            string that merely parses as one, is rejected at runtime.
+
+    Returns:
+        The canonical directory name, which is exactly the name the anchored
+        capsule discoverer recognises.
 
     Raises:
         PathContainmentError: When ``profile_id`` is not a :class:`~uuid.UUID`,

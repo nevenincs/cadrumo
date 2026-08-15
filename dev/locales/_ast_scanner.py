@@ -437,9 +437,7 @@ def declares_locale_keys(module: Path) -> bool:
     """
     if module.name in _UNSCANNED_MODULE_NAMES:
         return False
-    return not (
-        module.name.startswith("test_") or module.name.startswith("_test_") or "/tests/" in module.as_posix()
-    )
+    return not (module.name.startswith("test_") or module.name.startswith("_test_") or "/tests/" in module.as_posix())
 
 
 def _parse_module_source(source: str, filename: str) -> ast.Module | None:

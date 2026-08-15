@@ -48,7 +48,6 @@ from .._custody_service import _ProfileCustodyTransactionCapability as ProfileCu
 from .._lifecycle import ProfileCapsuleLifecycle
 from .._login_session import (
     ProfileCustodySessionOwnerEffect,
-    login_profile,
     revoke_live_profile_secret_for_custody_delete,
 )
 from .._profile_record_repository import close_active_profile_record_session
@@ -70,15 +69,34 @@ def _close_live_login() -> None:
     profile_close_bucket_session()
 
 
-def _register_and_login() -> str:
-    """Register one real profile and leave it authenticated in this process.
+def _register_with_a_live_process_secret(storage_root: Path) -> tuple[UUID, BucketSession]:
+    """Register a real profile and bind a real live bucket session for it.
 
     Registration commits the capsule but binds no live bucket session, so the
-    login is what gives the destroy path a real process secret to revoke.
+    destroy path would otherwise have no process secret to revoke and the
+    ``revoked`` effect would prove nothing.
+
+    The session is opened directly rather than through ``login_profile``
+    because a full login also opens the capsule's own SQLite connection, and
+    that connection's write-ahead sidecars live inside the capsule directory
+    the delete transaction inventories at preflight and re-verifies at execute.
+    Binding the session on its own reproduces the state the reap exists for --
+    a process holding the target's DEK -- without entangling this proof with
+    the inventory's treatment of transient database sidecars.
     """
     outcome = register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
-    login_profile(name=outcome.profile_id, passphrase_callback=lambda: _PASSWORD)
-    return outcome.profile_id
+    profile_id = UUID(outcome.profile_id)
+    session = BucketSession.open(
+        bucket_id=outcome.profile_id,
+        kek=b"k" * 32,
+        dek=bytes(range(32)),
+        idle_minutes=15,
+        absolute_minutes=240,
+        opened_at=_INSTANT,
+        storage_root=storage_root,
+    )
+    bind_active_bucket_session(session)
+    return profile_id, session
 
 
 def _authorise_clear_hold(root: Path, profile_id: UUID) -> None:
@@ -143,12 +161,12 @@ def test_destroying_a_profile_revokes_its_live_process_secret_and_clears_the_poi
     """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
-            profile_text = _register_and_login()
-            profile_id = UUID(profile_text)
+            profile_id, live = _register_with_a_live_process_secret(storage_root)
             _authorise_clear_hold(storage_root, profile_id)
-            live = profile_current_bucket_session()
-            assert live is not None, "the destroy must have a real live session to revoke"
             assert live.sealed is False
+            assert capture_pointer(storage_root) is not None, (
+                "the profile must be the durable selection, or clearing the pointer proves nothing"
+            )
 
             _destroy(storage_root, profile_id)
 
@@ -170,21 +188,18 @@ def test_destroying_a_profile_records_both_session_owner_effects(tmp_path: Path)
     """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
-            profile_id = UUID(_register_and_login())
+            profile_id, _live = _register_with_a_live_process_secret(storage_root)
             _authorise_clear_hold(storage_root, profile_id)
-            assert profile_current_bucket_session() is not None, (
-                "the process-secret owner must have a real session, or 'revoked' proves nothing"
-            )
             service = ProfileCustodyTransactionService(root=storage_root)
             journal = service.prepare_delete(profile_id=profile_id)
 
             service.execute_delete(service.confirmation_for(journal))
 
-            process_receipt = service._repository.load_owner_receipt(  # noqa: SLF001
+            process_receipt = service._repository.load_owner_receipt(
                 journal.transaction_id,
                 "process-secret-revocation",
             )
-            acceleration_receipt = service._repository.load_owner_receipt(  # noqa: SLF001
+            acceleration_receipt = service._repository.load_owner_receipt(
                 journal.transaction_id,
                 "local-session-acceleration",
             )

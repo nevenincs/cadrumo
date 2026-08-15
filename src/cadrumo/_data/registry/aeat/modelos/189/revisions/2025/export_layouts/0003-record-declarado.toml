@@ -1,0 +1,357 @@
+# Registro de tipo 2: registro de declarado. 500 bytes, 21 official positions.
+# 1+3+4+9+9+9+40+2+2+1+1+1+12+1+12+16+5+1+17+18+336 = 500.
+
+[[revisions."2025".export_layouts]]
+id = "modelo-189-fichero-2023"
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-189-declarado"
+record_type = "declarado"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+
+# Posicion 1. TIPO DE REGISTRO. Constante '2'.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-record-type"
+offset = 1
+length = 1
+kind = "literal"
+literal = "2"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+# Posiciones 2-4. MODELO DECLARACION. Constante '189'.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "189"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+# Posiciones 5-8. EJERCICIO. Consignar lo contenido en el registro de tipo 1.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-ejercicio"
+offset = 5
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+# Posiciones 9-17. N.I.F. DEL DECLARANTE. Consignar lo contenido en el tipo 1.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-nif-declarante"
+offset = 9
+length = 9
+kind = "header"
+producer_key = "presenter.tax_id"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+# Posiciones 18-26. N.I.F. DEL DECLARADO.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-nif-declarado"
+offset = 18
+length = 9
+kind = "casilla"
+casilla_id = "declarado-nif"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+# Posiciones 27-35. N.I.F. DEL REPRESENTANTE LEGAL. Solo para menores de 14
+# anos; en cualquier otro caso el campo se rellenara a espacios.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-nif-representante-legal"
+offset = 27
+length = 9
+kind = "casilla"
+casilla_id = "representante-legal-nif"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+# Posiciones 36-75. APELLIDOS Y NOMBRE, RAZON SOCIAL O DENOMINACION DEL DECLARADO.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-nombre-declarado"
+offset = 36
+length = 40
+kind = "casilla"
+casilla_id = "declarado-nombre"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+# Posiciones 76-77. CODIGO PROVINCIA. Numerico de dos digitos (01-52; 99 para
+# no residentes sin establecimiento permanente).
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-codigo-provincia"
+offset = 76
+length = 2
+kind = "casilla"
+casilla_id = "codigo-provincia"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+# Posiciones 78-79. CODIGO PAIS. Alfabetico, Orden EHA/3496/2011 Anexo II.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-codigo-pais"
+offset = 78
+length = 2
+kind = "casilla"
+casilla_id = "codigo-pais"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1284-2023:art-11"]
+source_refs = [
+    "boe-modelo-189-base-order",
+    "boe-modelo-189-2023-amendment-hfp-1284",
+    "aeat-dr-189-2023",
+]
+
+# Posicion 80. CLAVE DE MERCADO. Alfabetico: A, B, C, D o E.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-clave-mercado"
+offset = 80
+length = 1
+kind = "casilla"
+casilla_id = "clave-mercado"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+# Posicion 81. CLAVE DE VALOR. Claves A a F (alfabeticas).
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-clave-valor"
+offset = 81
+length = 1
+kind = "casilla"
+casilla_id = "clave-valor"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero"]
+source_refs = [
+    "boe-modelo-189-base-order",
+    "boe-modelo-189-2023-amendment-hfp-1180",
+    "aeat-dr-189-2023",
+]
+
+# Posicion 82. CLAVE DE IDENTIFICACION. Numerico: 1 ISIN, 2 valores extranjeros
+# sin ISIN, 3 NIF. Solo se informa cuando la clave de valor es A, B o C.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-clave-identificacion"
+offset = 82
+length = 1
+kind = "casilla"
+casilla_id = "clave-identificacion"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+# Posiciones 83-94. IDENTIFICACION DE LOS VALORES. Codigo ISIN de 12 posiciones,
+# clave ZXX, o NIF. Solo se informa cuando la clave de valor es A, B o C.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-identificacion-valores"
+offset = 83
+length = 12
+kind = "casilla"
+casilla_id = "identificacion-valores"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+# Posicion 95. CLAVE DE REPRESENTACION. Alfabetico: A anotaciones en cuenta,
+# B no representados mediante anotaciones en cuenta.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-clave-representacion"
+offset = 95
+length = 1
+kind = "casilla"
+casilla_id = "clave-representacion"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+# Posiciones 96-107. BLANCOS.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-blancos-96"
+offset = 96
+length = 12
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+# Posiciones 108-123. VALORACION. 108 SIGNO ('N' si es menor que cero, en otro
+# caso espacio), 109-121 parte entera, 122-123 parte decimal.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-valoracion"
+offset = 108
+length = 16
+kind = "casilla"
+casilla_id = "valoracion"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero"]
+source_refs = [
+    "boe-modelo-189-base-order",
+    "boe-modelo-189-2023-amendment-hfp-1180",
+    "aeat-dr-189-2023",
+]
+
+# Posiciones 124-128. PORCENTAJE DE PARTICIPACION. 124-126 parte entera,
+# 127-128 parte decimal.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-porcentaje-participacion"
+offset = 124
+length = 5
+kind = "casilla"
+casilla_id = "porcentaje-participacion"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+# Posicion 129. CLAVE DE TITULARIDAD. T titular pleno propietario, N nudo propietario.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-clave-titularidad"
+offset = 129
+length = 1
+kind = "casilla"
+casilla_id = "clave-titularidad"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+# Posiciones 130-146. NUMERO DE VALORES. 130-140 parte entera, 141-146 parte
+# decimal. Solo se informa cuando la clave de valor es A, B o C.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-numero-valores"
+offset = 130
+length = 17
+kind = "casilla"
+casilla_id = "numero-valores"
+data_type = "decimal"
+decimals = 6
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1284-2023:art-11"]
+source_refs = [
+    "boe-modelo-189-base-order",
+    "boe-modelo-189-2023-amendment-hfp-1284",
+    "aeat-dr-189-2023",
+]
+
+# Posiciones 147-164. NOMINAL UNITARIO DE LOS VALORES. 147-160 parte entera,
+# 161-164 parte decimal. Se consigna con la clave de valor "A".
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-nominal-unitario"
+offset = 147
+length = 18
+kind = "casilla"
+casilla_id = "nominal-unitario-valores"
+data_type = "decimal"
+decimals = 4
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1284-2023:art-11"]
+source_refs = [
+    "boe-modelo-189-base-order",
+    "boe-modelo-189-2023-amendment-hfp-1284",
+    "aeat-dr-189-2023",
+]
+
+# Posiciones 165-500. BLANCOS.
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-189-t2-blancos-165"
+offset = 165
+length = 336
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]

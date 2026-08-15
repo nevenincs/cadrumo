@@ -29,7 +29,7 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.master_key import login_throttle_path
+from ....adapters.persistence.storage.master_key import current_active_bucket_session, login_throttle_path
 from ....application.profile_custody import (
     profile_current_bucket_session,
     profile_record_login_failure,
@@ -99,11 +99,15 @@ def test_logout_seals_the_live_session_it_evicts(tmp_path: Path) -> None:
     Eviction alone would leave a live key buffer reachable by anything still
     holding the object. The strong close seals it in place, so a retained
     reference is worthless rather than merely orphaned.
+
+    The concrete session is read through the storage facade rather than the
+    application port because sealing is a property of the key buffer the
+    adapter owns; the port deliberately exposes no such handle.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
             _register_and_login(storage_root)
-            session = profile_current_bucket_session()
+            session = current_active_bucket_session()
             assert session is not None
             assert session.sealed is False
 
