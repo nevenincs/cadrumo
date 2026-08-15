@@ -126,7 +126,9 @@ def test_every_released_floor_key_names_a_live_format_tier() -> None:
     a floor, so with ``bucket_dek`` and ``bucket_manifest`` declared durable but
     absent from the hand-list, enrolling them failed THIS gate while omitting
     them failed that one. No flip mapping could satisfy both. Both were
-    vacuously green, so the contradiction was latent rather than red.
+    vacuously green, so the contradiction was latent rather than red. (Both
+    formats have since been de-enrolled, their implementations having been
+    retired; the deadlock they caused is the reason this set is derived.)
 
     Deriving makes that deadlock unrepresentable rather than merely resolved:
     the two gates now read one declaration, so widening the inventory cannot
@@ -181,12 +183,12 @@ def test_every_durable_format_carries_a_frozen_floor() -> None:
         # tiers frozen, the three durable formats with no floor machinery omitted.
         (
             {"secure_object": 1, "bundle": 3, "archive": 3},
-            ("bucket_database_file", "bucket_dek", "bucket_manifest", "operation_journal", "secret_index"),
+            ("bucket_database_file", "operation_journal", "secret_index"),
         ),
         # One omission is still an omission.
         (
-            {"secure_object": 1, "bundle": 3, "archive": 3, "bucket_manifest": 2},
-            ("bucket_database_file", "bucket_dek", "operation_journal", "secret_index"),
+            {"secure_object": 1, "bundle": 3, "archive": 3, "secret_index": 2},
+            ("bucket_database_file", "operation_journal"),
         ),
         # Freezing only the substrate leaves every other durable format bare.
         (
@@ -194,8 +196,6 @@ def test_every_durable_format_carries_a_frozen_floor() -> None:
             (
                 "archive",
                 "bucket_database_file",
-                "bucket_dek",
-                "bucket_manifest",
                 "bundle",
                 "operation_journal",
                 "secret_index",
