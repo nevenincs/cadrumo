@@ -1,0 +1,588 @@
+# Modelo 390 pagina 6 for revision 2024: apartados 7, 8, 9 and 10.
+#
+# Each box below was proved to be the SAME official box as revision
+# 2022's: the 2024 design row and the 2022 design row share
+# offset, length and a byte-identical description, and 2022 writes that
+# coordinate from a casilla-kind export field. Where that proof failed the row
+# was left unwritten rather than assumed -- see the notes at the end.
+#
+# Boxes [658], [84] and [659] appear TWICE on this page: once in apartado 7
+# and once restated verbatim in apartado 8 (tributacion por razon de
+# territorio). Each is one casilla carrying two export_refs, never two
+# casillas.
+#
+# GROUNDING GAP: the apartado-8 territorial split is governed by the Concierto
+# Economico con el Pais Vasco (Ley 12/2002 art. 27) and the Convenio Economico
+# con Navarra (Ley 28/1990). Neither is in the legal catalogue -- ley-12-2002
+# is present only at art. 15, which grounds Impuesto sobre Sociedades and NOT
+# IVA -- so those casillas carry the LIVA framework refs of the apartado-7
+# result boxes beside them rather than a citation that would be false.
+#
+# Offsets, lengths and box numbers transcribed from aeat-dr-390-2024
+# (sha256 8be79bacc86034c3c7951d2ea671c030800ed9a4cc3f52b9e5d407bc19bc03f0), pagina 6.
+
+# Box [658] - '7. Resultado liquidación anual - Regularización cuotas art. 80.Cinco.5ª LIVA [658]' (offset 13, length 17 and offset 123, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.regularizacion-cuotas-art-80-cinco-5"
+number = "658"
+section = ["iva", "anual", "resultado"]
+data_type = "money"
+semantic_role = "iva_regularizacion_cuotas_art_80_cinco_5"
+continuidad_id = "iva-regularizacion-cuotas-art-80-cinco-5"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-regularizacion-cuotas-art-80-cinco-5", "modelo-390-page-06-casilla-territorio-regularizacion-cuotas-art-80-cinco-5"]
+
+# Box [84] - '7. Resultado liquidación anual - Suma de resultados [84]' (offset 30, length 17 and offset 140, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.suma-resultados"
+number = "84"
+section = ["iva", "anual", "resultado"]
+data_type = "money"
+semantic_role = "iva_suma_resultados"
+continuidad_id = "iva-suma-resultados"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-suma-resultados", "modelo-390-page-06-casilla-territorio-suma-resultados"]
+
+# Box [659] - '7. Resultado liquidación anual - IVA a la importación liquidado por la Aduana (sólo sujetos pasivos con opción de diferimiento) [659]' (offset 47, length 17 and offset 174, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.iva-importacion-diferimiento"
+number = "659"
+section = ["iva", "anual", "resultado"]
+data_type = "money"
+semantic_role = "iva_iva_importacion_diferimiento"
+continuidad_id = "iva-iva-importacion-diferimiento"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-iva-importacion-diferimiento", "modelo-390-page-06-casilla-territorio-iva-importacion-diferimiento"]
+
+# Box [85] - '7. Resultado liquidación anual - Compensación de cuotas ejercicio anterior [85]' (offset 64, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.compensacion-cuotas-ejercicio-anterior"
+number = "85"
+section = ["iva", "anual", "resultado"]
+data_type = "money"
+semantic_role = "iva_compensacion_cuotas_ejercicio_anterior"
+continuidad_id = "iva-compensacion-cuotas-ejercicio-anterior"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-compensacion-cuotas-ejercicio-anterior"]
+
+# Box [86] - '7. Resultado liquidación anual - Resultado de la liquidación [86]' (offset 81, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.resultado-liquidacion"
+number = "86"
+section = ["iva", "anual", "resultado"]
+data_type = "money"
+semantic_role = "iva_resultado_liquidacion"
+continuidad_id = "iva-resultado-liquidacion"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-resultado-liquidacion"]
+
+# Box [87] - '8. Tributación razón de territorio - Administraciones - Territorio común [87]' (offset 98, length 5).
+[[revisions."2024".casillas]]
+id = "iva.anual.territorio.comun.porcentaje"
+number = "87"
+section = ["iva", "anual", "tributacion_territorio"]
+data_type = "ratio"
+semantic_role = "iva_territorio_comun_porcentaje"
+continuidad_id = "iva-territorio-comun-porcentaje"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-territorio-comun-porcentaje"]
+
+# Box [88] - '8. Tributación razón de territorio - Administraciones - Álava [88]' (offset 103, length 5).
+[[revisions."2024".casillas]]
+id = "iva.anual.territorio.alava.porcentaje"
+number = "88"
+section = ["iva", "anual", "tributacion_territorio"]
+data_type = "ratio"
+semantic_role = "iva_territorio_alava_porcentaje"
+continuidad_id = "iva-territorio-alava-porcentaje"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-territorio-alava-porcentaje"]
+
+# Box [89] - '8. Tributación razón de territorio - Administraciones - Guipúzcoa [89]' (offset 108, length 5).
+[[revisions."2024".casillas]]
+id = "iva.anual.territorio.guipuzcoa.porcentaje"
+number = "89"
+section = ["iva", "anual", "tributacion_territorio"]
+data_type = "ratio"
+semantic_role = "iva_territorio_guipuzcoa_porcentaje"
+continuidad_id = "iva-territorio-guipuzcoa-porcentaje"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-territorio-guipuzcoa-porcentaje"]
+
+# Box [90] - '8. Tributación razón de territorio - Administraciones - Vizcaya [90]' (offset 113, length 5).
+[[revisions."2024".casillas]]
+id = "iva.anual.territorio.vizcaya.porcentaje"
+number = "90"
+section = ["iva", "anual", "tributacion_territorio"]
+data_type = "ratio"
+semantic_role = "iva_territorio_vizcaya_porcentaje"
+continuidad_id = "iva-territorio-vizcaya-porcentaje"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-territorio-vizcaya-porcentaje"]
+
+# Box [91] - '8. Tributación razón de territorio - Administraciones - Navarra [91]' (offset 118, length 5).
+[[revisions."2024".casillas]]
+id = "iva.anual.territorio.navarra.porcentaje"
+number = "91"
+section = ["iva", "anual", "tributacion_territorio"]
+data_type = "ratio"
+semantic_role = "iva_territorio_navarra_porcentaje"
+continuidad_id = "iva-territorio-navarra-porcentaje"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-territorio-navarra-porcentaje"]
+
+# Box [92] - '8. Tributación razón de territorio - Administraciones - Resultado atribuible a territorio común [92]' (offset 157, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.territorio.resultado-atribuible-comun"
+number = "92"
+section = ["iva", "anual", "tributacion_territorio"]
+data_type = "money"
+semantic_role = "iva_territorio_resultado_atribuible_comun"
+continuidad_id = "iva-territorio-resultado-atribuible-comun"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-territorio-resultado-atribuible-comun"]
+
+# Box [93] - '8. Tributación razón de territorio - Administraciones - Compens. cuotas ej. anterior atrib. territ. com. [93]' (offset 191, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.territorio.compensacion-atribuible-comun"
+number = "93"
+section = ["iva", "anual", "tributacion_territorio"]
+data_type = "money"
+semantic_role = "iva_territorio_compensacion_atribuible_comun"
+continuidad_id = "iva-territorio-compensacion-atribuible-comun"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-territorio-compensacion-atribuible-comun"]
+
+# Box [94] - '8. Tributación razón de territorio - Administraciones - Resultado liq. anual atribuible territ. comun [94]' (offset 208, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.territorio.resultado-anual-atribuible-comun"
+number = "94"
+section = ["iva", "anual", "tributacion_territorio"]
+data_type = "money"
+semantic_role = "iva_territorio_resultado_anual_atribuible_comun"
+continuidad_id = "iva-territorio-resultado-anual-atribuible-comun"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-territorio-resultado-anual-atribuible-comun"]
+
+# Box [95] - '9. Resultado de las liquidaciones - Total resultados a ingresar autoliquidaciones de IVA del ejercicio [95]' (offset 225, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.liquidaciones.total-a-ingresar"
+number = "95"
+section = ["iva", "anual", "liquidaciones"]
+data_type = "money"
+semantic_role = "iva_liquidaciones_total_a_ingresar"
+continuidad_id = "iva-liquidaciones-total-a-ingresar"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-liquidaciones-total-a-ingresar"]
+
+# Box [96] - '9. Resultado de las liquidaciones - Total devoluc. mensuales IVA suj. pasivos Regtro. de devolución mensual [96]' (offset 242, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.liquidaciones.total-devoluciones-mensuales"
+number = "96"
+section = ["iva", "anual", "liquidaciones"]
+data_type = "money"
+semantic_role = "iva_liquidaciones_total_devoluciones_mensuales"
+continuidad_id = "iva-liquidaciones-total-devoluciones-mensuales"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-116", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-liquidaciones-total-devoluciones-mensuales"]
+
+# Box [524] - '9. Resultado de las liquidaciones - Total devoluc. Por cuotas en la adquisicion de elementos de transporte [524]' (offset 259, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.liquidaciones.total-devoluciones-elementos-transporte"
+number = "524"
+section = ["iva", "anual", "liquidaciones"]
+data_type = "money"
+semantic_role = "iva_liquidaciones_total_devoluciones_elementos_transporte"
+continuidad_id = "iva-liquidaciones-total-devoluciones-elementos-transporte"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-116", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-liquidaciones-total-devoluciones-elementos-transporte"]
+
+# Box [98] - '9. Resultado de las liquidaciones - Resultado declaración-liquidación último periodo - A devolver [98]' (offset 293, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.liquidaciones.ultimo-periodo-a-devolver"
+number = "98"
+section = ["iva", "anual", "liquidaciones"]
+data_type = "money"
+semantic_role = "iva_liquidaciones_ultimo_periodo_a_devolver"
+continuidad_id = "iva-liquidaciones-ultimo-periodo-a-devolver"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-116", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-liquidaciones-ultimo-periodo-a-devolver"]
+
+# Box [525] - '9. Resultado de las liquidaciones - Total resultados positivos del ejercicio (modelo 322) [525]' (offset 327, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.liquidaciones.total-resultados-positivos-m322"
+number = "525"
+section = ["iva", "anual", "liquidaciones"]
+data_type = "money"
+semantic_role = "iva_liquidaciones_total_resultados_positivos_m322"
+continuidad_id = "iva-liquidaciones-total-resultados-positivos-m322"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-liquidaciones-total-resultados-positivos-m322"]
+
+# Box [526] - '9. Resultado de las liquidaciones - Total resultados negativos del ejercicio (modelo 322) [526]' (offset 344, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.liquidaciones.total-resultados-negativos-m322"
+number = "526"
+section = ["iva", "anual", "liquidaciones"]
+data_type = "money"
+semantic_role = "iva_liquidaciones_total_resultados_negativos_m322"
+continuidad_id = "iva-liquidaciones-total-resultados-negativos-m322"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-liquidaciones-total-resultados-negativos-m322"]
+
+# Box [99] - '10. Volumen de operaciones - Operaciones en régimen general [99]' (offset 361, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.regimen-general"
+number = "99"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_regimen_general"
+continuidad_id = "iva-volumen-regimen-general"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-volumen-regimen-general"]
+
+# Box [653] - '10. Volumen de operaciones - Operaciones régimen especial del criterio de caja [653]' (offset 378, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.criterio-caja"
+number = "653"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_criterio_caja"
+continuidad_id = "iva-volumen-criterio-caja"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-163-decies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-volumen-criterio-caja"]
+
+# Box [105] - '10. Volumen de operaciones - Operaciones exentas sin derecho a deducción [105]' (offset 429, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.exentas-sin-derecho-deduccion"
+number = "105"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_exentas_sin_derecho_deduccion"
+continuidad_id = "iva-volumen-exentas-sin-derecho-deduccion"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-20", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-volumen-exentas-sin-derecho-deduccion"]
+
+# Box [110] - '10. Volumen de operaciones - Operaciones no sujetas por reglas de localización (excepto las incluidas en la casilla 126) [110]' (offset 446, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.no-sujetas-reglas-localizacion"
+number = "110"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_no_sujetas_reglas_localizacion"
+continuidad_id = "iva-volumen-no-sujetas-reglas-localizacion"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-68", "ley-37-1992:art-69", "ley-37-1992:art-70", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-volumen-no-sujetas-reglas-localizacion"]
+
+# Box [125] - '10. Volumen de operaciones - Operaciones sujetas con inversión del sujeto pasivo [125]' (offset 463, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.inversion-sujeto-pasivo"
+number = "125"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_inversion_sujeto_pasivo"
+continuidad_id = "iva-volumen-inversion-sujeto-pasivo"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-84", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-volumen-inversion-sujeto-pasivo"]
+
+# Box [126] - '10. Volumen de operaciones - OSS. Operaciones no sujetas por reglas de localización acogidas a la OSS [126]' (offset 480, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.oss-no-sujetas-localizacion"
+number = "126"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_oss_no_sujetas_localizacion"
+continuidad_id = "iva-volumen-oss-no-sujetas-localizacion"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-163-noniesdecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-volumen-oss-no-sujetas-localizacion"]
+
+# Box [127] - '10. Volumen de operaciones - OSS. Operaciones sujetas y acogidas a la OSS [127]' (offset 497, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.oss-sujetas"
+number = "127"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_oss_sujetas"
+continuidad_id = "iva-volumen-oss-sujetas"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-163-noniesdecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-volumen-oss-sujetas"]
+
+# Box [128] - '10. Volumen de operaciones - Operaciones intragrupo valoradas conforme a lo dispuesto en los arts. 78 y 79 LIVA [128]' (offset 514, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.intragrupo-arts-78-79"
+number = "128"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_intragrupo_arts_78_79"
+continuidad_id = "iva-volumen-intragrupo-arts-78-79"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-163-sexies", "ley-37-1992:art-79", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-volumen-intragrupo-arts-78-79"]
+
+# Box [100] - '10. Volumen de operaciones - Operaciones en régimen simplificado [100]' (offset 531, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.regimen-simplificado"
+number = "100"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_regimen_simplificado"
+continuidad_id = "iva-volumen-regimen-simplificado"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-volumen-regimen-simplificado"]
+
+# Box [101] - '10. Volumen de operaciones - Operaciones en régimen especias de la agricultura, ganadería y pesca [101]' (offset 548, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.reagp"
+number = "101"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_reagp"
+continuidad_id = "iva-volumen-reagp"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-124", "ley-37-1992:art-130", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-volumen-reagp"]
+
+# Box [102] - '10. Volumen de operaciones - Operaciones en régimen especial del recargo de equivalencia [102].' (offset 565, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.recargo-equivalencia"
+number = "102"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_recargo_equivalencia"
+continuidad_id = "iva-volumen-recargo-equivalencia"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-148", "ley-37-1992:art-161", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-volumen-recargo-equivalencia"]
+
+# Box [227] - '10. Volumen de operaciones - Operaciones en régimen especias de bienes usados, objetos de arte, antigüedades y objetos de colección [227].' (offset 582, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.bienes-usados"
+number = "227"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_bienes_usados"
+continuidad_id = "iva-volumen-bienes-usados"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-volumen-bienes-usados"]
+
+# Box [228] - '10. Volumen de operaciones - Operaciones en régimen especial de agencias de viajes [228].' (offset 599, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.agencias-viajes"
+number = "228"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_agencias_viajes"
+continuidad_id = "iva-volumen-agencias-viajes"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-volumen-agencias-viajes"]
+
+# Box [106] - '10. Volumen de operaciones - Entrega de bienes inmuebles y operaciones financieras no habituales [106]' (offset 616, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.inmuebles-financieras-no-habituales"
+number = "106"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_inmuebles_financieras_no_habituales"
+continuidad_id = "iva-volumen-inmuebles-financieras-no-habituales"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-volumen-inmuebles-financieras-no-habituales"]
+
+# Box [107] - '10. Volumen de operaciones - Entrega de bienes de inversion [107]' (offset 633, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.bienes-de-inversion"
+number = "107"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_bienes_de_inversion"
+continuidad_id = "iva-volumen-bienes-de-inversion"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-108", "ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-volumen-bienes-de-inversion"]
+
+# Box [108] - '10. Volumen de operaciones - Total volumen de operaciones [108]' (offset 650, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.volumen.total"
+number = "108"
+section = ["iva", "anual", "volumen_operaciones"]
+data_type = "money"
+semantic_role = "iva_volumen_total"
+continuidad_id = "iva-volumen-total"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-volumen-total"]
+
+# NOT WRITTEN -- proof failed, reported rather than assumed:
+#   @395+17: 2022 casilla 'iva.anual.volumen.entregas-intracomunitarias' is derived (formula/binding); not replicated
+#     10. Volumen de operaciones - Entregas intracomunitarias de bienes y servicios [103]
+#   @412+17: 2022 casilla 'iva.anual.volumen.exportaciones-exentas' is derived (formula/binding); not replicated
+#     10. Volumen de operaciones - Exportaciones y otras operaciones exentas con derecho a deducción [
