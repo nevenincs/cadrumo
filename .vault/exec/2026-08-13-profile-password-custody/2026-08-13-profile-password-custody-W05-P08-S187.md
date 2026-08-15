@@ -102,9 +102,10 @@ dangling target, accumulating.
 
 **The seventeen failures this row was handed are gone, and they were not the
 last wall.** The custody-session refusal appears nowhere in the reset suites
-now. Five reset-suite tests still fail and none of them is that refusal; each is
-a distinct wall the auth wall had been hiding, and each belongs to a surface
-this row does not own. The deletion preflight demands the legal hold owner's
+now. Five tests in the reset suite proper still fail, and eighteen across the
+six suites; none of them is that refusal. Each is a distinct wall the auth wall
+had been hiding, and each belongs to a surface this row does not own. The four
+are these. The deletion preflight demands the legal hold owner's
 facts and no production door writes them -- only the filing owner has a
 creation-time writer -- so a real profile cannot be deleted at all until one
 does; the reset suite forges that fact locally and says so at the site. The
@@ -113,7 +114,12 @@ but never reaches the custody transaction, which independently refuses the same
 target with no override channel. And on Windows the capsule's atomic no-replace
 rename fails with an access violation when the erasing process previously
 opened that profile's database, which the command-line entry point does for the
-active profile as a matter of course. Each deserves its own row.
+active profile as a matter of course. And the roll-forward recovery suite, which
+is the bulk of the eighteen, pauses every durable boundary on a target-state
+change rather than completing: the target's recorded fingerprint no longer
+matches at resume in a fresh process, which is the same open-handle and
+sidecar-churn family as the rename failure and not an auth fact at all. Each
+deserves its own row.
 
 **Two verification choices worth defending.** The locked-mode proof is built on
 a DANGLING target on purpose: it exercises the auth phase end to end while
@@ -127,11 +133,43 @@ capsule, and proving a branch through a path blocked elsewhere proves nothing.
 is enrolled as a regenerable persisted format, so it carries no durability
 floor, and the clearance is optional on a target that never cleared auth.
 
-**Attribution of what did not go green.** Across the six reset suites the count
-moved from eighteen failing to seventeen, with three tests added and passing;
-seventeen of the eighteen were the auth refusal and none of the seventeen
-remaining is. The authority suite is otherwise green apart from two
-certificate-source tests failing while creating a capsule on a second storage
-root with a Windows directory-anchoring error, reproduced with this step's other
-change neutered, so neither is claimed here. One reset test fails on the Windows
-file-in-use error this worktree's backing share is known for.
+**Attribution of what did not go green, re-measured after a session limit cut
+this step short and the tree moved underneath it.** Across the six reset suites
+the count today is eighteen failing and twenty-nine passing, which is the SAME
+count the retention step handed over. That is not a step that achieved nothing,
+and the arithmetic matters more than the total: reverting only this ruling from
+outside the repository gives nineteen failing and twenty-eight passing, so
+within these suites the ruling converts exactly one failure into a pass and the
+other seventeen it unblocked immediately meet a later wall. Two runs an hour
+apart produced byte-identical failure sets, so the count is stable rather than
+flaky. An earlier draft of this record claimed eighteen moving to seventeen;
+that is not reproducible at this HEAD and is corrected here rather than left
+standing. The custody-session refusal appears in no failure. The two new
+reachability tests pass, taking the seven-suite total to eighteen failing and
+thirty-one passing.
+
+**What was inherited versus verified.** The production ruling, its typed
+clearance, the reachability predicate and both test files were authored before
+the session limit, and a peer's broad sweep commit captured the production half
+into the tree's history under an unrelated subject. Nothing of it was taken on
+trust. The artefact inventory above was re-measured from scratch against a real
+capsule; the claim that in-bucket rows die with the capsule was re-proved by
+file inventory across a real custody deletion rather than read from the earlier
+record; both test files were read, run and bite-proved in both directions; and
+the failure counts were re-measured twice. The inventory turned up one thing the
+earlier pass had right but had not shown: the certificate-secret lookup digest
+is HMAC'd under the master key, so a locked caller cannot address that secret
+even knowing its name, which is what makes the recorded unknown an unknown
+rather than a laziness.
+
+**This ruling constrains the fix for the logged-in-profile deletion wall.** That
+wall is that the erasing process's own open database handles defeat the
+capsule's atomic no-replace rename, and its natural fix is to close the target's
+session before deleting. The auth phase MUST keep running before that close. It
+is the only moment a reset can remove the out-of-capsule certificate secrets at
+all, and it can only do so while the session is still open; a close moved ahead
+of it would silently downgrade every unlocked target to the locked mode and
+leave key-bound authority material behind under an honest-looking unknown. The
+current phase order already satisfies this -- auth clears, then the pointer
+reconciles, then targets delete -- so the constraint is that the close belongs
+inside the delete phase, not before the roll-forward.

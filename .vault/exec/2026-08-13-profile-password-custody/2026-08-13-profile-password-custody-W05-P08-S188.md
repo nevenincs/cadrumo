@@ -50,7 +50,7 @@ guards, and two separate tests would both stay green through it. The proof that
 the assertion is load-bearing is a runtime plugin, from outside the repository,
 that neuters the recorder: the seeding test reds and its neighbour does not.
 
-**The consumer set is fifty-eight test modules**, spanning the authority suite,
+**The consumer set is fifty-nine modules besides the door itself**, spanning the authority suite,
 modelo, ledger, review, filing, live capture, storage sync runs, user profile,
 one domain suite, and the command-line surface including its shared conftest and
 four support modules. The change is additive and cannot raise -- the recorder
@@ -60,6 +60,17 @@ storage taxonomy already declares because production registration writes it
 there.
 
 ## Notes
+
+**What was inherited versus verified.** The one-line delegation at the seeding
+door, the reset suite's matching cleanup and this record's first draft were
+authored before a session limit cut the step short, and a peer's broad sweep
+commit captured the production half into the tree's history under an unrelated
+subject. None of it was taken on trust afterwards: the door was re-read to
+confirm it delegates to the production recorder rather than a second one and
+records the empty set and nothing stronger, the consumer set was re-enumerated,
+the ripple was measured over six suites, the load-bearingness was bite-proved
+with a control the earlier pass could not obtain, and the predicted consumer
+breakage was reproduced instead of assumed.
 
 **The reset suite kept a local recording of a DIFFERENT fact, and that is the
 honest half of this step.** The deletion preflight consults two hold owners.
@@ -71,19 +82,42 @@ every seeded profile carry a fact no real profile has, turning a production gap
 into a green suite. It stays in the reset suite's own helper, with the reason at
 the site.
 
-**One consumer is now wrong and it is not mine to correct.** The deletion
-assessment suite proves that absence refuses by relying on the seeding door
-leaving no snapshot, which is exactly the fail-open shape this row closes. Its
-absence half must now forge absence explicitly -- delete the recorded snapshot,
-as this row's own test does -- rather than depend on the door's silence. That
-file belongs to another agent and is reported rather than edited; it is one line.
+**One consumer is now wrong, it is confirmed wrong by measurement, and it is
+not mine to correct.** The deletion assessment suite proves that absence refuses
+by relying on the seeding door leaving no snapshot, which is exactly the
+fail-open shape this row closes. Its absence half must now forge absence
+explicitly -- delete the recorded snapshot, as this row's own test does --
+rather than depend on the door's silence. The prediction was verified rather
+than left as an inference: the recorded-empty-versus-absent test in that suite
+now fails with a did-not-raise on the refusal it expects, which is the loud
+failure and not a silent pass. That file belongs to another agent and is
+reported rather than edited; it is one line, and it is the only regression this
+row causes anywhere in the sample.
 
-**The broad ripple sample could not be A/B compared, and the reason is worth
-recording.** The sample ran once with the change; the control run, with the
-recorder neutered, aborted at collection because a peer had added an error class
-without its registry entry mid-flight, so it contributed zero tests. The
-individual failures inspected in the sample name causes this change cannot
-produce: a caller passing a positional argument the seeding door stopped taking
-long before this row, a bucket opened before its capsule was published, and
-registry validation errors from a concurrent registry sweep. A recorder that
-never raises and writes one plaintext file cannot produce any of them.
+**The A/B comparison the earlier pass could not get was obtained, scoped
+precisely.** The control is a runtime plugin that rebinds the recorder on the
+filing package. The seeding door resolves it by a function-local import and
+picks the rebinding up; the production registration door bound the same symbol
+at module import and does not, so the control neuters the seeding door ALONE.
+Under it the reset suite goes from five failures to seven: the seeded-profile
+assessability test reds, and so does the read-only journal-view test that seeds
+through the same door. Reverting the recording therefore reds exactly what
+depends on it and nothing else, which is what makes the two green tests
+evidence rather than decoration.
+
+**The broad ripple sample is one thousand and forty-nine passing against
+sixty-two failures and five hundred and thirty-three collection errors, and none
+of the red is this row's but one.** Every error is the filing suite refusing to
+publish a capsule for a non-UUID bucket id, from the change that made the
+custody capsule the sole profile authority. The failures are the concurrent
+registry-authority sweep, a stale caller passing the vestigial state argument
+the seeding door stopped taking before this row, capsule directory anchoring
+failures on this worktree's backing share, and review-suite identity-length
+refusals. A recorder that never raises and writes one plaintext file cannot
+produce any of those, and the one failure it CAN produce is named above.
+
+**The recorder's own docstring now undercounts its callers and is not mine to
+touch.** It says two callers write the snapshot, profile creation and filing
+persistence. That remains true of production and is the claim that matters, but
+the shared seeding door is now a third caller, and a reader auditing the
+swallow-is-safe argument should know a test surface also exercises it.
