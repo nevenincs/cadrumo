@@ -662,7 +662,7 @@ def profile_refuse_unsecured_bucket_with_real_profile(session: ProfileBucketSess
 
 def profile_zeroise(buffer: object) -> None:
     """Zeroise one custody-owned mutable key buffer."""
-    master_key.zeroise(buffer)
+    custody.zeroise(buffer)
 
 
 def profile_is_authentication_failure(error: BaseException) -> bool:
@@ -727,12 +727,12 @@ def profile_session_absolute_minutes(*, storage_root: Path, bucket_id: str, defa
 
 def profile_session_path(*, storage_root: Path, profile_id: UUID) -> Path:
     """Return the persisted profile-session sidecar path."""
-    return master_key.profile_session_path(storage_root=storage_root, profile_id=profile_id)
+    return custody.profile_session_path(storage_root=storage_root, profile_id=profile_id)
 
 
 def profile_delete_session(*, storage_root: Path, profile_id: UUID) -> None:
     """Revoke the exact persisted session acceleration for one profile."""
-    master_key.delete_profile_session(storage_root=storage_root, profile_id=profile_id)
+    custody.delete_profile_session(storage_root=storage_root, profile_id=profile_id)
 
 
 def profile_resume_session(
@@ -744,7 +744,7 @@ def profile_resume_session(
     now: datetime,
 ) -> tuple[ProfileSessionResumeOutcomePort, bytes | None]:
     """Evaluate and, when valid, unwrap a persisted profile session."""
-    return master_key.resume_profile_session(
+    return custody.resume_profile_session(
         storage_root=storage_root,
         profile_id=profile_id,
         custody_generation=custody_generation,
@@ -761,10 +761,10 @@ def profile_advance_session_idle_deadline(
     new_idle_deadline: datetime,
 ) -> ProfilePersistedSessionPort:
     """Advance one receipt without exposing its keychain key to the app."""
-    return master_key.advance_persisted_profile_session_idle_deadline(
+    return custody.advance_persisted_profile_session_idle_deadline(
         storage_root=storage_root,
         profile_id=profile_id,
-        record=_substrate_handle(record, master_key.PersistedProfileSession, "persisted session receipt"),
+        record=_substrate_handle(record, custody.PersistedProfileSession, "persisted session receipt"),
         new_idle_deadline=new_idle_deadline,
     )
 
@@ -781,7 +781,7 @@ def profile_mint_session(
     absolute_minutes: int,
 ) -> ProfilePersistedSessionPort:
     """Mint and custody one optional keyring-accelerated DEK session."""
-    return master_key.mint_profile_session(
+    return custody.mint_profile_session(
         storage_root=storage_root,
         profile_id=profile_id,
         custody_generation=custody_generation,
@@ -795,7 +795,7 @@ def profile_mint_session(
 
 def profile_is_persisted_session(record: object) -> TypeGuard[ProfilePersistedSessionPort]:
     """Return whether an outcome record is the custody-owned persisted model."""
-    return isinstance(record, master_key.PersistedProfileSession)
+    return isinstance(record, custody.PersistedProfileSession)
 
 
 def profile_custody_secure_object_namespace() -> ProfileCustodySecureObjectNamespace:
