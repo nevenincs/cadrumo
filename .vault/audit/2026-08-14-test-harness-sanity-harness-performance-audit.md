@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:15da050b3cbb33ffdf49993921e625e05b7b3c34b0283dcfd0c5ad512b9dd84e'
+body_hash: 'sha256:3596eb40a1ac317329b5183963f8464c2cbe3b93a5232433b265de5b3e296114'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -706,12 +706,36 @@ Two facts make it sound, and both were checked rather than assumed:
 A fresh `set` is returned per call: the memo holds a `frozenset`, and a planted
 mutation on one caller's result was confirmed NOT to reach the next caller.
 
-    src/cadrumo/tests/test_parity.py : 193.25s before, 130.25s after
+### The wall-clock figure that had to be withdrawn
 
-with identical failure sets by name (7 failed, 25 passed both sides). The
-baseline snapshot was pinned to `de045bd45a`, chosen because it carries the C
-loader from the previous round but NOT the memo, so the figure isolates this
-change instead of re-reporting the last one.
+A first before/after read 193.25s against 130.25s on `test_parity.py` and was
+NOT reported, because re-running it did not reproduce: the failure set moved
+between runs, and at one point the module reported FEWER failures than its own
+baseline. Peers were committing fixes to the catalogues throughout, so the two
+runs had measured two different trees.
+
+A frozen A/B was built instead -- two copies of one `HEAD`, identical except
+that the control has the memo's read and write stripped -- which removes tree
+drift entirely. It reported 257.39s without the memo and 273.95s with it: no
+signal, and if anything backwards. Under peer load this machine's run-to-run
+variance on that module is larger than the effect being measured, so NO wall
+clock figure for this change is defensible.
+
+The effect was then measured directly, in-process, where a shared clock and a
+shared cache state make the comparison sound:
+
+    without the memo : scan 1 = 48.17s, scan 2 = 18.12s
+    with the memo    : scan 1 = 19.58s, scan 2 =  0.00s
+
+The second scan is what this change removes, and it costs 18.12s. Both
+configurations were instrumented to COUNT invocations as well as time them, and
+both report exactly 2 -- so the memo is proven to be exercised on this path
+rather than merely present, which the wall clock could not have established
+either way.
+
+Correctness is separately confirmed: the frozen A/B produced IDENTICAL failure
+sets (5 failed, 27 passed on both sides), which is the one thing those noisy
+runs were reliable for.
 
 ### Two instrument failures in one round, both caught by their own guards
 
