@@ -70899,6 +70899,8 @@ modelo:
           iva-base-imponible-soportada-interiores:
             help: null
             label: Base imposable de l'IVA suportat en operacions interiors corrents
+          iva-compensacion-cuotas-ejercicio-anterior:
+            label: Compensació de quotes de l'exercici anterior
           iva-cuota-autorepercutida-intracomunitaria:
             help: null
             label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
@@ -71253,6 +71255,20 @@ modelo:
           iva-isp-interior-cuota:
             help: null
             label: IVA autorepercutit meritat en operacions interiors
+          iva-liquidaciones-total-a-ingresar:
+            label: Total resultats a ingressar de les autoliquidacions d'IVA de l'exercici
+          iva-liquidaciones-total-devoluciones-elementos-transporte:
+            label: Total devolucions per quotes suportades en l'adquisició d'elements
+              de transport
+          iva-liquidaciones-total-devoluciones-mensuales:
+            label: Total devolucions mensuals d'IVA de subjectes passius inscrits
+              al Registre de devolució mensual
+          iva-liquidaciones-total-resultados-negativos-m322:
+            label: Total resultats negatius de l'exercici (model 322)
+          iva-liquidaciones-total-resultados-positivos-m322:
+            label: Total resultats positius de l'exercici (model 322)
+          iva-liquidaciones-ultimo-periodo-a-devolver:
+            label: Resultat de la declaració-liquidació de l'últim període - a retornar
           iva-modificacion-bases-cuotas-base:
             label: Modificació de bases imposables i quotes - base imposable
           iva-modificacion-bases-cuotas-cuota:
@@ -71281,6 +71297,8 @@ modelo:
           iva-modificacion-recargo-cuota:
             label: Modificació de bases imposables i quotes del recàrrec d'equivalència
               - quota
+          iva-regularizacion-cuotas-art-80-cinco-5:
+            label: Regularització de quotes de l'art. 80.Cinc.5a LIVA
           iva-repercutido-agencias-viajes-tipo-21-base:
             label: IVA meritat en el règim especial d'agències de viatges al tipus
               21% - base imposable
@@ -71372,14 +71390,54 @@ modelo:
             label: Recàrrec d'equivalència al tipus 1,75% - quota
           iva-repercutido-recargo-tipo-5-2-base:
             label: Recàrrec d'equivalència al tipus 5,2% - base imposable
+          iva-resultado-liquidacion:
+            label: Resultat de la liquidació
+          iva-suma-resultados:
+            label: Suma de resultats
           iva-total-bases-iva:
             label: Total bases imposables de l'IVA meritat
+          iva-volumen-agencias-viajes:
+            label: Volum d'operacions en el règim especial d'agències de viatges
+          iva-volumen-bienes-de-inversion:
+            label: Lliuraments de béns d'inversió
+          iva-volumen-bienes-usados:
+            label: Volum d'operacions en el règim especial de béns usats, objectes
+              d'art, antiguitats i objectes de col·lecció
+          iva-volumen-criterio-caja:
+            label: Volum d'operacions en el règim especial del criteri de caixa
+          iva-volumen-exentas-sin-derecho-deduccion:
+            label: Operacions exemptes sense dret a deducció
+          iva-volumen-inmuebles-financieras-no-habituales:
+            label: Lliuraments de béns immobles i operacions financeres no habituals
+          iva-volumen-intragrupo-arts-78-79:
+            label: Operacions intragrup valorades conforme als arts. 78 i 79 LIVA
+          iva-volumen-inversion-sujeto-pasivo:
+            label: Operacions subjectes amb inversió del subjecte passiu
+          iva-volumen-no-sujetas-reglas-localizacion:
+            label: Operacions no subjectes per regles de localització (excepte les
+              incloses a la casella 126)
           iva-volumen-operaciones-entregas-intracomunitarias:
             help: null
             label: Lliuraments intracomunitaris de béns i serveis
           iva-volumen-operaciones-exportaciones-exentas:
             help: null
             label: Exportacions i operacions assimilades
+          iva-volumen-oss-no-sujetas-localizacion:
+            label: 'OSS: operacions no subjectes per regles de localització acollides
+              a la finestreta única'
+          iva-volumen-oss-sujetas:
+            label: 'OSS: operacions subjectes i acollides a la finestreta única'
+          iva-volumen-reagp:
+            label: Volum d'operacions en el règim especial de l'agricultura, ramaderia
+              i pesca
+          iva-volumen-recargo-equivalencia:
+            label: Volum d'operacions en el règim especial del recàrrec d'equivalència
+          iva-volumen-regimen-general:
+            label: Volum d'operacions en règim general
+          iva-volumen-regimen-simplificado:
+            label: Volum d'operacions en règim simplificat
+          iva-volumen-total:
+            label: Total volum d'operacions
           tipo-declaracion:
             help: null
             label: Tipus de declaració

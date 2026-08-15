@@ -70972,6 +70972,8 @@ modelo:
           iva-base-imponible-soportada-interiores:
             help: null
             label: Levonható ÁFA adóalapja belföldi folyó ügyleteknél
+          iva-compensacion-cuotas-ejercicio-anterior:
+            label: Előző évi adójóváírás beszámítása
           iva-cuota-autorepercutida-intracomunitaria:
             help: null
             label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
@@ -71326,6 +71328,20 @@ modelo:
           iva-isp-interior-cuota:
             help: null
             label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél
+          iva-liquidaciones-total-a-ingresar:
+            label: Az évi ÁFA-önadózások alapján fizetendő összegek összesen
+          iva-liquidaciones-total-devoluciones-elementos-transporte:
+            label: Közlekedési eszközök beszerzése után előzetesen felszámított adó
+              visszatérítései összesen
+          iva-liquidaciones-total-devoluciones-mensuales:
+            label: A havi visszatérítési nyilvántartásban szereplő adóalanyok havi
+              ÁFA-visszatérítései összesen
+          iva-liquidaciones-total-resultados-negativos-m322:
+            label: Az év negatív eredményei összesen (322. nyomtatvány)
+          iva-liquidaciones-total-resultados-positivos-m322:
+            label: Az év pozitív eredményei összesen (322. nyomtatvány)
+          iva-liquidaciones-ultimo-periodo-a-devolver:
+            label: Az utolsó időszaki bevallás eredménye - visszatérítendő
           iva-modificacion-bases-cuotas-base:
             label: Adóalapok és adóösszegek módosítása - adóalap
           iva-modificacion-bases-cuotas-cuota:
@@ -71354,6 +71370,9 @@ modelo:
           iva-modificacion-recargo-cuota:
             label: Az egyenértékűségi felár adóalapjának és összegének módosítása
               - felár összege
+          iva-regularizacion-cuotas-art-80-cinco-5:
+            label: A LIVA 80. cikk Ötödik bekezdés 5. pontja szerinti adóösszegek
+              helyesbítése
           iva-repercutido-agencias-viajes-tipo-21-base:
             label: Az utazási irodák különös szabályai szerinti ÁFA 21% kulccsal -
               adóalap
@@ -71450,14 +71469,54 @@ modelo:
             label: Egyenértékűségi felár 1.75% kulccsal - felár összege
           iva-repercutido-recargo-tipo-5-2-base:
             label: Egyenértékűségi felár 5.2% kulccsal - adóalap
+          iva-resultado-liquidacion:
+            label: Az elszámolás eredménye
+          iva-suma-resultados:
+            label: Eredmények összege
           iva-total-bases-iva:
             label: A fizetendő ÁFA adóalapjai összesen
+          iva-volumen-agencias-viajes:
+            label: Az utazási irodák különös szabályai szerinti forgalom
+          iva-volumen-bienes-de-inversion:
+            label: Tárgyi eszközök értékesítése
+          iva-volumen-bienes-usados:
+            label: A használt cikkekre, műalkotásokra, gyűjteménydarabokra és régiségekre
+              vonatkozó különös szabályok szerinti forgalom
+          iva-volumen-criterio-caja:
+            label: A pénzforgalmi elszámolás különös szabályai szerinti forgalom
+          iva-volumen-exentas-sin-derecho-deduccion:
+            label: Adólevonásra nem jogosító adómentes ügyletek
+          iva-volumen-inmuebles-financieras-no-habituales:
+            label: Ingatlanértékesítések és nem szokásos pénzügyi ügyletek
+          iva-volumen-intragrupo-arts-78-79:
+            label: A LIVA 78. és 79. cikke szerint értékelt csoporton belüli ügyletek
+          iva-volumen-inversion-sujeto-pasivo:
+            label: Fordított adózás alá tartozó adóköteles ügyletek
+          iva-volumen-no-sujetas-reglas-localizacion:
+            label: A teljesítési hely szabályai miatt nem adóztatandó ügyletek (a
+              126. rovatban szereplők kivételével)
           iva-volumen-operaciones-entregas-intracomunitarias:
             help: null
             label: Közösségen belüli termék- és szolgáltatásértékesítések
           iva-volumen-operaciones-exportaciones-exentas:
             help: null
             label: Exportok és azokkal egy tekintet alá eső ügyletek
+          iva-volumen-oss-no-sujetas-localizacion:
+            label: 'OSS: az egyablakos rendszer alá tartozó, a teljesítési hely szabályai
+              miatt nem adóztatandó ügyletek'
+          iva-volumen-oss-sujetas:
+            label: 'OSS: az egyablakos rendszer alá tartozó adóköteles ügyletek'
+          iva-volumen-reagp:
+            label: A mezőgazdasági, állattenyésztési és halászati különös szabályok
+              szerinti forgalom
+          iva-volumen-recargo-equivalencia:
+            label: Az egyenértékűségi felár különös szabályai szerinti forgalom
+          iva-volumen-regimen-general:
+            label: Az általános szabályok szerinti forgalom
+          iva-volumen-regimen-simplificado:
+            label: Az egyszerűsített szabályok szerinti forgalom
+          iva-volumen-total:
+            label: Teljes forgalom
           tipo-declaracion:
             help: null
             label: Bevallás típusa

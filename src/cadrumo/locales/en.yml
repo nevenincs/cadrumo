@@ -70413,6 +70413,8 @@ modelo:
           iva-base-imponible-soportada-interiores:
             help: null
             label: Taxable base of deductible input VAT on domestic current transactions
+          iva-compensacion-cuotas-ejercicio-anterior:
+            label: Carry-forward of VAT credits from the previous year
           iva-cuota-autorepercutida-intracomunitaria:
             help: null
             label: Reverse-charge VAT amount on intra-Community acquisitions
@@ -70769,6 +70771,18 @@ modelo:
           iva-isp-interior-cuota:
             help: null
             label: Accrued reverse-charge VAT on domestic transactions
+          iva-liquidaciones-total-a-ingresar:
+            label: Total amounts payable from the year's VAT self-assessments
+          iva-liquidaciones-total-devoluciones-elementos-transporte:
+            label: Total refunds of input VAT on acquisitions of means of transport
+          iva-liquidaciones-total-devoluciones-mensuales:
+            label: Total monthly VAT refunds for taxpayers on the monthly refund register
+          iva-liquidaciones-total-resultados-negativos-m322:
+            label: Total negative results for the year (form 322)
+          iva-liquidaciones-total-resultados-positivos-m322:
+            label: Total positive results for the year (form 322)
+          iva-liquidaciones-ultimo-periodo-a-devolver:
+            label: Result of the final period return - refundable
           iva-modificacion-bases-cuotas-base:
             label: Adjustment of taxable bases and VAT amounts - taxable base
           iva-modificacion-bases-cuotas-cuota:
@@ -70797,6 +70811,8 @@ modelo:
           iva-modificacion-recargo-cuota:
             label: Adjustment of equivalence surcharge taxable bases and amounts -
               surcharge amount
+          iva-regularizacion-cuotas-art-80-cinco-5:
+            label: Adjustment of VAT amounts under LIVA art. 80.Five.5
           iva-repercutido-agencias-viajes-tipo-21-base:
             label: Output VAT under the travel agencies special scheme at the 21%
               rate - taxable base
@@ -70898,14 +70914,54 @@ modelo:
             label: Equivalence surcharge at the 1.75% rate - surcharge amount
           iva-repercutido-recargo-tipo-5-2-base:
             label: Equivalence surcharge at the 5.2% rate - taxable base
+          iva-resultado-liquidacion:
+            label: Result of the assessment
+          iva-suma-resultados:
+            label: Sum of results
           iva-total-bases-iva:
             label: Total taxable bases of output VAT
+          iva-volumen-agencias-viajes:
+            label: Turnover under the travel agencies special scheme
+          iva-volumen-bienes-de-inversion:
+            label: Supplies of capital goods
+          iva-volumen-bienes-usados:
+            label: Turnover under the special scheme for second-hand goods, works
+              of art, collectors' items and antiques
+          iva-volumen-criterio-caja:
+            label: Turnover under the cash accounting special scheme
+          iva-volumen-exentas-sin-derecho-deduccion:
+            label: Exempt transactions without right of deduction
+          iva-volumen-inmuebles-financieras-no-habituales:
+            label: Supplies of immovable property and non-recurring financial transactions
+          iva-volumen-intragrupo-arts-78-79:
+            label: Intra-group transactions valued under LIVA arts. 78 and 79
+          iva-volumen-inversion-sujeto-pasivo:
+            label: Taxable transactions under the reverse charge
+          iva-volumen-no-sujetas-reglas-localizacion:
+            label: Transactions outside the scope under the place-of-supply rules
+              (other than those in box 126)
           iva-volumen-operaciones-entregas-intracomunitarias:
             help: null
             label: Intra-Community supplies of goods and services
           iva-volumen-operaciones-exportaciones-exentas:
             help: null
             label: Exports and assimilated transactions
+          iva-volumen-oss-no-sujetas-localizacion:
+            label: 'OSS: transactions outside the scope under the place-of-supply
+              rules covered by the one-stop shop'
+          iva-volumen-oss-sujetas:
+            label: 'OSS: taxable transactions covered by the one-stop shop'
+          iva-volumen-reagp:
+            label: Turnover under the agriculture, livestock and fisheries special
+              scheme
+          iva-volumen-recargo-equivalencia:
+            label: Turnover under the equivalence surcharge special scheme
+          iva-volumen-regimen-general:
+            label: Turnover under the general scheme
+          iva-volumen-regimen-simplificado:
+            label: Turnover under the simplified scheme
+          iva-volumen-total:
+            label: Total turnover
           tipo-declaracion:
             help: null
             label: Return type

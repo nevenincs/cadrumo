@@ -73314,6 +73314,8 @@ modelo:
           iva-base-imponible-soportada-interiores:
             help: null
             label: Base imponible IVA soportado en operaciones interiores corrientes
+          iva-compensacion-cuotas-ejercicio-anterior:
+            label: Compensación de cuotas del ejercicio anterior
           iva-cuota-autorepercutida-intracomunitaria:
             help: null
             label: Cuota IVA autorepercutida en adquisiciones intracomunitarias (LIVA
@@ -73672,6 +73674,22 @@ modelo:
             help: null
             label: Cuota IVA autorepercutida en operaciones interiores con inversion
               del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
+          iva-liquidaciones-total-a-ingresar:
+            label: Total resultados a ingresar de las autoliquidaciones de IVA del
+              ejercicio
+          iva-liquidaciones-total-devoluciones-elementos-transporte:
+            label: Total devoluciones por cuotas soportadas en la adquisición de elementos
+              de transporte
+          iva-liquidaciones-total-devoluciones-mensuales:
+            label: Total devoluciones mensuales de IVA de sujetos pasivos inscritos
+              en el Registro de devolución mensual
+          iva-liquidaciones-total-resultados-negativos-m322:
+            label: Total resultados negativos del ejercicio (modelo 322)
+          iva-liquidaciones-total-resultados-positivos-m322:
+            label: Total resultados positivos del ejercicio (modelo 322)
+          iva-liquidaciones-ultimo-periodo-a-devolver:
+            label: Resultado de la declaración-liquidación del último período - A
+              devolver
           iva-modificacion-bases-cuotas-base:
             label: Modificación de bases imponibles y cuotas - Base imponible
           iva-modificacion-bases-cuotas-cuota:
@@ -73700,6 +73718,8 @@ modelo:
           iva-modificacion-recargo-cuota:
             label: Modificación de bases imponibles y cuotas del recargo de equivalencia
               - Cuota
+          iva-regularizacion-cuotas-art-80-cinco-5:
+            label: Regularización de cuotas del art. 80.Cinco.5ª LIVA
           iva-repercutido-agencias-viajes-tipo-21-base:
             label: IVA devengado en el régimen especial de agencias de viajes al tipo
               21% - Base imponible
@@ -73796,14 +73816,54 @@ modelo:
             label: Recargo de equivalencia al tipo 1,75% - Cuota
           iva-repercutido-recargo-tipo-5-2-base:
             label: Recargo de equivalencia al tipo 5,2% - Base imponible
+          iva-resultado-liquidacion:
+            label: Resultado de la liquidación
+          iva-suma-resultados:
+            label: Suma de resultados
           iva-total-bases-iva:
             label: Total bases imponibles del IVA devengado
+          iva-volumen-agencias-viajes:
+            label: Volumen de operaciones en el régimen especial de agencias de viajes
+          iva-volumen-bienes-de-inversion:
+            label: Entregas de bienes de inversión
+          iva-volumen-bienes-usados:
+            label: Volumen de operaciones en el régimen especial de bienes usados,
+              objetos de arte, antigüedades y objetos de colección
+          iva-volumen-criterio-caja:
+            label: Volumen de operaciones en el régimen especial del criterio de caja
+          iva-volumen-exentas-sin-derecho-deduccion:
+            label: Operaciones exentas sin derecho a deducción
+          iva-volumen-inmuebles-financieras-no-habituales:
+            label: Entregas de bienes inmuebles y operaciones financieras no habituales
+          iva-volumen-intragrupo-arts-78-79:
+            label: Operaciones intragrupo valoradas conforme a los arts. 78 y 79 LIVA
+          iva-volumen-inversion-sujeto-pasivo:
+            label: Operaciones sujetas con inversión del sujeto pasivo
+          iva-volumen-no-sujetas-reglas-localizacion:
+            label: Operaciones no sujetas por reglas de localización (excepto las
+              incluidas en la casilla 126)
           iva-volumen-operaciones-entregas-intracomunitarias:
             help: null
             label: Entregas intracomunitarias de bienes y servicios
           iva-volumen-operaciones-exportaciones-exentas:
             help: null
             label: Exportaciones y operaciones asimiladas
+          iva-volumen-oss-no-sujetas-localizacion:
+            label: 'OSS: operaciones no sujetas por reglas de localización acogidas
+              a la ventanilla única'
+          iva-volumen-oss-sujetas:
+            label: 'OSS: operaciones sujetas y acogidas a la ventanilla única'
+          iva-volumen-reagp:
+            label: Volumen de operaciones en el régimen especial de la agricultura,
+              ganadería y pesca
+          iva-volumen-recargo-equivalencia:
+            label: Volumen de operaciones en el régimen especial del recargo de equivalencia
+          iva-volumen-regimen-general:
+            label: Volumen de operaciones en régimen general
+          iva-volumen-regimen-simplificado:
+            label: Volumen de operaciones en régimen simplificado
+          iva-volumen-total:
+            label: Total volumen de operaciones
           tipo-declaracion:
             help: null
             label: Tipo de declaración
