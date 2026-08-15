@@ -1101,6 +1101,10 @@ def _promote_candidate_login(
     interrupted_handover: _ProfileLoginHandoverJournal | None,
 ) -> ProfileLoginOutcome:
     """CAS-publish, activate, then retire A through durable phases."""
+    # The live session is ONE of three inputs to the retirement set, never the
+    # gate: it is absent in an ordinary invocation, which is a fresh process.
+    # This binding survives for its own separate job -- closing the in-process
+    # session object by identity, further down in _retire_previous_authorities.
     previous_live = profile_current_bucket_session()
     retired_bucket_ids = _retired_bucket_ids(
         live_bucket_id=_live_bucket_id(previous_live),
