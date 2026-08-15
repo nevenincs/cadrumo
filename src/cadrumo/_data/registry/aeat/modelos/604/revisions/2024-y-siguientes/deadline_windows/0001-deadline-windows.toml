@@ -3,7 +3,7 @@
 # correspondiente periodo de liquidación mensual". Each window opens the 10th and
 # closes the 20th of the month following the reference month.
 
-[[revisions."2021-y-siguientes".deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-604-2025-01"
 filing_year = 2025
 period = "2025 01"
@@ -13,7 +13,7 @@ closes_on = 2025-02-20
 legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-604-procedure"]
 
-[[revisions."2021-y-siguientes".deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-604-2025-02"
 filing_year = 2025
 period = "2025 02"
@@ -23,7 +23,7 @@ closes_on = 2025-03-20
 legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-604-procedure"]
 
-[[revisions."2021-y-siguientes".deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-604-2025-03"
 filing_year = 2025
 period = "2025 03"
@@ -33,7 +33,7 @@ closes_on = 2025-04-20
 legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-604-procedure"]
 
-[[revisions."2021-y-siguientes".deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-604-2025-04"
 filing_year = 2025
 period = "2025 04"
@@ -43,7 +43,7 @@ closes_on = 2025-05-20
 legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-604-procedure"]
 
-[[revisions."2021-y-siguientes".deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-604-2025-05"
 filing_year = 2025
 period = "2025 05"
@@ -53,7 +53,7 @@ closes_on = 2025-06-20
 legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-604-procedure"]
 
-[[revisions."2021-y-siguientes".deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-604-2025-06"
 filing_year = 2025
 period = "2025 06"
@@ -63,7 +63,7 @@ closes_on = 2025-07-20
 legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-604-procedure"]
 
-[[revisions."2021-y-siguientes".deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-604-2025-07"
 filing_year = 2025
 period = "2025 07"
@@ -73,7 +73,7 @@ closes_on = 2025-08-20
 legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-604-procedure"]
 
-[[revisions."2021-y-siguientes".deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-604-2025-08"
 filing_year = 2025
 period = "2025 08"
@@ -83,7 +83,7 @@ closes_on = 2025-09-20
 legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-604-procedure"]
 
-[[revisions."2021-y-siguientes".deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-604-2025-09"
 filing_year = 2025
 period = "2025 09"
@@ -93,7 +93,7 @@ closes_on = 2025-10-20
 legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-604-procedure"]
 
-[[revisions."2021-y-siguientes".deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-604-2025-10"
 filing_year = 2025
 period = "2025 10"
@@ -103,7 +103,7 @@ closes_on = 2025-11-20
 legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-604-procedure"]
 
-[[revisions."2021-y-siguientes".deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-604-2025-11"
 filing_year = 2025
 period = "2025 11"
@@ -113,7 +113,7 @@ closes_on = 2025-12-20
 legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-604-procedure"]
 
-[[revisions."2021-y-siguientes".deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-604-2025-12"
 filing_year = 2025
 period = "2025 12"

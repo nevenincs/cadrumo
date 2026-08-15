@@ -1,0 +1,853 @@
+# Modelo 604 form casillas for the 2024 era, transcribed position-by-position
+# from aeat-dr-604-2024. AEAT's bracketed box numbers appear in the localized
+# labels, where they read against the official form. Ley 5/2020 (ITF) is NOT
+# cited: it is absent from this registry's legal catalogue and no article is
+# invented here; grounding is the modelo-approving orden plus the general
+# information duty, matching what the revision and construct already declare.
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "decl.idioma"
+number = "idioma"
+section = ["declaracion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-decl-idioma"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "decl.tipo-autoliquidacion"
+number = "tipo-autoliquidacion"
+section = ["declaracion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-decl-tipo-autoliquidacion"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "sp.codigo-lei"
+number = "codigo-lei"
+section = ["sujeto-pasivo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-sp-codigo-lei"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "sp.codigo-bic"
+number = "codigo-bic"
+section = ["sujeto-pasivo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-sp-codigo-bic"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-es.tipo-via"
+number = "tipo-via"
+section = ["sujeto-pasivo", "domicilio-espana"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-es-tipo-via"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-es.nombre-via"
+number = "nombre-via"
+section = ["sujeto-pasivo", "domicilio-espana"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-es-nombre-via"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-es.tipo-numeracion"
+number = "tipo-numeracion"
+section = ["sujeto-pasivo", "domicilio-espana"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-es-tipo-numeracion"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-es.numero-casa"
+number = "numero-casa"
+section = ["sujeto-pasivo", "domicilio-espana"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-es-numero-casa"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-es.calificador-numero"
+number = "calificador-numero"
+section = ["sujeto-pasivo", "domicilio-espana"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-es-calificador-numero"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-es.bloque"
+number = "bloque"
+section = ["sujeto-pasivo", "domicilio-espana"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-es-bloque"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-es.portal"
+number = "portal"
+section = ["sujeto-pasivo", "domicilio-espana"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-es-portal"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-es.escalera"
+number = "escalera"
+section = ["sujeto-pasivo", "domicilio-espana"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-es-escalera"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-es.planta"
+number = "planta"
+section = ["sujeto-pasivo", "domicilio-espana"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-es-planta"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-es.puerta"
+number = "puerta"
+section = ["sujeto-pasivo", "domicilio-espana"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-es-puerta"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-es.complemento"
+number = "complemento"
+section = ["sujeto-pasivo", "domicilio-espana"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-es-complemento"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-es.localidad"
+number = "localidad"
+section = ["sujeto-pasivo", "domicilio-espana"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-es-localidad"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-es.codigo-postal"
+number = "codigo-postal"
+section = ["sujeto-pasivo", "domicilio-espana"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-es-codigo-postal"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-es.municipio"
+number = "municipio"
+section = ["sujeto-pasivo", "domicilio-espana"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-es-municipio"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-es.codigo-provincia"
+number = "codigo-provincia"
+section = ["sujeto-pasivo", "domicilio-espana"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-es-codigo-provincia"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-es.provincia"
+number = "provincia"
+section = ["sujeto-pasivo", "domicilio-espana"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-es-provincia"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-ex.domicilio"
+number = "domicilio"
+section = ["sujeto-pasivo", "domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-ex-domicilio"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-ex.complemento"
+number = "complemento"
+section = ["sujeto-pasivo", "domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-ex-complemento"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-ex.poblacion"
+number = "poblacion"
+section = ["sujeto-pasivo", "domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-ex-poblacion"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-ex.codigo-postal"
+number = "codigo-postal"
+section = ["sujeto-pasivo", "domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-ex-codigo-postal"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-ex.provincia-region-estado"
+number = "provincia-region-estado"
+section = ["sujeto-pasivo", "domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-ex-provincia-region-estado"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-ex.pais"
+number = "pais"
+section = ["sujeto-pasivo", "domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-ex-pais"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "dom-ex.codigo-pais"
+number = "codigo-pais"
+section = ["sujeto-pasivo", "domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-dom-ex-codigo-pais"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "sp.persona-contacto"
+number = "persona-contacto"
+section = ["sujeto-pasivo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-sp-persona-contacto"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "sp.telefono-contacto"
+number = "telefono-contacto"
+section = ["sujeto-pasivo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-sp-telefono-contacto"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "anexo.numero-justificante"
+number = "numero-justificante"
+section = ["anexo-informativo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-anexo-numero-justificante"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "liq.01-base-imponible"
+number = "01-base-imponible"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-liq-01-base-imponible"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "liq.02-cuota"
+number = "02-cuota"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-liq-02-cuota"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "liq.03-signo-base-rectificaciones"
+number = "03-signo-base-rectificaciones"
+section = ["liquidacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-liq-03-signo-base-rectificaciones"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "liq.03-base-rectificaciones"
+number = "03-base-rectificaciones"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-liq-03-base-rectificaciones"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "liq.04-signo-cuota-rectificaciones"
+number = "04-signo-cuota-rectificaciones"
+section = ["liquidacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-liq-04-signo-cuota-rectificaciones"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "liq.04-cuota-rectificaciones"
+number = "04-cuota-rectificaciones"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-liq-04-cuota-rectificaciones"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "liq.05-operaciones-exentas"
+number = "05-operaciones-exentas"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-liq-05-operaciones-exentas"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "liq.08-diferencia"
+number = "08-diferencia"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-liq-08-diferencia"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "liq.09-cuota-estado"
+number = "09-cuota-estado"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-liq-09-cuota-estado"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "liq.10-signo-cuota-rectificaciones-estado"
+number = "10-signo-cuota-rectificaciones-estado"
+section = ["liquidacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-liq-10-signo-cuota-rectificaciones-estado"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "liq.10-cuota-rectificaciones-estado"
+number = "10-cuota-rectificaciones-estado"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-liq-10-cuota-rectificaciones-estado"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "liq.11-porcentaje-atribuible-estado"
+number = "11-porcentaje-atribuible-estado"
+section = ["liquidacion"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-liq-11-porcentaje-atribuible-estado"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "liq.12-resultado-estado"
+number = "12-resultado-estado"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-liq-12-resultado-estado"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "liq.06-a-deducir"
+number = "06-a-deducir"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-liq-06-a-deducir"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "liq.07-resultado"
+number = "07-resultado"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-liq-07-resultado"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "compl.declaracion-complementaria"
+number = "declaracion-complementaria"
+section = ["complementaria"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-compl-declaracion-complementaria"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "compl.numero-justificante-anterior"
+number = "numero-justificante-anterior"
+section = ["complementaria"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-compl-numero-justificante-anterior"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.alava.cuota-sujetas-no-exentas"
+number = "alava.cuota-sujetas-no-exentas"
+section = ["territorio", "alava"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-alava-cuota-sujetas-no-exentas"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.alava.signo-cuota-rectificaciones"
+number = "alava.signo-cuota-rectificaciones"
+section = ["territorio", "alava"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-alava-signo-cuota-rectificaciones"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.alava.cuota-rectificaciones"
+number = "alava.cuota-rectificaciones"
+section = ["territorio", "alava"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-alava-cuota-rectificaciones"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.alava.cuota-total-atribuible"
+number = "alava.cuota-total-atribuible"
+section = ["territorio", "alava"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-alava-cuota-total-atribuible"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.alava.porcentaje-atribuible"
+number = "alava.porcentaje-atribuible"
+section = ["territorio", "alava"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-alava-porcentaje-atribuible"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.alava.importe-operaciones-exentas"
+number = "alava.importe-operaciones-exentas"
+section = ["territorio", "alava"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-alava-importe-operaciones-exentas"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.guipuzcoa.cuota-sujetas-no-exentas"
+number = "guipuzcoa.cuota-sujetas-no-exentas"
+section = ["territorio", "guipuzcoa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-guipuzcoa-cuota-sujetas-no-exentas"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.guipuzcoa.signo-cuota-rectificaciones"
+number = "guipuzcoa.signo-cuota-rectificaciones"
+section = ["territorio", "guipuzcoa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-guipuzcoa-signo-cuota-rectificaciones"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.guipuzcoa.cuota-rectificaciones"
+number = "guipuzcoa.cuota-rectificaciones"
+section = ["territorio", "guipuzcoa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-guipuzcoa-cuota-rectificaciones"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.guipuzcoa.cuota-total-atribuible"
+number = "guipuzcoa.cuota-total-atribuible"
+section = ["territorio", "guipuzcoa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-guipuzcoa-cuota-total-atribuible"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.guipuzcoa.porcentaje-atribuible"
+number = "guipuzcoa.porcentaje-atribuible"
+section = ["territorio", "guipuzcoa"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-guipuzcoa-porcentaje-atribuible"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.guipuzcoa.importe-operaciones-exentas"
+number = "guipuzcoa.importe-operaciones-exentas"
+section = ["territorio", "guipuzcoa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-guipuzcoa-importe-operaciones-exentas"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.vizcaya.cuota-sujetas-no-exentas"
+number = "vizcaya.cuota-sujetas-no-exentas"
+section = ["territorio", "vizcaya"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-vizcaya-cuota-sujetas-no-exentas"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.vizcaya.signo-cuota-rectificaciones"
+number = "vizcaya.signo-cuota-rectificaciones"
+section = ["territorio", "vizcaya"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-vizcaya-signo-cuota-rectificaciones"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.vizcaya.cuota-rectificaciones"
+number = "vizcaya.cuota-rectificaciones"
+section = ["territorio", "vizcaya"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-vizcaya-cuota-rectificaciones"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.vizcaya.cuota-total-atribuible"
+number = "vizcaya.cuota-total-atribuible"
+section = ["territorio", "vizcaya"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-vizcaya-cuota-total-atribuible"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.vizcaya.porcentaje-atribuible"
+number = "vizcaya.porcentaje-atribuible"
+section = ["territorio", "vizcaya"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-vizcaya-porcentaje-atribuible"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.vizcaya.importe-operaciones-exentas"
+number = "vizcaya.importe-operaciones-exentas"
+section = ["territorio", "vizcaya"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-vizcaya-importe-operaciones-exentas"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.navarra.cuota-sujetas-no-exentas"
+number = "navarra.cuota-sujetas-no-exentas"
+section = ["territorio", "navarra"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-navarra-cuota-sujetas-no-exentas"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.navarra.signo-cuota-rectificaciones"
+number = "navarra.signo-cuota-rectificaciones"
+section = ["territorio", "navarra"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-navarra-signo-cuota-rectificaciones"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.navarra.cuota-rectificaciones"
+number = "navarra.cuota-rectificaciones"
+section = ["territorio", "navarra"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-navarra-cuota-rectificaciones"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.navarra.cuota-total-atribuible"
+number = "navarra.cuota-total-atribuible"
+section = ["territorio", "navarra"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-navarra-cuota-total-atribuible"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.navarra.porcentaje-atribuible"
+number = "navarra.porcentaje-atribuible"
+section = ["territorio", "navarra"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-navarra-porcentaje-atribuible"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.navarra.importe-operaciones-exentas"
+number = "navarra.importe-operaciones-exentas"
+section = ["territorio", "navarra"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-navarra-importe-operaciones-exentas"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.estado.cuota-sujetas-no-exentas"
+number = "estado.cuota-sujetas-no-exentas"
+section = ["territorio", "estado"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-estado-cuota-sujetas-no-exentas"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.estado.signo-cuota-rectificaciones"
+number = "estado.signo-cuota-rectificaciones"
+section = ["territorio", "estado"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-estado-signo-cuota-rectificaciones"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.estado.cuota-rectificaciones"
+number = "estado.cuota-rectificaciones"
+section = ["territorio", "estado"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-estado-cuota-rectificaciones"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.estado.cuota-total-atribuible"
+number = "estado.cuota-total-atribuible"
+section = ["territorio", "estado"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-estado-cuota-total-atribuible"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.estado.porcentaje-atribuible"
+number = "estado.porcentaje-atribuible"
+section = ["territorio", "estado"]
+data_type = "ratio"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-estado-porcentaje-atribuible"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "terr.estado.importe-operaciones-exentas"
+number = "estado.importe-operaciones-exentas"
+section = ["territorio", "estado"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-604-terr-estado-importe-operaciones-exentas"]
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]

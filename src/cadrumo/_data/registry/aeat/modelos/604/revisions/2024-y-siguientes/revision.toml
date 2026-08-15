@@ -1,0 +1,38 @@
+[revisions."2024-y-siguientes"]
+authority_grade = "applicability"
+# Modelo 604 autoliquidacion del Impuesto sobre las Transacciones Financieras,
+# approved by orden-hac-510-2021 art 1, plazo grounded verbatim in
+# orden-hac-510-2021 art 3: se presenta entre los dias 10 y 20 del mes
+# siguiente al correspondiente periodo de liquidacion mensual.
+#
+# ERA SPLIT (this revision covers 2024 onward). See the sibling '2021-2023'
+# revision for why the two eras cannot share one revision. This revision cites
+# aeat-dr-604-2024 only, and its export layout transcribes that design's three
+# records in full: Pag. 0 (envelope <AUX>) 1..328, Pag. 1 1..1000, Pag. 2
+# (tributacion por razon de territorio) 1..700.
+id = "2024-y-siguientes"
+valid_from = 2024-01-01
+period_selector = { year_from = 2024, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
+orden_aplicabilidad = ["orden-hac-510-2021:art-1"]
+legal_refs = [
+    "orden-hac-510-2021:art-1",
+    "orden-hac-510-2021:art-3",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-604-procedure",
+    "aeat-dr-604-2024",
+]
+
+
+[revisions."2024-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision. Revision '2024-y-siguientes' of modelo 604 DOES have a strictly-earlier sibling ('2021-2023'), so a within-modelo continuity transition is structurally possible here. None is declared because the two eras are not a renumbering of one another: AEAT's 2024 diseno de registro adds an entire second record (Pag. 2, tributacion por razon de territorio, boxes 13-37) and repurposes the byte spans at @701 and @719 from 'A deducir [06]' and 'Resultado [07]' to 'Diferencia [08]' and 'Cuota atribuible al Estado [09]'. Asserting continuity across that would claim an identity the designs contradict. The family is empty on a reviewed judgement, not by omission."
+legal_refs = [
+    "orden-hac-510-2021:art-1",
+    "orden-hac-510-2021:art-3",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-604-procedure",
+    "aeat-dr-604-2024",
+]
