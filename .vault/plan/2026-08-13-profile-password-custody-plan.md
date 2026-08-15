@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:25de0177829826ab02b599eb8fdd62af204ace87477d0ae1bfe6271521aee897'
+body_hash: 'sha256:822ca87862f8504882b9e5d419f1fb185c820ea388a7ff4083ccedb3f66a8246'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -195,6 +195,8 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S121` - Have Sol Medium rule on the bucket deletion assessment contract, since the fingerprint type is now producerless and its only consumer is the populated branch requiring label and fingerprint and retention together, a branch already unreachable because the assessment either reports a missing bucket or raises and never constructs that shape, so a validated contract stands for a state nothing can produce; `src/cadrumo/application/config_reset.py and src/cadrumo/application/bucket_maintenance/`.
 - [ ] `W04.P07.S123` - Have Terra XHigh make the persisted-format inventory detect an enrolled format whose code no longer exists, since the enrolment gate enumerates against the inventory and therefore catches a new format missing from it while a format listed in it with nothing left in the tree passes unnoticed, which has already happened once to a keystore format deleted while its durable enrolment stood; `src/cadrumo/core/compatibility_lifecycle.py`.
 - [ ] `W04.P07.S124` - Have Terra XHigh reconstruct the rotation crash-window coverage against the two surviving stores after the module was deleted whole to unblock collection, since its fixture seeded all three stores and the keystore was not an amputable arm, the booked losses being the crash window between envelope and blob-store rotation and the probe-skip idempotency that makes re-running a partial rotation a clean no-op; `src/cadrumo/adapters/persistence/storage/tests/`.
+- [ ] `W04.P07.S126` - Have Sol Medium enrol the custody capsule formats in the governed persisted-format inventory, since the commit record and the envelope and the recovery artefact each carry their own schema version constant while none appears in the closed inventory at all, so the campaign's own central authority sits outside the durability governance that a retired plaintext manifest was inside; `src/cadrumo/core/compatibility_lifecycle.py and src/cadrumo/adapters/persistence/storage/custody/`.
+- [ ] `W04.P07.S127` - Have Terra XHigh restore the deliberately empty compatibility fixture directory a peer deleted, which ships empty so the durability harness has a home before the release flip, and whose absence now fails the corpus-root gate; `src/cadrumo/_data/compat_fixtures/`.
 
 ## Wave `W05` - end-to-end proof
 
