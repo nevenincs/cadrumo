@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:3e07b4e1c09a554de1233456184f5d5199de8662c2580197468ac649eb9dd8af'
+body_hash: 'sha256:98bc25e8090fc16f5b83073605e62c236525c898bab89c33c2b35de20c7299cb'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -292,3 +292,42 @@ path segments, and drops an import name only when the AST reports zero remaining
 `Name` loads of it. It then re-parses and refuses to write unless the accessor is
 imported exactly once, is actually called, and no docstring contains the import
 text. A dry-run diff was read before applying.
+
+## Attribution: a PRE-MIGRATION snapshot, not a plausibility argument
+
+A wide slice (registry tests plus calculations tests) reported 1723 failed, 3443
+passed, 229 errors after the helper migration. That number cannot be read as
+evidence either way on its own, because this tree carries a large standing red
+(missing export layouts, blocked `authority_grade`, legal grounding) that
+predates the change.
+
+Reasoning about it was not accepted as attribution. `git archive f38ed9ade9^ |
+tar -x` produced an immovable pre-migration tree in scratch -- immovable
+mattering because peers commit to this worktree continuously -- and the same
+three consumer modules were run against both trees, the snapshot reached through
+a `PYTHONPATH` shadow whose effect was CONFIRMED before use (`cadrumo.__file__`
+resolves inside the snapshot) rather than assumed.
+
+    pre-migration : 33 failed, 31 passed
+    migrated      : 33 failed, 31 passed
+
+Counts alone would not have settled it, since a count cannot distinguish one
+failure being fixed while another appears. The failing test NAME SETS were
+diffed and are identical. The migration is behaviour-neutral, and the wide
+slice's 1723 failures belong to the standing red.
+
+Wall clock on that slice moved 80.82s to 51.06s, recorded as indicative only:
+the machine was carrying about 90 concurrent python processes from peer suites,
+and contention invalidates timing. The durable measurement is the per-call one
+(~1.05s to ~0s) and the structural one (one compiled tree per process instead of
+one per helper module).
+
+## Payload identity, checked rather than argued
+
+`bundled_registry_tree()` and `load_registry_tree(bundled_path("registry",
+"aeat"))` were compared directly: equal modelo count (73), equal modelos, equal
+catalogues, and `a_m is b_m` True -- the accessor hands back the very same
+objects, not a reconstruction. The alternate call form
+`load_registry_tree(bundled_path() / "registry" / "aeat")`, which one migrated
+module used, resolves to the same tree and compares equal, which is what makes
+substituting the accessor there sound rather than merely plausible.
