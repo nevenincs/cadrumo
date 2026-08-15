@@ -7557,6 +7557,9 @@ errors:
       per béns d'inversió no ha superat la validació.
     refused_profile_binding_resolution: Una dada del perfil necessària per al càlcul
       no s'ha pogut resoldre al canal de vincle correcte.
+    refused_profile_displaced_session_retirement: No s'ha pogut revocar la sessió
+      emmagatzemada del perfil seleccionat anteriorment, de manera que no s'ha creat
+      el perfil nou.
     refused_profile_foral_regime: El règim foral seleccionat no està modelat per aquest
       perfil. Selecciona un règim admès.
     refused_profile_inventory_validation: Un llibre d'inventari del perfil no ha superat
@@ -65322,24 +65325,59 @@ modelo:
       revision:
         2024-y-siguientes:
           casilla:
+            '05':
+              help: null
+              label: Nombre de rendes. Dividends i altres rendes de participació en
+                fons propis d'entitats
+            '06':
+              help: null
+              label: Nombre de rendes. Resta de rendes
+            '07':
+              help: null
+              label: Nombre de rendes. Total
             08:
               help: null
-              label: Base de retencions i ingressos a compte. Rendes dineràries
+              label: Base de retencions i ingressos a compte. Dividends i altres rendes
+                de participació en fons propis d'entitats
             09:
               help: null
-              label: Base de retencions i ingressos a compte. Rendes en espècie
+              label: Base de retencions i ingressos a compte. Resta de rendes
             '10':
               help: null
               label: Base de retencions i ingressos a compte. Total
             '11':
               help: null
-              label: Retencions i ingressos a compte. Rendes dineràries
+              label: Retencions i ingressos a compte. Dividends i altres rendes de
+                participació en fons propis d'entitats
             '12':
               help: null
-              label: Retencions i ingressos a compte. Rendes en espècie
+              label: Retencions i ingressos a compte. Resta de rendes
             '13':
               help: null
               label: Retencions i ingressos a compte. Total
+            '14':
+              help: null
+              label: Rendes no sotmeses a retenció o ingrés a compte. Nombre de rendes.
+                Dividends i altres rendes de participació en fons propis d'entitats
+            '15':
+              help: null
+              label: Rendes no sotmeses a retenció o ingrés a compte. Nombre de rendes.
+                Resta de rendes
+            '16':
+              help: null
+              label: Rendes no sotmeses a retenció o ingrés a compte. Nombre de rendes.
+                Total
+            '17':
+              help: null
+              label: Rendes no sotmeses a retenció o ingrés a compte. Base. Dividends
+                i altres rendes de participació en fons propis d'entitats
+            '18':
+              help: null
+              label: Rendes no sotmeses a retenció o ingrés a compte. Base. Resta
+                de rendes
+            '19':
+              help: null
+              label: Rendes no sotmeses a retenció o ingrés a compte. Base. Total
             '20':
               help: null
               label: Resultats a ingressar de declaracions anteriors pel mateix concepte,
@@ -65714,6 +65752,12 @@ modelo:
               label: Total import de la retenció o ingrés a compte
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
               label: Clau de personalitat del perceptor no resident
+            x-e1in4opecpim6q315lo62prf:
+              label: Data de pagament del premi
+            x-e1in4opecpim6q315lpmusjkclng:
+              label: Data de celebració del sorteig o aposta
+            x-e1in4oped5mn0rriehiiqs3iclmmiro:
+              label: Import íntegre del premi o valor individual del premi en espècie
             x-e1in4opedpkmc:
               label: Número d'identificació fiscal (NIF) del perceptor
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
@@ -65723,6 +65767,8 @@ modelo:
             x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
               label: Cognoms i nom, raó social o denominació del representant del
                 perceptor
+            x-e1in4opee1p6utj9dphmio8:
+              label: Codi de província del domicili del perceptor
             x-e1in4opeehkn0rpde1in4or5e1q6usg:
               label: Tipus de perceptor
           construct:
@@ -65741,9 +65787,18 @@ modelo:
             aportaciones-ejercicio:
               help: null
               label: Aportacions efectuades en l'exercici
+            base-retencion-practicada:
+              help: null
+              label: Base de la retenció practicada
+            base-retenciones:
+              help: null
+              label: Base de retencions
             clave-alta:
               help: null
               label: Clau d'alta
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaració complementària o substitutiva
             declarado-nif:
               help: null
               label: NIF del declarat
@@ -65753,27 +65808,63 @@ modelo:
             declarante-nif:
               help: null
               label: NIF del declarant
+            declarante-razon-social:
+              help: null
+              label: Raó social del declarant
             ejercicio-declaracion:
               help: null
               label: Exercici de declaració
             extincion-plan:
               help: null
               label: Extinció del Pla d'Estalvi a Llarg Termini
+            fecha-apertura:
+              help: null
+              label: Data d'obertura
             fecha-extincion:
               help: null
               label: Data d'extinció
+            identificador-producto:
+              help: null
+              label: Identificador del producte contractat
+            importe-total-aportaciones:
+              help: null
+              label: Import total d'aportacions
+            numero-identificativo-anterior:
+              help: null
+              label: Número identificatiu de la declaració anterior
+            numero-identificativo-declaracion:
+              help: null
+              label: Número identificatiu de la declaració
+            numero-total-declarados:
+              help: null
+              label: Nombre total de declarats
+            persona-relacion:
+              help: null
+              label: Persona amb qui relacionar-se
             rendimientos-negativos-acumulados:
               help: null
               label: Rendiments negatius acumulats
             rendimientos-negativos-ejercicio:
               help: null
               label: Rendiments negatius obtinguts durant l'exercici
+            rendimientos-negativos-imputables:
+              help: null
+              label: Rendiments negatius imputables
             rendimientos-positivos-acumulados:
               help: null
               label: Rendiments positius acumulats
             rendimientos-positivos-ejercicio:
               help: null
               label: Rendiments positius obtinguts durant l'exercici
+            representante-legal-nif:
+              help: null
+              label: NIF del representant legal
+            tipo-identificador:
+              help: null
+              label: Tipus d'identificador
+            tipo-plan-ahorro:
+              help: null
+              label: Tipus de Pla d'Estalvi a Llarg Termini
           field:
             label: null
     '289':
@@ -70232,6 +70323,36 @@ modelo:
       revision:
         2000-y-siguientes:
           casilla:
+            '01':
+              help: null
+              label: Import de les operacions [01]
+            '02':
+              help: null
+              label: Import de les operacions [02]
+            '03':
+              help: null
+              label: Import de les operacions [03]
+            '04':
+              help: null
+              label: Percentatge de compensació [04]
+            '05':
+              help: null
+              label: Percentatge de compensació [05]
+            '06':
+              help: null
+              label: Percentatge de compensació [06]
+            '07':
+              help: null
+              label: Import de la compensació [07]
+            08:
+              help: null
+              label: Import de la compensació [08]
+            09:
+              help: null
+              label: Import de la compensació [09]
+            '10':
+              help: null
+              label: Import total de les compensacions [10]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici a què es refereix l'autoliquidació
@@ -71358,6 +71479,9 @@ modelo:
           iva-isp-interior-cuota:
             help: null
             label: IVA autorepercutit meritat en operacions interiors
+          iva-iva-importacion-diferimiento:
+            label: Resultat liquidació anual - IVA a la importació liquidat per la
+              Duana (només subjectes passius amb opció de diferiment) [659]
           iva-liquidaciones-total-a-ingresar:
             label: Total resultats a ingressar de les autoliquidacions d'IVA de l'exercici
           iva-liquidaciones-total-devoluciones-elementos-transporte:
@@ -71653,6 +71777,26 @@ modelo:
             label: Sector diferenciat 3 - Suma de deduccions [189]
           iva-suma-resultados:
             label: Suma de resultats
+          iva-territorio-alava-porcentaje:
+            label: Tributació per raó de territori - Àlaba - Percentatge [88]
+          iva-territorio-compensacion-atribuible-comun:
+            label: Tributació per raó de territori - Compensació de quotes de l'exercici
+              anterior atribuïble a territori comú [93]
+          iva-territorio-comun-porcentaje:
+            label: Tributació per raó de territori - Territori comú - Percentatge
+              [87]
+          iva-territorio-guipuzcoa-porcentaje:
+            label: Tributació per raó de territori - Guipúscoa - Percentatge [89]
+          iva-territorio-navarra-porcentaje:
+            label: Tributació per raó de territori - Navarra - Percentatge [91]
+          iva-territorio-resultado-anual-atribuible-comun:
+            label: Tributació per raó de territori - Resultat de la liquidació anual
+              atribuïble a territori comú [94]
+          iva-territorio-resultado-atribuible-comun:
+            label: Tributació per raó de territori - Resultat atribuïble a territori
+              comú [92]
+          iva-territorio-vizcaya-porcentaje:
+            label: Tributació per raó de territori - Biscaia - Percentatge [90]
           iva-total-bases-iva:
             label: Total bases imposables de l'IVA meritat
           iva-volumen-agencias-viajes:

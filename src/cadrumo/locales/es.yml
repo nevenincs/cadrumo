@@ -7605,6 +7605,9 @@ errors:
       IVA por bienes de inversión no superó la validación.
     refused_profile_binding_resolution: Un dato del perfil necesario para el cálculo
       no se pudo resolver en el canal de vínculo correcto.
+    refused_profile_displaced_session_retirement: No se ha podido revocar la sesión
+      almacenada del perfil seleccionado anteriormente, por lo que no se ha creado
+      el perfil nuevo.
     refused_profile_foral_regime: El régimen foral seleccionado no está modelado por
       este perfil. Selecciona un régimen admitido.
     refused_profile_inventory_validation: Un libro de inventario del perfil no superó
@@ -67649,24 +67652,60 @@ modelo:
       revision:
         2024-y-siguientes:
           casilla:
+            '05':
+              help: null
+              label: Número de rentas. Dividendos y otras rentas de participación
+                en fondos propios de entidades
+            '06':
+              help: null
+              label: Número de rentas. Resto de rentas
+            '07':
+              help: null
+              label: Número de rentas. Total
             08:
               help: null
-              label: Base de retenciones e ingresos a cuenta. Rentas dinerarias
+              label: Base de retenciones e ingresos a cuenta. Dividendos y otras rentas
+                de participación en fondos propios de entidades
             09:
               help: null
-              label: Base de retenciones e ingresos a cuenta. Rentas en especie
+              label: Base de retenciones e ingresos a cuenta. Resto de rentas
             '10':
               help: null
               label: Base de retenciones e ingresos a cuenta. Total
             '11':
               help: null
-              label: Retenciones e ingresos a cuenta. Rentas dinerarias
+              label: Retenciones e ingresos a cuenta. Dividendos y otras rentas de
+                participación en fondos propios de entidades
             '12':
               help: null
-              label: Retenciones e ingresos a cuenta. Rentas en especie
+              label: Retenciones e ingresos a cuenta. Resto de rentas
             '13':
               help: null
               label: Retenciones e ingresos a cuenta. Total
+            '14':
+              help: null
+              label: Rentas no sometidas a retención o ingreso a cuenta. Número de
+                rentas. Dividendos y otras rentas de participación en fondos propios
+                de entidades
+            '15':
+              help: null
+              label: Rentas no sometidas a retención o ingreso a cuenta. Número de
+                rentas. Resto de rentas
+            '16':
+              help: null
+              label: Rentas no sometidas a retención o ingreso a cuenta. Número de
+                rentas. Total
+            '17':
+              help: null
+              label: Rentas no sometidas a retención o ingreso a cuenta. Base. Dividendos
+                y otras rentas de participación en fondos propios de entidades
+            '18':
+              help: null
+              label: Rentas no sometidas a retención o ingreso a cuenta. Base. Resto
+                de rentas
+            '19':
+              help: null
+              label: Rentas no sometidas a retención o ingreso a cuenta. Base. Total
             '20':
               help: null
               label: Resultados a ingresar de anteriores declaraciones por el mismo
@@ -68053,8 +68092,16 @@ modelo:
               label: Número total de registros de perceptor declarados
             x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
               label: Total importe de la retención o ingreso a cuenta
+            x-e1in4opec9gn6p9de9in8pbecdkmurg:
+              label: Base de retención o ingreso a cuenta
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
               label: Clave de personalidad del perceptor no residente
+            x-e1in4opecpim6q315lo62prf:
+              label: Fecha de pago del premio
+            x-e1in4opecpim6q315lpmusjkclng:
+              label: Fecha de celebración del sorteo o apuesta
+            x-e1in4oped5mn0rriehiiqs3iclmmiro:
+              label: Importe íntegro del premio o valor individual del premio en especie
             x-e1in4opedpkmc:
               label: NIF del perceptor
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
@@ -68064,6 +68111,8 @@ modelo:
             x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
               label: Apellidos y nombre, razón social o denominación del representante
                 del perceptor
+            x-e1in4opee1p6utj9dphmio8:
+              label: Código de provincia del domicilio del perceptor
             x-e1in4opeehkn0rpde1in4or5e1q6usg:
               label: Tipo de perceptor
           construct:
@@ -68083,9 +68132,18 @@ modelo:
             aportaciones-ejercicio:
               help: null
               label: Aportaciones efectuadas en el ejercicio
+            base-retencion-practicada:
+              help: null
+              label: Base de la retencion practicada
+            base-retenciones:
+              help: null
+              label: Base de retenciones
             clave-alta:
               help: null
               label: Clave de alta
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaracion complementaria o sustitutiva
             declarado-nif:
               help: null
               label: NIF del declarado
@@ -68095,27 +68153,63 @@ modelo:
             declarante-nif:
               help: null
               label: NIF del declarante
+            declarante-razon-social:
+              help: null
+              label: Razon social del declarante
             ejercicio-declaracion:
               help: null
               label: Ejercicio de declaracion
             extincion-plan:
               help: null
               label: Extincion del Plan de Ahorro a Largo Plazo
+            fecha-apertura:
+              help: null
+              label: Fecha de apertura
             fecha-extincion:
               help: null
               label: Fecha de extincion
+            identificador-producto:
+              help: null
+              label: Identificador del producto contratado
+            importe-total-aportaciones:
+              help: null
+              label: Importe total de aportaciones
+            numero-identificativo-anterior:
+              help: null
+              label: Numero identificativo de la declaracion anterior
+            numero-identificativo-declaracion:
+              help: null
+              label: Numero identificativo de la declaracion
+            numero-total-declarados:
+              help: null
+              label: Numero total de declarados
+            persona-relacion:
+              help: null
+              label: Persona con quien relacionarse
             rendimientos-negativos-acumulados:
               help: null
               label: Rendimientos negativos acumulados
             rendimientos-negativos-ejercicio:
               help: null
               label: Rendimientos negativos obtenidos durante el ejercicio
+            rendimientos-negativos-imputables:
+              help: null
+              label: Rendimientos negativos imputables
             rendimientos-positivos-acumulados:
               help: null
               label: Rendimientos positivos acumulados
             rendimientos-positivos-ejercicio:
               help: null
               label: Rendimientos positivos obtenidos durante el ejercicio
+            representante-legal-nif:
+              help: null
+              label: NIF del representante legal
+            tipo-identificador:
+              help: null
+              label: Tipo de identificador
+            tipo-plan-ahorro:
+              help: null
+              label: Tipo de Plan de Ahorro a Largo Plazo
           field:
             label: Modelo 280 ejercicio 2025 (Orden HAP/2118/2015; Ordenes HFP/1822/2016,
               HAC/1276/2019 y HFP/1192/2022)
@@ -72614,6 +72708,36 @@ modelo:
       revision:
         2000-y-siguientes:
           casilla:
+            '01':
+              help: null
+              label: Importe de las operaciones [01]
+            '02':
+              help: null
+              label: Importe de las operaciones [02]
+            '03':
+              help: null
+              label: Importe de las operaciones [03]
+            '04':
+              help: null
+              label: Porcentaje de compensación [04]
+            '05':
+              help: null
+              label: Porcentaje de compensación [05]
+            '06':
+              help: null
+              label: Porcentaje de compensación [06]
+            '07':
+              help: null
+              label: Importe de la compensación [07]
+            08:
+              help: null
+              label: Importe de la compensación [08]
+            09:
+              help: null
+              label: Importe de la compensación [09]
+            '10':
+              help: null
+              label: Importe total de las compensaciones [10]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la autoliquidación
@@ -73777,6 +73901,9 @@ modelo:
             help: null
             label: Cuota IVA autorepercutida en operaciones interiores con inversion
               del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
+          iva-iva-importacion-diferimiento:
+            label: Resultado liquidación anual - IVA a la importación liquidado por
+              la Aduana (sólo sujetos pasivos con opción de diferimiento) [659]
           iva-liquidaciones-total-a-ingresar:
             label: Total resultados a ingresar de las autoliquidaciones de IVA del
               ejercicio
@@ -74079,6 +74206,26 @@ modelo:
             label: Sector diferenciado 3 - Suma de deducciones [189]
           iva-suma-resultados:
             label: Suma de resultados
+          iva-territorio-alava-porcentaje:
+            label: Tributación por razón de territorio - Álava - Porcentaje [88]
+          iva-territorio-compensacion-atribuible-comun:
+            label: Tributación por razón de territorio - Compensación de cuotas del
+              ejercicio anterior atribuible a territorio común [93]
+          iva-territorio-comun-porcentaje:
+            label: Tributación por razón de territorio - Territorio común - Porcentaje
+              [87]
+          iva-territorio-guipuzcoa-porcentaje:
+            label: Tributación por razón de territorio - Guipúzcoa - Porcentaje [89]
+          iva-territorio-navarra-porcentaje:
+            label: Tributación por razón de territorio - Navarra - Porcentaje [91]
+          iva-territorio-resultado-anual-atribuible-comun:
+            label: Tributación por razón de territorio - Resultado de la liquidación
+              anual atribuible a territorio común [94]
+          iva-territorio-resultado-atribuible-comun:
+            label: Tributación por razón de territorio - Resultado atribuible a territorio
+              común [92]
+          iva-territorio-vizcaya-porcentaje:
+            label: Tributación por razón de territorio - Vizcaya - Porcentaje [90]
           iva-total-bases-iva:
             label: Total bases imponibles del IVA devengado
           iva-volumen-agencias-viajes:

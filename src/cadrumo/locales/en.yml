@@ -7064,6 +7064,8 @@ errors:
       record failed validation.
     refused_profile_binding_resolution: A profile fact required for the calculation
       could not be resolved into the correct binding channel.
+    refused_profile_displaced_session_retirement: The previously selected profile's
+      stored session could not be revoked, so the new profile was not created.
     refused_profile_foral_regime: The foral regime selected is not modelled by this
       profile. Select a supported regime.
     refused_profile_inventory_validation: A profile inventory ledger failed validation.
@@ -64867,24 +64869,61 @@ modelo:
       revision:
         2024-y-siguientes:
           casilla:
+            '05':
+              help: null
+              label: Number of income items. Dividends and other income from holdings
+                in the equity of entities
+            '06':
+              help: null
+              label: Number of income items. Other income
+            '07':
+              help: null
+              label: Number of income items. Total
             08:
               help: null
-              label: Withholding and advance payment tax base. Cash income
+              label: Withholding and advance payment tax base. Dividends and other
+                income from holdings in the equity of entities
             09:
               help: null
-              label: Withholding and advance payment tax base. Income in kind
+              label: Withholding and advance payment tax base. Other income
             '10':
               help: null
               label: Withholding and advance payment tax base. Total
             '11':
               help: null
-              label: Withholdings and advance payments. Cash income
+              label: Withholdings and advance payments. Dividends and other income
+                from holdings in the equity of entities
             '12':
               help: null
-              label: Withholdings and advance payments. Income in kind
+              label: Withholdings and advance payments. Other income
             '13':
               help: null
               label: Withholdings and advance payments. Total
+            '14':
+              help: null
+              label: Income not subject to withholding or advance payment. Number
+                of income items. Dividends and other income from holdings in the equity
+                of entities
+            '15':
+              help: null
+              label: Income not subject to withholding or advance payment. Number
+                of income items. Other income
+            '16':
+              help: null
+              label: Income not subject to withholding or advance payment. Number
+                of income items. Total
+            '17':
+              help: null
+              label: Income not subject to withholding or advance payment. Tax base.
+                Dividends and other income from holdings in the equity of entities
+            '18':
+              help: null
+              label: Income not subject to withholding or advance payment. Tax base.
+                Other income
+            '19':
+              help: null
+              label: Income not subject to withholding or advance payment. Tax base.
+                Total
             '20':
               help: null
               label: Amounts payable from prior returns for the same item, year and
@@ -65255,8 +65294,16 @@ modelo:
               label: Total number of declared payee records
             x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
               label: Total amount of withholding or payment on account
+            x-e1in4opec9gn6p9de9in8pbecdkmurg:
+              label: Base for withholding or payment on account
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
               label: Legal personality code of the non-resident payee
+            x-e1in4opecpim6q315lo62prf:
+              label: Date the prize was paid
+            x-e1in4opecpim6q315lpmusjkclng:
+              label: Date the draw or bet was held
+            x-e1in4oped5mn0rriehiiqs3iclmmiro:
+              label: Gross prize amount or individual value of the prize in kind
             x-e1in4opedpkmc:
               label: Payee tax identification number
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
@@ -65266,6 +65313,8 @@ modelo:
             x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
               label: Surnames and given name, legal name or business name of the payee's
                 representative
+            x-e1in4opee1p6utj9dphmio8:
+              label: Province code of the payee's address
             x-e1in4opeehkn0rpde1in4or5e1q6usg:
               label: Payee type
           construct:
@@ -65284,9 +65333,18 @@ modelo:
             aportaciones-ejercicio:
               help: null
               label: null
+            base-retencion-practicada:
+              help: null
+              label: Base of the withholding applied
+            base-retenciones:
+              help: null
+              label: Withholding base
             clave-alta:
               help: null
               label: null
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Supplementary or replacement return
             declarado-nif:
               help: null
               label: null
@@ -65296,27 +65354,63 @@ modelo:
             declarante-nif:
               help: null
               label: null
+            declarante-razon-social:
+              help: null
+              label: Business name of the filer
             ejercicio-declaracion:
               help: null
               label: null
             extincion-plan:
               help: null
               label: null
+            fecha-apertura:
+              help: null
+              label: Opening date
             fecha-extincion:
               help: null
               label: null
+            identificador-producto:
+              help: null
+              label: Identifier of the contracted product
+            importe-total-aportaciones:
+              help: null
+              label: Total amount of contributions
+            numero-identificativo-anterior:
+              help: null
+              label: Identifying number of the previous return
+            numero-identificativo-declaracion:
+              help: null
+              label: Declaration identifying number
+            numero-total-declarados:
+              help: null
+              label: Total number of reported persons
+            persona-relacion:
+              help: null
+              label: Contact person
             rendimientos-negativos-acumulados:
               help: null
               label: null
             rendimientos-negativos-ejercicio:
               help: null
               label: null
+            rendimientos-negativos-imputables:
+              help: null
+              label: Attributable negative returns
             rendimientos-positivos-acumulados:
               help: null
               label: null
             rendimientos-positivos-ejercicio:
               help: null
               label: null
+            representante-legal-nif:
+              help: null
+              label: Tax ID of the legal representative
+            tipo-identificador:
+              help: null
+              label: Identifier type
+            tipo-plan-ahorro:
+              help: null
+              label: Type of long-term savings plan
           field:
             label: null
     '289':
@@ -69746,6 +69840,36 @@ modelo:
       revision:
         2000-y-siguientes:
           casilla:
+            '01':
+              help: null
+              label: Amount of the operations [01]
+            '02':
+              help: null
+              label: Amount of the operations [02]
+            '03':
+              help: null
+              label: Amount of the operations [03]
+            '04':
+              help: null
+              label: Compensation percentage [04]
+            '05':
+              help: null
+              label: Compensation percentage [05]
+            '06':
+              help: null
+              label: Compensation percentage [06]
+            '07':
+              help: null
+              label: Amount of the compensation [07]
+            08:
+              help: null
+              label: Amount of the compensation [08]
+            09:
+              help: null
+              label: Amount of the compensation [09]
+            '10':
+              help: null
+              label: Total amount of the compensations [10]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Filing year to which the self-assessment relates
@@ -70870,6 +70994,9 @@ modelo:
           iva-isp-interior-cuota:
             help: null
             label: Accrued reverse-charge VAT on domestic transactions
+          iva-iva-importacion-diferimiento:
+            label: Annual settlement result - Import VAT assessed by Customs (only
+              taxpayers electing deferred payment) [659]
           iva-liquidaciones-total-a-ingresar:
             label: Total amounts payable from the year's VAT self-assessments
           iva-liquidaciones-total-devoluciones-elementos-transporte:
@@ -71176,6 +71303,25 @@ modelo:
             label: Differentiated sector 3 - Total deductions [189]
           iva-suma-resultados:
             label: Sum of results
+          iva-territorio-alava-porcentaje:
+            label: Taxation by territory - Álava - Percentage [88]
+          iva-territorio-compensacion-atribuible-comun:
+            label: Taxation by territory - Prior-year credit carried forward attributable
+              to common territory [93]
+          iva-territorio-comun-porcentaje:
+            label: Taxation by territory - Common territory - Percentage [87]
+          iva-territorio-guipuzcoa-porcentaje:
+            label: Taxation by territory - Gipuzkoa - Percentage [89]
+          iva-territorio-navarra-porcentaje:
+            label: Taxation by territory - Navarre - Percentage [91]
+          iva-territorio-resultado-anual-atribuible-comun:
+            label: Taxation by territory - Annual settlement result attributable to
+              common territory [94]
+          iva-territorio-resultado-atribuible-comun:
+            label: Taxation by territory - Result attributable to common territory
+              [92]
+          iva-territorio-vizcaya-porcentaje:
+            label: Taxation by territory - Bizkaia - Percentage [90]
           iva-total-bases-iva:
             label: Total taxable bases of output VAT
           iva-volumen-agencias-viajes:

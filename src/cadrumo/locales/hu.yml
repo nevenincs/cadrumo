@@ -7405,6 +7405,8 @@ errors:
       nyilvántartása nem ment át az ellenőrzésen.
     refused_profile_binding_resolution: A számításhoz szükséges profiladatot nem sikerült
       a megfelelő kötési csatornává feloldani.
+    refused_profile_displaced_session_retirement: A korábban kiválasztott profil tárolt
+      munkamenetét nem sikerült visszavonni, ezért az új profil nem jött létre.
     refused_profile_foral_regime: A kiválasztott foral adózási rend nem modellezett
       ebben a profilban. Válasszon egy támogatott adózási rendet.
     refused_profile_inventory_validation: Egy profil készlet-főkönyve nem ment át
@@ -65372,25 +65374,62 @@ modelo:
       revision:
         2024-y-siguientes:
           casilla:
+            '05':
+              help: null
+              label: Jövedelmek száma. Osztalék és társaságok saját tőkéjében fennálló
+                részesedésből származó egyéb jövedelem
+            '06':
+              help: null
+              label: Jövedelmek száma. Egyéb jövedelmek
+            '07':
+              help: null
+              label: Jövedelmek száma. Összesen
             08:
               help: null
-              label: Levonások és előlegfizetések adóalapja. Készpénzben teljesített
-                jövedelem
+              label: Levonások és előlegfizetések adóalapja. Osztalék és társaságok
+                saját tőkéjében fennálló részesedésből származó egyéb jövedelem
             09:
               help: null
-              label: Levonások és előlegfizetések adóalapja. Természetbeni jövedelem
+              label: Levonások és előlegfizetések adóalapja. Egyéb jövedelmek
             '10':
               help: null
               label: Levonások és előlegfizetések adóalapja. Összesen
             '11':
               help: null
-              label: Levonások és előlegfizetések. Készpénzben teljesített jövedelem
+              label: Levonások és előlegfizetések. Osztalék és társaságok saját tőkéjében
+                fennálló részesedésből származó egyéb jövedelem
             '12':
               help: null
-              label: Levonások és előlegfizetések. Természetbeni jövedelem
+              label: Levonások és előlegfizetések. Egyéb jövedelmek
             '13':
               help: null
               label: Levonások és előlegfizetések. Összesen
+            '14':
+              help: null
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Jövedelmek
+                száma. Osztalék és társaságok saját tőkéjében fennálló részesedésből
+                származó egyéb jövedelem
+            '15':
+              help: null
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Jövedelmek
+                száma. Egyéb jövedelmek
+            '16':
+              help: null
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Jövedelmek
+                száma. Összesen
+            '17':
+              help: null
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Adóalap.
+                Osztalék és társaságok saját tőkéjében fennálló részesedésből származó
+                egyéb jövedelem
+            '18':
+              help: null
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Adóalap.
+                Egyéb jövedelmek
+            '19':
+              help: null
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Adóalap.
+                Összesen
             '20':
               help: null
               label: Korábbi bevallásokból befizetendő összegek ugyanazon tétel, év
@@ -65765,6 +65804,13 @@ modelo:
               label: A forrásadó vagy adóelőleg teljes összege
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
               label: A külföldi illetőségű kedvezményezett jogi személyiségének kódja
+            x-e1in4opecpim6q315lo62prf:
+              label: A nyeremény kifizetésének időpontja
+            x-e1in4opecpim6q315lpmusjkclng:
+              label: A sorsolás vagy fogadás időpontja
+            x-e1in4oped5mn0rriehiiqs3iclmmiro:
+              label: A nyeremény bruttó összege vagy a természetbeni nyeremény egyedi
+                értéke
             x-e1in4opedpkmc:
               label: A kedvezményezett adóazonosító száma
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
@@ -65774,6 +65820,8 @@ modelo:
             x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
               label: A kedvezményezett képviselőjének vezeték- és utóneve, cégneve
                 vagy elnevezése
+            x-e1in4opee1p6utj9dphmio8:
+              label: A kedvezményezett lakcíme szerinti tartomány kódja
             x-e1in4opeehkn0rpde1in4or5e1q6usg:
               label: A kedvezményezett típusa
           construct:
@@ -65792,9 +65840,18 @@ modelo:
             aportaciones-ejercicio:
               help: null
               label: null
+            base-retencion-practicada:
+              help: null
+              label: A levont forrásadó alapja
+            base-retenciones:
+              help: null
+              label: A forrásadó alapja
             clave-alta:
               help: null
               label: null
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Kiegészítő vagy helyettesítő bevallás
             declarado-nif:
               help: null
               label: null
@@ -65804,27 +65861,63 @@ modelo:
             declarante-nif:
               help: null
               label: null
+            declarante-razon-social:
+              help: null
+              label: A bejelentő cégneve
             ejercicio-declaracion:
               help: null
               label: null
             extincion-plan:
               help: null
               label: null
+            fecha-apertura:
+              help: null
+              label: A megnyitás dátuma
             fecha-extincion:
               help: null
               label: null
+            identificador-producto:
+              help: null
+              label: A szerződött termék azonosítója
+            importe-total-aportaciones:
+              help: null
+              label: A befizetések teljes összege
+            numero-identificativo-anterior:
+              help: null
+              label: A korábbi bevallás azonosító száma
+            numero-identificativo-declaracion:
+              help: null
+              label: A bevallás azonosító száma
+            numero-total-declarados:
+              help: null
+              label: A bejelentett személyek száma összesen
+            persona-relacion:
+              help: null
+              label: Kapcsolattartó személy
             rendimientos-negativos-acumulados:
               help: null
               label: null
             rendimientos-negativos-ejercicio:
               help: null
               label: null
+            rendimientos-negativos-imputables:
+              help: null
+              label: Betudható negatív hozamok
             rendimientos-positivos-acumulados:
               help: null
               label: null
             rendimientos-positivos-ejercicio:
               help: null
               label: null
+            representante-legal-nif:
+              help: null
+              label: A törvényes képviselő adószáma
+            tipo-identificador:
+              help: null
+              label: Az azonosító típusa
+            tipo-plan-ahorro:
+              help: null
+              label: A hosszú távú megtakarítási terv típusa
           field:
             label: null
     '289':
@@ -70305,6 +70398,36 @@ modelo:
       revision:
         2000-y-siguientes:
           casilla:
+            '01':
+              help: null
+              label: Az ügyletek összege [01]
+            '02':
+              help: null
+              label: Az ügyletek összege [02]
+            '03':
+              help: null
+              label: Az ügyletek összege [03]
+            '04':
+              help: null
+              label: Kompenzációs százalék [04]
+            '05':
+              help: null
+              label: Kompenzációs százalék [05]
+            '06':
+              help: null
+              label: Kompenzációs százalék [06]
+            '07':
+              help: null
+              label: A kompenzáció összege [07]
+            08:
+              help: null
+              label: A kompenzáció összege [08]
+            09:
+              help: null
+              label: A kompenzáció összege [09]
+            '10':
+              help: null
+              label: A kompenzációk teljes összege [10]
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Az önadózás vonatkozási éve
@@ -71428,6 +71551,9 @@ modelo:
           iva-isp-interior-cuota:
             help: null
             label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél
+          iva-iva-importacion-diferimiento:
+            label: Éves elszámolás eredménye - A vámhatóság által kivetett import-áfa
+              (csak halasztott fizetést választó adóalanyoknál) [659]
           iva-liquidaciones-total-a-ingresar:
             label: Az évi ÁFA-önadózások alapján fizetendő összegek összesen
           iva-liquidaciones-total-devoluciones-elementos-transporte:
@@ -71732,6 +71858,24 @@ modelo:
             label: 3. elkülönült tevékenységi kör - Levonások összege [189]
           iva-suma-resultados:
             label: Eredmények összege
+          iva-territorio-alava-porcentaje:
+            label: Területi adómegosztás - Álava - Százalék [88]
+          iva-territorio-compensacion-atribuible-comun:
+            label: Területi adómegosztás - Az előző évi továbbvitt követelésből a
+              közös területre jutó rész [93]
+          iva-territorio-comun-porcentaje:
+            label: Területi adómegosztás - Közös terület - Százalék [87]
+          iva-territorio-guipuzcoa-porcentaje:
+            label: Területi adómegosztás - Gipuzkoa - Százalék [89]
+          iva-territorio-navarra-porcentaje:
+            label: Területi adómegosztás - Navarra - Százalék [91]
+          iva-territorio-resultado-anual-atribuible-comun:
+            label: Területi adómegosztás - A közös területre jutó éves elszámolási
+              eredmény [94]
+          iva-territorio-resultado-atribuible-comun:
+            label: Területi adómegosztás - A közös területre jutó eredmény [92]
+          iva-territorio-vizcaya-porcentaje:
+            label: Területi adómegosztás - Bizkaia - Százalék [90]
           iva-total-bases-iva:
             label: A fizetendő ÁFA adóalapjai összesen
           iva-volumen-agencias-viajes:
