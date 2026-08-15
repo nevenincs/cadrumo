@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-15'
-body_hash: 'sha256:7b5e3d4deb3d2e7924a707d9d66a814d057f10fa797650d5c247502b5e6f9245'
+body_hash: 'sha256:06917b6987c8adf8944dd51ffecf2c1572c8e85675fb3267b42b5a371c4ded1d'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -107,7 +107,7 @@ Complete root source development and packaging census remediation with no unclas
 - [x] `W07.P21.S104` - Collapse every identical-constraint fixture cluster to one definition preserving scope and autouse reach; `src/cadrumo`.
 - [x] `W07.P21.S105` - Key the ownership manifest disposition on full constraint shape rather than repeated name; `dev/quality/fixture_ownership.py, dev/quality/tests/test_fixture_census.py`.
 - [x] `W07.P21.S106` - Detect one fixture behaviour living under many names by keying the census on body rather than name; `dev/quality/fixture_census.py, dev/quality/tests/test_fixture_census.py`.
-- [ ] `W07.P21.S107` - Give each aliased fixture behaviour one canonical home and one name preserving per-site lifecycle; `src/cadrumo`.
+- [x] `W07.P21.S107` - Give each aliased fixture behaviour one canonical home and one name preserving per-site lifecycle; `src/cadrumo`.
 - [x] `W07.P21.S108` - Adjudicate the substitutable secure-storage-root fixture pair the manifest now refuses on; `src/cadrumo/application/setup/tests, src/cadrumo/application/wizard/tests`.
 - [x] `W07.P21.S109` - Classify factory-bound fixtures as manifest rows with per-binding identity and argument evidence; `dev/quality/fixture_ownership.py, dev/quality/tests/test_fixture_census.py`.
 - [x] `W07.P21.S110` - Sweep test helper functions assertion helpers and builders for drift the fixture census cannot see; `src/cadrumo, dev`.
@@ -160,7 +160,7 @@ Independently review both lanes and prove the full mandate with focused lane col
 
 Run exact focused and lane-level gates for each migrated surface and enforcement boundary.
 
-- [ ] `W08.P26.S88` - Run the fixture census and require zero unclassified or substitutable duplicates; `dev/quality/fixture_ownership.toml`.
+- [x] `W08.P26.S88` - Run the fixture census and require zero unclassified or substitutable duplicates; `dev/quality/fixture_ownership.toml`.
 - [x] `W08.P26.S89` - Run marker banned-import topology ownership and no-monkeypatch gates; `src/cadrumo/tests`.
 - [x] `W08.P26.S90` - Run the dedicated harness lane and verify non-vacuity and independent verdict; `justfile, .github/workflows/ci.yml`.
 - [x] `W08.P26.S91` - Run unit and integration recipes and compare measured runtime to baseline; `justfile`.
@@ -180,7 +180,7 @@ Bind collection VaultSpec execution records and plan state into one auditable co
 - [x] `W08.P28.S95` - Run full first-party collection and retain complete status and errors; `pyproject.toml`.
 - [x] `W08.P28.S96` - Run feature-scoped and repository-wide VaultSpec checks without rewriting unrelated debt; `.vault`.
 - [x] `W08.P28.S97` - Create and validate one execution record per completed Step; `.vault/exec/2026-08-14-test-harness-sanity`.
-- [ ] `W08.P28.S98` - Prove every mandate requirement has authoritative evidence and no work remains; `.vault/plan/2026-08-14-test-harness-sanity-plan.md`.
+- [x] `W08.P28.S98` - Prove every mandate requirement has authoritative evidence and no work remains; `.vault/plan/2026-08-14-test-harness-sanity-plan.md`.
 
 ## Parallelization
 

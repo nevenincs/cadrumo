@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:f9e86d76e5fa9fb1a2042f993c024ce66ee8c223080e425d458a9445c397414c'
+body_hash: 'sha256:01973e01fdfac817d1fe61c744a4e035e86e4369748e05486991eae6a071c501'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -32,6 +32,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P21-S104]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S105]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S106]]'
+  - '[[2026-08-14-test-harness-sanity-W07-P21-S107]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S108]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S109]]'
   - '[[2026-08-14-test-harness-sanity-W07-P21-S110]]'
@@ -60,6 +61,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W07-P25-S85]]'
   - '[[2026-08-14-test-harness-sanity-W07-P25-S86]]'
   - '[[2026-08-14-test-harness-sanity-W07-P25-S87]]'
+  - '[[2026-08-14-test-harness-sanity-W08-P26-S88]]'
   - '[[2026-08-14-test-harness-sanity-W08-P26-S89]]'
   - '[[2026-08-14-test-harness-sanity-W08-P26-S90]]'
   - '[[2026-08-14-test-harness-sanity-W08-P26-S91]]'
@@ -69,6 +71,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-W08-P28-S95]]'
   - '[[2026-08-14-test-harness-sanity-W08-P28-S96]]'
   - '[[2026-08-14-test-harness-sanity-W08-P28-S97]]'
+  - '[[2026-08-14-test-harness-sanity-W08-P28-S98]]'
   - '[[2026-08-14-test-harness-sanity-audit]]'
   - '[[2026-08-14-test-harness-sanity-harness-performance-audit]]'
   - '[[2026-08-14-test-harness-sanity-plan]]'
@@ -158,6 +161,9 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 - `2026-08-14-test-harness-sanity-W08-P28-S95` - Run full first-party collection and retain complete status and errors
 - `2026-08-14-test-harness-sanity-W08-P28-S96` - Run feature-scoped and repository-wide VaultSpec checks without rewriting unrelated debt
 - `2026-08-14-test-harness-sanity-W08-P28-S97` - Create and validate one execution record per completed Step
+- `2026-08-14-test-harness-sanity-W07-P21-S107` - Give each aliased fixture behaviour one canonical home and one name preserving per-site lifecycle
+- `2026-08-14-test-harness-sanity-W08-P26-S88` - Run the fixture census and require zero unclassified or substitutable duplicates
+- `2026-08-14-test-harness-sanity-W08-P28-S98` - Prove every mandate requirement has authoritative evidence and no work remains
 
 ### plan
 
