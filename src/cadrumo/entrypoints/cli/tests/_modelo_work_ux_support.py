@@ -95,18 +95,6 @@ def _create_attribution_entity_intracom_profile() -> None:
     )
 
 
-def _attempt_incomplete_profile_create():
-    return _invoke(
-        [
-            "--format", "json",
-            "config", "profile", "create", _PROFILE_LABEL,
-            "--quiet", "--accept-defaults",
-            "--tax-id", "12345678Z",
-            "--activity", "design",
-        ],
-    )  # fmt: skip
-
-
 def _create_m130_work_unit(*, period: str = "1T") -> str:
     return create_modelo_work_unit_via_cli(
         modelo="130",

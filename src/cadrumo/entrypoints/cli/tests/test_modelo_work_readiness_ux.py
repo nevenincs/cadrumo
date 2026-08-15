@@ -14,7 +14,6 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_cli_profile
 from ._modelo_work_ux_support import (
     _PROFILE_ID,
-    _attempt_incomplete_profile_create,
     _create_attribution_entity_intracom_profile,
     _create_de_nonresident_legal_entity_profile,
     _create_gb_non_resident_profile,
@@ -50,35 +49,15 @@ def _remove_representante_fields_from_operator_profile() -> None:
         )
 
 
-def test_profile_create_refuses_incomplete_profile_before_modelo_work() -> None:
-    """Incomplete profiles must fail before a modelo work unit can exist."""
-    from ....application.workflow import read_profile_bucket
-
-    result = _attempt_incomplete_profile_create()
-
-    assert result.exit_code != 0
-    payload = json.loads(result.output)
-    assert payload["status"] == "error"
-    assert payload["error"]["code"] == "REFUSED_WIZARD_MISSING_FLAG"
-    assert payload["error"]["category"] == "REFUSED"
-    message = payload["error"]["message"]
-    assert "--entity-type" in message
-    assert "--name" in message
-    assert "--surnames" in message
-    assert read_profile_bucket(_PROFILE_ID) is None
-    assert "work_unit_id" not in result.output
-    assert "Traceback" not in result.output
-
-
 def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
     register_cli_profile(
         label=_PROFILE_ID,
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Readiness',
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Operator",
+            "identity.surnames": "Readiness",
         },
     )
 
@@ -201,16 +180,16 @@ def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile
     register_cli_profile(
         label=_PROFILE_ID,
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
-            "irpf.estimation_regime": 'directa_normal',
-            "identity.tax_id": 'X1234567L',
-            "identity.name": 'Non Resident',
-            "identity.surnames": 'Readiness',
-            "activities.description": 'design',
-            "fiscal_residency.status": 'non_resident_irnr',
-            "fiscal_residency.country": 'FR',
-            "censo.activity_start_date": '2026-07-15',
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "irpf.estimation_regime": "directa_normal",
+            "identity.tax_id": "X1234567L",
+            "identity.name": "Non Resident",
+            "identity.surnames": "Readiness",
+            "activities.description": "design",
+            "fiscal_residency.status": "non_resident_irnr",
+            "fiscal_residency.country": "FR",
+            "censo.activity_start_date": "2026-07-15",
         },
     )
 

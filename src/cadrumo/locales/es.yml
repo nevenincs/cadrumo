@@ -1988,6 +1988,10 @@ application:
       no_active_profile_selected: No hay un perfil activo seleccionado.
       profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
         login NAME para activarlo o aeat config profile delete NAME primero.
+      registration_displaced_session_not_retired: No se ha podido crear el perfil.
+        No se ha podido eliminar la sesión almacenada del perfil al que sustituye.
+        Cierra cualquier programa que esté usando el almacén de perfiles e inténtalo
+        de nuevo.
       registration_label_blank: El nombre del perfil no puede estar vacío.
       registration_passphrase_too_short: La contraseña debe tener al menos {minimum_length}
         caracteres.
@@ -73821,6 +73825,162 @@ modelo:
             label: Recargo de equivalencia al tipo 5,2% - Base imponible
           iva-resultado-liquidacion:
             label: Resultado de la liquidación
+          iva-sector-diferenciado-1-aic-corrientes-base:
+            label: Sector diferenciado 1 - IVA deducible en adquisiciones intracomunitarias
+              de bienes corrientes - Base imponible [147]
+          iva-sector-diferenciado-1-aic-corrientes-cuota:
+            label: Sector diferenciado 1 - IVA deducible en adquisiciones intracomunitarias
+              de bienes corrientes - Cuota deducible [148]
+          iva-sector-diferenciado-1-aic-inversion-base:
+            label: Sector diferenciado 1 - IVA deducible en adquisiciones intracomunitarias
+              de bienes de inversión - Base imponible [149]
+          iva-sector-diferenciado-1-aic-inversion-cuota:
+            label: Sector diferenciado 1 - IVA deducible en adquisiciones intracomunitarias
+              de bienes de inversión - Cuota deducible [150]
+          iva-sector-diferenciado-1-compensaciones-reagp-base:
+            label: Sector diferenciado 1 - Compensaciones del régimen especial de
+              la agricultura, ganadería y pesca - Base imponible [151]
+          iva-sector-diferenciado-1-compensaciones-reagp-cuota:
+            label: Sector diferenciado 1 - Compensaciones del régimen especial de
+              la agricultura, ganadería y pesca - Cuota deducible [152]
+          iva-sector-diferenciado-1-importaciones-corrientes-base:
+            label: Sector diferenciado 1 - IVA deducible en importaciones de bienes
+              corrientes - Base imponible [143]
+          iva-sector-diferenciado-1-importaciones-corrientes-cuota:
+            label: Sector diferenciado 1 - IVA deducible en importaciones de bienes
+              corrientes - Cuota deducible [144]
+          iva-sector-diferenciado-1-importaciones-inversion-base:
+            label: Sector diferenciado 1 - IVA deducible en importaciones de bienes
+              de inversión - Base imponible [145]
+          iva-sector-diferenciado-1-importaciones-inversion-cuota:
+            label: Sector diferenciado 1 - IVA deducible en importaciones de bienes
+              de inversión - Cuota deducible [146]
+          iva-sector-diferenciado-1-interiores-corrientes-base:
+            label: Sector diferenciado 1 - IVA deducible en operaciones interiores
+              de bienes y servicios corrientes - Base imponible [139]
+          iva-sector-diferenciado-1-interiores-corrientes-cuota:
+            label: Sector diferenciado 1 - IVA deducible en operaciones interiores
+              de bienes y servicios corrientes - Cuota deducible [140]
+          iva-sector-diferenciado-1-interiores-inversion-base:
+            label: Sector diferenciado 1 - IVA deducible en operaciones interiores
+              de bienes de inversión - Base imponible [141]
+          iva-sector-diferenciado-1-interiores-inversion-cuota:
+            label: Sector diferenciado 1 - IVA deducible en operaciones interiores
+              de bienes de inversión - Cuota deducible [142]
+          iva-sector-diferenciado-1-rectificacion-base:
+            label: Sector diferenciado 1 - Rectificación de deducciones - Base imponible
+              [640]
+          iva-sector-diferenciado-1-rectificacion-cuota:
+            label: Sector diferenciado 1 - Rectificación de deducciones - Cuota deducible
+              [153]
+          iva-sector-diferenciado-1-regularizacion-inversiones:
+            label: Sector diferenciado 1 - Regularización de inversiones [154]
+          iva-sector-diferenciado-1-suma-deducciones:
+            label: Sector diferenciado 1 - Suma de deducciones [155]
+          iva-sector-diferenciado-2-aic-corrientes-base:
+            label: Sector diferenciado 2 - IVA deducible en adquisiciones intracomunitarias
+              de bienes corrientes - Base imponible [164]
+          iva-sector-diferenciado-2-aic-corrientes-cuota:
+            label: Sector diferenciado 2 - IVA deducible en adquisiciones intracomunitarias
+              de bienes corrientes - Cuota deducible [165]
+          iva-sector-diferenciado-2-aic-inversion-base:
+            label: Sector diferenciado 2 - IVA deducible en adquisiciones intracomunitarias
+              de bienes de inversión - Base imponible [166]
+          iva-sector-diferenciado-2-aic-inversion-cuota:
+            label: Sector diferenciado 2 - IVA deducible en adquisiciones intracomunitarias
+              de bienes de inversión - Cuota deducible [167]
+          iva-sector-diferenciado-2-compensaciones-reagp-base:
+            label: Sector diferenciado 2 - Compensaciones del régimen especial de
+              la agricultura, ganadería y pesca - Base imponible [168]
+          iva-sector-diferenciado-2-compensaciones-reagp-cuota:
+            label: Sector diferenciado 2 - Compensaciones del régimen especial de
+              la agricultura, ganadería y pesca - Cuota deducible [169]
+          iva-sector-diferenciado-2-importaciones-corrientes-base:
+            label: Sector diferenciado 2 - IVA deducible en importaciones de bienes
+              corrientes - Base imponible [160]
+          iva-sector-diferenciado-2-importaciones-corrientes-cuota:
+            label: Sector diferenciado 2 - IVA deducible en importaciones de bienes
+              corrientes - Cuota deducible [161]
+          iva-sector-diferenciado-2-importaciones-inversion-base:
+            label: Sector diferenciado 2 - IVA deducible en importaciones de bienes
+              de inversión - Base imponible [162]
+          iva-sector-diferenciado-2-importaciones-inversion-cuota:
+            label: Sector diferenciado 2 - IVA deducible en importaciones de bienes
+              de inversión - Cuota deducible [163]
+          iva-sector-diferenciado-2-interiores-corrientes-base:
+            label: Sector diferenciado 2 - IVA deducible en operaciones interiores
+              de bienes y servicios corrientes - Base imponible [156]
+          iva-sector-diferenciado-2-interiores-corrientes-cuota:
+            label: Sector diferenciado 2 - IVA deducible en operaciones interiores
+              de bienes y servicios corrientes - Cuota deducible [157]
+          iva-sector-diferenciado-2-interiores-inversion-base:
+            label: Sector diferenciado 2 - IVA deducible en operaciones interiores
+              de bienes de inversión - Base imponible [158]
+          iva-sector-diferenciado-2-interiores-inversion-cuota:
+            label: Sector diferenciado 2 - IVA deducible en operaciones interiores
+              de bienes de inversión - Cuota deducible [159]
+          iva-sector-diferenciado-2-rectificacion-base:
+            label: Sector diferenciado 2 - Rectificación de deducciones - Base imponible
+              [641]
+          iva-sector-diferenciado-2-rectificacion-cuota:
+            label: Sector diferenciado 2 - Rectificación de deducciones - Cuota deducible
+              [170]
+          iva-sector-diferenciado-2-regularizacion-inversiones:
+            label: Sector diferenciado 2 - Regularización de inversiones [171]
+          iva-sector-diferenciado-2-suma-deducciones:
+            label: Sector diferenciado 2 - Suma de deducciones [172]
+          iva-sector-diferenciado-3-aic-corrientes-base:
+            label: Sector diferenciado 3 - IVA deducible en adquisiciones intracomunitarias
+              de bienes corrientes - Base imponible [181]
+          iva-sector-diferenciado-3-aic-corrientes-cuota:
+            label: Sector diferenciado 3 - IVA deducible en adquisiciones intracomunitarias
+              de bienes corrientes - Cuota deducible [182]
+          iva-sector-diferenciado-3-aic-inversion-base:
+            label: Sector diferenciado 3 - IVA deducible en adquisiciones intracomunitarias
+              de bienes de inversión - Base imponible [183]
+          iva-sector-diferenciado-3-aic-inversion-cuota:
+            label: Sector diferenciado 3 - IVA deducible en adquisiciones intracomunitarias
+              de bienes de inversión - Cuota deducible [184]
+          iva-sector-diferenciado-3-compensaciones-reagp-base:
+            label: Sector diferenciado 3 - Compensaciones del régimen especial de
+              la agricultura, ganadería y pesca - Base imponible [185]
+          iva-sector-diferenciado-3-compensaciones-reagp-cuota:
+            label: Sector diferenciado 3 - Compensaciones del régimen especial de
+              la agricultura, ganadería y pesca - Cuota deducible [186]
+          iva-sector-diferenciado-3-importaciones-corrientes-base:
+            label: Sector diferenciado 3 - IVA deducible en importaciones de bienes
+              corrientes - Base imponible [177]
+          iva-sector-diferenciado-3-importaciones-corrientes-cuota:
+            label: Sector diferenciado 3 - IVA deducible en importaciones de bienes
+              corrientes - Cuota deducible [178]
+          iva-sector-diferenciado-3-importaciones-inversion-base:
+            label: Sector diferenciado 3 - IVA deducible en importaciones de bienes
+              de inversión - Base imponible [179]
+          iva-sector-diferenciado-3-importaciones-inversion-cuota:
+            label: Sector diferenciado 3 - IVA deducible en importaciones de bienes
+              de inversión - Cuota deducible [180]
+          iva-sector-diferenciado-3-interiores-corrientes-base:
+            label: Sector diferenciado 3 - IVA deducible en operaciones interiores
+              de bienes y servicios corrientes - Base imponible [173]
+          iva-sector-diferenciado-3-interiores-corrientes-cuota:
+            label: Sector diferenciado 3 - IVA deducible en operaciones interiores
+              de bienes y servicios corrientes - Cuota deducible [174]
+          iva-sector-diferenciado-3-interiores-inversion-base:
+            label: Sector diferenciado 3 - IVA deducible en operaciones interiores
+              de bienes de inversión - Base imponible [175]
+          iva-sector-diferenciado-3-interiores-inversion-cuota:
+            label: Sector diferenciado 3 - IVA deducible en operaciones interiores
+              de bienes de inversión - Cuota deducible [176]
+          iva-sector-diferenciado-3-rectificacion-base:
+            label: Sector diferenciado 3 - Rectificación de deducciones - Base imponible
+              [642]
+          iva-sector-diferenciado-3-rectificacion-cuota:
+            label: Sector diferenciado 3 - Rectificación de deducciones - Cuota deducible
+              [187]
+          iva-sector-diferenciado-3-regularizacion-inversiones:
+            label: Sector diferenciado 3 - Regularización de inversiones [188]
+          iva-sector-diferenciado-3-suma-deducciones:
+            label: Sector diferenciado 3 - Suma de deducciones [189]
           iva-suma-resultados:
             label: Suma de resultados
           iva-total-bases-iva:
@@ -75603,9 +75763,17 @@ modelo:
             identificacion-8:
               help: null
               label: Comunidad o Ciudad Autónoma de residencia en 2020
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Bienes y derechos - C1. No exentos afectos activ. empres. y profes.
+                (no inmuebles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ.
+                empres. y profes. - Total
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la declaracion
+            x-chim6r1ed5i6irrdc4:
+              label: Idioma de la declaración
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Periodo (anual, 0A)
@@ -75991,9 +76159,17 @@ modelo:
             identificacion-8:
               help: null
               label: Comunidad o Ciudad Autónoma de residencia en 2022
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Bienes y derechos - C1. No exentos afectos activ. empres. y profes.
+                (no inmuebles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ.
+                empres. y profes. - Total
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la declaracion
+            x-chim6r1ed5i6irrdc4:
+              label: Idioma de la declaración
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Periodo (anual, 0A)
@@ -76379,9 +76555,17 @@ modelo:
             identificacion-8:
               help: null
               label: Comunidad o Ciudad Autónoma de residencia en 2023
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Bienes y derechos - C1. No exentos afectos activ. empres. y profes.
+                (no inmuebles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ.
+                empres. y profes. - Total
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la declaracion
+            x-chim6r1ed5i6irrdc4:
+              label: Idioma de la declaración
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Periodo (anual, 0A)
@@ -76767,9 +76951,17 @@ modelo:
             identificacion-8:
               help: null
               label: Comunidad o Ciudad Autónoma de residencia en 2024
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Bienes y derechos - C1. No exentos afectos activ. empres. y profes.
+                (no inmuebles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ.
+                empres. y profes. - Total
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la declaracion
+            x-chim6r1ed5i6irrdc4:
+              label: Idioma de la declaración
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Periodo (anual, 0A)
@@ -77155,9 +77347,17 @@ modelo:
             identificacion-8:
               help: null
               label: Comunidad o Ciudad Autónoma de residencia en 2025
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Bienes y derechos - C1. No exentos afectos activ. empres. y profes.
+                (no inmuebles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ.
+                empres. y profes. - Total
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la declaracion
+            x-chim6r1ed5i6irrdc4:
+              label: Idioma de la declaración
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Periodo (anual, 0A)

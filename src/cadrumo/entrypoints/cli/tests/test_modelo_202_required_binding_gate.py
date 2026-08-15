@@ -10,7 +10,7 @@ import pytest
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ._modelo_empty_profile_fixture import _isolated_backend
-from ._profile_cli_support import create_quiet_profile
+from ._profile_cli_support import seed_profile
 
 __all__ = ["_isolated_backend"]
 
@@ -26,44 +26,43 @@ _MISSING_M202_BINDINGS = {
 }
 
 
+# The natural-person placeholders the shared seeding door applies are blanked
+# for a legal entity, which has no business carrying them.
+_LEGAL_ENTITY_FACTS = {
+    "taxpayer_type.entity_type": "legal_entity",
+    "taxpayer_type.legal_entity_form": "sl",
+    "identity.tax_id": "B12345674",
+    "identity.name": "",
+    "identity.surnames": "",
+    "taxpayer_type.irpf_income_categories": "",
+    "irpf.estimation_regime": "",
+}
+
+
 def _create_laura_taller_sol_profile() -> None:
-    result = create_quiet_profile(
+    seed_profile(
         "laura-taller-sol",
-        "--entity-type",
-        "legal_entity",
-        "--legal-entity-form",
-        "sl",
-        "--tax-id",
-        "B12345674",
-        "--activity",
-        "taller mecanico",
+        **_LEGAL_ENTITY_FACTS,
+        **{
+            "identity.legal_name": "Taller Sol SL",
+            "activities.description": "taller mecanico",
+        },
     )
-    assert result.exit_code == 0, result.output
 
 
 def _create_lorentz_irene_profile() -> None:
-    result = create_quiet_profile(
+    seed_profile(
         "lorentz-irene",
-        "--entity-type",
-        "legal_entity",
-        "--legal-entity-form",
-        "sl",
-        "--tax-id",
-        "B12345674",
-        "--legal-name",
-        "Lorentz Irene SL",
-        "--activity",
-        "IVA corporate run",
-        "--incn-prior-12-months",
-        "500000",
-        "--activity-start-date",
-        "2024-01-15",
-        "--tax-residence-ccaa",
-        "madrid",
-        "--iva-regime",
-        "GENERAL",
+        **_LEGAL_ENTITY_FACTS,
+        **{
+            "identity.legal_name": "Lorentz Irene SL",
+            "activities.description": "IVA corporate run",
+            "taxpayer_type.incn_prior_12_months": "500000",
+            "censo.activity_start_date": "2024-01-15",
+            "tax_residence.ccaa": "madrid",
+            "iva.regime": "GENERAL",
+        },
     )
-    assert result.exit_code == 0, result.output
 
 
 def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachable(tmp_path: Path) -> None:

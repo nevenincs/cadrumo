@@ -2,7 +2,14 @@
 id = "modelo-216-calculation-construct"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-4"]
 source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
-formulas = ["modelo-216-base-total", "modelo-216-retenciones-total", "modelo-216-resultado"]
+formulas = [
+    "modelo-216-base-total",
+    "modelo-216-retenciones-total",
+    "modelo-216-resultado",
+    "modelo-216-numero-rentas-sometidas-total",
+    "modelo-216-numero-rentas-no-sometidas-total",
+    "modelo-216-base-no-sometidas-total",
+]
 application_links = [
     "modelo-216-calculation",
     "modelo-216-deadline",

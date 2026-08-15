@@ -1,0 +1,45 @@
+# The three "Totales" rows the bundled diseño `aeat-dr-216-2024` adds beside
+# the already-declared base and retenciones totals. Each is the sum of the two
+# rows AEAT prints directly above it in the same block, exactly as
+# `modelo-216-base-total` ([10] = [08] + [09]) and
+# `modelo-216-retenciones-total` ([13] = [11] + [12]) already model that shape:
+#
+#   [07] = [05] + [06]   número de rentas, block I (sometidas)
+#   [16] = [14] + [15]   número de rentas, block II (no sometidas)
+#   [19] = [17] + [18]   base, block II (no sometidas)
+
+[[revisions."2024-y-siguientes".formulas]]
+id = "modelo-216-numero-rentas-sometidas-total"
+target_casilla_id = "07"
+expression = { op = "add", args = [ { casilla_id = "05" }, { casilla_id = "06" } ] }
+rounding = "integer"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+
+[[revisions."2024-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-216-procedure"
+required_text = ["216"]
+
+[[revisions."2024-y-siguientes".formulas]]
+id = "modelo-216-numero-rentas-no-sometidas-total"
+target_casilla_id = "16"
+expression = { op = "add", args = [ { casilla_id = "14" }, { casilla_id = "15" } ] }
+rounding = "integer"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+
+[[revisions."2024-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-216-procedure"
+required_text = ["216"]
+
+[[revisions."2024-y-siguientes".formulas]]
+id = "modelo-216-base-no-sometidas-total"
+target_casilla_id = "19"
+expression = { op = "add", args = [ { casilla_id = "17" }, { casilla_id = "18" } ] }
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+
+[[revisions."2024-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-216-procedure"
+required_text = ["216"]

@@ -10,6 +10,7 @@ input_kind = "computed"
 formula = "modelo-111-total-retenciones-ingresos"
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+export_refs = ["modelo-111-casilla-28"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "29"
@@ -21,6 +22,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+export_refs = ["modelo-111-casilla-29"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "30"
@@ -34,3 +36,4 @@ input_kind = "computed"
 formula = "modelo-111-resultado-ingresar"
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+export_refs = ["modelo-111-casilla-30"]

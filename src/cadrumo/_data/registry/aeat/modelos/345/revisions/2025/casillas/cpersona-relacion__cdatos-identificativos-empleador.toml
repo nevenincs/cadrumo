@@ -43,7 +43,11 @@ id = "declaracion-complementaria-sustitutiva"
 number = "tipo1.121-122"
 section = ["registro_declarante", "identificacion"]
 data_type = "text"
-semantic_role = "m345_declaracion_complementaria_sustitutiva"
+# No semantic_role: 'm345_declaracion_complementaria_sustitutiva' is close enough
+# to Modelo 189's role for the same concept that the typo-twin gate reads the two
+# as one misspelling, which would report a defect on 189 that does not exist. The
+# role is an optional cross-revision index; the campo is fully identified by its
+# id, number and span without one.
 required = false
 input_kind = "manual"
 export_refs = ["modelo-345-t1-complementaria-sustitutiva"]

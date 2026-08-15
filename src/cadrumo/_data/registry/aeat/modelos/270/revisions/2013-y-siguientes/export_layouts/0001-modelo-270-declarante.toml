@@ -1,0 +1,285 @@
+# Modelo 270 fichero BOE — registro de declarante (tipo 1), 500 positions.
+#
+# Every field below is transcribed from the bundled AEAT Diseño de Registro
+# aeat-dr-270-2023, record "Tipo 1 - Registro de Declarante". The design
+# declares 16 campos whose lengths sum to exactly 500 with no holes
+# (1+3+4+9+40+1+49+13+2+13+2+9+17+17+17+303 = 500); all 16 are declared here,
+# at the design's own (posición, longitud) coordinates.
+
+[[revisions."2013-y-siguientes".export_layouts]]
+id = "modelo-270-fichero-boe"
+
+[[revisions."2013-y-siguientes".export_layouts.records]]
+id = "modelo-270-declarante"
+record_type = "declarante"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-record-type"
+offset = 1
+length = 1
+kind = "literal"
+literal = "1"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "270"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-year"
+offset = 5
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-nif"
+offset = 9
+length = 9
+kind = "header"
+producer_key = "presenter.tax_id"
+# A NIF always exactly fills its 9-byte slot, so left_zero would never pad a
+# present value while its parse side would strip leading "0" characters from a
+# low-numbered DNI and corrupt the identifier. padding none + justification
+# none renders identically for every full-width value.
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-razon-social"
+offset = 18
+length = 40
+kind = "header"
+# The design names this slot "DENOMINACION O RAZON SOCIAL DEL DECLARANTE" and
+# admits nothing else: "se consignara la denominacion o razon social completa,
+# sin anagrama ... En ningun caso podra figurar en este campo un nombre
+# comercial". taxpayer.legal_name is exactly that fact. taxpayer.full_name is
+# NOT substitutable here: it composes surnames-first for a natural person,
+# which this slot does not admit. Every Modelo 270 declarant is an entity
+# obliged to withhold under LIRPF DA 33, so legal_name is the populated fact
+# for the whole declarant population.
+producer_key = "taxpayer.legal_name"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-tipo-soporte"
+offset = 58
+length = 1
+kind = "literal"
+# The design admits exactly one clave: "Se cumplimentara: 'T': transmision
+# telematica." Cadrumo emits a file for telematic presentation, so "T" is the
+# only value this producer can correctly write.
+literal = "T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-persona-relacion"
+offset = 59
+length = 49
+kind = "filler"
+# Design campo 7, "PERSONA CON QUIEN RELACIONARSE", subdivided by AEAT into
+# 59-67 TELEFONO and 68-107 APELLIDOS Y NOMBRE. Cadrumo holds no contact-person
+# fact for the presenting declarant -- no producer key carries a contact
+# telephone or a contact name -- so the slot is written as the design's own
+# single alfanumerico campo and left blank, which the design's global rule
+# admits: "los campos alfanumericos/alfabeticos que no tengan contenido se
+# rellenaran a blancos". Writing a taxpayer identity here would name the wrong
+# person.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-numero-identificativo"
+offset = 108
+length = 13
+kind = "filler"
+# Design campo 8. A sequential number whose first three digits are the code
+# 270; it is assigned at presentation, not derived from the draft, and no
+# producer key carries it. Numerico with no content is written to ceros per
+# the design's global numeric rule.
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-complementaria-sustitutiva"
+offset = 121
+length = 2
+kind = "filler"
+# Design campo 9, subdivided into 121 DECLARACION COMPLEMENTARIA ("C") and 122
+# DECLARACION SUSTITUTIVA ("S"). Neither byte can be produced correctly today:
+# the amendment_evidence.is_complementaria producer is a boolean and renders
+# the canonical "X", not the "C" this design admits, and there is no
+# sustitutiva producer at all. A first presentation leaves both bytes blank,
+# which is the design's own default ("en el caso excepcional de segunda o
+# posterior presentacion de declaraciones"), so blank is correct for every
+# filing this application can currently build.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-numero-identificativo-anterior"
+offset = 123
+length = 13
+kind = "filler"
+# Design campo 10. Written only when campo 9 carries "C" or "S", which no
+# filing this application builds currently does; the design states "en
+# cualquier otro caso debera rellenarse a CEROS".
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-periodo"
+offset = 136
+length = 2
+kind = "draft"
+# Design campo 11. "Todos los declarantes consignaran 0A, salvo la Sociedad
+# Estatal Loterias y Apuestas del Estado, S.M.E., S.A. y la Organizacion
+# Nacional de Ciegos Espanoles que consignaran los siguientes valores, en
+# funcion del mes al que se refiera la presentacion: '01' ... '12'." The draft
+# period_code carries whichever of those the filing's own period is, so the
+# slot stays correct for both populations.
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-total-perceptores"
+offset = 138
+length = 9
+kind = "casilla"
+casilla_id = "decl.total-perceptores"
+data_type = "integer"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-total-importe-premios"
+offset = 147
+length = 17
+kind = "casilla"
+casilla_id = "decl.total-importe-premios"
+# 17 positions subdivided by the design into 147-161 parte entera and 162-163
+# parte decimal, which is the money type's own implied-two-decimal shape.
+# "Todos los importes seran positivos", so the slot is unsigned.
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-total-base-retencion"
+offset = 164
+length = 17
+kind = "casilla"
+casilla_id = "decl.total-base-retencion"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-total-retenciones"
+offset = 181
+length = 17
+kind = "casilla"
+casilla_id = "decl.total-retenciones"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-blancos"
+offset = 198
+length = 303
+kind = "filler"
+# Design campo 16, declared "BLANCOS" -- no datum, and the record's remaining
+# extent to position 500.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]

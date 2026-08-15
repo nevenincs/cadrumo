@@ -1810,6 +1810,9 @@ application:
       no_active_profile_selected: No active profile selected.
       profile_already_exists: Profile '%{profile}' already exists; run aeat config
         login NAME to activate it or aeat config profile delete NAME first.
+      registration_displaced_session_not_retired: The profile could not be created.
+        The stored session of the profile it replaces could not be removed. Close
+        any program using the profile store and try again.
       registration_label_blank: The profile name cannot be empty.
       registration_passphrase_too_short: The password must be at least {minimum_length}
         characters long.
@@ -70918,6 +70921,165 @@ modelo:
             label: Equivalence surcharge at the 5.2% rate - taxable base
           iva-resultado-liquidacion:
             label: Result of the assessment
+          iva-sector-diferenciado-1-aic-corrientes-base:
+            label: Differentiated sector 1 - Deductible VAT on intra-Community acquisitions
+              of current goods - Taxable base [147]
+          iva-sector-diferenciado-1-aic-corrientes-cuota:
+            label: Differentiated sector 1 - Deductible VAT on intra-Community acquisitions
+              of current goods - Deductible amount [148]
+          iva-sector-diferenciado-1-aic-inversion-base:
+            label: Differentiated sector 1 - Deductible VAT on intra-Community acquisitions
+              of capital goods - Taxable base [149]
+          iva-sector-diferenciado-1-aic-inversion-cuota:
+            label: Differentiated sector 1 - Deductible VAT on intra-Community acquisitions
+              of capital goods - Deductible amount [150]
+          iva-sector-diferenciado-1-compensaciones-reagp-base:
+            label: Differentiated sector 1 - Flat-rate compensation under the special
+              agriculture, livestock and fisheries scheme - Taxable base [151]
+          iva-sector-diferenciado-1-compensaciones-reagp-cuota:
+            label: Differentiated sector 1 - Flat-rate compensation under the special
+              agriculture, livestock and fisheries scheme - Deductible amount [152]
+          iva-sector-diferenciado-1-importaciones-corrientes-base:
+            label: Differentiated sector 1 - Deductible VAT on imports of current
+              goods - Taxable base [143]
+          iva-sector-diferenciado-1-importaciones-corrientes-cuota:
+            label: Differentiated sector 1 - Deductible VAT on imports of current
+              goods - Deductible amount [144]
+          iva-sector-diferenciado-1-importaciones-inversion-base:
+            label: Differentiated sector 1 - Deductible VAT on imports of capital
+              goods - Taxable base [145]
+          iva-sector-diferenciado-1-importaciones-inversion-cuota:
+            label: Differentiated sector 1 - Deductible VAT on imports of capital
+              goods - Deductible amount [146]
+          iva-sector-diferenciado-1-interiores-corrientes-base:
+            label: Differentiated sector 1 - Deductible VAT on domestic supplies of
+              current goods and services - Taxable base [139]
+          iva-sector-diferenciado-1-interiores-corrientes-cuota:
+            label: Differentiated sector 1 - Deductible VAT on domestic supplies of
+              current goods and services - Deductible amount [140]
+          iva-sector-diferenciado-1-interiores-inversion-base:
+            label: Differentiated sector 1 - Deductible VAT on domestic supplies of
+              capital goods - Taxable base [141]
+          iva-sector-diferenciado-1-interiores-inversion-cuota:
+            label: Differentiated sector 1 - Deductible VAT on domestic supplies of
+              capital goods - Deductible amount [142]
+          iva-sector-diferenciado-1-rectificacion-base:
+            label: Differentiated sector 1 - Adjustment of deductions - Taxable base
+              [640]
+          iva-sector-diferenciado-1-rectificacion-cuota:
+            label: Differentiated sector 1 - Adjustment of deductions - Deductible
+              amount [153]
+          iva-sector-diferenciado-1-regularizacion-inversiones:
+            label: Differentiated sector 1 - Adjustment of capital goods deductions
+              [154]
+          iva-sector-diferenciado-1-suma-deducciones:
+            label: Differentiated sector 1 - Total deductions [155]
+          iva-sector-diferenciado-2-aic-corrientes-base:
+            label: Differentiated sector 2 - Deductible VAT on intra-Community acquisitions
+              of current goods - Taxable base [164]
+          iva-sector-diferenciado-2-aic-corrientes-cuota:
+            label: Differentiated sector 2 - Deductible VAT on intra-Community acquisitions
+              of current goods - Deductible amount [165]
+          iva-sector-diferenciado-2-aic-inversion-base:
+            label: Differentiated sector 2 - Deductible VAT on intra-Community acquisitions
+              of capital goods - Taxable base [166]
+          iva-sector-diferenciado-2-aic-inversion-cuota:
+            label: Differentiated sector 2 - Deductible VAT on intra-Community acquisitions
+              of capital goods - Deductible amount [167]
+          iva-sector-diferenciado-2-compensaciones-reagp-base:
+            label: Differentiated sector 2 - Flat-rate compensation under the special
+              agriculture, livestock and fisheries scheme - Taxable base [168]
+          iva-sector-diferenciado-2-compensaciones-reagp-cuota:
+            label: Differentiated sector 2 - Flat-rate compensation under the special
+              agriculture, livestock and fisheries scheme - Deductible amount [169]
+          iva-sector-diferenciado-2-importaciones-corrientes-base:
+            label: Differentiated sector 2 - Deductible VAT on imports of current
+              goods - Taxable base [160]
+          iva-sector-diferenciado-2-importaciones-corrientes-cuota:
+            label: Differentiated sector 2 - Deductible VAT on imports of current
+              goods - Deductible amount [161]
+          iva-sector-diferenciado-2-importaciones-inversion-base:
+            label: Differentiated sector 2 - Deductible VAT on imports of capital
+              goods - Taxable base [162]
+          iva-sector-diferenciado-2-importaciones-inversion-cuota:
+            label: Differentiated sector 2 - Deductible VAT on imports of capital
+              goods - Deductible amount [163]
+          iva-sector-diferenciado-2-interiores-corrientes-base:
+            label: Differentiated sector 2 - Deductible VAT on domestic supplies of
+              current goods and services - Taxable base [156]
+          iva-sector-diferenciado-2-interiores-corrientes-cuota:
+            label: Differentiated sector 2 - Deductible VAT on domestic supplies of
+              current goods and services - Deductible amount [157]
+          iva-sector-diferenciado-2-interiores-inversion-base:
+            label: Differentiated sector 2 - Deductible VAT on domestic supplies of
+              capital goods - Taxable base [158]
+          iva-sector-diferenciado-2-interiores-inversion-cuota:
+            label: Differentiated sector 2 - Deductible VAT on domestic supplies of
+              capital goods - Deductible amount [159]
+          iva-sector-diferenciado-2-rectificacion-base:
+            label: Differentiated sector 2 - Adjustment of deductions - Taxable base
+              [641]
+          iva-sector-diferenciado-2-rectificacion-cuota:
+            label: Differentiated sector 2 - Adjustment of deductions - Deductible
+              amount [170]
+          iva-sector-diferenciado-2-regularizacion-inversiones:
+            label: Differentiated sector 2 - Adjustment of capital goods deductions
+              [171]
+          iva-sector-diferenciado-2-suma-deducciones:
+            label: Differentiated sector 2 - Total deductions [172]
+          iva-sector-diferenciado-3-aic-corrientes-base:
+            label: Differentiated sector 3 - Deductible VAT on intra-Community acquisitions
+              of current goods - Taxable base [181]
+          iva-sector-diferenciado-3-aic-corrientes-cuota:
+            label: Differentiated sector 3 - Deductible VAT on intra-Community acquisitions
+              of current goods - Deductible amount [182]
+          iva-sector-diferenciado-3-aic-inversion-base:
+            label: Differentiated sector 3 - Deductible VAT on intra-Community acquisitions
+              of capital goods - Taxable base [183]
+          iva-sector-diferenciado-3-aic-inversion-cuota:
+            label: Differentiated sector 3 - Deductible VAT on intra-Community acquisitions
+              of capital goods - Deductible amount [184]
+          iva-sector-diferenciado-3-compensaciones-reagp-base:
+            label: Differentiated sector 3 - Flat-rate compensation under the special
+              agriculture, livestock and fisheries scheme - Taxable base [185]
+          iva-sector-diferenciado-3-compensaciones-reagp-cuota:
+            label: Differentiated sector 3 - Flat-rate compensation under the special
+              agriculture, livestock and fisheries scheme - Deductible amount [186]
+          iva-sector-diferenciado-3-importaciones-corrientes-base:
+            label: Differentiated sector 3 - Deductible VAT on imports of current
+              goods - Taxable base [177]
+          iva-sector-diferenciado-3-importaciones-corrientes-cuota:
+            label: Differentiated sector 3 - Deductible VAT on imports of current
+              goods - Deductible amount [178]
+          iva-sector-diferenciado-3-importaciones-inversion-base:
+            label: Differentiated sector 3 - Deductible VAT on imports of capital
+              goods - Taxable base [179]
+          iva-sector-diferenciado-3-importaciones-inversion-cuota:
+            label: Differentiated sector 3 - Deductible VAT on imports of capital
+              goods - Deductible amount [180]
+          iva-sector-diferenciado-3-interiores-corrientes-base:
+            label: Differentiated sector 3 - Deductible VAT on domestic supplies of
+              current goods and services - Taxable base [173]
+          iva-sector-diferenciado-3-interiores-corrientes-cuota:
+            label: Differentiated sector 3 - Deductible VAT on domestic supplies of
+              current goods and services - Deductible amount [174]
+          iva-sector-diferenciado-3-interiores-inversion-base:
+            label: Differentiated sector 3 - Deductible VAT on domestic supplies of
+              capital goods - Taxable base [175]
+          iva-sector-diferenciado-3-interiores-inversion-cuota:
+            label: Differentiated sector 3 - Deductible VAT on domestic supplies of
+              capital goods - Deductible amount [176]
+          iva-sector-diferenciado-3-rectificacion-base:
+            label: Differentiated sector 3 - Adjustment of deductions - Taxable base
+              [642]
+          iva-sector-diferenciado-3-rectificacion-cuota:
+            label: Differentiated sector 3 - Adjustment of deductions - Deductible
+              amount [187]
+          iva-sector-diferenciado-3-regularizacion-inversiones:
+            label: Differentiated sector 3 - Adjustment of capital goods deductions
+              [188]
+          iva-sector-diferenciado-3-suma-deducciones:
+            label: Differentiated sector 3 - Total deductions [189]
           iva-suma-resultados:
             label: Sum of results
           iva-total-bases-iva:
@@ -72509,9 +72671,17 @@ modelo:
             identificacion-8:
               help: null
               label: Autonomous Community or City of residence in 2020
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Assets and rights - C1. Non-exempt assets used in business and
+                professional activities (excluding immovable property) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Assets and rights - C2. Non-exempt immovable property used in
+                business and professional activities - Total
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Tax year the return relates to
+            x-chim6r1ed5i6irrdc4:
+              label: Language of the return
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Period (annual, 0A)
@@ -72894,9 +73064,17 @@ modelo:
             identificacion-8:
               help: null
               label: Autonomous Community or City of residence in 2022
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Assets and rights - C1. Non-exempt assets used in business and
+                professional activities (excluding immovable property) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Assets and rights - C2. Non-exempt immovable property used in
+                business and professional activities - Total
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Tax year the return relates to
+            x-chim6r1ed5i6irrdc4:
+              label: Language of the return
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Period (annual, 0A)
@@ -73279,9 +73457,17 @@ modelo:
             identificacion-8:
               help: null
               label: Autonomous Community or City of residence in 2023
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Assets and rights - C1. Non-exempt assets used in business and
+                professional activities (excluding immovable property) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Assets and rights - C2. Non-exempt immovable property used in
+                business and professional activities - Total
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Tax year the return relates to
+            x-chim6r1ed5i6irrdc4:
+              label: Language of the return
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Period (annual, 0A)
@@ -73664,9 +73850,17 @@ modelo:
             identificacion-8:
               help: null
               label: Autonomous Community or City of residence in 2024
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Assets and rights - C1. Non-exempt assets used in business and
+                professional activities (excluding immovable property) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Assets and rights - C2. Non-exempt immovable property used in
+                business and professional activities - Total
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Tax year the return relates to
+            x-chim6r1ed5i6irrdc4:
+              label: Language of the return
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Period (annual, 0A)
@@ -74049,9 +74243,17 @@ modelo:
             identificacion-8:
               help: null
               label: Autonomous Community or City of residence in 2025
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Assets and rights - C1. Non-exempt assets used in business and
+                professional activities (excluding immovable property) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Assets and rights - C2. Non-exempt immovable property used in
+                business and professional activities - Total
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Tax year the return relates to
+            x-chim6r1ed5i6irrdc4:
+              label: Language of the return
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Period (annual, 0A)

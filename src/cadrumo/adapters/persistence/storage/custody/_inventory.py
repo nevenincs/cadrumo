@@ -136,9 +136,7 @@ def _build_profile_custody_inventory(
     total_bytes = sum(entry.size_bytes for entry in ordered)
     if total_bytes > PROFILE_CUSTODY_INVENTORY_MAX_TOTAL_BYTES:
         raise ProfileCustodyRecordError("profile custody inventory exceeds its total byte limit")
-    covered = tuple(
-        entry for entry in ordered if entry.relative_path not in DATABASE_REPRESENTATION_RELATIVE_PATHS
-    )
+    covered = tuple(entry for entry in ordered if entry.relative_path not in DATABASE_REPRESENTATION_RELATIVE_PATHS)
     if not covered:
         raise ProfileCustodyRecordError("profile custody inventory covers no durable custody record")
     canonical = canonical_json_bytes([[entry.relative_path, entry.size_bytes, entry.sha256] for entry in covered])

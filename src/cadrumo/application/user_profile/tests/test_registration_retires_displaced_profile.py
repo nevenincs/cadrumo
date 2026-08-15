@@ -26,12 +26,14 @@ from multiprocessing import get_context
 from multiprocessing.queues import Queue
 from pathlib import Path
 from typing import TypedDict
+from uuid import UUID
 
 import pytest
 
 from ....core import read_pointer
 from ....tests.secure_sql import isolated_profile_storage_root
-from .._registration import register_profile_with_credentials
+from ...profile_custody import profile_session_path
+from .._registration import ProfileRegistrationError, register_profile_with_credentials
 from .test_login_handover import (
     _assert_no_resumable_material,
     _child_settings,
@@ -49,6 +51,12 @@ _PASSWORD_ENTERING = "registration-displaced-password-two"  # noqa: S105 - real 
 class _ChildRegistrationResult(TypedDict):
     profile_id: str
     label: str
+
+
+class _ChildRefusalResult(TypedDict):
+    refused: bool
+    translated_message: str | None
+    cause: str | None
 
 
 def _register_in_separate_process_child(
@@ -73,6 +81,51 @@ def _register_in_separate_process(storage_root: Path, label: str, password: str)
     result_queue: Queue[_ChildRegistrationResult] = context.Queue()
     child = context.Process(
         target=_register_in_separate_process_child,
+        args=(storage_root, label, password, result_queue),
+    )
+    child.start()
+    try:
+        result = result_queue.get(timeout=180)
+        child.join(timeout=30)
+        assert child.exitcode == 0
+        return result
+    finally:
+        if child.is_alive():
+            child.terminate()
+            child.join(timeout=30)
+
+
+def _attempt_registration_in_separate_process_child(
+    storage_root: Path,
+    label: str,
+    password: str,
+    result_queue: Queue[_ChildRefusalResult],
+) -> None:
+    """Report whatever the registration door tells the operator, refusal included."""
+    settings, token = _child_settings(storage_root)
+    _ = settings
+    try:
+        try:
+            register_profile_with_credentials(label=label, passphrase=password)
+        except ProfileRegistrationError as exc:
+            result_queue.put(
+                {
+                    "refused": True,
+                    "translated_message": exc.translated_message,
+                    "cause": type(exc.__cause__).__name__ if exc.__cause__ is not None else None,
+                }
+            )
+        else:
+            result_queue.put({"refused": False, "translated_message": None, "cause": None})
+    finally:
+        _close_child_login(token)
+
+
+def _attempt_registration_in_separate_process(storage_root: Path, label: str, password: str) -> _ChildRefusalResult:
+    context = get_context("spawn")
+    result_queue: Queue[_ChildRefusalResult] = context.Queue()
+    child = context.Process(
+        target=_attempt_registration_in_separate_process_child,
         args=(storage_root, label, password, result_queue),
     )
     child.start()
@@ -184,3 +237,52 @@ def test_the_entering_profile_keeps_the_session_the_registration_gave_it(
         probe = _probe_resumable_session(storage_root, entering)
         assert probe["resumed"] is True
         assert probe["dek_length"] == 32
+
+
+def test_a_retirement_that_cannot_complete_refuses_the_registration_in_its_own_words(
+    tmp_path: Path,
+) -> None:
+    """A retirement that did not complete must refuse, and must say what happened.
+
+    The refusal itself is the safety property: the removal is ordered ahead of
+    the pointer compare-and-swap, so a failure leaves the pointer on the
+    displaced profile rather than selecting the new capsule over a session that
+    is still live. What this pins beyond that is the ACCOUNT the operator gets.
+    The create transaction refuses a label collision and a failed retirement
+    through one exception family, and reporting the second as the first sends
+    the operator off to rename a brand-new profile whose label was never the
+    problem.
+
+    The obstruction is a real filesystem state rather than a patched function:
+    the receipt path is occupied by a non-empty directory, so the unlink cannot
+    succeed on any platform and the primitive's own absence check reports it.
+    The unobstructed control is the displacement test at the top of this module
+    -- without it this case would be satisfied by a registration door that
+    refuses unconditionally.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        displaced = _register_in_separate_process(storage_root, "Obstructed One", _PASSWORD_DISPLACED)["profile_id"]
+        _login_in_separate_process(storage_root, displaced, _PASSWORD_DISPLACED)
+
+        receipt = profile_session_path(storage_root=storage_root, profile_id=UUID(displaced))
+        assert receipt.exists(), "the displaced profile must hold a receipt for the retirement to reach"
+        receipt.unlink()
+        receipt.mkdir()
+        (receipt / "occupant.bin").write_bytes(b"an occupied receipt path cannot be unlinked")
+
+        refusal = _attempt_registration_in_separate_process(
+            storage_root, "Obstructed Two", _PASSWORD_ENTERING
+        )
+
+        assert refusal["refused"] is True
+        assert refusal["cause"] == "ProfileCustodyDisplacedSessionRetirementError"
+        assert refusal["translated_message"] == (
+            "application.user_profile.errors.registration_displaced_session_not_retired"
+        )
+        assert refusal["translated_message"] != "application.user_profile.errors.profile_already_exists"
+
+        selected = read_pointer(storage_root)
+        assert selected is not None
+        assert selected.bucket_id == displaced, (
+            "a refused retirement must leave the pointer on the profile it failed to retire"
+        )

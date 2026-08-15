@@ -14,3 +14,11 @@ requires_snapshot = true
 legal_refs = ["orden-hfp-823-2022:art-4"]
 source_refs = ["aeat-modelo-345-deadlines", "boe-modelo-345-base-order"]
 
+
+[[revisions."2025".application_links]]
+id = "modelo-345-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-hfp-823-2022:art-1"]
+source_refs = ["aeat-dr-345-2025"]

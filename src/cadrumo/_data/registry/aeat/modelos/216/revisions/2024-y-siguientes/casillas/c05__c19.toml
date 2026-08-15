@@ -1,0 +1,121 @@
+# Modelo 216 record-design closure, transcribed from the bundled diseño de
+# registro `aeat-dr-216-2024` (Pág. 1). Orden HAC/56/2024 restructured this
+# modelo's liquidación into two blocks, each broken down by dividendos vs
+# resto de rentas, and each carrying a rentas count beside its base:
+#
+#   I  Rentas SOMETIDAS a retención o ingreso a cuenta
+#        número de rentas [05][06][07], base [08][09][10], retenciones [11][12][13]
+#   II Rentas NO SOMETIDAS a retención o ingreso a cuenta
+#        número de rentas [14][15][16], base [17][18][19]
+#
+# The bases and retenciones of block I ([08]-[13]) and the resultado rows
+# ([20][21]) were already declared; this fragment adds the nine boxes the
+# official record requires and the prior declaration did not carry — the six
+# rentas counts and block II's three bases.
+#
+# The desglose is the orden's own: "En el modelo 216 [...] también se realiza
+# un desglose del importe total de retenciones e ingresos a cuenta en el
+# correspondiente a dividendos y otras rentas de participación en fondos
+# propios de entidades y el correspondiente a otras rentas."
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "05"
+number = "05"
+section = ["rentas_sometidas", "numero_rentas"]
+data_type = "integer"
+semantic_role = "irnr_retencion_numero_rentas_dividendos"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "06"
+number = "06"
+section = ["rentas_sometidas", "numero_rentas"]
+data_type = "integer"
+semantic_role = "irnr_retencion_numero_rentas_resto"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "07"
+number = "07"
+section = ["rentas_sometidas", "numero_rentas"]
+data_type = "integer"
+semantic_role = "irnr_retencion_numero_rentas_total"
+required = false
+input_kind = "computed"
+formula = "modelo-216-numero-rentas-sometidas-total"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "14"
+number = "14"
+section = ["rentas_no_sometidas", "numero_rentas"]
+data_type = "integer"
+semantic_role = "irnr_no_retencion_numero_rentas_dividendos"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "15"
+number = "15"
+section = ["rentas_no_sometidas", "numero_rentas"]
+data_type = "integer"
+semantic_role = "irnr_no_retencion_numero_rentas_resto"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "16"
+number = "16"
+section = ["rentas_no_sometidas", "numero_rentas"]
+data_type = "integer"
+semantic_role = "irnr_no_retencion_numero_rentas_total"
+required = false
+input_kind = "computed"
+formula = "modelo-216-numero-rentas-no-sometidas-total"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "17"
+number = "17"
+section = ["rentas_no_sometidas", "base"]
+data_type = "money"
+semantic_role = "irnr_no_retencion_base_dividendos"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "18"
+number = "18"
+section = ["rentas_no_sometidas", "base"]
+data_type = "money"
+semantic_role = "irnr_no_retencion_base_resto"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "19"
+number = "19"
+section = ["rentas_no_sometidas", "base"]
+data_type = "money"
+semantic_role = "irnr_no_retencion_base_total"
+required = false
+input_kind = "computed"
+formula = "modelo-216-base-no-sometidas-total"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]

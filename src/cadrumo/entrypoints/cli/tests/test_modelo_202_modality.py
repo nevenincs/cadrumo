@@ -237,34 +237,25 @@ def test_legal_entity_can_create_modelo_202_work_unit(tmp_path: Path) -> None:
     """
 
     from ....tests.cli_runner import invoke_cached_cli
+    from ....tests.user_profile import register_cli_profile
 
-    result = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            "company",
-            "--quiet",
-            "--accept-defaults",
-            "--tax-id",
-            "B12345674",
-            "--name",
-            "Company",
-            "--surnames",
-            "Company SL",
-            "--legal-name",
-            "Company SL",
-            "--activity",
-            "consulting",
-            "--entity-type",
-            "legal_entity",
-            "--legal-entity-form",
-            "sl",
-            "--incn-prior-12-months",
-            "7500000.00",
-        ],
+    register_cli_profile(
+        label="company",
+        facts={
+            "taxpayer_type.entity_type": "legal_entity",
+            "taxpayer_type.legal_entity_form": "sl",
+            "identity.tax_id": "B12345674",
+            "identity.legal_name": "Company SL",
+            "activities.description": "consulting",
+            "taxpayer_type.incn_prior_12_months": "7500000.00",
+            # Blank drops the natural-person placeholders the shared seeding
+            # door applies, which a legal entity has no business carrying.
+            "identity.name": "",
+            "identity.surnames": "",
+            "taxpayer_type.irpf_income_categories": "",
+            "irpf.estimation_regime": "",
+        },
     )
-    assert result.exit_code == 0, result.output
 
     result = invoke_cached_cli(
         [

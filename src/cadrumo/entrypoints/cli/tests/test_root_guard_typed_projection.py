@@ -12,8 +12,9 @@ from ....adapters.persistence.storage.master_key import close_active_bucket_sess
 from ....application.storage_write_policy import inspect_storage_write_policy
 from ....core import pointer_path
 from ....core.config import Settings, override_settings
-from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
+from ....tests.cli_runner import cadrumo_click_command
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_cli_profile
 from ...cli import app
 from .._command_suggestions import INVOCATION_REMAINDER_META_KEY
 from .._common import (
@@ -200,29 +201,17 @@ def test_real_common_guard_projects_profile_create_when_none_are_registered(tmp_
 def test_real_common_guard_projects_login_when_profiles_are_unselected(tmp_path: Path) -> None:
     """Registered-but-unselected is not collapsed into first-profile creation."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        created = invoke_cached_cli(
-            [
-                "config",
-                "profile",
-                "create",
-                "operator",
-                "--quiet",
-                "--accept-defaults",
-                "--entity-type",
-                "natural_person",
-                "--tax-id",
-                "12345678Z",
-                "--name",
-                "Operator",
-                "--surnames",
-                "Identity",
-                "--activity",
-                "design",
-                "--tax-residence-jurisdiction-scope",
-                "common_regime",
-            ]
+        register_cli_profile(
+            label="operator",
+            facts={
+                "taxpayer_type.entity_type": "natural_person",
+                "identity.tax_id": "12345678Z",
+                "identity.name": "Operator",
+                "identity.surnames": "Identity",
+                "activities.description": "design",
+                "tax_residence.jurisdiction_scope": "common_regime",
+            },
         )
-        assert created.exit_code == 0, created.output
         close_active_bucket_session()
         active_pointer = pointer_path(storage_root)
         assert active_pointer.is_file()

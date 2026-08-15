@@ -8,6 +8,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+export_refs = ["modelo-111-casilla-10"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "11"
@@ -19,6 +20,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+export_refs = ["modelo-111-casilla-11"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "12"
@@ -31,3 +33,4 @@ input_kind = "manual"
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"], source_refs = ["aeat-modelo-111-instructions"] }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+export_refs = ["modelo-111-casilla-12"]
