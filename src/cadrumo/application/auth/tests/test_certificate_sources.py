@@ -31,7 +31,10 @@ from .. import _certificate_sources as _certificate_sources_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
+#: This module's OWN bucket. A bucket shared with a sibling module makes
+#: the two suites' isolation fixtures interchangeable and puts both on one
+#: bucket-scoped master-key session in the same run.
+_BUCKET_ID = "c0000001-0000-4000-8000-000000000001"
 _PROFILE_LABEL = "gestor-multi-cert"
 
 

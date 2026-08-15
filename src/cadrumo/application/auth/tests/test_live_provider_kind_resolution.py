@@ -35,7 +35,10 @@ from .._sessions import _resolve_provider_kind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
+#: This module's OWN bucket. A bucket shared with a sibling module makes
+#: the two suites' isolation fixtures interchangeable and puts both on one
+#: bucket-scoped master-key session in the same run.
+_BUCKET_ID = "c0000003-0000-4000-8000-000000000003"
 _PROFILE_LABEL = "live-provider-operator"
 _TAX_ID = "12345678Z"
 

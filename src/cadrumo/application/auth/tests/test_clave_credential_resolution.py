@@ -33,7 +33,10 @@ from .._sessions import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
+#: This module's OWN bucket. A bucket shared with a sibling module makes
+#: the two suites' isolation fixtures interchangeable and puts both on one
+#: bucket-scoped master-key session in the same run.
+_BUCKET_ID = "c0000002-0000-4000-8000-000000000002"
 _PROFILE_LABEL = "clave-operator"
 _TAX_ID = "12345678Z"
 _OTHER_TAX_ID = "00000001R"
