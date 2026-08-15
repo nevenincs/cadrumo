@@ -279,8 +279,13 @@ def test_modelo_714_art31_m100_same_year_relation_chain_is_declared() -> None:
     revision = modelo.revisions["2021"]
     casillas = {casilla.id: casilla for casilla in revision.casillas}
 
-    assert revision.period_selector.year_from == 2021
-    assert revision.period_selector.year_to == 2025
+    # Each ejercicio is its own revision, so the selector names exactly one year
+    # rather than the 2021-2025 span the combined revision carried before the
+    # split. The relations below still reach 2021-2025 on the M100 side, because
+    # that window describes which SOURCE revisions they may read, not which
+    # filings this revision governs.
+    assert revision.period_selector.years == (2021,)
+    assert revision.period_selector.periods == ("0A",)
     assert {formula.target_casilla_id for formula in revision.formulas} == set(_PATRIMONIO_COMPUTED_TARGETS)
 
     relations = {relation.id: relation for relation in revision.relations}

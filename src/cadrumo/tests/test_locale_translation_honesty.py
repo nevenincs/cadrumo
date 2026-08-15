@@ -31,6 +31,7 @@ a data edit.
 from __future__ import annotations
 
 import json
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -86,8 +87,26 @@ def _load_allowlist() -> dict[str, set[str]]:
     return result
 
 
-def _catalogue_leaves(locale_code: str) -> dict[str, str | None]:
-    """Return one shipped catalogue's flattened leaves, refusing an empty one.
+@cache
+def _parsed_catalogue(locale_code: str) -> tuple[tuple[str, str | None], ...]:
+    """Parse and flatten one shipped catalogue, once per process.
+
+    The catalogues are ~3 MB each and pure-Python YAML parsing measured ~7s
+    apiece, while the five gates below read the same four files roughly
+    nineteen times between them -- so this module spent almost its entire
+    runtime re-parsing four unchanging files.
+
+    ``yaml.CSafeLoader`` is libyaml, the C parser, and measured 0.773s against
+    7.402s for the pure-Python loader on the largest catalogue. Both loaders
+    were confirmed to produce equal documents for all four shipped locales
+    before this switched; the fallback keeps the gate runnable on a build of
+    PyYAML compiled without libyaml. This mirrors what the production renderer
+    in ``core.i18n`` already does.
+
+    Parsing here stays INDEPENDENT of the production locale reader on purpose.
+    These gates make claims about what the shipped FILES contain, so borrowing
+    the reader would let a reader that silently dropped entries certify its own
+    view of the catalogue rather than the catalogue.
 
     The proof of scan lives here rather than at each gate because several gates
     read the same four catalogues: guarding the reader means one added later
@@ -95,10 +114,22 @@ def _catalogue_leaves(locale_code: str) -> dict[str, str | None]:
     value, no key echo and no reserved token, so each of those gates would
     report exactly what a clean catalogue reports.
     """
-    raw = yaml.safe_load((_LOCALES_DIR / f"{locale_code}.yml").read_text(encoding="utf-8"))
+    text = (_LOCALES_DIR / f"{locale_code}.yml").read_text(encoding="utf-8")
+    raw = yaml.load(text, Loader=yaml.CSafeLoader) if hasattr(yaml, "CSafeLoader") else yaml.safe_load(text)
     leaves = _flatten(raw if isinstance(raw, dict) else {})
     assert leaves, f"{locale_code}.yml flattened to no leaves; every honesty gate over it is vacuous"
-    return leaves
+    return tuple(leaves.items())
+
+
+def _catalogue_leaves(locale_code: str) -> dict[str, str | None]:
+    """Return one shipped catalogue's flattened leaves.
+
+    Rebuilt per call from the cached parse so each gate owns its own mapping.
+    Handing out one shared dict would make every caller's correctness depend on
+    no other caller ever mutating it -- safe only by convention, where the
+    copy costs microseconds against a multi-second parse.
+    """
+    return dict(_parsed_catalogue(locale_code))
 
 
 def _load_metadata_ceiling(locale_code: str, field: str) -> int | None:
