@@ -62,6 +62,45 @@ COMPATIBILITY_REGIME: Final[CompatibilityRegime] = CompatibilityRegime.PRE_RELEA
 RELEASED_FORMAT_FLOORS: Final[Mapping[str, int] | None] = None
 
 
+#: A nested shape earns its OWN entry in :data:`PERSISTED_FORMATS` -- rather
+#: than being covered by its container's -- only when BOTH conditions below
+#: hold. Proximity is not the test: "it lives inside an already-enrolled
+#: container" has repeatedly misclassified real taxpayer records, because a
+#: container's floor proves its own bytes decrypt or parse and says nothing
+#: about whether the grammar living inside them can still be read.
+#:
+#: 1. INDEPENDENT GRAMMAR. The shape declares a version distinct from any
+#:    enclosing container's or envelope's version, such that a reader needs
+#:    THIS version -- not merely the container's -- to interpret the bytes.
+#:    When two declarations turn out to state ONE format's version rather
+#:    than two formats' (a domain-model default and a persistence-row
+#:    default naming the same number), that is DUPLICATION, not a second
+#:    format: collapse to the declaration actually exercised on the live
+#:    write path -- never to whichever side an a-priori layering preference
+#:    names, because the layering preference has lost against evidence every
+#:    time it was tested here.
+#: 2. DURABLE READBACK. The shape's OWN bytes -- not a digest, a boolean, or
+#:    any other derivative of them -- are themselves written to persistent
+#:    storage and meant to be parsed back through that grammar by a real
+#:    read path, or they are the sole surviving evidence of a fact nothing
+#:    can reconstruct. A shape that lives only in-process and folds a digest
+#:    into some OTHER persisted structure, discarding its own instance, has
+#:    nothing on disk whose readability this inventory must guarantee --
+#:    only the container holding the digest is a format, and the digest
+#:    algorithm's own stability is a different concern from this one. A
+#:    shape that clears this bar by being durably written, but is ALWAYS
+#:    recomputed fresh from an already-durable authoritative source rather
+#:    than trusted on read, still enrols -- format-hood is not defeated by
+#:    being a cache -- but that same fact argues for classing it
+#:    :attr:`PersistedFormatClass.REGENERABLE` rather than
+#:    :attr:`PersistedFormatClass.DURABLE`.
+#:
+#: Both conditions must hold to enrol as a distinct entry. Failing (1) alone
+#: does not exclude a shape that is nonetheless durably read back under its
+#: own grammar -- it enrols, argued on (2). Failing (2) means there is no
+#: format to enrol at all, independent of how (1) resolves.
+
+
 class PersistedFormatClass(StrEnum):
     """How long one persisted format's bytes must stay readable.
 

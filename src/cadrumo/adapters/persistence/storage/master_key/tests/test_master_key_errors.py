@@ -12,7 +12,9 @@ import secrets
 
 import pytest
 
+from ......core.config import override_settings
 from ......core.errors import ERROR_REGISTRY, build_error_envelope, render_error_text
+from ......core.i18n import clear_output_language_cache
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import MasterKeyKeychainLockedError
 from .._errors import MasterKeyReentrantError
@@ -73,4 +75,11 @@ def test_master_key_keychain_locked_error_renders_locked_operator_category() -> 
     assert envelope.code == "LOCKED_STORAGE_MASTER_KEY_KEYCHAIN"
     assert envelope.category == "LOCKED"
     assert envelope.retryable is True
-    assert render_error_text(err).startswith("Locked. ")
+    # The rendered prefix is localised and the catalogue default is Spanish, so
+    # the operator category is asserted against a pinned language.
+    with override_settings(cadrumo_output_language="en"):
+        clear_output_language_cache()
+        try:
+            assert render_error_text(err).startswith("Locked. ")
+        finally:
+            clear_output_language_cache()
