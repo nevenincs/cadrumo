@@ -79,6 +79,7 @@ from ._protocols import (
     ModeloDraftLoader,
     ModeloDraftStatus,
     ModeloFinding,
+    ModeloFindingLike,
     SubmissionRepositoryProtocol,
 )
 
@@ -89,6 +90,7 @@ __all__ = [
     "ModeloDraftLoader",
     "ModeloDraftStatus",
     "ModeloFinding",
+    "ModeloFindingLike",
     "ModeloIdentifier",
     "ModeloPresentado",
     "Preflight",

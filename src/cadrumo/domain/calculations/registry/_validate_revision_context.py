@@ -15,8 +15,6 @@ from ....core import CasillaId
 from ._casilla_membership import casillas_by_id, declared_casilla_ids
 from ._ids import BindingId, RelationId
 from ._schema import (
-    AlgorithmBindingDefinition,
-    AlgorithmProviderDefinition,
     ApplicationLinkDefinition,
     CasillaDefinition,
     ConstructDefinition,
@@ -43,6 +41,31 @@ class _IdentifiedRecord(Protocol):
 
 def _records_by_id[RecordT: _IdentifiedRecord](records: Iterable[RecordT]) -> dict[str, RecordT]:
     return {record.id: record for record in records}
+
+
+ConstructMemberObject = (
+    CasillaDefinition
+    | FormulaDefinition
+    | ParameterDefinition
+    | DataBindingDefinition
+    | RelationDefinition
+    | ExportLayoutDefinition
+    | ExtractionProfileDefinition
+    | LiveCrossReferenceDecision
+    | WorkbookParityReference
+    | VerificationExpectationDefinition
+    | ApplicationLinkDefinition
+    | DeadlineWindowDefinition
+    | ModeloScheduleDefinition
+    | DependencyClassificationDefinition
+)
+"""Every schema class :func:`validate_construct_closure` may look up as a
+construct member. Every member of this union declares ``legal_refs`` and
+``source_refs`` -- the single source of truth for the type both
+:attr:`RevisionValidationContext.construct_member_objects` and
+:func:`~._validate_constructs.validate_construct_closure` declare, so the
+two stay in lock-step rather than one drifting to a bare ``object``.
+"""
 
 
 def _export_field_ids(revision: ModeloRevision) -> set[str]:
@@ -75,8 +98,6 @@ class RevisionValidationContext:
     binding_by_id: dict[BindingId, DataBindingDefinition]
     relation_by_id: dict[RelationId, RelationDefinition]
     parameter_by_id: dict[str, ParameterDefinition]
-    provider_by_id: dict[str, AlgorithmProviderDefinition]
-    algorithm_binding_by_id: dict[str, AlgorithmBindingDefinition]
     export_layout_by_id: dict[str, ExportLayoutDefinition]
     extraction_profile_by_id: dict[str, ExtractionProfileDefinition]
     cross_reference_by_id: dict[str, LiveCrossReferenceDecision]
@@ -92,43 +113,17 @@ class RevisionValidationContext:
     bindings: set[BindingId]
     relations: set[RelationId]
     parameters: set[str]
-    providers: set[str]
     resolvable_values: set[BindingId | CasillaId | RelationId | str]
     export_field_ids: set[str]
     exported_casillas: set[CasillaId]
 
     @property
-    def construct_member_objects(
-        self,
-    ) -> Mapping[
-        str,
-        Mapping[
-            str,
-            CasillaDefinition
-            | FormulaDefinition
-            | ParameterDefinition
-            | DataBindingDefinition
-            | AlgorithmProviderDefinition
-            | AlgorithmBindingDefinition
-            | RelationDefinition
-            | ExportLayoutDefinition
-            | ExtractionProfileDefinition
-            | LiveCrossReferenceDecision
-            | WorkbookParityReference
-            | VerificationExpectationDefinition
-            | ApplicationLinkDefinition
-            | DeadlineWindowDefinition
-            | ModeloScheduleDefinition
-            | DependencyClassificationDefinition,
-        ],
-    ]:
+    def construct_member_objects(self) -> Mapping[str, Mapping[str, ConstructMemberObject]]:
         return {
             "casilla": self.casilla_by_id,
             "formula": self.formula_by_id,
             "parameter": self.parameter_by_id,
             "binding": self.binding_by_id,
-            "algorithm provider": self.provider_by_id,
-            "algorithm binding": self.algorithm_binding_by_id,
             "relation": self.relation_by_id,
             "export layout": self.export_layout_by_id,
             "extraction profile": self.extraction_profile_by_id,
@@ -148,7 +143,6 @@ def build_revision_validation_context(revision: ModeloRevision) -> RevisionValid
     binding_by_id = _records_by_id(revision.bindings)
     relation_by_id = _records_by_id(revision.relations)
     parameter_by_id = _records_by_id(revision.parameters)
-    provider_by_id = _records_by_id(revision.algorithm_providers)
     casillas = set(declared_casilla_ids(revision))
     bindings = set(binding_by_id)
     relations = set(relation_by_id)
@@ -169,8 +163,6 @@ def build_revision_validation_context(revision: ModeloRevision) -> RevisionValid
         binding_by_id=binding_by_id,
         relation_by_id=relation_by_id,
         parameter_by_id=parameter_by_id,
-        provider_by_id=provider_by_id,
-        algorithm_binding_by_id=_records_by_id(revision.algorithm_bindings),
         export_layout_by_id=_records_by_id(revision.export_layouts),
         extraction_profile_by_id=_records_by_id(revision.extraction_profiles),
         cross_reference_by_id=_records_by_id(revision.live_cross_references),
@@ -186,7 +178,6 @@ def build_revision_validation_context(revision: ModeloRevision) -> RevisionValid
         bindings=bindings,
         relations=relations,
         parameters=parameters,
-        providers=set(provider_by_id),
         resolvable_values=casillas | bindings | relations | parameters,
         export_field_ids=_export_field_ids(revision),
         exported_casillas=_exported_casilla_ids(revision),

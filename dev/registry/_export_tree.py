@@ -385,6 +385,44 @@ def _render_records(
 
 
 def _require_exact_record_geometry(joined_record: JoinedRecordDesignRecord) -> None:
+    """Require ``joined_record`` to be a complete, exact fixed-width geometry.
+
+    This function's two checks are NOT the same kind of check, even though
+    they sit side by side. Read them differently:
+
+    ``declared_total is None`` -- NOT redundant. It is the generator's own
+    fixed-width requirement, independent of anything the extractor asserts.
+    ``RecordDesignSheet.total_positions`` (``src/cadrumo/domain/calculations/
+    registry/_record_design.py``) legitimately stays ``None`` when a workbook
+    declares a ``"Variable"`` total -- a real AEAT shape the extractor
+    correctly TOLERATES for coverage and other non-export consumers. This
+    generator can only emit fixed-width byte-exact export records, so it
+    correctly REFUSES that same design. A variable-total design passing the
+    extractor and failing here is intended behaviour. Do not weaken or
+    remove this check, and do not push it down into the extractor -- that
+    would force every extractor consumer to need a fixed total, breaking the
+    variable-envelope path.
+
+    The offset-contiguity loop below IS redundant, but only conditionally.
+    ``joined_record.fields`` reaches this function via a zero-transformation
+    pipeline: ``extract_record_design`` (the same extractor, which already
+    runs this identical check unconditionally on every field) ->
+    ``_record_design_ir.py``'s ``_intermediate_sheet`` (a straight 1:1
+    projection, offset/length unchanged, order preserved) ->
+    ``_semantic_map_join.py``'s ``_join_record_design_semantics`` (wraps
+    each field once more, still unreordered, unfiltered). Given that chain,
+    this loop can never actually fire differently from the extractor's own
+    check -- it is a backstop over an already-guaranteed invariant, kept
+    deliberately rather than deleted, because the guarantee holds only as
+    long as every hop in that chain stays transformation-free. If a future
+    change ever reorders, filters, or recomputes fields anywhere in that
+    pipeline, this loop is what would catch it; nobody adding such a
+    transformation later would think to re-add a check that looks like
+    established duplication today. Do not "clean up" this loop as
+    redundant with the ``declared_total`` check above -- they are not the
+    same kind of check, and only this one is safe to remove if the pipeline
+    it depends on ever changes.
+    """
     declared_total = joined_record.parser_sheet.declared_total
     if declared_total is None:
         raise RegistryValidationError(

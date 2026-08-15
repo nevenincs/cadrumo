@@ -8,8 +8,8 @@ config facade (``_resolve_profile_by_label``, ``config profile show``,
 an ambiguous label escaped to an unhandled traceback rather than producing a
 clean operator-facing refusal.
 
-These tests provision two LIVE profiles whose manifest labels differ only by
-case, then drive each surface and assert a clean refusal: a non-zero exit, the
+These tests provision two LIVE profiles whose committed capsule labels differ
+only by case, then drive each surface and assert a clean refusal: a non-zero exit, the
 dedicated ambiguity message, and — critically — the absence of the
 ``ProfileLabelAmbiguousError`` exception name in the output (its presence is the
 unhandled-traceback signature the fix eliminates).
@@ -17,84 +17,51 @@ unhandled-traceback signature the fix eliminates).
 
 from __future__ import annotations
 
+from uuid import UUID
+
 import pytest
 from click.testing import Result
 
-from .....adapters.persistence.storage.bucket import (
-    bucket_paths,
-    read_manifest,
-    write_manifest,
-)
-from .....core.config import load_settings
 from .....tests.cli_runner import invoke_cached_cli
+from .....tests.profile_capsule import forge_colliding_capsule_label
+from .....tests.user_profile import register_cli_profile
 from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def _create_profile(name: str, tax_id: str) -> None:
-    """Provision a real live profile through the canonical CLI create path."""
-    result = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            name,
-            "--quiet",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Test",
-            "--surnames",
-            "Operator",
-            "--tax-id",
-            tax_id,
-            "--activity",
-            "Servicios",
-            "--iva-regime",
-            "GENERAL",
-        ],
+def _create_profile(name: str, tax_id: str) -> str:
+    """Register one live profile through the credential-only creation door."""
+    return register_cli_profile(
+        label=name,
+        facts={
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Test",
+            "identity.surnames": "Operator",
+            "identity.tax_id": tax_id,
+            "activities.description": "Servicios",
+            "iva.regime": "GENERAL",
+        },
     )
-    assert result.exit_code == 0, result.output
-
-
-def _relabel_bucket(bucket_id: str, new_label: str) -> None:
-    """Rewrite one live bucket's manifest label, leaving everything else intact.
-
-    The CLI create path enforces label uniqueness, so two casefold-equal labels
-    cannot be provisioned directly. Two profiles are created with distinct
-    labels, then their on-disk manifest labels are rewritten to a casefold-equal
-    pair — both profiles remain ACTIVE with a real bucket directory, DB, and
-    keystore; only the plaintext manifest label changes.
-    """
-    root = load_settings().cadrumo_local_storage_root
-    assert root is not None
-    paths = bucket_paths(root, bucket_id)
-    manifest = read_manifest(paths)
-    write_manifest(paths, manifest.model_copy(update={"label": new_label}))
 
 
 def _provision_casefold_collision() -> None:
-    """Create two live profiles whose manifest labels are casefold-equal."""
+    """Create two live profiles, then forge casefold-equal labels onto them.
+
+    Label uniqueness is enforced casefolded by every writer, so this pair
+    cannot be provisioned through any operator action -- which is precisely why
+    the read-side refusal under test needs the state forged for it.
+    """
     # Distinct, valid NIFs: the per-taxpayer uniqueness guard refuses a second
     # profile reusing the first tax id. Control letters per AEAT mod-23 table:
     # 0 -> "T", 1 -> "R".
-    _create_profile("ambig-alpha", "00000000T")
-    _create_profile("ambig-beta", "00000001R")
+    alpha = _create_profile("ambig-alpha", "00000000T")
+    beta = _create_profile("ambig-beta", "00000001R")
 
-    from .....application.workflow import list_profile_buckets
-
-    root = load_settings().cadrumo_local_storage_root
-    assert root is not None
-    pointers = list(list_profile_buckets(root=root).values())
-    by_label = {p.label: p.bucket_id for p in pointers}
-    assert "ambig-alpha" in by_label, pointers
-    assert "ambig-beta" in by_label, pointers
-
-    # Collapse the two distinct labels onto a casefold-equal pair: "Ambig"
-    # and "ambig" compare equal under ``str.casefold`` but are distinct strings.
-    _relabel_bucket(by_label["ambig-alpha"], "Ambig")
-    _relabel_bucket(by_label["ambig-beta"], "ambig")
+    # "Ambig" and "ambig" compare equal under ``str.casefold`` but are
+    # distinct strings, which is the ambiguity the reader must refuse.
+    forge_colliding_capsule_label(profile_id=UUID(alpha), label="Ambig")
+    forge_colliding_capsule_label(profile_id=UUID(beta), label="ambig")
 
 
 # English rendering of the dedicated CLI refusal key

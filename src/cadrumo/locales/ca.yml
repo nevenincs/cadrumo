@@ -428,9 +428,18 @@ aggregation:
         datades fora del període de declaració sol·licitat.
   modelo_bindings:
     errors:
+      invoice_line_currency_unconverted: Una línia de factura està denominada en moneda
+        estrangera sense tipus de canvi a euros resolt, per la qual cosa no es pot
+        declarar en aquest model.
       unsupported_period: Període de model no admès per a l'agregació del llibre.
   oss_ioss:
     errors:
+      invoice_line_currency_unconverted: Una línia de factura OSS/IOSS està denominada
+        en moneda estrangera sense tipus de canvi a euros resolt, per la qual cosa
+        no es pot declarar en aquest model.
+      invoice_line_rate_kind_unclassifiable: Una línia de factura OSS/IOSS té un tipus
+        d'IVA que no es pot classificar en cap tram, per la qual cosa la seva quota
+        no es pot declarar en aquest model.
       iva_amount_mismatches_destination_rate: L'import d'IVA persistit no concorda
         amb el tipus de l'Estat membre de destinació més enllà de la tolerància d'un
         cèntim.

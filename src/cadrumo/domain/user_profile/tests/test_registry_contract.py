@@ -7,11 +7,12 @@ import sys
 from typing import TYPE_CHECKING
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from ....core import BindingSourceKind
 from ....core.errors import BaseSeverity
 from ....core.resources import resources
+from ...calculations.registry import DataBindingDefinition, ProfileSelector
 from .. import (
     ProfileDerivedSelectorDefinition,
     UserProfileRegistryContractIssue,
@@ -250,6 +251,87 @@ def test_profile_binding_selectors_is_public_and_deduplicates_supported_selector
         "enrollment.large_company",
         "TaxResidenceProfile.ccaa",
     )
+
+
+def test_profile_binding_selectors_resolves_a_real_hydrated_profile_selector() -> None:
+    """The legitimate path: a real ``source = "profile"`` binding still resolves.
+
+    ``binding.selector`` is hydrated into ``ProfileSelector`` at construction
+    time by ``DataBindingDefinition``'s discriminated-union field validator
+    (never a raw dict), matching the exact object every real caller of
+    :func:`profile_binding_selectors` (all pre-filtered to ``source ==
+    BindingSourceKind.PROFILE``) actually passes.
+    """
+    binding = DataBindingDefinition.model_validate(
+        {
+            "id": "renta-2025-profile-tax-residence-ccaa",
+            "source": "profile",
+            "selector": {
+                "profile_model": "TaxResidenceProfile",
+                "field": "ccaa",
+                "xsd_attribute": "codigoCADeclaracion",
+                "dictionary_field": "ZCCAD",
+                "required_when_profile_key": "enrollment.large_company",
+                "required_when_value": "S",
+            },
+            "aggregation": {"op": "copy"},
+            "typed_enum": "CCAA",
+            "legal_refs": ("orden-hac-277-2026:art-3",),
+            "source_refs": ("aeat-dr-100-2025-dictionary",),
+        },
+    )
+
+    assert not isinstance(binding.selector, dict), (
+        "the fix relies on this being an already-hydrated ProfileSelector model, "
+        "never a raw mapping -- if this assertion ever fails, the hydration "
+        "contract this fix depends on has changed and the fix must be revisited"
+    )
+    assert profile_binding_selectors(binding.selector) == (
+        "enrollment.large_company",
+        "TaxResidenceProfile.ccaa",
+    )
+
+
+def test_profile_binding_selectors_ignores_a_non_profile_typed_selector() -> None:
+    """A different binding-source family's typed selector never carries a
+    profile key: the ``isinstance(selector, ProfileSelector)`` narrowing
+    means only a genuine ``ProfileSelector`` reaches the attribute-access
+    branch, and every other typed selector shape is a clean no-op rather
+    than an attempted (and doomed) dict-style read on a BaseModel.
+    """
+
+    class _UnrelatedSelector(BaseModel):
+        casilla_id: str
+
+    assert profile_binding_selectors(_UnrelatedSelector(casilla_id="0003")) == ()
+
+
+def test_a_dropped_profile_selector_field_is_refused_not_silently_missing() -> None:
+    """The bite proof: a ``ProfileSelector`` instance that has genuinely lost a
+    declared field must fail loud, never silently drop the value.
+
+    Before the fix, :func:`profile_binding_selectors` discarded the model's
+    type information via ``model_dump()`` and re-read the resulting plain
+    dict with the string literal ``selector.get("required_when_profile_key")``.
+    If ``ProfileSelector``'s field of that name (declared at ``_bindings.py``)
+    were ever renamed, that read would keep silently returning ``None``
+    forever -- permanently indistinguishable from "this binding has no
+    conditional gate" -- while construction-time validation kept passing (it
+    would just be validating the new name). This simulates that drift
+    directly on a real, otherwise-valid ``ProfileSelector`` instance (the
+    field is removed from the live instance's ``__dict__``, not stood in with
+    a look-alike class) and proves the fixed attribute-access read fails loud
+    instead of silently dropping the gate.
+    """
+    selector = ProfileSelector(
+        profile_key="tax.id",
+        required_when_profile_key="enrollment.large_company",
+        required_when_value="S",
+    )
+    del selector.__dict__["required_when_profile_key"]
+
+    with pytest.raises(AttributeError, match="required_when_profile_key"):
+        profile_binding_selectors(selector)
 
 
 def test_committed_modelo_profile_selectors_are_declared_by_user_profile_schema() -> None:

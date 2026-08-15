@@ -695,7 +695,7 @@ review_status = "reviewed"
 [sources."boe-modelo-210-diseno-registro-2011"]
 evidence_tier = "layout_authority"
 authority = "aeat"
-kind = "form_spec"
+kind = "record_design"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_210/dr210_2011.pdf"
 sha256 = "41875d015c809fc303a399581d6a437255f3235f8727515fe7e47606772a45e3"
 bytes = 48190
@@ -734,6 +734,19 @@ applies_from = 2024-02-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
 review_status = "reviewed"
 
+[sources."aeat-dr-216-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2024"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_216/files/01-216-ejercicio-2024-y-siguientes.xlsx"
+sha256 = "ebee21da4709d6cd63e42cbd82d8c0592252ce2157c93ac1df9833f1ea42cbf0"
+bytes = 114063
+retrieved_at = 2026-07-21
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/216e2024.xlsx"
+review_status = "reviewed"
+
 # Modelo 296 sources - annual resumen (informativa) companion to Modelo 216,
 # governed by the same bundled Orden HAC/56/2024 (BOE-A-2024-1772).
 [sources."aeat-modelo-296-procedure"]
@@ -759,4 +772,17 @@ retrieved_at = 2026-05-27
 published_at = 2024-01-31
 applies_from = 2024-02-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
+review_status = "reviewed"
+
+[sources."aeat-dr-296-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2024"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_296/files/01-296-ejercicio-2024.pdf"
+sha256 = "abec12e56073f8325b159c45a6b25de713bd53f8315c26c0f5243024f00d0378"
+bytes = 304691
+retrieved_at = 2026-07-21
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/DR_296_2024.pdf"
 review_status = "reviewed"

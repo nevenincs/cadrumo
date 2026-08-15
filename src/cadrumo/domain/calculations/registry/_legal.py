@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import hashlib
+import re
 from collections.abc import Iterable, Mapping
 from pathlib import Path
+from typing import Final
 
 from ....core import (
     CorpusAnchorResolutionError,
@@ -56,6 +58,145 @@ def _validate_legal_corpus_clauses(reference: LegalReference, source_root: Path)
         if normalise_corpus_text(forbidden) in corpus_text:
             raise RegistryValidationError(
                 f"legal reference {reference.id!r} corpus text contains forbidden text {forbidden!r}",
+            )
+
+
+#: Kinds a taxpayer-facing amount, deadline or applicability window can cite
+#: as BINDING BOE law -- excludes ``manual`` (AEAT guidance prose, never
+#: dispositive) and ``instruction`` (AEAT operational notes, same reason).
+#: A reference of one of these kinds is expected to resolve to text a real
+#: orden/ley/reglamento actually WROTE, not a paraphrase of one.
+_DISPOSITIVE_KINDS = frozenset(
+    {"ley", "real_decreto", "real_decreto_legislativo", "real_decreto_ley", "orden", "reglamento",
+     "acuerdo_internacional", "directiva"},
+)
+
+#: Calibrated against what :func:`_legal_corpus_text` actually RETURNS, not
+#: against the raw bundled HTML: ``normalise_corpus_text`` lowercases and
+#: accent-strips the text and collapses it to one line with the document
+#: TITLE prepended ahead of the anchored unit (``include_title=True``), so
+#: neither a capital "Artículo" nor a line-start anchor survives into the
+#: text this check actually sees -- an earlier version of this pattern was
+#: written against the raw HTML/markdown extraction and false-fired on 630
+#: of 633 entries, caught by running it against the full catalogue before
+#: trusting it, never assumed clean from two hand-picked files.
+#:
+#: The real discriminator survives normalisation: a genuine dispositive
+#: article's own heading is followed IMMEDIATELY by a period --
+#: ``"articulo 1. aprobacion..."`` -- while a prose CROSS-REFERENCE to
+#: another law's article never is -- ``"...previsto en el articulo 93 de
+#: la ley 35/2006..."`` has no period after the number, and the M151 stub's
+#: "articulos 113 a 120" is plural with no period either. Verified directly
+#: against the normalised text (not the source HTML) for every calibration
+#: file: the two known stubs (M714, M151) produce zero matches, and the two
+#: real near-miss files (``orden-eha-3290-2008`` / M216,
+#: ``orden-hac-1526-2024`` / a M036 amending article, both using the
+#: unaccented convention) produce a real match.
+_DISPOSITIVE_CONTENT_SIGNAL = re.compile(
+    r"articulo\s+(?:\d+|primero|segundo|tercero|cuarto|quinto|sexto|septimo|octavo|noveno|decimo|unico)\."
+    r"|disposicion\s+(?:transitoria|final|adicional|derogatoria)\s+\w+\.",
+)
+
+
+#: A reference anchored to ``#modelo-<id>`` claims to ground the WHOLE
+#: approving instrument as one unit -- "this orden approves this modelo" --
+#: rather than one specific numbered provision. That is deliberately the
+#: ONLY anchor shape this check fires on. Sweeping all 633 committed legal
+#: entries during calibration found the general question ("does this
+#: anchor's resolved text contain a recognisable dispositive marker")
+#: cannot be answered safely for every anchor shape this catalogue uses --
+#: apartados, anexos, instrucciones, disposiciones with compound ordinals
+#: ("trigésima tercera"), and bis/ter/decies-suffixed articles all
+#: legitimately lack an "articulo <n>." heading of the vocabulary this
+#: check recognises, and a first attempt scoped to every dispositive kind
+#: mis-fired on 59 of 633 real, correctly-grounded entries before landing
+#: here. The ``modelo-<id>`` anchor is the one shape where the question is
+#: unambiguous and answerable: nothing legitimately anchors an ENTIRE
+#: orden to "which modelo it approves" without that orden containing real
+#: approving text somewhere, and both live counter-examples this campaign
+#: found (M714, M151) use exactly this anchor shape.
+_MODELO_ANCHOR = re.compile(r"^modelo-\d+$")
+
+
+def _validate_dispositive_content(reference: LegalReference, source_root: Path) -> None:
+    """Refuse a whole-orden ``#modelo-<id>`` reference with no dispositive text at all.
+
+    A ``required_text`` clause cannot catch this: it is satisfied by ANY
+    phrase the author supplies, including one copied from the same stub it
+    validates -- the exact tautology this check exists to close instead of
+    merely documenting. This checks the corpus text ITSELF, independent of
+    what any reference's own ``required_text`` claims about it.
+    """
+    if reference.kind not in _DISPOSITIVE_KINDS:
+        return
+    anchor = reference.corpus_ref.partition("#")[2]
+    if not _MODELO_ANCHOR.match(anchor):
+        return
+    corpus_text = _legal_corpus_text(source_root, reference)
+    if not _DISPOSITIVE_CONTENT_SIGNAL.search(corpus_text):
+        raise RegistryValidationError(
+            f"legal reference {reference.id!r} (kind={reference.kind!r}) cites corpus text with no "
+            "dispositive article or disposición of its own -- the resolved text paraphrases or "
+            "cross-references another instrument rather than stating its own operative provision. "
+            "A required_text clause cannot clear this: it is satisfied by any phrase the author "
+            "supplies, including one authored alongside the stub it validates. FIX: bundle the real "
+            "consolidated BOE text for this instrument (verified against the live BOE text, per "
+            "aeat-calculation-grounding), never widen this check to accept a paraphrase",
+        )
+
+
+#: Below this, tonight's measured population is exclusively provision-suffixed
+#: excerpts or bare-named files that are candidates for the risk tier; at or
+#: above it, every bare-named file checked was a genuine full consolidated
+#: text (98 files, 5KB to 3.07MB). Not a guessed number -- the corpus's own
+#: observed shape, re-measured rather than assumed each time this module is
+#: touched.
+_FULL_CONSOLIDATED_SIZE_FLOOR: Final = 5000
+
+#: A provision-scoped filename names its own single provision -- the same
+#: convention 326 excerpt files in the bundled corpus already follow.
+_PROVISION_SUFFIXED_FILENAME = re.compile(r"-(art|apartado|anexo|da|dt|df|se|pr|ar|redacciones)[-.]")
+
+
+def _validate_corpus_tier_declaration(reference: LegalReference, source_root: Path) -> None:
+    """Verify a DECLARED ``corpus_tier`` against the bundled file, when present.
+
+    Purely additive: nothing in the committed catalogue declares
+    ``corpus_tier`` today, so this can never fire against the existing tree.
+    It exists so a FUTURE declaration is checked rather than trusted --
+    verified against the file, never merely typed.
+    """
+    if reference.corpus_tier is None:
+        return
+    path_text = reference.corpus_ref.split("#", 1)[0]
+    path = (source_root / path_text).resolve()
+    if not path.is_file():
+        return  # a missing file is reported by the existing corpus-file checks, not duplicated here
+    filename = path.name
+    size = path.stat().st_size
+    is_provision_suffixed = bool(_PROVISION_SUFFIXED_FILENAME.search(filename))
+
+    if reference.corpus_tier == "full_consolidated":
+        if is_provision_suffixed or size < _FULL_CONSOLIDATED_SIZE_FLOOR:
+            raise RegistryValidationError(
+                f"legal reference {reference.id!r} declares corpus_tier='full_consolidated' but "
+                f"{filename!r} ({size} bytes) does not match the corpus's own observed full-text shape "
+                f"(a bare, non-provision-suffixed filename of at least {_FULL_CONSOLIDATED_SIZE_FLOOR} "
+                "bytes) -- reclassify as 'provision_excerpt', or confirm this really is the full "
+                "consolidated instrument and not a thin paraphrase",
+            )
+    elif reference.corpus_tier == "provision_excerpt":
+        if is_provision_suffixed:
+            return
+        # A bare-named file can still legitimately be a short excerpt (M216's shape:
+        # several real articles in one small file). The dispositive-content signal,
+        # not the filename, is the honest test for that case.
+        corpus_text = _legal_corpus_text(source_root, reference)
+        if not _DISPOSITIVE_CONTENT_SIGNAL.search(corpus_text):
+            raise RegistryValidationError(
+                f"legal reference {reference.id!r} declares corpus_tier='provision_excerpt' but its "
+                f"corpus text carries no dispositive article or disposición of its own -- a stub is "
+                "never a declarable tier; either bundle the real text or remove the corpus_tier claim",
             )
 
 
@@ -122,6 +263,9 @@ def verify_legal_reference_grounding(
         _validate_manual_legal_reference(reference, source_root)
     if source_root is not None and (reference.required_text or reference.forbidden_text):
         _validate_legal_corpus_clauses(reference, source_root)
+    if source_root is not None:
+        _validate_dispositive_content(reference, source_root)
+        _validate_corpus_tier_declaration(reference, source_root)
     _validate_known_bad_citation(reference)
 
 

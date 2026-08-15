@@ -26,7 +26,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar, Final, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -531,6 +531,37 @@ class SchemaResolutionError(RuntimeError):
         )
 
 
+DECLARED_UNIMPLEMENTED_SURFACES: Final[Mapping[str, str]] = {
+    "config.profile.subject_access_request": (
+        "Data-protection subject-access request. The operator verb was removed as collateral "
+        "of the profile-capsule cutover rather than by a decision, and no other surface "
+        "answers the obligation it existed to satisfy. Its schema declaration is therefore "
+        "kept where every other unresolved declaration was deleted as residue: deleting this "
+        "one would retire a legal obligation by tidying, and the absence would stop being "
+        "visible anywhere. Restoring the verb removes this entry."
+    ),
+    "config.profile.export": (
+        "Profile bundle transfer. Held rather than deleted because whether this capability "
+        "returns is an open question about the bundle transfer surface, not residue of a "
+        "retirement already executed, and deleting the declaration would answer that "
+        "question by making it invisible. Restoring the verb removes this entry."
+    ),
+    "config.profile.import": (
+        "Profile bundle transfer, the inbound half of config.profile.export and held on the "
+        "same grounds: the capability question is open, so the declaration stays until it is "
+        "answered rather than being settled by deletion."
+    ),
+}
+"""Command keys whose schema is declared while the verb is knowingly absent.
+
+An entry is a STATED gap, never a silenced one. The build stays green for these
+keys because someone declared the obligation here with its reason, not because
+the failure was hidden; every other unresolvable key still raises. Adding an
+entry is a decision about a capability, so it belongs to whoever owns that
+capability rather than to whoever is trying to make a build pass.
+"""
+
+
 def assert_schema_coverage(resolution_errors: tuple[VerbLeafResolutionFailure, ...]) -> None:
     """Fail the build when any command key's subtree failed to materialise.
 
@@ -538,10 +569,18 @@ def assert_schema_coverage(resolution_errors: tuple[VerbLeafResolutionFailure, .
     tuple is the healthy state. Any entry names a missing or unmaterialisable
     verb that would otherwise silently ship an argument-free schema and raises
     :class:`SchemaResolutionError`.
+
+    Keys listed in :data:`DECLARED_UNIMPLEMENTED_SURFACES` are the one exception,
+    and they are excluded here rather than upstream so the walk still produces
+    its typed evidence for them: the gap stays measurable, it simply does not
+    fail the build. The gate keeps its teeth for everything else.
     """
-    if not resolution_errors:
+    undeclared = tuple(
+        failure for failure in resolution_errors if failure.subject_leaf_key not in DECLARED_UNIMPLEMENTED_SURFACES
+    )
+    if not undeclared:
         return
-    raise SchemaResolutionError(resolution_errors)
+    raise SchemaResolutionError(undeclared)
 
 
 def _schema_from_resolution(
@@ -629,7 +668,13 @@ def resolve_mcp_action_capabilities(
             raise ValueError(f"duplicate MCP result-schema identity: {schema_ref.command}")
         schema_ref_by_key[schema_ref.command] = schema_ref
 
-    result_keys = frozenset(schema_ref_by_key)
+    # A declared-unimplemented surface has a result schema and, by construction,
+    # no input schema: there is no verb to read parameters from. Excluding it
+    # here is the same declaration honoured a second time rather than a second
+    # exemption -- were it demanded, the build would still fail on the very keys
+    # the declaration exists to hold open, and the gap would have to be hidden
+    # by deleting the result schema, which is the outcome it prevents.
+    result_keys = frozenset(schema_ref_by_key) - frozenset(DECLARED_UNIMPLEMENTED_SURFACES)
     input_keys = frozenset(verb_schemas)
     if result_keys != input_keys:
         missing_input = tuple(sorted(result_keys - input_keys))

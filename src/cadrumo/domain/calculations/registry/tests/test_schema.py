@@ -19,7 +19,6 @@ from pydantic import TypeAdapter, ValidationError
 from .....core import CasillaId, validated_casilla_id
 from .._ids import LegalRefId, SourceRefId
 from .._schema import (
-    AlgorithmBindingDefinition,
     CasillaDefinition,
     CasillaFieldKind,
     ConstructDefinition,
@@ -248,44 +247,6 @@ def test_formula_definition_rejects_legacy_target_key() -> None:
     message = str(exc_info.value)
     assert "target_casilla_id" in message
     assert "target" in message
-
-
-def test_algorithm_binding_definition_rejects_legacy_target_key() -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        AlgorithmBindingDefinition.model_validate(
-            {
-                "id": "test.algorithm-binding",
-                "provider": "test.algorithm-provider",
-                "target": _SCHEMA_CASILLA_ID,
-                "inputs": {"value": _SCHEMA_CASILLA_ID},
-                "output_casilla_ids": {"result": _SCHEMA_CASILLA_ID},
-                "legal_refs": (_SCHEMA_LEGAL_ID,),
-                "source_refs": (_SCHEMA_SOURCE_ID,),
-            },
-        )
-
-    message = str(exc_info.value)
-    assert "target_casilla_id" in message
-    assert "target" in message
-
-
-def test_algorithm_binding_definition_rejects_legacy_outputs_key() -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        AlgorithmBindingDefinition.model_validate(
-            {
-                "id": "test.algorithm-binding",
-                "provider": "test.algorithm-provider",
-                "target_casilla_id": _SCHEMA_CASILLA_ID,
-                "inputs": {"value": _SCHEMA_CASILLA_ID},
-                "outputs": {"result": _SCHEMA_CASILLA_ID},
-                "legal_refs": (_SCHEMA_LEGAL_ID,),
-                "source_refs": (_SCHEMA_SOURCE_ID,),
-            },
-        )
-
-    message = str(exc_info.value)
-    assert "output_casilla_ids" in message
-    assert "outputs" in message
 
 
 def test_relation_definition_rejects_legacy_source_output_key() -> None:

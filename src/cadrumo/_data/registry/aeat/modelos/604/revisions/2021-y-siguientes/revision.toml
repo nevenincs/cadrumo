@@ -16,4 +16,6 @@ legal_refs = [
 source_refs = [
     "enrolled-modelo-604-procedure",
     "enrolled-modelo-604-layout",
+    "aeat-dr-604-2021",
+    "aeat-dr-604-2024",
 ]

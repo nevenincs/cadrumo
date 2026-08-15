@@ -614,12 +614,33 @@ def validate_previous_filing_binding(binding: DataBindingDefinition) -> list[str
 
 
 def is_direct_previous_filing_binding(binding: DataBindingDefinition) -> bool:
-    selector = _selector_as_dict(binding)
-    if selector.get("source_casilla_ids"):
+    """Whether ``binding`` carries a DIRECT previous-filing selector shape.
+
+    Every real caller passes a ``source == "previous_filing"`` binding (the
+    only source this predicate is meaningful for), so ``binding.selector`` is
+    already hydrated into :class:`PreviousModeloSelector` by construction
+    (``DataBindingDefinition``'s discriminated-union field validator). Reading
+    through the declared model -- ``_previous_filing_selector``, the same
+    helper :func:`previous_filing_observation_requirements` and
+    :func:`_aggregate_previous_filing_binding` already call -- rather than
+    string-literal ``dict.get()`` keys means a field rename on
+    ``PreviousModeloSelector`` fails loud instead of silently making every
+    direct binding register as non-direct: this predicate backs the
+    registry-build refusal (``_validate_relation_sources.py``) that a
+    ``previous_filing`` binding must satisfy the direct-selector shape or
+    declare ``relation_prefill`` instead, so a silently wrong ``False`` here
+    is a validation gate going quiet, not a benign miss.
+    """
+    selector = _previous_filing_selector(binding)
+    if selector.source_casilla_ids:
         return True
-    if selector.get("source_casilla_id") is None:
+    if selector.source_casilla_id is None:
         return False
-    return any(key in selector for key in ("period", "source_periods", "source_period_offset_from_target"))
+    return (
+        selector.period is not None
+        or bool(selector.source_periods)
+        or selector.source_period_offset_from_target is not None
+    )
 
 
 def _previous_filing_source_ids(selector: PreviousModeloSelector) -> tuple[CasillaId, ...]:
@@ -628,6 +649,28 @@ def _previous_filing_source_ids(selector: PreviousModeloSelector) -> tuple[Casil
     if selector.source_casilla_id is not None:
         return (selector.source_casilla_id,)
     return ()
+
+
+def previous_filing_binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaId, ...]:
+    """Return the source casilla ids a ``previous_filing`` binding targets.
+
+    The canonical, typed way to ask "which casilla(s) does this
+    previous_filing binding read from" -- delegates to the same
+    :func:`_previous_filing_source_ids` normalisation every other consumer of
+    this selector uses, so a caller reading only the singular
+    ``source_casilla_id`` key via a raw ``selector_as_dict(binding).get(...)``
+    silently misses any binding declaring the plural ``source_casilla_ids``
+    form instead, indistinguishable from "this binding targets no casilla at
+    all". Reading through :class:`PreviousModeloSelector` also means a
+    renamed ``source_casilla_id``/``source_casilla_ids`` field raises here,
+    rather than silently returning an empty tuple for every binding.
+
+    Returns an empty tuple for a binding that is not ``previous_filing`` at
+    all -- a real, different fact from a malformed or drifted selector.
+    """
+    if binding.source is not BindingSourceKind.PREVIOUS_FILING:
+        return ()
+    return _previous_filing_source_ids(_previous_filing_selector(binding))
 
 
 def _derive_offset_source_anchor(offset: int, *, target_period: str) -> tuple[int, str]:

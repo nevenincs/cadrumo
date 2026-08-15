@@ -387,9 +387,17 @@ aggregation:
         dated outside the requested filing period.
   modelo_bindings:
     errors:
+      invoice_line_currency_unconverted: An invoice line is denominated in a foreign
+        currency with no resolved euro rate, so it cannot be declared on this modelo.
       unsupported_period: Unsupported modelo period for ledger aggregation.
   oss_ioss:
     errors:
+      invoice_line_currency_unconverted: An OSS/IOSS invoice line is denominated in
+        a foreign currency with no resolved euro rate, so it cannot be declared on
+        this modelo.
+      invoice_line_rate_kind_unclassifiable: An OSS/IOSS invoice line carries an IVA
+        rate that cannot be classified into a rate tier, so its cuota cannot be declared
+        on this modelo.
       iva_amount_mismatches_destination_rate: The persisted IVA amount disagrees with
         the destination member state rate beyond the one-cent tolerance.
   per_modelo:

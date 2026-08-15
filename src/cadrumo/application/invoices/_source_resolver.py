@@ -34,12 +34,11 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry import (
     BindingId,
-    DataBindingDefinition,
     InvoiceObservation,
     RegistryValidationError,
+    is_m347_declarante_summary_invoice_binding,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
-    selector_as_dict,
 )
 from ...domain.invoices import (
     Invoice,
@@ -76,7 +75,6 @@ _M349_OPERADOR_ROW_BINDINGS: dict[BindingId, str] = {
     "iva-349-operador-row-clave": "clave_operacion",
     "iva-349-operador-row-base": "importe",
 }
-_M347_DECLARANTE_SUMMARY_RECORD = "m347_declarante_summary"
 _COLLECTIBLE_M349_OPERATION_TYPES: frozenset[IntracomOperationType] = frozenset(
     {
         IntracomOperationType.E,
@@ -495,15 +493,9 @@ def _invoice_sources_for_revision(context: CalculationSourceContext) -> frozense
     declared_sources = frozenset(
         binding.source for binding in context.revision.bindings if binding.source in _OWNED_SOURCES
     )
-    if any(_is_m347_declarante_summary_binding(binding) for binding in context.revision.bindings):
+    if any(is_m347_declarante_summary_invoice_binding(binding) for binding in context.revision.bindings):
         return frozenset(_OWNED_SOURCES)
     return declared_sources
-
-
-def _is_m347_declarante_summary_binding(binding: DataBindingDefinition) -> bool:
-    if binding.source not in _OWNED_SOURCES:
-        return False
-    return selector_as_dict(binding).get("record") == _M347_DECLARANTE_SUMMARY_RECORD
 
 
 def _invoice_in_context(invoice: Invoice, context: CalculationSourceContext) -> bool:

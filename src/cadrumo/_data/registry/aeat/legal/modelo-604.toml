@@ -61,3 +61,30 @@ published_at = 2021-05-27
 applies_from = 2021-05-28
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-8878"
 review_status = "reviewed"
+
+[sources."aeat-dr-604-2021"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2021"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_604/files/04-604-ejercicios-2021-a-2023.xlsx"
+sha256 = "262e743deecf303fd344084bd56e9497da5a7cfd6eeab5286719513f788fd550"
+bytes = 116032
+retrieved_at = 2026-07-21
+applies_from = 2021-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR604_2021.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-604-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2024"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_604/files/03-604-ejercicio-2024.xlsx"
+sha256 = "98f7022a391e822ee2c57b6e2b1f873fd2bcc8db80a5b692fd7c6fae1e758f68"
+bytes = 168495
+retrieved_at = 2026-07-21
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR604_2024.xlsx"
+review_status = "reviewed"

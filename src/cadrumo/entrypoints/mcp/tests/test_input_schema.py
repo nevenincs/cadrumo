@@ -12,10 +12,13 @@ import pytest
 from ...cli import command_schema_refs
 from .._dispatch import is_exposable_command
 from .._input_schema import (
+    DECLARED_UNIMPLEMENTED_SURFACES,
     JsonType,
     SchemaResolutionError,
     VerbLeafKind,
+    VerbLeafResolutionFailure,
     VerbParamKind,
+    assert_schema_coverage,
     build_verb_input_schemas,
     cli_argv_for,
 )
@@ -250,3 +253,49 @@ def test_argv_maps_option_names_to_cli_flags_and_flags_emit_only_the_token() -> 
     create = schemas["config.profile.create"]
     flag_argv = cli_argv_for(create, {"profile_name": "acme", "quiet": True, "accept_defaults": False})
     assert flag_argv == ["--format", "json", "config", "profile", "create", "acme", "--quiet"]
+
+
+def test_the_declared_unimplemented_surface_names_its_unmet_obligation() -> None:
+    """The subject-access surface stays declared, with its reason, or it vanishes.
+
+    This is the only key whose schema outlives its verb. Every other unresolved
+    declaration was deleted as residue of a retirement the tree had already
+    executed; this one was kept because deleting it would retire a
+    data-protection obligation by tidying, and nothing else in the tree records
+    that the obligation is unmet.
+
+    So the declaration is the record, and a record nothing asserts is deleted by
+    the next sweep that finds it unreferenced. The gap must stay stated rather
+    than merely present: an entry whose reason is blank would pass a
+    membership check while saying nothing to the reader who finds it.
+    """
+    assert "config.profile.subject_access_request" in DECLARED_UNIMPLEMENTED_SURFACES
+    reason = DECLARED_UNIMPLEMENTED_SURFACES["config.profile.subject_access_request"]
+    assert "subject-access" in reason.lower()
+    assert len(reason.split()) >= 20, "the declaration must state the obligation, not merely name the key"
+
+
+def test_the_coverage_gate_still_refuses_an_undeclared_missing_verb() -> None:
+    """The carve-out is one named key, not a hole in the gate.
+
+    Anti-tautology for the test above: proving the exemption exists is worthless
+    unless the gate still bites for everything outside it, which is the property
+    that makes the exemption safe to keep.
+    """
+    declared = VerbLeafResolutionFailure(
+        subject_leaf_key="config.profile.subject_access_request",
+        attempted_cli_path=("config", "profile", "subject-access-request"),
+        reason="command did not resolve",
+    )
+    undeclared = VerbLeafResolutionFailure(
+        subject_leaf_key="config.profile.invented_verb",
+        attempted_cli_path=("config", "profile", "invented-verb"),
+        reason="command did not resolve",
+    )
+
+    assert_schema_coverage((declared,))
+
+    with pytest.raises(SchemaResolutionError) as excinfo:
+        assert_schema_coverage((declared, undeclared))
+    assert "config.profile.invented_verb" in str(excinfo.value)
+    assert "subject_access_request" not in str(excinfo.value)

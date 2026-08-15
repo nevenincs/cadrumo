@@ -40,7 +40,8 @@ from ...domain.calculations.registry import (
     CasillaObservation,
     ModeloRevision,
     RegistryModeloObservation,
-    selector_as_dict,
+    foreign_asset_binding_row_field,
+    previous_filing_binding_source_casilla_ids,
 )
 from ...domain.modelos import (
     CalculationRevision,
@@ -401,9 +402,17 @@ def modelo_720_prior_baseline_observation(
         value = binding_values.get(binding.id)
         if value is None:
             continue
-        source_casilla_id = selector_as_dict(binding).get("source_casilla_id")
-        if not isinstance(source_casilla_id, str):
+        source_casilla_ids = previous_filing_binding_source_casilla_ids(binding)
+        # binding_values resolves ONE value per binding id, so this observation
+        # only applies when the binding targets exactly one casilla -- a
+        # multi-casilla (plural source_casilla_ids) binding has no single value
+        # to attribute to which of its several targets, and is out of scope
+        # here, same as before this typed read replaced the raw singular-key
+        # lookup (which only ever matched the singular shape in the first
+        # place).
+        if len(source_casilla_ids) != 1:
             continue
+        (source_casilla_id,) = source_casilla_ids
         if source_casilla_id not in _M720_VALUATION_CASILLA_GROUPS:
             continue
         refs = refs_by_casilla.get(source_casilla_id)
@@ -427,9 +436,7 @@ def modelo_720_prior_baseline_observation(
 
 def _foreign_asset_row_binding_id(revision: ModeloRevision, *, row_field: str) -> str | None:
     for binding in revision.bindings:
-        if binding.source != BindingSourceKind.FOREIGN_ASSET:
-            continue
-        if selector_as_dict(binding).get("row_field") == row_field:
+        if foreign_asset_binding_row_field(binding) == row_field:
             return binding.id
     return None
 

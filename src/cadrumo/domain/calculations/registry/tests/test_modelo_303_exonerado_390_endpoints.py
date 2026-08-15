@@ -77,7 +77,7 @@ def test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint
         filing_year=filing_year,
         design_epoch=design_epoch,
     )
-    extracted = extract_record_design(resolved.path)
+    extracted = extract_record_design(resolved.path).accept_partial()
     declaration_sheet = next(item for item in extracted if item.name == "DP30301")
     sheet = next(item for item in extracted if item.name == "DP30304")
     exoneration_flags = tuple(

@@ -155,13 +155,26 @@ def _conditional_action_verdict(
     )
 
 
-def _draft_blocking_finding_codes(draft: object) -> tuple[str, ...]:
-    """Return stable finding identifiers without retaining rendered descriptions."""
+def _draft_blocking_finding_codes(draft: RegistryModeloDraftProtocol) -> tuple[str, ...]:
+    """Return stable finding identifiers without retaining rendered descriptions.
+
+    ``severity`` and ``code`` are read as typed attributes, never through
+    ``getattr(..., None)``: :attr:`RegistryModeloDraftProtocol.findings` is
+    typed ``tuple[WorkflowFindingLike, ...]``, and that Protocol declares both
+    fields required, so a rename fails loud here. Read defensively, a renamed
+    field would silently drop every finding from this diagnostic detail --
+    the same fail-open shape ``_stage_validating_draft`` and
+    ``domain/submission/_preflight.py`` carried, just feeding a reported
+    detail on an already-decided abort rather than the abort decision itself.
+    """
     codes: set[str] = set()
-    for finding in getattr(draft, "findings", ()) or ():
-        severity = _enum_value(getattr(finding, "severity", None))
-        code = _enum_value(getattr(finding, "code", None))
-        if severity in {"error", "warning"} and code and not any(character.isspace() for character in code):
+    for finding in draft.findings:
+        code = finding.code
+        if (
+            finding.severity in {BaseSeverity.ERROR, BaseSeverity.WARNING}
+            and code
+            and not any(character.isspace() for character in code)
+        ):
             codes.add(code)
     return tuple(sorted(codes))
 
@@ -1100,11 +1113,19 @@ class WorkflowEngine:
         draft: RegistryModeloDraftProtocol,
         steps: list[WorkflowStep],
     ) -> None:
-        """Stage 6 — re-scan the built draft for ERROR-severity findings."""
+        """Stage 6 — re-scan the built draft for ERROR-severity findings.
+
+        ``severity`` is read as a typed attribute, never through
+        ``getattr(..., None)``. :attr:`ModeloDraftLike.findings` is typed
+        ``tuple[ModeloFindingLike, ...]``, and that Protocol declares
+        ``severity`` required, so a rename fails loud here. Read defensively,
+        a renamed field would yield ``None`` for EVERY finding, this stage
+        would find no errors on a draft that has them, and it would report
+        success — the same fail-open this file's sibling gate carried in
+        ``domain/submission/_preflight.py``.
+        """
         started = _utcnow()
-        error_findings = tuple(
-            f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == BaseSeverity.ERROR
-        )
+        error_findings = tuple(f for f in draft.findings if f.severity == BaseSeverity.ERROR)
         if error_findings:
             steps.append(
                 WorkflowStep(

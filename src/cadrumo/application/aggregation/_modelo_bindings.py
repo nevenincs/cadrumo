@@ -1465,6 +1465,8 @@ def _declared_category_base_only_observation(
     recargo_amount: Decimal,
     category: IvaCategory,
     flow_direction: IvaFlowDirection,
+    base_amount_eur: Decimal,
+    iva_amount_eur: Decimal,
 ) -> IvaLedgerObservation:
     """Project a cuota-less line under the category the INVOICE declares.
 
@@ -1496,6 +1498,10 @@ def _declared_category_base_only_observation(
             ``_DECLARED_CATEGORY_BASE_ONLY_FLOWS`` lookup that selected
             *flow_direction*.
         flow_direction: The flow this category implies, from the table above.
+        base_amount_eur: ``line.subtotal`` already converted to EUR by the
+            caller (see :func:`_invoice_line_iva_observation`).
+        iva_amount_eur: ``line.iva_amount`` already converted to EUR, same
+            shape as *base_amount_eur*.
 
     Returns:
         The observation, carrying a real base and no cuota.
@@ -1508,8 +1514,8 @@ def _declared_category_base_only_observation(
         issued_at=devengo_date,
         invoice_kind=invoice.kind,
         iva_rate=line.iva_rate,
-        base_amount=line.subtotal,
-        iva_amount=line.iva_amount,
+        base_amount=base_amount_eur,
+        iva_amount=iva_amount_eur,
         deduction_fact_kind=None,
         deduction_provenance=None,
         recargo_amount=recargo_amount,
@@ -1521,7 +1527,7 @@ def _declared_category_base_only_observation(
         rate_kind=measured.rate_kind,
         applied_rate=measured.applied_rate,
         flow_direction=flow_direction,
-        base_amount=line.subtotal,
+        base_amount=base_amount_eur,
         iva_amount=Decimal("0"),
         recargo_amount=recargo_amount,
         deduction_fact_kind=None,
@@ -1537,6 +1543,8 @@ def _invoice_line_iva_observation(
     line_index: int,
     devengo_date: date,
     recargo_amount: Decimal,
+    base_amount_eur: Decimal,
+    iva_amount_eur: Decimal,
     deduction_authority: IvaLedgerObservation | None = None,
 ) -> IvaLedgerObservation | None:
     """Project one invoice line into the observation the screen declares from.
@@ -1577,6 +1585,13 @@ def _invoice_line_iva_observation(
         line_index: Position of the line, folded into the observation id.
         devengo_date: The date the observation is declared on.
         recargo_amount: Recargo attributable to this line, already resolved.
+        base_amount_eur: ``line.subtotal`` already converted to EUR via
+            :meth:`~domain.invoices.Invoice.line_amount_eur` -- the caller
+            gates on a resolvable EUR amount before this is ever invoked, so
+            every downstream construction reads this instead of the line's
+            own native-currency field.
+        iva_amount_eur: ``line.iva_amount`` already converted to EUR, same
+            shape as *base_amount_eur*.
         deduction_authority: Exact frozen transaction-ledger authority linked
             to a received invoice, or ``None`` for an issued invoice.
 
@@ -1585,13 +1600,15 @@ def _invoice_line_iva_observation(
         nowhere.
     """
     ledger_id = f"invoice:{invoice.invoice_id}:{line_index}"
-    if line.iva_amount > Decimal("0"):
+    if iva_amount_eur > Decimal("0"):
         return _standard_invoice_line_iva_observation(
             ledger_id=ledger_id,
             invoice=invoice,
             line=line,
             devengo_date=devengo_date,
             recargo_amount=recargo_amount,
+            base_amount_eur=base_amount_eur,
+            iva_amount_eur=iva_amount_eur,
             deduction_authority=deduction_authority,
         )
     category = invoice.iva_category
@@ -1605,6 +1622,8 @@ def _invoice_line_iva_observation(
             recargo_amount=recargo_amount,
             category=category,
             flow_direction=declared_flow,
+            base_amount_eur=base_amount_eur,
+            iva_amount_eur=iva_amount_eur,
         )
     if category is not None and category not in _BASE_ONLY_ROUTED_CATEGORIES:
         # The declared treatment wins over the rate slot, which is what the
@@ -1635,6 +1654,8 @@ def _invoice_line_iva_observation(
             recargo_amount=recargo_amount,
             category=category,
             deduction_authority=deduction_authority,
+            base_amount_eur=base_amount_eur,
+            iva_amount_eur=iva_amount_eur,
         )
     if category is None or category not in _BASE_ONLY_ROUTED_CATEGORIES:
         # No declared treatment at all: the rate slot is the only signal there
@@ -1650,6 +1671,8 @@ def _invoice_line_iva_observation(
             line=line,
             devengo_date=devengo_date,
             recargo_amount=recargo_amount,
+            base_amount_eur=base_amount_eur,
+            iva_amount_eur=iva_amount_eur,
         )
     if invoice.kind is not InvoiceKind.ISSUED:
         # Both base-only casillas select the repercutido flow: these are
@@ -1673,7 +1696,7 @@ def _invoice_line_iva_observation(
         # narrowed reducido binding look like a silent under-declaration.
         applied_rate=Decimal("0"),
         flow_direction=IvaFlowDirection.REPERCUTIDO,
-        base_amount=line.subtotal,
+        base_amount=base_amount_eur,
         iva_amount=Decimal("0"),
         recargo_amount=recargo_amount,
         deduction_fact_kind=None,
@@ -1689,6 +1712,8 @@ def _standard_invoice_line_iva_observation(
     line: InvoiceLine,
     devengo_date: date,
     recargo_amount: Decimal,
+    base_amount_eur: Decimal,
+    iva_amount_eur: Decimal,
     deduction_authority: IvaLedgerObservation | None = None,
 ) -> IvaLedgerObservation:
     """Project a rate-classified line, preserving linked ledger deduction facts."""
@@ -1697,8 +1722,8 @@ def _standard_invoice_line_iva_observation(
         issued_at=devengo_date,
         invoice_kind=invoice.kind,
         iva_rate=line.iva_rate,
-        base_amount=line.subtotal,
-        iva_amount=line.iva_amount,
+        base_amount=base_amount_eur,
+        iva_amount=iva_amount_eur,
         recargo_amount=recargo_amount,
         deduction_fact_kind=(deduction_authority.deduction_fact_kind if deduction_authority is not None else None),
         deduction_provenance=(deduction_authority.deduction_provenance if deduction_authority is not None else None),
@@ -1716,6 +1741,8 @@ def _declared_category_unrouted_observation(
     recargo_amount: Decimal,
     category: IvaCategory,
     deduction_authority: IvaLedgerObservation | None,
+    base_amount_eur: Decimal,
+    iva_amount_eur: Decimal,
 ) -> IvaLedgerObservation | None:
     """Retain a declared non-base-only category without inventing a rate.
 
@@ -1744,8 +1771,8 @@ def _declared_category_unrouted_observation(
         rate_kind=_rate_kind_for_slot(line.iva_rate),
         applied_rate=None,
         flow_direction=flow_direction,
-        base_amount=line.subtotal,
-        iva_amount=line.iva_amount,
+        base_amount=base_amount_eur,
+        iva_amount=iva_amount_eur,
         recargo_amount=recargo_amount,
         deduction_fact_kind=(deduction_authority.deduction_fact_kind if deduction_authority is not None else None),
         deduction_provenance=(deduction_authority.deduction_provenance if deduction_authority is not None else None),
@@ -2213,7 +2240,7 @@ def _screened_invoice_iva_result(
         and any(line.iva_amount > Decimal("0") for line in invoice.lines)
         and deduction_authority is None
     )
-    observations = ()
+    observations: tuple[IvaLedgerObservation, ...] = ()
     if not deduction_authority_missing:
         observations = _screened_invoice_line_observations(
             invoice,
@@ -2248,14 +2275,43 @@ def _screened_invoice_line_observations(
             continue
         if invoice.kind is InvoiceKind.RECEIVED and line.iva_amount == Decimal("0"):
             continue
+        # line.subtotal / line.iva_amount are denominated in invoice.currency
+        # (InvoiceLine carries no currency of its own); IvaLedgerObservation's
+        # base_amount/iva_amount are EUR-denominated (they feed M303 casillas
+        # directly), so this converts through the same fx_rate resolution the
+        # invoice-level totals already use, rather than folding the invoice's
+        # native fields straight in. A line whose invoice cannot itself resolve
+        # a EUR amount (foreign currency, unconverted) REFUSES -- by operator
+        # ruling ("aim for explicit red signals... until schema and api
+        # converges"), a would-be-silently-dropped declarable line is a hard
+        # stop, not an advisory beside a smaller-but-green figure. Fail-closed
+        # AND loud, not fail-closed-and-quiet.
+        base_amount_eur = invoice.line_amount_eur(line.subtotal)
+        iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
+        if base_amount_eur is None or iva_amount_eur is None:
+            raise AggregationValidationError(
+                t("aggregation.modelo_bindings.errors.invoice_line_currency_unconverted"),
+                context={
+                    "invoice_id": invoice.invoice_id,
+                    "invoice_number": invoice.invoice_number,
+                    "currency": invoice.currency,
+                    "line_index": str(line_index),
+                },
+            )
+        # recargo_amount_eur is None both for "no recargo declared" and for
+        # "unconverted" (same shape as the six sibling _eur properties), but
+        # the base/iva check above already proved this invoice resolves a EUR
+        # rate, so a None here can only mean the former -- defaulting to zero
+        # is the genuine-absence case, not a silently dropped recargo.
+        recargo_amount_eur = invoice.recargo_amount_eur or Decimal("0")
         observation = _invoice_line_iva_observation(
             invoice=invoice,
             line=line,
             line_index=line_index,
             devengo_date=devengo_date,
-            recargo_amount=(
-                invoice.recargo_amount or Decimal("0") if line_index == recargo_line_index else Decimal("0")
-            ),
+            recargo_amount=(recargo_amount_eur if line_index == recargo_line_index else Decimal("0")),
+            base_amount_eur=base_amount_eur,
+            iva_amount_eur=iva_amount_eur,
             deduction_authority=deduction_authority,
         )
         if observation is not None:

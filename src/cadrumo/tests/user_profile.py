@@ -132,6 +132,30 @@ def register_minimal_profile(
     return seeded
 
 
+def register_cli_profile(*, label: str, facts: Mapping[str, str] | None = None) -> str:
+    """Register a profile a CLI-surface test can afterwards unlock, and return its id.
+
+    The sibling :func:`register_minimal_profile` seeds a complete record for
+    application-layer tests.  A CLI test needs something that door does not
+    provide: the custody envelope has to open under the passphrase the isolated
+    CLI backend configures, so every ``aeat`` invocation that follows can unlock
+    the profile it just created.  Seeding a record writes no such envelope, which
+    is why the two doors are not interchangeable and why this one exists.
+
+    The profile is born incomplete, exactly as the production credential door
+    leaves it; pass ``facts`` for the fields the test's assertions depend on.
+    """
+    from ..application.user_profile import register_profile_with_credentials
+    from ..core.config import load_settings
+
+    outcome = register_profile_with_credentials(
+        label=label,
+        passphrase=load_settings().cadrumo_dev_test_database_password.get_secret_value(),
+        facts=tuple(UserProfileFact(path=path, value=value) for path, value in (facts or {}).items() if value),
+    )
+    return outcome.profile_id
+
+
 def complete_conditional_facts(
     schema: ProfileSchemaDefinition,
     facts: Iterable[UserProfileFact],
@@ -187,6 +211,7 @@ def complete_profile_facts(
 __all__ = [
     "complete_conditional_facts",
     "complete_profile_facts",
+    "register_cli_profile",
     "register_minimal_profile",
     "schema_valid_placeholder",
 ]

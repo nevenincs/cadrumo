@@ -30,8 +30,8 @@ from ....adapters.persistence.storage.custody import (
     ProfileCustodyRecordError,
     compare_and_replace_same_or_predecessor_profile_custody_local_record,
     load_committed_profile_password_material,
+    resume_profile_session,
 )
-from ....adapters.persistence.storage.master_key import resume_profile_session
 from ....application.profile_custody import profile_current_bucket_session, profile_session_path
 from ....core import BucketPointer, ProfileSessionRefusalReason, capture_pointer, read_pointer, write_pointer
 from ....core import config as config_module

@@ -209,6 +209,20 @@ def default_handbook_validators(legal_ref_ids: Container[str] | None = None) -> 
 
 
 def _bundled_legal_ref_ids() -> frozenset[str]:
+    """Return every legal-reference id the bundled catalogue carries.
+
+    Deliberately routed through the validated authority, and NOT through the
+    raw compiler, even though that makes this refuse whenever the registry
+    refuses. The compiler returns only the hand-authored legal entries; the
+    authority additionally folds in the annual-Orden compiler's synthesised
+    refs, which are more than half the catalogue. Reading the compiler here
+    would return a legal-ref set missing those, and this set is used to decide
+    whether a handbook concept's citation RESOLVES -- so the narrower set does
+    not fail loudly, it rejects valid citations.
+
+    A restored instrument returning a different population is worse than a
+    blocked one. This one stays blocked until the registry validates.
+    """
     from cadrumo.domain.calculations.registry import bundled_authority
 
     return frozenset(bundled_authority().catalogues.legal)

@@ -49,6 +49,7 @@ from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
+from ._observation_lookup_support import find_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -79,20 +80,6 @@ _METADATA_LEGAL_REFS_KEY = "iae_art82_legal_refs"
 
 _DECL_TIPO_DECLARACION_CASILLA: CasillaId = validated_casilla_id("decl.tipo-declaracion")
 _DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")
-
-
-def _find_observation(
-    repo: CalculationObservationRepository,
-    *,
-    filing_year: int,
-    period: str,
-):
-    """Scan iter_modelo and return the envelope matching (filing_year, period) or None."""
-    for payload in repo.iter_modelo(_MODELO):
-        obs = payload.observation
-        if obs.filing_year == filing_year and obs.period == period:
-            return payload
-    return None
 
 
 def _threshold_source_metadata(assessment: Modelo840IaeExemptionAssessment) -> dict[str, str]:
@@ -159,7 +146,7 @@ def test_below_threshold_context_persists_exempt_assessment_metadata(tmp_path: P
                 source_metadata=_threshold_source_metadata(assessment),
             )
         )
-        loaded = _find_observation(repo, filing_year=_YEAR_N, period="0A")
+        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
 
         assert loaded is not None, f"year-N observation not found for ({_MODELO!r}, {_YEAR_N}, '0A') after save"
         assert loaded.observation == obs, "840 year-N observation did not survive the encrypted-SQL roundtrip"
@@ -190,7 +177,7 @@ def test_at_threshold_context_persists_not_exempt_assessment_metadata(tmp_path: 
                 source_metadata=_threshold_source_metadata(assessment),
             )
         )
-        loaded = _find_observation(repo, filing_year=_YEAR_N_PLUS_2, period="0A")
+        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_2, period="0A")
 
         assert loaded is not None
         assert loaded.observation == obs
@@ -230,8 +217,8 @@ def test_exemption_assessments_are_independent_across_annual_contexts(tmp_path: 
                 source_metadata=_threshold_source_metadata(assessment_n2),
             )
         )
-        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period="0A")
-        loaded_n2 = _find_observation(repo, filing_year=_YEAR_N_PLUS_2, period="0A")
+        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
+        loaded_n2 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_2, period="0A")
 
         assert loaded_n is not None
         assert loaded_n2 is not None
@@ -275,7 +262,7 @@ def test_anti_tautology_proof_missing_turnover_metadata_surfaces_as_inequality(t
                 source_metadata=full_metadata,
             )
         )
-        loaded = _find_observation(repo, filing_year=_YEAR_N, period="0A")
+        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
 
         assert loaded is not None
         assert loaded.source_metadata != metadata_without_incn, (
@@ -310,7 +297,7 @@ def test_enrollment_recorder_evidences_two_distinct_annual_contexts_and_matches_
                 source_metadata=_threshold_source_metadata(assessment_n),
             )
         )
-        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period="0A")
+        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
         assert loaded_n is not None
         assert loaded_n.observation == obs_n
         assert loaded_n.source_metadata[_METADATA_STATUS_KEY] == Modelo840IaeExemptionStatus.EXEMPT.value
@@ -325,7 +312,7 @@ def test_enrollment_recorder_evidences_two_distinct_annual_contexts_and_matches_
                 source_metadata=_threshold_source_metadata(assessment_n2),
             )
         )
-        loaded_n2 = _find_observation(repo, filing_year=_YEAR_N_PLUS_2, period="0A")
+        loaded_n2 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_2, period="0A")
         assert loaded_n2 is not None
         assert loaded_n2.observation == obs_n2
         assert loaded_n2.source_metadata[_METADATA_STATUS_KEY] == Modelo840IaeExemptionStatus.NOT_EXEMPT.value

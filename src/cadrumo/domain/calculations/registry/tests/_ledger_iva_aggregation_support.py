@@ -18,12 +18,12 @@ from .....core import (
     CasillaId,
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
+    RegistryAuthorityGrade,
     ResultDisposition,
     derive_result_disposition,
     result_disposition_casilla_ids,
     validated_casilla_id,
 )
-from .....core import RegistryAuthorityGrade
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import bundled_path, resources
 from ....iva import (

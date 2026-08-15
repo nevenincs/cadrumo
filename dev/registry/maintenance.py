@@ -12,17 +12,16 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
-from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     AeatNifIvaCheckerOracle,
     CrossReferenceApplicabilityDeclaracion,
     GroiOracle,
     LiveParityCatalogue,
     OracleEnvironment,
-    ValidatedRegistryAuthority,
     audit_registry_oracle_bindings,
     collect_applicability_declarations,
     collect_orphan_oracle_ids,
+    load_registry_tree,
 )
 
 from ._parity_tapes import (
@@ -52,19 +51,33 @@ class RegistryOracleAuditReport(BaseModel):
 
 
 def audit_registry_oracles(registry_root: Path, *, environment: OracleEnvironment) -> RegistryOracleAuditReport:
-    """Audit committed oracle adapters against registry cross-references."""
-    authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
+    """Audit committed oracle adapters against registry cross-references.
+
+    Reads the compiled modelo definitions through the raw compiler rather than
+    the validated authority. This audit consumes exactly one surface --
+    ``modelos`` -- and never the legal catalogue, which is the distinction that
+    makes the move safe: the compiler and the authority return an identical
+    modelo set, while the authority's ``catalogues.legal`` additionally carries
+    the annual-Orden compiler's synthesised refs that the compiler tier cannot
+    see.
+
+    Routing it through the authority meant this audit refused whenever registry
+    validation refused anywhere in the tree -- so an instrument whose whole
+    purpose is auditing registry grounding was unavailable exactly when the
+    registry was under repair.
+    """
+    modelos, _catalogues = load_registry_tree(registry_root)
     catalogue = LiveParityCatalogue()
     catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.PRODUCTION)
     catalogue.register(GroiOracle(), environment=OracleEnvironment.PRODUCTION)
-    failures = audit_registry_oracle_bindings(authority.modelos, catalogue, environment=environment)
+    failures = audit_registry_oracle_bindings(modelos, catalogue, environment=environment)
     return RegistryOracleAuditReport(
         environment=environment.value,
         registered_oracle_ids=tuple(sorted(catalogue.ids())),
         failure_count=len(failures),
         failures=tuple(failures),
-        applicability_declarations=collect_applicability_declarations(authority.modelos),
-        orphan_oracle_ids=tuple(collect_orphan_oracle_ids(authority.modelos, catalogue)),
+        applicability_declarations=collect_applicability_declarations(modelos),
+        orphan_oracle_ids=tuple(collect_orphan_oracle_ids(modelos, catalogue)),
     )
 
 

@@ -29,7 +29,6 @@ been given a question that is not theirs and a remedy that cannot work.
 
 from __future__ import annotations
 
-from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -52,6 +51,7 @@ from ....domain.iva import (
     territorial_scope_for_country,
     territorial_scope_for_spanish_postal_code,
 )
+from ....tests.attribute_scope import scoped_attribute
 from .. import _establishment_ladder as ladder_module
 from .._counterparty_establishment import (
     ConfirmedCounterpartyFactsRepository,
@@ -75,17 +75,6 @@ from .._evidence_draft import (
 from .._regime_contradiction import draft_prints_a_repercutido_line
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@contextmanager
-def _replacing(target: object, name: str, value: object):
-    """Replace ``target.name`` for the scope, restoring the original on exit."""
-    original = getattr(target, name)
-    setattr(target, name, value)
-    try:
-        yield
-    finally:
-        setattr(target, name, original)
 
 
 _BUCKET_ID = "37373737-3737-4737-8737-373737373737"
@@ -463,7 +452,7 @@ def test_a_corrupt_vocabulary_refuses_rather_than_reporting_an_unestablished_par
     remedy, since confirming the counterparty would paper over a defect.
     """
     with (
-        _replacing(ladder_module, "country_code_for_printed_country_name", _refusing_rung),
+        scoped_attribute(ladder_module, "country_code_for_printed_country_name", _refusing_rung),
         pytest.raises(IvaCatalogueError),
     ):
         _resolve(repository, country_name="España", postal_code=_MADRID)
@@ -481,7 +470,7 @@ def test_a_corrupt_territory_registry_refuses_from_inside_the_rung_walk(
     shape that turns a broken data file into a counterparty question.
     """
     with (
-        _replacing(ladder_module, "territorial_scope_for_spanish_postal_code", _refusing_rung),
+        scoped_attribute(ladder_module, "territorial_scope_for_spanish_postal_code", _refusing_rung),
         pytest.raises(IvaCatalogueError),
     ):
         _resolve(repository, country_name="España", postal_code=_MADRID)
@@ -499,7 +488,7 @@ def test_a_corrupt_identifier_rung_refuses_from_the_top_of_the_walk(
     a gate green because it patched nothing.
     """
     with (
-        _replacing(ladder_module, "identification_state_for_printed_tax_identifier", _refusing_rung),
+        scoped_attribute(ladder_module, "identification_state_for_printed_tax_identifier", _refusing_rung),
         pytest.raises(IvaCatalogueError),
     ):
         _resolve(repository, tax_identifier=_GERMAN_IVA)
@@ -522,7 +511,7 @@ def test_a_corrupt_country_rung_refuses_from_between_the_covered_depths(
     for three of four proves the wrong statement.
     """
     with (
-        _replacing(ladder_module, "territorial_scope_for_country", _refusing_rung),
+        scoped_attribute(ladder_module, "territorial_scope_for_country", _refusing_rung),
         pytest.raises(IvaCatalogueError),
     ):
         _resolve(repository, country_name="France")
@@ -555,7 +544,7 @@ def test_a_store_that_cannot_be_read_refuses_rather_than_reporting_no_confirmed_
         )
 
     with (
-        _replacing(ladder_module, "resolve_confirmed_counterparty_facts", _unreadable_store),
+        scoped_attribute(ladder_module, "resolve_confirmed_counterparty_facts", _unreadable_store),
         pytest.raises(SecureObjectRowIdentityError),
     ):
         _resolve(repository, tax_identifier=_SPANISH_CIF)

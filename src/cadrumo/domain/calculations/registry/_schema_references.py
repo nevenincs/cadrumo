@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import AfterValidator, AnyHttpUrl, Field, TypeAdapter, field_validator, model_validator
 
-from ....core import REVIEWED_LEGAL_STATUSES, LegalReviewStatus, RegistryPeriodCode, RegistrySelectorPeriodCode
+from ....core import (
+    RECORD_DESIGN_EPOCH_RE,
+    REVIEWED_LEGAL_STATUSES,
+    LegalReviewStatus,
+    RegistryPeriodCode,
+    RegistrySelectorPeriodCode,
+)
 from ....core.external_constants import (
     PDF_EXTENSION,
     XLS_EXTENSION,
@@ -185,6 +191,20 @@ class LegalReference(RegistryModel):
     notes: str | None = None
     required_text: tuple[str, ...] = Field(min_length=1)
     forbidden_text: tuple[str, ...] = ()
+    corpus_tier: Literal["full_consolidated", "provision_excerpt"] | None = None
+    """Which kind of corpus evidence ``corpus_ref`` resolves to, when declared.
+
+    Deliberately optional and deliberately two-valued. Optional: nothing in
+    the committed catalogue declares it today, so adding the field cannot
+    itself introduce a new refusal -- authoring it is opt-in, verified only
+    when present. Two-valued: a paraphrase with no operative text of its own
+    must never become a *declarable* tier (a stub calling itself an
+    excerpt would pass silently); that shape stays a build-time refusal via
+    the dispositive-content check, never a legal state this field can assert.
+    Verified against the bundled corpus file, not merely typed, by
+    ``_legal.py``'s grounding check -- this field states a claim; the
+    verifier is what makes the claim mean something.
+    """
     """Phrases the cited corpus document must NOT contain.
 
     ``required_text`` alone cannot express "this repealed clause must be
@@ -203,6 +223,12 @@ class LegalReference(RegistryModel):
         _validate_legal_reference_text(self.id, self.required_text, self.forbidden_text)
         _validate_legal_corpus_ref(self.id, self.corpus_ref)
         return self
+
+
+#: The canonical epoch shape, imported rather than restated. A second copy is how
+#: the registry boundary and the filing-evidence boundary drift apart -- and that
+#: drift is what let a value the registry would refuse reach a filed artefact.
+_RECORD_DESIGN_EPOCH: Final = RECORD_DESIGN_EPOCH_RE
 
 
 class SourceReference(RegistryModel):
@@ -258,6 +284,18 @@ class SourceReference(RegistryModel):
             raise RegistryValidationError("record_design_epoch is only valid for kind='record_design'")
         if self.record_design_epoch is not None and not self.record_design_epoch.strip():
             raise RegistryValidationError("record_design_epoch must contain non-whitespace text")
+        if self.record_design_epoch is not None and not _RECORD_DESIGN_EPOCH.fullmatch(self.record_design_epoch):
+            raise RegistryValidationError(
+                f"source reference {self.id!r} declares record_design_epoch "
+                f"{self.record_design_epoch!r}, which is not a design EPOCH. An epoch names the "
+                "filing period a design governs -- a four-digit ejercicio, optionally with a "
+                "lower-case sub-year label where AEAT re-laid the form out mid-ejercicio "
+                "('2024-early', '2024-late'). It is NOT the document's version: "
+                "'aeat-dr-111-2019-v18' is epoch '2019', because v18 is which revision of the "
+                "PDF AEAT published and says nothing about which filings it governs. Two "
+                "designs differing only by version are the same epoch and must not both claim "
+                "one; two designs governing different periods are different epochs",
+            )
         return self
 
     @field_validator("sha256")

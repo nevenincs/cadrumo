@@ -15,4 +15,5 @@ legal_refs = [
 source_refs = [
     "enrolled-modelo-341-procedure",
     "enrolled-modelo-341-layout",
+    "aeat-dr-341-2016",
 ]

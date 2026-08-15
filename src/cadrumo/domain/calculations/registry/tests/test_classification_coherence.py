@@ -190,6 +190,10 @@ def test_live_informative_modelos_carry_no_class_blockers(bundled_audit: Registr
     blocker computed for one is the fold's own error, which is what makes this
     a real cross-check rather than a restatement of the blocker derivation.
     """
+    assert any(row.informative_by_calculation_class for row in bundled_audit.rows), (
+        "no modelo in the bundled tree declares the informative class, so the loop below "
+        "would pass without exercising the invariant at all"
+    )
     for row in bundled_audit.rows:
         if row.informative_by_calculation_class:
             assert row.informative_class_blockers == (), (

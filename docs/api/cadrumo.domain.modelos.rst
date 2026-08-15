@@ -15,6 +15,10 @@ Submodules
 
    cadrumo.domain.modelos._calculation_repository
    cadrumo.domain.modelos._calculation_revision
+   cadrumo.domain.modelos._calculation_revision_aggregate
+   cadrumo.domain.modelos._calculation_revision_amendment
+   cadrumo.domain.modelos._calculation_revision_m303_evidence
+   cadrumo.domain.modelos._calculation_revision_m303_handoff
    cadrumo.domain.modelos._codes
    cadrumo.domain.modelos._dt12_reduccion
    cadrumo.domain.modelos._errors

@@ -14,9 +14,9 @@ from cadrumo.domain.calculations.registry import ExportComputedKey, ExportDraftA
 
 from .. import SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION, load_semantic_map
 
-registry_facade = import_module("..", __package__)
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+registry_facade = import_module("..", __package__)
 
 
 _RECORD = """

@@ -174,7 +174,7 @@ def test_real_dp30305_geometry_is_exact_for_every_revision(
     resolved = resolve_record_design_binary(
         bundled_path(), catalogues.sources, source_ref=source_ref, filing_year=filing_year, design_epoch=epoch
     )
-    sheet = next(item for item in extract_record_design(resolved.path) if item.name == "DP30305")
+    sheet = next(item for item in extract_record_design(resolved.path).accept_partial() if item.name == "DP30305")
     fields = sheet.fields[30:66]
     assert tuple(field.offset for field in fields) == tuple(first_offset + 17 * index for index in range(36))
     assert all(field.length == 17 for field in fields)

@@ -816,6 +816,19 @@ applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-sociedades/modelo-202-is-i_____resencia-territorio-fraccionado_/instrucciones.html"
 review_status = "reviewed"
 
+[sources."aeat-dr-222-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2025"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_222/files/01-222-ejercicio-2025-y-siguientes.xlsx"
+sha256 = "0a44cd6bcae3b6ecbdb7bba1e54ddfad519506b91545b655c8da8454a3a63f51"
+bytes = 139242
+retrieved_at = 2026-07-21
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR222e25.xlsx"
+review_status = "reviewed"
+
 [sources."aeat-dr-202-2023"]
 evidence_tier = "layout_authority"
 authority = "aeat"

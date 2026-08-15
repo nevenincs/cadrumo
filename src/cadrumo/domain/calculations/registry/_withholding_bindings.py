@@ -18,6 +18,7 @@ from ....core.aggregation import BindingAggregationOp, BindingSourceKind, Retenc
 from ....core.identity import TaxIdIdentityToken
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import (
+    BindingExportDataType,
     optional_uppercase_alpha_code,
     unique_tuple,
 )
@@ -166,6 +167,14 @@ class _WithholdingSelector(BaseModel):
     row_field: _WithholdingRowField | None = None
     grouping: _WithholdingGrouping | None = None
     record: str | None = Field(default=None, min_length=1, max_length=64)
+    data_type: BindingExportDataType | None = None
+    """Scalar type of the value this row field contributes to the export.
+
+    The same fact ``BindingRowExportSelector.data_type`` carries; declared here
+    so the selector model admits the key, since a source-family selector is
+    validated whole against its own strict model. Optional while the families
+    adopt it.
+    """
 
 
 def _withholding_selector(binding: DataBindingDefinition) -> _WithholdingSelector:

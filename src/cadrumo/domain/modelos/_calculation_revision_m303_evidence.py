@@ -9,7 +9,7 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, CasillaId, Period
+from ...core import RECORD_DESIGN_EPOCH_PATTERN, STRICT_FROZEN_CONFIG, CasillaId, Period
 from ...core.hashing import content_hash_hex
 from ...core.identity import ContentDigest
 from ..calculations.registry import LegalRefId, RevisionId, SourceRefId
@@ -212,7 +212,13 @@ class M303RegimenSimplificadoCalculationResult(BaseModel):
     orden_source_content_digest: ContentDigest
     record_design_source_ref: SourceRefId
     record_design_content_digest: ContentDigest
-    record_design_epoch: str = Field(min_length=1)
+    #: Shape-constrained at the ARTEFACT boundary, not only where it is declared.
+    #: A build-time check on the registry proves the tag is well formed where it is
+    #: authored; it says nothing about a value arriving here by any other route, and
+    #: this field is stamped into filing evidence. ``min_length=1`` accepted strings
+    #: the registry would have refused, so the two boundaries disagreed about what an
+    #: epoch is -- with the weaker one downstream.
+    record_design_epoch: str = Field(min_length=1, pattern=RECORD_DESIGN_EPOCH_PATTERN)
     activities: tuple[M303RegimenSimplificadoActivityCalculationResult, ...]
     digest: ContentDigest
 

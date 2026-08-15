@@ -22,7 +22,6 @@ as a strict ``bytes`` / pydantic inequality.
 from __future__ import annotations
 
 import hashlib
-from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -40,6 +39,7 @@ from .....domain.attachments import (
     AttachmentSource,
     AttachmentValidationError,
 )
+from .....tests.attribute_scope import scoped_attribute
 from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..attachment import (
     _ATTACHMENT_BLOB_NAMESPACE,
@@ -59,17 +59,6 @@ from ..sql.engine import get_engine
 from ..sql.session import session_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-@contextmanager
-def _replacing(target: object, name: str, value: object):
-    """Replace ``target.name`` for the scope, restoring the original on exit."""
-    original = getattr(target, name)
-    setattr(target, name, value)
-    try:
-        yield
-    finally:
-        setattr(target, name, original)
 
 
 _CAPTURED_AT = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
@@ -455,7 +444,7 @@ def test_put_many_bytes_writes_a_repeated_payload_only_once(tmp_path: Path) -> N
             seen.append(len(writes))
             real_save_many(writes)
 
-        with _replacing(objects, "save_many", counting_save_many):
+        with scoped_attribute(objects, "save_many", counting_save_many):
             store.put_many_bytes([repeated, distinct, repeated])
 
         assert seen == [2], f"three payloads carrying two distinct digests must produce two writes, saw {seen}"

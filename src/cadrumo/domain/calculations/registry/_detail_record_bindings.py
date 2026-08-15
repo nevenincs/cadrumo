@@ -15,6 +15,7 @@ from ....core.external_constants import DEFAULT_CURRENCY
 from ....core.identity import TaxIdIdentityToken
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import (
+    BindingExportDataType,
     invariant_diagnostics,
     optional_uppercase_alpha_code,
     selector_against_model,
@@ -30,6 +31,7 @@ __all__ = [
     "Modelo720RowObservation",
     "RefundOperationObservation",
     "RelatedPartyOperationObservation",
+    "foreign_asset_binding_row_field",
     "resolve_atribucion_binding_row_values",
     "resolve_foreign_asset_binding_row_values",
     "resolve_refund_binding_row_values",
@@ -153,6 +155,14 @@ class _RelatedPartySelector(BaseModel):
     row_field: _RelatedPartyRowField | None = None
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
+    data_type: BindingExportDataType | None = None
+    """Scalar type of the value this row field contributes to the export.
+
+    The same fact ``BindingRowExportSelector.data_type`` carries; declared here
+    so the selector model admits the key, since a source-family selector is
+    validated whole against its own strict model. Optional while the families
+    adopt it.
+    """
 
 
 def _validated_related_party_selector(binding: DataBindingDefinition) -> _RelatedPartySelector:
@@ -286,6 +296,14 @@ class _ForeignAssetSelector(BaseModel):
     asset_classes: tuple[str, ...] = ()
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
+    data_type: BindingExportDataType | None = None
+    """Scalar type of the value this row field contributes to the export.
+
+    The same fact ``BindingRowExportSelector.data_type`` carries; declared here
+    so the selector model admits the key, since a source-family selector is
+    validated whole against its own strict model. Optional while the families
+    adopt it.
+    """
 
 
 def _validated_foreign_asset_selector(binding: DataBindingDefinition) -> _ForeignAssetSelector:
@@ -295,6 +313,28 @@ def _validated_foreign_asset_selector(binding: DataBindingDefinition) -> _Foreig
         raise RegistryValidationError(f"binding {binding.id!r} has malformed foreign-asset selector") from exc
     _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "foreign-asset")
     return selector
+
+
+def foreign_asset_binding_row_field(binding: DataBindingDefinition) -> str | None:
+    """Return the ``row_field`` a ``foreign_asset`` binding declares, or ``None``.
+
+    Reads through the typed :func:`_validated_foreign_asset_selector` rather
+    than a raw ``selector_as_dict(binding).get("row_field")``. Every
+    ``foreign_asset`` binding is row-field-shaped by construction (its
+    selector's ``fact`` accepts only the ``"row_field"`` literal, and build
+    validation refuses a ``row_field``-less selector under that fact), so
+    ``row_field`` is never legitimately absent from a valid foreign-asset
+    binding -- a raw ``.get()`` returning ``None`` there could ONLY mean a
+    RENAMED field, which would silently, permanently make every foreign-asset
+    row-field binding unmatchable by any caller searching for a specific
+    field, with no error at all.
+
+    Returns ``None`` for a binding that is not ``foreign_asset`` at all -- a
+    real, different fact from a drifted selector on one that is.
+    """
+    if binding.source is not BindingSourceKind.FOREIGN_ASSET:
+        return None
+    return _validated_foreign_asset_selector(binding).row_field
 
 
 def validate_foreign_asset_binding(binding: DataBindingDefinition) -> list[str]:
@@ -433,6 +473,14 @@ class _AtributionSelector(BaseModel):
     row_field: _AtributionRowField | None = None
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
+    data_type: BindingExportDataType | None = None
+    """Scalar type of the value this row field contributes to the export.
+
+    The same fact ``BindingRowExportSelector.data_type`` carries; declared here
+    so the selector model admits the key, since a source-family selector is
+    validated whole against its own strict model. Optional while the families
+    adopt it.
+    """
 
 
 def _validated_atribucion_selector(binding: DataBindingDefinition) -> _AtributionSelector:
@@ -545,6 +593,14 @@ class _RefundSelector(BaseModel):
     row_field: _RefundRowField | None = None
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
+    data_type: BindingExportDataType | None = None
+    """Scalar type of the value this row field contributes to the export.
+
+    The same fact ``BindingRowExportSelector.data_type`` carries; declared here
+    so the selector model admits the key, since a source-family selector is
+    validated whole against its own strict model. Optional while the families
+    adopt it.
+    """
 
 
 AtributionSelector = _AtributionSelector

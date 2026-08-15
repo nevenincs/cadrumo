@@ -1,5 +1,8 @@
 [revisions."2023-y-siguientes"]
-valid_from = 2023-08-01
+# valid_from is canonicalised to the ejercicio-start convention (January 1 of
+# period_selector.year_from), not the orden's own effective date -- that fact
+# already has its home on orden-hfp-886-2023:art-1's legal.effective_from.
+valid_from = 2023-01-01
 period_selector = { year_from = 2023, periods = ["0A"] }
 legal_refs = [
     "ley-58-2003:da-18",

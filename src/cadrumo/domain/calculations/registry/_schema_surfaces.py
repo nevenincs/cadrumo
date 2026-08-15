@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
 from decimal import Decimal
 from typing import Literal
 
@@ -22,7 +21,6 @@ from ._ids import (
     ExportFieldId,
     FormulaId,
     ModeloId,
-    ParameterId,
     RecordId,
     RelationId,
     RevisionId,
@@ -35,8 +33,6 @@ from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_scalars import DecimalValue
 
 __all__ = [
-    "AlgorithmBindingDefinition",
-    "AlgorithmProviderDefinition",
     "CalculationCompletenessCasilla",
     "CalculationCompletenessManifest",
     "CasillaAlias",
@@ -532,30 +528,6 @@ class CalculationCompletenessManifest(RegistryModel):
     def manifest_keys(self) -> frozenset[tuple[str, str | None, str]]:
         """Return canonical ids paired with their reviewed record-design metadata."""
         return frozenset(casilla.manifest_key() for casilla in self.casillas)
-
-
-class AlgorithmProviderDefinition(RegistryModel):
-    id: str
-    import_path: str
-    callable_name: str
-    deterministic: Literal[True]
-    side_effect_free: Literal[True]
-    allowed_input_schema: Mapping[str, str]
-    output_schema: Mapping[str, str]
-    trace_contract: str
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-
-class AlgorithmBindingDefinition(RegistryModel):
-    id: str
-    provider: str
-    target_casilla_id: CasillaId
-    inputs: Mapping[str, BindingId | CasillaId | ParameterId | RelationId]
-    output_casilla_ids: Mapping[str, CasillaId]
-    constants: tuple[ParameterId, ...] = ()
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
 
 
 class RelationRevisionSelector(RegistryModel):

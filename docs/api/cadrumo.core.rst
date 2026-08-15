@@ -14,7 +14,6 @@ Subpackages
    :maxdepth: 4
 
    cadrumo.core.access_gate
-   cadrumo.core.base64_codec
    cadrumo.core.classification
    cadrumo.core.corpus_manifest
    cadrumo.core.decimal
@@ -116,6 +115,7 @@ Submodules
    cadrumo.core._prorrata_exclusions
    cadrumo.core._prorrata_register
    cadrumo.core._provenance_stamp
+   cadrumo.core._record_design_epoch
    cadrumo.core._refund_election
    cadrumo.core._register_scoping_signal
    cadrumo.core._renta_declaracion_type
@@ -135,6 +135,7 @@ Submodules
    cadrumo.core.async_cleanup
    cadrumo.core.atomic_write
    cadrumo.core.auth_session_keys
+   cadrumo.core.base64_codec
    cadrumo.core.cli_metadata
    cadrumo.core.click_context
    cadrumo.core.compatibility_lifecycle

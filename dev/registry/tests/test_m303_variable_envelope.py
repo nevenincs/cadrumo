@@ -131,9 +131,6 @@ def test_real_m303_binaries_compile_the_typed_static_declaration_without_instanc
     assert tuple(field.role for field in declaration.prefix_fields) == tuple(M303EnvelopePrefixRole)
     assert sum(field.length for field in declaration.prefix_fields) == 328
     assert declaration.body_record_ids == _BODY_RECORD_IDS
-    assert declaration.product_identity_requirement == "aeat-product-software-identity-v1"
-    assert declaration.closer_derivation == "m303-relative-closer-v1"
-    assert declaration.total_derivation == "m303-emitted-byte-total-v1"
 
     provenance = M303EnvelopeProvenance(
         schema_version=2,

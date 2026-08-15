@@ -66,9 +66,6 @@ def test_modelo_100_dependency_relations_resolve_against_registered_modelos() ->
         assert source_revisions, relation.id
         for source_revision in source_revisions:
             outputs = {casilla.id for casilla in source_revision.casillas}
-            for binding in source_revision.algorithm_bindings:
-                outputs.update(binding.output_casilla_ids.values())
-
             assert relation.source_casilla_id in outputs, relation.id
             assert set(relation.source_periods).issubset(source_revision.period_selector.periods), relation.id
         assert relation.target_binding in {binding.id for binding in revision.bindings}

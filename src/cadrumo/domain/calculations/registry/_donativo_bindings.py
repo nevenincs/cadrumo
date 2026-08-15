@@ -35,7 +35,12 @@ from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.identity import TaxIdIdentityToken
 from ._binding_aggregation import binding_aggregation_op
-from ._binding_selector_utils import invariant_diagnostics, selector_against_model, uppercase_alpha_code
+from ._binding_selector_utils import (
+    BindingExportDataType,
+    invariant_diagnostics,
+    selector_against_model,
+    uppercase_alpha_code,
+)
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._ids import BindingId
@@ -129,6 +134,14 @@ class _DonativoSelector(BaseModel):
     row_field: _DonativoRowField | None = None
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
+    data_type: BindingExportDataType | None = None
+    """Scalar type of the value this row field contributes to the export.
+
+    The same fact ``BindingRowExportSelector.data_type`` carries; declared here
+    so the selector model admits the key, since a source-family selector is
+    validated whole against its own strict model. Optional while the families
+    adopt it.
+    """
 
 
 def _validated_donativo_selector(binding: DataBindingDefinition) -> _DonativoSelector:

@@ -80,6 +80,24 @@ class ModeloFinding(BaseModel):
     message: str
 
 
+@runtime_checkable
+class ModeloFindingLike(Protocol):
+    """Narrow structural port over one ``draft.findings`` entry.
+
+    Both real implementations declare ``severity`` as a REQUIRED field with
+    no default: :class:`ModeloFinding` above, and
+    :class:`domain.filing.ModeloValidationFinding`. Typing
+    :attr:`ModeloDraftLike.findings` through this Protocol (rather than
+    ``tuple[object, ...]``) lets the preflight gate read ``.severity``
+    directly instead of through a ``getattr(..., None)`` guess -- a field
+    rename now fails loud instead of silently excluding every finding from
+    the error-severity gate.
+    """
+
+    @property
+    def severity(self) -> BaseSeverity: ...
+
+
 class ModeloDraftStatus(StrEnum):
     """Lifecycle status of a modelo draft, spanning preparation and submission.
 
@@ -147,7 +165,7 @@ class ModeloDraftLike(Protocol):
     def values(self) -> Mapping[str, str] | Iterable[object]: ...
 
     @property
-    def findings(self) -> tuple[object, ...]: ...
+    def findings(self) -> tuple[ModeloFindingLike, ...]: ...
 
 
 @runtime_checkable

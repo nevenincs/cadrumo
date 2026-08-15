@@ -35,9 +35,10 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Sequence
 from datetime import date
-from typing import Protocol, runtime_checkable
+from typing import Protocol, override, runtime_checkable
 
 from ...core import AuthProviderDescription, Period
+from ...core.errors import BaseSeverity
 from ...domain.deadlines import Schedule, TaxpayerProfile
 
 # ``ModeloInputs`` and its element aliases have a single canonical
@@ -46,6 +47,30 @@ from ...domain.deadlines import Schedule, TaxpayerProfile
 # the workflow package without taking a second divergent definition.
 from ...domain.filing import ModeloInputs, ModeloInputScalar, ModeloInputValue
 from ...domain.submission import ModeloDraftLike
+
+
+@runtime_checkable
+class WorkflowFindingLike(Protocol):
+    """Narrow structural port over one registry-backed draft finding.
+
+    Wider than :class:`domain.submission.ModeloFindingLike`, which declares
+    only ``severity`` -- the preflight gate's minimal
+    :class:`domain.submission.ModeloFinding` carries no ``code``. Every
+    finding a :class:`RegistryModeloDraftProtocol` draft actually carries is
+    a :class:`domain.filing.ModeloValidationFinding`, which declares both
+    ``severity`` and ``code`` as required fields with no default. Typing
+    :attr:`RegistryModeloDraftProtocol.findings` through this Protocol lets
+    workflow-layer readers use ``finding.severity`` / ``finding.code``
+    directly instead of a ``getattr(..., None)`` guess -- a field rename now
+    fails loud instead of silently excluding every finding from whatever
+    reads through it.
+    """
+
+    @property
+    def severity(self) -> BaseSeverity: ...
+
+    @property
+    def code(self) -> str: ...
 
 
 @runtime_checkable
@@ -74,6 +99,10 @@ class RegistryModeloDraftProtocol(ModeloDraftLike, Protocol):
     """Workflow draft surface after registry-backed filing construction."""
 
     schema_version: str
+
+    @property
+    @override
+    def findings(self) -> tuple[WorkflowFindingLike, ...]: ...
 
 
 @runtime_checkable
@@ -251,6 +280,7 @@ __all__ = [
     "RegistryModeloDraftProtocol",
     "SubmissionEngineProtocol",
     "WorkflowExpedienteProtocol",
+    "WorkflowFindingLike",
     "WorkflowNotificationProtocol",
     "WorkflowNotificationsSnapshotProtocol",
 ]

@@ -351,12 +351,23 @@ def _normalise_invoice_monetary_fields(payload: dict[str, object]) -> dict[str, 
     ):
         if key not in payload:
             continue
-        coerced = coerce_decimal(payload[key])
-        if (coerced is None, key in optional_fields) == (True, True):
+        raw = payload[key]
+        coerced = coerce_decimal(raw)
+        # An explicit JSON null IS how this model's own model_dump_json()
+        # represents "no value" for an Optional[Decimal] field -- the
+        # standard persistence roundtrip writes every optional field,
+        # unset ones included, rather than omitting them. Treating a
+        # present-null the same as an absent key (both mean "no value")
+        # is what makes that roundtrip symmetric. What must still raise is
+        # a NON-null value that fails to parse (a string, a mis-mapped
+        # import column) -- that is genuinely unreadable, not absent, and
+        # coerce_decimal collapses both cases to None, so only the RAW
+        # value being non-None can tell them apart here.
+        if (raw is not None, coerced is None, key in optional_fields) == (True, True, True):
             raise InvoiceValidationError(
-                f"{key} could not be parsed as a decimal: {_bounded_rejected_value(payload[key])}. "
-                "Leave it out to declare it absent; a value that cannot be read "
-                "is not the same as no value.",
+                f"{key} could not be parsed as a decimal: {_bounded_rejected_value(raw)}. "
+                "Leave it out (or set it to null) to declare it absent; a value that "
+                "cannot be read is not the same as no value.",
             )
         payload[key] = coerced
     return payload
@@ -711,6 +722,31 @@ class Invoice(BaseModel):
         if self.fx_rate is None:
             return None
         return round_to_cents(amount * self.fx_rate)
+
+    def line_amount_eur(self, amount: Decimal) -> Decimal | None:
+        """Convert a LINE-level native-currency amount to euro, or ``None`` if unconverted.
+
+        :class:`InvoiceLine` carries no currency of its own -- every line on
+        an invoice is denominated in that invoice's own :attr:`currency`
+        (a single document states one currency for all its lines), so a line
+        amount (``line.subtotal``, ``line.iva_amount``) converts through the
+        SAME rate resolution as the invoice-level totals
+        (:attr:`base_total_eur` and siblings), not a separate per-line
+        mechanism. Delegating to :meth:`_in_eur` keeps that arithmetic
+        consistent: summing ``line_amount_eur(line.subtotal)`` over every line
+        equals :attr:`base_total_eur` exactly, the same way summing
+        ``line.subtotal`` natively already equals :attr:`base_total`.
+
+        Args:
+            amount: A native-currency line amount, e.g. ``line.subtotal`` or
+                ``line.iva_amount`` for one of this invoice's own
+                :attr:`lines`.
+
+        Returns:
+            The euro-equivalent amount, or ``None`` when this invoice is
+            foreign-currency with no resolved :attr:`fx_rate`.
+        """
+        return self._in_eur(amount)
 
     @model_validator(mode="before")
     @classmethod

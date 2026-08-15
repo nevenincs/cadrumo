@@ -972,24 +972,6 @@ def _binding_row_index(binding_id: _BindingId, row_key: object) -> int:
     return index
 
 
-_ROW_FIELD_DATA_TYPES: dict[str, str] = {
-    "base_imponible": "money",
-    "rectified_base_previous": "money",
-    "rectified_year": "text",
-    "rectified_period": "text",
-    "country_code": "text",
-    "party_tax_id": "text",
-    "party_legal_name": "text",
-    "clave": "text",
-    "asset_class_code": "text",
-    "currency_code": "text",
-    "asset_identifier": "text",
-    "asset_name": "text",
-    "acquisition_date": "text",
-    "valuation_amount": "money",
-}
-
-
 def _binding_data_type(binding: object) -> str:
     """Return the declared scalar type for one binding input.
 
@@ -997,17 +979,18 @@ def _binding_data_type(binding: object) -> str:
     ``data_type`` nor a ``row_field`` and is a money value by construction. It is
     NOT correct for a detail-record row field, whose type depends entirely on
     which field it is: a ``valuation_amount`` is money and a ``party_tax_id`` is a
-    NIF. An unmapped row field therefore refuses rather than defaulting, because
+    NIF. An undeclared row field therefore refuses rather than defaulting, because
     the alternative is emitting a name or a tax id into a filing artefact as a
     decimal, which is byte-valid and wrong and indistinguishable from a real value.
 
-    ``_ROW_FIELD_DATA_TYPES`` is a hand-list, and that is a real defect --  but it
-    cannot simply be deleted. The registry types WHICH row-field names are legal,
-    per family, and declares what scalar type any of them carries nowhere at all,
-    so this mapping is currently the only place that fact exists. Removing it
-    would break the fields it maps correctly rather than converging them. The
-    convergent fix is for each row-field binding to declare its own ``data_type``
-    in the registry, at which point the branch above returns it and this list goes.
+    A row field's scalar type is registry data: the binding declares ``data_type``
+    on its selector, typed as the closed export vocabulary so an unsupported value
+    is refused at registry build rather than at emission. That is the same key,
+    carrying the same fact, that a fixed-width export projection declares -- the
+    two differ only in how the value is positioned -- so this reads the
+    declaration and never infers a type from the row field's NAME, which could not
+    be correct in general: ``operation_kind_code`` is a typed enum on modelo 232
+    and a plain string on modelo 360.
     """
     selector: object = getattr(binding, "selector", None)
     if isinstance(selector, Mapping):
@@ -1020,12 +1003,10 @@ def _binding_data_type(binding: object) -> str:
     if raw_data_type is not None:
         return str(raw_data_type)
     if isinstance(row_field, str):
-        if row_field not in _ROW_FIELD_DATA_TYPES:
-            raise _ModeloBuilderError(
-                translated_message="application.filing.build_draft.errors.binding_data_type_unsupported",
-                context={"binding_id": str(getattr(binding, "id", row_field)), "data_type": row_field},
-            )
-        return _ROW_FIELD_DATA_TYPES[row_field]
+        raise _ModeloBuilderError(
+            translated_message="application.filing.build_draft.errors.binding_data_type_unsupported",
+            context={"binding_id": str(getattr(binding, "id", row_field)), "data_type": row_field},
+        )
     return "decimal"
 
 

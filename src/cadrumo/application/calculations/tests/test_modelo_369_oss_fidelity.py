@@ -62,6 +62,7 @@ from ....domain.calculations.registry import (
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
+from ._observation_lookup_support import find_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -97,14 +98,6 @@ _CASILLA_DE_GOODS: CasillaId = validated_casilla_id(
 _BINDING_DE_SERVICES = "modelo-369-union-de-services-21pct"
 _BINDING_FR_SERVICES = "modelo-369-union-fr-services-21pct"
 _BINDING_DE_GOODS = "modelo-369-union-de-goods-distance-21pct"
-
-
-def _find_observation(repo: CalculationObservationRepository, *, filing_year: int, period: str):
-    for payload in repo.iter_modelo(_MODELO):
-        obs = payload.observation
-        if obs.filing_year == filing_year and obs.period == period:
-            return payload
-    return None
 
 
 def _calculate_369(
@@ -189,7 +182,7 @@ def test_computed_total_persists_and_reloads_strictly(tmp_path: Path) -> None:
         result, _ = _calculate_369(filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS)
         obs = _registry_observation(filing_year=_YEAR_N, period=_PERIOD, result=result)
         repo.save(repo.prepare_observation_envelope(obs, source_kind="app_filing", captured_at=_CLOCK_N))
-        loaded = _find_observation(repo, filing_year=_YEAR_N, period=_PERIOD)
+        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_PERIOD)
         assert loaded is not None
         assert loaded.observation == obs
         assert loaded.source_kind == "app_filing"
@@ -210,8 +203,8 @@ def test_both_years_independently_retrievable_no_bleed(tmp_path: Path) -> None:
         obs_n1 = _registry_observation(filing_year=_YEAR_N_PLUS_1, period=_PERIOD, result=result_n1)
         repo.save(repo.prepare_observation_envelope(obs_n, source_kind="app_filing", captured_at=_CLOCK_N))
         repo.save(repo.prepare_observation_envelope(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1))
-        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period=_PERIOD)
-        loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period=_PERIOD)
+        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_PERIOD)
+        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period=_PERIOD)
 
         assert loaded_n is not None and loaded_n1 is not None
         total_n = loaded_n.observation.casilla_values[_CASILLA_TOTAL]
@@ -237,7 +230,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         assert obs != obs_missing
 
         repo.save(repo.prepare_observation_envelope(obs, source_kind="app_filing", captured_at=_CLOCK_N))
-        loaded = _find_observation(repo, filing_year=_YEAR_N, period=_PERIOD)
+        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_PERIOD)
         assert loaded is not None
         assert loaded.observation != obs_missing
         assert loaded.observation == obs

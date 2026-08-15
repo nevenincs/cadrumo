@@ -21,9 +21,9 @@ from dev._paths import REPO_ROOT
 from ..advisory import audit_checkout_drift, audit_dead_code
 from ..report import Status
 
-_REPO_ROOT = REPO_ROOT
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+
+_REPO_ROOT = REPO_ROOT
 
 
 def test_audit_dead_code_returns_a_valid_dimension_against_the_live_tree() -> None:

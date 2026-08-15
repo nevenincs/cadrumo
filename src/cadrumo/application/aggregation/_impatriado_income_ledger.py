@@ -64,7 +64,7 @@ from ...domain.transactions import (
 )
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
-from ._currency_predicates import is_non_eur_without_conversion
+from ._currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._grouping import fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
@@ -340,7 +340,11 @@ def _classify_impatriado_income_transaction(
                 f"business classification {transaction.business_classification.value!r} cannot feed the impatriado base"
             ),
         )
-    gross_amount = abs(transaction.raw.amount) * proportion
+    # Use the EUR projection after rejecting unconverted non-EUR rows above, so a
+    # converted foreign-currency receipt contributes its EUR equivalent while a
+    # domestic row retains its raw amount (mirrors the expense pipeline's
+    # ``effective_eur_amount`` usage in ``_renta_ledger.py``).
+    gross_amount = effective_eur_amount(transaction) * proportion
 
     filing_date = transaction.raw.value_date or transaction.raw.booked_date
     if not (window_start <= filing_date <= window_end):
@@ -355,9 +359,12 @@ def _classify_impatriado_income_transaction(
     # ``_computable_impatriado_income_amount`` PREFERS the base when it is
     # present, a rule that divided the base alone would silently declare a
     # fraction of an income the gross reported whole.
-    taxable_base_amount: Decimal | None = (
-        None if transaction.taxable_base is None else transaction.taxable_base * proportion
-    )
+    # ``transaction.taxable_base`` is native-currency (see
+    # ``domain.transactions.tests.test_gross_invariant``), so the EUR-equivalent
+    # accessor applies the same fx_rate projection the gross above received.
+    taxable_base_amount: Decimal | None = effective_eur_taxable_base(transaction)
+    if taxable_base_amount is not None:
+        taxable_base_amount *= proportion
 
     return ImpatriadoIncomeObservation(
         transaction_id=transaction_id,

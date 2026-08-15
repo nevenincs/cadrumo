@@ -28,10 +28,9 @@ See Also:
 
 from __future__ import annotations
 
-from contextlib import contextmanager
-
 import pytest
 
+from ....tests.attribute_scope import scoped_attribute
 from .. import _deterministic_findings
 from .._deterministic_findings import (
     DETERMINISTIC_CHECKS,
@@ -44,17 +43,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _INVOICE_ID_1 = "c" * 64
 _INVOICE_ID_2 = "d" * 64
-
-
-@contextmanager
-def _replacing(target: object, name: str, value: object):
-    """Replace ``target.name`` for the scope, restoring the original on exit."""
-    original = getattr(target, name)
-    setattr(target, name, value)
-    try:
-        yield
-    finally:
-        setattr(target, name, original)
 
 
 def test_the_stamp_names_every_declared_check() -> None:
@@ -78,7 +66,7 @@ def test_a_check_added_to_the_declaration_moves_the_stamp_by_itself() -> None:
     before = deterministic_check_names()
 
     added = DeterministicCheck("a_check_that_did_not_exist", lambda draft: ())
-    with _replacing(_deterministic_findings, "DETERMINISTIC_CHECKS", (*DETERMINISTIC_CHECKS, added)):
+    with scoped_attribute(_deterministic_findings, "DETERMINISTIC_CHECKS", (*DETERMINISTIC_CHECKS, added)):
         after = deterministic_check_names()
 
     assert after == (*before, "a_check_that_did_not_exist")
@@ -96,7 +84,7 @@ def test_a_check_added_to_the_declaration_also_runs() -> None:
     from .._evidence_draft import DraftDiscrepancyFinding, InvoiceDraft
 
     sentinel = DraftDiscrepancyFinding(kind=DraftDiscrepancyKind.ROLE_UNRESOLVED, detail="sentinel")
-    with _replacing(
+    with scoped_attribute(
         _deterministic_findings,
         "DETERMINISTIC_CHECKS",
         (*DETERMINISTIC_CHECKS, DeterministicCheck("sentinel_check", lambda draft: (sentinel,))),
@@ -173,7 +161,7 @@ def test_the_stamp_is_not_folded_into_the_derived_identity() -> None:
         )
 
     before = _mint()
-    with _replacing(
+    with scoped_attribute(
         _deterministic_findings,
         "DETERMINISTIC_CHECKS",
         (*DETERMINISTIC_CHECKS, DeterministicCheck("late_arrival", lambda draft: ())),

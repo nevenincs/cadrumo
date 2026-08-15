@@ -229,13 +229,23 @@ PROCESS_PLAN_CASE = PatternCase(
     ("test_plan_step_ordering", "_plan_item_rollup"),
     ("test_plan_de_empleo_capped", "_m130_plan", "test_export_plan_mirrors_manifest"),
 )
+#: Process uses of ``phase`` that must not name a durable test symbol or pytest id.
+#:
+#: Narrower than a bare-token ban, for the same reason :data:`PROCESS_PLAN_CASE`
+#: is: the word is not free here. ``phase`` is production domain vocabulary —
+#: ``_HandoverPhase`` names the login-handover state machine's states and
+#: ``OperationPhaseEvent`` the operation executor's — so a bare ban flags the
+#: state machines' own tests for using the word their subject uses. A plan
+#: container is numbered or bound to its sibling containers, and that is what
+#: separates it from a state a machine actually occupies.
+PROCESS_PHASE_CASE = PatternCase(
+    re.compile(r"(^|[_-])pha" + r"se[_-]?(?:\d+|step|wave)($|[_-])|(^|[_-])(?:wave|plan)[_-]pha" + r"se($|[_-])", re.IGNORECASE),
+    ("test_phase_1_rollout", "_phase2_migration", "test_wave_phase_ordering", "_phase_step_id"),
+    ("test_phases_of_moon", "_crash_at_handover_phase_child", "test_handover_phase_receipt", "_read_journal_phase"),
+)
 PROCESS_SYMBOL_METADATA_CASES: tuple[PatternCase, ...] = (
     PatternCase(re.compile(r"(^|[_-])ad" + r"r($|[_-])", re.IGNORECASE), ("test_adr_probe",), ("test_address_parse",)),
-    PatternCase(
-        re.compile(r"(^|[_-])pha" + r"se($|[_-])", re.IGNORECASE),
-        ("test_phase_rollout",),
-        ("test_phases_of_moon",),
-    ),
+    PROCESS_PHASE_CASE,
     PatternCase(
         re.compile(r"(^|[_-])wa" + r"ve($|[_-])", re.IGNORECASE),
         ("test_wave_rollup",),

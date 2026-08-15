@@ -26,6 +26,7 @@ from .. import (
     load_terminology_handbook,
     relation_integrity_validator,
 )
+from .._validators import _bundled_legal_ref_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -320,10 +321,17 @@ def test_default_inventory_trips_on_a_bad_handbook(tmp_path: Path) -> None:
 
 
 def test_bundled_exemplars_pass_every_gate_against_real_catalogue() -> None:
-    from cadrumo.domain.calculations.registry import bundled_authority
+    """The shipped handbook passes every gate against the real legal catalogue.
 
+    Reads the catalogue through the module's own ``_bundled_legal_ref_ids``
+    rather than re-deriving it here. The duplicate derivation reached for the
+    validated authority, so this test refused whenever the registry refused for
+    reasons unrelated to the handbook -- and it kept doing so after the helper
+    it exercises had been moved off that dependency, because the copy was what
+    ran.
+    """
     handbook = load_bundled_terminology_handbook()
-    legal_ids = frozenset(bundled_authority().catalogues.legal)
+    legal_ids = _bundled_legal_ref_ids()
     for validate in default_handbook_validators(legal_ids):
         validate(handbook)
 

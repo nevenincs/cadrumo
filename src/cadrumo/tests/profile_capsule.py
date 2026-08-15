@@ -292,8 +292,70 @@ def seed_test_profile_record(
     )
 
 
+def forge_colliding_capsule_label(*, profile_id: UUID, label: str, root: Path | None = None) -> None:
+    """Write one committed capsule's label to a value every writer would refuse.
+
+    NO SUPPORTED PATH PRODUCES THIS STATE. Every label writer -- capsule
+    creation and label rename alike -- routes through the custody service's
+    duplicate check under the custody-root lock, which compares casefolded, so
+    two committed capsules can never carry casefold-equal labels by any
+    operator action. Nothing here suggests otherwise: this manufactures on-disk
+    corruption on purpose, so that the read-side backstops which refuse an
+    ambiguous label can be exercised at all. A backstop against a state every
+    writer prevents is untestable without forging it.
+
+    The sequence mirrors the custody service's own rename transaction -- advance
+    the durable lineage head, replace the committed label record against its
+    expected digest, then re-verify the head -- omitting only the duplicate
+    refusal. Keeping the same order is what makes the forged state coherent
+    rather than merely broken: the label record and its verification head still
+    agree, which is exactly the state a reader must disambiguate.
+
+    The service takes the custody-root transaction lock around this sequence.
+    This does not, because a test forging a state has no concurrent writer to
+    exclude, and the lock is not on the custody package's public facade.
+    """
+    from ..adapters.persistence.storage.custody import (
+        PROFILE_CUSTODY_LABEL_FILENAME,
+        ProfileCustodyCapsuleLabel,
+        ProfileLabelHeadRepository,
+        load_committed_profile_custody_label_record,
+        replace_committed_profile_custody_data_file,
+    )
+    from ..core.config import load_settings
+    from ..core.hashing import prefixed_digest
+
+    resolved_root = root if root is not None else load_settings().cadrumo_local_storage_root
+    if resolved_root is None:
+        raise RuntimeError("forging a capsule label requires a configured local storage root")
+
+    current = load_committed_profile_custody_label_record(profile_id, root=resolved_root)
+    heads = ProfileLabelHeadRepository(root=resolved_root)
+    current_head = heads.recover_advance(profile_id=profile_id, current_label=current)
+    replacement = ProfileCustodyCapsuleLabel.create(
+        profile_id=profile_id,
+        label=label,
+        label_revision=current.label_revision + 1,
+        previous_label_digest=current.content_digest,
+    )
+    heads.begin_advance(
+        current_head=current_head,
+        current_label=current,
+        replacement_label=replacement,
+    )
+    replace_committed_profile_custody_data_file(
+        profile_id,
+        PROFILE_CUSTODY_LABEL_FILENAME,
+        replacement.canonical_json_bytes(),
+        expected_sha256=prefixed_digest(current.canonical_json_bytes()),
+        root=resolved_root,
+    )
+    heads.recover_advance(profile_id=profile_id, current_label=replacement)
+
+
 __all__ = [
     "bound_test_profile_record",
+    "forge_colliding_capsule_label",
     "load_test_profile_record",
     "open_test_profile_session",
     "replace_test_profile_record",

@@ -32,8 +32,6 @@ _RECORD_ID_KINDS: tuple[tuple[str, str], ...] = (
     ("binding", "bindings"),
     ("relation", "relations"),
     ("parameter", "parameters"),
-    ("algorithm provider", "algorithm_providers"),
-    ("algorithm binding", "algorithm_bindings"),
     ("export layout", "export_layouts"),
     ("extraction profile", "extraction_profiles"),
     ("cross-reference", "live_cross_references"),
@@ -64,9 +62,7 @@ def _emit_per_kind_duplicate_failures(
             failures.append(f"{prefix}: duplicate {kind} id {duplicate!r}")
 
 
-# Primary-id deduplication excludes algorithm providers; they share a namespace
-# with algorithm-binding ``provider`` references.
-_PRIMARY_ID_KINDS: frozenset[str] = frozenset(kind for kind, _ in _RECORD_ID_KINDS) - {"algorithm provider"}
+_PRIMARY_ID_KINDS: frozenset[str] = frozenset(kind for kind, _ in _RECORD_ID_KINDS)
 
 
 def _emit_combined_primary_id_failures(

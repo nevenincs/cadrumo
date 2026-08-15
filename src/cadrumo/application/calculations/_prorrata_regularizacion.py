@@ -62,9 +62,9 @@ from ...domain.calculations.registry import (
     IvaLedgerObservation,
     LegalRefId,
     ModeloRevision,
-    load_registry_tree,
     RegistrySnapshot,
     SourceRefId,
+    load_registry_tree,
     select_revision,
 )
 from ...domain.iva import (

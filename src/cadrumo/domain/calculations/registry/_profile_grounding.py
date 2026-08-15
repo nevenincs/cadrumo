@@ -19,15 +19,15 @@ from __future__ import annotations
 
 import threading
 from collections.abc import Mapping
-from typing import cast
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from ....core import STRICT_FROZEN_CONFIG, Modelo
 from ....core.aggregation import BindingSourceKind
 from ._authority import ValidatedRegistryAuthority
 from ._binding_selector_utils import selector_as_dict
 from ._bindings import ProfileSelector
+from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition
 
 
@@ -135,22 +135,27 @@ def binding_profile_keys(binding: DataBindingDefinition) -> tuple[str, ...]:
     building that index.
     """
     selector = binding.selector
-    if isinstance(selector, ProfileSelector):
-        scalar = (selector.profile_key,) if selector.profile_key is not None else ()
-        return scalar + tuple(selector.profile_keys)
-    mapping = selector_as_dict(binding)
-    scalar_raw = mapping.get("profile_key")
-    composite_raw = mapping.get("profile_keys")
-    keys: list[str] = []
-    if isinstance(scalar_raw, str) and scalar_raw:
-        keys.append(scalar_raw)
-    if isinstance(composite_raw, (list, tuple)):
-        # CAST-RATIONALE-PROFILE-GROUNDING-COMPOSITE-KEYS: isinstance narrows to
-        # list/tuple but not the element type; each item is coerced via str()
-        # below regardless of its actual type.
-        # nosemgrep: no-cast-in-domain-application
-        keys.extend(str(item) for item in cast(list[object] | tuple[object, ...], composite_raw) if item)
-    return tuple(keys)
+    if isinstance(selector, BaseModel) and not isinstance(selector, ProfileSelector):
+        # A different binding-source family's selector (manual_input, relation,
+        # ...); its shape never carries a profile key, so no read is needed.
+        return ()
+    if not isinstance(selector, ProfileSelector):
+        if binding.source is not BindingSourceKind.PROFILE:
+            return ()
+        # A ``source = "profile"`` binding whose selector has not been
+        # hydrated into the typed model by construction (e.g. built via
+        # ``model_construct``). Re-validate through the declared model --
+        # ``ProfileSelector`` -- rather than reading the raw mapping with
+        # string-literal keys, so a field the model no longer declares fails
+        # loud instead of silently under-reporting this key's grounding.
+        try:
+            selector = ProfileSelector.model_validate(selector_as_dict(binding))
+        except ValidationError as exc:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} has malformed profile selector: {exc}",
+            ) from exc
+    scalar = (selector.profile_key,) if selector.profile_key is not None else ()
+    return scalar + tuple(selector.profile_keys)
 
 
 __all__ = ["ProfileKeyGrounding", "binding_profile_keys", "build_profile_grounding_index"]

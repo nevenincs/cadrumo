@@ -29,6 +29,32 @@ applies_from = 2011-12-13
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396"
 review_status = "reviewed"
 
+[sources."aeat-dr-194-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2023"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_194/files/02-194-diseno-de-registro-actualizado-en-2023.pdf"
+sha256 = "83cd9a332e0016607e87332bea8c3e5d33f0b0f8373ec56f820d82414ca76a7b"
+bytes = 148101
+retrieved_at = 2026-07-21
+applies_from = 2023-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR_Mod_194-2023.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-194-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2024"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_194/files/01-194-diseno-de-registro-actualizado-en-2024.pdf"
+sha256 = "4a738a126ddb465aac236b687aa25441b7cb71ec4b0ef6ea940096a3747b2651"
+bytes = 183268
+retrieved_at = 2026-07-21
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_194_2024.pdf"
+review_status = "reviewed"
+
 # Modelo 188 sources — resumen anual retenciones capitalización/seguros de vida (Orden EHA/3377/2011).
 [sources."aeat-modelo-188-procedure"]
 evidence_tier = "official_source_guidance"
@@ -55,6 +81,19 @@ applies_from = 2011-12-13
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396"
 review_status = "reviewed"
 
+[sources."aeat-dr-188-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2023"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_188/files/01-188-diseno-de-registro-actualizado-en-2023.pdf"
+sha256 = "30ced236b558de21383c3eba6339cb720fc9a704d38eaa574dd9be55cf90f9e3"
+bytes = 106418
+retrieved_at = 2026-07-21
+applies_from = 2023-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_188_2023.pdf"
+review_status = "reviewed"
+
 # Modelo 187 sources — acciones/participaciones IIC + resumen anual retenciones (Orden EHA/3377/2011).
 [sources."aeat-modelo-187-procedure"]
 evidence_tier = "official_source_guidance"
@@ -79,4 +118,17 @@ retrieved_at = 2026-05-05
 published_at = 2011-12-12
 applies_from = 2011-12-13
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396"
+review_status = "reviewed"
+
+[sources."aeat-dr-187-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2022"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_187/files/01-187-diseno-de-registro-actualizado-en-2022.pdf"
+sha256 = "c7a21c1feb9619380bb0da3e73066fa3c58c628f430bf85ed9dbea15b1308eb1"
+bytes = 345403
+retrieved_at = 2026-07-21
+applies_from = 2022-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_187_2022.pdf"
 review_status = "reviewed"

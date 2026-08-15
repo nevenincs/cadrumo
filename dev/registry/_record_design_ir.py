@@ -230,6 +230,13 @@ class RecordDesignIntermediateVariableEnvelope(_StrictModel):
     body_validation: str | None = None
     body_content: str | None = None
     closing: RecordDesignIntermediateRelativeSuffixMarker | RecordDesignIntermediateCompositeRelativeClosing
+    #: The physical end-of-record marker, carried through rather than dropped.
+    #: The parser separates it from the closing identifier because the two are
+    #: different things; if the projection then omitted it, every record built from
+    #: this intermediate would be two bytes shorter than AEAT declares, and the
+    #: separation would have bought a clean-looking wrong answer instead of a
+    #: refusal.
+    terminator: RecordDesignIntermediateRelativeSuffixMarker | None = None
     total_source_row: int = Field(gt=0)
     total_source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
     total_label: Literal["total"]
@@ -275,7 +282,13 @@ def load_record_design_intermediate(
         filing_year=filing_year,
         design_epoch=design_epoch,
     )
-    return _build_record_design_intermediate(resolved, extract_record_design(resolved.path))
+    # REQUIRES A COMPLETE READ, unlike the coverage derivation, and the asymmetry
+    # is deliberate. This intermediate is what the export-tree generator authors a
+    # revision's byte layout from, so a design read only in part would produce a
+    # layout that is internally consistent, digest-valid, and missing whole
+    # records -- the failure the fixed-width completeness gate exists to catch,
+    # arriving through the generator instead of past it.
+    return _build_record_design_intermediate(resolved, extract_record_design(resolved.path).require_complete())
 
 
 def _build_record_design_intermediate(
@@ -408,6 +421,11 @@ def _intermediate_variable_envelope(
         body_validation=envelope.body.validation,
         body_content=envelope.body.content,
         closing=_intermediate_relative_closing(envelope.closing, workbook_format=workbook_format),
+        terminator=(
+            None
+            if envelope.terminator is None
+            else _intermediate_relative_suffix(envelope.terminator, workbook_format=workbook_format)
+        ),
         total_source_row=envelope.variable_total.row,
         total_source_cell=_source_cell(envelope.variable_total.row, workbook_format),
         total_label=envelope.variable_total.label,

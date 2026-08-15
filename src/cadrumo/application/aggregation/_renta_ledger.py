@@ -71,7 +71,12 @@ from ...domain.transactions import (
 from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord
 from ..user_profile import ProfileRecordRepository, fact_value
 from . import _shared_issue_reasons
-from ._currency_predicates import effective_eur_amount, is_non_eur_without_conversion
+from ._currency_predicates import (
+    effective_eur_amount,
+    effective_eur_iva_amount,
+    effective_eur_taxable_base,
+    is_non_eur_without_conversion,
+)
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance, LedgerAggregationResultBase
 from ._renta_business_eligibility import (
@@ -814,7 +819,17 @@ def _purchase_invoice_evidence_payload(
             reason=RentaLedgerAggregationIssueReason.PARTIAL_OR_MULTI_TRANSACTION_PURCHASE_INVOICE_EVIDENCE,
             detail="first-slice aggregation only accepts one transaction per purchase invoice evidence record",
         )
-    if transaction_amount != invoice.grand_total:
+    # invoice.grand_total is denominated in invoice.currency (native), while
+    # transaction_amount is the caller's already-EUR-converted eur_amount (see
+    # effective_eur_amount). Comparing them directly mixes currencies: a
+    # legitimate foreign-currency invoice would compare its native total
+    # against a converted EUR figure and mismatch even when the two documents
+    # agree, so this compares grand_total_eur instead. An invoice that cannot
+    # itself resolve a EUR total (foreign currency, unconverted) has no EUR
+    # figure to compare or fold in, so it is refused the same way rather than
+    # silently treated as a domestic-currency match.
+    invoice_grand_total_eur = invoice.grand_total_eur
+    if invoice_grand_total_eur is None or transaction_amount != invoice_grand_total_eur:
         return RentaLedgerAggregationIssue(
             transaction_id=transaction_id,
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,
@@ -822,23 +837,42 @@ def _purchase_invoice_evidence_payload(
             reason=RentaLedgerAggregationIssueReason.AMOUNT_MISMATCH,
             detail="linked transaction amount does not match invoice grand total",
         )
+    # invoice.base_total / invoice.iva_total are native-currency (same
+    # currency as invoice.currency); the EUR-safe *_eur properties are the
+    # ones that already exist for exactly this purpose (used correctly in
+    # _invoice_retencion.py). base_total_eur cannot be None here: the
+    # grand_total_eur check above already proved the invoice resolves to EUR.
+    base_total_eur = invoice.base_total_eur
+    iva_total_eur = invoice.iva_total_eur
+    assert base_total_eur is not None
+    assert iva_total_eur is not None
     return _PurchaseInvoiceEvidencePayload(
         invoice_issue_date=invoice.issued_at,
-        taxable_base=invoice.base_total,
-        iva_amount=invoice.iva_total,
+        taxable_base=base_total_eur,
+        iva_amount=iva_total_eur,
     )
 
 
 def _taxable_base_for(transaction: Transaction, evidence_payload: _PurchaseInvoiceEvidencePayload) -> Decimal | None:
+    """Return the EUR taxable_base: the linked invoice's (already EUR), else the transaction's own.
+
+    ``transaction.taxable_base`` is native-currency (see
+    ``domain.transactions.tests.test_gross_invariant``), so the fallback goes
+    through the EUR-equivalent accessor rather than the raw field.
+    """
     if evidence_payload.taxable_base is not None:
         return evidence_payload.taxable_base
-    return transaction.taxable_base
+    return effective_eur_taxable_base(transaction)
 
 
 def _iva_amount_for(transaction: Transaction, evidence_payload: _PurchaseInvoiceEvidencePayload) -> Decimal | None:
+    """Return the EUR iva_amount: the linked invoice's (already EUR), else the transaction's own.
+
+    Via the EUR-equivalent accessor -- see :func:`_taxable_base_for`.
+    """
     if evidence_payload.iva_amount is not None:
         return evidence_payload.iva_amount
-    return transaction.iva_amount
+    return effective_eur_iva_amount(transaction)
 
 
 def _casilla_aggregation(

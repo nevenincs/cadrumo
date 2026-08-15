@@ -133,3 +133,55 @@ published_at = 2021-09-28
 applies_from = 2021-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-7593"
 review_status = "reviewed"
+
+[sources."aeat-dr-714-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2022"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_714/files/01-714-ejercicio-2022.xls"
+sha256 = "b24b9ee856a9b4ea665e61ccbbe000fd8d50e4d70d48b34b5eeacbe74778b925"
+bytes = 766464
+retrieved_at = 2026-07-21
+applies_from = 2022-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR714_2022.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-714-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2023"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_714/files/02-714-ejercicio-2023.xls"
+sha256 = "b51178affa2a64ec2d538657136e807c11802457922f97e9333018d414c66299"
+bytes = 835584
+retrieved_at = 2026-07-21
+applies_from = 2023-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR714_2023.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-714-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2024"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_714/files/03-714-ejercicio-2024.xls"
+sha256 = "d70ce59786aa88cc91ad67197bf7f6a6630676abe087b7d66a64a0bf74a72aa5"
+bytes = 829440
+retrieved_at = 2026-07-21
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/DR714_2024.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-714-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2025"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_714/files/DR714_2025.xls"
+sha256 = "660e2ce1f4cea1405e27b4251231036e75b78aef33512afc22dec8081c7cb4d3"
+bytes = 839168
+retrieved_at = 2026-06-02
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/DR714_2025.xls"
+review_status = "reviewed"

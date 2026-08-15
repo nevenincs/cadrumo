@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSM_EXTENSION, XLSX_EXTENSION
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
 from .._corpus_catalogue import verify_source_catalogue, verify_source_file
@@ -342,6 +343,76 @@ def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:
         checked.append(source.id)
 
     assert checked
+
+
+#: The SAME extension set the schema's own ``kind == "record_design"`` validator
+#: accepts (``_schema_references.py``), reused rather than redeclared. A source
+#: NOT kind-``record_design`` whose bundled file carries one of these binary
+#: extensions AND lives under the AEAT ``disenos_registro/`` tree is exactly the
+#: shape the schema's forward check cannot see: nothing constrains what a
+#: ``form_spec`` (or other) kind may point at, so a real Diseño de Registro
+#: binary can sit mislabelled indefinitely with no gate noticing.
+_BINARY_RECORD_DESIGN_EXTENSIONS = (PDF_EXTENSION, XLS_EXTENSION, XLSX_EXTENSION, XLSM_EXTENSION)
+
+
+def test_no_non_record_design_source_points_at_a_binary_design_under_disenos_registro() -> None:
+    """A ``form_spec`` (or other) kind may not point at a real AEAT design binary.
+
+    Deliberately extension-scoped, not path-scoped: a bare "non-record_design
+    under disenos_registro/" rule would ALSO flag the 12 ``dictionary`` and 6
+    ``xsd`` companion files Modelo 100 correctly declares under its own kind --
+    those are a real, distinct evidence type living beside the design, not a
+    misclassified design. The binary-extension discriminator is what keeps this
+    check anchored on the PROPERTY (this file IS a design workbook by its own
+    extension) rather than a hand-list of which paths are exempt today, which
+    would go stale silently after the next rename or reclassification.
+
+    KNOWN BLIND SPOT, found and confirmed by inspection while building this
+    check, not by this check itself: Modelo 123 declares two ``form_spec``
+    sources whose ``corpus_path`` ends in ``.txt``
+    (``aeat-dr-123-2024-v20-form-text``, ``aeat-dr-123-2019-2023-v13-form-text``).
+    Reading the bundled files confirms they are row-by-row plain-text
+    TRANSCRIPTIONS of the exact same posición/longitud/tipo/descripción Diseño
+    de Registro content a bundled binary would carry -- genuine record-design
+    evidence, not a landing page or procedure note -- but their ``source_url``
+    already names the real ``.xls`` AEAT publishes. A binary-extension
+    discriminator cannot see this: ``.txt`` is not a design extension, and the
+    schema's own ``record_design`` kind validator would refuse a ``.txt``
+    corpus_path if this were reclassified as-is (only .pdf/.xls/.xlsx/.xlsm are
+    accepted). Closing this specific gap means re-bundling the real ``.xls``
+    binary AEAT already publishes at the recorded ``source_url``, not widening
+    the schema to accept a derived transcription -- the same "never ground on a
+    derived artefact" posture this registry already takes for
+    ``.html.extracted.md`` normatives citations. Reported here rather than
+    silently passed: this test's own binary-extension scope cannot catch it,
+    so it must not be allowed to look covered.
+    """
+    catalogues = _catalogues()
+    offending: list[str] = []
+    for source in catalogues.sources.values():
+        if source.kind == "record_design":
+            continue
+        path = Path(source.corpus_path)
+        if "disenos_registro" not in path.parts:
+            continue
+        suffix = source.corpus_path.rsplit(".", 1)
+        extension = "." + suffix[1].lower() if len(suffix) == 2 else ""
+        if extension in _BINARY_RECORD_DESIGN_EXTENSIONS:
+            offending.append(
+                f"{source.id!r} declares kind={source.kind!r} but its corpus_path "
+                f"{source.corpus_path!r} is a {extension} binary under disenos_registro/ -- "
+                "reclassify as kind='record_design' with a record_design_epoch, or confirm "
+                "by content that it is genuinely NOT the AEAT design (e.g. a companion "
+                "dictionary/xsd correctly modelled under its own kind, which never carries "
+                "a design-binary extension)",
+            )
+
+    assert offending == [], (
+        "non-record_design source(s) point at what their own extension declares is a "
+        "binary AEAT design under disenos_registro/ -- the same misclassification tier5's "
+        "M210/M280/M345 sweep found and corrected, reported here as a set so a NEW instance "
+        "is caught rather than silently joining a stale allowlist:\n  " + "\n  ".join(sorted(offending))
+    )
 
 
 def test_modelo_202_active_record_design_is_latest_manifested_revision() -> None:

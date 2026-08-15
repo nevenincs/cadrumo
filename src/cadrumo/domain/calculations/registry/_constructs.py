@@ -92,8 +92,6 @@ _CONSTRUCT_MEMBER_INDEXES: tuple[tuple[str, str, _RevisionIndex], ...] = (
     ("formula", "formulas", lambda revision: _index(revision.formulas)),
     ("parameter", "parameters", lambda revision: _index(revision.parameters)),
     ("binding", "bindings", lambda revision: _index(revision.bindings)),
-    ("algorithm provider", "algorithm_providers", lambda revision: _index(revision.algorithm_providers)),
-    ("algorithm binding", "algorithm_bindings", lambda revision: _index(revision.algorithm_bindings)),
     ("relation", "relations", lambda revision: _index(revision.relations)),
     ("export layout", "export_layouts", lambda revision: _index(revision.export_layouts)),
     ("extraction profile", "extraction_profiles", lambda revision: _index(revision.extraction_profiles)),

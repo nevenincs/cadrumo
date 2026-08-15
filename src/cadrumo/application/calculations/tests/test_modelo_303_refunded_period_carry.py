@@ -29,14 +29,16 @@ from pathlib import Path
 import pytest
 
 from ....core import CasillaId, Period, ResultDisposition, validated_casilla_id
-from ....core.resources import resources
+from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     RegistryCalculationResult,
     RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
     resolve_available_bound_inputs_by_casilla_id,
+    select_revision,
 )
+from ....domain.calculations.registry._loader import load_registry_tree
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -58,10 +60,27 @@ _MODELO = "303"
 _YEAR_N = 2025
 _YEAR_N_PLUS_1 = 2026
 _BUCKET_ID = "bucket-m303-refund"
+
+
 #: The law-determined Modelo 303 revision for 2025/4T. Stamped on the persisted
 #: carry observation so the cross-period carry gate re-confirms it (a divergent
 #: stamp would silently drop the carry).
-_REVISION = resources().modelos.authority.inspect_revision("303", filing_year=2025, period="4T").revision_id
+def _law_determined_revision_id(modelo_id: str, *, filing_year: int, period: str) -> str:
+    """Resolve the revision the law selects, without validating the whole registry.
+
+    Naming a revision is selection, not filing. Both the validated authority and
+    its inspection projection validate the full tree first, which refuses while
+    filing capability is absent -- so either would make this constant
+    unobtainable for a reason unrelated to the carry under test. The compiler
+    plus the canonical temporal resolver answer the same question and are the
+    only rungs that stay available.
+    """
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(candidate for candidate in modelos if candidate.id == modelo_id)
+    return str(select_revision(modelo, filing_year=filing_year, period=period).id)
+
+
+_REVISION = _law_determined_revision_id("303", filing_year=2025, period="4T")
 
 _CARRY_RELATION: RelationId = "modelo-303-rel-self-compensacion-anteriores"
 _CARRY_BINDING = "modelo-303-compensacion-pendiente-anteriores"

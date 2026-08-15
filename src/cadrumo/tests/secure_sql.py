@@ -38,10 +38,10 @@ from ..adapters.persistence.storage.crypto import (
     encrypt_secure_object_payload,
     secure_object_payload_aad,
 )
+from ..adapters.persistence.storage.custody import delete_profile_session
 from ..adapters.persistence.storage.master_key import (
     BucketSession,
     activate_session,
-    delete_profile_session,
     get_master_key_provider,
     load_or_mint_bucket_dek,
 )

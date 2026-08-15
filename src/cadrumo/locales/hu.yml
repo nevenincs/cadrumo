@@ -405,9 +405,17 @@ aggregation:
         időszakon kívüli keltézésű megfigyeléseket tartalmaz.
   modelo_bindings:
     errors:
+      invoice_line_currency_unconverted: Egy számlasor külföldi pénznemben van megadva,
+        és nincs feloldott euró árfolyama, ezért nem deklarálható ezen a modelón.
       unsupported_period: Nem támogatott nyomtatvány-időszak a főkönyvi aggregáláshoz.
   oss_ioss:
     errors:
+      invoice_line_currency_unconverted: Egy OSS/IOSS számlasor külföldi pénznemben
+        van megadva, és nincs feloldott euró árfolyama, ezért nem deklarálható ezen
+        a modelón.
+      invoice_line_rate_kind_unclassifiable: Egy OSS/IOSS számlasor olyan áfakulcsot
+        tartalmaz, amely nem sorolható be egyetlen kulcssávba sem, ezért az adóösszege
+        nem deklarálható ezen a modelón.
       iva_amount_mismatches_destination_rate: A tárolt áfaösszeg az egy centes tűréshatáron
         túl eltér a rendeltetési tagállam adókulcsától.
   per_modelo:

@@ -16,11 +16,11 @@ from .....tests.secure_sql import (
     isolated_profile_storage_root,
     isolated_runtime_profile,
 )
-from ..master_key import (
+from ..custody import (
     PROFILE_SESSION_KEYCHAIN_SERVICE,
-    has_active_bucket_session,
     mint_profile_session,
 )
+from ..master_key import has_active_bucket_session
 from ..sql.engine import get_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

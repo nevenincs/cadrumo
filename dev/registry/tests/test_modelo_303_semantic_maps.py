@@ -887,7 +887,6 @@ def test_static_declaration_preserves_dp30300_without_instance_values(
     assert declaration.source_sha256 == epoch.source_sha256
     assert declaration.body_record_ids == tuple(record.id for record in rendered.layout.records)
     assert sum(field.length for field in declaration.prefix_fields) == _ENVELOPE_PREFIX_LENGTH
-    assert declaration.product_identity_requirement == "aeat-product-software-identity-v1"
     assert rendered.provenance_manifest.m303_variable_envelope is not None
     assert rendered.provenance_manifest.m303_variable_envelope.envelope == declaration
 

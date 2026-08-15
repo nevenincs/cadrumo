@@ -50,21 +50,9 @@ def _validated_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCa
     return modelos, catalogues
 
 
-def _algorithm_relation_refs(revision: ModeloRevision) -> set[str]:
-    relation_ids = {relation.id for relation in revision.relations}
-    return {
-        str(value)
-        for binding in revision.algorithm_bindings
-        for value in binding.inputs.values()
-        if str(value) in relation_ids
-    }
-
-
 def _consumed_relation_refs(revision: ModeloRevision) -> set[str]:
     index = relation_consumption_index(revision)
-    return _algorithm_relation_refs(revision) | {
-        str(relation.id) for relation in revision.relations if relation_is_consumed(relation, index)
-    }
+    return {str(relation.id) for relation in revision.relations if relation_is_consumed(relation, index)}
 
 
 def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
@@ -228,7 +216,7 @@ def test_formula_bearing_revisions_consume_calculation_relations() -> None:
 
     for modelo in modelos:
         for revision in modelo.revisions.values():
-            if not revision.formulas and not revision.algorithm_bindings:
+            if not revision.formulas:
                 continue
             consumed = _consumed_relation_refs(revision)
             required = {
@@ -350,19 +338,10 @@ def test_relation_source_casilla_ids_are_filing_grade_source_casilla_ids() -> No
                 assert source_revisions, f"{modelo.id}/{revision.id}/{relation.id}"
                 for source_revision in source_revisions:
                     casillas = {casilla.id: casilla for casilla in source_revision.casillas}
-                    algorithm_outputs = {
-                        str(output)
-                        for algorithm_binding in source_revision.algorithm_bindings
-                        for output in algorithm_binding.output_casilla_ids.values()
-                    }
-                    if relation.source_casilla_id in casillas:
-                        assert casillas[relation.source_casilla_id].input_kind != InputKind.INFORMATIONAL, (
-                            f"{modelo.id}/{revision.id}/{relation.id}"
-                        )
-                    else:
-                        assert relation.source_casilla_id in algorithm_outputs, (
-                            f"{modelo.id}/{revision.id}/{relation.id}"
-                        )
+                    assert relation.source_casilla_id in casillas, f"{modelo.id}/{revision.id}/{relation.id}"
+                    assert casillas[relation.source_casilla_id].input_kind != InputKind.INFORMATIONAL, (
+                        f"{modelo.id}/{revision.id}/{relation.id}"
+                    )
 
 
 def test_dependency_classifications_preserve_relation_authority_basis() -> None:

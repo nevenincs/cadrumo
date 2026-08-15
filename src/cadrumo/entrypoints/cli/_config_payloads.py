@@ -502,39 +502,6 @@ class ConfigProfilePreflightResult(OutputSchema):
         return self
 
 
-@register_schema("config.profile.delete")
-class ConfigProfileDeleteResult(OutputSchema):
-    """JSON envelope for ``aeat config profile delete``.
-
-    Reports the tombstoned profile id and display label plus whether the active
-    profile pointer had to be cleared. Bounded and typed at the same widths
-    :class:`~cadrumo.application.user_profile.ProfileLifecycleResult` carries
-    (the mutated :class:`~cadrumo.domain.user_profile.UserProfileRecord`), so
-    an empty identity/label or an unknown lifecycle status is refused rather
-    than reported as a valid tombstoning.
-    """
-
-    profile_id: BucketId
-    display_name: str = Field(min_length=1, max_length=160)
-    setup_state: ProfileSetupState
-    active_profile_cleared: bool
-
-
-@register_schema("config.profile.duplicate")
-class ConfigProfileDuplicateResult(OutputSchema):
-    """JSON envelope for ``aeat config profile duplicate``.
-
-    Projects the source and new immutable profile ids produced by the profile
-    lifecycle service; the copied fact set is not expanded in this mutation
-    result. Bounded at the same widths the profile-pointer/record identity
-    carries, so a blank identity or label is refused.
-    """
-
-    source_profile_id: BucketId
-    target_profile_id: BucketId
-    display_name: str = Field(min_length=1, max_length=160)
-
-
 @register_schema("config.profile.status")
 class ConfigStatusResult(OutputSchema):
     """JSON envelope for ``aeat config profile status``.
@@ -1036,73 +1003,7 @@ class ConfigProfileImportResult(OutputSchema):
     schema_version: int
 
 
-@register_schema("config.profile.rename")
-class ConfigProfileRenameResult(OutputSchema):
-    """JSON envelope for ``aeat config profile rename``.
-
-    Reports the immutable profile id plus the previous and new display labels;
-    profile identity and bucket storage remain unchanged. Bounded at the same
-    widths :class:`~cadrumo.application.bucket_maintenance.RenameBucketResult`
-    carries, so a blank identity or label is refused.
-    """
-
-    profile_id: BucketId
-    previous_display_name: str = Field(min_length=1, max_length=160)
-    display_name: str = Field(min_length=1, max_length=160)
-
-
 # Sealed bucket-archive result schemas (backup / restore / inspect)
-
-
-@register_schema("config.profile.archive.export")
-class ConfigProfileArchiveExportResult(OutputSchema):
-    """JSON envelope for ``aeat config profile archive export``.
-
-    Reports the exported profile id, the written archive path, and the
-    manifest digest recorded in the archive header. Unlike
-    ``config profile export`` this archive is a full, AEAD-encrypted backup:
-    it carries attachment evidence bytes, the audit trail, and the
-    cross-period calculation inputs. It does not carry recovery material,
-    which is exported separately as its own artifact.
-    """
-
-    profile_id: ProfileId
-    display_name: str
-    out: str
-    manifest_digest: ContentDigest
-
-
-@register_schema("config.profile.archive.import")
-class ConfigProfileArchiveImportResult(OutputSchema):
-    """JSON envelope for ``aeat config profile archive import``.
-
-    Reports the restored profile id, the manifest digest authenticated at
-    decryption, and the archive schema version. The profile identity is
-    preserved verbatim from the archive (same ``bucket_id`` the archive was
-    exported from); a colliding existing profile is refused unless
-    ``--force`` is supplied.
-    """
-
-    profile_id: BucketId
-    manifest_digest: ContentDigest
-    archive_schema_version: int = Field(ge=1)
-
-
-@register_schema("config.profile.archive.inspect")
-class ConfigProfileArchiveInspectResult(OutputSchema):
-    """JSON envelope for ``aeat config profile archive inspect``.
-
-    A read-only preview of a sealed archive's plaintext header plus the
-    on-disk file size: the profile id it holds, when it was written, its
-    manifest digest, and its archive schema version. The encrypted payload
-    is never opened, so no per-store contents are reported here.
-    """
-
-    profile_id: BucketId
-    manifest_digest: ContentDigest
-    archive_schema_version: int = Field(ge=1)
-    created_at: datetime
-    size_bytes: int = Field(ge=0)
 
 
 # Repair verb result schemas (profile / integrity sub-app)

@@ -21,12 +21,14 @@ __all__ = [
     "BindingRowExportSelector",
     "BindingRowSetSelector",
     "BooleanBindingEncodedValue",
+    "ManualInputRecordFieldSelector",
     "binding_export_selector",
     "binding_row_set_selector",
     "boolean_binding_encoded_values",
     "canonical_selector_key_hint",
     "intracommunity_clave_validator",
     "invariant_diagnostics",
+    "manual_input_record_field_selector",
     "selector_against_model",
     "selector_as_dict",
     "unique_tuple",
@@ -65,12 +67,24 @@ class BindingFixedExportSelector(BaseModel):
 
 
 class BindingRowExportSelector(BaseModel):
-    """Typed row-field export projection carried by a binding selector."""
+    """Typed row-field export projection carried by a binding selector.
+
+    ``data_type`` carries the same fact here as on
+    :class:`BindingFixedExportSelector`: the scalar type of the value this
+    binding contributes to the export. The two projections differ only in how
+    the value is POSITIONED -- a fixed projection names an absolute
+    ``offset``/``length``, a row projection takes its position from the repeated
+    record's row layout -- so the type belongs on both and means one thing.
+
+    Optional because the declaration is being adopted per family; absent leaves
+    the consumer on whatever it used before.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     record: str = Field(min_length=1, max_length=64)
     row_field: str = Field(min_length=1, max_length=128)
+    data_type: BindingExportDataType | None = None
 
 
 BindingExportSelector = BindingFixedExportSelector | BindingRowExportSelector
@@ -101,7 +115,20 @@ class _BindingExportProjection(BaseModel):
     field: str | None = Field(default=None, min_length=1, max_length=128)
 
     def export_selector(self, *, binding_id: str) -> BindingExportSelector | None:
-        """Return the typed export selector, or ``None`` for non-export selectors."""
+        """Return the typed export selector, or ``None`` for non-export selectors.
+
+        Which projection a binding declares is decided by its POSITION keys,
+        which are declared data: ``row_field`` names a slot in a repeated
+        record's row layout, ``offset``/``length`` name an absolute span. The
+        discrimination never consults a name pattern or the binding's source
+        family, so a family that starts carrying row-field exports needs no
+        change here.
+
+        ``data_type`` is deliberately NOT a discriminator. It is the scalar type
+        of the contributed value and is meaningful to both projections; treating
+        it as a fixed-projection marker is what made a row field declaring its
+        own type read as a malformed fixed field.
+        """
         if self.record is None:
             if self.offset is not None or self.length is not None:
                 raise RegistryValidationError(
@@ -109,14 +136,27 @@ class _BindingExportProjection(BaseModel):
                 )
             return None
 
+        if self.row_field is not None:
+            if self.offset is not None or self.length is not None:
+                raise RegistryValidationError(
+                    f"binding {binding_id!r} export selector projection cannot declare row_field "
+                    "with offset/length: a row field is positioned by the record's row layout, "
+                    "not by an absolute span",
+                )
+            if self.decimals is not None and self.data_type != "decimal":
+                raise RegistryValidationError(
+                    f"binding {binding_id!r} row export projection declares decimals "
+                    f"but its data_type is {self.data_type!r}",
+                )
+            return BindingRowExportSelector(
+                record=self.record,
+                row_field=self.row_field,
+                data_type=self.data_type,
+            )
+
         fixed_values = (self.offset, self.length, self.data_type)
         fixed_count = sum(value is not None for value in fixed_values)
         if fixed_count == len(fixed_values):
-            if self.row_field is not None:
-                raise RegistryValidationError(
-                    f"binding {binding_id!r} export selector projection cannot declare row_field "
-                    "with offset/length/data_type",
-                )
             assert self.offset is not None
             assert self.length is not None
             assert self.data_type is not None
@@ -141,8 +181,6 @@ class _BindingExportProjection(BaseModel):
             raise RegistryValidationError(
                 f"binding {binding_id!r} export selector projection is missing fixed-field keys {missing!r}",
             )
-        if self.row_field is not None:
-            return BindingRowExportSelector(record=self.record, row_field=self.row_field)
         raise RegistryValidationError(
             f"binding {binding_id!r} export selector projection must declare row_field or offset/length/data_type",
         )
@@ -232,19 +270,113 @@ def boolean_binding_encoded_values(
 
     Returns:
         Zero or two :class:`BooleanBindingEncodedValue` rows.
+
+    Raises:
+        RegistryValidationError: When ``binding`` is a ``manual_input`` binding
+            whose selector does not validate against :class:`_ManualInputSelector`
+            -- a malformed selector must be a named failure, not a silently
+            empty "not a boolean binding" result.
     """
     if binding.source is not BindingSourceKind.MANUAL_INPUT:
         return ()
-    selector = selector_as_dict(binding)
-    if selector.get("data_type") != "boolean":
+    # Deferred import: ``_bindings`` imports FROM this module (``selector_as_dict``,
+    # ``selector_against_model``), so a module-level import of ``_ManualInputSelector``
+    # here would cycle. Read through the declared model rather than raw dict keys:
+    # a renamed/misspelled ``true_value`` / ``false_value`` / ``data_type`` key must
+    # raise, not silently return "not a boolean binding".
+    from ._bindings import _ManualInputSelector
+
+    try:
+        selector = _ManualInputSelector.model_validate(selector_as_dict(binding))
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed manual_input selector: {exc}",
+        ) from exc
+    if selector.data_type != "boolean":
         return ()
-    true_value = selector.get("true_value")
-    false_value = selector.get("false_value")
+    true_value = selector.true_value
+    false_value = selector.false_value
     if not isinstance(true_value, str) or not isinstance(false_value, str):
         return ()
     return (
         BooleanBindingEncodedValue(encoded_value="1", boolean_meaning=True, registry_value=true_value),
         BooleanBindingEncodedValue(encoded_value="0", boolean_meaning=False, registry_value=false_value),
+    )
+
+
+class ManualInputRecordFieldSelector(BaseModel):
+    """The record-field shape of a validated ``manual_input`` binding selector.
+
+    :class:`_ManualInputSelector` models both the casilla shape and the
+    record-field shape on one class because the two are mutually exclusive
+    and share ``data_type``; this narrower model is what a caller that only
+    cares about the record-field shape (a fichero-BOE fixed-record
+    projection) actually wants, with ``record``/``field``/``offset``/``length``
+    as the non-optional fields the source model's own validator already
+    guarantees once ``record`` is not ``None``.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    record: str
+    field: str
+    offset: int
+    length: int
+    decimals: int | None = None
+
+
+def manual_input_record_field_selector(
+    binding: DataBindingDefinition,
+) -> ManualInputRecordFieldSelector | None:
+    """Return the record-field selector of a ``manual_input`` binding, or ``None``.
+
+    ``None`` covers two DIFFERENT, both legitimate, cases a caller does not
+    need to distinguish: ``binding`` is not a ``manual_input`` binding at all,
+    or it is a ``manual_input`` binding using the CASILLA shape (the operator
+    types a value straight into a registry casilla, with no record/field
+    position at all) rather than the record-field shape this accessor
+    projects. Neither is a defect; a caller collecting record-field
+    projections across a revision's bindings is meant to skip both.
+
+    Returns:
+        The typed :class:`ManualInputRecordFieldSelector`, or ``None`` when
+        ``binding`` does not declare a record-field ``manual_input`` selector.
+
+    Raises:
+        RegistryValidationError: When ``binding`` is a ``manual_input`` binding
+            whose selector does not validate against ``_ManualInputSelector``
+            -- a malformed selector must be a named failure, not silently read
+            as "not a record-field binding".
+    """
+    if binding.source is not BindingSourceKind.MANUAL_INPUT:
+        return None
+    # Deferred import: ``_bindings`` imports FROM this module (``selector_as_dict``,
+    # ``selector_against_model``), so a module-level import of ``_ManualInputSelector``
+    # here would cycle. Read through the declared model rather than raw dict keys:
+    # a renamed/misspelled ``record`` / ``field`` key must raise, not silently read
+    # as "not a record-field binding".
+    from ._bindings import _ManualInputSelector
+
+    try:
+        selector = _ManualInputSelector.model_validate(selector_as_dict(binding))
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed manual_input selector: {exc}",
+        ) from exc
+    if selector.record is None:
+        return None
+    # _ManualInputSelector._validate_manual_input_shape already proved that a
+    # non-None record implies field/offset/length are all non-None too -- the
+    # record-field shape's four keys are required together.
+    assert selector.field is not None
+    assert selector.offset is not None
+    assert selector.length is not None
+    return ManualInputRecordFieldSelector(
+        record=selector.record,
+        field=selector.field,
+        offset=selector.offset,
+        length=selector.length,
+        decimals=selector.decimals,
     )
 
 

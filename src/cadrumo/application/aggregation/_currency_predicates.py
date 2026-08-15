@@ -14,6 +14,7 @@ from decimal import Decimal
 
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...domain.transactions import Transaction
+from ._errors import AggregationConfigError, t
 
 
 def is_non_eur_without_conversion(transaction: Transaction) -> bool:
@@ -43,23 +44,110 @@ def effective_eur_amount(transaction: Transaction) -> Decimal:
     conversion was pre-applied at import; otherwise returns
     ``transaction.raw.amount`` (the native EUR amount for domestic rows).
 
-    Note: callers are responsible for ensuring ``is_non_eur_without_conversion``
-    returns ``False`` before calling this function.  An unconverted
-    foreign-currency row would return ``raw.amount`` in a foreign currency,
-    which is not a valid EUR projection.
+    Raises :class:`~.._errors.AggregationConfigError` when
+    ``is_non_eur_without_conversion`` is ``True`` for the row, rather than
+    documenting the precondition and trusting every caller to check it first.
+    An unconverted foreign-currency row has no valid EUR projection to
+    return, and a caller that skipped the gate must fail loud, not fold
+    ``raw.amount`` into a EUR-denominated total in a foreign currency.
 
     Args:
         transaction: The transaction whose effective EUR amount is needed.
 
     Returns:
         A :class:`decimal.Decimal` suitable for casilla arithmetic.
+
+    Raises:
+        AggregationConfigError: The row is foreign-currency with no EUR
+            conversion applied.
     """
+    if is_non_eur_without_conversion(transaction):
+        raise AggregationConfigError(
+            translated_message=t("aggregation.service.errors.currency_conversion_required"),
+            context={
+                "transaction_id": transaction.transaction_id,
+                "currency": transaction.raw.currency,
+            },
+        )
     if transaction.value_in_eur is not None:
         return transaction.value_in_eur
     return transaction.raw.amount
 
 
+def effective_eur_taxable_base(transaction: Transaction) -> Decimal | None:
+    """Return the EUR-equivalent ``taxable_base``, or ``None`` if unset.
+
+    ``transaction.taxable_base`` is denominated in the row's NATIVE currency
+    (the ``gross == base + iva + recargo`` invariant reconstitutes
+    ``raw.amount``, never ``value_in_eur`` -- see
+    ``domain.transactions.tests.test_gross_invariant``). A converted
+    foreign-currency row must apply the same ``fx_rate`` multiplier import
+    used to derive ``value_in_eur`` from ``raw.amount``
+    (``raw.amount * fx_rate == value_in_eur``), so the base cannot be summed
+    as EUR while still carrying its native-currency figure.
+
+    Raises the same way ``effective_eur_amount`` does when the row is
+    foreign-currency with no conversion applied.
+
+    Args:
+        transaction: The transaction whose EUR-equivalent taxable base is needed.
+
+    Returns:
+        A :class:`decimal.Decimal`, or ``None`` when ``taxable_base`` is unset.
+
+    Raises:
+        AggregationConfigError: The row is foreign-currency with no EUR
+            conversion applied.
+    """
+    if transaction.taxable_base is None:
+        return None
+    if is_non_eur_without_conversion(transaction):
+        raise AggregationConfigError(
+            translated_message=t("aggregation.service.errors.currency_conversion_required"),
+            context={
+                "transaction_id": transaction.transaction_id,
+                "currency": transaction.raw.currency,
+            },
+        )
+    if transaction.fx_rate is not None:
+        return transaction.taxable_base * transaction.fx_rate
+    return transaction.taxable_base
+
+
+def effective_eur_iva_amount(transaction: Transaction) -> Decimal | None:
+    """Return the EUR-equivalent ``iva_amount``, or ``None`` if unset.
+
+    Same native-currency contract and ``fx_rate`` conversion as
+    :func:`effective_eur_taxable_base`, applied to ``iva_amount``.
+
+    Args:
+        transaction: The transaction whose EUR-equivalent IVA amount is needed.
+
+    Returns:
+        A :class:`decimal.Decimal`, or ``None`` when ``iva_amount`` is unset.
+
+    Raises:
+        AggregationConfigError: The row is foreign-currency with no EUR
+            conversion applied.
+    """
+    if transaction.iva_amount is None:
+        return None
+    if is_non_eur_without_conversion(transaction):
+        raise AggregationConfigError(
+            translated_message=t("aggregation.service.errors.currency_conversion_required"),
+            context={
+                "transaction_id": transaction.transaction_id,
+                "currency": transaction.raw.currency,
+            },
+        )
+    if transaction.fx_rate is not None:
+        return transaction.iva_amount * transaction.fx_rate
+    return transaction.iva_amount
+
+
 __all__ = [
     "effective_eur_amount",
+    "effective_eur_iva_amount",
+    "effective_eur_taxable_base",
     "is_non_eur_without_conversion",
 ]

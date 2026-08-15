@@ -211,7 +211,7 @@ required = true
 def _load_isolated_did_layout(tmp_path: Path) -> tuple[RegistrySnapshot, ExportLayoutDefinition]:
     source = bundled_authority().catalogues.sources[_SOURCE_REF]
     assert source.sha256 == _SOURCE_SHA256
-    parsed = extract_record_design(bundled_path() / source.corpus_path)
+    parsed = extract_record_design(bundled_path() / source.corpus_path).accept_partial()
     did = next(sheet for sheet in parsed if sheet.name == "DP303DID")
     assert did.total_positions == 823
     assert (

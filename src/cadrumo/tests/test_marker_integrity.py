@@ -702,6 +702,31 @@ def _os_keychain_marked_test_ids() -> list[str]:
     return found
 
 
+def _is_fixture_reexport(node: ast.stmt) -> bool:
+    """Return True for an ``__all__`` assignment: import wiring, not a test statement.
+
+    A fixture imported solely for pytest to discover it is re-exported so the
+    unused-import lint stays honest.
+    """
+    return isinstance(node, ast.Assign) and all(
+        isinstance(t, ast.Name) and t.id == "__all__" for t in node.targets
+    )
+
+
+def _is_type_checking_import_guard(node: ast.stmt) -> bool:
+    """Return True for an ``if TYPE_CHECKING:`` block holding only imports.
+
+    The guard defers an import to type-check time, so it belongs on the import
+    side of ``pytestmark``. The body is checked so no unrelated branch rides in.
+    """
+    if not isinstance(node, ast.If) or node.orelse:
+        return False
+    test = node.test
+    if not ((isinstance(test, ast.Name) and test.id == "TYPE_CHECKING") or (isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING")):
+        return False
+    return all(isinstance(stmt, ast.Import | ast.ImportFrom) for stmt in node.body)
+
+
 @cache
 def _placement_error(path: Path) -> str | None:
     """Validate that module-level ``pytestmark`` is the first test statement."""
@@ -710,6 +735,8 @@ def _placement_error(path: Path) -> str | None:
         if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
             continue
         if isinstance(node, ast.Import | ast.ImportFrom):
+            continue
+        if _is_fixture_reexport(node) or _is_type_checking_import_guard(node):
             continue
         if isinstance(node, ast.Assign) and any(
             isinstance(target, ast.Name) and target.id == "pytestmark" for target in node.targets
@@ -891,7 +918,17 @@ def _production_campaign_metadata_violations() -> list[str]:
     return violations
 
 
-_MODULES = _discover_test_modules()
+@cache
+def _modules() -> tuple[Path, ...]:
+    """Return the discovered test-module corpus, built once per process on first use.
+
+    Not a module-level constant: :func:`_discover_test_modules` reads and
+    ``ast.parse``s every ``test_*.py`` under all four roots, and a module-level
+    binding pays that at import — which pytest does during collection, once per
+    xdist worker, even for runs that deselect every test here. The cache keeps
+    the corpus built exactly once, so every gate reads one consistent snapshot.
+    """
+    return tuple(_discover_test_modules())
 
 
 def _unioned_marker_item_modules() -> tuple[Path, ...]:
@@ -911,7 +948,7 @@ def _unioned_marker_item_modules() -> tuple[Path, ...]:
     reached main and aborted every collection. Asserting the union directly
     over the whole tree does not depend on that composition holding.
     """
-    return tuple(sorted({*project_test_modules(), *_MODULES}))
+    return tuple(sorted({*project_test_modules(), *_modules()}))
 
 
 @pytest.fixture(scope="module")
@@ -923,7 +960,7 @@ def marker_policy_inventory() -> _MarkerPolicyInventory:
     live_gate_helper_violations: list[str] = []
     retired_marker_violations: list[str] = []
 
-    for module_path in _MODULES:
+    for module_path in _modules():
         inventory = _marker_module_inventory(module_path)
         campaign_metadata_violations.extend(inventory.campaign_metadata_violations)
         process_symbol_metadata_violations.extend(inventory.process_symbol_metadata_violations)
@@ -947,7 +984,7 @@ def marker_policy_inventory() -> _MarkerPolicyInventory:
 def test_module_carries_valid_pytestmark() -> None:
     """Every test module must declare a valid hexagonal ``pytestmark``."""
     violations: list[str] = []
-    for module_path in _MODULES:
+    for module_path in _modules():
         marker_sequence, error = _extract_pytestmark_sequence(module_path)
         names = set(marker_sequence)
         relative = module_path.relative_to(_REPO_ROOT)
@@ -981,7 +1018,7 @@ def test_module_carries_valid_pytestmark() -> None:
 def test_module_hex_marker_matches_owning_architecture_root() -> None:
     """Tests under clear architecture roots must carry that root's hex marker."""
     violations: list[str] = []
-    for module_path in _MODULES:
+    for module_path in _modules():
         expected = _expected_hex_marker_for_path(module_path)
         if expected is None:
             continue
@@ -1000,7 +1037,7 @@ def test_module_hex_marker_matches_owning_architecture_root() -> None:
 def test_module_pytestmark_is_first_test_statement() -> None:
     """The module marker declaration must precede constants, fixtures, and tests."""
     violations: list[str] = []
-    for module_path in _MODULES:
+    for module_path in _modules():
         error = _placement_error(module_path)
         if error is not None:
             violations.append(f"{module_path.relative_to(_REPO_ROOT)}: {error}")
@@ -1543,4 +1580,4 @@ def test_production_scoped_cases_are_derived_from_the_declared_scope() -> None:
 
 def test_discovery_found_modules() -> None:
     """Guardrail: the walker must discover at least one test module."""
-    assert _MODULES, "no test modules discovered - glob roots or layout changed"
+    assert _modules(), "no test modules discovered - glob roots or layout changed"

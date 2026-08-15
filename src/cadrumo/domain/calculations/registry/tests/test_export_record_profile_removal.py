@@ -20,7 +20,8 @@ from __future__ import annotations
 
 import pytest
 
-from .. import bundled_authority
+from .....core.resources import bundled_path
+from .._loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -39,12 +40,22 @@ _MODELOS_THAT_HELD_BOTH_PROFILES = frozenset({"111", "115", "123"})
 
 
 def test_export_record_profiles_removed_without_deleting_pdf_authority() -> None:
-    """The declaracion-PDF profiles survive the export-record profile removal."""
-    authority = bundled_authority()
+    """The declaracion-PDF profiles survive the export-record profile removal.
+
+    Read through the compiler rather than the validated authority. Which
+    extraction profiles a revision declares is registry declaration data, not a
+    filing artefact, and the full-tree validation now refuses while filing
+    capability is absent. Reading through it would make this over-deletion guard
+    unrunnable for reasons that have nothing to do with extraction profiles --
+    and a guard that goes quiet whenever something else is broken is one nobody
+    can rely on at the moment it matters.
+    """
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    by_id = {modelo.id: modelo for modelo in modelos}
     profiles = {
         profile.id: profile.surface
         for modelo_id in _MODELOS_THAT_HELD_BOTH_PROFILES
-        for revision in authority.modelo(modelo_id).revisions.values()
+        for revision in by_id[modelo_id].revisions.values()
         for profile in revision.extraction_profiles
     }
 
