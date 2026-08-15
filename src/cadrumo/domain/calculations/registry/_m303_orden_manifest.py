@@ -35,7 +35,22 @@ def generate_m303_annual_orden_manifest(
     sources: Mapping[SourceRefId, SourceReference],
 ) -> M303AnnualOrdenGeneratedManifest:
     """Derive the exact source-integrity manifest from the pinned BOE corpus."""
+    return _generate_manifest_with_censuses(source_root=source_root, sources=sources)[0]
+
+
+def _generate_manifest_with_censuses(
+    *,
+    source_root: Path,
+    sources: Mapping[SourceRefId, SourceReference],
+) -> tuple[M303AnnualOrdenGeneratedManifest, dict[SourceRefId, M303AnnualOrdenSourceCensus]]:
+    """Derive the manifest AND hand back the censuses it was derived from.
+
+    Extracting one annual Orden means a full BeautifulSoup parse of its BOE
+    HTML, so a caller that needs both the manifest row and the census behind it
+    should take both from one pass rather than extracting twice.
+    """
     generated_sources: list[M303AnnualOrdenGeneratedSource] = []
+    censuses: dict[SourceRefId, M303AnnualOrdenSourceCensus] = {}
     for ejercicio in SUPPORTED_EJERCICIOS:
         source = _single_annual_orden_source_for_year(sources, ejercicio=ejercicio)
         census = extract_m303_annual_orden_source(
@@ -43,6 +58,7 @@ def generate_m303_annual_orden_manifest(
             source=source,
             source_root=source_root,
         )
+        censuses[source.id] = census
         generated_sources.append(
             M303AnnualOrdenGeneratedSource(
                 ejercicio=ejercicio,
@@ -66,10 +82,11 @@ def generate_m303_annual_orden_manifest(
                 ),
             ),
         )
-    return M303AnnualOrdenGeneratedManifest(
+    manifest = M303AnnualOrdenGeneratedManifest(
         extractor_version=EXTRACTOR_VERSION,
         sources=tuple(generated_sources),
     )
+    return manifest, censuses
 
 
 def render_m303_annual_orden_manifest(
@@ -135,6 +152,20 @@ def check_m303_annual_orden_manifest(
     sources: Mapping[SourceRefId, SourceReference],
 ) -> M303AnnualOrdenGeneratedManifest:
     """Refuse a missing, manually edited, or stale generated annual Orden artefact."""
+    return _check_manifest_with_censuses(
+        manifest_path=manifest_path,
+        source_root=source_root,
+        sources=sources,
+    )[0]
+
+
+def _check_manifest_with_censuses(
+    *,
+    manifest_path: Path,
+    source_root: Path,
+    sources: Mapping[SourceRefId, SourceReference],
+) -> tuple[M303AnnualOrdenGeneratedManifest, dict[SourceRefId, M303AnnualOrdenSourceCensus]]:
+    """Run the staleness refusal and hand back the censuses it already extracted."""
     try:
         directory_entries = tuple(manifest_path.parent.iterdir())
     except OSError as exc:
@@ -149,7 +180,7 @@ def check_m303_annual_orden_manifest(
     # manifest are the same derivation of the same corpus, so deriving them
     # separately cost a second full extraction of every pinned annual Orden
     # and could not have disagreed.
-    manifest = generate_m303_annual_orden_manifest(source_root=source_root, sources=sources)
+    manifest, censuses = _generate_manifest_with_censuses(source_root=source_root, sources=sources)
     expected = _render_generated_manifest(manifest)
     try:
         actual = manifest_path.read_text(encoding="utf-8")
@@ -157,7 +188,7 @@ def check_m303_annual_orden_manifest(
         raise RegistryLoadError(f"annual Orden generated manifest cannot be read: {manifest_path}") from exc
     if actual != expected:
         raise RegistryLoadError(f"annual Orden generated manifest is stale: regenerate {manifest_path}")
-    return manifest
+    return manifest, censuses
 
 
 def load_m303_annual_orden_authority(
@@ -169,7 +200,12 @@ def load_m303_annual_orden_authority(
 ) -> M303AnnualOrdenCompilation:
     """Compile source-pinned annual Orden rows and legal provisions into the registry."""
     manifest_path = root.resolve() / "m303_orden_anual" / "manifest.toml"
-    manifest = check_m303_annual_orden_manifest(
+    # The staleness check already extracted every pinned Orden to build the
+    # manifest it compared against disk. Those censuses are exactly what the
+    # compile below needs, so they are carried out of the check rather than
+    # re-derived: extracting one Orden is a full BeautifulSoup parse of its BOE
+    # HTML, and this loop used to pay for all five a second time.
+    manifest, censuses = _check_manifest_with_censuses(
         manifest_path=manifest_path,
         source_root=source_root,
         sources=sources,
@@ -183,6 +219,7 @@ def load_m303_annual_orden_authority(
             generated_source,
             source_root=source_root,
             sources=sources,
+            census=censuses.get(generated_source.source_ref),
         )
         _merge_annual_orden_legal_refs(legal, table_legal_refs.values())
         projections.extend(
@@ -203,15 +240,24 @@ def _compile_generated_annual_orden_source(
     *,
     source_root: Path,
     sources: Mapping[SourceRefId, SourceReference],
+    census: M303AnnualOrdenSourceCensus | None = None,
 ) -> tuple[SourceReference, M303AnnualOrdenSourceCensus, dict[str, LegalReference]]:
+    """Compile one pinned annual Orden, extracting it only if not already done.
+
+    ``census`` is the extraction the manifest check already performed for this
+    source. It is the same pure derivation of the same bytes this function would
+    otherwise recompute, so accepting it changes no value; it only stops the
+    corpus being parsed a second time.
+    """
     source = sources.get(generated_source.source_ref)
     if source is None:
         raise RegistryLoadError(f"annual Orden manifest names unknown source {generated_source.source_ref!r}")
-    census = extract_m303_annual_orden_source(
-        ejercicio=generated_source.ejercicio,
-        source=source,
-        source_root=source_root,
-    )
+    if census is None:
+        census = extract_m303_annual_orden_source(
+            ejercicio=generated_source.ejercicio,
+            source=source,
+            source_root=source_root,
+        )
     _validate_generated_source_matches_census(generated_source, census)
     legal_refs = compile_annual_orden_legal_references(census, source=source)
     return source, census, legal_refs
