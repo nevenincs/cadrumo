@@ -16,7 +16,15 @@ from typing import cast, get_args, get_origin
 
 from pydantic import BaseModel, ValidationError
 
-from ....core import OBJECT_TUPLE_ADAPTER, FilingProducerKey, compile_filing_projection_ref, freeze_toml, read_toml
+from ....core import (
+    OBJECT_TUPLE_ADAPTER,
+    DirectoryEntryKind,
+    FilingProducerKey,
+    compile_filing_projection_ref,
+    freeze_toml,
+    read_toml,
+    scan_directory,
+)
 from ._compiled_cache import load_compiled_registry_cache, store_compiled_registry_cache
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._export_semantics import ExportComputedKey, ExportDraftAttribute
@@ -451,11 +459,10 @@ def _load_modelo_revisions(resolved: Path) -> dict[str, object]:
     if not revisions_dir.is_dir():
         return {}
     merged_revisions: dict[str, object] = {}
-    for path in sorted(revisions_dir.glob("*.toml")):
+    for path in scan_directory(revisions_dir, pattern="*.toml"):
         _merge_revision_file(path, merged_revisions)
-    for path in sorted(revisions_dir.iterdir()):
-        if path.is_dir():
-            _merge_revision_directory(path, merged_revisions)
+    for path in scan_directory(revisions_dir, select=DirectoryEntryKind.DIRECTORIES):
+        _merge_revision_directory(path, merged_revisions)
     return merged_revisions
 
 
@@ -484,43 +491,44 @@ def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -
     revision_manifest = path / "revision.toml"
     if not revision_manifest.is_file():
         raise RegistryLoadError(f"{path}: revision fragment directory must contain revision.toml")
-    section_dirs = _revision_section_directories(path)
-    _require_revision_section_fragments(section_dirs)
+    section_fragments = _revision_section_fragment_paths(_revision_section_directories(path))
     merged_revision: dict[str, object] = {}
     _merge_revision_manifest(revision_manifest, revision_id, merged_revision)
-    for fragment_path in _revision_section_fragment_paths(section_dirs):
+    for fragment_path in section_fragments:
         _merge_revision_fragment(fragment_path, revision_id, merged_revision)
     merged_revisions[revision_id] = merged_revision
 
 
 def _revision_section_directories(path: Path) -> tuple[Path, ...]:
-    return tuple(sorted(entry for entry in path.iterdir() if entry.is_dir() and entry.name != "locales"))
-
-
-def _require_revision_section_fragments(section_dirs: tuple[Path, ...]) -> None:
-    """Guard every section directory against emptiness.
-
-    Matches :func:`_revision_section_fragment_paths`'s own one-level ``glob``
-    rather than ``rglob`` -- the collector is what actually defines the
-    registry's content, so the guard must see exactly what the collector
-    sees, never more or less. A one-level-only collector paired with a
-    recursive emptiness check could in principle let a section directory
-    holding ONLY nested fragments pass as "populated" while the collector
-    silently read zero of them; in practice this can never happen, because
-    :func:`_validate_section_fragment_names` (``_loader_cache.py``, run for
-    every section directory before a fragment tree is ever merged) already
-    refuses ANY subdirectory nested inside a section directory outright.
-    This still narrows the check to match the collector exactly, so the two
-    can never textually diverge even if that upstream categorical block ever
-    changed shape.
-    """
-    for section_dir in section_dirs:
-        if not any(candidate.is_file() for candidate in section_dir.glob("*.toml")):
-            raise RegistryLoadError(f"{section_dir}: revision section fragment directory contains no TOML fragments")
+    return tuple(entry for entry in scan_directory(path, select=DirectoryEntryKind.DIRECTORIES) if entry.name != "locales")
 
 
 def _revision_section_fragment_paths(section_dirs: tuple[Path, ...]) -> tuple[Path, ...]:
-    return tuple(sorted(fragment_path for section_dir in section_dirs for fragment_path in section_dir.glob("*.toml")))
+    """Collect every section directory's fragments, refusing an empty section.
+
+    One listing per section directory answers both questions the loader asks
+    of it -- "is this section populated" and "which files does it hold" -- so
+    the two cannot disagree. They were previously two independent one-level
+    walks kept textually identical by hand, on the reasoning that a guard
+    seeing more than the collector could call a section "populated" while the
+    collector read nothing from it. Deriving both from a single listing makes
+    that agreement structural rather than editorial, and halves the walks.
+
+    The listing is narrowed to files, which is what the emptiness question
+    always meant: a directory named ``*.toml`` is not a fragment. Nothing of
+    the sort can exist anyway -- :func:`_validate_section_fragment_names`
+    (``_loader_cache.py``, run for every section directory before a fragment
+    tree is merged) refuses ANY subdirectory nested inside a section
+    directory outright -- so the narrowing restates an upstream categorical
+    block rather than introducing a new rule.
+    """
+    fragments: list[Path] = []
+    for section_dir in section_dirs:
+        section_fragments = scan_directory(section_dir, pattern="*.toml", select=DirectoryEntryKind.FILES)
+        if not section_fragments:
+            raise RegistryLoadError(f"{section_dir}: revision section fragment directory contains no TOML fragments")
+        fragments.extend(section_fragments)
+    return tuple(sorted(fragments))
 
 
 def _read_single_revision_table(path: Path, expected_revision_id: RevisionId) -> dict[str, object]:

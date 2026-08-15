@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:4ba5a49b54b9255c77e9a34af65b32ad1c000c5080ab24860d99c9dfc9efebe3'
+body_hash: 'sha256:093b2915803cee0c1626f7e598a68b11fab7168350254a28f4cead6d1e1e7997'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -192,6 +192,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S118` - Have Terra XHigh re-derive every stated reason in the runtime bootstrap-exempt allowlist against the tree, since two of its justifications were found false in one day, one citing a test that was never written and one asserting a manifest read that no longer happens, and the entries were correct in both cases so the defect is that a reader inherits a false reason rather than re-deriving it, which is worse than a file carrying no comments at all; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
 - [ ] `W04.P07.S120` - Have Terra XHigh repair the rotation crash-window test module broken at HEAD, which imports a keystore filename constant whose definition the deletion removed and which it is now the only referent of, this being a collection error that can abort a whole run rather than a single failing test; `src/cadrumo/adapters/persistence/storage/tests/test_rotation_crash_windows.py`.
 - [ ] `W04.P07.S121` - Have Sol Medium rule on the bucket deletion assessment contract, since the fingerprint type is now producerless and its only consumer is the populated branch requiring label and fingerprint and retention together, a branch already unreachable because the assessment either reports a missing bucket or raises and never constructs that shape, so a validated contract stands for a state nothing can produce; `src/cadrumo/application/config_reset.py and src/cadrumo/application/bucket_maintenance/`.
+- [ ] `W04.P07.S123` - Have Terra XHigh make the persisted-format inventory detect an enrolled format whose code no longer exists, since the enrolment gate enumerates against the inventory and therefore catches a new format missing from it while a format listed in it with nothing left in the tree passes unnoticed, which has already happened once to a keystore format deleted while its durable enrolment stood; `src/cadrumo/core/compatibility_lifecycle.py`.
 
 ## Wave `W05` - end-to-end proof
 

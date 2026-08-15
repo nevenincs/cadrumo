@@ -1,10 +1,13 @@
 """Canonical empty-storage-root fixtures for profile-bootstrap test flows."""
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import nullcontext
 from pathlib import Path
 
 import pytest
 
+from ..adapters.persistence.storage import dispose_engine
+from ..core.config import override_settings
 from .profile_capsule import open_test_profile_session
 from .secure_sql import isolated_profile_storage_root
 
@@ -21,6 +24,8 @@ def isolated_profile_storage_fixture(
     *,
     autouse: bool = True,
     name: str = "_isolated_storage",
+    dispose_engine_around: bool = False,
+    settings_overrides: Mapping[str, object] | Callable[[Path], Mapping[str, object]] | None = None,
 ) -> Callable[[Path], Iterator[None]]:
     """Build a bare isolation fixture that yields no value.
 
@@ -31,12 +36,31 @@ def isolated_profile_storage_fixture(
     twice under two names for that reason, once autouse and once explicitly
     requested via ``usefixtures``; ``autouse`` and ``name`` stay per-caller so
     reach is still declared where it applies, only the body is shared.
+
+    ``dispose_engine_around`` and ``settings_overrides`` mirror the identically-
+    named parameters on
+    :func:`~cadrumo.tests.active_profile_isolated_backend_fixture.active_profile_isolated_backend_fixture`:
+    a small cluster of no-active-profile sites also needs the SQL engine
+    disposed before the isolated root opens and in a ``finally`` after it
+    closes, and/or an additional Settings field pinned. Both default to
+    ``False``/``None`` and preserve every existing caller's behaviour
+    unchanged. Pass a callable for a ``tmp_path``-derived override value.
     """
 
     @pytest.fixture(name=name, autouse=autouse)
     def _isolated_profile_storage(tmp_path: Path) -> Iterator[None]:
-        with isolated_profile_storage_root(tmp_path=tmp_path):
-            yield
+        if dispose_engine_around:
+            dispose_engine()
+        resolved_overrides = settings_overrides(tmp_path) if callable(settings_overrides) else settings_overrides
+        settings_cm = override_settings(**resolved_overrides) if resolved_overrides else nullcontext()
+        with settings_cm, isolated_profile_storage_root(tmp_path=tmp_path):
+            if dispose_engine_around:
+                try:
+                    yield
+                finally:
+                    dispose_engine()
+            else:
+                yield
 
     return _isolated_profile_storage
 

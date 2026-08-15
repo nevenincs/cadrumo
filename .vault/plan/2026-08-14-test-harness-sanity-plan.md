@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-15'
-body_hash: 'sha256:80867603ffa30bfb5d2aee4072cf461c32f0a9894026f2836b39a9c0594813c7'
+body_hash: 'sha256:0505c33ece003938f0babb1d70b029699d25d16ba6a375dd64d77c22d9f92f57'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -199,7 +199,7 @@ Twenty-five file-disjoint batches of byte-identical helper bodies, partitioned b
 - [x] `W09.P29.S117` - Collapse the sixty-six structurally identical modelo 131 modulos tests into parametrized cases without losing a single expected value or IAE citation; `src/cadrumo/domain/calculations/registry/tests/test_modelo_131_modulos_engine*.py`.
 - [x] `W09.P29.S118` - Consolidate the ledger corpus match and oracle-rule helpers and upgrade the existing shared copies to the stricter guarded variant; `src/cadrumo/entrypoints/cli/tests/_ledger_corpus_support.py`.
 - [x] `W09.P29.S119` - Consolidate the remaining digest, live-write-declaration, ephemeral-repository and fragment-writer helpers without crossing the dev and shipped-package boundary; `dev/packaging, src/cadrumo/entrypoints/mcp/tests, dev/docs/terminology_handbook/tests`.
-- [ ] `W09.P29.S120` - Write one census record per consolidated cluster proving substitutability and naming the canonical owner, as the fixture-deletion constraint requires; `.vault/audit`.
+- [x] `W09.P29.S120` - Write one census record per consolidated cluster proving substitutability and naming the canonical owner, as the fixture-deletion constraint requires; `.vault/audit`.
 
 ### Phase `W09.P30` - adjudicate drifted variants and semantically mirrored reimplementations
 
@@ -207,7 +207,7 @@ The classes the name-keyed census cannot reach. Drift is scored by structural si
 
 - [x] `W09.P30.S121` - Score name-grouped helper clusters by structural similarity over normalised AST node sequences to separate genuine drift from name collision; `scratchpad census artefacts`.
 - [x] `W09.P30.S122` - Adjudicate every drifted cluster above the similarity threshold as real drift, deliberate variant, or false positive before any edit; `src/cadrumo, dev`.
-- [ ] `W09.P30.S123` - Migrate the under-adopted canonical locale and loader-directory fixture homes onto their existing owners rather than creating new ones; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `W09.P30.S123` - Migrate the under-adopted canonical locale and loader-directory fixture homes onto their existing owners rather than creating new ones; `src/cadrumo/domain/calculations/registry/tests`.
 - [x] `W09.P30.S124` - Sweep the corpus by meaning for reimplementations sharing neither name nor structure and record which could not have been reached by name or grep; `src/cadrumo, dev`.
 - [ ] `W09.P30.S125` - Re-key the duplication gate on body rather than name so a renamed twin cannot sit outside its own comparison; `dev/quality`.
 - [ ] `W09.P30.S126` - Sweep the thirty-seven pre-provisioned-bucket isolated-backend fixtures onto the canonical factory after extending it with settings and profile override passthroughs; `src/cadrumo/tests/active_profile_isolated_backend_fixture.py, src/cadrumo/entrypoints/cli/tests`.
@@ -217,9 +217,12 @@ The classes the name-keyed census cannot reach. Drift is scored by structural si
 - [x] `W09.P30.S130` - Consolidate the drifted release-cohort builders onto a deterministic clock and retire the wall-clock variant; `dev/packaging/tests/_release_cohort_support.py`.
 - [ ] `W09.P30.S131` - Rename the worked-example oracle reader to oracle_declared_figures so it stops sharing vocabulary with the manual-input allowlist that governs silent-blank casillas; `src/cadrumo/domain/calculations/registry/tests/_manual_oracle_support.py`.
 - [ ] `W09.P30.S132` - Converge the hand-spelled CLI runtime isolation fixture onto the taxonomy-derived canonical helper, closing a storage-path defect the canonical docstring records as already fixed elsewhere; `src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`.
-- [ ] `W09.P30.S133` - Determine whether any production path rebuilds the transactions or invoices directory from the taxonomy rather than the resolved setting, which would make the drifted override a live defect rather than a self-consistent one; `src/cadrumo/core, src/cadrumo/application`.
+- [x] `W09.P30.S133` - Determine whether any production path rebuilds the transactions or invoices directory from the taxonomy rather than the resolved setting, which would make the drifted override a live defect rather than a self-consistent one; `src/cadrumo/core, src/cadrumo/application`.
 - [x] `W09.P30.S134` - Sweep every test HTTP server for the shutdown-close-join triad and close the socket and thread leaks that accumulate under parallel execution; `dev/docs/tests, src/cadrumo/adapters/outbound`.
-- [ ] `W09.P30.S135` - Move the in-memory engine disposal in the hash-column-width test inside a finally so a failing assertion cannot skip it; `src/cadrumo/adapters/persistence/storage/sql/tests/test_hash_column_widths.py`.
+- [x] `W09.P30.S135` - Move the in-memory engine disposal in the hash-column-width test inside a finally so a failing assertion cannot skip it; `src/cadrumo/adapters/persistence/storage/sql/tests/test_hash_column_widths.py`.
+- [ ] `W09.P30.S136` - Close the live-write declaration helper still duplicated in the evaluation tree, or record the cross-tree import direction as the standing reason it cannot move; `dev/agent_eval/tests/test_confirmation_gate_golden.py`.
+- [ ] `W09.P30.S137` - Sweep key providers and encrypted sessions for guaranteed teardown, the one resource class left unexamined; `src/cadrumo/adapters/persistence/storage`.
+- [ ] `W09.P30.S138` - Re-run the registry-tests failure-set diff from a quiesced tree so the consolidation pair is cleared on evidence rather than on zero-overlap reasoning; `src/cadrumo/domain/calculations/registry/tests`.
 
 ## Parallelization
 

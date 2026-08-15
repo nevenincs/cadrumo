@@ -4,14 +4,28 @@ Every module in the tree that needs "the files under this directory" resolves
 it here, rather than reaching for :meth:`pathlib.Path.iterdir`,
 :meth:`pathlib.Path.glob`, or :meth:`pathlib.Path.rglob` directly.
 
-``os.scandir`` rather than :meth:`pathlib.Path.rglob`, which is roughly ten
-times slower over this tree (0.28s against 0.025s for the same 4,984 files)
-because it materialises a ``Path`` per entry and re-stats it to decide whether
-to descend. ``scandir`` answers ``is_dir`` from the directory entry the
-operating system already returned. Pruning happens BEFORE descending, so an
-excluded directory costs one ``is_dir`` check rather than a full subtree walk
--- which is what makes excluding a large data tree cheap rather than merely
-correct.
+The case for centralising is consistency, not raw speed, and it is worth
+being exact about that. ``os.scandir`` used to be dramatically faster than
+:meth:`pathlib.Path.rglob`, because pathlib materialised a ``Path`` per entry
+and re-stat'ed it to decide whether to descend. Python 3.13 rewrote globbing
+onto ``glob._Globber``, which calls ``os.scandir`` itself and reuses the
+directory entry rather than re-stat'ing -- so that gap has largely closed.
+Measured on the repository's own tree (4,985 ``.py`` files, warm cache,
+best of ten): a bare ``scandir`` walk 0.19s, this primitive 0.23s,
+``sorted(Path.rglob("*.py"))`` 0.27s. Parity, not an order of magnitude.
+
+What this module still buys is real, and none of it is throughput:
+
+* One walk with one ordering rule, instead of every caller re-deciding
+  whether to wrap ``sorted()`` and what to sort.
+* *prune_directories*, which ``Path.rglob`` cannot express at all. Pruning
+  happens BEFORE descending, so an excluded directory costs one ``is_dir``
+  check rather than a full subtree walk -- which is what makes excluding a
+  large data tree cheap rather than merely correct, and is where a genuine
+  order-of-magnitude win is still available.
+* An explicit, tested answer on the three semantics that silently differ
+  between platforms and call styles: sort order, missing directories, and
+  symlinks.
 
 Nothing here is memoised. A cached listing of a directory under construction
 is simply wrong, and production callers write to the directories they scan;
@@ -115,13 +129,14 @@ def scan_directory(
     """
     return tuple(
         sorted(
-            iter_directory(
+            _scan(
                 root,
                 pattern=pattern,
                 recursive=recursive,
                 select=select,
                 prune_directories=prune_directories,
                 require_root=require_root,
+                ordered=False,
             )
         )
     )
@@ -207,12 +222,45 @@ def iter_directory(
             uses ``**``.
         OSError: *root* could not be scanned and *require_root* is set.
     """
+    return _scan(
+        root,
+        pattern=pattern,
+        recursive=recursive,
+        select=select,
+        prune_directories=prune_directories,
+        require_root=require_root,
+        ordered=True,
+    )
+
+
+def _scan(
+    root: Path,
+    *,
+    pattern: str | None,
+    recursive: bool,
+    select: DirectoryEntryKind,
+    prune_directories: Collection[str],
+    require_root: bool,
+    ordered: bool,
+) -> Iterator[Path]:
+    """Validate the arguments eagerly, then hand back the lazy walk.
+
+    Splitting validation from the generator is what lets a refused pattern
+    raise from the public call rather than from the caller's first
+    ``next()``, where the traceback would point at the loop instead of the
+    mistake.
+
+    *ordered* asks each directory's entries to be name-sorted as they are
+    read. :func:`iter_directory` needs that -- it is the only ordering its
+    consumer will ever see -- while :func:`scan_directory` sorts the whole
+    result afterwards and would simply be paying for the work twice.
+    """
     matches = _compile_name_matcher(pattern)
     pruned = frozenset(prune_directories)
-    root_entries = _sorted_entries(os.fspath(root), propagate=require_root)
+    root_entries = _read_entries(os.fspath(root), propagate=require_root, ordered=ordered)
     if root_entries is None:
         return iter(())
-    return _walk(root_entries, matches=matches, recursive=recursive, select=select, pruned=pruned)
+    return _walk(root_entries, matches=matches, recursive=recursive, select=select, pruned=pruned, ordered=ordered)
 
 
 def _walk(
@@ -222,6 +270,7 @@ def _walk(
     recursive: bool,
     select: DirectoryEntryKind,
     pruned: frozenset[str],
+    ordered: bool,
 ) -> Iterator[Path]:
     """Pre-order walk over an explicit stack of directory listings.
 
@@ -241,7 +290,7 @@ def _walk(
         if _is_selected(is_directory, select) and (matches is None or matches(entry.name)):
             yield Path(entry.path)
         if is_directory and recursive:
-            child_entries = _sorted_entries(entry.path, propagate=False)
+            child_entries = _read_entries(entry.path, propagate=False, ordered=ordered)
             if child_entries is not None:
                 stack.append(iter(child_entries))
 
@@ -255,8 +304,8 @@ def _is_selected(is_directory: bool, select: DirectoryEntryKind) -> bool:
     return not is_directory
 
 
-def _sorted_entries(path: str, *, propagate: bool) -> list[os.DirEntry[str]] | None:
-    """Read one directory into a deterministically ordered list.
+def _read_entries(path: str, *, propagate: bool, ordered: bool) -> list[os.DirEntry[str]] | None:
+    """Read one directory into a list, optionally name-ordered.
 
     Returns ``None`` when the directory could not be read and *propagate* is
     unset, which is the silent-empty behaviour ``Path.glob`` gives for a
@@ -264,12 +313,17 @@ def _sorted_entries(path: str, *, propagate: bool) -> list[os.DirEntry[str]] | N
 
     The sort key is the case-normalised name, matching how
     :class:`~pathlib.Path` compares, with the raw name breaking ties so two
-    entries differing only in case cannot swap between runs. The listing is
-    materialised and the directory handle closed before the caller sees any
-    entry.
+    entries differing only in case cannot swap between runs.
+
+    The listing is materialised and the directory handle closed before the
+    caller sees any entry, whether or not it is sorted. That is what lets a
+    consumer delete a directory it is part-way through iterating without
+    tripping a Windows sharing violation.
     """
     try:
         with os.scandir(path) as entries:
+            if not ordered:
+                return list(entries)
             return sorted(entries, key=lambda entry: (os.path.normcase(entry.name), entry.name))
     except OSError:
         if propagate:

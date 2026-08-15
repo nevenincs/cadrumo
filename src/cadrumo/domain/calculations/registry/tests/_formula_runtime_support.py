@@ -1,11 +1,55 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from datetime import date
+from decimal import Decimal
 
 from .....core import RegistryAuthorityGrade, validated_casilla_id
 from .....core.resources import bundled_path
-from .._schema import CasillaId, DataBindingDefinition, ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from .._formula_runtime import _evaluate_expression
+from .._schema import (
+    CasillaId,
+    DataBindingDefinition,
+    FormulaExpression,
+    ModeloDefinition,
+    ParameterDefinition,
+    RegistryCatalogues,
+    RegistrySnapshot,
+)
 from .._snapshot import build_snapshot
+
+
+def _evaluate(
+    expression: FormulaExpression,
+    values: Mapping[CasillaId, Decimal] | None = None,
+    *,
+    parameters: Mapping[str, ParameterDefinition] | None = None,
+    enum_bindings: Mapping[str, str] | None = None,
+) -> Decimal:
+    """Evaluate one formula expression in isolation, outside a full snapshot run.
+
+    ``values`` (positional) supplies resolved casilla operands; ``parameters``
+    and ``enum_bindings`` (keyword-only) supply the parameter table and enum
+    dispatch a lookup-by-* op needs. All three default to empty, so a caller
+    exercising only casilla arithmetic can omit the ones its op does not read.
+    """
+    operand_refs: list[str] = []
+    operand_casilla_refs: list[CasillaId] = []
+    operand_values: list[Decimal] = []
+    return _evaluate_expression(
+        expression,
+        values=dict(values or {}),
+        binding_values={},
+        parameters=dict(parameters or {}),
+        date_context={"filing_period": date(2025, 12, 31)},
+        relation_values={},
+        operand_refs=operand_refs,
+        operand_casilla_refs=operand_casilla_refs,
+        operand_values=operand_values,
+        enum_binding_values=dict(enum_bindings or {}),
+        unresolved_relation_ids=frozenset(),
+        unresolved_casilla_ids=set(),
+    )
 
 _PREVIOUS_YEAR_NET_INCOME_BINDING = "irpf.previous_year_economic_activity_net_income"
 _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING = "modelo-130-resultados-negativos-anteriores"

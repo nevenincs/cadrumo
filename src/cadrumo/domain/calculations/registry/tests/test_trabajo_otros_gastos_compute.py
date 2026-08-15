@@ -27,15 +27,13 @@ under test (``aeat-quality-gates``).
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from datetime import date
 from decimal import Decimal
 from functools import lru_cache
 
 import pytest
 
-from .._formula_runtime import _evaluate_expression
-from .._schema import CasillaId, FormulaDefinition, FormulaExpression, ModeloRevision
+from .._schema import CasillaId, FormulaDefinition, ModeloRevision
+from ._formula_runtime_support import _evaluate
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -48,25 +46,6 @@ _IN_SCOPE_REVISIONS: tuple[str, ...] = ("2021", "2022", "2023", "2024", "2025")
 # revision; this constant is the independent legal oracle the test asserts
 # against.
 _ART_19_2F_OTROS_GASTOS_EUR = Decimal("2000")
-
-
-def _evaluate(expression: FormulaExpression, values: Mapping[CasillaId, Decimal]) -> Decimal:
-    operand_refs: list[str] = []
-    operand_casilla_refs: list[CasillaId] = []
-    operand_values: list[Decimal] = []
-    return _evaluate_expression(
-        expression,
-        values=values,
-        binding_values={},
-        parameters={},
-        date_context={"filing_period": date(2025, 12, 31)},
-        relation_values={},
-        operand_refs=operand_refs,
-        operand_casilla_refs=operand_casilla_refs,
-        operand_values=operand_values,
-        unresolved_relation_ids=frozenset(),
-        unresolved_casilla_ids=set(),
-    )
 
 
 @lru_cache

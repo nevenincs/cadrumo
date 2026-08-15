@@ -159,19 +159,20 @@ def _conf_language_config() -> dict[str, object]:
         "'language': ns['language'],"
         "'valid_languages': sorted(ns['_VALID_DOCS_LANGUAGES'])}))"
     )
-    env = {
-        **os.environ,
-        "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
-        "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(prefix="cadrumo-locale-parity-"),
-    }
-    result = subprocess.run(
-        [sys.executable, "-c", script],
-        cwd=_REPO_ROOT,
-        capture_output=True,
-        text=True,
-        env=env,
-        check=False,
-    )
+    with tempfile.TemporaryDirectory(prefix="cadrumo-locale-parity-") as storage_root:
+        env = {
+            **os.environ,
+            "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
+            "CADRUMO_LOCAL_STORAGE_ROOT": storage_root,
+        }
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            env=env,
+            check=False,
+        )
     assert result.returncode == 0, result.stdout + result.stderr
     line = next(row for row in result.stdout.splitlines() if row.startswith("LANG_CONFIG="))
     return json.loads(line[len("LANG_CONFIG=") :])

@@ -161,20 +161,21 @@ def _conf_switcher_context(language: str) -> dict[str, object]:
         "'is_default': ctx['cadrumo_docs_language_is_default'],"
         "'languages': ctx['cadrumo_docs_languages']}))"
     )
-    env = {
-        **os.environ,
-        "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
-        "CADRUMO_DOCS_LANGUAGE": language,
-        "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(prefix="cadrumo-switcher-ctx-"),
-    }
-    result = subprocess.run(
-        [sys.executable, "-c", script],
-        cwd=_REPO_ROOT,
-        capture_output=True,
-        text=True,
-        env=env,
-        check=False,
-    )
+    with tempfile.TemporaryDirectory(prefix="cadrumo-switcher-ctx-") as storage_root:
+        env = {
+            **os.environ,
+            "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
+            "CADRUMO_DOCS_LANGUAGE": language,
+            "CADRUMO_LOCAL_STORAGE_ROOT": storage_root,
+        }
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            env=env,
+            check=False,
+        )
     assert result.returncode == 0, result.stdout + result.stderr
     line = next(row for row in result.stdout.splitlines() if row.startswith("SWITCHER="))
     return json.loads(line[len("SWITCHER=") :])
