@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:20b2ab4ce654bb29392b634e3971e96d3f188d82accbbecb97a8994a9f716743'
+body_hash: 'sha256:d9cff3564c74b91fbb9b6977b44b19dc31c5b034c536cdfd47a172b5011f14c2'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1103,3 +1103,59 @@ mismatch -- the standing tree-wide registry red, now reaching the packaging
 probe. This change alters WHERE wheels are built and never their content, so it
 cannot produce a registry validation error. Checked by reading the actual
 exception rather than accepting the pass/fail count.
+
+## Round: four dev targets ruled out, and a correction to how the table is read
+
+No change this round. Every remaining dev target above ~40s was investigated
+and each is either irreducible, protected, or was never as expensive as the
+table said.
+
+### `-n auto` durations rank work PLUS contention
+
+`test_checked_rehoming_ledger_is_an_exact_live_source_join` sat at 45.57s in the
+table. Its components, measured in isolation, are
+`current_source_fingerprints` 10.5s (called ONCE),
+`load_rehoming_ledger` 0.6s x 6, and `_historical_non_null_identities` 0.6s --
+about 12s of work. Run alone it takes **12.94s**.
+
+So the durations entry was ~3.5x its own work; the rest was time spent competing
+with five sibling workers. That is not a flaw in pytest -- wall clock is wall
+clock -- but it is a flaw in reading the table as a work ranking.
+
+The consequence for this campaign: a mid-table `-n auto` entry must be
+re-measured in isolation BEFORE it is treated as a target, or the "optimisation"
+chases waiting rather than working. The top entries here survive that test
+because they are subprocess-bound builds whose cost is real, but nothing below
+them should be trusted on the table alone. Every earlier win in this document
+was verified by isolated or component measurement, so none of them rests on this
+mistake -- but only by habit, not because the hazard was understood.
+
+### Ruled out, with the measurement
+
+**`test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary`
+(177.91s).** One test performing three genuine builds -- wheel, companions and
+sdist -- from `commit_defined_build_root`, a clean commit-defined extract. The
+module's only other test exercises `commit_defined_build_root` against tiny
+synthetic repositories and is cheap. Its build root DIFFERS from the
+split-install module's (`_REPO_ROOT`), so its artifacts cannot be served from
+the fixture added there. Nothing is duplicated; the cost is three builds it is
+the point of the test to perform.
+
+**`test_live_fixture_ownership_manifest_is_complete_and_has_no_substitutable_duplicate`
+(47.39s).** `census(REPO_ROOT)` measures 37.16s and 39.12s on consecutive calls
+-- uncached -- over 5651 files. But `check_manifest` calls it exactly ONCE, so
+there is nothing to share.
+
+More importantly, memoising `census` would be actively wrong. `stable_manifest`
+and `stable_census` snapshot the source universe BEFORE and AFTER the scan and
+refuse a tree that moved during it. A cached census returns a result computed at
+some earlier moment while the guard compares two fresh snapshots around what has
+become a no-op -- the guard would still pass, having watched nothing. This is
+the third instance of the same shape in this campaign, after the drift census
+and the tax-id determinism pair.
+
+**`test_no_reviewed_acceptance_is_reported_as_a_failing_hotspot` (42.92s).** One
+`audit_complexity()` call. Its other caller lives in a different module, and
+under `--dist=loadfile` different modules land on different workers, so there is
+no shared process to memoise into. Cross-module sharing here would pay off only
+when the scheduler happened to co-locate them.
