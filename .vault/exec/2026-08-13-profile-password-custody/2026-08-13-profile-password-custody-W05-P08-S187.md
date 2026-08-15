@@ -5,44 +5,11 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:c21f61245584168a739a38cc8302337351796878ef835d27dc5d6d2e0a1bfe9c'
+body_hash: 'sha256:e9ce48c7694b88c2b3e3d26b68e3acd0b38f1442d40a7a7b9701ce30fabf3dd0'
 step_id: 'S187'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace profile-password-custody with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S187 and 2026-08-13-profile-password-custody-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Have Sol Medium rule how a reset clears authority state for a target it has not unlocked, since revoking the authority browser session genuinely requires the key because that session is an encrypted row inside the bucket, while a reset holds locks on targets whose key nobody holds, making the auth phase structurally unreachable in exactly the way the retention assessment was before it was rewired, and seventeen reset failures now rest on this one refusal and ## Scope
-
-- `src/cadrumo/application/config_reset.py and src/cadrumo/application/auth/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Have Sol Medium rule how a reset clears authority state for a target it has not unlocked, since revoking the authority browser session genuinely requires the key because that session is an encrypted row inside the bucket, while a reset holds locks on targets whose key nobody holds, making the auth phase structurally unreachable in exactly the way the retention assessment was before it was rewired, and seventeen reset failures now rest on this one refusal
 

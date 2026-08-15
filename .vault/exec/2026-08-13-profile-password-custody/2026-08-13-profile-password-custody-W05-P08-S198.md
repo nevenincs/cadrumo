@@ -5,14 +5,11 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:48df88a092f6b498e23c746e14c08d373a3f814a5b5fb9d8a984f31ef6b636f9'
+body_hash: 'sha256:e0520866796e5b8c7b494a64354d7762f07e3fd7a3a7dee20cde4d9aa56d3c89'
 step_id: 'S198'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
-
-
-
 
 # Have Terra XHigh stop the profile deletion transaction invalidating its own preflight, since a live login holds the capsule database open so its write-ahead and shared-memory sidecars are inventoried into the prepared deletion marker, and the first act of execution revokes the session which checkpoints and removes exactly those sidecars, so the source-marker re-inventory can never match its own prepared digest and a profile the operator is signed into cannot be deleted at all, which the configuration reset path reaches directly by running prepare and confirm and delete with no prior session close
 
