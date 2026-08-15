@@ -24,9 +24,24 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from ..operator_actions import ActionCatalogue, ActionCatalogueEntry
 from ._contract import get_operator_surface_contract
+from ._errors import OperatorSurfaceContractError
 from ._models import ManifestActionProfile, OperatorSurfaceContract
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+
+def _refuse(surface: str, diagnostics: list[str]) -> None:
+    """Raise one typed refusal carrying every accumulated disagreement.
+
+    The join accumulates rather than raising at the first disagreement. A
+    reconciliation that stops at the first orphan reports one item per crash,
+    so repairing it merely uncovers the next: three retired custody families
+    were declared while only the first was ever named by the refusal. The
+    complete census has to survive one read.
+    """
+    if not diagnostics:
+        return
+    raise OperatorSurfaceContractError(surface, reason="; ".join(diagnostics))
 
 
 def _require_non_blank_inventory_text(value: str) -> str:
@@ -398,45 +413,63 @@ def _index_subject_rows[
     *,
     source: ReconciliationSurface,
     live_subjects: frozenset[str],
+    diagnostics: list[str],
 ) -> dict[str, InventoryRow]:
-    """Index one leaf-keyed source while refusing duplicate or orphan rows."""
+    """Index one leaf-keyed source while recording duplicate or orphan rows."""
     indexed: dict[str, InventoryRow] = {}
     for row in rows:
         key = row.subject_leaf_key
         if key not in live_subjects:
-            raise ValueError(f"unmatched {source.value} identity: {key}")
+            diagnostics.append(f"unmatched {source.value} identity: {key}")
+            continue
         if key in indexed:
-            raise ValueError(f"duplicate {source.value} identity: {key}")
+            diagnostics.append(f"duplicate {source.value} identity: {key}")
+            continue
         indexed[key] = row
     return indexed
 
 
-def _index_live_leaves(rows: tuple[LiveLeafInventoryRow, ...]) -> dict[str, LiveLeafInventoryRow]:
-    """Index leaves and ensure canonical and alias paths resolve unambiguously."""
+def _index_live_leaves(
+    rows: tuple[LiveLeafInventoryRow, ...],
+    *,
+    diagnostics: list[str],
+) -> dict[str, LiveLeafInventoryRow]:
+    """Index leaves and record canonical or alias paths that resolve ambiguously."""
     indexed: dict[str, LiveLeafInventoryRow] = {}
     path_owners: dict[tuple[str, ...], str] = {}
     for row in rows:
         if row.subject_leaf_key in indexed:
-            raise ValueError(f"duplicate live leaf identity: {row.subject_leaf_key}")
+            diagnostics.append(f"duplicate live leaf identity: {row.subject_leaf_key}")
+            continue
         if row.canonical_cli_path in row.alias_cli_paths:
-            raise ValueError(f"canonical CLI path is also an alias: {row.subject_leaf_key}")
+            diagnostics.append(f"canonical CLI path is also an alias: {row.subject_leaf_key}")
         for path in (row.canonical_cli_path, *row.alias_cli_paths):
             previous = path_owners.get(path)
             if previous is not None:
-                raise ValueError(f"ambiguous CLI path {' '.join(path)}: {previous} and {row.subject_leaf_key}")
+                diagnostics.append(f"ambiguous CLI path {' '.join(path)}: {previous} and {row.subject_leaf_key}")
+                continue
             path_owners[path] = row.subject_leaf_key
         indexed[row.subject_leaf_key] = row
     if not indexed:
-        raise ValueError("live leaf inventory must not be empty")
+        # The authority itself is missing, so every downstream projection would
+        # be reported orphaned against an empty denominator. Refuse here rather
+        # than emit a census of false orphans.
+        diagnostics.append("live leaf inventory must not be empty")
+        _refuse("operator_surface_reconciliation", diagnostics)
     return indexed
 
 
-def _index_families(rows: tuple[MountedFamilyInventoryRow, ...]) -> dict[tuple[str, str], MountedFamilyInventoryRow]:
+def _index_families(
+    rows: tuple[MountedFamilyInventoryRow, ...],
+    *,
+    diagnostics: list[str],
+) -> dict[tuple[str, str], MountedFamilyInventoryRow]:
     """Index mounted declarations by their contract-defined root/child identity."""
     indexed: dict[tuple[str, str], MountedFamilyInventoryRow] = {}
     for row in rows:
         if row.identity in indexed:
-            raise ValueError(f"duplicate mounted family identity: {' '.join(row.identity)}")
+            diagnostics.append(f"duplicate mounted family identity: {' '.join(row.identity)}")
+            continue
         indexed[row.identity] = row
     return indexed
 
@@ -445,15 +478,18 @@ def _index_exclusions(
     rows: tuple[ExplicitExclusionInventoryRow, ...],
     *,
     live_subjects: frozenset[str],
+    diagnostics: list[str],
 ) -> dict[tuple[str, ReconciliationSurface], ExplicitExclusionInventoryRow]:
-    """Index explicit omissions while rejecting duplicates and orphan identities."""
+    """Index explicit omissions while recording duplicates and orphan identities."""
     indexed: dict[tuple[str, ReconciliationSurface], ExplicitExclusionInventoryRow] = {}
     for row in rows:
         if row.subject_leaf_key not in live_subjects:
-            raise ValueError(f"unmatched exclusion identity: {row.subject_leaf_key}")
+            diagnostics.append(f"unmatched exclusion identity: {row.subject_leaf_key}")
+            continue
         key = (row.subject_leaf_key, row.surface)
         if key in indexed:
-            raise ValueError(f"duplicate exclusion: {row.subject_leaf_key} / {row.surface.value}")
+            diagnostics.append(f"duplicate exclusion: {row.subject_leaf_key} / {row.surface.value}")
+            continue
         indexed[key] = row
     return indexed
 
@@ -464,24 +500,36 @@ def _require_accounting(
     surface: ReconciliationSurface,
     row: object | None,
     exclusions: dict[tuple[str, ReconciliationSurface], ExplicitExclusionInventoryRow],
+    diagnostics: list[str],
 ) -> object | None:
     """Require one source row or a deliberate, attributable exclusion."""
     exclusion = exclusions.get((subject_leaf_key, surface))
     if row is None:
         if exclusion is None:
-            raise ValueError(f"missing {surface.value} accounting for {subject_leaf_key}; explicit exclusion required")
+            diagnostics.append(
+                f"missing {surface.value} accounting for {subject_leaf_key}; explicit exclusion required"
+            )
         return None
     if exclusion is not None:
-        raise ValueError(f"{surface.value} is both declared and excluded for {subject_leaf_key}")
+        diagnostics.append(f"{surface.value} is both declared and excluded for {subject_leaf_key}")
     return row
 
 
-def _require_reached_mounted_families(
+def _reconcile_mounted_families(
     *,
     live_by_subject: dict[str, LiveLeafInventoryRow],
     family_by_identity: dict[tuple[str, str], MountedFamilyInventoryRow],
+    diagnostics: list[str],
 ) -> None:
-    """Reject mounted-family declarations no live canonical path reaches."""
+    """Reconcile mounted-family declarations against the live tree, both ways.
+
+    The live command tree is the authority for a family's existence, so the
+    check is symmetric: a declaration no live canonical path reaches is a dead
+    manifest entry that advertises a door which is not there, and a live family
+    with no declaration is a mounted subtree the capability manifest omits, so
+    an operator agent reads an authoritative-looking tool map with a hole in it.
+    Neither direction is a warning.
+    """
     reached_family_identities = frozenset(
         (leaf.canonical_cli_path[0], leaf.canonical_cli_path[1])
         for leaf in live_by_subject.values()
@@ -489,7 +537,9 @@ def _require_reached_mounted_families(
     )
     for identity, declaration in family_by_identity.items():
         if identity not in reached_family_identities:
-            raise ValueError(f"orphan mounted family declaration {' '.join(identity)} from {declaration.provenance}")
+            diagnostics.append(f"orphan mounted family declaration {' '.join(identity)} from {declaration.provenance}")
+    for identity in sorted(reached_family_identities - frozenset(family_by_identity)):
+        diagnostics.append(f"live mounted family with no contract declaration: {' '.join(identity)}")
 
 
 def _reconcile_mcp_exposure(
@@ -498,22 +548,23 @@ def _reconcile_mcp_exposure(
     profile_policy: object | None,
     mcp_exposure: McpExposureInventoryRow | None,
     exclusions: dict[tuple[str, ReconciliationSurface], ExplicitExclusionInventoryRow],
+    diagnostics: list[str],
 ) -> McpExposureInventoryRow | None:
     """Require attributable MCP absence and enforce the profile exposure policy."""
     mcp_exclusion = exclusions.get((subject_leaf_key, ReconciliationSurface.MCP_EXPOSURE))
     if mcp_exposure is None:
         if mcp_exclusion is None:
-            raise ValueError(f"missing mcp_exposure accounting for {subject_leaf_key}; explicit exclusion required")
+            diagnostics.append(f"missing mcp_exposure accounting for {subject_leaf_key}; explicit exclusion required")
     elif mcp_exposure.exposed:
         if mcp_exclusion is not None:
-            raise ValueError(f"mcp_exposure is both exposed and excluded for {subject_leaf_key}")
+            diagnostics.append(f"mcp_exposure is both exposed and excluded for {subject_leaf_key}")
     elif mcp_exclusion is None:
-        raise ValueError(f"silent MCP exclusion for {subject_leaf_key}; reason and authority required")
+        diagnostics.append(f"silent MCP exclusion for {subject_leaf_key}; reason and authority required")
 
     if isinstance(profile_policy, ProfilePolicyInventoryRow):
         observed_exposure = mcp_exposure.exposed if mcp_exposure is not None else False
         if profile_policy.should_expose_via_mcp != observed_exposure:
-            raise ValueError(
+            diagnostics.append(
                 f"MCP exposure contradicts profile policy for {subject_leaf_key}: "
                 f"expected {profile_policy.should_expose_via_mcp}, observed {observed_exposure}"
             )
@@ -543,6 +594,7 @@ def _reconcile_live_leaf(
     policy_by_subject: dict[str, ProfilePolicyInventoryRow],
     mcp_by_subject: dict[str, McpExposureInventoryRow],
     exclusions: dict[tuple[str, ReconciliationSurface], ExplicitExclusionInventoryRow],
+    diagnostics: list[str],
 ) -> ReconciledOperatorLeaf:
     """Account for every required projection of one live command leaf."""
     result_schema = _require_accounting(
@@ -550,18 +602,21 @@ def _reconcile_live_leaf(
         surface=ReconciliationSurface.RESULT_SCHEMA,
         row=result_by_subject.get(subject_leaf_key),
         exclusions=exclusions,
+        diagnostics=diagnostics,
     )
     input_schema = _require_accounting(
         subject_leaf_key=subject_leaf_key,
         surface=ReconciliationSurface.INPUT_SCHEMA,
         row=input_by_subject.get(subject_leaf_key),
         exclusions=exclusions,
+        diagnostics=diagnostics,
     )
     profile_policy = _require_accounting(
         subject_leaf_key=subject_leaf_key,
         surface=ReconciliationSurface.PROFILE_POLICY,
         row=policy_by_subject.get(subject_leaf_key),
         exclusions=exclusions,
+        diagnostics=diagnostics,
     )
     canonical_path = live_leaf.canonical_cli_path
     family_identity = (canonical_path[0], canonical_path[1]) if len(canonical_path) > 1 else None
@@ -570,12 +625,14 @@ def _reconcile_live_leaf(
         surface=ReconciliationSurface.MOUNTED_FAMILY,
         row=family_by_identity.get(family_identity) if family_identity is not None else None,
         exclusions=exclusions,
+        diagnostics=diagnostics,
     )
     mcp_exposure = _reconcile_mcp_exposure(
         subject_leaf_key=subject_leaf_key,
         profile_policy=profile_policy,
         mcp_exposure=mcp_by_subject.get(subject_leaf_key),
         exclusions=exclusions,
+        diagnostics=diagnostics,
     )
     return ReconciledOperatorLeaf(
         live_leaf=live_leaf,

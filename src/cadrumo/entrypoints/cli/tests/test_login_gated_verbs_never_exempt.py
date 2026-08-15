@@ -68,8 +68,7 @@ def test_no_exempt_prefix_reaches_a_login_gated_verb(gated: LoginGatedVerb) -> N
         if gated.verb_path == exempt or gated.verb_path.startswith(f"{exempt} ")
     ]
     assert not swallowing, (
-        f"the exempt prefix(es) {swallowing} reach {gated.verb_path!r}, which must stay login-gated. "
-        f"{gated.reason}"
+        f"the exempt prefix(es) {swallowing} reach {gated.verb_path!r}, which must stay login-gated. {gated.reason}"
     )
 
 

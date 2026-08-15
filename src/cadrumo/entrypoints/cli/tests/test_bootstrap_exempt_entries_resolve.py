@@ -37,7 +37,9 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import cast
 
+import click
 import pytest
 from click import Context as ClickContext
 from typer.main import get_command
@@ -58,7 +60,39 @@ _CITING_ENTRIES = tuple(
 _READ_ONLY_CLAIMS = tuple(exemption for exemption in BOOTSTRAP_EXEMPTIONS if exemption.asserts_family_read_only)
 
 
-def _walk(verb_path: str) -> tuple[object | None, ClickContext | None]:
+def _root_command() -> click.Command:
+    """The live command tree, typed as upstream click.
+
+    Typer vendors its own Click fork, so ``typer.main.get_command`` is declared
+    to return ``typer._click.core.Command``; it is the same object family at
+    runtime as the ``click.Command`` this module walks. The cast bridges the
+    static vendored/upstream duality only, as the shared CLI runner does.
+    """
+    return cast(click.Command, get_command(app))
+
+
+def _child_of(command: click.Command, context: ClickContext, token: str) -> click.Command | None:
+    """Return ``command``'s ``token`` subcommand, materialising a lazy group.
+
+    Duck-typed rather than gated on ``isinstance(command, click.Group)``: Typer
+    vendors its own Click fork, so an ``isinstance`` test against the upstream
+    class silently matches nothing and would report every group as a leaf.
+    """
+    getter = getattr(command, "get_command", None)
+    if getter is None:
+        return None
+    return cast("click.Command | None", getter(context, token))
+
+
+def _subcommand_names(command: click.Command, context: ClickContext) -> list[str]:
+    """Return ``command``'s subcommand names, empty when it is a leaf."""
+    lister = getattr(command, "list_commands", None)
+    if lister is None:
+        return []
+    return sorted(cast("list[str]", lister(context)))
+
+
+def _walk(verb_path: str) -> tuple[click.Command | None, ClickContext | None]:
     """Resolve ``verb_path`` exactly as dispatch does, token by token from the root.
 
     Threads a fresh child context at each level so lazily-loaded subcommand
@@ -69,14 +103,10 @@ def _walk(verb_path: str) -> tuple[object | None, ClickContext | None]:
     pass an entry that no operator can reach and that the gate can never fire
     on — the exact shape that let a dead entry survive a re-derivation pass.
     """
-    root = get_command(app)
-    command: object = root
-    context = ClickContext(root, info_name=str(root.name))
+    command = _root_command()
+    context = ClickContext(command, info_name=str(command.name))
     for token in verb_path.split():
-        getter = getattr(command, "get_command", None)
-        if getter is None:
-            return None, None
-        child = getter(context, token)
+        child = _child_of(command, context, token)
         if child is None:
             return None, None
         context = ClickContext(child, info_name=token, parent=context)
@@ -95,14 +125,15 @@ def _live_subtree(verb_path: str) -> tuple[str, ...]:
     command, context = _walk(verb_path)
     assert command is not None and context is not None, verb_path
 
-    def _leaves(node: object, ctx: ClickContext, prefix: str) -> list[str]:
-        lister = getattr(node, "list_commands", None)
-        names = sorted(lister(ctx)) if lister is not None else []
+    def _leaves(node: click.Command, ctx: ClickContext, prefix: str) -> list[str]:
+        names = _subcommand_names(node, ctx)
         if not names:
             return [prefix]
         collected: list[str] = []
         for name in names:
-            child = node.get_command(ctx, name)  # type: ignore[attr-defined]
+            child = _child_of(node, ctx, name)
+            if child is None:
+                continue
             child_ctx = ClickContext(child, info_name=name, parent=ctx)
             collected.extend(_leaves(child, child_ctx, f"{prefix} {name}".strip()))
         return collected
@@ -228,5 +259,5 @@ def test_the_matched_paths_are_derived_from_the_records() -> None:
     """
     from .._bootstrap_exempt import BOOTSTRAP_EXEMPT_VERB_PATHS
 
-    assert BOOTSTRAP_EXEMPT_VERB_PATHS == tuple(exemption.verb_path for exemption in BOOTSTRAP_EXEMPTIONS)
+    assert tuple(exemption.verb_path for exemption in BOOTSTRAP_EXEMPTIONS) == BOOTSTRAP_EXEMPT_VERB_PATHS
     assert len(set(BOOTSTRAP_EXEMPT_VERB_PATHS)) == len(BOOTSTRAP_EXEMPT_VERB_PATHS)

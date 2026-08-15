@@ -12,6 +12,7 @@ data_type = "year"
 semantic_role = "filing_year"
 required = true
 input_kind = "informational"
+export_refs = ["modelo-604-p01-ejercicio"]
 legal_refs = ["orden-hac-510-2021:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-604-procedure"]
 
@@ -23,5 +24,6 @@ data_type = "period_code"
 semantic_role = "filing_period"
 required = true
 input_kind = "informational"
+export_refs = ["modelo-604-p01-periodo"]
 legal_refs = ["orden-hac-510-2021:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-604-procedure"]

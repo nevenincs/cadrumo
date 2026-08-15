@@ -1930,6 +1930,19 @@ applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/folleto-actividades-economicas/7-otras-obligaciones-fiscales-retenciones/7_3-retenciones-arrendamiento-bienes-inmuebles-180.html"
 review_status = "reviewed"
 
+[sources."boe-rirpf-art-108-retencion-deadline"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/rd-439-2007-art-108.html"
+sha256 = "012e6624c2f89f4c7a82df00b6638e5117af0fedd63ca9516bb2dcdcd4076ee8"
+bytes = 2378
+retrieved_at = 2026-05-15
+published_at = 2007-03-31
+applies_from = 2007-04-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a108"
+review_status = "reviewed"
+
 [sources."aeat-dr-180-2023"]
 evidence_tier = "layout_authority"
 authority = "aeat"

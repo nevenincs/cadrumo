@@ -5471,12 +5471,18 @@ cli:
       next_heading: What to type next
       next_step:
         command_guide: Return to the command guide.
+        create_profile: Create a taxpayer profile before importing data or starting
+          a declaration.
         import_transactions: Import a bank statement to record your transactions.
         modelo_210_sede_only: Modelo 210 is visible for IRNR discovery, but local
           work-unit creation is not supported yet; file through AEAT Sede G320.
         repair_storage: Run storage diagnostics for detail. Do not quarantine rows
           unless you intentionally want to archive unreadable old local data.
+        resume_work_unit: Resume an existing work unit.
         review_ledger: Review imported rows.
+        start_another_work_unit: Start another work unit for a different Modelo.
+        start_work_unit_from_ledger: Start a work unit using the data already in your
+          ledger.
       profile_active: You are working in profile `%{profile}`.
       profile_missing: No active profile is configured. Create one before importing
         data.
@@ -5711,6 +5717,8 @@ docs:
         for the pago fraccionado
       ledger_renta_income_aggregation: from your ledger income
       ledger_transaction: from your ledger transactions
+      m303_regimen_simplificado_annual_summary: from Modelo 303's simplified-regime
+        annual summary
       manual_input: from a value you supply
       payable_invoice: from the invoices you received
       previous_filing: from your previous filing
@@ -7389,6 +7397,7 @@ flows:
             totals
           ledger_renta_income_aggregation: Income ledger totals
           ledger_transaction: Ledger transaction
+          m303_regimen_simplificado_annual_summary: Modelo 303 simplified-regime summary
           manual_input: Manual input
           payable_invoice: Supplier invoice
           previous_filing: Previous filing

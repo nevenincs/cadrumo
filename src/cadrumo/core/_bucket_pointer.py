@@ -16,13 +16,15 @@ TOML and pydantic validation failures are deliberate hard failures for
 ``read_pointer``; they are not treated as "no active profile" because that
 would silently fall back to root storage.
 
-This module is also distinct from the application-layer manifest scanners:
-:class:`~application.workflow.ProfileBucketPointer` records are derived
-from ``buckets/*/manifest.toml`` and prove registered profile metadata. A
-``BucketPointer`` only names the intended active bucket; it does not prove the
-bucket exists, read a manifest, or validate lifecycle status. The companion
-:mod:`core._bucket_pointer_io` module owns the file boundary, while this
-module owns strict validation and deterministic serialisation only.
+This module is also distinct from the application-layer capsule scanners:
+:class:`~application.workflow.ProfileBucketPointer` records are derived from
+the committed custody capsule projection (``CommittedProfileRepository``,
+seeded by ``list_current_profile_custody_capsule_ids``) and prove registered
+profile metadata. A ``BucketPointer`` only names the intended active bucket;
+it does not prove the bucket exists, read a capsule, or validate lifecycle
+status. The companion :mod:`core._bucket_pointer_io` module owns the file
+boundary, while this module owns strict validation and deterministic
+serialisation only.
 """
 
 from __future__ import annotations

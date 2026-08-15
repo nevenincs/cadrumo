@@ -5913,6 +5913,8 @@ cli:
       next_heading: Que escribir ahora
       next_step:
         command_guide: Vuelve a la guía de comandos.
+        create_profile: Crea un perfil de contribuyente antes de importar datos o
+          iniciar una declaración.
         import_transactions: Importa un extracto bancario para registrar tus movimientos.
         modelo_210_sede_only: Modelo 210 está visible para descubrimiento IRNR, pero
           la creación local de unidades de trabajo aún no está soportada; presenta
@@ -5920,7 +5922,9 @@ cli:
         repair_storage: Ejecuta el diagnóstico de almacenamiento para ver el detalle.
           No pongas filas en cuarentena salvo que quieras archivar deliberadamente
           datos locales antiguos ilegibles.
+        resume_work_unit: Reanuda una unidad de trabajo existente.
         review_ledger: Revisa las filas importadas.
+        start_another_work_unit: Inicia otra unidad de trabajo para un modelo distinto.
         start_work_unit_from_ledger: Inicia una declaración de modelo a partir de
           los datos de tu libro.
       profile_active: Estas trabajando en el perfil `%{profile}`.
@@ -6160,6 +6164,8 @@ docs:
         fraccionado
       ledger_renta_income_aggregation: desde sus ingresos registrados
       ledger_transaction: desde sus movimientos registrados
+      m303_regimen_simplificado_annual_summary: desde el resumen anual del régimen
+        simplificado del modelo 303
       manual_input: desde un valor que usted aporta
       payable_invoice: desde las facturas recibidas
       previous_filing: desde su declaración anterior
@@ -7940,6 +7946,8 @@ flows:
             pago fraccionado
           ledger_renta_income_aggregation: Totales de ingresos
           ledger_transaction: Movimiento del libro
+          m303_regimen_simplificado_annual_summary: Resumen régimen simplificado (modelo
+            303)
           manual_input: Entrada manual
           payable_invoice: Factura recibida
           previous_filing: Declaración anterior

@@ -1,0 +1,82 @@
+[[revisions."2008-y-siguientes".export_layouts]]
+id = "modelo-347-fichero-boe"
+legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2008-y-siguientes".export_layouts.records]]
+id = "modelo-347-declarante"
+record_type = "declarante"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "none"
+binding_record = "m347_declarante_summary"
+
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
+id = "modelo-347-decl-record-type"
+offset = 1
+length = 1
+kind = "literal"
+literal = "1"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
+id = "modelo-347-decl-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "347"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
+id = "modelo-347-decl-ejercicio"
+offset = 5
+length = 4
+kind = "casilla"
+casilla_id = "decl.ejercicio"
+data_type = "integer"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
+id = "modelo-347-decl-nif"
+offset = 9
+length = 9
+kind = "header"
+producer_key = "presenter.tax_id"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2008-y-siguientes".export_layouts.records.fields]]
+id = "modelo-347-decl-tipo-declaracion"
+offset = 121
+length = 2
+kind = "casilla"
+casilla_id = "decl.tipo-declaracion"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]

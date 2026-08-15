@@ -5781,6 +5781,8 @@ cli:
       next_heading: Mit gépeljen be ezután
       next_step:
         command_guide: Térjen vissza a parancsútmutatóhoz.
+        create_profile: Hozzon létre adózói profilt, mielőtt adatokat importálna vagy
+          bevallást indítana.
         import_transactions: Importáljon bankkivonatot a tranzakciói rögzítéséhez.
         modelo_210_sede_only: A Modelo 210 IRNR-felderítéshez látható, de a helyi
           munkaegység-létrehozás még nem támogatott; nyújtsa be az AEAT Sede G320
@@ -5788,7 +5790,9 @@ cli:
         repair_storage: Futtassa a tároló-diagnosztikát a részletekért. Ne helyezzen
           sorokat karanténba, hacsak nem szándékosan archiválja az olvashatatlan régi
           helyi adatokat.
+        resume_work_unit: Folytasson egy meglévő munkaegységet.
         review_ledger: Tekintse át az importált sorokat.
+        start_another_work_unit: Indítson egy másik munkaegységet egy eltérő modelóhoz.
         start_work_unit_from_ledger: Indítson modelo bevallást a főkönyvi adataiból.
       profile_active: A(z) `%{profile}` profilban dolgozik.
       profile_missing: Nincs beállítva aktív profil. Hozzon létre egyet az adatok
@@ -6020,6 +6024,8 @@ docs:
       ledger_renta_gastos_pago_fraccionado_aggregation: a pago fraccionado költségeiből
       ledger_renta_income_aggregation: a nyilvántartott bevételeiből
       ledger_transaction: a nyilvántartott tételeiből
+      m303_regimen_simplificado_annual_summary: a 303-as modelo egyszerűsített rendszerének
+        éves összesítéséből
       manual_input: az Ön által megadott értékből
       payable_invoice: a befogadott számláiból
       previous_filing: a korábbi bevallásából
@@ -7733,6 +7739,8 @@ flows:
             összesítése
           ledger_renta_income_aggregation: Jövedelmek összesítése
           ledger_transaction: Nyilvántartási tétel
+          m303_regimen_simplificado_annual_summary: 303-as modelo egyszerűsített rendszer
+            összesítő
           manual_input: Kézi adatbevitel
           payable_invoice: Bejövő számla
           previous_filing: Előző bevallás

@@ -11,6 +11,7 @@ from __future__ import annotations
 import os
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Final
 from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
@@ -30,13 +31,16 @@ from ..profile_custody import (
 
 _MAX_BYTES = 8 * 1024
 
+LEGAL_HOLD_SNAPSHOT_SCHEMA_VERSION: Final[int] = 1
+"""Current on-disk schema version of :class:`LegalHoldCaseSnapshot` documents."""
+
 
 class LegalHoldCaseSnapshot(BaseModel):
     """Durable legal-owner fact: exactly the known open case identifiers."""
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: int = Field(default=1, frozen=True)
+    schema_version: int = Field(default=LEGAL_HOLD_SNAPSHOT_SCHEMA_VERSION, frozen=True)
     profile_id: UUID
     open_case_ids: tuple[str, ...]
     observed_at: datetime
@@ -92,7 +96,7 @@ class LegalHoldCaseSnapshot(BaseModel):
         observed_at: datetime,
     ) -> LegalHoldCaseSnapshot:
         unsigned = cls.model_construct(
-            schema_version=1,
+            schema_version=LEGAL_HOLD_SNAPSHOT_SCHEMA_VERSION,
             profile_id=profile_id,
             open_case_ids=open_case_ids,
             observed_at=observed_at,
@@ -169,4 +173,4 @@ class LegalHoldCaseAuthority:
         ensure_profile_custody_owner_root(self._local_record_store, self._root)
 
 
-__all__ = ["LegalHoldCaseAuthority", "LegalHoldCaseSnapshot"]
+__all__ = ["LEGAL_HOLD_SNAPSHOT_SCHEMA_VERSION", "LegalHoldCaseAuthority", "LegalHoldCaseSnapshot"]
