@@ -60,7 +60,7 @@ def _project_root() -> Path:
 
 def _populate_schema_registry() -> None:
     """Load schemas through the production payload-module discovery path."""
-    from cadrumo.entrypoints.cli._app_contract import _ensure_result_schemas_registered
+    from cadrumo.entrypoints.cli._command_schema import _ensure_result_schemas_registered
 
     failures = _ensure_result_schemas_registered()
     assert failures == (), f"payload schema modules failed to import: {failures!r}"

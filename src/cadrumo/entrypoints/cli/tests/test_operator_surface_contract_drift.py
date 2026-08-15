@@ -3,13 +3,12 @@
 The companion of :func:`test_every_cli_leaf_has_a_registered_schema`. That gate
 proves every CLI leaf has a registered JSON schema; this one proves the
 :class:`~cadrumo.application.operator_surface.OperatorSurfaceContract` — the source
-the ``aeat app contract`` capability manifest (and, later, the MCP ``tools/list``)
-is built from — declares *exactly* the mounted command families and their
-sub-verbs.
+the operator capability manifest (and the MCP ``tools/list``) is built from —
+declares *exactly* the mounted command families and their sub-verbs.
 
 Without this gate the contract is self-referential: the sibling
 ``test_required_children_match_mounted_command_families`` checks the contract
-against itself, and ``test_app_contract`` checks the manifest against the same
+against itself, and the manifest tests check it against the same
 contract. Neither resolves the real Typer tree, so a whole family
 (``config google``, ``config check``, ``config reset``) or a sub-verb (every
 ``app live`` child but ``filed``) could be — and was — absent from the manifest
@@ -72,7 +71,7 @@ def _resolve_live_surface() -> dict[str, dict[str, frozenset[str]]]:
 
     For a family whose child is a group with sub-commands, the sub-verb set is its
     direct child names. For a family whose child is a leaf command (or an
-    ``invoke_without_command`` group with no registered leaf, e.g. ``app contract``),
+    ``invoke_without_command`` group with no registered leaf, e.g. ``app quickfile``),
     the sub-verb set is the degenerate self-reference ``{child}`` — matching the
     contract's convention of summarising such a verb as ``commands=(child,)``.
     """
