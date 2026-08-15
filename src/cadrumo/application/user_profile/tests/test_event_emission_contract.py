@@ -50,7 +50,7 @@ _REQUIRED_EMISSION_SITES: tuple[tuple[BucketEventType, Path, str], ...] = (
         # module also cross-links this member in prose, and a bare-symbol
         # needle is satisfied by that prose alone -- so reverting the stamp
         # to the surface string it used to carry left this gate green.
-        "event_type=BucketEventType.PROFILE_VALUES_UPDATED.value",
+        "event_type=BucketEventType.PROFILE_VALUES_UPDATED,",
     ),
 )
 

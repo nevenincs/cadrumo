@@ -17,7 +17,6 @@ resolver after normalizing the operator-facing display label.
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
 
 import pytest
 
@@ -26,8 +25,8 @@ from ._modelo_empty_profile_fixture import _isolated_backend
 __all__ = ["_isolated_backend"]
 
 from ....core.config import override_settings
-from ....tests.bucket_layout import provision_bucket_directory
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
+from ....tests.profile_capsule import forge_colliding_capsule_label
 from ....tests.user_profile import register_cli_profile
 from .._common import cli_policy_refusal_projection
 from .._errors import CliRefusedBoundaryError, error_boundary_under_test
@@ -36,7 +35,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 #: The display label the operator chooses at create — the only id they know.
 _LABEL = "operator"
-_DUPLICATE_MANIFEST_CREATED_AT = datetime(2026, 5, 28, 15, 5, tzinfo=UTC)
 
 
 def _create_profile_and_resolve_uuid() -> str:
@@ -103,39 +101,29 @@ def test_env_override_by_uuid_is_unchanged() -> None:
 
 
 def _write_second_live_bucket_sharing_label(label: str) -> None:
-    """Write a SECOND live bucket manifest carrying ``label`` (a torn-duplicate state).
+    """Provision a SECOND live profile whose committed capsule label collides with ``label``.
 
-    The CLI ``profile create`` enforces label uniqueness, so a real operator
-    cannot mint two live profiles with the same name through the happy path; this
-    helper writes the duplicate manifest directly to simulate the torn / repair
-    state that makes a label resolve ambiguously, exercising the ambiguity-refusal
-    path through the entrypoint normalizer.
+    The CLI ``profile create`` enforces label uniqueness casefolded under the
+    custody-root lock, so a real operator cannot mint two live profiles with
+    the same name through the happy path. This registers a genuine second
+    profile under a distinct placeholder label, then forges its committed
+    custody capsule label onto ``label`` directly — the same corruption every
+    label writer refuses — to reach the torn / repair state that makes
+    ``label`` resolve ambiguously, exercising the ambiguity-refusal path
+    through the entrypoint normalizer.
     """
-    from ....adapters.persistence.storage.bucket import (
-        BUCKET_MANIFEST_SCHEMA_VERSION,
-        BucketKeySchedule,
-        BucketManifest,
-        bucket_paths,
-        write_manifest,
-    )
-    from ....adapters.persistence.storage.master_key import KdfParams
-    from ....core.config import load_settings
+    from uuid import UUID
 
-    root = load_settings().cadrumo_local_storage_root
-    duplicate_uuid = "62d2ab08-39f2-4811-bd2a-fe48fd105e4a"
-    provision_bucket_directory(root, duplicate_uuid)
-    write_manifest(
-        bucket_paths(root, duplicate_uuid),
-        BucketManifest(
-            bucket_id=duplicate_uuid,
-            label=label,
-            created_at=_DUPLICATE_MANIFEST_CREATED_AT,
-            last_unlocked_at=None,
-            kdf_params=KdfParams.default().to_manifest_params(),
-            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-        ),
+    second_uuid = register_cli_profile(
+        label=f"{label}-forged",
+        facts={
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Operator",
+            "identity.surnames": "Duplicate",
+            "activities.description": "design",
+        },
     )
+    forge_colliding_capsule_label(profile_id=UUID(second_uuid), label=label)
 
 
 # English rendering of the DEDICATED ambiguity refusal key

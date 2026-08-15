@@ -65,12 +65,26 @@ class WizardFactWriteDoor(StrEnum):
     every wizard write stamped a surface-shaped string that the closed
     :class:`~cadrumo.domain.buckets.BucketEventType` does not contain, and the
     capsule writer refused the whole command rather than recording anything.
+
+    The taxonomy spans every surface that writes profile facts, not only the
+    wizard: the command-line manager screens and the ``config profile`` verbs
+    publish through this same writer, so their identities belong in the same
+    closed set rather than in a second one beside it.  ``CLI_DESCENDIENTE`` is
+    deliberately distinct from :attr:`DESCENDANTS` -- the interactive wizard's
+    repeating group and the non-interactive descendiente verbs are two surfaces
+    an operator can tell apart, and a history query asking which of them last
+    rewrote the set would be unable to answer if they shared one value.
     """
 
     ANSWERS = "wizard.answers"
     PATCH = "wizard.patch"
     CHECKPOINT = "wizard.checkpoint"
     DESCENDANTS = "wizard.descendants"
+    MANAGER_FIELD = "manager.field"
+    MANAGER_AUTH = "manager.auth"
+    MANAGER_ROW = "manager.row"
+    CLI_CAPABILITY = "cli.capability"
+    CLI_DESCENDIENTE = "cli.descendiente"
 
 
 def apply_wizard_fact_changes(
@@ -120,7 +134,7 @@ def apply_wizard_fact_changes(
         facts=next_facts,
         expected_revision=current.record_revision,
         expected_content_digest=current.content_digest,
-        event_type=BucketEventType.PROFILE_VALUES_UPDATED.value,
+        event_type=BucketEventType.PROFILE_VALUES_UPDATED,
         event_payload={"changed_fact_count": str(len(changes)), "door": door.value},
     )
 

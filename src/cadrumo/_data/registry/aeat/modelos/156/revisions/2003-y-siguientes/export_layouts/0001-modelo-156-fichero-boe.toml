@@ -1,0 +1,76 @@
+# Modelo 156 tipo-1 (declarante) header, transcribed from the bundled official
+# Diseño de Registro (source "aeat-dr-156-2021",
+# corpus/aeat_official/disenos_registro/modelo_156/files/01-156-diseno-de-registro-vigente.pdf).
+# "A.- TIPO DE REGISTRO 1: REGISTRO DE DECLARANTE" position table:
+# 1 TIPO DE REGISTRO (constante '1'); 2-4 MODELO DECLARACIÓN (constante '156');
+# 5-8 EJERCICIO; 9-17 N.I.F. DEL DECLARANTE. Only these envelope-identity
+# positions are transcribed here; the revision carries no money-closure or
+# afiliado-level casillas, so no further field is authored from this design.
+
+[[revisions."2003-y-siguientes".export_layouts]]
+id = "modelo-156-fichero-boe"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["aeat-dr-156-2021"]
+
+[[revisions."2003-y-siguientes".export_layouts.records]]
+id = "modelo-156-declarante"
+record_type = "1"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "none"
+
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
+id = "modelo-156-decl-tipo-registro"
+offset = 1
+length = 1
+kind = "literal"
+literal = "1"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["aeat-dr-156-2021"]
+
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
+id = "modelo-156-decl-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "156"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["aeat-dr-156-2021"]
+
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
+id = "modelo-156-decl-ejercicio"
+offset = 5
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["aeat-dr-156-2021"]
+
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
+id = "modelo-156-decl-nif"
+offset = 9
+length = 9
+kind = "header"
+producer_key = "presenter.tax_id"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-3580-2003:art-1"]
+source_refs = ["aeat-dr-156-2021"]

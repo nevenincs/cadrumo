@@ -1,0 +1,76 @@
+# Modelo 165 tipo-1 (declarante) header, transcribed from the bundled official
+# Diseño de Registro (source "aeat-dr-165-2026",
+# corpus/aeat_official/disenos_registro/modelo_165/files/01-165-diseno-de-registro-actualizado-en-2023.pdf).
+# "A. TIPO DE REGISTRO 1: REGISTRO DE DECLARANTE" position table:
+# 1 TIPO DE REGISTRO (constante '1'); 2-4 MODELO DECLARACIÓN (constante '165');
+# 5-8 EJERCICIO; 9-17 NIF DEL DECLARANTE. Only these envelope-identity positions
+# are transcribed here; the revision carries no money-closure or socio-level
+# casillas, so no further field is authored from this design.
+
+[[revisions."2013-y-siguientes".export_layouts]]
+id = "modelo-165-fichero-boe"
+legal_refs = ["orden-hap-2455-2013:art-1"]
+source_refs = ["aeat-dr-165-2026"]
+
+[[revisions."2013-y-siguientes".export_layouts.records]]
+id = "modelo-165-declarante"
+record_type = "1"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "none"
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-decl-tipo-registro"
+offset = 1
+length = 1
+kind = "literal"
+literal = "1"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1"]
+source_refs = ["aeat-dr-165-2026"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-decl-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "165"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1"]
+source_refs = ["aeat-dr-165-2026"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-decl-ejercicio"
+offset = 5
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1"]
+source_refs = ["aeat-dr-165-2026"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-decl-nif"
+offset = 9
+length = 9
+kind = "header"
+producer_key = "presenter.tax_id"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1"]
+source_refs = ["aeat-dr-165-2026"]

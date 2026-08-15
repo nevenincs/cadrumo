@@ -1,0 +1,23 @@
+{
+  "source": "BOE - Orden HAC/539/2003 (BOE-A-2003-5304), Anexo I",
+  "modelo": "186",
+  "retrieved_at": "2026-08-15",
+  "source_pages": [
+    "https://www.boe.es/buscar/act.php?id=BOE-A-2003-5304"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "186",
+      "title": "186 - Anexo I (Nacimientos), Tipo de Registro 1 y 2, imagen embebida en el texto consolidado BOE",
+      "source_page": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-5304",
+      "url": "https://www.boe.es/datos/imagenes/disp/2003/63/05304_8169760_image1.png",
+      "stored_path": "files/01-186-anexo-i-tipo1-nacimientos.png",
+      "original_filename": "05304_8169760_image1.png",
+      "content_type": "image/png",
+      "bytes": 183396,
+      "sha256": "662639891a323cd1139fac3c4220a61e87ae1be25b062006ac840f71488273c6",
+      "retrieved_at": "2026-08-15"
+    }
+  ]
+}

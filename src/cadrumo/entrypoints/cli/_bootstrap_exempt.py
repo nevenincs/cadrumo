@@ -62,10 +62,12 @@ deadlock the operator" --- which stays true across refactors of how the verb
 achieves it. Where a mechanism genuinely matters, cite it in ``cites_verbs`` /
 ``cites_tests`` so it is gated, rather than asserting it here where it is not.
 
-The criterion itself is executable for the read-only classes, and is executed:
-``test_bootstrap_exempt_criterion_probe.py`` drives those verbs against a
-pristine storage root with no profile pointer and no session, which is the
-first membership rule stated verbatim.
+The first membership criterion is behavioural and so is executable in principle
+--- drive the verb against a pristine storage root and require it to answer.
+``config repair`` is covered that way. Generalising it to the read-only classes
+needs a signal that separates "refused for want of a session" from "failed for
+an unrelated reason", which the current CLI surface does not expose distinctly
+enough to gate on; until it does, that criterion is carried by review.
 """
 
 from __future__ import annotations

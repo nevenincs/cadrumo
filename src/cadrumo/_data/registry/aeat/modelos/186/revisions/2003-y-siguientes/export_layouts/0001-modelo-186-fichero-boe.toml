@@ -1,0 +1,67 @@
+# Modelo 186 tipo-1 (declarante) header, transcribed from the bundled BOE
+# annex image (source "boe-modelo-186-anexo-i-tipo1", Orden HAC/539/2003
+# Anexo I -- NACIMIENTOS -- "B.- TIPO DE REGISTRO 1: REGISTRO DE DECLARANTE").
+# Position table: 1 TIPO DE REGISTRO (constante '1'); 2-4 MODELO DECLARACIÓN
+# (constante 'NAC' for the nacimientos annex -- NOT declared here as a literal
+# since the same casillas also cover the defunciones annex, whose constant is
+# 'DEF'; the modelo literal is genuinely disposition-dependent, unlike every
+# 100-199-family sibling where it is a bare 3-digit constant); 5-13 N.I.F. DEL
+# DECLARANTE; 14-53 RAZÓN SOCIAL; 54-57 EJERCICIO DE ENVÍO; 58-59 MES DE
+# ENVÍO; 60-69 NÚMERO TOTAL DE REGISTROS; 70-320 BLANCOS. Confirmed directly
+# from the image that this record carries NO "declaración complementaria/
+# sustitutiva" field (unlike the 100-199 family's usual 121-122 pair), so
+# decl.tipo-declaracion is not addressed by this layout.
+
+[[revisions."2003-y-siguientes".export_layouts]]
+id = "modelo-186-fichero-boe"
+legal_refs = ["orden-hac-539-2003:art-1"]
+source_refs = ["boe-modelo-186-anexo-i-tipo1"]
+
+[[revisions."2003-y-siguientes".export_layouts.records]]
+id = "modelo-186-declarante"
+record_type = "1"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "none"
+
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
+id = "modelo-186-decl-tipo-registro"
+offset = 1
+length = 1
+kind = "literal"
+literal = "1"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-539-2003:art-1"]
+source_refs = ["boe-modelo-186-anexo-i-tipo1"]
+
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
+id = "modelo-186-decl-nif"
+offset = 5
+length = 9
+kind = "header"
+producer_key = "presenter.tax_id"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-539-2003:art-1"]
+source_refs = ["boe-modelo-186-anexo-i-tipo1"]
+
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
+id = "modelo-186-decl-ejercicio"
+offset = 54
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-539-2003:art-1"]
+source_refs = ["boe-modelo-186-anexo-i-tipo1"]

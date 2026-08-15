@@ -27,8 +27,10 @@ checks them:
 
 What is still NOT checked here is the judgement in each record's ``note``. That
 residue is prose and is marked as unverified where it lives. The first
-membership criterion — runs on a fresh root with no session — IS executable,
-and ``test_bootstrap_exempt_criterion_probe.py`` executes it.
+membership criterion — runs on a fresh root with no session — is behavioural
+rather than structural; ``test_repair_bootstrap_exempt.py`` executes it for the
+recovery family, and generalising it needs a signal that distinguishes a
+session refusal from an unrelated failure.
 """
 
 from __future__ import annotations

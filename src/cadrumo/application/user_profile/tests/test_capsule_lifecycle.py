@@ -217,7 +217,7 @@ def test_fact_command_cas_publishes_the_record_and_authenticated_event_together(
             facts=(*initial.facts, UserProfileFact(path="identity.tax_id", value="12345678Z")),
             expected_revision=initial.record_revision,
             expected_content_digest=initial.content_digest,
-            event_type="profile.censo.applied",
+            event_type=BucketEventType.CENSO_APPLIED,
             event_payload={"adopted_count": "1", "divergence_count": "0"},
         )
         persisted = ProfileRecordStore(session=record_session, root=tmp_path).load()

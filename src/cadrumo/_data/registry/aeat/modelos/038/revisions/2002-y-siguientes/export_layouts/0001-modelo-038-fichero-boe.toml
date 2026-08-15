@@ -1,0 +1,76 @@
+# Modelo 038 tipo-1 (declarante) header, transcribed from the bundled official
+# Diseño de Registro (source "enrolled-modelo-038-layout", re-pointed 2026-08-15
+# to corpus/aeat_official/disenos_registro/modelo_038/files/01-038-diseno-de-registro-actualizado-28-06-2024.pdf).
+# Page 1 of that PDF ("MODELO 038 REGISTRO DE TIPO 1 REGISTRO DE DECLARANTE")
+# shows the position-numbered header row: TIPO DE REGISTRO(1), MODELO(2-4),
+# EJERCICIO(5-8), N.I.F. DECLARANTE(9-17). Only these envelope-identity
+# positions are transcribed here; the revision carries no money-closure or
+# operation-level casillas, so no further field is authored from this design.
+
+[[revisions."2002-y-siguientes".export_layouts]]
+id = "modelo-038-fichero-boe"
+legal_refs = ["orden-hac-66-2002:art-1"]
+source_refs = ["enrolled-modelo-038-layout"]
+
+[[revisions."2002-y-siguientes".export_layouts.records]]
+id = "modelo-038-declarante"
+record_type = "1"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "none"
+
+[[revisions."2002-y-siguientes".export_layouts.records.fields]]
+id = "modelo-038-decl-tipo-registro"
+offset = 1
+length = 1
+kind = "literal"
+literal = "1"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-66-2002:art-1"]
+source_refs = ["enrolled-modelo-038-layout"]
+
+[[revisions."2002-y-siguientes".export_layouts.records.fields]]
+id = "modelo-038-decl-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "038"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-66-2002:art-1"]
+source_refs = ["enrolled-modelo-038-layout"]
+
+[[revisions."2002-y-siguientes".export_layouts.records.fields]]
+id = "modelo-038-decl-ejercicio"
+offset = 5
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-66-2002:art-1"]
+source_refs = ["enrolled-modelo-038-layout"]
+
+[[revisions."2002-y-siguientes".export_layouts.records.fields]]
+id = "modelo-038-decl-nif"
+offset = 9
+length = 9
+kind = "header"
+producer_key = "presenter.tax_id"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-66-2002:art-1"]
+source_refs = ["enrolled-modelo-038-layout"]
