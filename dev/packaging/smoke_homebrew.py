@@ -188,22 +188,17 @@ def _write_json(path: Path, document: object) -> None:
     )
 
 
-def _assert_oracle_evidence(
-    *,
-    tax_document: dict[str, object],
-    mcp_document: dict[str, object],
-    aeat_path_sha256: str,
-) -> None:
+def _assert_oracle_evidence(*, tax_document: dict[str, object]) -> None:
+    """Refuse a Homebrew keg whose installed CLI does not reproduce the oracle.
+
+    The CLI is the only executable this formula installs. ``cadrumo-mcp`` ships
+    in the sibling ``cadrumo-harness`` distribution, which Homebrew does not
+    carry — one distribution per formula — so there is no MCP leg to exercise
+    here; the harness is reached through pipx, the MCPB bundle, or the Claude
+    plugin, each of which runs the MCP oracle on its own acquisition path.
+    """
     if tax_document.get("target_value") != "23000.00":
         raise SystemExit(f"installed CLI oracle returned unexpected evidence: {tax_document!r}")
-    if mcp_document.get("target_value") != "23000.00":
-        raise SystemExit(f"installed MCP oracle returned unexpected evidence: {mcp_document!r}")
-    invoked_cli_sha256 = mcp_document.get("invoked_cli_sha256")
-    if invoked_cli_sha256 != aeat_path_sha256:
-        raise SystemExit(
-            "installed MCP server invoked a different CLI identity: "
-            f"expected {aeat_path_sha256}, got {invoked_cli_sha256!r}",
-        )
 
 
 def run_homebrew_smoke(
@@ -385,11 +380,12 @@ def run_homebrew_smoke(
             label="brew-prefix",
         ).stdout.strip()
         installed_prefix = Path(prefix_text).resolve(strict=True)
+        # The formula installs the `cadrumo` distribution alone, so `aeat` is the
+        # only executable it lands. `cadrumo-mcp` belongs to the sibling
+        # `cadrumo-harness` distribution, which Homebrew does not carry.
         aeat = (installed_prefix / "bin" / "aeat").resolve(strict=True)
-        mcp = (installed_prefix / "bin" / "cadrumo-mcp").resolve(strict=True)
-        for command in (aeat, mcp):
-            if not command.is_file() or not os.access(command, os.X_OK):
-                raise SystemExit(f"installed Homebrew command is not executable: {command}")
+        if not aeat.is_file() or not os.access(aeat, os.X_OK):
+            raise SystemExit(f"installed Homebrew command is not executable: {aeat}")
 
         _run(
             [str(brew), "test", qualified],
@@ -408,7 +404,6 @@ def run_homebrew_smoke(
         oracle_env = os.environ.copy()
         oracle_env["PYTHONPATH"] = str(repo)
         tax_evidence = run_root / "tax-evidence.json"
-        mcp_evidence = run_root / "mcp-evidence.json"
         _run(
             [
                 str(installed_python),
@@ -428,34 +423,10 @@ def run_homebrew_smoke(
             label="installed-tax-oracle",
             env=oracle_env,
         )
-        _run(
-            [
-                str(installed_python),
-                "-m",
-                "dev.packaging.installed_mcp_oracle",
-                "--server",
-                str(mcp),
-                "--storage-root",
-                str(run_root / "mcp-state"),
-                "--work-dir",
-                str(run_root / "mcp-work"),
-                "--output",
-                str(mcp_evidence),
-            ],
-            cwd=repo,
-            log_dir=logs,
-            label="installed-mcp-oracle",
-            env=oracle_env,
-        )
         tax_document = json.loads(tax_evidence.read_text(encoding=_UTF_8))
-        mcp_document = json.loads(mcp_evidence.read_text(encoding=_UTF_8))
         aeat_sha256 = sha256_path(aeat)
         aeat_path_sha256 = _text_sha256(str(aeat))
-        _assert_oracle_evidence(
-            tax_document=tax_document,
-            mcp_document=mcp_document,
-            aeat_path_sha256=aeat_path_sha256,
-        )
+        _assert_oracle_evidence(tax_document=tax_document)
 
         evidence = {
             "schema": "cadrumo.packaging.homebrew-smoke.v1",
@@ -482,12 +453,8 @@ def run_homebrew_smoke(
             "aeat_command": str(aeat),
             "aeat_sha256": aeat_sha256,
             "aeat_path_sha256": aeat_path_sha256,
-            "mcp_command": str(mcp),
-            "mcp_sha256": sha256_path(mcp),
-            "mcp_invoked_cli_sha256": mcp_document["invoked_cli_sha256"],
             "version_output": version,
             "tax_evidence": str(tax_evidence),
-            "mcp_evidence": str(mcp_evidence),
             "preexisting_formulae": sorted(preexisting_formulae),
             "preexisting_taps": sorted(preexisting_taps),
         }

@@ -10,10 +10,10 @@ import json
 from ....application.wizard import _catalogue as _wizard_catalogue
 from ....application.wizard import _persistence as _wizard_persistence
 from ....core.aggregation import BindingSourceKind
-from ....core.resources import bundled_path
-from ....domain.calculations.registry import load_registry_tree, select_revision
+from ....domain.calculations.registry import select_revision
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
+from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ....tests.user_profile import register_cli_profile
 
@@ -49,17 +49,17 @@ def _create_profile(*, activity_start_date: str | None = None) -> None:
 def _create_gb_non_resident_profile() -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Readiness',
-            "activities.description": 'Spanish-source rent',
-            "fiscal_residency.status": 'non_resident_irnr',
-            "fiscal_residency.country": 'GB',
-            "taxpayer_type.representante_fiscal_nif": '12345678Z',
-            "taxpayer_type.representante_fiscal_nombre": 'Test Representative',
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Operator",
+            "identity.surnames": "Readiness",
+            "activities.description": "Spanish-source rent",
+            "fiscal_residency.status": "non_resident_irnr",
+            "fiscal_residency.country": "GB",
+            "taxpayer_type.representante_fiscal_nif": "12345678Z",
+            "taxpayer_type.representante_fiscal_nombre": "Test Representative",
         },
     )
 
@@ -67,16 +67,16 @@ def _create_gb_non_resident_profile() -> None:
 def _create_de_nonresident_legal_entity_profile() -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "taxpayer_type.entity_type": 'legal_entity',
-            "taxpayer_type.legal_entity_form": 'sl',
-            "identity.tax_id": 'B66012345',
-            "identity.legal_name": 'NordHaus GmbH',
-            "activities.description": 'Spanish-source services',
-            "fiscal_residency.status": 'non_resident_irnr',
-            "fiscal_residency.country": 'DE',
-            "iva.regime": 'GENERAL',
+            "taxpayer_type.entity_type": "legal_entity",
+            "taxpayer_type.legal_entity_form": "sl",
+            "identity.tax_id": "B66012345",
+            "identity.legal_name": "NordHaus GmbH",
+            "activities.description": "Spanish-source services",
+            "fiscal_residency.status": "non_resident_irnr",
+            "fiscal_residency.country": "DE",
+            "iva.regime": "GENERAL",
         },
     )
 
@@ -84,13 +84,13 @@ def _create_de_nonresident_legal_entity_profile() -> None:
 def _create_attribution_entity_intracom_profile() -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "taxpayer_type.entity_type": 'attribution_entity',
-            "identity.tax_id": 'E12345674',
-            "identity.name": 'M349 Readiness CB',
-            "activities.description": 'intracommunity operations',
-            "iva.does_intracomunitario": 'true',
+            "taxpayer_type.entity_type": "attribution_entity",
+            "identity.tax_id": "E12345674",
+            "identity.name": "M349 Readiness CB",
+            "activities.description": "intracommunity operations",
+            "iva.does_intracomunitario": "true",
         },
     )
 
@@ -117,7 +117,7 @@ def _create_m130_work_unit(*, period: str = "1T") -> str:
 
 
 def _create_m303_work_unit() -> str:
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "303")
     return create_modelo_work_unit_via_cli(
         modelo="303",

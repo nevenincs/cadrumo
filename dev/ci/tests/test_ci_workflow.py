@@ -327,7 +327,7 @@ def test_the_per_push_integration_gates_recipe_carries_the_substance_the_workflo
     assert body is not None, "no justfile line carries the recipe body; the delegated lane has no home"
     assert "not serial and not perf and not external_tool and not os_keychain and not resident_service" in body
     for target in (
-        "src/cadrumo/agent/tests/test_rule_surface_conformance.py",
+        "src/cadrumo-harness/src/cadrumo_harness/tests/test_rule_surface_conformance.py",
         "src/cadrumo/entrypoints/cli/_config/tests/test_status_frontend_gate.py",
         "src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py",
         "src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py",

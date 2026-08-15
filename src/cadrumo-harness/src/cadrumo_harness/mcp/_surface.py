@@ -3,11 +3,12 @@
 Dumping the whole ~273-verb tree into ``tools/list`` crowds out the user's
 question and degrades tool selection. The console therefore
 advertises an **orientation core** by default - the always-on floor, grounding,
-and meta-discovery tools plus the small manifest-derived orientation slice (the
-``overview`` obligation-derivation family and the capability ``contract`` verb,
-the surfaces the operator rules mandate reading first). The full per-verb
-universe stays reachable through the ``search`` + ``execute`` meta pair and
-through runtime toolset activation; it is not advertised up front.
+and meta-discovery tools (the ``contract`` capability manifest among them) plus
+the small manifest-derived orientation slice: the ``overview``
+obligation-derivation family, the per-verb surface the operator rules mandate
+reading first. The full per-verb universe stays reachable through the ``search``
++ ``execute`` meta pair and through runtime toolset activation; it is not
+advertised up front.
 
 The ``CADRUMO_MCP_SURFACE`` environment toggle preserves the flat surface for an
 operator who wants it (``full``) and for the core-vs-full A/B measurement; the
@@ -31,10 +32,6 @@ SURFACE_ENV_VAR = "CADRUMO_MCP_SURFACE"
 #: advertised. Membership is a prefix test against the live command keys, never a
 #: hand-listed verb set, so a verb added to the family joins the core for free.
 _ORIENTATION_PREFIXES: tuple[str, ...] = ("overview.",)
-
-#: Standalone orientation command keys. ``contract`` is the capability manifest
-#: the operator rules mandate reading first; it has no dotted family.
-_ORIENTATION_KEYS: frozenset[str] = frozenset({"contract"})
 
 
 class SurfaceMode(StrEnum):
@@ -80,8 +77,6 @@ def resolve_surface_mode(raw: str | None) -> SurfaceMode:
 
 def is_orientation_command(command_key: str) -> bool:
     """Whether ``command_key`` belongs to the always-advertised orientation slice."""
-    if command_key in _ORIENTATION_KEYS:
-        return True
     return any(command_key.startswith(prefix) for prefix in _ORIENTATION_PREFIXES)
 
 

@@ -27,9 +27,9 @@ from ....core import (
 )
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import RegistrySnapshot
-from ....domain.calculations.registry._loader import load_registry_tree
 from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.iva_compensation import IvaCompensationPeriodState
+from ....tests.registry_tree import bundled_registry_tree
 
 #: A checksum-valid synthetic NIF. ``IvaCompensationPeriodState.taxpayer_nif``
 #: is a ``SubjectTaxId``, so a placeholder label is refused at the boundary
@@ -71,7 +71,7 @@ def _modelo_390_2026_snapshot() -> RegistrySnapshot:
     ``.load()`` validates the entire registry tree (including modelos with no
     export layout at all) and currently refuses unconditionally as a result.
     """
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = bundled_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "390")
     return build_snapshot(
         modelo,

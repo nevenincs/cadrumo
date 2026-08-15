@@ -1,10 +1,16 @@
-"""The ``search`` + ``execute`` meta-tool pair for the long-tail verb surface.
+"""The ``contract`` + ``search`` + ``execute`` meta-tools for the verb surface.
 
 The curated domain toolsets (``_toolsets``) cover the common path; the rest of
-the operator-callable verb tree is reached through two meta-tools, the Cloudflare
-precedent for a large API surface: ``search`` maps a natural
+the operator-callable verb tree is reached through meta-tools, the Cloudflare
+precedent for a large API surface: ``contract`` emits the whole capability
+manifest the operator rules mandate reading first, ``search`` maps a natural
 query onto matching command keys with their intent and mutability, and
 ``execute`` runs one command key with typed arguments.
+
+``contract`` is MCP-native: it composes the application layer's
+:func:`~application.operator_surface.build_operator_surface_manifest` with the
+CLI's registered result-schema references directly, so the manifest is served
+without spawning the CLI and without a command family of its own.
 
 The load-bearing guarantee is that ``execute`` is NOT a side door. It routes
 through the exact same gates a direct tool call runs - :func:`gate_refusal`
@@ -25,7 +31,12 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.application.command_search import CommandDoc, CommandIndex, build_command_index
-from cadrumo.application.operator_surface import declared_risk
+from cadrumo.application.operator_surface import (
+    OperatorSurfaceManifest,
+    build_operator_surface_manifest,
+    declared_risk,
+)
+from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
 from ._hitl import ConfirmationPolicy, confirmation_for_tool
 from ._persona_scope import AgentPersona, handoff_denial_message, is_handoff_denied, is_tool_in_persona_scope
 from ._tools import McpToolDescriptor
@@ -310,6 +321,28 @@ def describe_command(
         risk_live_write=risk.live_write if risk is not None else False,
         owning_toolset=toolset.value if toolset is not None else None,
         reachable_personas=reachable,
+    )
+
+
+def build_capability_manifest() -> OperatorSurfaceManifest:
+    """Build the operator-surface capability manifest served by ``contract``.
+
+    The orientation surface the operator rules mandate reading first: the
+    accepted roots, every mounted command family with its ``operator_question``
+    intent and mutability, the lifecycle ordering, and the registered per-command
+    result-schema references. Composed here from the application layer's
+    :func:`~application.operator_surface.build_operator_surface_manifest` and the
+    CLI's own :func:`~entrypoints.cli.command_schema_refs`, so the manifest is a
+    first-class MCP tool rather than a projection of any one CLI verb.
+
+    Returns:
+        The validated :class:`~application.operator_surface.OperatorSurfaceManifest`.
+    """
+    from cadrumo.entrypoints.cli import command_schema_refs
+
+    return build_operator_surface_manifest(
+        envelope_schema_version=ENVELOPE_SCHEMA_VERSION,
+        command_schemas=command_schema_refs(),
     )
 
 

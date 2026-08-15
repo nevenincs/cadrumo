@@ -2,8 +2,12 @@
 
 Exposes the deterministic ``aeat`` CLI to an LLM operator as Model Context
 Protocol tools, sourcing the tool list, output schemas, and mutability
-annotations from the Layer 0 capability manifest (``aeat app contract``). The
-human-in-the-loop confirmation tiers and the faithfulness check live here too.
+annotations from the Layer 0 capability manifest. The manifest itself is served
+to the operator by the MCP-native ``contract`` meta-tool
+(:func:`~cadrumo_harness.mcp._meta_tools.build_capability_manifest`), which
+composes the application-layer manifest builder with the CLI's registered
+result-schema references. The human-in-the-loop confirmation tiers and the
+faithfulness check live here too.
 
 The protocol runtime (the MCP SDK) is an optional dependency gated behind the
 ``cadrumo[agent]`` extra and imported lazily by :func:`main`; the tool-building,

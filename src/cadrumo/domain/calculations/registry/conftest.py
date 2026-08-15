@@ -6,9 +6,9 @@ import pytest
 
 from ....core import RegistryAuthorityGrade
 from ....core.resources import bundled_path, resources
+from ....tests.registry_tree import bundled_registry_tree
 from ._authority import ValidatedRegistryAuthority
 from ._ids import RevisionId
-from ._loader import load_registry_tree
 from ._schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from ._snapshot import build_snapshot
 
@@ -30,7 +30,7 @@ def registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     definition plus the shared catalogues, so it loads independently of the
     authority rather than inheriting its all-or-nothing gate.
     """
-    return load_registry_tree(bundled_path("registry", "aeat"))
+    return bundled_registry_tree()
 
 
 @pytest.fixture(scope="session")

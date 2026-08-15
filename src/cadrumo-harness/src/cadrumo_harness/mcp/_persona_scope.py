@@ -123,9 +123,11 @@ class PersonaToolScope(BaseModel):
 # already-scoped family never needs this mapping edited - only a new family
 # grant does.
 #
-# coordinator: read-only orchestration only (`aeat app overview status`,
-# `aeat app contract`); it delegates every mutating step and issues no
-# mutating verb itself (asserted by the pinning test).
+# coordinator: read-only orchestration only (`aeat app overview status`); it
+# delegates every mutating step and issues no mutating verb itself (asserted by
+# the pinning test). The capability manifest it orients from is the MCP-native
+# `contract` meta-tool, which carries no command family and is therefore not a
+# family grant.
 #
 # onboarding: profile custody + read-only auth configuration + read-only
 # overview confirmation. No modelo, no ledger mutation, no live AEAT read.
@@ -142,7 +144,7 @@ class PersonaToolScope(BaseModel):
 PERSONA_TOOL_SCOPES: tuple[PersonaToolScope, ...] = (
     PersonaToolScope(
         persona=AgentPersona.COORDINATOR,
-        families=frozenset({"overview", "contract"}),
+        families=frozenset({"overview"}),
         mutability_ceiling=OperatorMutability.READ_ONLY,
     ),
     PersonaToolScope(

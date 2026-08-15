@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:f35617b405dc8b451f9c723654f89658c804fd0106bb09e3f5882f7a3aa53d7a'
+body_hash: 'sha256:1552eb53db4fa9cba5b3cf8b4b45b2a540e8edd2862a15dd74f10fb85e24c754'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
   - "[[2026-08-14-test-harness-sanity-successor-adr]]"
@@ -408,4 +408,24 @@ So the two suites that share a shape got one definition, in a package-local home
 Restored beside `_json_array`, implemented to match the canonical `entrypoints/cli/tests/_cli_json_support.py::_json_object` exactly — `STR_KEYED_MAPPING_ADAPTER.validate_python(value)`, the core type-narrowing primitive — rather than the looser `assert isinstance` shape `_json_array` uses, so the two `_json_object` definitions in the tree cannot diverge in behaviour. **Deliberately NOT consolidated onto the canonical:** `cadrumo.llm.tests` importing `cadrumo.entrypoints.cli.tests._cli_json_support` would be a cross-package private reach, which the architecture boundary forbids. The pre-existing cross-package import from `llm/tests` into `application/ledger/tests` is left as found — not this change's to fix, and noted here so it is not mistaken for something this change introduced.
 
 **`S138` remains blocked, and the reason is now measured rather than asserted.** Collection errors across four runs this session: 67 → 4 → 3 → (after these two fixes) 7. The rise at the end is not a regression from these fixes — both symbols cleared the error list — but a peer landing an in-flight relocation of `cadrumo.entrypoints.mcp`, which took out seven suites across `command_search`, `modelo`, `operator_surface` and `cli`. The tree has not been collectable once this session. **`S138` asks for a failure-set diff from a quiesced tree, and there has been no quiesced tree to take one from.**
+
+
+### `S137` key-provider and session teardown | proven-negative | 15 suspects, zero leaks, and the sweep deliberately stops short of a 30-site hygiene churn
+
+This step had been marked complete with no locatable evidence, was returned to open, and has now been done properly. **The result is a clean negative, which is a real result and is recorded as one rather than being padded into a fix.**
+
+**The whole verdict rests on one fact, so it was verified directly rather than taken from the report:** in `src/cadrumo/tests/master_key.py`, `EphemeralMasterKeyProvider.get_master_key()` returns `self._key` and touches nothing else, while `__enter__` is the SOLE place a `BucketSession` is opened (`BucketSession.open` + `activate_session`). A provider that is constructed but never entered therefore opens no session, registers nothing, and holds no OS handle: **there is nothing to tear down.** `__init__` only mints bytes.
+
+**All 15 suspects adjudicated:**
+
+- **HELPER-MANAGED (5):** `test_secure_objects_part1.py:608,723,772` and `test_secure_objects_part2.py:317,343` all forward into `sql/tests/_secure_objects_support.py::_seed_under_key`, which does `with provider: ... finally: engine.dispose()`. My original probe could not see these because it was a regex over the same file only — exactly the limitation it was flagged with.
+- **SELF-CLOSING (10):** every remaining site's provider reaches only `.get_master_key()`, directly or through `EncryptedBlobStore` / `SecretStore` / `rotate_blob_stores` / `save_encrypted_envelope` / `load_encrypted_envelope` — each confirmed to call `.get_master_key()` directly and never the ContextVar-based `get_active_master_key()`.
+
+**Widened beyond the probe's scope**, since the step also names encrypted sessions: `FileFallbackMasterKeyProvider`, `UnsecuredMasterKeyProvider` and `KeyringMasterKeyProvider` share the identical `__enter__`-only-opens-a-session shape, and ~28 further bare constructions across `master_key/tests/` are all `.get_master_key()`-only. No new leaks.
+
+**`ProfileRecordSession` is NOT this resource class, and the ~20 test files that never close one are DELIBERATELY left alone.** It is a plain `@dataclass(slots=True)` with no `__enter__`/`__exit__`, no live-session registration, no SQL engine, no lock and no ContextVar binding; `.close()` only zeroises its own `bytearray` DEK in place. **The question worth asking was about production, not tests, and production is clean:** all four construction sites are accounted for — `_registration.py:179` closes at `:206`, `_login_session.py:1101` closes at `:1103`, `_login_session.py:753` and `_profile_record_repository.py:141` both hand the session straight to `activate_profile_record_session`, whose owner `close_active_profile_record_session` zeroises it. Every path either closes in a `finally` or transfers ownership to the activator.
+
+So the test-side gap is a best-effort memory-hygiene nicety over test key material, with no OS handle, no registered global outliving the test, and a GC-reclaimed buffer. **Adding `.close()` to ~30 call sites would be churn on a tree three teams are committing to, in exchange for nothing observable.** Recorded as a deliberate non-fix. The principle generalises the census's own "duplication matters when it can diverge": **a leak matters when it can outlive the test.** One that cannot is a style preference, and this campaign does not spend collision risk on style.
+
+**Verification:** the 9 affected files run sequentially give 154 passed, 1 failed — `test_materialisation.py::test_get_secret_store_writes_a_real_blob_at_the_declared_taxonomy_path`, failing inside `open_test_profile_session` on `UUID("materialisation-wiring-test")` with `ValueError: badly formed hexadecimal UUID string`. That fails before any master-key-provider code runs, and **no code was changed in this step, so the before and after sets are the same set** — there is no diff to claim. That failure is separate pre-existing tree noise and is not attributed to this sweep.
 

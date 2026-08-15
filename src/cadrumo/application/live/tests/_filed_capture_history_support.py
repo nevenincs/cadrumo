@@ -30,7 +30,6 @@ from ....core import (
 )
 from ....core.external_constants import load_external_constants
 from ....core.resources import bundled_path
-from ....domain.calculations.registry import load_registry_tree
 from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.modelos import (
     ExternalEvidence,
@@ -45,6 +44,7 @@ from ....domain.modelos import (
 )
 from ....tests import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
+from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ....tests.user_profile import register_minimal_profile
 from ...workflow import workflow_state_repository
@@ -99,7 +99,7 @@ def _registry_snapshot(modelo: str, filing_year: int, period: str):
     unconditionally as a result. A modelo whose OWN revisions lack an export layout
     still refuses here, honestly, on its own missing capability.
     """
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = bundled_registry_tree()
     modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
     return build_snapshot(
         modelo_definition,

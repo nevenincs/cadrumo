@@ -31,11 +31,6 @@ from ._result_thinning import thin_output_schema
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
-# Read-only command keys that are not a mounted command family (operator meta
-# surfaces). Everything else falls back to LOCAL_STATE_MUTATING - the conservative
-# default that asks for confirmation more often, never less.
-_READ_ONLY_OVERRIDES: frozenset[str] = frozenset({"contract"})
-
 
 class McpToolDescriptor(BaseModel):
     """SDK-independent description of one exposed MCP tool.
@@ -71,8 +66,9 @@ def _family_mutability() -> dict[str, OperatorMutability]:
 
 
 def _mutability_for_key(command_key: str, family_map: dict[str, OperatorMutability]) -> OperatorMutability:
-    if command_key in _READ_ONLY_OVERRIDES:
-        return OperatorMutability.READ_ONLY
+    # A key whose family is absent from the manifest falls back to
+    # LOCAL_STATE_MUTATING - the conservative default that asks for confirmation
+    # more often, never less.
     tokens = command_key.split(".")
     family_token = tokens[1] if tokens[0] in {"config", "app"} and len(tokens) > 1 else tokens[0]
     return family_map.get(family_token, OperatorMutability.LOCAL_STATE_MUTATING)

@@ -9,8 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.resources import bundled_path
-from ...calculations.registry import load_registry_tree
+from ....tests.registry_tree import bundled_registry_tree
 from .._loader import load_user_profile_schema
 from .._schema import ProfileSchemaDefinition
 
@@ -37,5 +36,5 @@ def legal_ids_fixture() -> frozenset[str]:
     ``resources().modelos.authority``, whose ``.load()`` validates every
     modelo in the bundled tree before returning anything.
     """
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _modelos, catalogues = bundled_registry_tree()
     return frozenset(catalogues.legal)

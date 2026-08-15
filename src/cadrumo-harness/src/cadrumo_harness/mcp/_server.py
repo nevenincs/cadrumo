@@ -93,6 +93,7 @@ from ._identity_gate import (
 from ._meta_tools import (
     ToolRunner,
     ToolRunOutcome,
+    build_capability_manifest,
     build_command_search_index,
     describe_command,
     gate_refusal,
@@ -158,6 +159,13 @@ _INSTALL_HINT = "the MCP server requires the agent extra: pip install 'cadrumo[a
 _REQUIRED_VERSION_ENV = f"{PRODUCT_IDENTITY.environment_prefix}MCP_REQUIRED_VERSION"
 _RUNTIME_COHORT = (PRODUCT_IDENTITY.distribution, *PRODUCT_IDENTITY.companion_distributions)
 
+# The capability-manifest meta-tool: emits the operator-surface manifest - roots,
+# mounted command families with their intent and mutability, lifecycle ordering,
+# and registered result schemas - that the operator rules mandate reading first.
+# It is MCP-native (composed from the application manifest builder and the CLI's
+# schema refs), not a projection of any CLI verb, so it carries no command key and
+# no mounted family of its own.
+_META_CONTRACT_TOOL = "contract"
 # The two meta-tools that reach the long-tail verb surface outside the curated
 # toolsets. They are advertised alongside the per-verb tools and are never
 # persona-scoped away (``execute`` applies the persona gate internally).
@@ -339,12 +347,29 @@ def build_meta_sdk_tools() -> list[Tool]:
     surface is unit-tested against the real SDK types when they are installed.
 
     Returns:
-        The ``search``, ``execute``, ``toolsets``, and ``describe``
+        The ``contract``, ``search``, ``execute``, ``toolsets``, and ``describe``
         :class:`mcp.types.Tool` objects.
     """
-    from mcp.types import Tool
+    from mcp.types import Tool, ToolAnnotations
 
     return [
+        Tool(
+            name=_META_CONTRACT_TOOL,
+            description=(
+                "Return the Cadrumo capability manifest: the accepted command roots, every mounted "
+                "command family with the operator question it answers and its mutability, the filing "
+                "lifecycle ordering, and the registered per-command result schemas. Read this first to "
+                "orient, then use search and describe to reach an individual verb."
+            ),
+            input_schema={"type": "object", "properties": {}, "additionalProperties": False},
+            annotations=ToolAnnotations(
+                title="contract",
+                read_only_hint=True,
+                destructive_hint=False,
+                idempotent_hint=True,
+                open_world_hint=False,
+            ),
+        ),
         Tool(
             name=_META_SEARCH_TOOL,
             description=(
@@ -837,6 +862,13 @@ def build_server(
             return CallToolResult(
                 content=[TextContent(type="text", text=render_terminology_search_text(term_payload))],
                 structured_content=term_payload.model_dump(mode="json"),
+                is_error=False,
+            )
+        if name == _META_CONTRACT_TOOL:
+            manifest_payload = build_capability_manifest().model_dump(mode="json")
+            return CallToolResult(
+                content=[TextContent(type="text", text=json.dumps(manifest_payload, indent=2))],
+                structured_content=manifest_payload,
                 is_error=False,
             )
         if name == _META_SEARCH_TOOL:
