@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:b2399d956a1ae2ed00805a644846588d1e43423eb68ae6f4d8bc7481d4660dd4'
+body_hash: 'sha256:4fc087ececb687ae554da525a3231a08bc03100fe72f36db2bccc1937ea751ff'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -220,3 +220,4 @@ Exercise the actual local system and read-only DEHu path, then complete an indep
 - [ ] `W05.P08.S25` - After S24 proves the hard cutover, perform the explicitly authorized local-only destructive reset of the existing disposable retired/shared-master store through the new canonical application-owned profile deletion authority, capture journal and receipt evidence, re-enrol only current-format profiles, never read/adopt/migrate retired custody, never delete through raw filesystem or SQL, and perform no AEAT or external mutation; `src/cadrumo/application/user_profile/; .vault/exec/`.
 - [ ] `W05.P08.S105` - Have Sol Medium close the gap that lets a decision be made without a record, since a ruling delivered as a report and never persisted is indistinguishable from no ruling and cost a full search to establish, which is the campaign-close discipline failing in the direction nobody watches; `.vault/audit/`.
 - [ ] `W05.P08.S134` - Have Sol Medium rule what the destructive profile deletion surface should be, since both of its primitives have zero definitions anywhere in the tree while tests still import them and four further tests assert a retention assessment the producer can never satisfy, so the surface was demolished rather than deferred and its contract now specifies work nothing implements; `src/cadrumo/application/config_reset.py and src/cadrumo/application/bucket_maintenance/`.
+- [ ] `W05.P08.S137` - Have Terra XHigh restore the retention detail to the hold projection so the deletion preflight can answer a count and a floor and a safe-erase date rather than two booleans, since the filing retention authority already computes the position and the projection discards it at the boundary, this being a narrowing to undo rather than a capability to build and a precondition for retiring the older assessment contract; `src/cadrumo/application/filing/_profile_filing_retention.py and src/cadrumo/application/user_profile/`.
