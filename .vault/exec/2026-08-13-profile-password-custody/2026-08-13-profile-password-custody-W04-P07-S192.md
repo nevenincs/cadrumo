@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:fde19384a6b7354f17c602d758cb04299a6bb4dc32fe6cb49b1e627bd22456eb'
+body_hash: 'sha256:c97bef52269d4ee8b8d38deba16f9c2116370548cfe7b7348d079c2d179492a2'
 step_id: 'S192'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -137,16 +137,37 @@ later replacement operates on the very same capsule. The gap is now closed at
 head: the class is declared with its own dedicated message key resolving to
 real prose in all four locales, and the chain imports again.
 
-**THE FIRST REPORT OF THAT GAP NAMED THE WRONG OWNER, AND THE CORRECTION IS THE
-POINT.** It was reported as the commit of the row whose subject line the commit
-carried. That row's owner had run no git write at all. The commit was a third
-party's bare commit that swept several working trees into one: five of its nine
-files are exactly THIS row's uncommitted change set, alongside the other row's
-two files and two shared test-support modules, all under a subject naming only
-the other row. Every commit in this worktree carries the same git author, so
-authorship cannot discriminate between agents and a subject line is not
-evidence of who wrote the diff. The misattribution cost the other owner a
-blocked session and an escalation for a defect that was already fixed.
+**THE FIRST REPORT OF THAT GAP NAMED THE WRONG OWNER. THE MECHANISM THAT MADE
+THE WRONG ANSWER LOOK CONCLUSIVE IS THE PART WORTH KEEPING.** The unregistered
+class was traced to the commit that introduced it, that commit's subject line
+carried another row's identifier, and the defect was reported to that row's
+owner. The owner had run no git write at all.
+
+The inference failed because of how commits are actually produced in this
+shared worktree. A bare commit stages whatever is in the tree, so ONE commit
+routinely contains the uncommitted work of SEVERAL agents at once, and it
+carries the single subject line its author typed -- naming that author's own
+row and no other. This commit is the worked example: nine files, of which five
+are exactly THIS row's uncommitted change set (the facade redirect, the port
+promotions, and the command-event narrowing across three modules), two are the
+accused row's, and two are shared test-support modules belonging to neither.
+The subject named only the accused row. Compounding it, every commit in this
+worktree carries the same git author, so `git log` authorship cannot separate
+any two agents either.
+
+So neither the subject line nor the author field is evidence of who wrote a
+given hunk, and the two most reachable signals are both misleading in the same
+direction: they point at whoever typed the commit, for changes they never made.
+What does discriminate is FILE OVERLAP against the reporting agent's own known
+edit set, and TIMING against when each agent's tree was dirty. Read a diff hunk
+by hunk against the ownership map before naming anyone.
+
+The cost was real and asymmetric: the accused owner lost a session to a defect
+that was already fixed and escalated for permission to fix it. The same
+inference error was made independently by another agent on the same day against
+a different target, so this is a property of the tree rather than one agent's
+carelessness. Left uncorrected it would have hardened here, in the durable
+record, long after the conversation that could have refuted it was gone.
 
 ## Notes
 
