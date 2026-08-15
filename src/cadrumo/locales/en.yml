@@ -47284,6 +47284,11 @@ modelo:
             x-chin6or5dpi6ipbeehin6bjedtmm4sj5:
               label: Regularisation for descendants with a disability. Descendant's
                 surnames and given name
+            x-cpgmqqbcd5giqrjldlin4rrjc4n68pb4elhm6qbfdo:
+              label: Large-family regularisation. Deduction amount
+            x-cpgmqqbcd5giqrjldlin4rrjc4n78qbkelm6u:
+              label: Large-family regularisation. Large-family certificate identification
+                number
           construct:
             modelo-122-regularizacion:
               field:
@@ -70872,6 +70877,12 @@ modelo:
           iva-deducible-aic-inversion-tipo-10-cuota:
             label: Deductible input VAT on intra-Community acquisitions of capital
               goods at the 10% rate - deductible VAT amount
+          iva-deducible-aic-inversion-tipo-2-base:
+            label: Deductible VAT on intra-Community acquisitions of capital goods
+              - 2% rate - Taxable base [769]
+          iva-deducible-aic-inversion-tipo-2-cuota:
+            label: Deductible VAT on intra-Community acquisitions of capital goods
+              - 2% rate - Deductible amount [770]
           iva-deducible-aic-inversion-tipo-21-base:
             label: Deductible input VAT on intra-Community acquisitions of capital
               goods at the 21% rate - taxable base
@@ -70890,6 +70901,12 @@ modelo:
           iva-deducible-aic-inversion-tipo-5-cuota:
             label: Deductible input VAT on intra-Community acquisitions of capital
               goods at the 5% rate - deductible VAT amount
+          iva-deducible-aic-inversion-tipo-7-5-base:
+            label: Deductible VAT on intra-Community acquisitions of capital goods
+              - 7,5% rate - Taxable base [771]
+          iva-deducible-aic-inversion-tipo-7-5-cuota:
+            label: Deductible VAT on intra-Community acquisitions of capital goods
+              - 7,5% rate - Deductible amount [772]
           iva-deducible-aic-inversion-total-base:
             label: 'Total: Deductible input VAT on intra-Community acquisitions of
               capital goods - taxable base'
@@ -70902,6 +70919,12 @@ modelo:
           iva-deducible-aic-servicios-tipo-10-cuota:
             label: Deductible input VAT on intra-Community acquisitions of services
               at the 10% rate - deductible VAT amount
+          iva-deducible-aic-servicios-tipo-2-base:
+            label: Deductible VAT on intra-Community acquisitions of services - 2%
+              rate - Taxable base [773]
+          iva-deducible-aic-servicios-tipo-2-cuota:
+            label: Deductible VAT on intra-Community acquisitions of services - 2%
+              rate - Deductible amount [774]
           iva-deducible-aic-servicios-tipo-21-base:
             label: Deductible input VAT on intra-Community acquisitions of services
               at the 21% rate - taxable base
@@ -70920,6 +70943,12 @@ modelo:
           iva-deducible-aic-servicios-tipo-5-cuota:
             label: Deductible input VAT on intra-Community acquisitions of services
               at the 5% rate - deductible VAT amount
+          iva-deducible-aic-servicios-tipo-7-5-base:
+            label: Deductible VAT on intra-Community acquisitions of services - 7,5%
+              rate - Taxable base [775]
+          iva-deducible-aic-servicios-tipo-7-5-cuota:
+            label: Deductible VAT on intra-Community acquisitions of services - 7,5%
+              rate - Deductible amount [776]
           iva-deducible-aic-servicios-total-base:
             label: 'Total: Deductible input VAT on intra-Community acquisitions of
               services - taxable base'
