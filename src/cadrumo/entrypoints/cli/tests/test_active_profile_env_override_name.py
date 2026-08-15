@@ -28,6 +28,7 @@ __all__ = ["_isolated_backend"]
 from ....core.config import override_settings
 from ....tests.bucket_layout import provision_bucket_directory
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
+from ....tests.user_profile import register_cli_profile
 from .._common import cli_policy_refusal_projection
 from .._errors import CliRefusedBoundaryError, error_boundary_under_test
 
@@ -45,27 +46,16 @@ def _create_profile_and_resolve_uuid() -> str:
     the UUIDv4 bucket directory + manifest and writes the active-profile pointer
     to that UUID (never the label).
     """
-    created = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            _LABEL,
-            "--quiet",
-            "--accept-defaults",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Operator",
-            "--surnames",
-            "Override",
-            "--activity",
-            "design",
-        ],
+    register_cli_profile(
+        label=_LABEL,
+        facts={
+            "identity.tax_id": '12345678Z',
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Override',
+            "activities.description": 'design',
+        },
     )
-    assert created.exit_code == 0, created.output
     from ....application.workflow import read_profile_bucket
 
     pointer = read_profile_bucket(_LABEL)

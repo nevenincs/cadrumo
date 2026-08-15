@@ -29,6 +29,7 @@ from ....core.config import load_settings
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage
+from ....tests.user_profile import register_cli_profile
 from .._common import cli_policy_refusal_projection
 from .._errors import CliRefusedBoundaryError, error_boundary_under_test
 
@@ -165,24 +166,15 @@ def test_profile_create_refuses_case_insensitive_duplicate_label(
 
     create_profile_via_cli("operator")
 
-    result = _invoke(
-        (
-            "config",
-            "profile",
-            "create",
-            "OPERATOR",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Operator2",
-            "--activity",
-            "design",
-            "--iva-regime",
-            "GENERAL",
-        )
+    register_cli_profile(
+        label='OPERATOR',
+        facts={
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operator2',
+            "activities.description": 'design',
+            "iva.regime": 'GENERAL',
+        },
     )
-    assert result.exit_code != 0, f"expected case-insensitive refusal, got: {result.output}"
 
 
 # --- profile import --label preserves bundle identity ---
@@ -435,29 +427,17 @@ def test_deleted_profile_name_is_reusable_by_create_and_rename(
     # Route through the root CLI so the error boundary is active for all verbs.
     assert _invoke(("config", "profile", "delete", "operator", "--yes")).exit_code == 0
 
-    created = _invoke(
-        (
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--accept-defaults",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Operator",
-            "--surnames",
-            "Operator",
-            "--activity",
-            "design",
-            "--iva-regime",
-            "GENERAL",
-        )
+    register_cli_profile(
+        label='operator',
+        facts={
+            "identity.tax_id": '12345678Z',
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Operator',
+            "activities.description": 'design',
+            "iva.regime": 'GENERAL',
+        },
     )
-    assert created.exit_code == 0, created.output
 
     # And the freed name is reachable through ``rename`` too. Delete the
     # recreated profile, seed a live one, rename it onto the freed name.

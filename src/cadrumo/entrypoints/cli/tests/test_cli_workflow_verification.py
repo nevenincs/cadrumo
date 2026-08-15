@@ -16,6 +16,7 @@ from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHO
 from ....tests.cli_envelope import unwrap_cli_result as _json
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -197,20 +198,17 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
     Every CLI invocation is asserted to exit 0 here; downstream
     tests assert against the JSON payloads only.
     """
-    profile = _invoke(
-        [
-            "--format", "json",
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--tax-id", "12345678Z",
-            "--entity-type", "natural_person",
-            "--name", "Operator",
-            "--surnames", "Workflow",
-            "--activity", "design",
-            "--iva-regime", "GENERAL",
-        ],
-    )  # fmt: skip
-    assert profile.exit_code == 0, profile.output
+    register_cli_profile(
+        label='operator',
+        facts={
+            "identity.tax_id": '12345678Z',
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Workflow',
+            "activities.description": 'design',
+            "iva.regime": 'GENERAL',
+        },
+    )
     status = _invoke(["--format", "json", "config", "profile", "status"])
     assert status.exit_code == 0, status.output
 

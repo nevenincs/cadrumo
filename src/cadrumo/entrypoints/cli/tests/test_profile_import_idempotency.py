@@ -29,6 +29,7 @@ from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_storage  # noqa: F401 - autouse fixture
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_cli_profile
 from .privacy_helpers import (
     assert_public_profile_id_not_leaked,
     assert_public_profile_id_redacted,
@@ -145,29 +146,17 @@ def _assert_label_collision_message(output: str, label: str) -> None:
 
 
 def _create_legal_entity_profile_and_export(bundle_path: Path) -> str:
-    r = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "legal-import-source",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "legal_entity",
-            "--legal-entity-form",
-            "sl",
-            "--tax-id",
-            "B66012345",
-            "--legal-name",
-            "Legal Import Source SL",
-            "--activity",
-            "asesoria",
-            "--output-language",
-            "en",
-        ],
+    register_cli_profile(
+        label='legal-import-source',
+        facts={
+            "taxpayer_type.entity_type": 'legal_entity',
+            "taxpayer_type.legal_entity_form": 'sl',
+            "identity.tax_id": 'B66012345',
+            "identity.legal_name": 'Legal Import Source SL',
+            "activities.description": 'asesoria',
+            "preferences.output_language": 'en',
+        },
     )
-    assert r.exit_code == 0, r.output
 
     r_export = _export_profile("legal-import-source", bundle_path)
     assert r_export.exit_code == 0, r_export.output
@@ -180,27 +169,16 @@ def _create_legal_entity_profile_and_export(bundle_path: Path) -> str:
 
 
 def _create_attribution_entity_profile_and_export(bundle_path: Path) -> str:
-    r = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "attribution-import-source",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "attribution_entity",
-            "--tax-id",
-            "E12345674",
-            "--name",
-            "Attribution Import Source",
-            "--activity",
-            "arrendamiento",
-            "--output-language",
-            "en",
-        ],
+    register_cli_profile(
+        label='attribution-import-source',
+        facts={
+            "taxpayer_type.entity_type": 'attribution_entity',
+            "identity.tax_id": 'E12345674',
+            "identity.name": 'Attribution Import Source',
+            "activities.description": 'arrendamiento',
+            "preferences.output_language": 'en',
+        },
     )
-    assert r.exit_code == 0, r.output
 
     r_export = _export_profile("attribution-import-source", bundle_path)
     assert r_export.exit_code == 0, r_export.output

@@ -17,6 +17,7 @@ from click.testing import Result
 from ....core import scan_directory
 from ....tests import REPO_ROOT, leaf_name
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
+from ....tests.user_profile import register_cli_profile
 from ._runtime_profile_cli_fixture import _isolated_cli_state
 
 __all__ = ["_isolated_cli_state"]
@@ -91,29 +92,17 @@ class TestOverviewCalendarRequiresProfileCreate:
     """
 
     def test_overview_calendar_for_general_iva_includes_modelo_303(self) -> None:
-        init = _invoke(
-            [
-                "config",
-                "profile",
-                "create",
-                "operator",
-                "--quiet",
-                "--accept-defaults",
-                "--entity-type",
-                "natural_person",
-                "--name",
-                "Operator",
-                "--surnames",
-                "Operator",
-                "--tax-id",
-                "12345678Z",
-                "--activity",
-                "software development",
-                "--iva-regime",
-                "GENERAL",
-            ],
+        register_cli_profile(
+            label='operator',
+            facts={
+                "taxpayer_type.entity_type": 'natural_person',
+                "identity.name": 'Operator',
+                "identity.surnames": 'Operator',
+                "identity.tax_id": '12345678Z',
+                "activities.description": 'software development',
+                "iva.regime": 'GENERAL',
+            },
         )
-        assert init.exit_code == 0, init.output
 
         # Modelo applicability is derived from the taxpayer model — declare
         # an autónomo (natural person with actividad económica) so Modelo

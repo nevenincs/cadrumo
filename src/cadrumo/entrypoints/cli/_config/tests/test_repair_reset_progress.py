@@ -16,6 +16,7 @@ from .....application.workflow import WorkflowState, workflow_state_repository
 from .....domain.buckets import BucketEventType
 from .....tests.cli_runner import invoke_cached_cli
 from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from .....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -28,29 +29,17 @@ def _seed_workflow_state() -> None:
     secure-object row that ``reset-progress`` later discards.
     """
 
-    created = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Test",
-            "--surnames",
-            "Operator",
-            "--irpf-income-categories",
-            "actividad_economica",
-            "--tax-id",
-            "00000000T",
-            "--activity",
-            "Servicios",
-        ],
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": 'Test',
+            "identity.surnames": 'Operator',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "identity.tax_id": '00000000T',
+            "activities.description": 'Servicios',
+        },
     )
-    assert created.exit_code == 0, created.output
 
 
 def _row_exists() -> bool:

@@ -19,6 +19,7 @@ from click.testing import Result
 
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_storage  # noqa: F401 - autouse fixture
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -30,26 +31,16 @@ def _invoke(args: Sequence[str], *, env: dict[str, str] | None = None) -> Result
 def _imported_transaction_id(tmp_path: Path) -> str:
     """Create a profile, import one CSV transaction, return its id."""
 
-    created = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "tester",
-            "--quiet",
-            "--tax-id",
-            "00000001R",
-            "--activity",
-            "freelance",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Tester",
-            "--surnames",
-            "Allocation",
-        ],
+    register_cli_profile(
+        label='tester',
+        facts={
+            "identity.tax_id": '00000001R',
+            "activities.description": 'freelance',
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": 'Tester',
+            "identity.surnames": 'Allocation',
+        },
     )
-    assert created.exit_code == 0, created.output
 
     statement = tmp_path / "statement.csv"
     statement.write_text(

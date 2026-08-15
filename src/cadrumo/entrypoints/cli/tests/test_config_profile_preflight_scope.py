@@ -275,16 +275,14 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
 
 def test_attribution_entity_without_activity_remains_status_blocked() -> None:
     """The no-business natural-person exception does not leak to entities."""
-    created = invoke_cached_cli(
-        [
-            "config", "profile", "create", "comunidad-sin-actividad",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "attribution_entity",
-            "--tax-id", "E12345674",
-            "--name", "Comunidad sin actividad",
-        ],
-    )  # fmt: skip
-    assert created.exit_code == 0, created.output
+    register_cli_profile(
+        label='comunidad-sin-actividad',
+        facts={
+            "taxpayer_type.entity_type": 'attribution_entity',
+            "identity.tax_id": 'E12345674',
+            "identity.name": 'Comunidad sin actividad',
+        },
+    )
 
     status = invoke_cached_cli(["--format", "json", "config", "profile", "status"])
     assert status.exit_code == 0, status.output

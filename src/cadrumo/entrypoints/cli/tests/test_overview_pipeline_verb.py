@@ -35,6 +35,7 @@ from ....domain.modelos import (
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.profile_capsule import open_test_profile_session
+from ....tests.user_profile import register_cli_profile
 from .._overview_payloads import OverviewPipelineModeloPayload
 from ._modelo_work_ux_support import _create_profile, _invoke
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
@@ -43,30 +44,28 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _create_complete_pipeline_profile() -> None:
-    result = _invoke(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--surnames", "Pipeline Parity",
-            "--activity", "design",
-            "--activity-start-date", "2025-10-01",
-            "--irpf-income-categories", "actividad_economica",
-            "--irpf-estimation-regime", "directa_normal",
-            "--fiscal-residency", "resident_irpf",
-            "--tax-residence-ccaa", "madrid",
-            "--tax-residence-jurisdiction-scope", "common_regime",
-            "--iva-regime", "GENERAL",
-            "--iva-m303-regime-composition", "general",
-            "--no-iva-redeme-enrolled",
-            "--no-iva-cash-accounting-regime-enrolled",
-            "--no-iva-voluntary-sii-enrolled",
-            "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Pipeline Parity',
+            "activities.description": 'design',
+            "censo.activity_start_date": '2025-10-01',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "irpf.estimation_regime": 'directa_normal',
+            "fiscal_residency.status": 'resident_irpf',
+            "tax_residence.ccaa": 'madrid',
+            "tax_residence.jurisdiction_scope": 'common_regime',
+            "iva.regime": 'GENERAL',
+            "iva.m303_regime_composition": 'general',
+            "iva.redeme_enrolled": 'false',
+            "iva.cash_accounting_regime_enrolled": 'false',
+            "iva.voluntary_sii_enrolled": 'false',
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": 'false',
+        },
+    )
 
 
 def test_pipeline_fresh_profile_reports_not_ready_with_empty_modelos(_isolated_cli_backend: Path) -> None:
