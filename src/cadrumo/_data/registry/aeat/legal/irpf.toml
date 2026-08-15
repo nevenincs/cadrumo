@@ -1966,7 +1966,16 @@ bytes = 107660
 retrieved_at = 2026-05-03
 published_at = 2014-09-26
 applies_from = 2014-09-27
-applies_to = 2023-11-30
+# Was 2023-11-30, which double-claimed eleven months with "aeat-dr-180-2023"
+# (that source opens 2023-01-01). The two boundaries were measured on different
+# axes: 2023-11-30 tracks the PUBLICATION of Orden HFP/1284/2023 de 28 de
+# noviembre, while the successor's 2023-01-01 is an EJERCICIO bound. The
+# ejercicio axis is the one modelo 180 actually resolves on -- its revisions
+# split exactly there, "2019-2022" (year_to 2022) and "2023-y-siguientes"
+# (year_from 2023) -- so the successor's bound is the correct one and this
+# upper bound moves to meet it. Only the overlap is removed; applies_from is
+# left as declared.
+applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/180.pdf"
 review_status = "reviewed"
 
