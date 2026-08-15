@@ -65817,6 +65817,8 @@ modelo:
             x-e1in4oped5mn0rriehiiqs3iclmmiro:
               label: A nyeremény bruttó összege vagy a természetbeni nyeremény egyedi
                 értéke
+            x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
+              label: A külföldi illetőségű kedvezményezett születési helye
             x-e1in4opedpkmc:
               label: A kedvezményezett adóazonosító száma
             x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
@@ -65828,6 +65830,8 @@ modelo:
             x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
               label: A kedvezményezett képviselőjének vezeték- és utóneve, cégneve
                 vagy elnevezése
+            x-e1in4opee1gmispde9in6qb4cln66qb1:
+              label: A kedvezményezett adóügyi illetőségének országa vagy területe
             x-e1in4opee1p6utj9dphmio8:
               label: A kedvezményezett lakcíme szerinti tartomány kódja
             x-e1in4opee9in8pbecdkmurg:

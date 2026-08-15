@@ -68119,6 +68119,8 @@ modelo:
             x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
               label: Apellidos y nombre, razón social o denominación del representante
                 del perceptor
+            x-e1in4opee1gmispde9in6qb4cln66qb1:
+              label: País o territorio de residencia fiscal del perceptor
             x-e1in4opee1p6utj9dphmio8:
               label: Código de provincia del domicilio del perceptor
             x-e1in4opee9in8pbecdkmurg:

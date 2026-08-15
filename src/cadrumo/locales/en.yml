@@ -65308,6 +65308,8 @@ modelo:
               label: Prize collection agent
             x-e1in4oped5mn0rriehiiqs3iclmmiro:
               label: Gross prize amount or individual value of the prize in kind
+            x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
+              label: Place of birth of the non-resident payee
             x-e1in4opedpkmc:
               label: Payee tax identification number
             x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
@@ -65319,6 +65321,8 @@ modelo:
             x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
               label: Surnames and given name, legal name or business name of the payee's
                 representative
+            x-e1in4opee1gmispde9in6qb4cln66qb1:
+              label: Payee country or territory of tax residence
             x-e1in4opee1p6utj9dphmio8:
               label: Province code of the payee's address
             x-e1in4opee9in8pbecdkmurg:

@@ -65777,6 +65777,8 @@ modelo:
             x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
               label: Cognoms i nom, raó social o denominació del representant del
                 perceptor
+            x-e1in4opee1gmispde9in6qb4cln66qb1:
+              label: País o territori de residència fiscal del perceptor
             x-e1in4opee1p6utj9dphmio8:
               label: Codi de província del domicili del perceptor
             x-e1in4opee9in8pbecdkmurg:
