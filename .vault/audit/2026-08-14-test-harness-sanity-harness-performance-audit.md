@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:9045fe0b0545b29008de59f03bca8aba5d8b47aff742e12180dee9ecd81f54ee'
+body_hash: 'sha256:1d395509a87db08471d07e1aecefb967b4f3e5242bbfc8d6dec5b6897f1cedd2'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -464,3 +464,87 @@ structural figure (five census runs to one) is reported as the result and the
 wall clock only as corroboration. One pre-existing failure,
 `test_every_finding_carries_exactly_one_adjudication`, reproduces identically in
 both configurations; it goes through `reconcile()` and was not touched.
+
+## Round: locale catalogues and the IVA stem gates
+
+### The largest single win of the campaign: 125s to 6s
+
+`test_locale_translation_honesty` measured 125.14s / 126.13s and was, almost
+entirely, YAML parsing. The four shipped catalogues are ~3 MB each and
+pure-Python parsing measured ~7s apiece; five gates read the same four files
+roughly nineteen times between them. The per-test durations matched the parse
+count exactly, which is what identified the cause rather than merely the
+symptom:
+
+    28.21s, 28.62s, 29.55s, 30.83s   four-locale sweeps  (4 parses each)
+     7.07s                           single-locale gate  (1 parse)
+
+Two levers, stacked. The parse is now memoised per locale, and it uses
+`yaml.CSafeLoader` -- libyaml, the C parser -- measured at 0.773s against
+7.402s on the largest catalogue, a 9.6x primitive speedup. The pure-Python
+fallback is retained for a PyYAML built without libyaml. Both loaders were
+confirmed to produce EQUAL documents for all four shipped locales before the
+switch; a 9.6x faster parser that disagreed on one value would be a
+correctness regression wearing a performance result.
+
+    before : 125.14s, 126.13s
+    after  :   6.86s,   6.04s
+
+The production renderer in `core.i18n` was already doing exactly this
+(`_render.py:562` picks `CSafeLoader` when present, behind an `lru_cache`), so
+the test harness was the laggard, not the application. Worth noting for the
+next reader: the fast path already existed in the tree and simply had not
+reached this gate.
+
+The gate's parse stays INDEPENDENT of that production reader deliberately. These
+gates assert what the shipped FILES contain; borrowing the production reader
+would let a reader that silently dropped entries certify its own view of the
+catalogue instead of the catalogue. Speed was taken; independence was not
+traded for it.
+
+### The IVA stem gates: fused, not cached
+
+`test_spanish_iva_stem_conformance` ran three gates that each walked
+`src/cadrumo` and `ast.parse`d all 4903 modules -- 15.56s, 18.70s and 22.40s.
+The parse is identical across the three; only the analysis differs.
+
+The obvious fix -- cache the parsed trees and hand them out -- was MEASURED and
+rejected: parsing all 4903 files at once holds **1247 MB** of AST, and under
+`-n auto` that is per worker. This is the same shape as the tree-wide AST cache
+this campaign already ruled out for measuring SLOWER than re-parsing; the memory
+figure explains why that happened rather than leaving it as folklore.
+
+Instead the three analyses now run over each tree while it is live, and the tree
+is dropped. Only findings survive, which are small. Each gate keeps its own test
+and its own assertion, so a failure still names the gate.
+
+    before : 76.16s, 63.00s
+    after  : 48.92s, 49.48s
+
+Less than the 3x a naive reading predicts, because the per-tree `ast.walk`
+analyses are themselves a large share of the cost -- only the parse was
+duplicated, not the analysis.
+
+### The equivalence check that a test count would have passed
+
+Both configurations reported "2 failed, 3 passed" with the same two test names,
+which is exactly the evidence that is NOT sufficient: a refactored analysis can
+fail the same test for a different reason. pytest's own rendering then showed a
+violation entry present after and absent before -- which looked like a real
+divergence and was in fact truncation of a differently-worded assertion
+expression.
+
+Rather than judge that from the rendering, a driver ran the three separate
+passes and the fused pass against the same tree, through the same helpers and
+constants, and compared all five outputs exactly:
+
+    path_and_identifier      10 / 10   identical
+    identity_tokens           0 /  0   identical
+    prose                     1 /  1   identical
+    used_external_values      9 /  9   identical
+    used_external_fragments   2 /  2   identical
+
+with an anti-vacuity guard that exits non-zero if every list is empty, since an
+all-empty comparison agrees no matter what the code does. The `identity_tokens`
+row being legitimately 0 is precisely why that guard is needed: one empty pair
+proves nothing on its own and only the populated rows carry the result.
