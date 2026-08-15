@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:b4839b57ba6e8912095dbad75833e6f63f2a8a8ebda9f2e246a7be4991646204'
+body_hash: 'sha256:a36557a945326b6b3a56a8ca84866c7baca339d25d0e40b03fcba0105ef6cd66'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -113,25 +113,86 @@ that leaves the never-mint guard both correct and untouched.
 
 ## Consequences
 
-**Nothing is stranded, and that empties the migration question.** Established by
-reproduction rather than assumed: a bucket in this state is inert today. Its
+**The strand question has two populations, and the first version of this record
+measured only one of them.** The correction matters more than the original
+claim, because the unmeasured population is the operator's own data.
+
+*Capsule-era buckets: nothing is stranded.* Established by reproduction rather
+than assumed — a bucket created through the sanctioned door is inert today. Its
 capsule is recognised, it is listed as current, and its password custody material
-loads — while both `workflow_state_repository().load()` and
+loads, while both `workflow_state_repository().load()` and
 `secure_object_repository_for_active_bucket()` refuse with
 `StorageValidationError: errors.storage.runtime.not_ready`. No record can have
-been written after creation, because no route to write one ever opened.
-
-So option A is restorative rather than migratory. Every affected bucket holds
+been written after creation, because no route to write one ever opened. For this
+population option A is restorative rather than migratory: the bucket holds
 exactly its creation-time state, including a real `db/cadrumo.db` written during
-staging, and the change makes that existing database readable through custody
-material already on disk. There is no on-disk shape to convert and no window in
-which a profile becomes less readable than it is now.
+staging, and the change makes that database readable through custody material
+already on disk.
 
-The honest difficulty is that this widens what the capsule route must support: a
-custody path used at creation and login becomes the path every record access
-depends on. That concentration is the price of not holding a second key, and it
-should be weighed as such rather than assumed free.
+*Pre-capsule buckets: roughly six megabytes of operator data.* The live default
+store at `AppData/Local/cadrumo/storage` holds four buckets that predate the
+cutover entirely, measured 2026-08-15:
 
-Under option A the `BUCKET_DEK_V1` branch does not disappear — buckets that
-genuinely carry a wrapped DEK keep using it — so this opens no purge and closes
-no existing schedule.
+| bucket | label | manifest status | `db/cadrumo.db` |
+|---|---|---|---|
+| `3806b406-2d0c-47fb-a576-13644e08e737` | `wgergely` | `setup_incomplete` | 5,316,608 B |
+| `d06d093f-f1cc-4f79-bb0d-219541836a99` | `operator` | `active` | 106,496 B |
+| `f5556acb-6a12-4266-be5e-e3cfdc73c325` | `wgergely` | `tombstoned` | 516,096 B |
+| `faa52bed-5708-4bf2-b974-ad9c658f5871` | `sync-test` | `tombstoned` | 311,296 B |
+
+6,250,496 bytes of encrypted data in total, and the `active-profile` pointer
+targets the first. Sizes are the database files alone; a per-bucket 32,768-byte
+`-shm` companion accounts for a reader arriving at slightly larger figures.
+
+Each carries `manifest.toml` and `keystore/<id>/bucket.dek.json` — both retired
+surfaces — and the store contains **no capsule material of any kind**: no
+`profile.commit.v1.json`, no `envelope.v1.json`, no `dek.sentinel.v1.json`, and
+no `custody/` directory anywhere beneath it. These buckets depend on both
+surfaces a no-legacy deletion would remove, and have nothing to fall back to.
+
+**So the deletion is ordered, not merely authorised.** The retired route cannot
+be removed while this store still depends on it, and of the two conceivable
+orderings only one is available.
+
+Migrating the buckets into custody first is closed on two independent counts.
+The campaign's own closing step forbids it in terms — `W05.P08.S25` requires
+that retired custody is never read, adopted or migrated — and it is in any case
+unreachable without new code, because the current tree cannot read these
+manifests at all. `read_manifest` raises `ValidationError` on all four: the
+on-disk documents carry `recovery_enrolled` and `status`, which the strict
+`extra="forbid"` `BucketManifest` does not declare, and they report
+`schema_version = 2` against a current version and durability floor of 3.
+Writing the reader that would make migration possible is exactly the
+read-tolerance of pre-current shapes that `no-legacy-compatibility` forbids.
+
+Disposal is therefore the sanctioned ordering. `W05.P08.S25` performs an
+explicitly authorised local-only destructive reset of this store through the
+canonical application-owned deletion authority, capturing journal and receipt
+evidence and re-enrolling only current-format profiles, gated behind
+`W05.P08.S24`, the final security and architecture proof of the hard cutover.
+The legacy route may be deleted after that step has run, and not before.
+
+**What "at stake" means here is recoverability, not working access.** These four
+buckets are unreadable by the current tree today for three independent reasons,
+none of which is the branch under deletion: no capsule, so `bucket_key_schedule`
+resolves `None` and the `BUCKET_DEK_V1` arm is never reached; the manifest
+schema floor; and the retired manifest fields above. Their only remaining door
+is the bootstrap arm, which no production caller opens. The deletion would
+therefore take away not access but the ability to recover — today the ciphertext
+and its wrapped key are both on disk and the unwrapping helpers still ship
+behind a test-only flag, so recovery is a small amount of code against existing
+symbols, whereas afterwards it means reconstructing removed code from history.
+That is a narrowing rather than an immediate loss, and it remains the operator's
+call, which is why the sanctioned reset captures evidence rather than assuming
+the data is disposable.
+
+The honest difficulty in option A is that it widens what the capsule route must
+support: a custody path used at creation and login becomes the path every record
+access depends on. That concentration is the price of not holding a second key,
+and it should be weighed as such rather than assumed free.
+
+**Option A's retained-branch clause no longer stands.** The operator has since
+ruled that no legacy survives anywhere in the codebase, which deletes the
+`BUCKET_DEK_V1` branch rather than keeping it for wrapped-DEK buckets. This
+record does not enact that ruling: the measurement above blocks it on ordering,
+the change remains owner-gated, and this record stays `proposed`.
