@@ -56,7 +56,7 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import WorkflowState, workflow_state_repository
+from ...workflow import workflow_state_repository
 from .._reconcile import (
     _reconcile_parsed_declaracion,
 )
@@ -83,7 +83,6 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         # ``buckets/<profile-id>``, which a workflow-state repository
         # construction would otherwise materialise first and collide with.
         register_minimal_profile(
-            WorkflowState(),
             profile_id="33333333-3333-4333-8333-333333333333",
             overrides={"identity.tax_id": _PROFILE_TAX_ID},
         )
