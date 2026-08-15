@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:77163da621825265c78cbc28ea51a1210a74a725c0a32e613209bb33823a5934'
+body_hash: 'sha256:87c867962266c97f33d86e9b0adee32f26b972eccfacfdea5df9a6a616368eba'
 step_id: 'S137'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -50,13 +50,20 @@ with no empty-assessment fallback present in the source.
 
 ## Notes
 
-**The deferral that started this whole investigation is obsolete, and that is the
-third instance of the same trap.** The producer's docstring said retention
-"requires decrypting the exact profile record under an authenticated session",
-which is why the populated assessment was believed impossible to produce. The
-filing owner persists a plaintext snapshot and assesses from that, needing no
-session at all. So the stated constraint has not been true for some time, and it
-was read as a fact about the present.
+**The deferral that started this whole investigation is HALF obsolete, and the
+half matters.** The producer's docstring said retention "requires decrypting the
+exact profile record under an authenticated session", which is why the populated
+assessment was believed impossible to produce. The filing owner persists a
+plaintext snapshot and assesses from that, so ASSESSING needs no session.
+
+**Corrected after the fact, because the first version of this note overstated
+it.** Producing that snapshot still requires the session -- it summarises the
+bucket's encrypted filing catalogue -- so the deferral was right about the write
+side and wrong only about the read side. The snapshot does not abolish the
+session requirement, it RELOCATES it to the moment a filing is recorded, which
+is the one moment a session is held by construction. Saying flatly that the
+constraint "has not been true for some time" was the same overstatement this
+note exists to warn about, one document further up.
 
 That is now three: a deferral naming a future that had already arrived, a
 comment describing a source of truth that had moved, and here a constraint that

@@ -232,6 +232,7 @@ def serialize_profile_bundle(
     )
 
     return UserProfilePortableExport(
+        bundle_schema_version=BUNDLE_SCHEMA_VERSION,
         profile=record,
         work_units=work_units,
         ledger_transactions=ledger_transactions,

@@ -156,7 +156,7 @@ def test_modelo_200_form_order_is_boe_corpus_backed() -> None:
     assert _M200_FORM_ORDER_REF in revision.legal_refs
     assert revision.orden_aplicabilidad == (_M200_FORM_ORDER_REF,)
     assert catalogues.sources["aeat-modelo-200-manual-2024"].evidence_tier == "official_source_guidance"
-    assert catalogues.sources["boe-modelo-200-2025-form"].evidence_tier == "layout_authority"
+    assert catalogues.sources["boe-modelo-200-2025-form"].evidence_tier == "official_source_guidance"
     reference = legal[_M200_FORM_ORDER_REF]
     assert reference.document_id == "BOE-A-2025-12818"
     assert reference.kind == "orden"

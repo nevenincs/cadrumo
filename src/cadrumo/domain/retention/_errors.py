@@ -19,12 +19,18 @@ The dormancy this module used to describe is over, and the reason it gave is
 worth recording because it stopped being true without anyone noticing. It said
 a manifest-level surface cannot decrypt the profile record and therefore cannot
 assess retention, keeping the class only because "that refusal names the
-assessment as the missing capability". The capability now exists and needs no
-decryption:
+assessment as the missing capability". The capability now exists, and the
+precise claim matters because the loose version of it was wrong:
 :meth:`~application.filing.FilingRetentionAuthority.assess` computes the
 retained count, the floor and the safe-erase date from a plaintext filing
-snapshot. A deferral is a claim about the moment it was written; this one
-outlived its constraint by long enough to be read as current more than once.
+snapshot, so ASSESSING needs no session. Producing that snapshot still does --
+it summarises the bucket's encrypted filing catalogue -- so the deferral was
+right about the write side and wrong only about the read side. The snapshot
+does not abolish the session requirement, it relocates it to the moment a
+filing is recorded, which is the one moment a session is held by construction.
+
+A deferral is a claim about the moment it was written, and this one outlived
+its constraint long enough to be read as current more than once.
 """
 
 from __future__ import annotations
