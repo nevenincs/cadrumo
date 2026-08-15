@@ -1,0 +1,647 @@
+# Modelo 130 -- IRPF pago fraccionado, estimacion directa -- fichero BOE.
+#
+# Transcribed position by position from the bundled AEAT Diseno de Registros
+# cited in source_refs. Every offset and length below is read from that file;
+# none is derived, inferred or rounded.
+#
+# Six money positions are declared signed because AEAT types them 'N' rather
+# than 'Num': [03], [07], [11], [14], [17] and [19], each of which is a
+# subtraction that can legitimately go negative.
+#
+# Two positions of the file envelope are deliberately left unwritten: AEAT's
+# 'Version del Programa' (ordinal 9) and 'NIF Empresa Desarrollo' (ordinal 11)
+# are its Nota 1 slots, to be filled by the entidad desarrolladora del software.
+# No such identity is declared anywhere in this project, so writing either one
+# would be inventing it. Modelo 131 leaves the same two slots unwritten.
+
+[[revisions."2019-y-siguientes".export_layouts]]
+id = "modelo-130-fichero-boe"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+# Design sheet 'DR 13000': the file envelope, positions 1-328.
+[[revisions."2019-y-siguientes".export_layouts.records]]
+id = "modelo-130-envelope-header"
+record_type = "envelope_header"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-envelope-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-envelope-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "130"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-envelope-discriminante"
+offset = 6
+length = 1
+kind = "literal"
+literal = "0"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-envelope-ejercicio"
+offset = 7
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-envelope-periodo"
+offset = 11
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-envelope-marker"
+offset = 13
+length = 5
+kind = "literal"
+literal = "0000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-envelope-aux-open"
+offset = 18
+length = 5
+kind = "literal"
+literal = "<AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-envelope-reserved-1"
+offset = 23
+length = 70
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-envelope-reserved-2"
+offset = 97
+length = 4
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-envelope-reserved-3"
+offset = 110
+length = 213
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-envelope-aux-close"
+offset = 323
+length = 6
+kind = "literal"
+literal = "</AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+# Design sheet 'DR 13001': the declaration page, positions 1-600.
+[[revisions."2019-y-siguientes".export_layouts.records]]
+id = "modelo-130-page-01"
+record_type = "page_1"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "130"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-pagina"
+offset = 6
+length = 2
+kind = "literal"
+literal = "01"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-identifier-close"
+offset = 8
+length = 4
+kind = "literal"
+literal = "000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+# AEAT's own Contenido cell for this position reads 'En blanco': the modelo has a
+# single page-01 record, so there is no continuation page to indicate. The
+# complementaria declaration itself is design ordinal 31 @432, written below.
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-indicador-pagina-complementaria"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-tipo-declaracion"
+offset = 13
+length = 1
+kind = "header"
+producer_key = "filing.result_disposition"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+# 'Declarante (1). Sujeto pasivo. NIF' -- the taxpayer, matched to the apellidos and nombre positions below.
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-nif"
+offset = 14
+length = 9
+kind = "header"
+producer_key = "taxpayer.tax_id"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-apellidos"
+offset = 23
+length = 60
+kind = "header"
+producer_key = "taxpayer.surnames"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+# Modelo 130 is filed by personas fisicas, but the slot stays non-required for symmetry with the surnames pair.
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-nombre"
+offset = 83
+length = 20
+kind = "header"
+producer_key = "taxpayer.given_name"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-ejercicio"
+offset = 103
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-periodo"
+offset = 107
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-01"
+offset = 109
+length = 17
+kind = "casilla"
+casilla_id = "01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-02"
+offset = 126
+length = 17
+kind = "casilla"
+casilla_id = "02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-03"
+offset = 143
+length = 17
+kind = "casilla"
+casilla_id = "03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-04"
+offset = 160
+length = 17
+kind = "casilla"
+casilla_id = "04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-05"
+offset = 177
+length = 17
+kind = "casilla"
+casilla_id = "05"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-06"
+offset = 194
+length = 17
+kind = "casilla"
+casilla_id = "06"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-07"
+offset = 211
+length = 17
+kind = "casilla"
+casilla_id = "07"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-08"
+offset = 228
+length = 17
+kind = "casilla"
+casilla_id = "08"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-09"
+offset = 245
+length = 17
+kind = "casilla"
+casilla_id = "09"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-10"
+offset = 262
+length = 17
+kind = "casilla"
+casilla_id = "10"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-11"
+offset = 279
+length = 17
+kind = "casilla"
+casilla_id = "11"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-12"
+offset = 296
+length = 17
+kind = "casilla"
+casilla_id = "12"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-13"
+offset = 313
+length = 17
+kind = "casilla"
+casilla_id = "13"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-14"
+offset = 330
+length = 17
+kind = "casilla"
+casilla_id = "14"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-15"
+offset = 347
+length = 17
+kind = "casilla"
+casilla_id = "15"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-16"
+offset = 364
+length = 17
+kind = "casilla"
+casilla_id = "16"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-17"
+offset = 381
+length = 17
+kind = "casilla"
+casilla_id = "17"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-18"
+offset = 398
+length = 17
+kind = "casilla"
+casilla_id = "18"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-casilla-19"
+offset = 415
+length = 17
+kind = "casilla"
+casilla_id = "19"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-declaracion-complementaria"
+offset = 432
+length = 1
+kind = "header"
+producer_key = "amendment_evidence.is_complementaria"
+data_type = "boolean"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-justificante-anterior"
+offset = 433
+length = 13
+kind = "header"
+producer_key = "amendment_evidence.original_aeat_receipt"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-iban"
+offset = 446
+length = 34
+kind = "header"
+producer_key = "selected_account.iban"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-reserved-aeat"
+offset = 480
+length = 96
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-sello-electronico"
+offset = 576
+length = 13
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-130-page-01-close"
+offset = 589
+length = 12
+kind = "literal"
+literal = "</T13001000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12"]
+

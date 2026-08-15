@@ -1,6 +1,13 @@
 # Modelo 216 calculation-completeness manifest: the calculation closure is the
-# three computed totals (10 base, 13 retenciones, 21 resultado) and their
-# operands (08/09 bases, 11/12 retenciones, 20 prior-declaration results).
+# six computed totals and their operands, across both liquidacion blocks of
+# the bundled diseño `aeat-dr-216-2024`.
+#
+#   block I, rentas sometidas:      07 = 05+06, 10 = 08+09, 13 = 11+12
+#   block II, rentas no sometidas:  16 = 14+15, 19 = 17+18
+#   resultado:                      21 = 13-20
+#
+# Every casilla the official record addresses is listed; the manifest and the
+# export layout close over the same set.
 
 [revisions."2024-y-siguientes".completeness_manifest]
 source_ref = "boe-modelo-216-form-layout"
@@ -38,3 +45,39 @@ number = "21"
 [[revisions."2024-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "20"
 number = "20"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "05"
+number = "05"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "06"
+number = "06"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "07"
+number = "07"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "14"
+number = "14"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "15"
+number = "15"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "16"
+number = "16"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "17"
+number = "17"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "18"
+number = "18"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "19"
+number = "19"

@@ -9,6 +9,7 @@ input_kind = "bound"
 binding = "modelo-115-perceptores"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"]
+export_refs = ["modelo-115-casilla-01"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "02"
@@ -22,6 +23,7 @@ input_kind = "bound"
 binding = "modelo-115-base-retenciones"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
+export_refs = ["modelo-115-casilla-02"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "03"
@@ -35,6 +37,7 @@ formula = "modelo-115-retenciones"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-100", "orden-2000-11-20:apartado-primero"], source_refs = ["aeat-modelo-115-guia-censal"] }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
+export_refs = ["modelo-115-casilla-03"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "04"
@@ -46,6 +49,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-obligaciones-retenedor"]
+export_refs = ["modelo-115-casilla-04"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "05"
@@ -59,3 +63,4 @@ input_kind = "computed"
 formula = "modelo-115-resultado-ingresar"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
+export_refs = ["modelo-115-casilla-05"]

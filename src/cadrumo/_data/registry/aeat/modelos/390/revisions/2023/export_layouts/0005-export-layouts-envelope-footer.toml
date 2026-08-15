@@ -1,0 +1,31 @@
+[[revisions."2023".export_layouts]]
+id = "modelo-390-2023-fichero-boe"
+
+# Envelope footer. Relocated out of the page fragment so that it is
+# DECLARED after every page record: the export parity check requires the
+# declared record sequence to equal the sequence sorted by `order`, and
+# paginas 7 and 8 are authored in later fragments.
+#
+# It joins no design sheet: its only field is the computed closing tag, so
+# it declares no constant for the coverage gate's join to match on.
+
+[[revisions."2023".export_layouts.records]]
+id = "modelo-390-envelope-footer"
+record_type = "envelope_footer"
+order = 9
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-envelope-close"
+offset = 1
+length = 18
+kind = "computed"
+computed_key = "envelope_closing_tag"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2023"]

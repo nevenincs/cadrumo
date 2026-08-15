@@ -1,0 +1,195 @@
+[[revisions."2024-y-siguientes".export_layouts]]
+id = "modelo-216-2024-fichero-boe"
+
+[[revisions."2024-y-siguientes".export_layouts.records]]
+id = "modelo-216-envelope-header"
+record_type = "envelope_header"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-envelope-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-envelope-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "216"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-envelope-discriminante"
+offset = 6
+length = 1
+kind = "literal"
+literal = "0"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-envelope-year"
+offset = 7
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-envelope-period"
+offset = 11
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-envelope-tipo-cierre"
+offset = 13
+length = 5
+kind = "literal"
+literal = "0000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-envelope-aux-open"
+offset = 18
+length = 5
+kind = "literal"
+literal = "<AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-envelope-reserved-1"
+offset = 23
+length = 70
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-envelope-program-version"
+offset = 93
+length = 4
+kind = "filler"
+# AEAT note (**): "A cumplimentar por las entidades desarrolladoras
+# (EEDD)". This slot carries the identifier of the SOFTWARE version, supplied
+# by the software house, not by the filer, and the application declares no
+# developer identity anywhere. It renders blank, exactly as it does on a filing
+# produced by software whose developer is unregistered.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-envelope-reserved-2"
+offset = 97
+length = 4
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-envelope-eedd-nif"
+offset = 101
+length = 9
+kind = "filler"
+# Same EEDD note (**): the NIF of the software-development entity, not of
+# the taxpayer and not of the presenter. Deliberately NOT mapped to
+# presenter.tax_id: that would write the filer's NIF into a slot AEAT reserves
+# for the software house.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-envelope-reserved-3"
+offset = 110
+length = 213
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-envelope-aux-close"
+offset = 323
+length = 6
+kind = "literal"
+literal = "</AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]

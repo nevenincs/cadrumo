@@ -2,10 +2,22 @@
 authority_grade = "applicability"
 # Modelo 341 autoliquidación/solicitud del IVA, approved by orden-min-2000-12-15-m341 art
 # 1 with its plazo grounded verbatim in orden-min-2000-12-15-m341 art 2.
-# Scheduling/applicability-grade: declaration-header casillas only. The
-# authoritative Modelo 341 diseño de registro IS bundled (aeat-dr-341-2016)
-# but no casilla-to-position mapping has been authored from it yet, so no
-# numbered money-closure casilla is fabricated here.
+# The numbered casillas [01]-[10] and the fichero-BOE export layout ARE now
+# authored, transcribed position by position from the bundled diseño de registro
+# aeat-dr-341-2016: 33 of 33 required positions across both of its records.
+#
+# The grade stays applicability, deliberately and conservatively: promoting it is
+# an operator decision, and it is not made here on the strength of the layout
+# landing.
+#
+# ERA GAP, open for operator decision: this revision claims 2000 onwards, but the
+# only diseño de registro AEAT publishes for Modelo 341 is titled "Ejercicio 2016
+# y siguientes" and its source declares applies_from 2016-01-01. Filing years
+# 2000-2015 are therefore governed by this revision while no record design covers
+# them, and the authored layout is faithful only from 2016. AEAT publishes no
+# earlier design, so there is nothing to transcribe for that span; closing the
+# gap means either bounding this revision at 2016 or accepting that pre-2016
+# years carry a layout whose fidelity is unverified.
 valid_from = 2000-01-01
 period_selector = { year_from = 2000, periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-min-2000-12-15-m341:art-1"]

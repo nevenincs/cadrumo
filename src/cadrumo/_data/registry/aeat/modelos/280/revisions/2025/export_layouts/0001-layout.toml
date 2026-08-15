@@ -1,0 +1,66 @@
+# Modelo 280 fichero -- transcribed from the bundled AEAT Diseno de Registro
+# (source aeat-dr-280-2022, corpus/aeat_official/disenos_registro/modelo_280/
+# files/DR_280_2022.pdf, sha256
+# 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701).
+#
+# The design declares exactly two records of 500 bytes each: registro de tipo 1
+# (declarante) with 13 numbered campos plus a BLANCOS trailer, and registro de
+# tipo 2 (declarado) with 21 numbered campos plus a BLANCOS trailer. All 36
+# positions are declared across the two record files beside this one, and each
+# record's declared field lengths sum to exactly 500 contiguously from 1.
+#
+# ---------------------------------------------------------------------------
+# READ THIS BEFORE "FIXING" THE COVERAGE REFUSAL ON THIS LAYOUT
+# ---------------------------------------------------------------------------
+# This layout is COMPLETE against the published design, and the export-layout
+# coverage gate will still refuse it. The refusal is a defect in the PDF
+# record-design reader, not a gap here, and the gap it names cannot be closed:
+#
+#   1. The reader DROPS position 58 of the tipo 1 record. AEAT prints that row
+#      ("58  TIPO DE SOPORTE") with an EMPTY naturaleza cell, and the reader
+#      requires a type code, so the row vanishes -- while the extraction still
+#      reports is_complete = True. The tell is arithmetic: the reader's tipo 1
+#      field lengths sum to 499, not the 500 the sheet declares. Position 58 is
+#      declared below and is real; the gate's denominator is one short.
+#
+#   2. For the tipo 2 record the reader emits AEAT's desglosa sub-rows as
+#      SIBLING top-level fields instead of nesting them in the parent's
+#      `components`. Its tipo 2 lengths therefore sum to 582 against a declared
+#      500, and it reports 42 rows where the design has 22. Twenty of those 42
+#      are sub-spans of another row -- (111,4) and (115,2) inside (111,6), and
+#      eight more groups like it.
+#
+# So the gate asks this layout to write both (111,6) and (111,4) and (115,2),
+# which are overlapping byte ranges; `_reject_overlapping_ranges` in _export.py
+# refuses any record that declares two overlapping fields. Satisfying the gate
+# is therefore not merely undone work, it is impossible. Writing the parents --
+# which is what AEAT numbers, and what the money codec renders as one span with
+# two implied decimals -- yields 33 of the 53 positions the gate counts.
+#
+# Do not close that gap by splitting these fields, by adding overlapping
+# entries, or by dropping positions. The fix belongs in the record-design
+# reader: nest desglosa rows as `components` (the mechanism already exists on
+# RecordDesignField and is used for Modelo 576), and record a skip when a row
+# is dropped for a missing naturaleza cell instead of returning is_complete.
+#
+# Global rules the design states once, applied throughout:
+#   "Todos los campos numericos se presentaran alineados a la derecha y rellenos
+#    a ceros por la izquierda sin signos y sin empaquetar."
+#   "Todos los campos alfanumericos y alfabeticos se presentaran alineados a la
+#    izquierda y rellenos de blancos por la derecha, en mayusculas."
+#   "Para los caracteres especificos del idioma se utilizara la codificacion
+#    ISO-8859-1."
+
+[[revisions."2025".export_layouts]]
+id = "modelo-280-fichero-2022"
+legal_refs = [
+    "orden-hap-2118-2015:art-1",
+    "orden-hfp-1822-2016:art-sexto",
+    "orden-hfp-1192-2022:art-cuarto",
+]
+source_refs = [
+    "aeat-dr-280-2022",
+    "boe-modelo-280-base-order",
+    "boe-modelo-280-2016-amendment-hfp-1822",
+    "boe-modelo-280-2022-amendment-hfp-1192",
+]

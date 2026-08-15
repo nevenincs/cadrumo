@@ -8,6 +8,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 source_refs = ["boe-modelo-117-form-layout"]
+export_refs = ["modelo-117-casilla-01"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "02"
@@ -19,6 +20,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 source_refs = ["boe-modelo-117-form-layout"]
+export_refs = ["modelo-117-casilla-02"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "03"
@@ -30,6 +32,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 source_refs = ["boe-modelo-117-form-layout"]
+export_refs = ["modelo-117-casilla-03"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "04"
@@ -41,6 +44,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 source_refs = ["boe-modelo-117-form-layout"]
+export_refs = ["modelo-117-casilla-04"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "05"
@@ -52,6 +56,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 source_refs = ["boe-modelo-117-form-layout"]
+export_refs = ["modelo-117-casilla-05"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "06"
@@ -63,6 +68,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 source_refs = ["boe-modelo-117-form-layout"]
+export_refs = ["modelo-117-casilla-06"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "07"
@@ -74,6 +80,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 source_refs = ["boe-modelo-117-form-layout"]
+export_refs = ["modelo-117-casilla-07"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "08"
@@ -85,6 +92,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 source_refs = ["boe-modelo-117-form-layout"]
+export_refs = ["modelo-117-casilla-08"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "09"
@@ -97,6 +105,7 @@ input_kind = "computed"
 formula = "modelo-117-total-liquidacion"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout"]
+export_refs = ["modelo-117-casilla-09"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "10"
@@ -108,6 +117,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 source_refs = ["boe-modelo-117-form-layout"]
+export_refs = ["modelo-117-casilla-10"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "11"
@@ -121,4 +131,5 @@ input_kind = "computed"
 formula = "modelo-117-resultado-ingresar"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout"]
+export_refs = ["modelo-117-casilla-11"]
 

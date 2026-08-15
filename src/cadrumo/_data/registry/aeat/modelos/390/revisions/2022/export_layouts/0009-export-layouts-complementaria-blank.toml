@@ -1,0 +1,121 @@
+[[revisions."2022".export_layouts]]
+id = "modelo-390-2022-fichero-boe"
+
+# Indicador de pagina complementaria, offset 12, length 1.
+#
+# On the paginas below AEAT declares the whole contenido as 'En blanco':
+# there is no datum at this position and the filer writes a blank. These are
+# fillers because the DESIGN says blank, not because no carrier was handy.
+#
+# Paginas 5 and 7 declare the SAME offset as 'Blanco (No complementaria) o
+# "C" (Complementaria)' -- a real operator datum -- and are deliberately NOT
+# authored here: no carrier in this registry emits "C" (data_type "boolean"
+# renders the canonical "X" and blank only), so writing them any way
+# available would put wrong bytes on the wire.
+#
+# Offsets and lengths transcribed from aeat-dr-390-2022 (sha256 7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe).
+
+[[revisions."2022".export_layouts.records]]
+id = "modelo-390-page-01"
+record_type = "page_01"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+
+# Pág. 1: contenido 'En blanco'.
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-01-complementaria-indicator"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".export_layouts.records]]
+id = "modelo-390-page-02"
+record_type = "page_02"
+order = 2
+encoding = "latin-1"
+line_ending = "none"
+
+# Pág. 2: contenido 'En Blanco'.
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-02-complementaria-indicator"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".export_layouts.records]]
+id = "modelo-390-page-03"
+record_type = "page_03"
+order = 3
+encoding = "latin-1"
+line_ending = "none"
+
+# Pág. 3: contenido 'En Blanco'.
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-03-complementaria-indicator"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".export_layouts.records]]
+id = "modelo-390-page-04"
+record_type = "page_04"
+order = 4
+encoding = "latin-1"
+line_ending = "none"
+
+# Pág. 4: contenido 'En Blanco'.
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-04-complementaria-indicator"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".export_layouts.records]]
+id = "modelo-390-page-06"
+record_type = "page_06"
+order = 6
+encoding = "latin-1"
+line_ending = "none"
+
+# Pág. 6: contenido 'En blanco'.
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-06-complementaria-indicator"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]

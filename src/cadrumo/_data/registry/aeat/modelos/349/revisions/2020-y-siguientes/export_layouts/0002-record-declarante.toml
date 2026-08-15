@@ -55,7 +55,7 @@ id = "modelo-349-decl-nif"
 offset = 9
 length = 9
 kind = "header"
-producer_key = "presenter.tax_id"
+producer_key = "taxpayer.tax_id"
 # A NIF is a fixed-width alphanumeric identifier that always exactly
 # fills its 9-byte slot, not a zero-filled numeric quantity -- LEFT_ZERO
 # never actually pads a present value here, but its parse-side _unpad

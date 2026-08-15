@@ -28,6 +28,7 @@ data_type = "nif"
 semantic_role = "m280_declarado_nif"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-280-t2-nif-declarado"]
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-2"]
 source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 
@@ -39,6 +40,7 @@ data_type = "name"
 semantic_role = "m280_declarado_nombre"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-280-t2-nombre-declarado"]
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-2"]
 source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 
@@ -50,6 +52,7 @@ data_type = "text"
 semantic_role = "m280_clave_alta"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-280-t2-clave-alta"]
 legal_refs = ["orden-hap-2118-2015:art-1"]
 source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 
@@ -61,6 +64,7 @@ data_type = "money"
 semantic_role = "m280_aportaciones_ejercicio"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-280-t2-aportaciones-ejercicio"]
 legal_refs = ["orden-hfp-1822-2016:art-sexto"]
 source_refs = [
     "boe-modelo-280-base-order",
@@ -76,6 +80,7 @@ data_type = "money"
 semantic_role = "m280_rendimientos_positivos_ejercicio"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-280-t2-rendimientos-positivos-ejercicio"]
 legal_refs = ["orden-hfp-1822-2016:art-sexto"]
 source_refs = [
     "boe-modelo-280-base-order",
@@ -91,6 +96,7 @@ data_type = "money"
 semantic_role = "m280_rendimientos_negativos_ejercicio"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-280-t2-rendimientos-negativos-ejercicio"]
 legal_refs = ["orden-hfp-1822-2016:art-sexto"]
 source_refs = [
     "boe-modelo-280-base-order",
@@ -106,6 +112,7 @@ data_type = "text"
 semantic_role = "m280_extincion_plan"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-280-t2-extincion-plan"]
 legal_refs = ["orden-hfp-1192-2022:art-cuarto"]
 source_refs = [
     "boe-modelo-280-base-order",
@@ -121,6 +128,7 @@ data_type = "text"
 semantic_role = "m280_fecha_extincion"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-280-t2-fecha-extincion"]
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1192-2022:art-cuarto"]
 source_refs = [
     "boe-modelo-280-base-order",
@@ -136,6 +144,7 @@ data_type = "money"
 semantic_role = "m280_rendimientos_positivos_acumulados"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-280-t2-rendimientos-positivos-acumulados"]
 legal_refs = ["orden-hfp-1822-2016:art-sexto"]
 source_refs = [
     "boe-modelo-280-base-order",
@@ -151,6 +160,7 @@ data_type = "money"
 semantic_role = "m280_rendimientos_negativos_acumulados"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-280-t2-rendimientos-negativos-acumulados"]
 legal_refs = ["orden-hfp-1822-2016:art-sexto"]
 source_refs = [
     "boe-modelo-280-base-order",

@@ -1,0 +1,26 @@
+# Modelo 604 declaration-header casillas, grounded in orden-hac-510-2021 art 1.
+
+[[revisions."2021-2023".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-510-2021:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".casillas]]
+id = "decl.periodo"
+number = "periodo"
+section = ["declarante"]
+data_type = "period_code"
+semantic_role = "filing_period"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-510-2021:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+# No numbered form casilla is declared for this era: its diseno de registro
+# (aeat-dr-604-2021) has not been transcribed. Nothing is fabricated here.

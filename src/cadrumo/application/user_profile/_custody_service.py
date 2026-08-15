@@ -66,6 +66,11 @@ class ProfileCustodyDisplacedSessionRetirementError(ProfileCustodyTransactionCon
     create conflict as a refusal that leaves the pointer where it was, and that
     is exactly the disposition wanted here; narrowing the message must not
     narrow which handlers catch it.
+
+    Its registry entry is declared retryable, which is a considered value rather
+    than an oversight to correct: the underlying removal fails when something
+    else holds the receipt open -- another reader, a backup agent, a scanner --
+    which clears on its own, so a second attempt is the right advice to give.
     """
 
 

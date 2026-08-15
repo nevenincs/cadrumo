@@ -2,8 +2,22 @@
 id = "modelo-341-autoliquidacion"
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "orden-min-2000-12-15-m341:art-2", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-341-procedure", "enrolled-modelo-341-layout", "aeat-dr-341-2016"]
-casilla_ids = ["decl.ejercicio", "decl.periodo"]
-application_links = ["modelo-341-filing", "modelo-341-deadline"]
+casilla_ids = [
+    "decl.ejercicio",
+    "decl.periodo",
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+]
+export_layouts = ["modelo-341-fichero-boe"]
+application_links = ["modelo-341-filing", "modelo-341-deadline", "modelo-341-export"]
 workbook_parity_refs = ["modelo-341-orden-static-layout"]
 deadline_windows = [
     "modelo-341-2025-1t",

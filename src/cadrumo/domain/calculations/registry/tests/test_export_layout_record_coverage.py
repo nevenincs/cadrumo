@@ -39,6 +39,7 @@ from .._record_design_schema import RecordDesignExtraction, RecordDesignSheet, R
 from .._schema import ExportLayoutDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, SourceReference
 from .._validate_export_layout_coverage import (
     _design_sources,
+    _omissible_reason,
     _read_design_sheets,
     _required_positions,
     validate_export_layout_record_coverage,
@@ -168,19 +169,45 @@ def test_the_fixture_anchor_still_names_an_incomplete_layout(
     """
     modelo_id, revision_id, layout_id = _INCOMPLETE_ANCHOR
     modelos, catalogues = registry_tree
-    modelo = next((candidate for candidate in modelos if candidate.id == modelo_id), None)
-    assert modelo is not None, f"anchor modelo {modelo_id!r} is no longer in the bundled registry"
-    revision = modelo.revisions.get(revision_id)
-    assert revision is not None, f"anchor revision {revision_id!r} is no longer declared by modelo {modelo_id!r}"
-    layout = next((candidate for candidate in _fixed_width_layouts(revision) if candidate.id == layout_id), None)
-    assert layout is not None, f"anchor layout {layout_id!r} is no longer a fixed-width layout on this revision"
+    cohort = {
+        (candidate_modelo, candidate_revision, layout.id): gap
+        for candidate_modelo, candidate_revision, revision in _revisions_with_fixed_width_layouts(modelos)
+        for layout in _fixed_width_layouts(revision)
+        if (gap := _obligatorio_gap(layout, catalogues))
+    }
+    if not cohort:
+        # The cohort emptied: every AEAT-obligatorio position in the bundled
+        # tree is now writable. That is the campaign's goal reached on this
+        # narrow axis, not a reason to delete the anchor -- so the assertion
+        # becomes the positive statement of the same fact, and re-engages by
+        # itself the moment any layout stops writing an obligatorio position.
+        # The gate's own broader rule (every non-omissible position, not only
+        # the obligatorio-marked ones) still refuses layouts today; those are
+        # covered by the live-derived tests below, which need no anchor.
+        assert not _obligatorio_gap_anywhere(modelos, catalogues), "cohort recomputed non-empty within one test"
+        return
 
-    gap = _obligatorio_gap(layout, catalogues)
-    assert gap, (
-        f"anchor layout {layout_id!r} no longer leaves any AEAT-obligatorio position unwritten. If it was "
-        f"genuinely completed, move this anchor to another incomplete layout rather than deleting it"
+    assert (modelo_id, revision_id, layout_id) in cohort, (
+        f"anchor layout {layout_id!r} no longer leaves any AEAT-obligatorio position unwritten, but "
+        f"{sorted(cohort)} still do. Move the anchor to one of them rather than deleting it"
     )
-    assert _gate(revision, catalogues), f"the gate accepts anchor layout {layout_id!r} despite the gap {sorted(gap)}"
+    modelo = next(candidate for candidate in modelos if candidate.id == modelo_id)
+    revision = modelo.revisions[revision_id]
+    assert _gate(revision, catalogues), (
+        f"the gate accepts anchor layout {layout_id!r} despite the gap {sorted(cohort[(modelo_id, revision_id, layout_id)])}"
+    )
+
+
+def _obligatorio_gap_anywhere(
+    modelos: tuple[ModeloDefinition, ...],
+    catalogues: RegistryCatalogues,
+) -> set[tuple[str, int, int]]:
+    """Every AEAT-obligatorio position unwritable by its own layout, tree-wide."""
+    found: set[tuple[str, int, int]] = set()
+    for _modelo_id, _revision_id, revision in _revisions_with_fixed_width_layouts(modelos):
+        for layout in _fixed_width_layouts(revision):
+            found |= _obligatorio_gap(layout, catalogues)
+    return found
 
 
 def test_an_unwritable_obligatorio_position_forces_a_refusal(
@@ -217,8 +244,16 @@ def test_every_enumerated_coordinate_is_a_real_unwritten_design_position(
     modelos, catalogues = registry_tree
     for _modelo_id, _revision_id, revision in _revisions_with_fixed_width_layouts(modelos):
         for layout in _fixed_width_layouts(revision):
+            # Sub-fields count as declared: where AEAT desglosa a field the gate
+            # enumerates the SUB-FIELD coordinates, which live under
+            # ``components`` and never appear in ``sheet.fields``. Reading only
+            # the top level would call a correctly-reported sub-field a
+            # fabricated coordinate.
             declared = {
-                (field.offset, field.length) for sheet in _design_sheets(layout, catalogues) for field in sheet.fields
+                (candidate.offset, candidate.length)
+                for sheet in _design_sheets(layout, catalogues)
+                for field in sheet.fields
+                for candidate in (field, *field.components)
             }
             if not declared:
                 continue
@@ -364,3 +399,116 @@ def _bundled_design_path(source: SourceReference):
     path = resolve_corpus_binary(*source.corpus_path.split("/"))
     assert path is not None, f"bundled design {source.id!r} is not resolvable"
     return path
+
+
+def _component_parents(
+    modelos: tuple[ModeloDefinition, ...],
+    catalogues: RegistryCatalogues,
+) -> list[tuple[RecordDesignSheet, object]]:
+    """Every design field AEAT desglosa into sub-fields, across the bundled tree."""
+    return [
+        (sheet, field)
+        for _modelo_id, _revision_id, revision in _revisions_with_fixed_width_layouts(modelos)
+        for layout in _fixed_width_layouts(revision)
+        for sheet in _design_sheets(layout, catalogues)
+        for field in sheet.fields
+        if field.components
+    ]
+
+
+def test_a_desglosado_field_requires_its_sub_fields_and_not_its_parent_span(
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """Where AEAT desglosa a field, the sub-fields are the positions.
+
+    The parent's printed span is a grouping, not a slot: a layout writing it as
+    one field writes taxpayer data straight across whatever the design reserves
+    inside it. Both directions are pinned here -- the parent coordinate must NOT
+    be demanded, and every non-omissible sub-field must be -- so the rule cannot
+    be satisfied by dropping the parent alone.
+
+    Anti-vacuity is explicit: the population is asserted non-empty first, so a
+    corpus that stopped carrying a desglosado field fails here rather than
+    passing this test by examining nothing.
+    """
+    modelos, catalogues = registry_tree
+    parents = _component_parents(modelos, catalogues)
+    assert parents, "no bundled design declares a desglosado field, so this rule is untested"
+    for sheet, parent in parents:
+        required = {(position.offset, position.length) for position in _required_positions(sheet)}
+        assert (parent.offset, parent.length) not in required, (
+            f"{sheet.name!r} still demands the desglosado parent span "
+            f"@{parent.offset}+{parent.length} as a single position; a layout can only satisfy that "
+            f"by writing one blob across its sub-fields"
+        )
+        for component in parent.components:
+            coordinate = (component.offset, component.length)
+            if _omissible_reason(component) is not None:
+                assert coordinate not in required, (
+                    f"{sheet.name!r} demands sub-field @{component.offset}+{component.length}, which "
+                    f"the design itself declares omissible ({component.description!r})"
+                )
+                continue
+            assert coordinate in required, (
+                f"{sheet.name!r} does not demand sub-field @{component.offset}+{component.length} "
+                f"({component.description!r}), so a layout omitting a real datum reads as complete"
+            )
+
+
+def test_writing_a_desglosado_parent_as_one_blob_is_refused(
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """The bite proof: the shape that corrupts the filing must not satisfy the gate.
+
+    Replaces the faithful sub-field slots of a REAL bundled layout with the
+    single parent-span field the old rule rewarded, in memory only, and asserts
+    the gate refuses and names the sub-fields it can no longer write. Nothing on
+    disk is touched, so a peer sweep cannot capture the mutation and a crashed
+    run leaves no residue.
+    """
+    modelos, catalogues = registry_tree
+    subject = next(
+        (
+            (revision, layout, sheet, parent)
+            for _modelo_id, _revision_id, revision in _revisions_with_fixed_width_layouts(modelos)
+            for layout in _fixed_width_layouts(revision)
+            for sheet in _design_sheets(layout, catalogues)
+            for parent in sheet.fields
+            if parent.components
+        ),
+        None,
+    )
+    assert subject is not None, "no bundled layout is backed by a design declaring a desglosado field"
+    revision, layout, _sheet, parent = subject
+    span = range(parent.offset, parent.offset + parent.length)
+    expected = [
+        component
+        for component in parent.components
+        if _omissible_reason(component) is None and component.offset in span
+    ]
+    assert expected, "the desglosado parent carries no required sub-field, so this proof would be vacuous"
+
+    def _blobbed(record):
+        outside = tuple(field for field in record.fields if field.offset not in span)
+        if len(outside) == len(record.fields):
+            return record
+        donor = next(field for field in record.fields if field.offset in span)
+        blob = donor.model_copy(update={"offset": parent.offset, "length": parent.length})
+        return record.model_copy(update={"fields": (*outside, blob)})
+
+    blobbed_layout = layout.model_copy(update={"records": tuple(_blobbed(r) for r in layout.records)})
+    blobbed_revision = revision.model_copy(
+        update={
+            "export_layouts": tuple(
+                blobbed_layout if candidate.id == layout.id else candidate for candidate in revision.export_layouts
+            )
+        }
+    )
+    failures = _gate(blobbed_revision, catalogues)
+    assert failures, "collapsing a desglosado field into its parent span left the gate green"
+    reported = " ".join(failures)
+    for component in expected:
+        assert f"@{component.offset}+{component.length}" in reported, (
+            f"the refusal did not name sub-field @{component.offset}+{component.length}, so an author "
+            f"cannot tell which datum the blob swallowed"
+        )

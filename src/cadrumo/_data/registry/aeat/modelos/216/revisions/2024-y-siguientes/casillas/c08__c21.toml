@@ -23,6 +23,7 @@ semantic_role = "irnr_retencion_base_dividendos"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-08"]
 source_refs = ["boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -34,6 +35,7 @@ semantic_role = "irnr_retencion_base_resto"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-09"]
 source_refs = ["boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -46,6 +48,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-216-base-total"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-10"]
 source_refs = ["boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -57,6 +60,7 @@ semantic_role = "irnr_retencion_cuota_dividendos"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-11"]
 source_refs = ["boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -68,6 +72,7 @@ semantic_role = "irnr_retencion_cuota_resto"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-12"]
 source_refs = ["boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -80,6 +85,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-216-retenciones-total"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-13"]
 source_refs = ["boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -91,6 +97,7 @@ semantic_role = "irnr_retencion_resultados_anteriores"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-20"]
 source_refs = ["boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -104,4 +111,5 @@ required = false
 input_kind = "computed"
 formula = "modelo-216-resultado"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-21"]
 source_refs = ["boe-modelo-216-form-layout"]

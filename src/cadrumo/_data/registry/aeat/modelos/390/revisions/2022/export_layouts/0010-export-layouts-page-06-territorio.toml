@@ -1,0 +1,204 @@
+[[revisions."2022".export_layouts]]
+id = "modelo-390-2022-fichero-boe"
+
+# Pagina 6 completion: apartado 7 box [659] and the whole apartado 8
+# "Tributacion por razon de territorio" block. Merges into the page_06
+# record already declared in 0002/0005.
+#
+# The three apartado-8 slots for [658], [84] and [659] are RESTATEMENTS: they
+# write the same casilla as their apartado-7 counterpart, which is why those
+# casillas carry two export_refs each.
+#
+# Offsets and lengths transcribed from aeat-dr-390-2022 (sha256 7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe).
+
+[[revisions."2022".export_layouts.records]]
+id = "modelo-390-page-06"
+record_type = "page_06"
+order = 6
+encoding = "latin-1"
+line_ending = "none"
+
+# 7. Resultado liquidación anual - IVA a la importación liquidado por la Aduana (sólo sujetos pasivos con opción de diferimiento) [659]
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-iva-importacion-diferimiento"
+offset = 47
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.iva-importacion-diferimiento"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+# 8. Tributación razón de territorio - Administraciones - Territorio común [87]
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-comun-porcentaje"
+offset = 98
+length = 5
+kind = "casilla"
+casilla_id = "iva.anual.territorio.comun.porcentaje"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+# 8. Tributación razón de territorio - Administraciones - Álava [88]
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-alava-porcentaje"
+offset = 103
+length = 5
+kind = "casilla"
+casilla_id = "iva.anual.territorio.alava.porcentaje"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+# 8. Tributación razón de territorio - Administraciones - Guipúzcoa [89]
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-guipuzcoa-porcentaje"
+offset = 108
+length = 5
+kind = "casilla"
+casilla_id = "iva.anual.territorio.guipuzcoa.porcentaje"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+# 8. Tributación razón de territorio - Administraciones - Vizcaya [90]
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-vizcaya-porcentaje"
+offset = 113
+length = 5
+kind = "casilla"
+casilla_id = "iva.anual.territorio.vizcaya.porcentaje"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+# 8. Tributación razón de territorio - Administraciones - Navarra [91]
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-navarra-porcentaje"
+offset = 118
+length = 5
+kind = "casilla"
+casilla_id = "iva.anual.territorio.navarra.porcentaje"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+# 8. Tributación razón de territorio - Administraciones - Regularización cuotas art. 80.Cinco.5ª LIVA [658]
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-regularizacion-cuotas-art-80-cinco-5"
+offset = 123
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.regularizacion-cuotas-art-80-cinco-5"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+# 8. Tributación razón de territorio - Administraciones - Suma de resultados [84]
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-suma-resultados"
+offset = 140
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.suma-resultados"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+# 8. Tributación razón de territorio - Administraciones - Resultado atribuible a territorio común [92]
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-resultado-atribuible-comun"
+offset = 157
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.territorio.resultado-atribuible-comun"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+# 8. Tributación razón de territorio - Administraciones - IVA a la importación liquidado por la Aduana(sólo sujetos pasivos con opción de diferimiento) [659]
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-iva-importacion-diferimiento"
+offset = 174
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.iva-importacion-diferimiento"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+# 8. Tributación razón de territorio - Administraciones - Compens. cuotas ej. anterior atrib. territ. com. [93]
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-compensacion-atribuible-comun"
+offset = 191
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.territorio.compensacion-atribuible-comun"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+# 8. Tributación razón de territorio - Administraciones - Resultado liq. anual atribuible territ. comun [94]
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-resultado-anual-atribuible-comun"
+offset = 208
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.territorio.resultado-anual-atribuible-comun"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]

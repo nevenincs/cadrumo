@@ -1,0 +1,7 @@
+[[revisions."2021-2023".constructs]]
+id = "modelo-604-autoliquidacion"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure", "aeat-dr-604-2021"]
+casilla_ids = ["decl.ejercicio", "decl.periodo"]
+application_links = ["modelo-604-filing"]
+workbook_parity_refs = ["modelo-604-2021-2023-static-layout"]

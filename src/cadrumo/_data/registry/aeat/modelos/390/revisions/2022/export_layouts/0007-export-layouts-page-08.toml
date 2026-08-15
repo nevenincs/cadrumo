@@ -72,13 +72,18 @@ signed = false
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
 
+# Indicador de pagina complementaria. AEAT declares this position's whole
+# contenido as 'En blanco' on pagina 8 -- there is no datum here and
+# the filer writes a blank. It is a filler because the DESIGN says blank,
+# not because nothing was available to put in it: paginas 5 and 7 carry the
+# real flag at this same offset, spelled 'Blanco (No complementaria) o "C"
+# (Complementaria)', and those are NOT authored as fillers.
 [[revisions."2022".export_layouts.records.fields]]
 id = "modelo-390-page-08-complementaria-indicator"
 offset = 12
 length = 1
-kind = "header"
-producer_key = "amendment_evidence.is_complementaria"
-data_type = "boolean"
+kind = "filler"
+data_type = "text"
 required = false
 padding = "right_space"
 justification = "left"

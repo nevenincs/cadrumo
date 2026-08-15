@@ -77,3 +77,11 @@ source_refs = ["boe-modelo-190-2025-form", "aeat-modelo-190-procedure"]
 # practicada, ingreso a cuenta. The withholding source kind aggregates
 # from the operator's payroll / accounts-payable ledger.
 # -----------------------------------------------------------------------------
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-190-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]

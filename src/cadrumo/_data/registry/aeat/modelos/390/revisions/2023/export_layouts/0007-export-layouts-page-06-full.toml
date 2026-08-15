@@ -1,0 +1,592 @@
+[[revisions."2023".export_layouts]]
+id = "modelo-390-2023-fichero-boe"
+
+# Pagina 6 completion: apartados 7, 8, 9 and 10. Merges into the page_06
+# record declared in the earlier fragments.
+#
+# The apartado-8 slots for [658], [84] and [659] are RESTATEMENTS of their
+# apartado-7 counterparts, which is why those casillas carry two export_refs.
+#
+# Offsets and lengths transcribed from aeat-dr-390-2023 (sha256 179c02eddc8bab411c249fc3fda19c7015d668e1dd7930d4af79f38998b9c5a7).
+
+[[revisions."2023".export_layouts.records]]
+id = "modelo-390-page-06"
+record_type = "page_06"
+order = 6
+encoding = "latin-1"
+line_ending = "none"
+
+# 7. Resultado liquidación anual - Regularización cuotas art. 80.Cinco.5ª LIVA [658]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-regularizacion-cuotas-art-80-cinco-5"
+offset = 13
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.regularizacion-cuotas-art-80-cinco-5"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 7. Resultado liquidación anual - Suma de resultados [84]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-suma-resultados"
+offset = 30
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.suma-resultados"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 7. Resultado liquidación anual - IVA a la importación liquidado por la Aduana (sólo sujetos pasivos con opción de diferimiento) [659]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-iva-importacion-diferimiento"
+offset = 47
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.iva-importacion-diferimiento"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 7. Resultado liquidación anual - Compensación de cuotas ejercicio anterior [85]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-compensacion-cuotas-ejercicio-anterior"
+offset = 64
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.compensacion-cuotas-ejercicio-anterior"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 7. Resultado liquidación anual - Resultado de la liquidación [86]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-resultado-liquidacion"
+offset = 81
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.resultado-liquidacion"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 8. Tributación razón de territorio - Administraciones - Territorio común [87]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-comun-porcentaje"
+offset = 98
+length = 5
+kind = "casilla"
+casilla_id = "iva.anual.territorio.comun.porcentaje"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 8. Tributación razón de territorio - Administraciones - Álava [88]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-alava-porcentaje"
+offset = 103
+length = 5
+kind = "casilla"
+casilla_id = "iva.anual.territorio.alava.porcentaje"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 8. Tributación razón de territorio - Administraciones - Guipúzcoa [89]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-guipuzcoa-porcentaje"
+offset = 108
+length = 5
+kind = "casilla"
+casilla_id = "iva.anual.territorio.guipuzcoa.porcentaje"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 8. Tributación razón de territorio - Administraciones - Vizcaya [90]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-vizcaya-porcentaje"
+offset = 113
+length = 5
+kind = "casilla"
+casilla_id = "iva.anual.territorio.vizcaya.porcentaje"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 8. Tributación razón de territorio - Administraciones - Navarra [91]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-navarra-porcentaje"
+offset = 118
+length = 5
+kind = "casilla"
+casilla_id = "iva.anual.territorio.navarra.porcentaje"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 8. Tributación razón de territorio - Administraciones - Regularización cuotas art. 80.Cinco.5ª LIVA [658]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-regularizacion-cuotas-art-80-cinco-5"
+offset = 123
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.regularizacion-cuotas-art-80-cinco-5"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 8. Tributación razón de territorio - Administraciones - Suma de resultados [84]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-suma-resultados"
+offset = 140
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.suma-resultados"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 8. Tributación razón de territorio - Administraciones - Resultado atribuible a territorio común [92]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-resultado-atribuible-comun"
+offset = 157
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.territorio.resultado-atribuible-comun"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 8. Tributación razón de territorio - Administraciones - IVA a la importación liquidado por la Aduana(sólo sujetos pasivos con opción de diferimiento) [659]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-iva-importacion-diferimiento"
+offset = 174
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.iva-importacion-diferimiento"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 8. Tributación razón de territorio - Administraciones - Compens. cuotas ej. anterior atrib. territ. com. [93]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-compensacion-atribuible-comun"
+offset = 191
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.territorio.compensacion-atribuible-comun"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 8. Tributación razón de territorio - Administraciones - Resultado liq. anual atribuible territ. comun [94]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-territorio-resultado-anual-atribuible-comun"
+offset = 208
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.territorio.resultado-anual-atribuible-comun"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 9. Resultado de las liquidaciones - Total resultados a ingresar autoliquidaciones de IVA del ejercicio [95]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-liquidaciones-total-a-ingresar"
+offset = 225
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.liquidaciones.total-a-ingresar"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 9. Resultado de las liquidaciones - Total devoluc. mensuales IVA suj. pasivos Regtro. de devolución mensual [96]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-liquidaciones-total-devoluciones-mensuales"
+offset = 242
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.liquidaciones.total-devoluciones-mensuales"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-116", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 9. Resultado de las liquidaciones - Total devoluc. Por cuotas en la adquisicion de elementos de transporte [524]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-liquidaciones-total-devoluciones-elementos-transporte"
+offset = 259
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.liquidaciones.total-devoluciones-elementos-transporte"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-116", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 9. Resultado de las liquidaciones - Resultado declaración-liquidación último periodo - A devolver [98]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-liquidaciones-ultimo-periodo-a-devolver"
+offset = 293
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.liquidaciones.ultimo-periodo-a-devolver"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-116", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 9. Resultado de las liquidaciones - Total resultados positivos del ejercicio (modelo 322) [525]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-liquidaciones-total-resultados-positivos-m322"
+offset = 327
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.liquidaciones.total-resultados-positivos-m322"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 9. Resultado de las liquidaciones - Total resultados negativos del ejercicio (modelo 322) [526]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-liquidaciones-total-resultados-negativos-m322"
+offset = 344
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.liquidaciones.total-resultados-negativos-m322"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 10. Volumen de operaciones - Operaciones en régimen general [99]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-volumen-regimen-general"
+offset = 361
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.regimen-general"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 10. Volumen de operaciones - Operaciones régimen especial del criterio de caja [653]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-volumen-criterio-caja"
+offset = 378
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.criterio-caja"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-163-decies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 10. Volumen de operaciones - Operaciones exentas sin derecho a deducción [105]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-volumen-exentas-sin-derecho-deduccion"
+offset = 429
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.exentas-sin-derecho-deduccion"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-20", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 10. Volumen de operaciones - Operaciones no sujetas por reglas de localización (excepto las incluidas en la casilla 126) [110]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-volumen-no-sujetas-reglas-localizacion"
+offset = 446
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.no-sujetas-reglas-localizacion"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-68", "ley-37-1992:art-69", "ley-37-1992:art-70", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 10. Volumen de operaciones - Operaciones sujetas con inversión del sujeto pasivo [125]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-volumen-inversion-sujeto-pasivo"
+offset = 463
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.inversion-sujeto-pasivo"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-84", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 10. Volumen de operaciones - OSS. Operaciones no sujetas por reglas de localización acogidas a la OSS [126]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-volumen-oss-no-sujetas-localizacion"
+offset = 480
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.oss-no-sujetas-localizacion"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-163-noniesdecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 10. Volumen de operaciones - OSS. Operaciones sujetas y acogidas a la OSS [127]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-volumen-oss-sujetas"
+offset = 497
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.oss-sujetas"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-163-noniesdecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 10. Volumen de operaciones - Operaciones intragrupo valoradas conforme a lo dispuesto en los arts. 78 y 79 LIVA [128]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-volumen-intragrupo-arts-78-79"
+offset = 514
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.intragrupo-arts-78-79"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-163-sexies", "ley-37-1992:art-79", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 10. Volumen de operaciones - Operaciones en régimen simplificado [100]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-volumen-regimen-simplificado"
+offset = 531
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.regimen-simplificado"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 10. Volumen de operaciones - Operaciones en régimen especias de la agricultura, ganadería y pesca [101]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-volumen-reagp"
+offset = 548
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.reagp"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-124", "ley-37-1992:art-130", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 10. Volumen de operaciones - Operaciones en régimen especial del recargo de equivalencia [102].
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-volumen-recargo-equivalencia"
+offset = 565
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.recargo-equivalencia"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-148", "ley-37-1992:art-161", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 10. Volumen de operaciones - Operaciones en régimen especias de bienes usados, objetos de arte, antigüedades y objetos de colección [227].
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-volumen-bienes-usados"
+offset = 582
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.bienes-usados"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 10. Volumen de operaciones - Operaciones en régimen especial de agencias de viajes [228].
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-volumen-agencias-viajes"
+offset = 599
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.agencias-viajes"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 10. Volumen de operaciones - Entrega de bienes inmuebles y operaciones financieras no habituales [106]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-volumen-inmuebles-financieras-no-habituales"
+offset = 616
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.inmuebles-financieras-no-habituales"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 10. Volumen de operaciones - Entrega de bienes de inversion [107]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-volumen-bienes-de-inversion"
+offset = 633
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.bienes-de-inversion"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-108", "ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 10. Volumen de operaciones - Total volumen de operaciones [108]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-volumen-total"
+offset = 650
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.total"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]

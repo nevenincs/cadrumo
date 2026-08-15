@@ -29,7 +29,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-06-casilla-regularizacion-cuotas-art-80-cinco-5"]
+# Apartado 8 ("Tributacion por razon de territorio") restates this box at offset
+# 123 with a byte-identical label, so the same casilla is written twice.
+export_refs = ["modelo-390-page-06-casilla-regularizacion-cuotas-art-80-cinco-5", "modelo-390-page-06-casilla-territorio-regularizacion-cuotas-art-80-cinco-5"]
 
 # Box [84] - "7. Resultado liquidacion anual - Suma de resultados [84]" (offset 30, length 17).
 [[revisions."2022".casillas]]
@@ -45,7 +47,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-06-casilla-suma-resultados"]
+# Apartado 8 ("Tributacion por razon de territorio") restates this box at offset
+# 140 with a byte-identical label, so the same casilla is written twice.
+export_refs = ["modelo-390-page-06-casilla-suma-resultados", "modelo-390-page-06-casilla-territorio-suma-resultados"]
 
 # Box [85] - "7. Resultado liquidacion anual - Compensacion de cuotas ejercicio anterior [85]" (offset 64, length 17).
 [[revisions."2022".casillas]]
