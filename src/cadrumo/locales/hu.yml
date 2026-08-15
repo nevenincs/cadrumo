@@ -675,9 +675,6 @@ application:
           config auth test` parancsot az AEAT adatok olvasása előtt.
   bucket_maintenance:
     errors:
-      archive_active_bucket: Az aktív bucket nem archiválható; válts előbb másik profilra.
-      archive_not_confirmed: Az archiválás visszafordítható állapotátmenet, de kifejezett
-        megerősítést igényel.
       delete_active_bucket: Az aktív bucket nem törölhető; előbb jelentkezzen be másik
         profilba az aeat config login NÉV paranccsal.
       delete_not_confirmed: Ez a művelet visszafordíthatatlan. Futtassa újra a --yes

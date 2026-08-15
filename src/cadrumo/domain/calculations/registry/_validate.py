@@ -38,6 +38,7 @@ from ._source_evidence_fingerprint import (
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_layout_authority_content import validate_layout_authority_content
+from ._validate_official_source_guidance_content import validate_suppression_notice_content
 from ._validate_record_design_epochs import (
     validate_record_design_epoch_uniqueness,
     validate_record_design_epoch_window,
@@ -221,6 +222,7 @@ class RegistryValidator:
         # unbacked claims would surface as one message naming one of them. Each
         # claim is its own declaration and each is named.
         failures.extend(validate_layout_authority_content(self._sources, source_root=self._source_root))
+        failures.extend(validate_suppression_notice_content(self._sources, source_root=self._source_root))
         self._catalogue_failures = tuple(failures)
         CATALOGUE_FAILURE_CACHE[cache_key] = (self._legal, self._sources, self._catalogue_failures)
         return self._catalogue_failures

@@ -649,10 +649,6 @@ application:
           before reading AEAT data.
   bucket_maintenance:
     errors:
-      archive_not_confirmed: Archiving is a reversible state transition, but it still
-        requires explicit confirmation.
-      delete_active_bucket: Cannot delete the active bucket; log in to another profile
-        first with aeat config login NAME.
       delete_not_confirmed: This operation is destructive. Re-run with --yes to confirm.
       import_bucket_collision: A bucket with id {bucket_id} already exists; use --force-replace
         to overwrite it.

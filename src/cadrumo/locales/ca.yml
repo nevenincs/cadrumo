@@ -716,10 +716,6 @@ application:
           auth test` abans de llegir dades AEAT.
   bucket_maintenance:
     errors:
-      archive_not_confirmed: Arxivar és una transició d'estat reversible, però requereix
-        confirmació explícita.
-      delete_active_bucket: No es pot eliminar el bucket actiu; inicia primer la sessió
-        en un altre perfil amb aeat config login NAME.
       delete_not_confirmed: Aquesta operació és destructiva. Torna a executar-la amb
         --yes per confirmar.
       import_bucket_collision: Ja existeix un bucket amb l'id {bucket_id}; usa --force-replace
