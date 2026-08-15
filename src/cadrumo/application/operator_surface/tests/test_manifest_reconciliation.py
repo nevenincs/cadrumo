@@ -7,6 +7,7 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
+from .._errors import OperatorSurfaceContractError
 from .._manifest import (
     ExplicitExclusionInventoryRow,
     InputSchemaInventoryRow,
@@ -116,7 +117,7 @@ def test_reconciliation_requires_reasoned_authoritative_mcp_exclusion() -> None:
         ),
     )
 
-    with pytest.raises(ValueError, match="silent MCP exclusion"):
+    with pytest.raises(OperatorSurfaceContractError, match="silent MCP exclusion"):
         reconcile_operator_surface_inventory(**inventory)
 
     inventory["exclusions"] = (
@@ -204,13 +205,13 @@ def test_reconciliation_rejects_unmatched_duplicate_and_ambiguous_identities() -
             provenance="SCHEMA_REGISTRY",
         ),
     )
-    with pytest.raises(ValueError, match="unmatched result_schema identity"):
+    with pytest.raises(OperatorSurfaceContractError, match="unmatched result_schema identity"):
         reconcile_operator_surface_inventory(**inventory)
 
     inventory = _complete_inventory()
     result_schema = inventory["result_schemas"][0]
     inventory["result_schemas"] = (result_schema, result_schema)
-    with pytest.raises(ValueError, match="duplicate result_schema identity"):
+    with pytest.raises(OperatorSurfaceContractError, match="duplicate result_schema identity"):
         reconcile_operator_surface_inventory(**inventory)
 
     inventory = _complete_inventory()
@@ -225,7 +226,7 @@ def test_reconciliation_rejects_unmatched_duplicate_and_ambiguous_identities() -
             provenance="resolved Click command tree",
         ),
     )
-    with pytest.raises(ValueError, match="ambiguous CLI path"):
+    with pytest.raises(OperatorSurfaceContractError, match="ambiguous CLI path"):
         reconcile_operator_surface_inventory(**inventory)
 
 
@@ -240,7 +241,7 @@ def test_reconciliation_rejects_orphan_mounted_family_with_identity_and_provenan
         ),
     )
 
-    with pytest.raises(ValueError, match="orphan mounted family declaration") as exc_info:
+    with pytest.raises(OperatorSurfaceContractError, match="orphan mounted family declaration") as exc_info:
         reconcile_operator_surface_inventory(**inventory)
 
     assert "app ghost" in str(exc_info.value)
@@ -250,7 +251,7 @@ def test_reconciliation_rejects_orphan_mounted_family_with_identity_and_provenan
 def test_reconciliation_rejects_silent_missing_surface_and_policy_exposure_contradiction() -> None:
     inventory = _complete_inventory()
     inventory["input_schemas"] = ()
-    with pytest.raises(ValueError, match="missing input_schema accounting"):
+    with pytest.raises(OperatorSurfaceContractError, match="missing input_schema accounting"):
         reconcile_operator_surface_inventory(**inventory)
 
     inventory = _complete_inventory()
@@ -270,7 +271,7 @@ def test_reconciliation_rejects_silent_missing_surface_and_policy_exposure_contr
             provenance="test inventory",
         ),
     )
-    with pytest.raises(ValueError, match="MCP exposure contradicts profile policy"):
+    with pytest.raises(OperatorSurfaceContractError, match="MCP exposure contradicts profile policy"):
         reconcile_operator_surface_inventory(**inventory)
 
 

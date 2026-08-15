@@ -239,12 +239,29 @@ open above it.
 
 Two corrections to the plan row's own framing are load-bearing findings on
 their own, independent of the per-family verdicts: sandbox and archive are
-NOT wiring (evidenced by the deleted 838-line sandbox module and the
-docstring-stated absence of any archive successor, respectively), and delete
-is NOT unassessed (it was already ruled in `W05.P08.S134` and sequenced
-behind `W05.P08.S154`). Both are reported rather than silently corrected in
-place, per the standing instruction to say so explicitly when disagreeing
-with a load-bearing prior.
+NOT wiring (evidenced by the deleted 838-line sandbox module and, for
+archive, three independent confirmations — the maintenance package's own
+docstring, the vanished `ProfileSetupState` dormancy axis, and "S34"'s
+independently-run zero-successor/zero-caller/six-red-tests finding for
+archive inspect specifically), and delete is NOT unassessed (it was already
+ruled in `W05.P08.S134` and sequenced behind `W05.P08.S154`, whose blocking
+guard is confirmed live, not retired). Both are reported rather than
+silently corrected in place, per the standing instruction to say so
+explicitly when disagreeing with a load-bearing prior — and rename and
+delete's own "wiring" characterization holds up exactly as the row assumed,
+so the correction is scoped to sandbox and archive, not a blanket rejection
+of the row's premise.
+
+A peer session's parallel per-verb assessment ("S34") on this same family
+was received mid-row and verified rather than taken on report: all four of
+its cited facts (the retention-floor guard function and its test-failure
+count, the live `--help` refusals for `rename`/`delete`/`archive`, the
+`_profile_inspect.py` stale-docstring citation, and the orphaned
+`RenameBucketCommand` import) reproduced exactly as reported. Its residue
+cleanup inside `bucket_maintenance/_contracts.py` was confirmed already
+landed and is not re-done or re-nominated here; the residue it named as
+still-live outside that package is carried forward into this record's
+archive-family section above rather than duplicated as a new finding.
 
 No `entrypoints/mcp/` directory exists in the current tree at all (checked
 directly; `src/cadrumo/entrypoints/` contains only `cli/`,

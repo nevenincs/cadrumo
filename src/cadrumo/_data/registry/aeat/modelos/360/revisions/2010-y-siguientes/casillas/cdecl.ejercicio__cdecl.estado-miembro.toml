@@ -6,6 +6,7 @@ data_type = "year"
 semantic_role = "filing_year"
 required = true
 input_kind = "informational"
+export_refs = ["modelo-360-sol-ejercicio"]
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 
@@ -17,6 +18,7 @@ data_type = "text"
 semantic_role = "estado_miembro_devolucion"
 required = true
 input_kind = "informational"
+export_refs = ["modelo-360-sol-estado-miembro"]
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 

@@ -1,14 +1,33 @@
-"""Policy coverage gate for repair, recovery, import, export, and profile-history commands."""
+"""Policy coverage gate for repair, recovery, import, export, and profile-history commands.
+
+The catalog is bound in both directions. The *coverage* direction (a
+policy-relevant command declared in the CLI sources must carry a policy row)
+walks the command declarations by AST. The *liveness* direction — every
+catalogued ``command_path`` must resolve to a command the live CLI actually
+registers — is derived from the live click tree, with nothing hand-listed:
+see :func:`test_every_catalogued_command_path_resolves_in_the_live_cli`.
+
+That second direction is what keeps a policy row from outliving its verb. The
+row is an operator-facing inventory of command paths written WITHOUT the
+``aeat`` executable token, so neither
+:mod:`test_documented_command_conformance` (which anchors on the executable
+token in docs) nor :mod:`test_suggestion_command_conformance` (which anchors on
+it in string literals) can see it. Six rows for retired custody verbs and two
+for never-implemented profile-bundle verbs sat here unnoticed for exactly that
+reason.
+"""
 
 from __future__ import annotations
 
 import ast
 from pathlib import Path
 
+import click
 import pytest
 
 from ....adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
 from ....application.repair_integrity import build_repair_policy_command_surface_catalog
+from ....tests.cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -17,9 +36,7 @@ _CLI_DIR = Path(__file__).resolve().parents[1]
 _POLICY_COMMAND_MODULES: tuple[tuple[Path, str, tuple[str, ...]], ...] = (
     (_CLI_DIR / "_config" / "__init__.py", "app", ("config",)),
     (_CLI_DIR / "_config" / "_custody.py", "app", ("config",)),
-    (_CLI_DIR / "_config" / "_custody_secret.py", "app", ("config",)),
     (_CLI_DIR / "_config" / "_bucket_history.py", "profile_app", ("config", "profile")),
-    (_CLI_DIR / "_config" / "_profile_bundle.py", "profile_app", ("config", "profile")),
     (_CLI_DIR / "_config" / "_repair_cli.py", "repair_app", ("config", "repair")),
     (_CLI_DIR / "_config" / "_repair_profile.py", "repair_app", ("config", "repair")),
     (_CLI_DIR / "_ledger.py", "app", ("app", "ledger")),
