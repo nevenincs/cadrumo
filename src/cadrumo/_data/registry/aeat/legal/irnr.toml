@@ -702,6 +702,16 @@ bytes = 48190
 retrieved_at = 2026-07-10
 published_at = 2012-02-15
 applies_from = 2011-01-01
+# Closed on the artefact's OWN declared extent, not on its successor's start.
+# AEAT titles this exact URL "210 - Orden EHA/3316/2010 (Devengos desde el
+# 01-01-2011 al 31-12-2017)", and the declared 48190 bytes match the 47 KB the
+# index advertises for it. Closing it at the day before "aeat-dr-210-2022"
+# opens would have stretched it over 2018-2022, which AEAT governs with two
+# further editions this registry does not enrol ("Devengos entre del 01-01-2018
+# y 31/12/2021" and "Devengos entre 01-01-2022 y 01-06-2022"). Narrowing to the
+# artefact's real extent turns a silent over-claim into a visible era gap for
+# 2018-01-01..2022-05-31, which is the honest state until those two are bundled.
+applies_to = 2017-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos/dr210_2011.pdf"
 review_status = "reviewed"
 
@@ -719,7 +729,15 @@ sha256 = "dce167991abaf547f31b38d7a5e51892ff6e8bd49a27a539432ab504891a0c00"
 bytes = 308224
 retrieved_at = 2026-07-21
 applies_from = 2022-06-01
-applies_to = 2026-01-01
+# Was 2026-01-01, which double-claimed a day with "aeat-dr-210-2026". AEAT
+# titles that successor "Devengos a partir del 01-01-2026" -- explicitly
+# inclusive of 01-01-2026 -- so the two could not both hold it. AEAT's own
+# boundary convention across its consecutive 210 editions settles the direction:
+# "Devengos desde el 01-01-2011 al 31-12-2017" and "Devengos entre del
+# 01-01-2018 y 31/12/2021" both close on 31 December, and this edition's own
+# title ("entre 01-06-2022 y 01-01-2026") states its upper bound as the
+# SUCCESSOR'S START, not as its own last day. Closed the day before.
+applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_22/dr210e22.xls"
 review_status = "reviewed"
 

@@ -612,11 +612,18 @@ evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
 record_design_epoch = "2025"
+# Closed at its own ejercicio, the day before "aeat-dr-303-2026" opens. AEAT
+# titles this edition "303 - Ejercicio 2025" and its successor "303 - Ejercicio
+# 2026 y siguientes", so the boundary is the authority's own. It was the only
+# one of modelo 303's fourteen editions left open-ended; the rest, including the
+# deliberate same-year period splits for 2018, 2021 and 2024, were already
+# correctly closed.
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/06-303-ejercicio-2025-actualizado-04-12-2025-380-kb-xlsx.xlsx"
 sha256 = "6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6"
 bytes = 386694
 retrieved_at = 2026-05-06
 applies_from = 2025-01-01
+applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/303_2025.xlsx"
 review_status = "reviewed"
 

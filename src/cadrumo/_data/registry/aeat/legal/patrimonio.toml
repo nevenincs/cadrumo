@@ -142,6 +142,13 @@ sha256 = "4c8409b0a213bc2c450428939c60eb0791fba40de70ebc82d4cb3c07c43faf4f"
 bytes = 756224
 retrieved_at = 2026-08-15
 applies_from = 2021-01-01
+# Closed at its own ejercicio. AEAT publishes modelo 714 one edition PER
+# EJERCICIO (its index titles read "714 - Ejercicio 2021"), and this
+# source's record_design_epoch and corpus filename both name 2021. All
+# five 714 editions previously declared applies_from with no applies_to, so
+# five designs simultaneously claimed 2025 onward and revision resolution
+# had no single answer.
+applies_to = 2021-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR714_2021.xls"
 review_status = "reviewed"
 
@@ -155,6 +162,13 @@ sha256 = "b24b9ee856a9b4ea665e61ccbbe000fd8d50e4d70d48b34b5eeacbe74778b925"
 bytes = 766464
 retrieved_at = 2026-07-21
 applies_from = 2022-01-01
+# Closed at its own ejercicio. AEAT publishes modelo 714 one edition PER
+# EJERCICIO (its index titles read "714 - Ejercicio 2022"), and this
+# source's record_design_epoch and corpus filename both name 2022. All
+# five 714 editions previously declared applies_from with no applies_to, so
+# five designs simultaneously claimed 2025 onward and revision resolution
+# had no single answer.
+applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR714_2022.xls"
 review_status = "reviewed"
 
@@ -168,6 +182,13 @@ sha256 = "b51178affa2a64ec2d538657136e807c11802457922f97e9333018d414c66299"
 bytes = 835584
 retrieved_at = 2026-07-21
 applies_from = 2023-01-01
+# Closed at its own ejercicio. AEAT publishes modelo 714 one edition PER
+# EJERCICIO (its index titles read "714 - Ejercicio 2023"), and this
+# source's record_design_epoch and corpus filename both name 2023. All
+# five 714 editions previously declared applies_from with no applies_to, so
+# five designs simultaneously claimed 2025 onward and revision resolution
+# had no single answer.
+applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR714_2023.xls"
 review_status = "reviewed"
 
@@ -181,6 +202,13 @@ sha256 = "d70ce59786aa88cc91ad67197bf7f6a6630676abe087b7d66a64a0bf74a72aa5"
 bytes = 829440
 retrieved_at = 2026-07-21
 applies_from = 2024-01-01
+# Closed at its own ejercicio. AEAT publishes modelo 714 one edition PER
+# EJERCICIO (its index titles read "714 - Ejercicio 2024"), and this
+# source's record_design_epoch and corpus filename both name 2024. All
+# five 714 editions previously declared applies_from with no applies_to, so
+# five designs simultaneously claimed 2025 onward and revision resolution
+# had no single answer.
+applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/DR714_2024.xls"
 review_status = "reviewed"
 
