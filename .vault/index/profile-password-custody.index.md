@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:ce3d66dee269b0b049620b84477e50a77899da71ef6fea517ae4d4629f7dd60e'
+body_hash: 'sha256:0bdb5092ea30b2eac89f695926d3d951256072eec8b7b37fb4f789c8d188a56b'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -35,6 +35,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W03-P05-S13]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S108]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S135]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S136]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S140]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S42]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S59]]'
@@ -175,6 +176,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W02-P04-S95` - Have Terra XHigh make the receipt deletion honour the clear outcome it already computes, since the discard helper returns whether the compare-and-clear succeeded and the resume path branches on it, while the revocation entry point calls the same helper bare and returns nothing, so a refused clear is silent and a login can report the prior profile as closed while its acceleration receipt survives on disk, the reachability being narrow because the bytes must change under a held per-profile lock but the reporting value already existing
 - `2026-08-13-profile-password-custody-W03-P06-S108` - Have Terra XHigh re-found the label ambiguity refusal test on the custody label authority rather than retire it, since the refusal itself was restored as real operator-facing work and is live, while only the test's mechanism is stale in manufacturing two casefold-equal labels by rewriting the retired plaintext bucket manifest, and the restored refusal already ships five tests that manufacture the same collision correctly
 - `2026-08-13-profile-password-custody-W03-P06-S135` - Have Terra XHigh name the capsules root path in the retired-custody refusal
+- `2026-08-13-profile-password-custody-W03-P06-S136` - Have Terra XHigh finish the creation-door conversion enumerated by CALL SITE of the creation verb rather than by named helper
 - `2026-08-13-profile-password-custody-W03-P06-S140` - Have Terra XHigh resolve the three creation flags that have no mapped fact path by reading the profile schema rather than inferring one
 - `2026-08-13-profile-password-custody-W03-P06-S59` - Have Sol Medium rule on the seventeen operator command subtrees the capsule cutover left unresolved
 - `2026-08-13-profile-password-custody-W03-P06-S75` - Have Terra XHigh clear the six dead entries in the runtime bootstrap-exempt allowlist that name operator verbs the tree no longer registers, since each entry grants exemption from the active-profile session gate matched by command chain, so a future verb registered under one of those names silently inherits an exemption nobody consciously granted, which matters most for the profile deletion verb, and note one further non-resolving entry is a deliberate exemption for a separate module entrypoint rather than a defect
