@@ -72,6 +72,7 @@ from .....tests.cli_runner import invoke_cached_cli
 from .....tests.env_scope import scoped_env_var
 from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .....tests.secure_sql import isolated_runtime_profile
+from .....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -94,10 +95,12 @@ _PROFILE_CREATE_ARGS = (
 
 
 def _create_profile(name: str = "google-credential-source-operator") -> str:
-    """Provision and activate a real profile; return its resolved profile id."""
-    result = invoke_cached_cli(["config", "profile", "create", name, *_PROFILE_CREATE_ARGS])
-    assert result.exit_code == 0, result.output
-    return name
+    """Register the profile through the shared CLI registration door."""
+    return register_cli_profile(
+        label=name,
+        facts={
+        },
+    )
 
 
 def test_set_service_account_impersonation_then_show_reflects_it() -> None:

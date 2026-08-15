@@ -30,6 +30,7 @@ from ....core import STR_KEYED_MAPPING_ADAPTER, scan_directory
 from ....domain.user_profile import UserProfilePortableExport
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -37,32 +38,17 @@ _RECONCILE_ARGV = ("--format", "json", "app", "maintenance", "reconcile")
 
 
 def _create_profile() -> str:
-    result = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            "subject",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--activity",
-            "design",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Subject",
-            "--surnames",
-            "Access",
-        ],
+    """Register the profile through the shared CLI registration door."""
+    return register_cli_profile(
+        label='subject',
+        facts={
+            "identity.tax_id": '12345678Z',
+            "activities.description": 'design',
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": 'Subject',
+            "identity.surnames": 'Access',
+        },
     )
-    assert result.exit_code == 0, result.output
-
-    from ....core import resolve_active_bucket_id
-
-    bucket_id = resolve_active_bucket_id()
-    assert bucket_id is not None
-    return bucket_id
 
 
 def _request(destination: Path) -> ProfileBundleExportRequest:

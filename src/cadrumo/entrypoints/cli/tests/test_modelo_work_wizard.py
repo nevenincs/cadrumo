@@ -34,6 +34,7 @@ from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
+from ....tests.user_profile import register_cli_profile
 from .._modelo import _resolve_work_unit_for_cli
 from .._modelo_work_wizard_cli import (
     _ACTIVE_RUNS,
@@ -121,29 +122,18 @@ def _calculate_flags(overrides: list[str]) -> list[str]:
 
 
 def _create_profile() -> None:
-    result = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "natural_person",
-            "--irpf-income-categories",
-            "actividad_economica",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Operator",
-            "--surnames",
-            "Wizard",
-            "--activity",
-            "design",
-        ],
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Wizard',
+            "activities.description": 'design',
+        },
     )
-    assert result.exit_code == 0, result.output
 
 
 def _seed_m130_ledger(source_key: str) -> None:

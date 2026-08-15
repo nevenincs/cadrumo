@@ -36,8 +36,10 @@ def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
     ``missing_profile_record`` torn state these CLI verbs must detect; this
     helper materialises that state directly through the bucket-layout
     primitives, since ``CommittedProfileRepository`` always writes the record
-    alongside. It also staged a plaintext manifest until that format was
-    retired; the torn state is the absent record, not the absent manifest.
+    alongside. The retired plaintext ``manifest.toml`` is staged as a STUB
+    rather than a real record: the surfaces under test check the member's
+    PRESENCE, never its content, and the model that once parsed it is gone.
+    Reconstructing a schema nothing reads would be dressing up a fossil.
 
     Unlike the unsecured-backend version, this implementation uses
     ``open_test_profile_session`` to provision real key material for
@@ -52,7 +54,18 @@ def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
         pass
 
     root = load_settings().cadrumo_local_storage_root
-    provision_bucket_directory(root, bucket_id)
+    paths = provision_bucket_directory(root, bucket_id)
+    (paths.bucket_dir / "manifest.toml").write_text(
+        "\n".join(
+            (
+                "# Retired bucket manifest, staged for PRESENCE only.",
+                f'bucket_id = "{bucket_id}"',
+                f'label = "{label}"',
+                "",
+            )
+        ),
+        encoding="utf-8",
+    )
     # Clear the active-profile pointer after provisioning so the staged
     # profile is not reported as the active one; the torn-state tests
     # specifically test non-active torn profiles.

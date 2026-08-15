@@ -15,13 +15,13 @@ from pydantic import ValidationError
 from .....core.resources import bundled_path, resources
 from .....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from .._errors import RegistryLoadError, RegistryValidationError
-from .._loader import load_registry_tree
 from .._m303_orden_manifest import (
     check_m303_annual_orden_manifest,
     load_m303_annual_orden_authority,
 )
 from .._m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from .._m303_orden_source import extract_m303_annual_orden_source
+from .._schema import ModeloDefinition, RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -78,9 +78,10 @@ def test_pinned_boe_orden_compiler_extracts_the_complete_annual_iva_catalogue(
     expected_digest: str,
     expected_agricultural_axis_count: int,
     expects_lorca_2022_reduction: bool,
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
     """Each pinned BOE source supplies all 49 tables and 141 module rows."""
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _, catalogues = registry_tree
 
     census = extract_m303_annual_orden_source(
         ejercicio=ejercicio,
@@ -132,9 +133,12 @@ def test_pinned_boe_orden_compiler_extracts_the_complete_annual_iva_catalogue(
     )
 
 
-def test_pinned_boe_orden_compiler_refuses_a_real_truncated_copy(tmp_path: Path) -> None:
+def test_pinned_boe_orden_compiler_refuses_a_real_truncated_copy(
+    tmp_path: Path,
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
     """A copied source whose bytes no longer match its pinned digest cannot compile."""
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _, catalogues = registry_tree
     source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
     copied_path = tmp_path / source.corpus_path
     copied_path.parent.mkdir(parents=True)
@@ -149,9 +153,12 @@ def test_pinned_boe_orden_compiler_refuses_a_real_truncated_copy(tmp_path: Path)
         )
 
 
-def test_pinned_boe_orden_compiler_refuses_a_divergent_markdown_sidecar(tmp_path: Path) -> None:
+def test_pinned_boe_orden_compiler_refuses_a_divergent_markdown_sidecar(
+    tmp_path: Path,
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
     """The committed Markdown and JSON sidecars are one inseparable generated pair."""
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _, catalogues = registry_tree
     source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
     source_path = bundled_path() / source.corpus_path
     copied_path = tmp_path / source.corpus_path
@@ -189,9 +196,10 @@ def test_pinned_boe_orden_compiler_refuses_noncanonical_sidecar_shape(
     tmp_path: Path,
     field: str,
     unknown_scope: str | None,
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
     """Copied sidecars must retain the exact canonical envelope and unit shapes."""
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _, catalogues = registry_tree
     source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
     source_path = bundled_path() / source.corpus_path
     copied_path = tmp_path / source.corpus_path
@@ -231,9 +239,10 @@ def test_pinned_boe_orden_compiler_refuses_invalid_units_before_pair_comparison(
     tmp_path: Path,
     invalid_value: object,
     expected_refusal: str,
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
     """Unit-envelope defects retain precedence over the sidecar-pair comparison."""
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _, catalogues = registry_tree
     source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
     source_path = bundled_path() / source.corpus_path
     copied_path = tmp_path / source.corpus_path
@@ -260,9 +269,12 @@ def test_pinned_boe_orden_compiler_refuses_invalid_units_before_pair_comparison(
         )
 
 
-def test_pinned_boe_orden_compiler_refuses_duplicate_semantic_table_anchor(tmp_path: Path) -> None:
+def test_pinned_boe_orden_compiler_refuses_duplicate_semantic_table_anchor(
+    tmp_path: Path,
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
     """The complete sidecar pair cannot collapse two official tables onto one anchor."""
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _, catalogues = registry_tree
     source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
     source_path = bundled_path() / source.corpus_path
     copied_path = tmp_path / source.corpus_path
@@ -483,9 +495,12 @@ def test_snapshot_refuses_cross_envelope_filing_year_and_record_design_drift() -
         type(resolved).model_validate(record_design_payload)
 
 
-def test_generated_directory_refuses_an_extra_toml_file(tmp_path: Path) -> None:
+def test_generated_directory_refuses_an_extra_toml_file(
+    tmp_path: Path,
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
     """A parallel hand-authored taxonomy cannot coexist with the generated manifest."""
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _, catalogues = registry_tree
     directory = tmp_path / "m303_orden_anual"
     directory.mkdir()
     copyfile(bundled_path("registry", "aeat", "m303_orden_anual", "manifest.toml"), directory / "manifest.toml")
@@ -499,9 +514,11 @@ def test_generated_directory_refuses_an_extra_toml_file(tmp_path: Path) -> None:
         )
 
 
-def test_generated_annual_orden_legal_ids_cover_every_compiled_source_axis() -> None:
+def test_generated_annual_orden_legal_ids_cover_every_compiled_source_axis(
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
     """Every pinned regulatory axis receives its own exact legal provenance."""
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = registry_tree
     compilation = load_m303_annual_orden_authority(
         bundled_path("registry", "aeat"),
         source_root=bundled_path(),
@@ -539,9 +556,11 @@ def test_generated_annual_orden_legal_ids_cover_every_compiled_source_axis() -> 
         )
 
 
-def test_m303_revision_refuses_a_second_cross_year_annual_orden_source() -> None:
+def test_m303_revision_refuses_a_second_cross_year_annual_orden_source(
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
     """A real revision cannot cite its own Orden plus another year's authority."""
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = registry_tree
     modelo = next(item for item in modelos if item.id == "303")
     revision = modelo.revisions["2023"]
     contaminated_revision = revision.model_copy(

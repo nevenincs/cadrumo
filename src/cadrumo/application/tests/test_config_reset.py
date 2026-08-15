@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import shutil
 from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 from pydantic import SecretStr
@@ -44,6 +46,54 @@ def _create_profile(
             display_name=label,
             overrides={"identity.tax_id": tax_id, "identity.name": label},
         )
+
+
+def _delete_profile_through_custody(profile_id: str, *, root: Path) -> None:
+    """Delete one profile through the sanctioned custody transaction.
+
+    Replaces the retired ``delete_profile_with_lifecycle_span``, whose whole
+    span now lives behind the custody transaction owner: prepare the journal,
+    take the confirmation bound to it, execute. The owner facts are recorded
+    first because the preflight consumes their projections and refuses outright
+    when they are absent -- that refusal is the hold guard working, not setup
+    noise.
+    """
+    from ..evidence import LegalHoldCaseAuthority
+    from ..filing import FilingRetentionAuthority
+    from ..user_profile import ProfileCapsuleLifecycle
+
+    observed_at = datetime.now(UTC)
+    identity = UUID(profile_id)
+    LegalHoldCaseAuthority(root=root).record_open_case_snapshot(
+        profile_id=identity,
+        open_case_ids=(),
+        observed_at=observed_at,
+    )
+    FilingRetentionAuthority(root=root).record_filing_catalogue(
+        profile_id=identity,
+        records=(),
+        observed_at=observed_at,
+    )
+    lifecycle = ProfileCapsuleLifecycle(root=root)
+    journal = lifecycle.prepare_delete(profile_id=identity)
+    lifecycle.delete(lifecycle.confirm_delete(journal))
+
+
+def _remove_bucket_directory_out_of_band(profile_id: str, *, root: Path) -> None:
+    """Remove one bucket directory WITHOUT going through custody, on purpose.
+
+    The guard under test is that a reset detects its target changing beneath
+    it, so the change must not be a sanctioned deletion -- a custody delete is
+    an authorised transaction and would prove nothing about detection. It could
+    not be used here in any case: this profile carries a filing, so the
+    retention hold refuses the transaction outright.
+
+    Replaces the retired ``remove_profile_bucket_directory``. No supported path
+    produces this state; forging it is the only way to exercise the detector.
+    """
+    from ...adapters.persistence.storage import BUCKETS_DIRNAME
+
+    shutil.rmtree(root / BUCKETS_DIRNAME / profile_id)
 
 
 def _write_active_pointer(root: Path, bucket_id: str) -> None:
@@ -137,7 +187,6 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
         set_operator_certificate_source_secret,
     )
     from ..config_reset import start_config_reset
-    from ..user_profile import delete_profile_with_lifecycle_span
 
     with _isolated_reset_root(tmp_path) as root:
         root.mkdir(parents=True, exist_ok=True)
@@ -146,7 +195,7 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
         cold_default_database.write_bytes(cold_default_bytes)
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
         _create_profile(_PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
-        delete_profile_with_lifecycle_span(_PROFILE_B_ID)
+        _delete_profile_through_custody(_PROFILE_B_ID, root=root)
 
         certificate_path = tmp_path / "operator.p12"
         certificate_path.write_bytes(b"test certificate")
@@ -281,7 +330,6 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
         ConfigResetTargetPhase,
     )
     from ..config_reset import resume_config_reset, start_config_reset
-    from ..user_profile import remove_profile_bucket_directory
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
@@ -293,7 +341,7 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
         assert paused.status is ConfigResetOperationStatus.PAUSED
         assert paused.pause_reason is ConfigResetPauseReason.RETENTION_UNRESOLVED
 
-        remove_profile_bucket_directory(_PROFILE_B_ID)
+        _remove_bucket_directory_out_of_band(_PROFILE_B_ID, root=root)
 
         changed = resume_config_reset(paused.operation_id, confirmed=True)
         assert changed.status is ConfigResetOperationStatus.PAUSED

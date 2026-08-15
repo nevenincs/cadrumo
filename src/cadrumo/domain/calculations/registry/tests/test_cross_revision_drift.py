@@ -39,7 +39,11 @@ from .._validate_cross_revision import (
 )
 from .._validate_registry_scope import validate_registry_scope
 from ._registry_schema_support import _committed_registry_tree
-from ._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label, synthetic_locale_state
+from ._synthetic_locale_fixtures import (
+    _synthetic_locale_scope,
+    _write_test_label,
+    synthetic_locale_state,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

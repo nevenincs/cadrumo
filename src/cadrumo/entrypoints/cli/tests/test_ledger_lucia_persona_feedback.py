@@ -12,6 +12,7 @@ from ....core.config import override_settings
 from ....tests.cli_envelope import unwrap_cli_result as _json
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -37,26 +38,17 @@ def _invoke(args: list[str]):
 
 
 def _create_active_profile() -> None:
-    result = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "lucia",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Lucia",
-            "--surnames",
-            "Example",
-            "--activity",
-            "Test",
-        ],
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='lucia',
+        facts={
+            "identity.tax_id": '12345678Z',
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": 'Lucia',
+            "identity.surnames": 'Example',
+            "activities.description": 'Test',
+        },
     )
-    assert result.exit_code == 0, result.output
 
 
 def test_ledger_add_accepts_and_persists_iva_category() -> None:

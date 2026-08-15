@@ -26,6 +26,7 @@ from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from ....tests.user_profile import register_cli_profile
 from .._common import _declared_tax_id, cli_policy_refusal_projection
 from .._errors import CliRefusedBoundaryError, error_boundary_under_test
 
@@ -57,18 +58,17 @@ def _invoke(args: list[str]):
 
 
 def _create_profile() -> None:
-    result = _invoke(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--tax-id", _TAX_ID,
-            "--name", "Operator",
-            "--surnames", "Identity",
-            "--activity", "design",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.tax_id": _TAX_ID,
+            "identity.name": 'Operator',
+            "identity.surnames": 'Identity',
+            "activities.description": 'design',
+        },
+    )
 
 
 def _persist_facts(*, include_tax_id: bool) -> None:

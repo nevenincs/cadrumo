@@ -21,6 +21,7 @@ from ....core.config import override_settings
 from ....core.logging import default_log_file_path
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -323,30 +324,17 @@ def test_config_repair_bootstrap_surfaces_do_not_require_active_profile() -> Non
 
 
 def _create_operator_profile() -> None:
-    result = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "natural_person",
-            "--tax-id",
-            "00000000T",
-            "--name",
-            "Operator",
-            "--surnames",
-            "Privacy",
-            "--activity",
-            "design",
-            "--irpf-income-categories",
-            "actividad_economica",
-            "--irpf-estimation-regime",
-            "directa_normal",
-            "--iva-regime",
-            "GENERAL",
-        ],
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.tax_id": '00000000T',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Privacy',
+            "activities.description": 'design',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "irpf.estimation_regime": 'directa_normal',
+            "iva.regime": 'GENERAL',
+        },
     )
-    assert result.exit_code == 0, result.output

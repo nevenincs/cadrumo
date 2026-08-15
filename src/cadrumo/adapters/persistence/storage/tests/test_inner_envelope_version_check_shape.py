@@ -94,6 +94,27 @@ def _absolute_import_from(module_dotted: str, *, is_package: bool, node: ast.Imp
     return ".".join(base) if base else None
 
 
+_ENVELOPE_SYMBOL = "Envelope"
+"""Trailing symbol every governed origin ends in, used to screen before parsing."""
+
+
+def _binds_an_envelope_origin(path: Path) -> bool:
+    """Whether *path* binds one of the governed envelope origins.
+
+    Screens on the symbol before parsing. Every origin in
+    :data:`_ENVELOPE_ORIGINS` ends in ``Envelope``, so a module that binds one
+    must spell that name; a module that never does cannot be governed and need
+    not be parsed. The parse still decides which modules ARE governed -- a
+    docstring mentioning the word is not a binding -- so this only chooses what
+    is worth parsing.
+    """
+    source = path.read_text(encoding="utf-8", errors="replace")
+    if _ENVELOPE_SYMBOL not in source:
+        return False
+    bindings = _origin_bindings(ast.parse(source), module_name(path), is_package=path.name == "__init__.py")
+    return any(origin in _ENVELOPE_ORIGINS for origin in bindings.values())
+
+
 def _origin_bindings(tree: ast.AST, module_dotted: str, *, is_package: bool) -> dict[str, str]:
     """Return local name -> absolute origin for every import binding in ``tree``.
 
@@ -353,18 +374,7 @@ def test_the_governed_surface_is_not_empty() -> None:
     is meant to govern. This asserts the module filter admits real read paths
     rather than excluding everything and passing vacuously.
     """
-    governed = [
-        path
-        for path in production_python_files()
-        if any(
-            origin in _ENVELOPE_ORIGINS
-            for origin in _origin_bindings(
-                ast.parse(path.read_text(encoding="utf-8", errors="replace")),
-                module_name(path),
-                is_package=path.name == "__init__.py",
-            ).values()
-        )
-    ]
+    governed = [path for path in production_python_files() if _binds_an_envelope_origin(path)]
     names = {path.name for path in governed}
     # ``_observation_store.py`` was in this set until its four hand-rolled
     # envelope reads moved onto SecureBoundRepository; the kernel that now

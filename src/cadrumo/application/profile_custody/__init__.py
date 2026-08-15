@@ -705,8 +705,12 @@ def profile_resume_session(
     custody_generation: int,
     dek_epoch: str,
     now: datetime,
-) -> tuple[ProfileSessionResumeOutcomePort, bytes | None]:
-    """Evaluate and, when valid, unwrap a persisted profile session."""
+) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
+    """Evaluate and, when valid, unwrap a persisted profile session.
+
+    The key is yielded as a wipeable buffer the caller owns; see the substrate
+    function for why the type is not narrowed to ``bytes`` on the way through.
+    """
     return custody.resume_profile_session(
         storage_root=storage_root,
         profile_id=profile_id,

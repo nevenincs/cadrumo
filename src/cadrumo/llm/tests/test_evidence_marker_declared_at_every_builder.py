@@ -63,7 +63,16 @@ def _request_construction_sites() -> list[tuple[str, int, ast.Call]]:
     """
     sites: list[tuple[str, int, ast.Call]] = []
     for path in production_python_files():
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        source = path.read_text(encoding="utf-8")
+        # A call to the request model needs its name in the source, so a module
+        # that never spells it cannot hold a call site. The AST walk below is
+        # still what CLASSIFIES a hit -- the package's own docstrings show
+        # ``LLMRequest(prompt=...)`` in examples, and only a parse tells an
+        # example from a call. The screen decides which modules are worth
+        # parsing; it does not decide what counts.
+        if _REQUEST_MODEL not in source:
+            continue
+        tree = ast.parse(source, filename=str(path))
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue

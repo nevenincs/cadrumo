@@ -10,23 +10,23 @@ from ....core.resources import resources
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _create_defaulted_natural_person_profile(profile_name: str) -> None:
-    created = invoke_cached_cli(
-        [
-            "config", "profile", "create", profile_name,
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--irpf-income-categories", "actividad_economica",
-            "--tax-id", "12345678Z",
-            "--name", "Lucia",
-            "--surnames", "Navarro",
-        ],
-    )  # fmt: skip
-    assert created.exit_code == 0, created.output
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label=profile_name,
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Lucia',
+            "identity.surnames": 'Navarro',
+        },
+    )
 
 
 def test_profile_preflight_names_profile_only_scope_for_m100() -> None:

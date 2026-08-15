@@ -26,7 +26,11 @@ from uuid import UUID
 import pytest
 
 from .. import WipeTypeError, zeroise
-from .._acceleration_receipt import unwrap_profile_session_dek, wrap_profile_session_dek
+from .._acceleration_receipt import (
+    resume_profile_session,
+    unwrap_profile_session_dek,
+    wrap_profile_session_dek,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -80,3 +84,31 @@ def test_session_receipt_unwrap_returns_a_buffer_that_wipes() -> None:
     # material is gone from this buffer rather than merely declared wipeable.
     assert recovered == bytearray(32)
     assert recovered != _DEK
+
+
+def test_the_resume_signature_declares_the_key_it_actually_yields() -> None:
+    """The resume must not narrow its wipeable buffer to immutable ``bytes``.
+
+    The unwrap above returns a wipeable buffer, but a caller only benefits if
+    the signature it reaches through says so. While this declared ``bytes``,
+    the login path did the reasonable thing for that contract and copied into a
+    ``bytearray`` before wiping -- which zeroed the copy and left the real key
+    resident and beyond any later reach. Narrowing it back would silently
+    restore that, and no behavioural test would notice, because the copy makes
+    the wipe *look* successful.
+
+    Scoped to this package's own function on purpose. The two application-layer
+    hops that carry the same value are held to it by the type checker, since
+    ``bytearray`` is not a subtype of ``bytes``; asserting them here would mean
+    an adapter test reaching across a layer boundary into private application
+    modules to prove something the checker already refuses.
+    """
+    from typing import get_type_hints
+
+    returned = get_type_hints(resume_profile_session)["return"]
+    key_type = returned.__args__[1]
+
+    assert bytearray in key_type.__args__, (
+        f"resume_profile_session declares the resumed key as {key_type}; "
+        "a caller typed to receive immutable bytes cannot wipe it"
+    )

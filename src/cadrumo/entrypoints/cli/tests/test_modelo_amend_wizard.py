@@ -49,6 +49,7 @@ from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
+from ....tests.user_profile import register_cli_profile
 from .._modelo import _resolve_work_unit_for_cli
 from .._modelo_amend_wizard_cli import (
     _ACTIVE_RUNS,
@@ -133,29 +134,18 @@ def _casilla_observation(revision_payload, casilla_id: str):
 
 
 def _create_profile() -> None:
-    result = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "natural_person",
-            "--irpf-income-categories",
-            "actividad_economica",
-            "--tax-id",
-            _TAX_ID,
-            "--name",
-            "Operator",
-            "--surnames",
-            "Amend",
-            "--activity",
-            "design",
-        ],
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "identity.tax_id": _TAX_ID,
+            "identity.name": 'Operator',
+            "identity.surnames": 'Amend',
+            "activities.description": 'design',
+        },
     )
-    assert result.exit_code == 0, result.output
 
 
 def _seed_justificante(*, csv: str, period: str = "1T", modelo: str = "130", filing_year: int = 2025) -> None:

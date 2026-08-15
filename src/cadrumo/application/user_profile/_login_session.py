@@ -711,12 +711,15 @@ def resume_active_profile_session(
         return outcome.refusal if outcome.refusal is not None else ProfileSessionRefusalReason.ABSENT
 
     record = outcome.record
-    dek_buffer = bytearray(dek)
+    # Wipe the buffer the resume actually returned, not a copy of it. Copying
+    # first and zeroising the copy leaves the original resident and beyond any
+    # later reach, which is the defect this key's wipeability exists to remove.
+    # The session takes and owns its own copy.
     try:
         idle_minutes, _ = _bucket_session_windows()
         session = profile_bucket_session_open_resumed(
             bucket_id=bucket_id,
-            dek=bytes(dek_buffer),
+            dek=bytes(dek),
             idle_minutes=idle_minutes,
             opened_at=record.issued_at,
             idle_deadline=record.idle_deadline,
@@ -724,7 +727,7 @@ def resume_active_profile_session(
             storage_root=storage_root,
         )
     finally:
-        profile_zeroise(dek_buffer)
+        profile_zeroise(dek)
 
     session.touch(instant)
     profile_bind_bucket_session(session)
@@ -755,7 +758,7 @@ def _resume_acceleration_receipt(
     storage_root: Path,
     bucket_id: str,
     now: datetime,
-) -> tuple[ProfileSessionResumeOutcomePort, bytes | None]:
+) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
     """Resume only against the envelope that is current for this capsule."""
     profile_id = UUID(bucket_id)
     material = load_profile_custody_password_material(profile_id, root=storage_root)
