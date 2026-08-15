@@ -145,6 +145,13 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     # filing-grade artefact.
     "config.profile.censo.pull": CommandRiskDeclaration(),
     "config.profile.create": CommandRiskDeclaration(),
+    # Irreversibly destroys one named profile capsule and every encrypted
+    # financial record inside it. Its default posture is a preflight that
+    # writes nothing, but the risk axis describes what the verb CAN do under
+    # `--yes`, so it must elicit human confirmation on the MCP surface and
+    # never auto-approve. It produces no filing-grade artefact and never
+    # reaches AEAT.
+    "config.profile.delete": CommandRiskDeclaration(destructive=True),
     "config.profile.descendiente.add": CommandRiskDeclaration(),
     "config.profile.descendiente.list": CommandRiskDeclaration(),
     "config.profile.descendiente.remove": CommandRiskDeclaration(destructive=True),
