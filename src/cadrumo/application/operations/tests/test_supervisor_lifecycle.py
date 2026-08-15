@@ -56,6 +56,27 @@ from .. import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 14, 18, tzinfo=UTC)
+
+#: Cleanup window for the deadline-expiry proof below.
+#:
+#: The window is measured from the moment cancellation is REQUESTED, not from
+#: the moment settlement begins the owned close, so everything the test does in
+#: between spends it: awaiting the start task and two journal round-trips
+#: through real SQLite. At 30ms it was routinely gone before settlement ran, and
+#: ``_complete_cleanup_before_settlement`` then took its early
+#: ``now >= cleanup_deadline`` exit and refused WITHOUT starting the close --
+#: leaving ``cleanup_started`` unset and the test awaiting it forever. On this
+#: platform that wedges the whole session rather than one test, because a
+#: thread-based timeout cannot interrupt a blocked event loop.
+#:
+#: The clock cannot be frozen to remove the race: the operation lease is
+#: evaluated against real time, so a frozen supervisor clock fails the settle
+#: with "operation exact lease expired before renewal" instead.
+#:
+#: A second is far beyond the setup cost and still bounds the test, and once the
+#: close has started the refusal is deterministic regardless of the window,
+#: because the resource holds its cleanup until the test releases it.
+_CLEANUP_WINDOW = timedelta(seconds=1)
 _NAMESPACE = SecureObjectNamespaceDefinition(
     key="operation_supervisor_lifecycle_test",
     namespace="cadrumo-test.operations.supervisor-lifecycle",
@@ -421,7 +442,29 @@ def test_cleanup_failure_refuses_terminal_journal_persistence(tmp_path: Path) ->
 
 
 def test_cleanup_timeout_refuses_terminal_journal_persistence(tmp_path: Path) -> None:
-    """A deadline-expired owned close remains settling instead of publishing cancellation."""
+    """A deadline-expired owned close remains settling instead of publishing cancellation.
+
+    The clock is the module's frozen one rather than wall time, and that is what
+    makes the deadline expire for the reason under test.
+
+    The cleanup deadline starts when cancellation is REQUESTED, while the window
+    the test cares about opens later, when settlement begins the owned close.
+    Read against wall time, every await in between spends the deadline, so on a
+    loaded machine it was already elapsed by the time settlement ran:
+    ``_complete_cleanup_before_settlement`` then took its early ``now >=
+    cleanup_deadline`` exit and refused before starting the close at all.
+    ``cleanup_started`` was therefore never set and the test waited on it
+    forever, which wedged the whole session rather than one test, because the
+    thread-based timeout cannot interrupt a blocked event loop here.
+
+    Frozen, the deadline cannot be spent by setup. Settlement reaches the close,
+    the resource records that it started, and the deadline then expires the only
+    way this test means: the blocked cleanup task is still unfinished when the
+    supervisor's bounded wait elapses. Same refusal, same assertions, reached by
+    the path the test is named for -- and in milliseconds rather than seconds,
+    since the deadline stays 30ms of real waiting rather than a headroom margin
+    wide enough to out-run scheduling jitter.
+    """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
         journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
@@ -437,7 +480,7 @@ def test_cleanup_timeout_refuses_terminal_journal_persistence(tmp_path: Path) ->
             operands=operands,
             executor=executor,
             clock=lambda: datetime.now(UTC),
-            cleanup_timeout=timedelta(milliseconds=30),
+            cleanup_timeout=_CLEANUP_WINDOW,
         )
         case = _TERMINAL_CASES[3]
 
