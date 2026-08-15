@@ -548,9 +548,8 @@ application:
           %{storage_root}, but that profile has no open custody session. Run aeat
           config login for that profile, then retry.
         revoke_requires_custody_session: The AEAT session for profile '%{bucket_id}'
-          was NOT revoked. It is stored encrypted inside that profile, so unlocking
-          the profile is what revokes it. Run aeat config login for this profile and
-          repeat the command. Until then the session remains usable.
+          was NOT revoked and remains usable. It is stored encrypted inside that profile,
+          so only unlocking that profile - with aeat config login - revokes it.
         scope_conflict: Choose either --provider or --all, not both.
         unreadable_active_profile: Active profile '%{active_profile}' has a bucket
           manifest but no readable profile record (status=%{status}). Run `%{next_action}`

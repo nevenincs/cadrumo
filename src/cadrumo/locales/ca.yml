@@ -602,9 +602,9 @@ application:
           a %{storage_root}, però aquest perfil no té cap sessió de custòdia oberta.
           Executeu aeat config login per a aquest perfil i torneu-ho a provar.
         revoke_requires_custody_session: La sessió de l'AEAT del perfil '%{bucket_id}'
-          NO s'ha revocat. Està desada xifrada dins d'aquest perfil, de manera que
-          desbloquejar el perfil és el que la revoca. Executeu aeat config login per
-          a aquest perfil i repetiu l'ordre. Fins llavors la sessió continua activa.
+          NO s'ha revocat i continua activa. Està desada xifrada dins d'aquest perfil,
+          de manera que només desbloquejar aquest perfil -amb aeat config login- la
+          revoca.
         scope_conflict: Trieu --provider o --all, però no tots dos.
         unreadable_active_profile: 'El perfil actiu ''%{active_profile}'' té un manifest
           de bucket però cap registre de perfil llegible (status=%{status}). Següent

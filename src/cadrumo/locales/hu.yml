@@ -569,9 +569,9 @@ application:
           munkamenet. Futtassa az aeat config login parancsot erre a profilra, majd
           próbálja újra.'
         revoke_requires_custody_session: A(z) '%{bucket_id}' profil AEAT-munkamenete
-          NEM lett visszavonva. Titkosítva, a profilon belül tárolódik, ezért a profil
-          feloldása vonja vissza. Futtassa az aeat config login parancsot erre a profilra,
-          majd ismételje meg a parancsot. Addig a munkamenet használható marad.
+          NEM lett visszavonva, és továbbra is használható. Titkosítva, a profilon
+          belül tárolódik, ezért csak a profil feloldása - az aeat config login paranccsal
+          - vonja vissza.
         scope_conflict: Válassza a --provider vagy a --all lehetőséget, de ne mindkettőt.
         unreadable_active_profile: 'Az aktív profil (%{active_profile}) rendelkezik
           bucket-manifeszttel, de nincs olvasható profil-rekorddal (állapot=%{status}).
