@@ -205,13 +205,40 @@ def test_operator_auth_test_surfaces_the_refusal_for_an_unbound_explicit_target(
         run_operator_auth_test(AuthProviderKind.CERTIFICATE.value, settings=settings_b)
 
 
+def test_live_auth_preflight_answers_not_ready_when_no_session_is_open_at_all(
+    tmp_path: Path,
+) -> None:
+    """The locked workstation: nothing is unlocked, so the report answers rather than refuses.
+
+    This is the other arm of the same narrowing, and it is pinned here beside
+    the refusal so neither can be widened into the other. The operator asks
+    whether auth is ready BEFORE unlocking anything; a readiness probe that
+    declines to answer precisely then has no remaining purpose, and the doctor
+    that consumes it emitted an error document instead of a payload when this
+    last broke. Every field of the report defaults to empty or false because
+    the type exists to carry exactly this degraded answer.
+    """
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        override_settings(cadrumo_active_profile=_BUCKET_A),
+    ):
+        assert current_active_bucket_session() is None
+
+        report = build_live_auth_preflight_report(AuthProviderKind.CERTIFICATE.value)
+
+        assert report.provider == AuthProviderKind.CERTIFICATE.value
+        assert report.configured is False
+        assert report.available is False
+
+
 def test_live_auth_preflight_surfaces_the_refusal_for_an_unbound_explicit_target(
     bucket_a_session: Path,
 ) -> None:
-    """The live-read preflight refuses on the same terms as ``auth test``.
+    """The live-read preflight refuses when a session is open for ANOTHER profile.
 
-    A preflight that silently answered from bucket A would clear a live AEAT
-    read for a profile it never inspected.
+    The distinction against the test above is the whole of the narrowing:
+    answering here would be a claim about a profile that was never inspected,
+    because a session exists and it serves someone else.
     """
     with override_settings(cadrumo_active_profile=_BUCKET_B) as settings_b:
         pass

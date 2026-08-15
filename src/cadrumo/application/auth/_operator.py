@@ -603,6 +603,16 @@ def build_live_auth_preflight_report(
     identity alignment, persisted-session indicators, and active-profile health
     fields inherited from :class:`AuthTestResult`.
 
+    A locked store answers "not ready" rather than refusing to answer. The two
+    ways this report can fail to reach a profile are not the same question. When
+    a custody session is open for some OTHER profile, answering about the named
+    one would be a claim about a profile that was never inspected, so the
+    refusal stands. When NO session is open at all, the operator is asking
+    whether auth is ready before unlocking anything -- the locked workstation --
+    and a readiness probe that declines to answer precisely then has no
+    remaining purpose. Every field of :class:`LiveAuthPreflightReport` defaults
+    to empty or false because the type exists to carry that degraded answer.
+
     See Also:
         :class:`core.access_gate.AeatAccessGate`
             Live-read gate evaluated before an authenticated AEAT operation can
@@ -610,9 +620,26 @@ def build_live_auth_preflight_report(
         :func:`test_operator_auth`
             Shared provider-readiness probe that supplies the preflight base.
     """
+    from ...adapters.persistence.storage.master_key import current_active_bucket_session
+    from ._operator_results import AuthOperationRequiresCustodySessionError
+
+    try:
+        return _build_live_auth_preflight_report(provider, settings=settings)
+    except AuthOperationRequiresCustodySessionError:
+        if current_active_bucket_session() is not None:
+            raise
+        return LiveAuthPreflightReport(provider=_provider_kind_or_none(provider).value if provider else "")
+
+
+def _build_live_auth_preflight_report(
+    provider: str | None = None,
+    *,
+    settings: Settings | None = None,
+) -> LiveAuthPreflightReport:
+    """Build the report against an open route, refusing when it cannot be reached."""
     if settings is not None:
         with _active_profile_storage_span(settings):
-            return build_live_auth_preflight_report(provider, settings=None)
+            return _build_live_auth_preflight_report(provider, settings=None)
 
     resolved_settings = load_settings()
     requested_kind = _provider_kind_or_none(provider)
