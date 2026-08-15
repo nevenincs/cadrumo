@@ -1,0 +1,862 @@
+[[revisions."2023".export_layouts]]
+id = "modelo-390-2023-fichero-boe"
+
+# Pagina 8: apartado 13, regularizacion anual de deducciones por sectores
+# diferenciados. This design record had no authored record at all; the
+# coverage gate joined its sheet to the envelope header by the shared
+# "<T"/"390" constants alone. The "08000" page discriminant below makes
+# the join unique and per-record.
+#
+# Offsets and lengths are transcribed verbatim from aeat-dr-390-2023 (sha256 179c02eddc8bab411c249fc3fda19c7015d668e1dd7930d4af79f38998b9c5a7).
+
+[[revisions."2023".export_layouts.records]]
+id = "modelo-390-page-08"
+record_type = "page_08"
+order = 8
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "390"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-number"
+offset = 6
+length = 5
+kind = "literal"
+literal = "08000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-end"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# Indicador de pagina complementaria. AEAT declares this position's whole
+# contenido as 'En blanco' on pagina 8 -- there is no datum here and
+# the filer writes a blank. It is a filler because the DESIGN says blank,
+# not because nothing was available to put in it: paginas 5 and 7 carry the
+# real flag at this same offset, spelled 'Blanco (No complementaria) o "C"
+# (Complementaria)', and those are NOT authored as fillers.
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-complementaria-indicator"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-interiores-corrientes-base"
+offset = 13
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.interiores-corrientes.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-interiores-corrientes-cuota"
+offset = 30
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.interiores-corrientes.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-interiores-inversion-base"
+offset = 47
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.interiores-inversion.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-interiores-inversion-cuota"
+offset = 64
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.interiores-inversion.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-importaciones-corrientes-base"
+offset = 81
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.importaciones-corrientes.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-importaciones-corrientes-cuota"
+offset = 98
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.importaciones-corrientes.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-importaciones-inversion-base"
+offset = 115
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.importaciones-inversion.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-importaciones-inversion-cuota"
+offset = 132
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.importaciones-inversion.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-aic-corrientes-base"
+offset = 149
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.aic-corrientes.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-aic-corrientes-cuota"
+offset = 166
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.aic-corrientes.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-aic-inversion-base"
+offset = 183
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.aic-inversion.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-aic-inversion-cuota"
+offset = 200
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.aic-inversion.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-compensaciones-reagp-base"
+offset = 217
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.compensaciones-reagp.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-compensaciones-reagp-cuota"
+offset = 234
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.compensaciones-reagp.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-rectificacion-base"
+offset = 251
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.rectificacion.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-rectificacion-cuota"
+offset = 268
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.rectificacion.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-regularizacion-inversiones"
+offset = 285
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.regularizacion-inversiones"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-1-suma-deducciones"
+offset = 302
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-1.suma-deducciones"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-interiores-corrientes-base"
+offset = 319
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.interiores-corrientes.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-interiores-corrientes-cuota"
+offset = 336
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.interiores-corrientes.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-interiores-inversion-base"
+offset = 353
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.interiores-inversion.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-interiores-inversion-cuota"
+offset = 370
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.interiores-inversion.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-importaciones-corrientes-base"
+offset = 387
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.importaciones-corrientes.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-importaciones-corrientes-cuota"
+offset = 404
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.importaciones-corrientes.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-importaciones-inversion-base"
+offset = 421
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.importaciones-inversion.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-importaciones-inversion-cuota"
+offset = 438
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.importaciones-inversion.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-aic-corrientes-base"
+offset = 455
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.aic-corrientes.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-aic-corrientes-cuota"
+offset = 472
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.aic-corrientes.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-aic-inversion-base"
+offset = 489
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.aic-inversion.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-aic-inversion-cuota"
+offset = 506
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.aic-inversion.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-compensaciones-reagp-base"
+offset = 523
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.compensaciones-reagp.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-compensaciones-reagp-cuota"
+offset = 540
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.compensaciones-reagp.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-rectificacion-base"
+offset = 557
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.rectificacion.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-rectificacion-cuota"
+offset = 574
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.rectificacion.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-regularizacion-inversiones"
+offset = 591
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.regularizacion-inversiones"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-2-suma-deducciones"
+offset = 608
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-2.suma-deducciones"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-interiores-corrientes-base"
+offset = 625
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.interiores-corrientes.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-interiores-corrientes-cuota"
+offset = 642
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.interiores-corrientes.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-interiores-inversion-base"
+offset = 659
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.interiores-inversion.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-interiores-inversion-cuota"
+offset = 676
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.interiores-inversion.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-importaciones-corrientes-base"
+offset = 693
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.importaciones-corrientes.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-importaciones-corrientes-cuota"
+offset = 710
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.importaciones-corrientes.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-importaciones-inversion-base"
+offset = 727
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.importaciones-inversion.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-importaciones-inversion-cuota"
+offset = 744
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.importaciones-inversion.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-aic-corrientes-base"
+offset = 761
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.aic-corrientes.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-aic-corrientes-cuota"
+offset = 778
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.aic-corrientes.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-aic-inversion-base"
+offset = 795
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.aic-inversion.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-aic-inversion-cuota"
+offset = 812
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.aic-inversion.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-compensaciones-reagp-base"
+offset = 829
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.compensaciones-reagp.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-compensaciones-reagp-cuota"
+offset = 846
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.compensaciones-reagp.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-rectificacion-base"
+offset = 863
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.rectificacion.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-rectificacion-cuota"
+offset = 880
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.rectificacion.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-regularizacion-inversiones"
+offset = 897
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.regularizacion-inversiones"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-casilla-sector-3-suma-deducciones"
+offset = 914
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.sector-diferenciado-3.suma-deducciones"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-08-close"
+offset = 1081
+length = 12
+kind = "literal"
+literal = "</T39008000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
