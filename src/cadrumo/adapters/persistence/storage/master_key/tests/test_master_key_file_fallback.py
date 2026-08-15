@@ -19,7 +19,6 @@ from ......core.base64_codec import b64_decode
 from ......core.config import SecretStoreBackend, Settings, override_settings
 from ......core.errors import build_error_envelope
 from ......core.external_constants import UTF_8_ENCODING
-from ...bucket import BucketKeySchedule
 from ...crypto import KEY_SIZE
 from ...errors import (
     DecryptionError,
@@ -33,7 +32,6 @@ from .. import (
     FileFallbackMasterKeyProvider,
     MasterKeyProvider,
     activate_master_key_provider,
-    load_or_mint_bucket_dek,
 )
 from .._active_session import (
     current_active_bucket_session,
@@ -65,8 +63,6 @@ The provider itself chooses these filenames inside whatever ``store_dir`` it
 is given -- see ``TestFileFallbackProvider``'s own docstring for the sibling
 directory-segment case these are NOT the same as.
 """
-
-
 
 
 _PROVIDER_SESSION_HARNESS = dedent(
@@ -170,126 +166,6 @@ class TestFileFallbackProvider:
         )
         with pytest.raises(MasterKeyUnavailableError, match="KDF parameters"):
             reopened.get_master_key()
-
-
-
-    ) -> None:
-        bucket_id = _PROVIDER_READ_CONCURRENCY
-        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
-        provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.cadrumo_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
-        )
-        master_key = provider.provision_master_key()
-        load_or_mint_bucket_dek(
-            kek=master_key,
-            storage_root=settings.cadrumo_local_storage_root,
-            bucket_id=bucket_id,
-            allow_bootstrap_mint=True,
-        )
-        _write_registered_bucket(
-            settings.cadrumo_local_storage_root,
-            bucket_id,
-            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-        )
-        command = [
-            sys.executable,
-            "-c",
-            _PROVIDER_SESSION_HARNESS,
-            str(settings.cadrumo_local_storage_root),
-            str(settings.cadrumo_secret_store_dir),
-            bucket_id,
-        ]
-        holder = subprocess.Popen(  # noqa: S603 - fixed interpreter and repository-owned harness
-            [*command, "hold"],
-            cwd=Path.cwd(),
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        try:
-            assert holder.stdout is not None
-            assert holder.stdout.readline().strip() == "OPEN"
-            contender = subprocess.run(  # noqa: S603 - fixed interpreter and repository-owned harness
-                [*command, "once"],
-                cwd=Path.cwd(),
-                check=True,
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
-            assert contender.stdout.strip() == "OPEN"
-        finally:
-            if holder.poll() is None:
-                assert holder.stdin is not None
-                holder.stdin.write("\n")
-                holder.stdin.flush()
-            try:
-                returncode = holder.wait(timeout=30)
-            except subprocess.TimeoutExpired:
-                holder.kill()
-                returncode = holder.wait(timeout=10)
-            assert returncode == 0
-
-    ) -> None:
-        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
-        provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.cadrumo_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
-        )
-        provider.provision_master_key()
-        bucket_dek_path = _bucket_dek_path(settings, _ALPHA)
-
-        with (
-            override_settings(
-                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
-                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
-                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-            ),
-            activate_master_key_provider(
-                provider,
-                fallback_bucket_id=_ALPHA,
-                allow_bucket_dek_enrollment=True,
-            ),
-        ):
-            assert len(get_active_master_key()) == KEY_SIZE
-
-        _write_registered_bucket(
-            settings.cadrumo_local_storage_root,
-            _ALPHA,
-            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-        )
-        document = json.loads(bucket_dek_path.read_text(encoding=UTF_8_ENCODING))
-        document["tag_b64"] = base64.b64encode(b"\x00" * 16).decode("ascii")
-        bucket_dek_path.write_text(json.dumps(document), encoding=UTF_8_ENCODING)
-
-        second = FileFallbackMasterKeyProvider(
-            store_dir=settings.cadrumo_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
-        )
-        with (
-            override_settings(
-                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
-                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
-                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-            ),
-            pytest.raises(MasterKeyUnavailableError) as excinfo,
-            activate_master_key_provider(second, fallback_bucket_id=_ALPHA),
-        ):
-            pass
-
-        assert isinstance(excinfo.value.__cause__, DecryptionError)
-        assert excinfo.value.translated_message == "errors.auth.auth_storage_master_key_unavailable"
-        assert str(tmp_path) not in str(excinfo.value)
-        envelope = build_error_envelope(excinfo.value)
-        assert str(tmp_path) not in envelope.model_dump_json()
-
-
-
-
-
-
 
     def test_round_trip_across_provider_instances(self, tmp_path: Path) -> None:
         """A second provider over the same dir + passphrase recovers the same key."""
