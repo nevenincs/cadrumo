@@ -47,55 +47,52 @@ def _create_profile(*, activity_start_date: str | None = None) -> None:
 
 
 def _create_gb_non_resident_profile() -> None:
-    result = _invoke(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--surnames", "Readiness",
-            "--activity", "Spanish-source rent",
-            "--fiscal-residency", "non_resident_irnr",
-            "--country-of-fiscal-residence", "GB",
-            "--representante-fiscal-nif", "12345678Z",
-            "--representante-fiscal-nombre", "Test Representative",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Readiness',
+            "activities.description": 'Spanish-source rent',
+            "fiscal_residency.status": 'non_resident_irnr',
+            "fiscal_residency.country": 'GB',
+            "taxpayer_type.representante_fiscal_nif": '12345678Z',
+            "taxpayer_type.representante_fiscal_nombre": 'Test Representative',
+        },
+    )
 
 
 def _create_de_nonresident_legal_entity_profile() -> None:
-    result = _invoke(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "legal_entity",
-            "--legal-entity-form", "sl",
-            "--tax-id", "B66012345",
-            "--legal-name", "NordHaus GmbH",
-            "--activity", "Spanish-source services",
-            "--fiscal-residency", "non_resident_irnr",
-            "--country-of-fiscal-residence", "DE",
-            "--iva-regime", "GENERAL",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'legal_entity',
+            "taxpayer_type.legal_entity_form": 'sl',
+            "identity.tax_id": 'B66012345',
+            "identity.legal_name": 'NordHaus GmbH',
+            "activities.description": 'Spanish-source services',
+            "fiscal_residency.status": 'non_resident_irnr',
+            "fiscal_residency.country": 'DE',
+            "iva.regime": 'GENERAL',
+        },
+    )
 
 
 def _create_attribution_entity_intracom_profile() -> None:
-    result = _invoke(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "attribution_entity",
-            "--tax-id", "E12345674",
-            "--name", "M349 Readiness CB",
-            "--activity", "intracommunity operations",
-            "--does-intracomunitario",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'attribution_entity',
+            "identity.tax_id": 'E12345674',
+            "identity.name": 'M349 Readiness CB',
+            "activities.description": 'intracommunity operations',
+            "iva.does_intracomunitario": 'true',
+        },
+    )
 
 
 def _attempt_incomplete_profile_create():

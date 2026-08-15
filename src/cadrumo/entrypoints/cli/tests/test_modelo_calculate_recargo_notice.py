@@ -41,6 +41,7 @@ from ....tests.cli_envelope import unwrap_schema_envelope as _result
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_storage  # noqa: F401 - autouse fixture
+from ....tests.user_profile import register_cli_profile
 from .._modelo_rendering import _work_unit_deadline_output_from_posture
 from ._m130_source_support import seed_m130_income_transaction
 
@@ -58,27 +59,17 @@ _M130_QUARTERLY_PERIODS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
 
 
 def _create_natural_person_profile() -> None:
-    result = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--accept-defaults",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Operator",
-            "--surnames",
-            "Readiness",
-            "--activity",
-            "design",
-        ],
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='operator',
+        facts={
+            "identity.tax_id": '12345678Z',
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Readiness',
+            "activities.description": 'design',
+        },
     )
-    assert result.exit_code == 0, result.output
 
 
 def _calculate_m130(work_unit_id: str) -> Any:

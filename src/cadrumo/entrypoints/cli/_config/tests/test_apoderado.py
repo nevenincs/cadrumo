@@ -12,6 +12,7 @@ from .....tests.profile_storage_root_fixture import profile_storage_root_fixture
 __all__ = ["profile_storage_root_fixture"]
 
 from .....tests.secure_sql import isolated_profile_storage_root
+from .....tests.user_profile import register_cli_profile
 from ... import app as root_app
 from ..._config_payloads import (
     ApoderadoCheckResult,
@@ -158,29 +159,18 @@ def test_apoderado_happy_path_against_active_profile(profile_storage_root: Path)
 
 
 def _create_active_profile() -> None:
-    create = invoke_typer_app(
-        root_app,
-        [
-            "config",
-            "profile",
-            "create",
-            "myco",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "MyCo",
-            "--surnames",
-            "Operator",
-            "--activity",
-            "design",
-            "--iva-regime",
-            "GENERAL",
-        ],
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='myco',
+        facts={
+            "identity.tax_id": '12345678Z',
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": 'MyCo',
+            "identity.surnames": 'Operator',
+            "activities.description": 'design',
+            "iva.regime": 'GENERAL',
+        },
     )
-    assert create.exit_code == 0, f"create failed: {create.output}"
 
 
 def test_apoderado_configure_without_nif_refuses_naming_the_flags(profile_storage_root: Path) -> None:

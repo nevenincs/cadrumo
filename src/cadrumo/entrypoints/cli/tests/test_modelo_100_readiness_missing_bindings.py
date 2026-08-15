@@ -9,6 +9,7 @@ import pytest
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -19,20 +20,19 @@ _REVISION = "2025"
 
 
 def _create_natural_person_profile() -> None:
-    result = invoke_cached_cli(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--surnames", "Readiness",
-            "--activity", "design",
-            "--irpf-income-categories", "actividad_economica",
-            "--irpf-estimation-regime", "directa_normal",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Readiness',
+            "activities.description": 'design',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "irpf.estimation_regime": 'directa_normal',
+        },
+    )
 
 
 def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight() -> None:

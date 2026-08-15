@@ -16,6 +16,7 @@ from ....core import resolve_active_bucket_id
 from ....core.config import SecretStoreBackend, load_settings, override_settings
 from ....entrypoints.mcp import build_verb_input_schemas, cli_argv_for
 from ....tests.profile_capsule import open_test_profile_session
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -175,34 +176,20 @@ def _create_natural_profile(environment: dict[str, str]) -> None:
 
 
 def _create_legal_profile(environment: dict[str, str]) -> None:
-    _run_success(
-        environment,
-        [
-            "config",
-            "profile",
-            "create",
-            "entidad-s27",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "legal_entity",
-            "--legal-entity-form",
-            "sl",
-            "--tax-id",
-            "B12345674",
-            "--legal-name",
-            "Entidad de prueba SL",
-            "--activity",
-            "actividad",
-            "--incn-prior-12-months",
-            "500000",
-            "--activity-start-date",
-            "2024-01-15",
-            "--tax-residence-ccaa",
-            "madrid",
-            "--iva-regime",
-            "GENERAL",
-        ],
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='entidad-s27',
+        facts={
+            "taxpayer_type.entity_type": 'legal_entity',
+            "taxpayer_type.legal_entity_form": 'sl',
+            "identity.tax_id": 'B12345674',
+            "identity.legal_name": 'Entidad de prueba SL',
+            "activities.description": 'actividad',
+            "taxpayer_type.incn_prior_12_months": '500000',
+            "censo.activity_start_date": '2024-01-15',
+            "tax_residence.ccaa": 'madrid',
+            "iva.regime": 'GENERAL',
+        },
     )
 
 
