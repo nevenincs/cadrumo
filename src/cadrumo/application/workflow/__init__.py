@@ -114,6 +114,7 @@ from ._errors import (
 # WorkflowState / utc_now from this package during their own module load,
 # those names are already present in the partially-initialised module.
 from ._models import (
+    ActiveProfileRecordResolution,
     DeclaracionPointer,
     ProfileBucketPointer,
     SiteHealthAlert,
@@ -143,6 +144,7 @@ from ._models import (
     active_transaction_catalogue_repository,
     compute_run_id,
     declaration_key,
+    resolve_active_profile_record,
     update_declaration_pointer,
     utc_now,
 )
@@ -212,6 +214,7 @@ __all__ = [
     "ActiveProfileHealth",
     "ActiveProfileRepairResult",
     "AuthCleanupCertificateSource",
+    "ActiveProfileRecordResolution",
     "AuthCleanupIntent",
     "AuthCleanupOperationKind",
     "AuthState",
@@ -289,6 +292,7 @@ __all__ = [
     "read_profile_bucket_by_id",
     "repair_active_profile_pointer",
     "reset_workflow_state",
+    "resolve_active_profile_record",
     "resolve_modelo_exact_workflow_run_for_resume",
     "resolve_modelo_visible_workflow_run_for_resume",
     "resolve_modelo_workflow_resume_target",

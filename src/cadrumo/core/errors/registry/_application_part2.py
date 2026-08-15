@@ -498,6 +498,57 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.calculations._m303_regimen_simplificado.M303RegimenSimplificadoCalculationError",
+        ErrorCode(
+            code="ERROR_M303_REGIMEN_SIMPLIFICADO_CALCULATION",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_financial_iva",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.calculations._m303_regimen_simplificado_annual_summary."
+        "M303RegimenSimplificadoAnnualSummaryHandoffError",
+        ErrorCode(
+            code="FAIL_M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_HANDOFF",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.reconciliation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.profile_custody.ProfileRecordCryptoError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_RECORD_CRYPTO",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_encryption",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.user_profile._capsule_record.ProfileRecordConflictError",
+        ErrorCode(
+            code="FAIL_PROFILE_RECORD_CONFLICT",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_storage_secure_object_revision_conflict",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.user_profile._capsule_record.ProfileRecordIntegrityError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_RECORD",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_profile_custody_record",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.iva_compensation._errors.IvaWalletReconciliationError",
         ErrorCode(
             code="REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT",

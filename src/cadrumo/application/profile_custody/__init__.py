@@ -38,6 +38,7 @@ from ...adapters.persistence.storage import (
 from ...core import SecureObjectWrite, StorageCategory, storage_location
 from ...core.classification import SensitivityClass
 from ...core.config import Settings
+from ...core.errors import CoreError
 from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from ...core.paths import effective_storage_root
 
@@ -54,8 +55,18 @@ if TYPE_CHECKING:
     )
 
 
-class ProfileRecordCryptoError(RuntimeError):
-    """The configured profile-record crypto provider rejected an operation."""
+class ProfileRecordCryptoError(CoreError, RuntimeError):
+    """The configured profile-record crypto provider rejected an operation.
+
+    Roots at :class:`~core.errors.CoreError` so the refusal binds to the error
+    registry rather than reaching an operator as an unregistered builtin. The
+    port deliberately does not root at the persistence layer's own
+    :class:`~adapters.persistence.storage.EncryptionError`: this package exists
+    to keep the adapter's crypto types off the application port, and adopting
+    that family would make the port's refusal catchable by every storage-family
+    handler — a broadening, not a re-root. :class:`RuntimeError` is retained so
+    the ancestry every existing caller was written against is unchanged.
+    """
 
 
 class ProfileRecordEncryptedBlob(BaseModel):

@@ -1,6 +1,6 @@
-"""Real-behavior CLI tests for config-boundary error narrowing (contract/contract).
+"""Real-behavior CLI tests for config-boundary error narrowing.
 
-Verifies two contracts introduced by contract:
+Verifies two contracts:
 
 1. CadrumoError subclasses that escape a config command surface produce a
    typed error envelope — the command_error_boundary receives the typed
@@ -12,8 +12,10 @@ Verifies two contracts introduced by contract:
    result and exits with code 2, chaining ConfigBoundaryError rather than the
    raw exception.
 
-3. The profile-import parse-failure path (catch 4) continues to emit a
-   CliRefusedBoundaryError when model_validate_json raises a non-CadrumoError.
+The bundle-import parse-failure boundary is deliberately uncovered here.
+``config profile import`` does not resolve, so the only assertion a test could
+make against it is that click refused an unknown command — which is not the
+boundary, and passes whatever the boundary does.
 """
 
 from __future__ import annotations
@@ -199,53 +201,6 @@ def test_non_cadrumo_error_cause_chain_reaches_config_boundary_error(tmp_path: P
             from .....core.errors import CadrumoError
 
             assert not isinstance(cause.original_exception, CadrumoError)
-
-
-# ---------------------------------------------------------------------------
-# G3: Catch 4 (profile import) — non-CadrumoError parse errors → CliRefusedBoundaryError
-# ---------------------------------------------------------------------------
-
-
-def test_profile_import_with_invalid_json_raises_refused_boundary(tmp_path: Path) -> None:
-    """config profile import with a non-JSON file surfaces as CliRefusedBoundaryError.
-
-    model_validate_json raises ValueError (a non-CadrumoError) on bad input.
-    The narrowed catch 4 re-raises CadrumoError as-is and wraps everything
-    else in _CliRefusedBoundaryError (an CadrumoError) with the
-    "import_invalid_bundle" locale message.
-
-    Real-behavior test: we write a real file with invalid JSON content and
-    invoke the full CLI surface.
-    """
-    bad_bundle = tmp_path / "bad.json"
-    bad_bundle.write_text("this is not valid json", encoding="utf-8")
-
-    result = invoke_cached_cli(["config", "profile", "import", str(bad_bundle)])
-
-    # CliRefusedBoundaryError is category REFUSED; exit code ≠ 0.
-    assert result.exit_code != 0
-
-
-def test_profile_import_with_structurally_invalid_bundle_surfaces_as_refused(
-    tmp_path: Path,
-) -> None:
-    """config profile import with valid JSON but wrong schema structure → refused boundary.
-
-    pydantic's model_validate_json raises ValidationError (a non-CadrumoError)
-    when the JSON schema does not match UserProfilePortableExport. The
-    narrowed catch 4 wraps it in _CliRefusedBoundaryError (a typed CadrumoError).
-    """
-    wrong_schema_bundle = tmp_path / "wrong.json"
-    wrong_schema_bundle.write_text(json.dumps({"not": "a valid bundle"}), encoding="utf-8")
-
-    result = invoke_cached_cli(["config", "profile", "import", str(wrong_schema_bundle)])
-
-    assert result.exit_code != 0
-
-
-# ---------------------------------------------------------------------------
-# G4: ConfigBoundaryError is a registered CadrumoError subclass (structural)
-# ---------------------------------------------------------------------------
 
 
 # ---------------------------------------------------------------------------

@@ -1416,15 +1416,38 @@ def _run_wizard_persistence_path(
     )
 
 
-_DEFAULT_PROFILE_NEXT_COMMAND = "aeat app modelo work create"
+#: The routing projection's default suggestion: a profile carrying no
+#: fiscal-residency classification that redirects it elsewhere. Public
+#: because a consumer projecting this same guidance onto another surface
+#: (the profile manager) needs to tell "the ordinary default applies" from
+#: "this profile earned a specific next step" without re-deriving the
+#: comparison.
+DEFAULT_PROFILE_NEXT_COMMAND = "aeat app modelo work create"
 _NON_RESIDENT_IRNR_NEXT_COMMAND = "aeat app modelo describe 210"
 
 
-def _next_step_command_for_profile_values(profile_values: dict[str, str]) -> str:
+def next_step_command_for_profile_values(profile_values: dict[str, str]) -> str:
+    """Resolve the CLI command a profile's declared facts point at next.
+
+    The one canonical mapping from a taxpayer classification to its
+    recommended follow-on command — currently a single rule (IRNR
+    non-residents route to the Modelo 210 describe surface, TRLIRNR RDLeg
+    5/2004 Art. 2) falling back to :data:`DEFAULT_PROFILE_NEXT_COMMAND` for
+    every other profile. Consumed by the scripted wizard's own success line
+    and by the profile manager's live next-step advisory, so the two never
+    grow independent opinions about what a fiscal-residency fact implies.
+
+    Args:
+        profile_values: Dotted-path fact values as the wizard's canonical
+            question-id keys, or the equivalent
+            :func:`~cadrumo.application.user_profile.record_to_path_values`
+            projection of a :class:`~cadrumo.domain.user_profile.UserProfileRecord`
+            — the two share the same ``taxpayer_type.fiscal_residency`` key.
+    """
     fiscal_residency = profile_values.get("taxpayer_type.fiscal_residency", "").strip().lower()
     if fiscal_residency == "non_resident_irnr":
         return _NON_RESIDENT_IRNR_NEXT_COMMAND
-    return _DEFAULT_PROFILE_NEXT_COMMAND
+    return DEFAULT_PROFILE_NEXT_COMMAND
 
 
 def _ccaa_was_defaulted(
@@ -1467,7 +1490,7 @@ def _emit_wizard_success(
     mode: WizardPersistMode,
     profile_name: str,
     *,
-    next_command: str = _DEFAULT_PROFILE_NEXT_COMMAND,
+    next_command: str = DEFAULT_PROFILE_NEXT_COMMAND,
     ccaa_defaulted: bool = False,
     modify_no_resume: bool = False,
     modify_no_resume_message: str | None = None,
@@ -1817,7 +1840,7 @@ def _execute_wizard_command(
     _emit_wizard_success(
         mode,
         profile_name,
-        next_command=_next_step_command_for_profile_values(profile_values),
+        next_command=next_step_command_for_profile_values(profile_values),
         ccaa_defaulted=_ccaa_was_defaulted(
             mode,
             explicit_flags,
@@ -1902,6 +1925,8 @@ def build_wizard_command(
 
 
 __all__ = [
+    "DEFAULT_PROFILE_NEXT_COMMAND",
     "SETUP_FLOW",
     "build_wizard_command",
+    "next_step_command_for_profile_values",
 ]

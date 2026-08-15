@@ -27,7 +27,8 @@ if TYPE_CHECKING:
 
     from ....adapters.inbound.tui import FormPage, RegistrationAttempt
     from ....application.user_profile import ProfileOverview, ProfileRegistrationOutcome
-    from ....domain.user_profile import ProfileFieldDefinition, ProfileValueRefusalKind
+    from ....core.json_contract import Notice
+    from ....domain.user_profile import ProfileFieldDefinition, ProfileValueRefusalKind, UserProfileRecord
 
 
 _ROUTING_META_KEYS = frozenset({"ctx", "profile_name", "quiet", "accept_defaults"})
@@ -99,6 +100,63 @@ def host_can_run_full_screen() -> bool:
     return detect_frontend_capability() is FrontendCapability.FULL_SCREEN
 
 
+def _profile_next_action_notice(record: UserProfileRecord) -> Notice | None:
+    """The next-step advisory for a profile the routing projection singles out.
+
+    Reuses the SAME projection the scripted wizard's own success line
+    already renders --
+    :func:`~cadrumo.application.wizard.next_step_command_for_profile_values`
+    -- so the manager and the registration screen it opens onto never grow a
+    second opinion about what a fiscal-residency classification implies.
+    Registration itself declares no tax facts: a profile is born with only a
+    label and a passphrase, so this can only ever fire once the operator has
+    answered the fiscal-residency question, whether in the manager session
+    opened straight from registration or a later ``edit``. There is no
+    separate hook to wire on the registration screen itself, because at that
+    moment there is nothing yet to project.
+
+    Silent for the ordinary default: ``aeat app modelo work create`` applies
+    to every profile regardless of its facts and is not a discovery worth a
+    banner, so a profile the projection does not single out renders no
+    notice at all rather than repeating the generic default on every page.
+    """
+    from ....application.user_profile import record_to_path_values
+    from ....application.wizard import DEFAULT_PROFILE_NEXT_COMMAND, next_step_command_for_profile_values
+    from ....core.i18n import tr
+    from ....core.json_contract import Notice, NoticeSeverity
+
+    command = next_step_command_for_profile_values(record_to_path_values(record))
+    if command == DEFAULT_PROFILE_NEXT_COMMAND:
+        return None
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code="config.profile.manager.next_step",
+        message=tr(
+            "flows.manager.next_step",
+            default="Next step: run '{command}'.",
+            command=command,
+        ),
+        context={"command": command},
+    )
+
+
+def _overview_notices(record: UserProfileRecord) -> tuple[Notice, ...]:
+    """Every advisory the manager's landing page reports for one record.
+
+    Composes the shared status/manager advisory set with the routing
+    projection's next-step hint, so both surfaces the manager renders --
+    the read-only status page and the manager itself -- keep reading
+    :func:`~cadrumo.entrypoints.cli._config._status_frontend.build_active_profile_notices`
+    as their one shared advisory authority, with the next-step hint layered
+    on top only where the manager's overview is actually built.
+    """
+    from ._status_frontend import build_active_profile_notices
+
+    notices = build_active_profile_notices(record)
+    next_action = _profile_next_action_notice(record)
+    return (*notices, next_action) if next_action is not None else notices
+
+
 def build_active_profile_overview(*, label: str | None = None) -> ProfileOverview:
     """Build the manager's page for whichever profile is currently active."""
     from ....application.user_profile import CommittedProfileRepository, ProfileRecordRepository, build_profile_overview
@@ -110,9 +168,7 @@ def build_active_profile_overview(*, label: str | None = None) -> ProfileOvervie
         record,
         label=label if label is not None else CommittedProfileRepository().load(profile_id).label,
     )
-    from ._status_frontend import build_active_profile_notices
-
-    return overview.model_copy(update={"notices": build_active_profile_notices(record)})
+    return overview.model_copy(update={"notices": _overview_notices(record)})
 
 
 def persist_active_profile_field(path: str, value: str, *, label: str | None = None) -> ProfileOverview:
@@ -300,10 +356,8 @@ def _active_profile_manager_storage(
     resolved_label = label if label is not None else CommittedProfileRepository().load(profile_id).label
 
     def _page(record: UserProfileRecord) -> ProfileOverview:
-        from ._status_frontend import build_active_profile_notices
-
         overview = build_profile_overview(record, label=resolved_label, schema=schema)
-        return overview.model_copy(update={"notices": build_active_profile_notices(record)})
+        return overview.model_copy(update={"notices": _overview_notices(record)})
 
     def _persist(path: str, value: str) -> ProfileOverview:
         fact = UserProfileFact(path=path, value=value.strip() or None)

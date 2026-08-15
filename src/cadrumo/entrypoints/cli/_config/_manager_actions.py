@@ -25,10 +25,11 @@ never learns what a censal read or a profile bundle is — it renders a
 label, calls the callable, and shows the sentence it gets back. That is
 the same injected-door arrangement the rest of this seam uses.
 
-Import is deliberately absent. ``aeat config profile import`` feeds
-secrets over stdin and threads an atomic-create callback the screen has no
-way to supply; a button would either duplicate that orchestration or drop
-its guards, and both are worse than sending the operator to the verb.
+Taking a copy away is offered; bringing one back is not, and there is
+nowhere else to send an operator who wants to. No inbound bundle path
+exists on any surface — :func:`~cadrumo.application.user_profile.deserialize_profile_bundle`
+survives with no production caller — so this page carries the export half
+of a transfer whose other half is absent rather than elsewhere.
 
 See Also:
     :mod:`cadrumo.entrypoints.cli._config._manager_frontend`
@@ -470,10 +471,15 @@ def export_action() -> ManagerAction:
 def _run_export() -> ManagerActionOutcome:
     """Collect a destination and a passphrase, then publish the bundle.
 
-    Encrypted transport is the only one offered here. The cleartext form
-    exists for a subject-access request and is gated behind an explicit
-    command-line flag precisely so it cannot be reached by pressing a
-    button while looking at the data it would expose.
+    Encrypted transport is not merely the default here, it is the only one
+    reachable, and that is now load-bearing rather than a preference.
+    :attr:`~cadrumo.application.user_profile.ProfileBundleExportTransport.CLEARTEXT_LOCAL`
+    writes the taxpayer's financial data as plain JSON; it used to be held
+    behind an explicit command-line flag, and no surface declares that flag
+    any more. Hardcoding the transport at this call is therefore the sole
+    remaining guard against writing cleartext by pressing a button while
+    looking at the data it would expose. It is not a value to plumb through
+    to the operator.
     """
     from pathlib import Path
 

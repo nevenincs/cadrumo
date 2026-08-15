@@ -11,6 +11,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core import BindingSourceKind, CasillaId, Modelo, Period
+from ...core.errors import CoreValidationError
 from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import (
     RegistrySnapshot,
@@ -42,8 +43,15 @@ _SOURCE_CASILLA_VALUES: tuple[CasillaId, ...] = ("51", "53", "52", "54", "55", "
 _ZERO = Decimal("0")
 
 
-class M303RegimenSimplificadoAnnualSummaryHandoffError(ValueError):
-    """Raised when a Modelo 390 annual handoff has no exact filed 303 source."""
+class M303RegimenSimplificadoAnnualSummaryHandoffError(CoreValidationError):
+    """Raised when a Modelo 390 annual handoff has no exact filed 303 source.
+
+    Roots at :class:`~core.errors.CoreValidationError` like every other refusal
+    in this package, so the class binds to the error registry and its refusal
+    carries a code, a category and locale-resolved text. That base already
+    carries :class:`ValueError`, so the resolver keeps the ancestry its callers
+    were written against.
+    """
 
 
 class M303RegimenSimplificadoAnnualSummarySourceResolver:

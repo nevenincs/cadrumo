@@ -38,6 +38,8 @@ from ...core import (
     ActionConditionality,
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
+    ProfileRecordUnavailability,
+    ProfileSessionRefusalReason,
     resolve_active_bucket_id,
 )
 from ...core.config import load_settings, override_settings
@@ -49,10 +51,11 @@ from ..operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,
 )
-from ..profile_preconditions import inspect_active_profile_precondition
+from ..profile_preconditions import inspect_active_profile_precondition, profile_session_failure_verdict
 from ..user_profile import (
     active_profile_pointer_transaction,
     list_profile_key_records,
+    profile_record_session_if_authenticated,
     record_to_path_values,
     validate_profile_values,
 )
@@ -63,12 +66,22 @@ from ._profile_bucket_scan import list_profile_buckets, resolve_profile_bucket
 ProfileHealthStatus = Literal[
     "none",
     "dangling_pointer",
+    "profile_locked",
     "missing_profile_record",
     "profile_record_unreadable",
     "capsule_unreadable",
     "incomplete",
     "ready",
 ]
+"""Closed set of active-profile health verdicts.
+
+``profile_locked`` is the ordinary benign member: the capsule is committed and
+its record is intact, and nobody has logged in, so the record is simply not
+knowable yet. It is deliberately distinct from ``missing_profile_record`` and
+``profile_record_unreadable``, which both assert something is WRONG with the
+record. Collapsing the three told an operator whose profile was merely locked
+that their financial records were gone.
+"""
 
 ProfileSource = Literal["none", "env_override", "pointer"]
 
@@ -163,6 +176,15 @@ _HEALTH_EVIDENCE_IDS: dict[ProfileHealthStatus, str] = {
     "incomplete": "profile.configuration.completeness",
 }
 
+#: Health status carried by each reason the active-profile record did not resolve.
+#: Only a selector with no committed capsule is an ABSENT record; a locked
+#: profile is benign and a mis-addressed session is a readability failure.
+_UNAVAILABILITY_STATUSES: dict[ProfileRecordUnavailability, ProfileHealthStatus] = {
+    ProfileRecordUnavailability.NO_LIVE_CAPSULE: "missing_profile_record",
+    ProfileRecordUnavailability.SESSION_REQUIRED: "profile_locked",
+    ProfileRecordUnavailability.SESSION_IDENTITY_MISMATCH: "profile_record_unreadable",
+}
+
 
 def unavailable_profile_record_verdict(
     *,
@@ -205,6 +227,15 @@ def _health_precondition_verdict(health: ActiveProfileHealth) -> PreconditionVer
         if verdict is None:
             raise RuntimeError("inactive-profile health did not produce a precondition verdict")
         return verdict
+    if health.status == "profile_locked":
+        # A locked profile is not broken, so it takes the ordinary logged-out
+        # session verdict rather than a record-repair one: the remedy is
+        # logging in, and the capsule label the assessment already resolved
+        # names WHICH profile to log into.
+        label = health.active_profile_label
+        if label is None:
+            raise RuntimeError("a locked active profile has no committed-capsule label to route its login")
+        return profile_session_failure_verdict(ProfileSessionRefusalReason.ABSENT, profile_name=label)
     if health.status == "missing_profile_record":
         return unavailable_profile_record_verdict(
             status=health.status,
@@ -329,9 +360,17 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
     """Return a redacted, non-secret projection from current authenticated state.
 
     This is an observation boundary: it reads only the already-bound current
-    profile-record or custody session.  An absent or cold session is returned
-    as the existing typed unreadable-record verdict; health assessment never
-    unlocks a capsule or constructs a credential provider.
+    profile-record or custody session; health assessment never unlocks a
+    capsule or constructs a credential provider.
+
+    An absent session is reported as ``profile_locked`` and routed to the
+    login action for the capsule's own label. It is NOT an absent or unreadable
+    record: the capsule is committed and the record is intact, and nothing
+    about that record is knowable until someone logs in. Whether a record is
+    genuinely gone is answered by the capsule projection above, which still
+    refuses a selector with no committed capsule as ``dangling_pointer``, so
+    real data loss keeps its own verdict rather than hiding behind the benign
+    one.
     """
     settings = load_settings()
     override = (settings.cadrumo_active_profile or "").strip()
@@ -398,6 +437,24 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
         )
     active_profile = registered_pointer.bucket_id
 
+    # Asked BEFORE the encrypted workflow state is opened. That store is locked
+    # by the very session this is probing for, so loading it first refuses with
+    # a storage error and reports a benign locked profile as an unreadable one
+    # -- the same lie in a different spelling.
+    with override_settings(cadrumo_active_profile=registered_pointer.bucket_id):
+        locked = profile_record_session_if_authenticated(registered_pointer.bucket_id) is None
+    if locked:
+        return _finalise_health(
+            ActiveProfileHealth(
+                active_profile=active_profile,
+                source=source,
+                status="profile_locked",
+                registered_bucket=True,
+                profile_total_keys=total_keys,
+            ),
+            label=registered_pointer.label,
+        )
+
     try:
         with override_settings(cadrumo_active_profile=registered_pointer.bucket_id):
             resolved_state = state or workflow_state_repository().load()
@@ -418,7 +475,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
         )
     try:
         with override_settings(cadrumo_active_profile=registered_pointer.bucket_id):
-            record = resolved_state.active_profile_record()
+            resolution = resolved_state.resolve_active_profile_record()
     except (CadrumoError, ValueError) as exc:
         # CadrumoError: domain or registry failures resolving the profile record.
         # ValueError (including pydantic ValidationError): stored record fails strict validation.
@@ -434,15 +491,22 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             ),
             label=registered_pointer.label,
         )
+    record = resolution.record
     if record is None:
+        # The reason travels with the absence, so each one reaches the operator
+        # as itself. A session that vanished between the probe above and this
+        # read lands here as a lock rather than as a missing record.
+        assert resolution.unavailability is not None
         return _finalise_health(
             ActiveProfileHealth(
                 active_profile=active_profile,
                 source=source,
-                status="missing_profile_record",
+                status=_UNAVAILABILITY_STATUSES[resolution.unavailability],
                 registered_bucket=True,
                 profile_total_keys=total_keys,
-                repairable_by_clearing_pointer=source == "pointer",
+                repairable_by_clearing_pointer=(
+                    source == "pointer" and resolution.unavailability is not ProfileRecordUnavailability.SESSION_REQUIRED
+                ),
             ),
             label=registered_pointer.label,
         )

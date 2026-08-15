@@ -6,6 +6,7 @@ from collections.abc import Iterable
 from decimal import Decimal, InvalidOperation
 
 from ...core import Period
+from ...core.errors import CoreValidationError
 from ...core.money import round_to_cents
 from ...domain.calculations.registry import LegalParameter, M303RegimenSimplificadoSnapshot, RegistryCatalogues
 from ...domain.iva import (
@@ -43,8 +44,15 @@ _DANA_2024_SOURCE_REFS = (
 _HUNDRED = Decimal("100")
 
 
-class M303RegimenSimplificadoCalculationError(ValueError):
-    """Raised when exact annual-Orden inputs cannot form a calculation result."""
+class M303RegimenSimplificadoCalculationError(CoreValidationError):
+    """Raised when exact annual-Orden inputs cannot form a calculation result.
+
+    Roots at :class:`~core.errors.CoreValidationError` like every other refusal
+    in this package, so the class binds to the error registry and its refusal
+    carries a code, a category and locale-resolved text. That base already
+    carries :class:`ValueError`, which the row validation below relies on to
+    convert the domain refusal into this one.
+    """
 
 
 def calculate_m303_regimen_simplificado_result(
