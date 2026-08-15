@@ -77,6 +77,34 @@ def clear_scoped_locks(
     return cleared, tuple(affected)
 
 
+def clear_operator_auth_acquisition_locks(
+    settings: Settings,
+    *,
+    bucket_id: str,
+) -> tuple[str, ...]:
+    """Clear every provider's acquisition lock for ``bucket_id`` without its key.
+
+    The lock is a plaintext file under the token directory, outside the profile
+    capsule, so clearing it needs no custody session -- and destroying the
+    capsule does not reap it, which is why a caller erasing a profile clears it
+    explicitly rather than leaving it to the deletion.
+
+    Every implemented provider kind is swept because the workflow state naming
+    the configured provider lives INSIDE the capsule and is unreadable while the
+    profile is locked. Clearing an absent lock is a no-op, so the sweep costs a
+    stat per kind and reports only the locks that were actually there.
+
+    Returns:
+        The provider ids whose lock was present and has been cleared.
+    """
+    _, affected = clear_scoped_locks(
+        settings,
+        tuple(kind.value for kind in AuthProviderKind),
+        bucket_id=bucket_id,
+    )
+    return affected
+
+
 def delete_certificate_source_secrets(bucket_id: str, names: tuple[str, ...]) -> int:
     backend = SecureStorageCertificateSecretBackend(bucket_id=bucket_id)
     return sum(backend.remove(name) for name in names)

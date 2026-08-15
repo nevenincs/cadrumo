@@ -1078,4 +1078,14 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.application.operations._execution_context.OperationDeclarationError",
+        ErrorCode(
+            code="INTERNAL_OPERATION_DECLARATION_BREACH",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_operation_declaration_breach",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

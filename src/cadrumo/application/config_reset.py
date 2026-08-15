@@ -14,6 +14,8 @@ from ..core.hashing import sha256_hex
 from ..core.time import now
 from ..domain.retention import RetentionFloorAssessment, RetentionFloorError
 from ._config_reset_models import (
+    ConfigResetAuthClearance,
+    ConfigResetAuthClearanceMode,
     ConfigResetDeletionMarker,
     ConfigResetOperation,
     ConfigResetOperationStatus,
@@ -31,7 +33,11 @@ from ._config_reset_repository import (
     ConfigResetJournalNotFoundError,
     ConfigResetJournalRepository,
 )
-from .auth import reset_operator_auth
+from .auth import (
+    clear_operator_auth_acquisition_locks,
+    operator_auth_revocation_is_reachable,
+    reset_operator_auth,
+)
 from .bucket_maintenance import (
     AssessBucketDeletionCommand,
     BucketDeletionAssessment,

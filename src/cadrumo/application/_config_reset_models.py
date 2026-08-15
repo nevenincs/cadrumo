@@ -98,6 +98,56 @@ class ConfigResetRetentionDecision(BaseModel):
         return self
 
 
+class ConfigResetAuthClearanceMode(StrEnum):
+    """Closed vocabulary of how one target's auth custody was actually ended."""
+
+    UNLOCKED_REVOCATION = "unlocked_revocation"
+    CAPSULE_DESTRUCTION = "capsule_destruction"
+
+
+class ConfigResetAuthClearance(BaseModel):
+    """What the auth phase removed for one target, and what it could not reach.
+
+    The phase name says auth was cleared; this record says HOW, because the two
+    modes end custody by different means and leave different residue.
+
+    ``UNLOCKED_REVOCATION`` means a custody session for the target was already
+    open, so the full revocation ran: the encrypted rows inside the capsule and
+    the certificate-source secrets held outside it were both removed, and
+    ``removed_out_of_bucket_secret_records`` counts the latter.
+
+    ``CAPSULE_DESTRUCTION`` means the target was locked. Its in-capsule auth
+    rows end with the capsule, and the acquisition locks -- plaintext files
+    outside it, which the deletion does not reap -- were cleared explicitly.
+    Its certificate-source secrets could be neither enumerated nor removed,
+    because both the record naming them and the lookup digest addressing them
+    need the profile's key, so ``removed_out_of_bucket_secret_records`` is
+    ``None``: an unknown, never a zero. Their ciphertext outlives the erase and
+    is unreadable, the wrapping of its key having been destroyed with the
+    capsule.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    mode: ConfigResetAuthClearanceMode
+    cleared_at: datetime
+    cleared_lock_provider_ids: tuple[str, ...] = ()
+    removed_out_of_bucket_secret_records: int | None = Field(default=None, ge=0)
+
+    @model_validator(mode="after")
+    def _validate_clearance(self) -> ConfigResetAuthClearance:
+        validate_utc_aware(self.cleared_at)
+        if self.cleared_lock_provider_ids != tuple(sorted(set(self.cleared_lock_provider_ids))):
+            raise ValueError("cleared auth lock provider ids must be unique and sorted")
+        locked_out = self.mode is ConfigResetAuthClearanceMode.CAPSULE_DESTRUCTION
+        if locked_out != (self.removed_out_of_bucket_secret_records is None):
+            raise ValueError(
+                "a capsule-destruction clearance cannot count removed out-of-bucket secret records, "
+                "and an unlocked revocation must",
+            )
+        return self
+
+
 class ConfigResetDeletionMarker(BaseModel):
     """Ownership-witness shape intended for pre-delete persistence.
 
@@ -132,6 +182,7 @@ class ConfigResetTarget(BaseModel):
     fingerprint: BucketDeletionFingerprint | None = None
     phase: ConfigResetTargetPhase = ConfigResetTargetPhase.SNAPSHOTTED
     retention: ConfigResetRetentionDecision | None = None
+    auth_clearance: ConfigResetAuthClearance | None = None
     deletion_marker: ConfigResetDeletionMarker | None = None
     completed_at: datetime | None = None
 
@@ -139,8 +190,22 @@ class ConfigResetTarget(BaseModel):
     def _validate_target_state(self) -> ConfigResetTarget:
         self._validate_existence_correlation()
         self._validate_marker_phase()
+        self._validate_auth_clearance_phase()
         self._validate_completion_timestamp()
         return self
+
+    def _validate_auth_clearance_phase(self) -> None:
+        """Refuse a clearance mode the target's own existence contradicts.
+
+        An absent target has no capsule, so no custody session can be open for
+        it and its clearance can only be the key-free half. The converse is not
+        an invariant: an EXISTING target may legitimately record either mode,
+        which is the whole point of the distinction.
+        """
+        if self.auth_clearance is None or self.exists_at_snapshot:
+            return
+        if self.auth_clearance.mode is ConfigResetAuthClearanceMode.UNLOCKED_REVOCATION:
+            raise ValueError("an absent reset target cannot have been revoked through an open custody session")
 
     def _validate_existence_correlation(self) -> None:
         if self.exists_at_snapshot != (self.fingerprint is not None):
@@ -291,6 +356,8 @@ def new_config_reset_operation_id() -> str:
 
 __all__ = [
     "CONFIG_RESET_SCHEMA_VERSION",
+    "ConfigResetAuthClearance",
+    "ConfigResetAuthClearanceMode",
     "ConfigResetDeletionMarker",
     "ConfigResetOperation",
     "ConfigResetOperationStatus",

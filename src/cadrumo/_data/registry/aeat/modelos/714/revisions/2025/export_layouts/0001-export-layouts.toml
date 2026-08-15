@@ -13,79 +13,9 @@ line_ending = "none"
 [[revisions."2025".export_layouts.records.fields]]
 id = "modelo-714-envelope-open"
 offset = 1
-length = 2
+length = 17
 kind = "literal"
-literal = "<T"
-data_type = "text"
-required = true
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-277-2026:art-4"]
-source_refs = ["aeat-dr-714-2025"]
-
-[[revisions."2025".export_layouts.records.fields]]
-id = "modelo-714-envelope-modelo"
-offset = 3
-length = 3
-kind = "literal"
-literal = "714"
-data_type = "text"
-required = true
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-277-2026:art-4"]
-source_refs = ["aeat-dr-714-2025"]
-
-[[revisions."2025".export_layouts.records.fields]]
-id = "modelo-714-envelope-discriminante"
-offset = 6
-length = 1
-kind = "literal"
-literal = "0"
-data_type = "text"
-required = true
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-277-2026:art-4"]
-source_refs = ["aeat-dr-714-2025"]
-
-[[revisions."2025".export_layouts.records.fields]]
-id = "modelo-714-envelope-ejercicio"
-offset = 7
-length = 4
-kind = "draft"
-draft_attribute = "filing_year"
-data_type = "text"
-required = true
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-277-2026:art-4"]
-source_refs = ["aeat-dr-714-2025"]
-
-[[revisions."2025".export_layouts.records.fields]]
-id = "modelo-714-envelope-periodo"
-offset = 11
-length = 2
-kind = "draft"
-draft_attribute = "period_code"
-data_type = "text"
-required = true
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-277-2026:art-4"]
-source_refs = ["aeat-dr-714-2025"]
-
-[[revisions."2025".export_layouts.records.fields]]
-id = "modelo-714-envelope-tipo"
-offset = 13
-length = 5
-kind = "literal"
-literal = "0000>"
+literal = "<T714020250A0000>"
 data_type = "text"
 required = true
 padding = "none"
@@ -173,7 +103,6 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
-
 [[revisions."2025".export_layouts.records]]
 id = "modelo-714-page-01"
 record_type = "714-01"
@@ -2999,6 +2928,34 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-declaracion-a"
+offset = 173
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-a"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-declaracion-b"
+offset = 186
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-b"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
 [[revisions."2025".export_layouts.records]]
 id = "modelo-714-page-ingreso-devolucion"
 record_type = "714-ID"
@@ -3200,6 +3157,48 @@ signed = false
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-ingreso-devolucion-importe"
+offset = 91
+length = 13
+kind = "casilla"
+casilla_id = "declaracion-i"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-ingreso-devolucion-forma-de-pago"
+offset = 104
+length = 1
+kind = "casilla"
+casilla_id = "ingreso.forma-de-pago"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+allowed_values = ["0", "2", "3"]
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-ingreso-devolucion-negativa"
+offset = 139
+length = 1
+kind = "casilla"
+casilla_id = "declaracion-negativa"
+data_type = "boolean"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
 [[revisions."2025".export_layouts.records]]
 id = "modelo-714-envelope-footer"
 record_type = "envelope_footer"

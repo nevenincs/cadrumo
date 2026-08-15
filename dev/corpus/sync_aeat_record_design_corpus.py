@@ -174,6 +174,7 @@ _REQUIRED = (
     _RequiredArtifact("296", "296 - Ejercicio 2024", "DR_200_299/archivos_24/DR_296_2024.pdf", "200"),
     _RequiredArtifact("341", "341 - Ejercicio 2016 y siguientes", "DR_300_399/archivos/dr341_2016.xls", "300"),
     _RequiredArtifact("345", "345 - Ejercicio 2025", "DR_100_199/DR_Modelo_345_2025.pdf", "300"),
+    _RequiredArtifact("360", "360 - Orden EHA/789/2010", "DR_300_399/archivos/DR360.pdf", "300"),
     _RequiredArtifact("390", "390 - Ejercicio 2025", "DR_300_399/archivos_25/dr390e2025.xlsx", "300"),
     _RequiredArtifact("490", "490 - Ejercicio 2023 y siguientes", "DR_Resto_Mod/archivos/dr490e23.xlsx", "resto"),
     _RequiredArtifact("576", "576 - Diseño de registro vigente", "DR_Resto_Mod/archivos/dr576.xlsx", "resto"),

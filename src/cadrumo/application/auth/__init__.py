@@ -251,6 +251,7 @@ from ._operator import (
     reset_operator_auth,
     test_operator_auth,
 )
+from ._operator_cleanup import clear_operator_auth_acquisition_locks
 from ._operator_probes import (
     ProviderConfigurationProbe,
     bind_profile_auth_settings,
@@ -284,6 +285,7 @@ from ._operator_results import (
     CertificateSourceSecretMutationResult,
     LiveAuthPreflightReport,
 )
+from ._operator_scope import operator_auth_revocation_is_reachable
 from ._probe_result import ProviderProbeResult
 from ._sessions import (
     AuthenticatedAeatSessionResult,
@@ -388,6 +390,7 @@ __all__ = [
     "check_operator_certificate_sources",
     "clave_auth_facts_from_profile_values",
     "clear_auth_acquisition_lock",
+    "clear_operator_auth_acquisition_locks",
     "configure_operator_auth",
     "delete_persisted_session",
     "ensure_authenticated_aeat_session",
@@ -404,6 +407,7 @@ __all__ = [
     "load_persisted_session",
     "login_operator_auth",
     "logout_operator_auth",
+    "operator_auth_revocation_is_reachable",
     "persisted_session_exists",
     "probe_provider_configuration",
     "probe_provider_credentials",

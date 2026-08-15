@@ -193,6 +193,29 @@ def active_profile_storage_span(
         )
 
 
+def operator_auth_revocation_is_reachable(
+    settings: Settings | None = None,
+    *,
+    bucket_id: str,
+) -> bool:
+    """Report whether an auth revocation for ``bucket_id`` could open its store.
+
+    Asks :func:`active_profile_storage_span` instead of re-deriving its reuse
+    test, so "is this profile's custody session open" keeps one authority.
+    Entering the span yields a null context and performs no mutation, so this
+    is a question rather than a half-executed operation.
+
+    A caller erasing a profile it has NOT unlocked uses this to choose between
+    a real revocation and the key-free half, rather than driving control flow
+    off a caught refusal.
+    """
+    try:
+        with active_profile_storage_span(settings, target_bucket_id=bucket_id) as resolved:
+            return resolved is not None
+    except AuthOperationRequiresCustodySessionError:
+        return False
+
+
 @dataclass(slots=True)
 class _AuthMutationOwnership:
     root: Path

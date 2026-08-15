@@ -1127,3 +1127,63 @@ input_kind = "informational"
 export_refs = ["modelo-714-decl.periodo"]
 legal_refs = ["ley-19-1991:art-28"]
 source_refs = ["aeat-modelo-714-procedure"]
+
+[[revisions."2022".casillas]]
+id = "declaracion-a"
+number = "a"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-a"]
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "declaracion-b"
+number = "b"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-declaracion-b"]
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "declaracion-i"
+number = "I"
+segmento = "714-ID"
+section = ["ingreso-devolucion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-ingreso-devolucion-importe"]
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "ingreso.forma-de-pago"
+number = "forma-de-pago"
+segmento = "714-ID"
+section = ["ingreso-devolucion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-ingreso-devolucion-forma-de-pago"]
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "declaracion-negativa"
+number = "declaracion-negativa"
+segmento = "714-ID"
+section = ["ingreso-devolucion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-ingreso-devolucion-negativa"]
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]

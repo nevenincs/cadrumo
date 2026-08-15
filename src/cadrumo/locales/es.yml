@@ -73374,6 +73374,14 @@ modelo:
             help: null
             label: Cuota IVA autorepercutida en operaciones interiores con inversion
               del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
+          iva-repercutido-intragrupo-tipo-0-base:
+            label: IVA devengado en operaciones intragrupo al tipo 0% - Base imponible
+          iva-repercutido-intragrupo-tipo-0-cuota:
+            label: IVA devengado en operaciones intragrupo al tipo 0% - Cuota
+          iva-repercutido-intragrupo-tipo-4-base:
+            label: IVA devengado en operaciones intragrupo al tipo 4% - Base imponible
+          iva-repercutido-intragrupo-tipo-4-cuota:
+            label: IVA devengado en operaciones intragrupo al tipo 4% - Cuota
           iva-volumen-operaciones-entregas-intracomunitarias:
             help: null
             label: Entregas intracomunitarias de bienes y servicios

@@ -1,11 +1,17 @@
 """Runtime identity contract for the custody path builder.
 
-The builder turns a profile identity into a filesystem name, so its
-``UUID`` annotation is a claim about callers, not a runtime bound. These
-tests exercise the bound itself in both directions: what must refuse, and
-what must keep working. A validator that refused a real profile identifier
-would break custody outright, so the acceptance direction is as load-bearing
-as the refusal direction.
+The builder turns a profile identity into a filesystem name, so its ``UUID``
+annotation is a claim about callers, not a runtime bound. These tests exercise
+the bound itself in both directions: what must refuse, and what must keep
+working. A validator that refused a real profile identifier would break custody
+outright, so the acceptance direction is as load-bearing as the refusal one.
+
+Most refusal cases address :func:`profile_custody_directory_name` directly.
+That primitive declares its parameter as ``object`` precisely because it does
+not trust its input, so a wrong-typed argument needs no checker suppression --
+the same shape the wipe primitive takes. The suppressed cases below exist to
+prove the refusal also stands at the composed builder, which is the function
+that produces a real filesystem path.
 """
 
 from __future__ import annotations
@@ -39,6 +45,8 @@ _NON_CANONICAL_UUID_SPELLINGS = (
     "urn:uuid:2691dda2-224b-48b5-bdf4-b6a8685d7c6a",
 )
 
+_WRONG_TYPES: tuple[object, ...] = ("", None, 42, b"2691dda2-224b-48b5-bdf4-b6a8685d7c6a")
+
 
 def _mintable_profile_ids() -> tuple[UUID, ...]:
     """Every shape of ``UUID`` the system can put in front of this boundary."""
@@ -61,51 +69,47 @@ class TestRefusedIdentifiers:
     """Nothing but a ``UUID`` may become a custody directory name."""
 
     @pytest.mark.parametrize("sentinel", _SYSTEM_SENTINELS)
-    def test_system_sentinels_refuse(self, sentinel: str, tmp_path: Path) -> None:
+    def test_system_sentinels_refuse(self, sentinel: str) -> None:
         with pytest.raises(PathContainmentError):
-            profile_custody_path(
-                sentinel,  # type: ignore[arg-type]
-                StorageCategory.PROFILE_CAPSULE_COMMIT,
-                root=tmp_path,
-            )
+            profile_custody_directory_name(sentinel)
 
     @pytest.mark.parametrize("token", _RELATIVE_PATH_TOKENS)
-    def test_relative_path_tokens_refuse(self, token: str, tmp_path: Path) -> None:
+    def test_relative_path_tokens_refuse(self, token: str) -> None:
         with pytest.raises(PathContainmentError):
-            profile_custody_path(
-                token,  # type: ignore[arg-type]
-                StorageCategory.PROFILE_CAPSULE_COMMIT,
-                root=tmp_path,
-            )
+            profile_custody_directory_name(token)
 
     @pytest.mark.parametrize("spelling", _NON_CANONICAL_UUID_SPELLINGS)
-    def test_non_canonical_uuid_strings_refuse(self, spelling: str, tmp_path: Path) -> None:
+    def test_non_canonical_uuid_strings_refuse(self, spelling: str) -> None:
         """A string that merely parses as a UUID is still not a profile identity.
 
         Accepting one would publish a capsule under a name the anchored
         discoverer rejects, leaving real custody material invisible.
         """
         with pytest.raises(PathContainmentError):
-            profile_custody_path(
-                spelling,  # type: ignore[arg-type]
-                StorageCategory.PROFILE_CAPSULE_COMMIT,
-                root=tmp_path,
-            )
+            profile_custody_directory_name(spelling)
 
-    @pytest.mark.parametrize("value", ["", None, 42, b"2691dda2-224b-48b5-bdf4-b6a8685d7c6a"])
-    def test_wrong_typed_identifiers_refuse(self, value: object, tmp_path: Path) -> None:
+    @pytest.mark.parametrize("value", _WRONG_TYPES)
+    def test_wrong_typed_identifiers_refuse(self, value: object) -> None:
         with pytest.raises(PathContainmentError):
-            profile_custody_path(
-                value,  # type: ignore[arg-type]
-                StorageCategory.PROFILE_CAPSULE_COMMIT,
-                root=tmp_path,
-            )
+            profile_custody_directory_name(value)
 
-    def test_canonical_uuid_string_refuses(self, tmp_path: Path) -> None:
+    def test_canonical_uuid_string_refuses(self) -> None:
         """Even the canonical rendering refuses: the type is the contract."""
         with pytest.raises(PathContainmentError):
+            profile_custody_directory_name(str(uuid4()))
+
+
+class TestRefusalStandsAtTheComposedBuilder:
+    """The refusal must hold at the function that yields a real path."""
+
+    @pytest.mark.parametrize(
+        "candidate",
+        ["system", "..", "../../escape", "", "2691dda2-224b-48b5-bdf4-b6a8685d7c6a"],
+    )
+    def test_builder_refuses(self, candidate: str, tmp_path: Path) -> None:
+        with pytest.raises(PathContainmentError):
             profile_custody_path(
-                str(uuid4()),  # type: ignore[arg-type]
+                candidate,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: passing the wrong type IS the refusal under test
                 StorageCategory.PROFILE_CAPSULE_COMMIT,
                 root=tmp_path,
             )
@@ -114,7 +118,7 @@ class TestRefusedIdentifiers:
         for candidate in (*_SYSTEM_SENTINELS, *_RELATIVE_PATH_TOKENS, ""):
             with pytest.raises(PathContainmentError):
                 profile_custody_path(
-                    candidate,  # type: ignore[arg-type]
+                    candidate,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: passing the wrong type IS the refusal under test
                     StorageCategory.PROFILE_CAPSULE_COMMIT,
                     root=tmp_path,
                 )

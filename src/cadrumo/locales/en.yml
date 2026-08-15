@@ -70470,6 +70470,14 @@ modelo:
           iva-isp-interior-cuota:
             help: null
             label: Accrued reverse-charge VAT on domestic transactions
+          iva-repercutido-intragrupo-tipo-0-base:
+            label: Output VAT on intra-group transactions at the 0% rate - taxable
+              base
+          iva-repercutido-intragrupo-tipo-0-cuota:
+            label: Output VAT on intra-group transactions at the 0% rate - VAT amount
+          iva-repercutido-intragrupo-tipo-4-base:
+            label: Output VAT on intra-group transactions at the 4% rate - taxable
+              base
           iva-volumen-operaciones-entregas-intracomunitarias:
             help: null
             label: Intra-Community supplies of goods and services

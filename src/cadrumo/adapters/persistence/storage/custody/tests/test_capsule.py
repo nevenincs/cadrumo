@@ -481,11 +481,11 @@ def test_the_refusal_never_names_the_candidate_directory_it_found_a_retired_memb
     with pytest.raises(ProfileCustodyRefusedError) as captured:
         list_current_profile_custody_capsule_ids(settings=settings)
 
-    rendered = " ".join(
-        str(value) for key, value in captured.value.context.items() if key not in {"capsules_root", "keystore_root"}
-    )
+    context = captured.value.context
+    assert context is not None
+    rendered = " ".join(str(value) for key, value in context.items() if key not in {"capsules_root", "keystore_root"})
     assert str(_PROFILE_ID) not in rendered
-    assert captured.value.context["capsules_root_retired_matches"] == ("*/manifest.toml",)
+    assert context["capsules_root_retired_matches"] == ("*/manifest.toml",)
 
 
 def test_a_current_store_with_live_keystore_sidecars_is_not_refused(tmp_path: Path) -> None:

@@ -8,6 +8,7 @@ from datetime import datetime
 
 from ...core import OperationEffect, OperationLifecycle
 from ...core.async_cleanup import AsyncCloseable
+from ...core.errors import CoreValidationError
 from ._capabilities import OperationOwnedResource
 from ._events import (
     OperationDiagnosticEvent,
@@ -28,7 +29,7 @@ from ._models import OperationId
 from ._registry import OperationRegistry
 
 
-class OperationDeclarationError(ValueError):
+class OperationDeclarationError(CoreValidationError):
     """One executor claim the operation definition does not declare.
 
     A declaration refusal is a definition-contract breach detected by the

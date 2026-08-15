@@ -70956,6 +70956,12 @@ modelo:
           iva-isp-interior-cuota:
             help: null
             label: IVA autorepercutit meritat en operacions interiors
+          iva-repercutido-intragrupo-tipo-0-base:
+            label: IVA meritat en operacions intragrup al tipus 0% - base imposable
+          iva-repercutido-intragrupo-tipo-0-cuota:
+            label: IVA meritat en operacions intragrup al tipus 0% - quota
+          iva-repercutido-intragrupo-tipo-4-base:
+            label: IVA meritat en operacions intragrup al tipus 4% - base imposable
           iva-volumen-operaciones-entregas-intracomunitarias:
             help: null
             label: Lliuraments intracomunitaris de béns i serveis

@@ -71028,6 +71028,12 @@ modelo:
           iva-isp-interior-cuota:
             help: null
             label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél
+          iva-repercutido-intragrupo-tipo-0-base:
+            label: Csoporton belüli ügyletek után keletkezett ÁFA 0% kulccsal - adóalap
+          iva-repercutido-intragrupo-tipo-0-cuota:
+            label: Csoporton belüli ügyletek után keletkezett ÁFA 0% kulccsal - adóösszeg
+          iva-repercutido-intragrupo-tipo-4-base:
+            label: Csoporton belüli ügyletek után keletkezett ÁFA 4% kulccsal - adóalap
           iva-volumen-operaciones-entregas-intracomunitarias:
             help: null
             label: Közösségen belüli termék- és szolgáltatásértékesítések
