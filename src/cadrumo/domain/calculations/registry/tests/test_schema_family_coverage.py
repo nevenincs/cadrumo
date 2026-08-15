@@ -21,10 +21,10 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from .....core import UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS, RegistrySchemaFamilyDisposition
-from .....core.resources import bundled_path
+from .....tests.registry_tree import bundled_registry_tree
 from .._coverage import REQUIRED_COVERAGE_TIERS
 from .._errors import RegistryLoadError
-from .._loader import load_modelo_directory, load_registry_tree
+from .._loader import load_modelo_directory
 from .._schema import (
     REVISION_COLLECTION_SHAPED_FIELDS,
     REVISION_MANIFEST_ONLY_FIELDS,
@@ -398,7 +398,7 @@ def test_every_bundled_revision_projects_a_coherent_manifest() -> None:
     invisibility. Running it across the whole corpus is what makes a regression
     in it observable.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     revisions = [(modelo.id, revision) for modelo in modelos for revision in modelo.revisions.values()]
 
     assert revisions, "the bundled registry must load at least one revision"

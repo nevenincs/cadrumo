@@ -26,7 +26,6 @@ import pytest
 
 from ....core import NON_REGISTRY_MODELOS, ExportLayoutFormat, Modelo, RevisionReviewStatus
 from ....core.access_gate import AuthorizationState
-from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
     ModeloDefinition,
     RegistryExternalGroundingAudit,
@@ -34,9 +33,9 @@ from ....domain.calculations.registry import (
     build_classification_coherence_audit,
     build_external_grounding_audit,
     load_bundled_external_oracle_inventory,
-    load_registry_tree,
     xml_dictionary_entries,
 )
+from ....tests.registry_tree import bundled_registry_tree
 from .. import (
     RegistryApplicationInputError,
     RegistryConformanceProfile,
@@ -93,7 +92,7 @@ _M100_IDENTITY_DIVERGENCE_COUNTS = {
 @pytest.fixture(scope="module")
 def tree_modelos() -> tuple[ModeloDefinition, ...]:
     """Every compiled modelo in the bundled tree, read without validation."""
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     return modelos
 
 

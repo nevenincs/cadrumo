@@ -24,15 +24,13 @@ from ....adapters.persistence.storage.custody import (
     inventory_staged_profile_custody_capsule,
     list_current_profile_custody_capsule_ids,
     load_committed_profile_custody_label_record,
+    mint_profile_session,
     profile_custody_staging_path,
+    profile_session_path,
     publish_profile_custody_capsule,
     publish_staged_profile_custody_capsule,
     rename_profile_custody_capsule_for_deletion,
     write_profile_custody_deletion_marker,
-)
-from ....adapters.persistence.storage.custody import (
-    mint_profile_session,
-    profile_session_path,
 )
 from ....adapters.persistence.storage.master_key import (
     BucketSession,

@@ -28,9 +28,9 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Final
 
+from cadrumo_harness import iter_personas, operator_rules_text
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo_harness import iter_personas, operator_rules_text
 from ...application.wizard import ensure_profile_keys_registered
 from ...application.workflow import ProfileHealthStatus, assess_active_profile_health
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8

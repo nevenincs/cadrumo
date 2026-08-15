@@ -28,7 +28,8 @@ import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
 from ....core.resources import bundled_path
-from ....domain.calculations.registry import XmlDictionaryEntry, load_registry_tree, xml_dictionary_entries
+from ....domain.calculations.registry import XmlDictionaryEntry, xml_dictionary_entries
+from ....tests.registry_tree import bundled_registry_tree
 from .._export_xml_dictionary import _modelo_100_sign_branch_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -41,7 +42,7 @@ _NEGATIVE_BRANCH = "TCNN112"
 
 
 def _dictionary_entries() -> tuple[XmlDictionaryEntry, ...]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = bundled_registry_tree()
     modelo = next(item for item in modelos if item.id == "100")
     revision = modelo.revisions["2024"]
     layout = next(item for item in revision.export_layouts if item.format == "xml_dictionary")

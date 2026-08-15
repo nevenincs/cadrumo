@@ -23,8 +23,9 @@ import pytest
 
 from .....core import UNDECLARED_REGISTRY_AUTHORITY_GRADE, DirectoryEntryKind, RegistryAuthorityGrade, scan_directory
 from .....core.resources import bundled_path
+from .....tests.registry_tree import bundled_registry_tree
 from .._errors import RegistryLoadError
-from .._loader import load_modelo_directory, load_registry_tree
+from .._loader import load_modelo_directory
 from .._schema import (
     REVISION_GOVERNANCE_FIELDS,
     REVISION_MANIFEST_ONLY_FIELDS,
@@ -231,7 +232,7 @@ def test_the_shipped_corpus_loads_and_every_revision_reads_a_valid_reach() -> No
     against a revision tally, which would encode today's corpus and detect
     nothing tomorrow.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     revisions = [revision for modelo in modelos for revision in modelo.revisions.values()]
 
     assert revisions, "the bundled registry must load at least one revision"

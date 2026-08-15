@@ -27,10 +27,10 @@ from pathlib import Path
 
 import pytest
 
-from ....core.resources import bundled_path
-from ....domain.calculations.registry import load_registry_tree, select_revision
+from ....domain.calculations.registry import select_revision
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
+from ....tests.registry_tree import bundled_registry_tree
 from ....tests.user_profile import register_cli_profile
 from ._modelo_work_ux_support import (
     _create_calculable_work_unit,
@@ -733,7 +733,7 @@ def test_work_create_without_revision_uses_registry_revision_for_supplied_year(
             "activities.description": 'objective-estimation activity',
         },
     )
-    modelos_131, _catalogues_131 = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos_131, _catalogues_131 = bundled_registry_tree()
     modelo_131 = next(candidate for candidate in modelos_131 if candidate.id == "131")
     expected_revision = select_revision(modelo_131, filing_year=2026, period="2T").id
 

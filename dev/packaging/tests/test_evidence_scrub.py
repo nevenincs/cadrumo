@@ -16,7 +16,6 @@ from pathlib import Path
 
 import pytest
 
-from ._release_cohort_support import release_cohort
 from ..cohort_manifest import LoadedReleaseCohort
 from ..evidence import (
     AcquisitionIdentity,
@@ -41,6 +40,7 @@ from ..evidence_scrub import (
     find_residual_leaks,
     scrub_distribution_evidence,
 )
+from ._release_cohort_support import release_cohort
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

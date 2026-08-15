@@ -21,6 +21,7 @@ import pytest
 
 from ....adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
 from ....domain.calculations.registry import undeclared_casilla_ids
+from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     M145CommunicationCreateCommand,
@@ -141,10 +142,9 @@ def test_create_m145_communication_record_refuses_undeclared_casilla_id(tmp_path
 
 
 def test_create_m145_communication_record_uses_real_registry_membership() -> None:
-    from ....core.resources import bundled_path
-    from ....domain.calculations.registry import load_registry_tree, select_revision
+    from ....domain.calculations.registry import select_revision
 
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     modelo = next(m for m in modelos if m.id == "145")
     revision = select_revision(modelo, filing_year=2026, period="comunicacion")
 

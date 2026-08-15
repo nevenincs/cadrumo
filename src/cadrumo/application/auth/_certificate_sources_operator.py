@@ -32,7 +32,6 @@ See Also:
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
@@ -42,6 +41,8 @@ from pydantic import SecretStr
 
 from ...core.config import Settings, load_settings
 from ...core.errors import CadrumoError
+from ...core.external_constants import UTF_8_ENCODING
+from ...core.hashing import sha256_hex
 from ...core.time import now
 from .._workflow_auth_models import (
     CertificateSecretMutationEventKind,
@@ -682,7 +683,7 @@ def _new_certificate_secret_mutation_intent(
         ),
     )
     return CertificateSecretMutationIntent(
-        operation_id=hashlib.sha256(operation_material.encode("utf-8")).hexdigest(),
+        operation_id=sha256_hex(operation_material.encode(UTF_8_ENCODING)),
         bucket_id=active_bucket_id,
         source_name=source_name,
         event_kind=event_kind,

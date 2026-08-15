@@ -54,7 +54,6 @@ from cadrumo.core import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
-from ._http_serve_support import serve_directory
 from ...deploy.docs_static_site import (
     CANONICAL_DOCS_BASE_URL,
     DEFAULT_SOURCE_LANGUAGE,
@@ -68,6 +67,7 @@ from ...deploy.docs_static_site import (
 from ..build import docs_build_language, resolve_record_injector
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import InjectionStats
+from ._http_serve_support import serve_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

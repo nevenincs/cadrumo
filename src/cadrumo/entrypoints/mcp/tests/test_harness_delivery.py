@@ -23,12 +23,12 @@ from uuid import UUID
 
 import anyio
 import pytest
+from cadrumo_harness import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
 
 from ....adapters.persistence.storage.custody import (
     load_committed_profile_password_material,
     unlock_profile_custody,
 )
-from cadrumo_harness import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
 from ....application.profile_custody import (
     profile_bind_bucket_session,
     profile_bucket_session_open_resumed,

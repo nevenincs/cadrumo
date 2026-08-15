@@ -31,7 +31,7 @@ import pytest
 from pydantic import BaseModel, Field, ValidationError
 
 from .....core import TaxDomain
-from .....core.resources import bundled_path
+from .....tests.registry_tree import bundled_registry_tree
 from .._classification_coherence import (
     _MAX_DETAIL_LENGTH,
     _TRUNCATION_SUFFIX,
@@ -43,7 +43,6 @@ from .._classification_coherence import (
     audit_bundled_classification_coherence,
     build_classification_coherence_audit,
 )
-from .._loader import load_registry_tree
 from .._schema import (
     CasillaDefinition,
     DependencyClassificationDefinition,
@@ -138,7 +137,7 @@ def bundled_modelos() -> tuple[ModeloDefinition, ...]:
     subdirectory-blind read of this registry has twice produced wrong
     "parse-only" verdicts.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     return tuple(modelos)
 
 

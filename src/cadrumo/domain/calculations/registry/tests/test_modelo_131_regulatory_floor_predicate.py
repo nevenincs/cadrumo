@@ -8,7 +8,7 @@ import pytest
 
 from .....core import normalise_corpus_text
 from .....core.resources import bundled_path
-from .._loader import load_registry_tree
+from .....tests.registry_tree import bundled_registry_tree
 from .._schema import ModeloDefinition, RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -28,7 +28,7 @@ _M131_INSTRUCTIONS_SOURCE = "aeat-modelo-131-instructions"
 
 @cache
 def _committed_modelo_131() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = bundled_registry_tree()
     return next(modelo for modelo in modelos if modelo.id == "131"), catalogues
 
 

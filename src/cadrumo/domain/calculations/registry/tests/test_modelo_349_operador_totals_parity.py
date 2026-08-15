@@ -53,6 +53,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.aggregation import BindingSourceKind
+from .....tests.registry_tree import bundled_registry_tree
 from .. import (
     InvoiceObservation,
     Modelo349OperadorTotalsParity,
@@ -204,13 +205,13 @@ def test_totals_parity_default_is_exact_equality_not_a_hardcoded_cent() -> None:
     exactly this gap.
     """
     from .....core.resources import bundled_path
-    from .....domain.calculations.registry import RegistryValidationError, load_registry_tree
+    from .....domain.calculations.registry import RegistryValidationError
     from .....domain.calculations.registry.tests import build_snapshot
 
     # Scoped to M349 alone rather than through ``resources().modelos.authority``,
     # whose ``.load()`` validates every modelo in the bundled tree before
     # returning anything.
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = bundled_registry_tree()
     modelo = next(item for item in modelos if item.id == "349")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="01")
     assert not snapshot.revision.verification_expectations, (

@@ -45,7 +45,7 @@ class _Draft:
 
 def _run(draft: _Draft) -> list[WorkflowStep]:
     steps: list[WorkflowStep] = []
-    WorkflowEngine._stage_validating_draft(  # noqa: SLF001 - unbound on purpose, see module docstring
+    WorkflowEngine._stage_validating_draft(
         cast(Any, None),
         draft=cast(Any, draft),
         steps=steps,

@@ -40,9 +40,8 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....tests.registry_tree import bundled_registry_tree
 from .._export import derive_export_layouts_from_bindings
-from .._loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -61,7 +60,7 @@ def _revisions_that_cannot_emit() -> tuple[tuple[str, str], ...]:
     in the tree would replace this enumeration with someone else's error, and the
     list of modelos that cannot file would silently stop being reported.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     return tuple(
         sorted(
             (str(modelo.id), str(revision.id))

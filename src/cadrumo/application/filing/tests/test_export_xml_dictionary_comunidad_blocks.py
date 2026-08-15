@@ -23,8 +23,9 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import bundled_path
-from ....domain.calculations.registry import load_registry_tree, xml_dictionary_entries
+from ....domain.calculations.registry import xml_dictionary_entries
 from ....domain.filing import FilingExportValidationError
+from ....tests.registry_tree import bundled_registry_tree
 from .._export_xml_dictionary import (
     _modelo_100_comunidad_block,
     _modelo_100_unfiled_comunidad_paths,
@@ -37,7 +38,7 @@ _SHARED_TOTAL = "0564"
 
 
 def _entries():
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = bundled_registry_tree()
     modelo = next(item for item in modelos if item.id == "100")
     revision = modelo.revisions["2024"]
     layout = next(item for item in revision.export_layouts if item.format == "xml_dictionary")

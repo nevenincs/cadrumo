@@ -66,6 +66,7 @@ from datetime import date
 import pytest
 
 from .....core.resources import bundled_path
+from .....tests.registry_tree import bundled_registry_tree
 from .._authority import ValidatedRegistryAuthority
 from .._schema import ModeloRevision
 
@@ -82,9 +83,8 @@ def _authority() -> ValidatedRegistryAuthority:
 
 def _record_design_windows() -> dict[str, tuple[int | None, int | None]]:
     """``design source id -> (applies_from year, applies_to year)``."""
-    from .._loader import load_registry_tree
 
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _modelos, catalogues = bundled_registry_tree()
     windows: dict[str, tuple[int | None, int | None]] = {}
     for source_id, source in catalogues.sources.items():
         if getattr(source, "kind", None) != "record_design":

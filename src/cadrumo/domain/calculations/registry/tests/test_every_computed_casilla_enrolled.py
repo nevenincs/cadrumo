@@ -19,15 +19,14 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
-from .._loader import load_registry_tree
+from .....tests.registry_tree import bundled_registry_tree
 from .._schema_input_kind import InputKind
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
 
 def test_every_computed_casilla_is_enrolled_in_a_verification_contract() -> None:
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     holes: list[str] = []
     checked = 0
     for modelo in modelos:

@@ -13,8 +13,7 @@ from datetime import date
 
 import pytest
 
-from .....core.resources import bundled_path
-from .._loader import load_registry_tree
+from .....tests.registry_tree import bundled_registry_tree
 from .._validate_revision_id_window_agreement import (
     revision_id_claims_open_window,
     revision_window_closures,
@@ -46,7 +45,7 @@ _KNOWN_ID_TAILS = frozenset(
 
 
 def _committed_revisions():
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     return tuple((modelo.id, revision) for modelo in modelos for revision in modelo.revisions.values())
 
 

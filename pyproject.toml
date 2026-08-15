@@ -125,10 +125,6 @@ dependencies = [
 
 [project.scripts]
 aeat = "cadrumo.entrypoints.cli:main"
-# Operator MCP server (the `cadrumo[agent]` capability). Refuses with an install
-# hint when the agent extra is absent, so a bare-core install carries the script
-# without the runtime.
-cadrumo-mcp = "cadrumo.entrypoints.mcp:main"
 
 [project.urls]
 Homepage = "https://github.com/nevenincs/cadrumo"
@@ -202,23 +198,12 @@ llm = [
   # be refused.
   "nvidia-ml-py>=13,<14",
 ]
-# Operator agent-harness runtime. The harness operating layer (rules, personas,
-# skills) ships as reviewed product data in the CORE wheel under
-# `src/cadrumo/_data/agent/` and is read with no extra dependency. This extra gates
-# the optional MCP server runtime reached by the `cadrumo-mcp` console script. No
-# model weights or credentials are ever bundled (per the product-packaging and
-# secure storage).
-agent = [
-  # 2.x major: carried here by the vaultspec-core>=0.1.55 floor, which requires
-  # mcp>=2.0.0. The shipped `cadrumo-mcp` server runs on this SDK, so any 2.x
-  # API change surfaces in `cadrumo.entrypoints.mcp`, not merely in tooling.
-  "mcp>=2,<3",
-  # The stdio MCP server (`cadrumo.entrypoints.mcp._server`) imports anyio directly
-  # to run the transport; declare it here rather than relying on it transitively
-  # through `mcp`, so the import has a direct owner in the extra that gates the
-  # server runtime.
-  "anyio>=4.5,<5",
-]
+# Deliberately absent: an `agent` extra. The operator agent harness — its
+# reviewed operating data, its accessors, and the MCP server runtime that serves
+# them — is a separate `cadrumo-harness` distribution that depends on this one.
+# It carries its own dependencies and its own `cadrumo-mcp` console script, so
+# this package gates nothing on its behalf.
+#
 # Deliberately absent: a `search` extra. The on-host grounding search stack
 # needs none — the lexical index (stdlib sqlite3 FTS5 plus the core
 # `snowballstemmer` stemmed column) and the structured citation lookup run on
@@ -235,7 +220,6 @@ all = [
   "cadrumo[browser]",
   "cadrumo[anthropic]",
   "cadrumo[ofx]",
-  "cadrumo[agent]",
   "cadrumo[llm]",
 ]
 
@@ -424,6 +408,12 @@ dev = [
   # harness tracks latest. This floor is what carried `mcp` to its 2.x major.
   "vaultspec-core>=0.1.55",
   "vaultspec-rag[mcp]>=0.3.8",
+  # The sibling agent-harness distribution, resolved from the in-repo tree via
+  # the `[tool.uv.sources]` path override above. It depends on `cadrumo`, never
+  # the reverse, so it cannot live in [project.dependencies]; it belongs here
+  # because the repository's own dev and packaging code imports `cadrumo_harness`
+  # and its test suite runs in this environment.
+  "cadrumo-harness",
   # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/cadrumo/.
   "sphinx>=8.1,<9",  # <9: sphinx-hoverxref 1.4.2 (latest) crashes on Sphinx 9's _Opt config repr at config-inited

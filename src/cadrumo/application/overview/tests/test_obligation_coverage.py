@@ -37,8 +37,8 @@ from ....domain.deadlines import (
     LegalEntityForm,
     TaxpayerProfile,
 )
-from ...modelo import registry_modelo_codes
 from ....tests.attribute_scope import scoped_attribute
+from ...modelo import registry_modelo_codes
 from .. import _coverage
 from .._agenda import build_overview_agenda
 from .._backlog import build_overview_backlog

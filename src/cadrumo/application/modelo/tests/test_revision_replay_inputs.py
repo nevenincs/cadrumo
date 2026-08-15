@@ -7,8 +7,7 @@ import pytest
 
 from ....application.filing import ModeloOperatorProfile, build_draft, build_runtime_schema_provider
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import bundled_path
-from ....domain.calculations.registry import InputKind, load_registry_tree, select_revision
+from ....domain.calculations.registry import InputKind, select_revision
 from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,
@@ -23,6 +22,7 @@ from ....domain.modelos import (
     derive_work_unit_id,
 )
 from ....tests.registry_observations import registry_grounded_observations
+from ....tests.registry_tree import bundled_registry_tree
 from .._revision_replay_inputs import revision_filing_replay_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -46,7 +46,7 @@ _M100_M111_RETENCIONES_BINDING = "renta-2024-modelo-111-retenciones-periodicas"
 
 
 def _resolved_revision(*, modelo: str, filing_year: int, period_code: str):
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
     return select_revision(modelo_definition, filing_year=filing_year, period=period_code)
 

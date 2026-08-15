@@ -18,8 +18,6 @@ import pytest
 from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
-from ._http_serve_support import serve_directory
-from ._pagefind_inject_support import concept_records
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import (
     InjectionStats,
@@ -27,6 +25,8 @@ from ..pagefind_inject import (
     _materialise_records,
 )
 from ..terminology._concept_cards import project_concept_cards
+from ._http_serve_support import serve_directory
+from ._pagefind_inject_support import concept_records
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

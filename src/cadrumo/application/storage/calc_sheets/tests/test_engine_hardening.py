@@ -12,11 +12,11 @@ from .....core.resources import bundled_path, resources
 from .....domain.calculations.registry import (
     FormulaDefinition,
     RegistrySnapshot,
-    load_registry_tree,
     relation_requirement_index,
     relation_source_requirements,
 )
 from .....domain.calculations.registry.tests import build_snapshot
+from .....tests.registry_tree import bundled_registry_tree
 from .._engine import _rounding_rule_for, build_export_plan
 from .._errors import CalcSheetsEngineError
 from .._records import RelationValues
@@ -55,7 +55,7 @@ def test_guide_paragraphs_resolve_through_output_language() -> None:
 
 
 def test_blank_relation_values_carry_registry_grounding() -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = bundled_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "180")
     snapshot = build_snapshot(
         modelo,

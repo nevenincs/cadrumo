@@ -19,8 +19,8 @@ from typing import Any, cast
 
 import anyio
 import pytest
-
 from cadrumo_harness import iter_skill_documents, operator_rules_text
+
 from ....core import accepted_filing_period_codes, accepted_filing_period_patterns
 from ....tests import connected_server_and_client_session as connect
 from .._completions import complete_prompt_argument
