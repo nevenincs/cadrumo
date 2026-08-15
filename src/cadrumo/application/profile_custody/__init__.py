@@ -365,6 +365,28 @@ def ensure_profile_custody_owner_root(store: ProfileCustodyLocalRecordStore, roo
         store.ensure_directory(directory)
 
 
+def committed_profile_custody_inventory(
+    profile_id: UUID,
+    *,
+    root: Path | None = None,
+) -> custody.ProfileCustodyInventory:
+    """Return the exact bounded inventory of one profile's committed capsule.
+
+    The application-owned door onto the capsule content fold, so a service that
+    needs a capsule's exact digest, file count and byte total gets it from this
+    port rather than importing the persistence adapter. The inventory follows no
+    link and opens no encrypted payload; it observes file identity and size
+    only, which is what makes it usable against a capsule nobody has unlocked.
+
+    Raises:
+        Exception: Whatever the custody adapter raises when the capsule is not
+            committed or cannot be walked. Deliberately not narrowed here: a
+            deletion caller must treat every failure as unassessable rather
+            than substitute a fingerprint it did not observe.
+    """
+    return custody.inventory_committed_profile_custody_capsule(profile_id, root=root)
+
+
 class _PersistenceProfileCustodyLocalRecordStore:
     """Adapt the real persistence facade to the application-owned port."""
 
@@ -892,6 +914,7 @@ __all__ = [
     "canonical_snapshot_bytes",
     "canonical_snapshot_digest",
     "canonical_snapshot_payload",
+    "committed_profile_custody_inventory",
     "create_profile_custody_registration_material",
     "default_profile_bucket_event_history_repository",
     "default_profile_bucket_storage",

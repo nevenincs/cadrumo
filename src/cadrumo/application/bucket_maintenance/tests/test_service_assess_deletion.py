@@ -36,7 +36,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -116,6 +116,17 @@ def _assess() -> BucketDeletionAssessment:
     )
 
 
+def _refusal_context(error: BucketDeleteRefusedError) -> Mapping[str, object]:
+    """Return the refusal's structured context, proving it carries one.
+
+    A refusal with no context names nothing an operator can act on, so the
+    absence of context is itself a failure rather than a typing inconvenience.
+    """
+    context = error.context
+    assert context is not None
+    return context
+
+
 def test_a_recorded_empty_snapshot_answers_while_an_absent_one_refuses(tmp_path: Path) -> None:
     """Absence and recorded-emptiness must stay two different observables.
 
@@ -126,8 +137,8 @@ def test_a_recorded_empty_snapshot_answers_while_an_absent_one_refuses(tmp_path:
     with _published_profile(tmp_path) as root:
         with pytest.raises(BucketDeleteRefusedError) as refused:
             _assess()
-        assert refused.value.context["retention_snapshot"] == "absent"
-        assert refused.value.context["unassessable"] == "filing_retention_floor"
+        assert _refusal_context(refused.value)["retention_snapshot"] == "absent"
+        assert _refusal_context(refused.value)["unassessable"] == "filing_retention_floor"
 
         _record_snapshot(root)
 
@@ -184,8 +195,8 @@ def test_a_snapshot_that_cannot_be_authenticated_refuses_distinctly(tmp_path: Pa
         snapshot_path.write_bytes(intact.replace(b'"filing_records"', b'"filing_recordz"'))
         with pytest.raises(BucketDeleteRefusedError) as refused:
             _assess()
-        assert refused.value.context["retention_snapshot"] == "unreadable"
-        assert refused.value.context["unassessable"] == "filing_retention_floor"
+        assert _refusal_context(refused.value)["retention_snapshot"] == "unreadable"
+        assert _refusal_context(refused.value)["unassessable"] == "filing_retention_floor"
 
         snapshot_path.write_bytes(intact)
         assert _assess().retention is not None

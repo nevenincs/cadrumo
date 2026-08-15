@@ -21,12 +21,15 @@ the material was genuinely reachable and genuinely overwritten.
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from uuid import UUID
+from pathlib import Path
+from uuid import UUID, uuid4
 
 import pytest
 
 from .. import WipeTypeError, zeroise
 from .._acceleration_receipt import (
+    delete_profile_session,
+    mint_profile_session,
     resume_profile_session,
     unwrap_profile_session_dek,
     wrap_profile_session_dek,
@@ -112,3 +115,60 @@ def test_the_resume_signature_declares_the_key_it_actually_yields() -> None:
         f"resume_profile_session declares the resumed key as {key_type}; "
         "a caller typed to receive immutable bytes cannot wipe it"
     )
+
+
+@pytest.mark.os_keychain
+def test_the_resumed_key_is_a_buffer_whose_wipe_reaches_the_material(tmp_path: Path) -> None:
+    """The resumed key is wipeable in FACT, not merely in its annotation.
+
+    The sibling above reads the declaration, which is the only arm that can run
+    on a host with no credential store -- but a declaration is not the property.
+    A resume that annotated ``bytearray`` while yielding something else, or
+    yielding a buffer holding other material, would satisfy it and still leave
+    the real key resident. This arm takes the value the production mint/resume
+    pair actually hands back, proves it holds the minted key, wipes it, and
+    reads it again.
+
+    Nothing here is substituted: a real receipt is minted through the
+    production path, its session key is custodied in the real OS credential
+    store, and the resume unwraps it under that key. That is why the case
+    carries the keychain marker rather than living in the default lane.
+    """
+    profile_id = uuid4()
+    try:
+        mint_profile_session(
+            storage_root=tmp_path,
+            profile_id=profile_id,
+            custody_generation=1,
+            dek_epoch="epoch-1",
+            dek=_DEK,
+            now=_ISSUED_AT,
+            idle_minutes=30,
+            absolute_minutes=480,
+        )
+
+        outcome, resumed = resume_profile_session(
+            storage_root=tmp_path,
+            profile_id=profile_id,
+            custody_generation=1,
+            dek_epoch="epoch-1",
+            now=_ISSUED_AT + timedelta(minutes=1),
+        )
+
+        assert outcome.resumed is True
+        assert resumed is not None
+        # Not a restatement of the annotation: this is the runtime object, and
+        # a narrowed resume would hand back ``bytes`` here regardless of what
+        # the signature claimed.
+        assert isinstance(resumed, bytearray)
+        assert resumed == _DEK
+
+        zeroise(resumed)
+
+        # The load-bearing assertion. It can only hold if the caller's own
+        # reference reached the minted material -- which is the whole point of
+        # yielding a buffer instead of a copy the caller cannot follow.
+        assert resumed == bytearray(32)
+        assert resumed != _DEK
+    finally:
+        delete_profile_session(storage_root=tmp_path, profile_id=profile_id)

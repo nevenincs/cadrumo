@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:dd8c8567069254003b9de5cb82c5a767eb63d57b9c91d8294ab901ea117911de'
+body_hash: 'sha256:4f30e7c0c736d94172324a9bb2543c2282be3e1180a484a8864d0b12af72fb21'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
@@ -141,10 +141,9 @@ Families 8 and 9 in `dev/quality/import_hygiene_scan.py` implement the ruling
 and are gated in `src/cadrumo/tests/test_import_edge_integrity_gate.py`, which
 is a new module rather than an extension of the existing import-hygiene gate
 because appending them broke that file through its declared size ceiling.
-Family 8
-holds a hard zero over first-party import targets; family 9 holds a hard zero
-over orphaned re-export bridges and reports the wider orphan set without gating
-it.
+Family 8 holds a hard zero over first-party import targets; family 9 holds a
+hard zero over orphaned re-export bridges and reports the wider orphan set
+without gating it.
 
 Three items are left open, each named rather than absorbed.
 
