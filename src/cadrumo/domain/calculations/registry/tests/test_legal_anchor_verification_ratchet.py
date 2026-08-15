@@ -29,7 +29,7 @@ import pytest
 
 from .....core import CorpusAnchorResolutionError, resolve_anchored_extracted_unit
 from .....core.resources import bundled_path
-from .._loader import load_registry_tree
+from .....tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -162,7 +162,7 @@ def _classify() -> tuple[list[str], list[str], set[str]]:
     *unverified* when it resolves just as the declared anchor does.
     """
     source_root = _source_root()
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _modelos, catalogues = bundled_registry_tree()
     verified: list[str] = []
     unverified: list[str] = []
     files: set[str] = set()
@@ -235,7 +235,7 @@ def test_entries_whose_anchor_is_absent_from_their_files_ids_only_shrink() -> No
     are the real finding.
     """
     source_root = _source_root()
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _modelos, catalogues = bundled_registry_tree()
 
     mismatched: set[str] = set()
     for ref_id, reference in catalogues.legal.items():

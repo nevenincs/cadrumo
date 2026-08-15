@@ -199,7 +199,7 @@ def resolve_donativo_binding_row_values(
     return resolved
 
 
-@dataclass
+@dataclass(slots=True)
 class _DonativoRowAccumulator:
     """Per-donor accumulator carrying each row field's own precise type.
 

@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
+from ...core.errors import BaseSeverity
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._errors import ManifestError, ManualNotFoundError, ManualParseError, ManualReviewRequiredError
@@ -26,14 +27,15 @@ class ManualVerificationIssue(BaseModel):
     """Single issue flagged by the verifier.
 
     Attributes:
-        level: Either ``'error'`` or ``'warning'``.
+        level: Severity, shared with every other diagnostic and validation
+            issue in the project via :class:`~cadrumo.core.errors.BaseSeverity`.
         code: Stable identifier for the issue category.
         message: Human-readable description, including the offending path.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    level: str = Field(description="Either 'error' or 'warning'.")
+    level: BaseSeverity
     code: str = Field(description="Stable identifier for the issue category.")
     message: str = Field(description="Human-readable description, including the offending path.")
 
@@ -58,17 +60,17 @@ class ManualVerificationReport(BaseModel):
 
     @property
     def errors(self) -> tuple[ManualVerificationIssue, ...]:
-        """Return only the :class:`ManualVerificationIssue` items with ``level == 'error'``."""
-        return tuple(issue for issue in self.issues if issue.level == "error")
+        """Return only the :class:`ManualVerificationIssue` items at :attr:`~cadrumo.core.errors.BaseSeverity.ERROR`."""
+        return tuple(issue for issue in self.issues if issue.level is BaseSeverity.ERROR)
 
     @property
     def warnings(self) -> tuple[ManualVerificationIssue, ...]:
-        """Return only the ``level == 'warning'`` issues.
+        """Return only the issues at :attr:`~cadrumo.core.errors.BaseSeverity.WARNING`.
 
         Returns:
             Tuple of :class:`ManualVerificationIssue` objects with warning-level severity.
         """
-        return tuple(issue for issue in self.issues if issue.level == "warning")
+        return tuple(issue for issue in self.issues if issue.level is BaseSeverity.WARNING)
 
     @property
     def ok(self) -> bool:
@@ -83,7 +85,7 @@ def _section_multilingual_warnings(section: Section) -> list[ManualVerificationI
         if not translatable:
             issues.append(
                 ManualVerificationIssue(
-                    level="warning",
+                    level=BaseSeverity.WARNING,
                     code="missing-translation",
                     message=tr(
                         "cli.registry.manuals.verify_missing_translation",
@@ -112,7 +114,7 @@ def _cross_reference_issues(
             if target not in known_section_ids:
                 issues.append(
                     ManualVerificationIssue(
-                        level="error",
+                        level=BaseSeverity.ERROR,
                         code="dangling-section-ref",
                         message=tr(
                             "cli.registry.manuals.verify_dangling_section_ref",
@@ -127,7 +129,7 @@ def _cross_reference_issues(
                 if target not in known_section_ids:
                     issues.append(
                         ManualVerificationIssue(
-                            level="error",
+                            level=BaseSeverity.ERROR,
                             code="dangling-section-ref",
                             message=tr(
                                 "cli.registry.manuals.verify_dangling_rule_section_ref",
@@ -184,7 +186,7 @@ def verify_manual_dir(
     if not manifest_path.exists():
         issues.append(
             ManualVerificationIssue(
-                level="warning",
+                level=BaseSeverity.WARNING,
                 code="missing-manifest",
                 message=tr(
                     "cli.registry.manuals.verify_missing_manifest",
@@ -216,7 +218,7 @@ def verify_manual_dir(
         )
         issues.append(
             ManualVerificationIssue(
-                level="error",
+                level=BaseSeverity.ERROR,
                 code="load-failed",
                 message=str(exc),
             ),

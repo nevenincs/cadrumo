@@ -916,24 +916,32 @@ def test_a_workbook_mixing_both_header_spellings_yields_every_sheet() -> None:
 def test_a_design_with_a_dropped_sheet_reports_the_read_as_partial() -> None:
     """A partial read must SAY it is partial -- the first half of the bite proof.
 
-    Modelo 151 is the live case: nine of its twelve sheets title the description
-    column ``Datos adicionales de las rentas...`` instead of ``Descripción``, so
-    the header probe fails on every one of them and the extractor returns the
-    other three. Before the result carried a completeness notion those three
-    looked exactly like a whole design, and the 108 anchors read from a source
-    carrying roughly 727 propagated into every derived count with nothing able to
-    tell the difference.
+    Modelo 232 is the live case: its ``TABLAS`` tab is a legend -- two lookup
+    tables of relationship-type and valuation-method codes (LIS art. 18.3/18.4)
+    -- carrying no ``Posic.``/``Lon``/``Tipo``/``Contenido`` columns anywhere, so
+    the header probe correctly finds nothing to parse there while the sheet's
+    three genuine record pages (``DR23200``-``DR23202``) read cleanly. Modelo
+    151's own nine header-shape-variant sheets were this test's specimen until
+    the parser learned that second AEAT header shape (see
+    ``test_a_second_recognised_header_shape_is_read_and_a_non_matching_sheet_still_skips``);
+    now they parse, so this specimen moved to a sheet that is genuinely never
+    going to become a record -- not a temporarily-unread one.
 
     Asserted on the PROPERTY -- some sheets read, some named as skipped, and the
     two disjoint -- rather than on the counts, which move whenever the header
     vocabulary widens or AEAT republishes.
     """
-    design = _RECORD_DESIGN_ROOT / "modelo_151" / "files" / "01-151-ejercicio-2023-y-siguientes.xls"
+    design = (
+        _RECORD_DESIGN_ROOT
+        / "modelo_232"
+        / "files"
+        / "01-232-orden-hfp-816-2017-ejercicio-2016-y-siguientes-actualizado-15-01-2020-145-kb-xlsx.xlsx"
+    )
     assert design.is_file(), f"corpus anchor moved: {design}"
 
     extraction = extract_record_design(design)
 
-    assert extraction.skipped, "Modelo 151 drops sheets; a read that reports none is not seeing them"
+    assert extraction.skipped, "Modelo 232 drops its TABLAS tab; a read that reports none is not seeing it"
     assert extraction.sheets, "some sheets do parse, so this must be a PARTIAL read rather than a refusal"
     assert extraction.is_complete is False
     assert not {sheet.name for sheet in extraction.sheets} & {item.name for item in extraction.skipped}
@@ -941,6 +949,109 @@ def test_a_design_with_a_dropped_sheet_reports_the_read_as_partial() -> None:
 
     with pytest.raises(RegistryValidationError, match="PARTIAL design"):
         extraction.require_complete()
+
+
+def test_a_second_recognised_header_shape_is_read_and_a_non_matching_sheet_still_skips() -> None:
+    """AEAT's real second header shape is read; a sheet matching neither shape still refuses.
+
+    Modelo 151's nine annex sheets (``M15100000``, ``M15102000``-``M15109000``)
+    title their description column with the sheet's own topical caption instead
+    of the literal ``Descripción``, and carry no ``Validación`` column at all --
+    a real published AEAT shape, not a parser defect. Resilience to it is
+    permitted precisely because it is matched as specifically as the ordinary
+    shape (``Com.`` present by its own recognised alias AND the very next
+    column non-blank), never by relaxing the ordinary shape's own token match.
+
+    Both directions are asserted: the nine sheets read with correct geometry
+    (spot-checked against the raw workbook, not just "it parsed"), AND a sheet
+    matching NEITHER shape -- no ``Descripción``, no ``Com.`` -- still skips.
+    """
+    design = _RECORD_DESIGN_ROOT / "modelo_151" / "files" / "01-151-ejercicio-2023-y-siguientes.xls"
+    assert design.is_file(), f"corpus anchor moved: {design}"
+    extraction = extract_record_design(design)
+
+    annex_sheet_names = {f"M1510{n}000" for n in range(2, 10)} | {"M15100000"}
+    read_names = {sheet.name for sheet in extraction.sheets}
+    assert annex_sheet_names <= read_names, f"still skipped: {annex_sheet_names - read_names}"
+
+    # Spot-check exact geometry against the raw workbook (row 6, sheet M15102000):
+    # ``38.0, 480.0, 1.0, 'Num', 'Datos Adicionales...Situación [13]'`` verified directly.
+    m15102000 = next(sheet for sheet in extraction.sheets if sheet.name == "M15102000")
+    first = m15102000.fields[0]
+    assert (first.ordinal, first.offset, first.length, first.type_code) == ("1", 1, 2, "An")
+    assert "Inicio del identificador de modelo y p" in (first.description or "")
+    last = m15102000.fields[-1]
+    assert (last.offset, last.length, last.type_code) == (1089, 12, "An")
+    assert last.description == "Indicador de fin de registro"
+
+    # Negative case: a header row with NEITHER "Descripcion" NOR "Com." must still refuse,
+    # proving Shape B did not widen the match rather than add a second one.
+    no_shape_match = record_design_module._probe_header_row(
+        ("Nº", "Posic.", "Lon", "Tipo", "Contenido"),
+        1,
+        label="test",
+        sheet_name="test",
+        header_corrections={},
+    )
+    assert no_shape_match is None, "a header with no description column and no 'Com.' column must not match"
+
+    # Negative case: "Com." present but the following column is blank -- no caption to
+    # treat as the description -- must also still refuse.
+    blank_caption = record_design_module._probe_header_row(
+        ("Nº", "Posic.", "Lon", "Tipo", "Com.", None, "Contenido"),
+        1,
+        label="test",
+        sheet_name="test",
+        header_corrections={},
+    )
+    assert blank_caption is None, "a 'Com.' column followed by a blank cell must not match Shape B"
+
+
+def test_a_declared_header_cell_correction_is_read_and_an_undeclared_blank_column_still_refuses() -> None:
+    """A declared header correction recovers a design; an undeclared one still skips.
+
+    Modelo 100's ``100-03`` sheet (2015 and 2016 editions, both containers) is
+    the live case: AEAT's own length-column header cell is a whitespace-only
+    string, not the literal word ``Long.``/``Lon`` -- confirmed by cross-year
+    comparison against the 2017 edition's identical cell. The correction fires
+    ONLY because a sidecar declares it for this exact sheet, row and column;
+    without one, the same blank cell must still refuse (proven with a
+    synthetic row carrying no declared correction).
+    """
+    design = _RECORD_DESIGN_ROOT / "modelo_100" / "files" / "20-100-ejercicio-2015-1-75-mb-xls.xlsx"
+    assert design.is_file(), f"corpus anchor moved: {design}"
+    extraction = extract_record_design(design)
+
+    assert not extraction.skipped, f"still skipped: {[item.name for item in extraction.skipped]}"
+    header_corrections = [c for c in extraction.corrections if c.kind == "header_cell"]
+    assert len(header_corrections) == 1
+    correction = header_corrections[0]
+    assert (correction.sheet, correction.header_row, correction.column_index, correction.column_role) == (
+        "100-03",
+        5,
+        2,
+        "length",
+    )
+
+    # Spot-check exact geometry against the raw workbook, sheet 100-03:
+    sheet = next(item for item in extraction.sheets if item.name == "100-03")
+    assert len(sheet.fields) == 54
+    first = sheet.fields[0]
+    assert (first.ordinal, first.offset, first.length, first.type_code) == ("1", 1, 2, "An")
+    assert first.description == "Inicio del identificador de modelo y página."
+    last = sheet.fields[-1]
+    assert (last.ordinal, last.offset, last.length, last.type_code) == ("54", 630, 2, "An")
+
+    # Negative case: the identical blank-length-column shape with NO declared correction
+    # must still refuse -- proving the sidecar is load-bearing, not a fallback default.
+    undeclared = record_design_module._probe_header_row(
+        ("Nº", "Posic.", "", "Tipo", "Descripción", "Validación", "Contenido"),
+        5,
+        label="test",
+        sheet_name="100-03",
+        header_corrections={},
+    )
+    assert undeclared is None, "a blank length-column cell with no declared correction must not match"
 
 
 def test_a_design_read_in_full_reports_complete_and_hands_over_its_sheets() -> None:

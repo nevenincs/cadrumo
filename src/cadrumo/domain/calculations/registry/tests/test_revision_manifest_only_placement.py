@@ -20,10 +20,10 @@ from typing import Annotated
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....tests.registry_tree import bundled_registry_tree
 from .. import _loader
 from .._errors import RegistryLoadError
-from .._loader import load_modelo_directory, load_registry_tree
+from .._loader import load_modelo_directory
 from .._schema import (
     REVISION_GOVERNANCE_FIELDS,
     REVISION_MANIFEST_ONLY_FIELDS,
@@ -265,7 +265,7 @@ def test_the_shipped_registry_still_loads_under_the_widened_refusal() -> None:
     with it, so the tightening is only legitimate if every shipped revision
     already declares these scalars in its own manifest.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     revisions = [revision for modelo in modelos for revision in modelo.revisions.values()]
 
     assert revisions, "the bundled registry must load at least one revision"

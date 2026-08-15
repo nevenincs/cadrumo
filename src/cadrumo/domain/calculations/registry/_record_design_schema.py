@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Literal, Self
+from typing import Annotated, Literal, Self
 
 from pydantic import ConfigDict, Field, model_validator
 
@@ -15,9 +15,11 @@ __all__ = [
     "RecordDesignAuxiliaryEnvelopeHeaderField",
     "RecordDesignAuxiliaryEnvelopeHeaderRole",
     "RecordDesignCompositeRelativeClosing",
+    "RecordDesignCorrection",
     "RecordDesignExtraction",
     "RecordDesignField",
     "RecordDesignFieldTypeCorrection",
+    "RecordDesignHeaderCellCorrection",
     "RecordDesignRelativeSuffixMarker",
     "RecordDesignSheet",
     "RecordDesignSkippedSheet",
@@ -322,22 +324,66 @@ class RecordDesignVariableEnvelope(RegistryModel):
 class RecordDesignFieldTypeCorrection(RegistryModel):
     """A declared, sourced correction of one blank ``Tipo`` cell AEAT itself omitted.
 
-    Never inferred and never a silent fallback: the parser applies a correction
-    ONLY when a hand-authored sidecar next to the exact source binary declares
-    one for this exact ``(sheet, source_row)``, and every correction carries
-    its own grounding inline -- the specific editions read and the reason the
+    Subject is one DATA ROW; the consequence is that one field's type. Never
+    inferred and never a silent fallback: the parser applies a correction ONLY
+    when a hand-authored sidecar next to the exact source binary declares one
+    for this exact ``(sheet, source_row)``, and every correction carries its
+    own grounding inline -- the specific editions read and the reason the
     omission occurred -- so a design read this way is never indistinguishable
-    from one AEAT published cleanly. See
-    :attr:`RecordDesignExtraction.corrections`.
+    from one AEAT published cleanly. See :class:`RecordDesignCorrection` for
+    the sibling that corrects a HEADER cell instead, and
+    :attr:`RecordDesignExtraction.corrections` for where both land.
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
+    kind: Literal["field_type"] = "field_type"
     sheet: str = Field(min_length=1)
     source_row: int = Field(gt=0)
     corrected_type: str = Field(min_length=1)
     reason: str = Field(min_length=1)
     editions_read: tuple[str, ...] = Field(min_length=1)
+
+
+class RecordDesignHeaderCellCorrection(RegistryModel):
+    """A declared, sourced correction of one blank HEADER cell AEAT itself omitted.
+
+    Subject is a COLUMN of the header row; the consequence is the whole
+    sheet's parse, not one field. Deliberately a separate model from
+    :class:`RecordDesignFieldTypeCorrection` rather than an extension of it --
+    overloading one model to carry both would mean widening its validation to
+    admit a row-less, type-less entry, weakening every existing type
+    correction's guarantee that it names one real data row. Applied ONLY when
+    a sidecar declares one for this exact ``(sheet, header_row, column_index)``,
+    and only where the parser's header probe would otherwise find that column
+    role missing -- never a fallback for a column that is merely misspelled or
+    differently ordered.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    kind: Literal["header_cell"] = "header_cell"
+    sheet: str = Field(min_length=1)
+    header_row: int = Field(gt=0)
+    column_index: int = Field(ge=0)
+    #: Closed to the one shape observed so far. Extend when a new blank-header
+    #: shape is grounded, never widen to a free-form string.
+    column_role: Literal["length"]
+    reason: str = Field(min_length=1)
+    editions_read: tuple[str, ...] = Field(min_length=1)
+
+
+#: One concept, one collection: a design reads only because of a declared,
+#: sourced correction whether the correction fixed a data cell or a header
+#: cell, so both feed the SAME :attr:`RecordDesignExtraction.corrections`
+#: tuple through this discriminated union. A worklist reading ``corrections``
+#: needs no per-kind branch to keep treating "corrected" as distinct from
+#: "complete" -- see ``_classify()`` in
+#: ``test_every_bundled_design_is_read_or_reported.py``.
+RecordDesignCorrection = Annotated[
+    RecordDesignFieldTypeCorrection | RecordDesignHeaderCellCorrection,
+    Field(discriminator="kind"),
+]
 
 
 class RecordDesignSheet(RegistryModel):
@@ -350,9 +396,10 @@ class RecordDesignSheet(RegistryModel):
     total_positions: int | None = None
     variable_envelope: RecordDesignVariableEnvelope | None = None
     auxiliary_envelope_header: RecordDesignAuxiliaryEnvelopeHeader | None = None
-    #: Declared corrections applied while reading this sheet's field rows.
-    #: Empty for the overwhelming majority of sheets, which read as published.
-    corrections: tuple[RecordDesignFieldTypeCorrection, ...] = ()
+    #: Declared corrections applied while reading this sheet -- a data row's
+    #: type or a header column, per :data:`RecordDesignCorrection`. Empty for
+    #: the overwhelming majority of sheets, which read as published.
+    corrections: tuple[RecordDesignCorrection, ...] = ()
 
     @model_validator(mode="after")
     def _require_one_record_composition_kind(self) -> Self:
@@ -414,7 +461,7 @@ class RecordDesignExtraction(RegistryModel):
         return not self.skipped
 
     @property
-    def corrections(self) -> tuple[RecordDesignFieldTypeCorrection, ...]:
+    def corrections(self) -> tuple[RecordDesignCorrection, ...]:
         """Every declared correction applied anywhere in this source, flattened.
 
         Non-empty here means this design reads fully only BECAUSE of a

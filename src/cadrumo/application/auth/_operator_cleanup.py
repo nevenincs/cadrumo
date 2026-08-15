@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-import hashlib
 from datetime import datetime
 
 from ...core import AuthProviderKind
 from ...core.config import Settings
+from ...core.external_constants import UTF_8_ENCODING
+from ...core.hashing import sha256_hex
 from .._workflow_auth_models import (
     AuthCleanupCertificateSource,
     AuthCleanupIntent,
@@ -236,7 +237,9 @@ def _cleanup_operation_id(
 
     The join format, field ordering, and ``started_at.isoformat()`` are the
     frozen identity material; a resume of the same operation must hash to the
-    same ``operation_id``.
+    same ``operation_id``. ``started_at`` is a parameter read back off the
+    persisted intent at the resume path, never a derivation-time clock read, so
+    folding it in is what makes the address stable across resumes.
     """
     operation_material = "|".join(
         (
@@ -247,7 +250,7 @@ def _cleanup_operation_id(
             started_at.isoformat(),
         ),
     )
-    return hashlib.sha256(operation_material.encode("utf-8")).hexdigest()
+    return sha256_hex(operation_material.encode(UTF_8_ENCODING))
 
 
 def build_auth_cleanup_intent(

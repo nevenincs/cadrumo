@@ -37,7 +37,7 @@ from pydantic import ValidationError
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import scan_directory
+from ....core import STR_KEYED_MAPPING_ADAPTER, scan_directory
 from ....core.config import Settings
 from ....domain.attachments import load_attachment
 from ....domain.invoices import InvoiceValidationError
@@ -57,7 +57,7 @@ from .._preconditions import LedgerPreconditionCondition
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._ledger_value_fixtures import isolated_settings, secure_objects
-from ._llm_vision_evidence_support import _json_array, _json_object, _run_against_loopback_ollama
+from ._llm_vision_evidence_support import _json_array, _run_against_loopback_ollama
 from ._loopback_reader import serving_a_loopback_reader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -332,9 +332,9 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
         assert draft.grand_total == Decimal("121.00")
 
         # The request genuinely carried a rasterised image, not inlined text.
-        body = _json_object(observed["body"])
+        body = STR_KEYED_MAPPING_ADAPTER.validate_python(observed["body"])
         messages = _json_array(body["messages"])
-        user_message = _json_object(messages[-1])
+        user_message = STR_KEYED_MAPPING_ADAPTER.validate_python(messages[-1])
         assert user_message.get("images")
 
     def test_image_attachment_falls_back_to_vision_and_grounds_fields(

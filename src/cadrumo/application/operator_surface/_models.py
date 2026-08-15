@@ -89,8 +89,6 @@ class MountedCommandDomain(StrEnum):
     MODELO = "modelo"
     REVIEW = "review"
     REGISTRY = "registry"
-    CONTRACT = "contract"
-    AGENT = "agent"
     QUICKFILE = "quickfile"
 
 

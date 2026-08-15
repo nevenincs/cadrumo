@@ -45,6 +45,7 @@ import io
 import re
 from collections import Counter
 from datetime import date, datetime
+from itertools import islice
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -306,15 +307,14 @@ def _parse_with(text: str, delimiter: str, quotechar: str) -> list[tuple[int, li
     return parsed
 
 
-def _rectangle_score(parsed: list[tuple[int, list[str]]]) -> tuple[int, int]:
-    """Return ``(score, column_count)`` for one candidate parse.
+def _rectangle_score(widths: Counter[int]) -> tuple[int, int]:
+    """Return ``(score, column_count)`` for one candidate parse's width histogram.
 
     The score rewards the largest consistent rectangle: how many rows share the
     most common field count, times that count. A wrong delimiter collapses
     every line into a single field, scoring nothing, because a one-column
     rectangle is not a table.
     """
-    widths = Counter(len(cells) for _, cells in parsed if any(cell.strip() for cell in cells))
     best_score = 0
     best_width = 0
     for width, frequency in widths.items():
@@ -327,24 +327,62 @@ def _rectangle_score(parsed: list[tuple[int, list[str]]]) -> tuple[int, int]:
     return best_score, best_width
 
 
+def _score_delimiter(text: str, delimiter: str, quotechar: str) -> tuple[int, int]:
+    """Score one candidate delimiter without materializing its parse.
+
+    Only the field-count histogram decides the delimiter, and
+    :func:`csv.reader` is a lazy C iterator, so the histogram can be
+    accumulated a row at a time. Scoring the four candidates by materializing
+    each full parse instead built the whole table four times over to keep one
+    of them; on a 50k-row statement that cost tens of megabytes of peak
+    allocation, and cost :func:`detect_tabular_delimiter` — which wants no
+    parse at all — the parse time as well.
+
+    Every row is still visited, so the score is the whole-file score by
+    construction: a bounded leading sample would be a different measurement,
+    and would pick a different delimiter on exactly the preamble-bearing and
+    summary-bearing exports this module exists to survive.
+    """
+    reader = csv.reader(io.StringIO(text, newline=""), delimiter=delimiter, quotechar=quotechar)
+    widths: Counter[int] = Counter()
+    for row in reader:
+        if any(cell.strip() for cell in row):
+            widths[len(row)] += 1
+    return _rectangle_score(widths)
+
+
+def _best_delimiter(text: str, quotechar: str) -> tuple[int, int, str] | None:
+    """Return ``(score, column_count, delimiter)`` for the winning delimiter.
+
+    ``None`` when no candidate produced a rectangle at all — a single-column
+    file, or one no candidate delimiter splits. Ties are decided by
+    :data:`CANDIDATE_DELIMITERS` order: the first candidate to reach a score
+    holds it, so ``;`` outranks ``,`` at equal evidence.
+    """
+    best: tuple[int, int, str] | None = None
+    for delimiter in CANDIDATE_DELIMITERS:
+        score, width = _score_delimiter(text, delimiter, quotechar)
+        if score == 0:
+            continue
+        if best is None or score > best[0]:
+            best = (score, width, delimiter)
+    return best
+
+
 def _best_delimiter_parse(
     text: str,
     quotechar: str,
 ) -> tuple[int, int, str, list[tuple[int, list[str]]]] | None:
     """Return ``(score, column_count, delimiter, parsed)`` for the winning delimiter.
 
-    ``None`` when no candidate produced a rectangle at all — a single-column
-    file, or one no candidate delimiter splits.
+    The full parse is materialized once, for the winner only; the losing
+    candidates are streamed for their score and never held.
     """
-    best: tuple[int, int, str, list[tuple[int, list[str]]]] | None = None
-    for delimiter in CANDIDATE_DELIMITERS:
-        parsed = _parse_with(text, delimiter, quotechar)
-        score, width = _rectangle_score(parsed)
-        if score == 0:
-            continue
-        if best is None or score > best[0]:
-            best = (score, width, delimiter, parsed)
-    return best
+    best = _best_delimiter(text, quotechar)
+    if best is None:
+        return None
+    score, width, delimiter = best
+    return score, width, delimiter, _parse_with(text, delimiter, quotechar)
 
 
 def detect_tabular_delimiter(text: str, *, quotechar: str = '"') -> str | None:
@@ -359,7 +397,7 @@ def detect_tabular_delimiter(text: str, *, quotechar: str = '"') -> str | None:
         candidate produced a rectangle. A caller that must parse regardless
         chooses its own fallback.
     """
-    best = _best_delimiter_parse(text, quotechar)
+    best = _best_delimiter(text, quotechar)
     return None if best is None else best[2]
 
 
@@ -410,13 +448,23 @@ def _header_score(cells: list[str], *, next_row: list[str] | None) -> int:
 
 
 def _locate_header(parsed: list[tuple[int, list[str]]], *, column_count: int) -> int | None:
-    """Return the index in ``parsed`` of the best header row, or ``None``."""
+    """Return the index in ``parsed`` of the best header row, or ``None``.
+
+    The following-row lookup walks ``parsed`` through :func:`itertools.islice`
+    rather than a ``parsed[index + 1 :]`` slice: the slice copies the whole
+    remaining table on each of the twenty candidate rows, so locating a header
+    in a 50k-row export cost a million element copies to read at most a handful
+    of rows. The slice is lazy now; which row it stops on is unchanged.
+    """
     best_index: int | None = None
     best_score = 0
-    for index, (_, cells) in enumerate(parsed[:_HEADER_SEARCH_LIMIT]):
+    for index, (_, cells) in enumerate(islice(parsed, _HEADER_SEARCH_LIMIT)):
         if len(cells) != column_count:
             continue
-        next_row = next((row for _, row in parsed[index + 1 :] if any(cell.strip() for cell in row)), None)
+        next_row = next(
+            (row for _, row in islice(parsed, index + 1, None) if any(cell.strip() for cell in row)),
+            None,
+        )
         score = _header_score(cells, next_row=next_row)
         if best_index is None or score > best_score:
             best_index = index

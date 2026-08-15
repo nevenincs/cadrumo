@@ -16,6 +16,7 @@ from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHO
 from ....tests.cli_envelope import unwrap_cli_result as _json
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -52,7 +53,7 @@ def _as_group(command: object) -> TyperGroup:
 
 
 @pytest.fixture(autouse=True)
-def _isolated_cli_backend(tmp_path: Path):
+def _certificate_bearing_cli_backend(tmp_path: Path):
     # The round-trip helper writes its synthetic certificate to
     # ``<tmp_path>/certificate.p12``. The certificate auth backend
     # probes the path from ``Settings.cadrumo_certificate_path``, so the
@@ -197,20 +198,17 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
     Every CLI invocation is asserted to exit 0 here; downstream
     tests assert against the JSON payloads only.
     """
-    profile = _invoke(
-        [
-            "--format", "json",
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--tax-id", "12345678Z",
-            "--entity-type", "natural_person",
-            "--name", "Operator",
-            "--surnames", "Workflow",
-            "--activity", "design",
-            "--iva-regime", "GENERAL",
-        ],
-    )  # fmt: skip
-    assert profile.exit_code == 0, profile.output
+    register_cli_profile(
+        label='operator',
+        facts={
+            "identity.tax_id": '12345678Z',
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Workflow',
+            "activities.description": 'design',
+            "iva.regime": 'GENERAL',
+        },
+    )
     status = _invoke(["--format", "json", "config", "profile", "status"])
     assert status.exit_code == 0, status.output
 
@@ -259,43 +257,43 @@ _PROFILE_STATUS_EXPECTATIONS = (
 
 @pytest.mark.parametrize(("key", "expected"), _PROFILE_STATUS_EXPECTATIONS)
 def test_config_app_round_trip_profile_status_records_field(
-    _isolated_cli_backend: Path,
+    _certificate_bearing_cli_backend: Path,
     key: str,
     expected: object,
 ) -> None:
-    outcome = _drive_workflow_round_trip(_isolated_cli_backend)
+    outcome = _drive_workflow_round_trip(_certificate_bearing_cli_backend)
     assert outcome.status_payload[key] == expected
 
 
-def test_config_app_round_trip_certificate_configure_records_provider(_isolated_cli_backend: Path) -> None:
-    outcome = _drive_workflow_round_trip(_isolated_cli_backend)
+def test_config_app_round_trip_certificate_configure_records_provider(_certificate_bearing_cli_backend: Path) -> None:
+    outcome = _drive_workflow_round_trip(_certificate_bearing_cli_backend)
     assert outcome.configured_payload["provider"] == "certificate"
 
 
 def test_config_app_round_trip_certificate_auth_status_reports_configured(
-    _isolated_cli_backend: Path,
+    _certificate_bearing_cli_backend: Path,
 ) -> None:
-    outcome = _drive_workflow_round_trip(_isolated_cli_backend)
+    outcome = _drive_workflow_round_trip(_certificate_bearing_cli_backend)
     assert outcome.auth_status_payload["configured"] is True
 
 
-def test_config_app_round_trip_certificate_auth_test_records_provider(_isolated_cli_backend: Path) -> None:
-    outcome = _drive_workflow_round_trip(_isolated_cli_backend)
+def test_config_app_round_trip_certificate_auth_test_records_provider(_certificate_bearing_cli_backend: Path) -> None:
+    outcome = _drive_workflow_round_trip(_certificate_bearing_cli_backend)
     assert outcome.auth_test_payload["provider"] == "certificate"
 
 
-def test_config_app_round_trip_ledger_import_records_one_row(_isolated_cli_backend: Path) -> None:
-    outcome = _drive_workflow_round_trip(_isolated_cli_backend)
+def test_config_app_round_trip_ledger_import_records_one_row(_certificate_bearing_cli_backend: Path) -> None:
+    outcome = _drive_workflow_round_trip(_certificate_bearing_cli_backend)
     assert outcome.imported_payload["imported"] == 1
 
 
-def test_config_app_round_trip_overview_reports_one_transaction(_isolated_cli_backend: Path) -> None:
-    outcome = _drive_workflow_round_trip(_isolated_cli_backend)
+def test_config_app_round_trip_overview_reports_one_transaction(_certificate_bearing_cli_backend: Path) -> None:
+    outcome = _drive_workflow_round_trip(_certificate_bearing_cli_backend)
     assert outcome.overview_payload["transactions"] == 1
 
 
-def test_config_app_round_trip_review_queue_lists_imported_row(_isolated_cli_backend: Path) -> None:
-    outcome = _drive_workflow_round_trip(_isolated_cli_backend)
+def test_config_app_round_trip_review_queue_lists_imported_row(_certificate_bearing_cli_backend: Path) -> None:
+    outcome = _drive_workflow_round_trip(_certificate_bearing_cli_backend)
     assert len(_review_rows(outcome)) == 1
 
 
@@ -306,12 +304,12 @@ _REVIEW_ROW_EXPECTATIONS = (
 
 
 @pytest.mark.parametrize(("key", "expected"), _REVIEW_ROW_EXPECTATIONS)
-def test_config_app_round_trip_review_row_records_field(_isolated_cli_backend: Path, key: str, expected: str) -> None:
-    outcome = _drive_workflow_round_trip(_isolated_cli_backend)
+def test_config_app_round_trip_review_row_records_field(_certificate_bearing_cli_backend: Path, key: str, expected: str) -> None:
+    outcome = _drive_workflow_round_trip(_certificate_bearing_cli_backend)
     assert _review_rows(outcome)[0][key] == expected
 
 
-def test_config_app_round_trip_review_row_records_bucket_id(_isolated_cli_backend: Path) -> None:
+def test_config_app_round_trip_review_row_records_bucket_id(_certificate_bearing_cli_backend: Path) -> None:
     """The review row carries a redacted profile bucket id.
 
     Profile identity is the decoupled ``profile_id`` UUID, not the
@@ -319,21 +317,21 @@ def test_config_app_round_trip_review_row_records_bucket_id(_isolated_cli_backen
     ``active_profile`` while redacting the machine identifiers.
     """
 
-    outcome = _drive_workflow_round_trip(_isolated_cli_backend)
+    outcome = _drive_workflow_round_trip(_certificate_bearing_cli_backend)
     assert outcome.status_payload["active_profile"] == "operator"
     assert _review_rows(outcome)[0]["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
     assert outcome.status_payload["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
 
 
-def test_config_app_round_trip_review_row_has_affected_object(_isolated_cli_backend: Path) -> None:
-    outcome = _drive_workflow_round_trip(_isolated_cli_backend)
+def test_config_app_round_trip_review_row_has_affected_object(_certificate_bearing_cli_backend: Path) -> None:
+    outcome = _drive_workflow_round_trip(_certificate_bearing_cli_backend)
     assert _review_rows(outcome)[0]["affected_object_id"]
 
 
 def test_config_app_round_trip_review_row_canonical_next_command_is_review_verb(
-    _isolated_cli_backend: Path,
+    _certificate_bearing_cli_backend: Path,
 ) -> None:
-    outcome = _drive_workflow_round_trip(_isolated_cli_backend)
+    outcome = _drive_workflow_round_trip(_certificate_bearing_cli_backend)
     canonical_next_command = _review_rows(outcome)[0]["canonical_next_command"]
     assert isinstance(canonical_next_command, str)
     assert canonical_next_command.startswith("aeat app ledger review ")
@@ -342,7 +340,7 @@ def test_config_app_round_trip_review_row_canonical_next_command_is_review_verb(
 
 
 def test_config_app_round_trip_review_row_carries_legal_refs_field(
-    _isolated_cli_backend: Path,
+    _certificate_bearing_cli_backend: Path,
 ) -> None:
     """Every JSON review row exposes a ``legal_refs`` field.
 
@@ -350,14 +348,14 @@ def test_config_app_round_trip_review_row_carries_legal_refs_field(
     a ledger-transaction row grounds its obligation in the operator's own
     records, so the field is present and empty rather than absent.
     """
-    outcome = _drive_workflow_round_trip(_isolated_cli_backend)
+    outcome = _drive_workflow_round_trip(_certificate_bearing_cli_backend)
     row = _review_rows(outcome)[0]
     assert "legal_refs" in row
     assert row["legal_refs"] == []
 
 
 def test_config_app_round_trip_review_queue_text_omits_bucket_placeholder(
-    _isolated_cli_backend: Path,
+    _certificate_bearing_cli_backend: Path,
 ) -> None:
     """The text queue table does not render the redacted bucket placeholder.
 
@@ -366,7 +364,7 @@ def test_config_app_round_trip_review_queue_text_omits_bucket_placeholder(
     ``<profile-id>`` placeholder (the m17 leak). The column is removed; the
     JSON ``bucket_id`` (redacted) remains for tooling.
     """
-    _drive_workflow_round_trip(_isolated_cli_backend)
+    _drive_workflow_round_trip(_certificate_bearing_cli_backend)
 
     text_queue = _invoke(["app", "review", "queue"])
     assert text_queue.exit_code == 0, text_queue.output

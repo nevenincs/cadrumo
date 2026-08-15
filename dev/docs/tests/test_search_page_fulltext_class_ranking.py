@@ -39,7 +39,6 @@ import pytest
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
-from ._http_serve_support import serve_directory
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records, _Materialised
 from ..terminology import (
@@ -50,6 +49,7 @@ from ..terminology import (
     SearchRecordMetadata,
     normalise_display_class_weight,
 )
+from ._http_serve_support import serve_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

@@ -13,6 +13,7 @@ from .._schema import (
     CasillaAlias,
     CasillaConstraints,
     DatedValue,
+    ModeloDefinition,
     ProfilePredicateDefinition,
 )
 from .._schema_input_kind import InputKind
@@ -46,7 +47,6 @@ from ._referential_integrity_support import (
     minimal_revision,
     minimal_source_ref,
     minimal_workbook_ref,
-    modelo_validation_failures,
     snapshot_for_revision,
 )
 
@@ -63,6 +63,14 @@ _MISSING_SOURCE_ID = "aeat-missing-source"
 _EXTRA_LEGAL_ID = "ley-35-2006:art-9998"
 _EXTRA_SOURCE_ID = "aeat-extra-source"
 _PARITY_SOURCE_ID = "aeat-open-parity-source"
+
+
+def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
+    try:
+        RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+    except RegistryValidationError as exc:
+        return str(exc).splitlines()
+    return []
 
 
 def _catalogues_with_executable_parity_source() -> RegistryCatalogues:
@@ -201,7 +209,7 @@ def test_casilla_alias_and_constraints_refs_must_resolve_in_registry_validation(
     )
     revision = minimal_revision(casillas=(casilla,))
 
-    failures = modelo_validation_failures(minimal_modelo(revision))
+    failures = _modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
         f"casilla 01 alias '{_ALTERNATE_ALIAS_KEY}' references unknown legal id '{_MISSING_LEGAL_ID}'" in failure
@@ -544,7 +552,7 @@ def test_cross_reference_applicability_predicate_refs_must_resolve_in_registry_v
     )
     revision = minimal_revision(live_cross_references=(cross_ref,))
 
-    failures = modelo_validation_failures(minimal_modelo(revision))
+    failures = _modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
         "cross-reference test.cross-ref applicability predicate 'iva.roi_enrolled' "
@@ -681,7 +689,7 @@ def test_verification_predicate_refs_must_resolve_in_registry_validation() -> No
     )
     revision = minimal_revision().model_copy(update={"verification_predicates": (predicate,)})
 
-    failures = modelo_validation_failures(minimal_modelo(revision))
+    failures = _modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
         "verification predicate test.predicate references unknown legal id 'ley-35-2006:art-9999'" in failure

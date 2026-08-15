@@ -29,7 +29,7 @@ from pathlib import Path
 import pytest
 
 from ....core import CasillaId, Period, ResultDisposition, validated_casilla_id
-from ....core.resources import bundled_path, resources
+from ....core.resources import resources
 from ....domain.calculations.registry import (
     RegistryCalculationResult,
     RelationId,
@@ -38,7 +38,6 @@ from ....domain.calculations.registry import (
     resolve_available_bound_inputs_by_casilla_id,
     select_revision,
 )
-from ....domain.calculations.registry._loader import load_registry_tree
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -48,6 +47,7 @@ from ....domain.modelos import (
     derive_work_unit_id,
 )
 from ....tests import general_m303_filing_evidence
+from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import persist_filed_revision_observation
 from .._iva_compensation_history import IvaCompensationHistoryRepository
@@ -75,7 +75,7 @@ def _law_determined_revision_id(modelo_id: str, *, filing_year: int, period: str
     plus the canonical temporal resolver answer the same question and are the
     only rungs that stay available.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == modelo_id)
     return str(select_revision(modelo, filing_year=filing_year, period=period).id)
 

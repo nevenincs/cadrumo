@@ -21,7 +21,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import PROSE_ELISION_MARKER, Period
+from ....core import PROSE_ELISION_MARKER
 from ....domain.renta import RentaExpenseDirection
 from ....domain.transactions import BusinessClassification, TransactionDirection
 from .._business_proportion import business_proportion
@@ -33,6 +33,7 @@ from .._renta_ledger import (
     _renta_direction_for,
     _resolve_annual_period,
 )
+from ._renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,10 +41,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # ---------------------------------------------------------------------------
 # _resolve_annual_period — accept ANNUAL, reject monthly / quarterly
 # ---------------------------------------------------------------------------
-
-
-def _period(year: int, code: str) -> Period:
-    return Period.from_year_and_code(year, code)
 
 
 def test_resolve_annual_period_accepts_annual_period_instance() -> None:

@@ -57,9 +57,8 @@ from pathlib import Path
 import pytest
 
 from ....core import CasillaId, Period, RevisionReviewStatus, validated_casilla_id
-from ....core.resources import bundled_path
 from ....domain.calculations.registry import ExportLayoutDefinition, ModeloRevision
-from ....domain.calculations.registry._loader import load_registry_tree
+from ....tests.registry_tree import bundled_registry_tree
 from .. import build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -77,7 +76,7 @@ def _committed_revisions(modelo_id: str) -> tuple[ModeloRevision, ...]:
     reason. A proof that cannot report what is missing whenever anything else is
     broken is a proof that goes quiet exactly when it is needed.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == modelo_id)
     return tuple(
         sorted(

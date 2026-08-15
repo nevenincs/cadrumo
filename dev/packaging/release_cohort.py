@@ -136,7 +136,7 @@ def _materialise_claude_artifacts(
     output: Path,
     work_root: Path,
 ) -> tuple[Path, Path]:
-    from cadrumo.agent import materialise_marketplace
+    from cadrumo_harness import materialise_marketplace
 
     claude_dir = output / "claude"
     marketplace_tree = work_root / "marketplace"
@@ -167,12 +167,12 @@ def _materialise_claude_artifacts(
 
 def _require_cohort_aware_marketplace_materialiser() -> None:
     """Refuse before building if the clean source cannot embed cohort wheels."""
-    from cadrumo.agent import materialise_marketplace
+    from cadrumo_harness import materialise_marketplace
 
     if "cohort" not in inspect.signature(materialise_marketplace).parameters:
         raise SystemExit(
             "clean source marketplace materialiser cannot embed the immutable Python cohort: "
-            "cadrumo.agent.materialise_marketplace accepts no 'cohort' argument, so the built "
+            "cadrumo_harness.materialise_marketplace accepts no 'cohort' argument, so the built "
             "plugin would ship without pinned wheels. Give it a 'cohort' parameter that it "
             "forwards to materialise_plugin, then re-run release assembly.",
         )

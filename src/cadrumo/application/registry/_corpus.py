@@ -33,6 +33,7 @@ from pydantic import BaseModel, Field, StringConstraints
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import scan_directory
 from ...core.config import Settings, coerce_output_language_setting, load_settings
+from ...core.errors import BaseSeverity
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ...core.logging import get_logger
 from ...core.topics import Topic, TopicCatalogue, load_topic_catalogue
@@ -195,12 +196,14 @@ class RegistryCorpusIssueProjection(BaseModel):
 
     Used by citation verification and manual verification so CLI payloads carry
     one stable issue shape even though the underlying domain issues come from
-    different registry and corpus verifiers.
+    different registry and corpus verifiers. ``level`` shares
+    :class:`~cadrumo.core.errors.BaseSeverity` with every other diagnostic and
+    validation issue in the project.
     """
 
     model_config = _STRICT_FROZEN
 
-    level: str = Field(min_length=1)
+    level: BaseSeverity
     code: str = Field(min_length=1)
     message: str = Field(min_length=1)
     reference_id: str | None = None
@@ -1032,7 +1035,7 @@ def _legal_validation_issue_projections(error: RegistryValidationError) -> tuple
     ) or (message,)
     return tuple(
         RegistryCorpusIssueProjection(
-            level="error",
+            level=BaseSeverity.ERROR,
             code="legal-catalogue-validation",
             message=failure,
             reference_id=_legal_issue_reference_id(failure),

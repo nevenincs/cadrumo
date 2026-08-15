@@ -71,15 +71,13 @@ from ...schema_surface import (
 # since a gate only checks what is registered when it collects. The families
 # were enrolled in two measured batches: live first (33 keys), then the
 # remaining four together (52 keys, of which quickfile contributes 49).
-from .. import _app_agent_workspace_payloads as _app_agent_workspace_payloads
-from .. import _app_contract_payloads as _app_contract_payloads
 from .. import _app_live_payloads as _app_live_payloads
 from .. import _app_maintenance_payloads as _app_maintenance_payloads
 from .. import _app_quickfile_payloads as _app_quickfile_payloads
 from .. import _config_bucket_history_payloads as _config_bucket_history_payloads
 from .. import _config_descendiente_payloads as _config_descendiente_payloads
 from .. import _config_payloads as _config_payloads
-from ._lazy_command_tree import materialise_lazy_subcommands
+from .._command_suggestions import materialise_lazy_subcommands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -1078,7 +1076,7 @@ def _probe_script(
         # Warm the lazy core exports so a cold-start config resolution does not hit
         # the unrelated `pointer_path` circular import (identical in every case).
         from cadrumo.core import pointer_path, read_pointer  # noqa: F401
-        from cadrumo.entrypoints.cli._app_contract import command_schema_refs
+        from cadrumo.entrypoints.cli._command_schema import command_schema_refs
 
         # The guard must not import the wizard package itself: building the
         # contract entrypoint must leave it unimported, so any later wizard
@@ -1141,7 +1139,7 @@ def test_wizard_profile_schemas_reach_the_manifest_from_their_canonical_owner(tm
 
     Runs in a fresh interpreter that does NOT import the wizard package, so
     the declared producer module is the sole registrar of the profile schemas
-    on the ``aeat app contract`` surface. The guard first
+    on the capability-manifest surface. The guard first
     proves it did not self-seed the wizard package (a guard that seeds its own
     subject is the very defect it exists to catch), then that both schemas are
     present. If the canonical declaration omits their producer module, both

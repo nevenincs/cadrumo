@@ -1,0 +1,21 @@
+# Modelo 714 is an autoliquidacion the taxpayer presents to AEAT, so its
+# application surfaces are the filing lifecycle and the presentation calendar.
+# No export surface is declared here: this revision has no export layout yet,
+# and a link asserting an export consumer would claim a capability the registry
+# does not carry.
+
+[[revisions."2021".application_links]]
+id = "modelo-714-2021-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hfp-207-2022:art-2", "orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-modelo-714-procedure"]
+
+[[revisions."2021".application_links]]
+id = "modelo-714-2021-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-hfp-207-2022:art-8"]
+source_refs = ["aeat-modelo-714-procedure"]

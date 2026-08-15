@@ -13,42 +13,21 @@ from click.testing import Result
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.bucket import bucket_paths
-from ....adapters.persistence.storage.sql import dispose_engine
 from ....application.diagnostics import build_cli_version_report
-from ....core.config import SecretStoreBackend, load_settings, override_settings
+from ....core import StorageCategory, storage_path
+from ....core.config import load_settings, override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....domain.buckets import BucketEventType
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
-from ....tests.secure_sql import read_db_at_rest_bytes
-from ....tests.user_profile import register_minimal_profile
+from ....tests.secure_sql import isolated_profile_storage_root, read_db_at_rest_bytes
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _invoke(args: list[str]):
     return invoke_cached_cli(args)
-
-
-def _profile_create_args(*extra_args: str) -> list[str]:
-    return [
-        "config",
-        "profile",
-        "create",
-        "operator",
-        "--quiet",
-        "--tax-id",
-        "00000000T",
-        "--entity-type",
-        "natural_person",
-        "--name",
-        "Operator",
-        "--surnames",
-        "Workflow",
-        "--activity",
-        "Servicios",
-        *extra_args,
-    ]
 
 
 def _json_output(result: Result) -> str:
@@ -65,38 +44,34 @@ def _json_output(result: Result) -> str:
 
 @contextmanager
 def _isolated_user_cli(tmp_path: Path) -> Iterator[Path]:
-    """Pin Settings via the canonical centralized override API.
+    """Isolate CLI-runtime storage and neutralize ambient auth configuration.
 
-    Replaces a prior direct manipulation of ``config._settings_override``
-    (private ContextVar) with ``override_settings(**fields)``. The
-    backend API validates all fields through pydantic, restores prior
-    state on exit, and is async-context-safer than token-based reset.
+    Storage and secrets isolation delegates to
+    :func:`isolated_profile_storage_root`, the canonical helper that derives
+    every leaf directory (tokens, drafts, runs, financial catalogues) from
+    ``STORAGE_TAXONOMY``. A hand-spelled override block here once drifted from
+    that taxonomy (a literal ``txs`` leaf where the declared subpath is
+    ``financial/transactions``), and nothing caught it, because a fixture that
+    only round-trips its own override agrees with any name it is given.
+    Delegating removes the possibility of that drift recurring.
+
+    The auth-provider nulling stays local: it isolates this module's tests
+    from ambient dev-machine auth configuration, which is not a storage-path
+    concern :func:`isolated_profile_storage_root` owns.
     """
-    dispose_engine()
-    dev_test_passphrase = load_settings().cadrumo_dev_test_database_password
-    with override_settings(
-        cadrumo_auth_provider=None,
-        cadrumo_certificate_path=None,
-        cadrumo_certificate_password_secret=None,
-        cadrumo_clave_movil_dni_nie=None,
-        cadrumo_clave_movil_dni_fecha=None,
-        cadrumo_clave_movil_nie_soporte=None,
-        cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-        cadrumo_secret_passphrase=dev_test_passphrase,
-        cadrumo_secret_store_dir=tmp_path / "fallback-store",
-        cadrumo_allow_unencrypted="",
-        cadrumo_active_profile=None,
-        cadrumo_local_storage_root=tmp_path / "storage",
-        cadrumo_token_dir=tmp_path / "probe-tokens",
-        cadrumo_runs_dir=tmp_path / "probe-runs",
-        cadrumo_financial_txs_dir=tmp_path / "txs",
-        cadrumo_invoices_dir=tmp_path / "invoices",
-        cadrumo_drafts_dir=tmp_path / "probe-drafts",
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        override_settings(
+            cadrumo_auth_provider=None,
+            cadrumo_certificate_path=None,
+            cadrumo_certificate_password_secret=None,
+            cadrumo_clave_movil_dni_nie=None,
+            cadrumo_clave_movil_dni_fecha=None,
+            cadrumo_clave_movil_nie_soporte=None,
+            cadrumo_allow_unencrypted="",
+        ),
     ):
-        try:
-            yield tmp_path
-        finally:
-            dispose_engine()
+        yield tmp_path
 
 
 @pytest.fixture
@@ -110,8 +85,9 @@ def encrypted_user_cli(isolated_user_cli: Path) -> Path:
     return isolated_user_cli
 
 
-def _assert_secure_database_payload(tmp_path: Path, *plaintext_canaries: str) -> None:
-    db_path = bucket_paths(tmp_path / "storage", "00000000-0000-4000-8000-000000000000").database_file
+def _assert_secure_database_payload(bucket_id: str, *plaintext_canaries: str) -> None:
+    storage_root = load_settings().cadrumo_local_storage_root
+    db_path = bucket_paths(storage_root, bucket_id).database_file
     assert db_path.exists()
     on_disk = read_db_at_rest_bytes(db_path)
     assert b"secure_objects" in on_disk
@@ -126,15 +102,18 @@ def _seed_profile(
     activity: str = "design",
     iva_regime: str = "GENERAL",
     extra_values: dict[str, str] | None = None,
-) -> None:
-    """Seed an active profile through workflow pointers and profile buckets.
+) -> str:
+    """Register the profile through the shared CLI registration door, and return its id.
 
-    Registers the profile through canonical user-profile orchestration.
-    Workflow state keeps the active profile pointer; profile facts are
-    written through the profile lifecycle service.
+    ``_seed_profile`` used to write a record through the application-layer
+    ``register_minimal_profile`` door, which opens no custody envelope under
+    the passphrase the isolated CLI backend configures -- so a CLI invocation
+    made afterwards could not unlock the profile it just seeded.
+    :func:`register_cli_profile` is the door built for exactly this: real CLI
+    invocations follow every one of these calls.
 
-    ``iva.regime`` defaults to ``GENERAL`` so the seeded profile
-    matches the operator's state after a quiet profile-create run.
+    ``iva.regime`` defaults to ``GENERAL`` so the seeded profile matches the
+    operator's state after a quiet profile-create run.
     """
 
     values = {
@@ -151,12 +130,7 @@ def _seed_profile(
     }
     if extra_values:
         values.update(extra_values)
-    with open_test_profile_session("00000000-0000-4000-8000-000000000000"):
-        register_minimal_profile(
-            profile_id="00000000-0000-4000-8000-000000000000",
-            display_name=name,
-            overrides=values,
-        )
+    return register_cli_profile(label=name, facts=values)
 
 
 def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
@@ -169,8 +143,18 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     from ....application.workflow import workflow_state_repository
     from ....tests.profile_capsule import load_test_profile_record
 
-    create_result = _invoke(_profile_create_args("--iva-regime", "GENERAL", "--tax-residence-ccaa", "madrid"))
-    assert create_result.exit_code == 0, create_result.output
+    register_cli_profile(
+        label="operator",
+        facts={
+            "identity.tax_id": "00000000T",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Operator",
+            "identity.surnames": "Workflow",
+            "activities.description": "Servicios",
+            "iva.regime": "GENERAL",
+            "tax_residence.ccaa": "madrid",
+        },
+    )
 
     # Modelo applicability is derived from the taxpayer model; declare
     # an autónomo (natural person with actividad económica) so the
@@ -521,25 +505,25 @@ def test_review_filter_help_lists_supported_filter_keys() -> None:
 def test_config_auth_accepts_supported_provider_and_rejects_others(
     encrypted_user_cli: Path,
 ) -> None:
-    created = _invoke(_profile_create_args())
-    assert created.exit_code == 0, created.output
+    register_cli_profile(
+        label="operator",
+        facts={
+            "identity.tax_id": "00000000T",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Operator",
+            "identity.surnames": "Workflow",
+            "activities.description": "Servicios",
+        },
+    )
 
-    # config auth verbs write the auth provider into the profile-bound secure
-    # store, which needs an active bucket session. The in-process test runner does not
-    # re-open the session per invoke as a fresh CLI process does (#52 /
-    # master_key _active_session), so hold the master-key provider active across
-    # these invokes.
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-
-    with activate_master_key_provider(get_master_key_provider()):
-        configure = _invoke(["config", "auth", "configure", "--provider", "clave_movil"])
-        unsupported_spelling = _invoke(["config", "auth", "configure", "--provider", "clave-movil"])
-        unsupported = _invoke(["config", "auth", "configure", "--provider", "clave_pin"])
-        unsupported_test = _invoke(["config", "auth", "test", "--provider", "dnie_pkcs"])
-        unsupported_login = _invoke(["config", "auth", "login", "--provider", "dnie_pkcs"])
-        reserved_reset = _invoke(
-            ["--format", "json", "config", "auth", "reset", "--provider", "clave_pin", "--yes"],
-        )
+    configure = _invoke(["config", "auth", "configure", "--provider", "clave_movil"])
+    unsupported_spelling = _invoke(["config", "auth", "configure", "--provider", "clave-movil"])
+    unsupported = _invoke(["config", "auth", "configure", "--provider", "clave_pin"])
+    unsupported_test = _invoke(["config", "auth", "test", "--provider", "dnie_pkcs"])
+    unsupported_login = _invoke(["config", "auth", "login", "--provider", "dnie_pkcs"])
+    reserved_reset = _invoke(
+        ["--format", "json", "config", "auth", "reset", "--provider", "clave_pin", "--yes"],
+    )
 
     assert configure.exit_code == 0, configure.output
     assert "clave_movil" in configure.output
@@ -597,7 +581,7 @@ def test_ledger_import_accepts_n26_csv_dry_run(isolated_user_cli: Path) -> None:
 
 def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_user_cli: Path) -> None:
     tmp_path = encrypted_user_cli
-    _seed_profile(tax_id="00000000T", name="operator", activity="design")
+    bucket_id = _seed_profile(tax_id="00000000T", name="operator", activity="design")
     canary = "CLI_ENCRYPTED_LEDGER_CANARY_5A2F"
     transaction_ref = "n26-secure-row-001"
     statement = tmp_path / "n26-secure.csv"
@@ -611,17 +595,9 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
         encoding="utf-8",
     )
 
-    # The import invoke decrypts/persists to the profile-bound store, which needs
-    # an active bucket session. The in-process test runner does not re-open the session
-    # per invoke the way a fresh CLI process does (see #52 / master_key
-    # _active_session), so hold the master-key provider active across the invoke -
-    # the same idiom this test already uses for its read-back below.
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-
-    with activate_master_key_provider(get_master_key_provider()):
-        imported = _invoke(
-            ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "n26"]
-        )
+    imported = _invoke(
+        ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "n26"]
+    )
 
     assert imported.exit_code == 0, imported.output
     import_envelope = json.loads(_json_output(imported))
@@ -630,12 +606,11 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
     assert import_payload["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
     assert len(import_payload["bucket_event_ids"]) == 1
     assert import_payload["imported_transaction_refs"][0]["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
-    assert not (tmp_path / "txs" / "transactions.envelope.json").exists()
-    _assert_secure_database_payload(tmp_path, canary, transaction_ref)
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    assert not (storage_path(StorageCategory.FINANCIAL_TRANSACTIONS) / "transactions.envelope.json").exists()
+    _assert_secure_database_payload(bucket_id, canary, transaction_ref)
 
-    with activate_master_key_provider(get_master_key_provider()):
-        catalogue = TransactionCatalogueRepository(bucket_id="00000000-0000-4000-8000-000000000000").load()
+    with open_test_profile_session(bucket_id):
+        catalogue = TransactionCatalogueRepository(bucket_id=bucket_id).load()
         [stored] = list(catalogue.transactions.values())
         assert stored.raw.counterparty == canary
         assert stored.raw.provider_transaction_id == transaction_ref
@@ -643,7 +618,7 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
             BucketEventHistoryRepository()
             .load()
             .for_bucket(
-                "00000000-0000-4000-8000-000000000000",
+                bucket_id,
                 event_types=(BucketEventType.LEDGER_TRANSACTION_IMPORTED,),
             )
         )
@@ -749,14 +724,8 @@ def test_ledger_import_verify_source_rejects_missing_original_file(
 def test_read_only_status_commands_use_isolated_local_state(encrypted_user_cli: Path) -> None:
     _seed_profile(tax_id="00000000T", name="operator", activity="design")
 
-    # Both status commands read the profile-bound secure store, needing an active
-    # bucket session that the in-process test runner does not re-open per invoke (#52 /
-    # master_key _active_session); hold the provider active across them.
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-
-    with activate_master_key_provider(get_master_key_provider()):
-        config_status = _invoke(["--format", "json", "config", "profile", "status"])
-        overview = _invoke(["--format", "json", "app", "overview", "status"])
+    config_status = _invoke(["--format", "json", "config", "profile", "status"])
+    overview = _invoke(["--format", "json", "app", "overview", "status"])
 
     assert config_status.exit_code == 0, config_status.output
     assert overview.exit_code == 0, overview.output
@@ -800,12 +769,19 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
     from ....application.workflow import workflow_state_repository
     from ....domain.deadlines import IVARegime
 
-    created = _invoke(_profile_create_args("--iva-regime", "general"))
-    assert created.exit_code == 0, created.output
+    bucket_id = register_cli_profile(
+        label="operator",
+        facts={
+            "identity.tax_id": "00000000T",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Operator",
+            "identity.surnames": "Workflow",
+            "activities.description": "Servicios",
+            "iva.regime": "general",
+        },
+    )
 
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-
-    with activate_master_key_provider(get_master_key_provider()):
+    with open_test_profile_session(bucket_id):
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
@@ -820,12 +796,19 @@ def test_config_profile_create_persists_situacion_familiar(
     from ....application.user_profile import record_to_path_values
     from ....application.workflow import workflow_state_repository
 
-    created = _invoke(_profile_create_args("--situacion-familiar", "soltero"))
-    assert created.exit_code == 0, created.output
+    bucket_id = register_cli_profile(
+        label="operator",
+        facts={
+            "identity.tax_id": "00000000T",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Operator",
+            "identity.surnames": "Workflow",
+            "activities.description": "Servicios",
+            "renta_family.situacion_familiar": "soltero",
+        },
+    )
 
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-
-    with activate_master_key_provider(get_master_key_provider()):
+    with open_test_profile_session(bucket_id):
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
@@ -840,8 +823,17 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
     from ....application.user_profile import projection_for_taxpayer
     from ....application.workflow import workflow_state_repository
 
-    created = _invoke(_profile_create_args("--does-intracomunitario"))
-    assert created.exit_code == 0, created.output
+    bucket_id = register_cli_profile(
+        label="operator",
+        facts={
+            "identity.tax_id": "00000000T",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Operator",
+            "identity.surnames": "Workflow",
+            "activities.description": "Servicios",
+            "iva.does_intracomunitario": "true",
+        },
+    )
 
     show_result = _invoke(["--format", "json", "config", "profile", "show"])
     assert show_result.exit_code == 0, show_result.output
@@ -851,9 +843,7 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
     facts = {row["path"]: row["value"] for row in show_payload["facts"]}
     assert facts["iva.does_intracomunitario"] == "true"
 
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-
-    with activate_master_key_provider(get_master_key_provider()):
+    with open_test_profile_session(bucket_id):
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None

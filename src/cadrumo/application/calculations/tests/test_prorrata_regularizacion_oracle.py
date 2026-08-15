@@ -48,7 +48,7 @@ from ....domain.calculations.registry import (
     calculate_registry_snapshot,
     resolve_available_bound_inputs_by_casilla_id,
 )
-from ....domain.calculations.registry.tests import read_manual_worked_example
+from ....domain.calculations.registry.tests import oracle_declared_figures, read_manual_worked_example
 from ....domain.iva import (
     InputClassification,
     ProrrataInputs,
@@ -139,31 +139,23 @@ def _m303_zero_bindings() -> dict[str, Decimal]:
     }
 
 
-def _declared_annual_volumes() -> dict[CasillaId, Decimal]:
-    """The manual's current-year volumes, read FROM the oracle rather than retyped here.
+def _m303_prorrata_percentage_from_manual_annual_volumes(payload: ManualWorkedExamplePayload) -> Decimal:
+    """Compute the M303 prorrata percentage from the manual's declared current-year volumes.
 
-    Only the two CASILLA-keyed givens are declared. The prior-year volumes and the
-    quarterly IVA soportado reach a domain function directly rather than a casilla, so
+    ``oracle_declared_figures`` only carries the two CASILLA-keyed givens the
+    manual prints. The prior-year volumes and the quarterly IVA soportado
+    reach a domain function directly rather than a casilla, so
     ``by_casilla_id`` has nowhere to put them and they stay local below.
 
-    The total, 45.000, is never printed as a figure on its own: it exists only inside
-    the definitive-prorrata arithmetic as ``Alquiler locales (25.000) + Alquiler
-    viviendas (20.000)``. Its locator therefore cites both the two line items it is made
-    of and the formula line that uses it, rather than pointing at a total the page does
-    not display.
+    The total, 45.000, is never printed as a figure on its own: it exists only
+    inside the definitive-prorrata arithmetic as ``Alquiler locales (25.000) +
+    Alquiler viviendas (20.000)``. Its locator therefore cites both the two
+    line items it is made of and the formula line that uses it, rather than
+    pointing at a total the page does not display.
     """
-    declared = read_manual_worked_example(_ORACLE_PAYLOAD_NAME).declared_inputs
-    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
-    return {
-        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
-        for casilla_id, value in declared.by_casilla_id.items()
-    }
-
-
-def _m303_prorrata_percentage_from_manual_annual_volumes(payload: ManualWorkedExamplePayload) -> Decimal:
     snapshot = resources().modelos.authority.snapshot("303", filing_year=payload.filing_year, period="4T")
     binding_values = _m303_zero_bindings()
-    manual_volume_inputs = _declared_annual_volumes()
+    manual_volume_inputs = oracle_declared_figures(_ORACLE_PAYLOAD_NAME)
     inputs = {
         **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         **manual_volume_inputs,

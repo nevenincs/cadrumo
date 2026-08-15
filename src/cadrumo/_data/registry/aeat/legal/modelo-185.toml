@@ -86,7 +86,7 @@ review_status = "reviewed"
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hac-96-2003.html#textoxslt"
+corpus_ref = "corpus/normatives/html/orden-hac-96-2003-primero.html#primero"
 document_id = "BOE-A-2003-1911"
 article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-1911"
@@ -95,7 +95,17 @@ effective_from = 2003-01-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-15
 reviewed_by = "agent-review"
-corpus_tier = "full_consolidated"
+# corpus_tier intentionally undeclared: corpus_ref now points at a single-
+# provision excerpt (orden-hac-96-2003-primero.html) rather than the whole
+# consolidated document, because this orden's "Primero."/"Segundo." ordinal-
+# word disposition headings are a heading shape the shared HTML extractor's
+# anchor derivation does not recognise (it derives #aN only from numbered
+# "Artículo N." headings), so the whole-document #textoxslt anchor could not
+# resolve to one unit. The excerpt does not fit either declarable tier: it is
+# not the full consolidated text, and it is not provision-suffixed nor does
+# it match the dispositive-content-signal's "articulo N."/"disposicion ..."
+# vocabulary -- both are the same ordinal-word gap. Leaving the field
+# undeclared is honest rather than forcing a mismatched claim.
 notes = "Orden HAC/96/2003: aprueba los disenos fisicos y logicos del modelo 185, informacion mensual que organos y entidades gestores de la Seguridad Social y las Mutualidades estan obligados a suministrar de sus afiliados o mutualistas. Real predecessor of orden-hac-1197-2025 for M185 -- confirmed by BOE search results and by the derogatoria clause in the 2025 orden repealing this one. Fetched via curl, bytes read back from disk before authoring this entry. The bundled consolidated text is marked [Disposicion derogada] since it is now repealed by orden-hac-1197-2025 effective 2026-01-01, but the operative text through that date is fully present and this entry grounds this modelo's 2003-2025 span, not any period after repeal."
 required_text = [
     "modelo 185",

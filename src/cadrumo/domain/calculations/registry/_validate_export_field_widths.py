@@ -66,12 +66,11 @@ DRAFT_ATTRIBUTE_CANONICAL_WIDTHS: Mapping[ExportDraftAttribute, int | None] = {
 
 
 def validate_draft_field_slot_width(
-    failures: list[str],
     *,
     prefix: str,
     field: ExportFieldDefinition,
-) -> None:
-    """Append a failure when a draft field's slot width contradicts its typed source.
+) -> list[str]:
+    """Return a failure when a draft field's slot width contradicts its typed source.
 
     When the attribute's source is a typed value of fixed width, a slot of some
     other width is holding a different value than the attribute yields. That is
@@ -81,29 +80,27 @@ def validate_draft_field_slot_width(
     right-padded the filer's identifier into another entity's field.
 
     Args:
-        failures: Accumulator the caller reports; this validator never raises, so
-            one build surfaces every offending field rather than the first.
         prefix: Diagnostic prefix naming the modelo and revision under validation.
         field: The
             :class:`~cadrumo.domain.calculations.registry.ExportFieldDefinition`
             to check. Non-draft fields and logical-only fields return unchecked.
     """
     if field.kind != CasillaFieldKind.DRAFT or field.draft_attribute is None:
-        return
+        return []
     if field.draft_attribute not in DRAFT_ATTRIBUTE_CANONICAL_WIDTHS:
-        failures.append(
+        return [
             f"{prefix}: export field {field.id!r} binds draft attribute {field.draft_attribute!r}, "
             "which declares no canonical-width ruling; give it a width or record it as "
             "explicitly not width-gated",
-        )
-        return
+        ]
     canonical_width = DRAFT_ATTRIBUTE_CANONICAL_WIDTHS[field.draft_attribute]
     if canonical_width is None or field.length is None:
-        return
+        return []
     if field.length != canonical_width:
-        failures.append(
+        return [
             f"{prefix}: export field {field.id!r} binds draft attribute {field.draft_attribute!r}, "
             f"whose typed source is exactly {canonical_width} characters, to a slot of length "
             f"{field.length}; a slot of that width holds a different value than the attribute "
             "supplies, so either the slot belongs to another party or the binding is wrong",
-        )
+        ]
+    return []

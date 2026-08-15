@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import get_args
 
 from ...core.config import Settings
+from ...core.errors import BaseSeverity
 from ...core.logging import get_logger
 from ...domain.calculations.registry import RegistrySnapshotError, ValidatedRegistryAuthority, bundled_authority
 from ...domain.manuals import (
@@ -92,7 +93,7 @@ def _manual_registry_casilla_reference_rule_issues(
     except RegistrySnapshotError:
         return (
             ManualVerificationIssue(
-                level="error",
+                level=BaseSeverity.ERROR,
                 code="unknown-casilla-modelo-ref",
                 message=(
                     f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
@@ -110,7 +111,7 @@ def _manual_registry_casilla_reference_rule_issues(
     if not covering_revisions:
         return (
             ManualVerificationIssue(
-                level="error",
+                level=BaseSeverity.ERROR,
                 code="no-casilla-revision-ref",
                 message=(
                     f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
@@ -127,7 +128,7 @@ def _manual_registry_casilla_reference_rule_issues(
         if len(matches) > 1:
             issues.append(
                 ManualVerificationIssue(
-                    level="error",
+                    level=BaseSeverity.ERROR,
                     code="ambiguous-casilla-ref",
                     message=(
                         f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
@@ -147,7 +148,7 @@ def _manual_registry_casilla_reference_rule_issues(
     if missing_revisions:
         issues.append(
             ManualVerificationIssue(
-                level="error",
+                level=BaseSeverity.ERROR,
                 code="dangling-casilla-ref",
                 message=(
                     f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
@@ -160,7 +161,7 @@ def _manual_registry_casilla_reference_rule_issues(
         signature_revisions = tuple(tuple(revisions) for revisions in resolved_signatures.values())
         issues.append(
             ManualVerificationIssue(
-                level="error",
+                level=BaseSeverity.ERROR,
                 code="ambiguous-casilla-ref",
                 message=(
                     f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "

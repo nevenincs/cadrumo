@@ -137,7 +137,7 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     ValidatedRegistryAuthority,
 )
-from ....domain.calculations.registry.tests import read_manual_worked_example
+from ....domain.calculations.registry.tests import oracle_declared_figures
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
@@ -159,27 +159,15 @@ _M202 = "202"
 _FILING_YEAR = 2024
 
 # Manual casilla inputs (Ejemplo 1, quoted verbatim in the module docstring).
-
+#
+# One mapping is worth a reader's attention. The example's liquidación table
+# labels the resultado row ``[00500]`` while the scenario feeds ``00501``; the
+# registry records why on the casilla itself -- 00501 is the Liquidación I
+# result-before-IS row the official manual uses as the base-determination
+# starting point. The FIGURE is the same 2.000.000 the example states twice,
+# and its locator cites both statements. That box choice predates this
+# declaration and is unchanged by it.
 _ORACLE_PAYLOAD_NAME = "modelo-200-2024-ejemplo1-tributacion-minima-empresa-grande.json"
-
-
-def _declared_liquidacion_inputs() -> dict[CasillaId, Decimal]:
-    """The manual's Ejemplo 1 figures, read FROM the oracle rather than retyped here.
-
-    One mapping is worth a reader's attention. The example's liquidación table labels
-    the resultado row ``[00500]`` while the scenario feeds ``00501``; the registry
-    records why on the casilla itself -- 00501 is the Liquidación I result-before-IS
-    row the official manual uses as the base-determination starting point. The FIGURE
-    is the same 2.000.000 the example states twice, and its locator cites both
-    statements. That box choice predates this declaration and is unchanged by it.
-    """
-    declared = read_manual_worked_example(_ORACLE_PAYLOAD_NAME).declared_inputs
-    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
-    return {
-        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
-        for casilla_id, value in declared.by_casilla_id.items()
-    }
-
 
 _CASILLA_RESULTADO_CTA_PYG: CasillaId = validated_casilla_id("00501", surface="_CASILLA_RESULTADO_CTA_PYG")
 _CASILLA_DEDUCCION_DI_INTERNACIONAL: CasillaId = validated_casilla_id(
@@ -310,7 +298,7 @@ def _calculate_m200(
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs={
-            **_declared_liquidacion_inputs(),
+            **oracle_declared_figures(_ORACLE_PAYLOAD_NAME),
             # Not declared: the cuota líquida mínima is what this scenario ASSERTS
             # (casillas 00592 and 00611), so supplying it as a declared input would
             # have the oracle check the figure it was handed.

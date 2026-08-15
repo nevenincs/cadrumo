@@ -63,7 +63,7 @@ class ParsedExportPayload(RegistryModel):
     casillas: tuple[ParsedExportFieldValue, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class XmlDictionaryEntry:
     """One field mapping from an official AEAT XML dictionary source."""
 

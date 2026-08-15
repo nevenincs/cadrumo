@@ -26,7 +26,8 @@ import re
 import pytest
 
 from .....core.resources import bundled_path
-from .. import CasillaFieldKind, ExportFieldDefinition, load_registry_tree, resolve_export_layout
+from .....tests.registry_tree import bundled_registry_tree
+from .. import CasillaFieldKind, ExportFieldDefinition, resolve_export_layout
 from .._authority import bundled_authority
 from .._snapshot import build_snapshot
 from .._support_matrix import build_support_matrix
@@ -59,7 +60,7 @@ def _modelo_145():
     # ``bundled_authority()``, whose ``.load()`` validates every modelo in the
     # bundled tree before returning anything and would fail this M145-only
     # check on an unrelated modelo's missing filing capability.
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = bundled_registry_tree()
     return next(modelo for modelo in modelos if modelo.id == "145"), catalogues
 
 

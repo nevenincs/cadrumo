@@ -10,6 +10,7 @@ from ....core import pointer_path
 from ....core.i18n import clear_output_language_cache, tr
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import dev_test_database_password
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -32,29 +33,17 @@ def test_malformed_active_pointer_error_documents_spanish_pre_profile_fallback(t
     env = _profile_storage_env(tmp_path)
     storage_root = Path(env["CADRUMO_LOCAL_STORAGE_ROOT"] or "")
 
-    created = invoke_cached_cli(
-        (
-            "config",
-            "profile",
-            "create",
-            "catala",
-            "--quiet",
-            "--entity-type",
-            "natural_person",
-            "--tax-id",
-            "00000000T",
-            "--name",
-            "Catala",
-            "--surnames",
-            "Test",
-            "--activity",
-            "Serveis",
-            "--output-language",
-            "ca",
-        ),
-        env=env,
+    register_cli_profile(
+        label='catala',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.tax_id": '00000000T',
+            "identity.name": 'Catala',
+            "identity.surnames": 'Test',
+            "activities.description": 'Serveis',
+            "preferences.output_language": 'ca',
+        },
     )
-    assert created.exit_code == 0, created.output
 
     pointer_path(storage_root).write_text("schema_version = 1\n", encoding="utf-8")
     clear_output_language_cache()

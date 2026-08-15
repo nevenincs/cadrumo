@@ -17,7 +17,7 @@ directly, while :func:`build_harness_floor_tool` lazily adapts the payload
 surface onto the MCP SDK's ``Tool`` type so the module still imports (and the
 server still refuses gracefully) when the ``cadrumo[agent]`` extra is absent.
 
-The operating-layer text is read through the ``cadrumo.agent`` package facade
+The operating-layer text is read through the ``cadrumo_harness`` package facade
 (:func:`~agent.operator_rules_text` and
 :func:`~agent.iter_personas`), never a private submodule, per the
 ``aeat-architecture-boundaries`` discipline.
@@ -28,9 +28,9 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Final
 
+from cadrumo_harness import iter_personas, operator_rules_text
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...agent import iter_personas, operator_rules_text
 from ...application.wizard import ensure_profile_keys_registered
 from ...application.workflow import ProfileHealthStatus, assess_active_profile_health
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8

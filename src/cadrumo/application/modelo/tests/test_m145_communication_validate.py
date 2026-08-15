@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core.resources import bundled_path
-from ....domain.calculations.registry import CasillaDefinition, casillas_by_id, load_registry_tree, select_revision
+from ....domain.calculations.registry import CasillaDefinition, casillas_by_id, select_revision
+from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     M145CommunicationCreateCommand,
@@ -43,7 +43,7 @@ def _field_values() -> dict[str, str]:
 
 
 def _m145_revision():
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "145")
     return select_revision(modelo, filing_year=2026, period="comunicacion")
 

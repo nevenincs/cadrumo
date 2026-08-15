@@ -27,6 +27,7 @@ import pytest
 
 from .....core import resources as core_resources
 from .....core.config import override_settings
+from .....tests.attribute_scope import scoped_attribute
 from .. import _formula_runtime_ops as formula_runtime_ops
 from .. import read_parameter
 from .._convenio import collect_convenio_fingerprints
@@ -111,9 +112,7 @@ def _certify_current_tree(registry_root: Path, source_root: Path) -> None:
 
 
 @pytest.fixture
-def redirected_bundled_registry_root(
-    monkeypatch: pytest.MonkeyPatch,
-) -> Iterator[Callable[[Path], Path]]:
+def redirected_bundled_registry_root() -> Iterator[Callable[[Path], Path]]:
     """Redirect only ``bundled_path("registry", "aeat")`` to a caller-chosen tree.
 
     The default-root branch is the one that carried the defect, and the only way
@@ -135,8 +134,8 @@ def redirected_bundled_registry_root(
         clear_fingerprint_cache()
         return real_bundled_path()
 
-    monkeypatch.setattr(core_resources, "bundled_path", _redirected)
-    yield _point_at
+    with scoped_attribute(core_resources, "bundled_path", _redirected):
+        yield _point_at
     _bundled_registry_root.cache_clear()
     clear_fingerprint_cache()
 

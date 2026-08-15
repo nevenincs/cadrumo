@@ -75,12 +75,10 @@ def sancion_pdf_bytes(lines: tuple[str, ...] = SANCION_TEXT_LINES) -> bytes:
     before any test relies on it, so what a test asserts on is text a real
     extractor genuinely recovers, not a string the test handed to itself.
 
-    Cached by ``lines``: reportlab stamps a creation timestamp, so two
-    independent builds of the same content are NOT byte-identical, and the
-    custody/service suites re-store the same served document to prove a
-    matching re-store is a byte-identical no-op. The hand-rolled builder this
-    replaced had no clock and was deterministic by construction; caching
-    restores that property without reintroducing it.
+    ``text_pdf_bytes`` builds with ``invariant=True``, so byte-stability
+    across calls no longer depends on this cache -- it is a cost optimisation
+    only, sparing repeat callers both the reportlab build and the pypdfium2
+    verification below for a ``lines`` value already computed.
     """
     import pypdfium2 as pdfium
 

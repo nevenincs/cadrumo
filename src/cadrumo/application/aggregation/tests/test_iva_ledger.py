@@ -67,6 +67,7 @@ from .. import (
 from .. import (
     aggregate_iva_ledger_observations as _aggregate_iva_ledger_observations_with_authority,
 )
+from ._renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -94,10 +95,6 @@ def _intra_eu_deduction_provenance(locator: str) -> IvaDeductionClassificationPr
         source_locator=locator,
         evidence_digest="c" * 64,
     )
-
-
-def _period(year: int, code: str) -> Period:
-    return Period.from_year_and_code(year, code)
 
 
 def _iva_binding(

@@ -36,7 +36,6 @@ from ._validate_revision_identity import duplicates
 
 
 def validate_formula_section(
-    failures: list[str],
     *,
     prefix: str,
     revision: ModeloRevision,
@@ -48,12 +47,13 @@ def validate_formula_section(
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
-) -> None:
-    """Append formula reference, evidence, citation, and duplicate-target failures.
+) -> list[str]:
+    """Return formula reference, evidence, citation, and duplicate-target failures.
 
     Every formula the :class:`ModeloRevision` ``revision`` declares is checked in
-    turn, and each failure is appended to ``failures``.
+    turn, and each failure is collected into the returned list.
     """
+    failures: list[str] = []
     for formula in revision.formulas:
         owner = f"formula {formula.id}"
         failures.extend(missing_refs(prefix, owner, formula.legal_refs, legal_refs, "legal"))
@@ -90,6 +90,7 @@ def validate_formula_section(
 
     for target in sorted(duplicates([formula.target_casilla_id for formula in revision.formulas])):
         failures.append(f"{prefix}: duplicate formula target {target!r}")
+    return failures
 
 
 def validate_formula_dag(scope: str, revision: ModeloRevision) -> list[str]:

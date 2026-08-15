@@ -17,6 +17,7 @@ from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from ._cli_json_support import _json_object
 
 _PROFILE_ID = "9e0f3a2b-5d1c-4a77-9b2d-27ed6d6c7f10"
 _PROFILE_LABEL = "tester"
@@ -24,10 +25,6 @@ _PROFILE_LABEL = "tester"
 
 def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Result:
     return invoke_cached_cli(args, env=env)
-
-
-def _json_object(value: object) -> dict[str, object]:
-    return STR_KEYED_MAPPING_ADAPTER.validate_python(value)
 
 
 @contextmanager

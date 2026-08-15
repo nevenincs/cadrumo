@@ -26,6 +26,6 @@ in Claude Code, or through the plugin browser in Claude Desktop / Cowork.
 ## Regenerating the served plugin tree
 
 The manifest and the `plugins/cadrumo/` subtree are both emitted by the harness
-materialiser (`cadrumo.agent.materialise_marketplace`) from one source. Regenerate
+materialiser (`cadrumo_harness.materialise_marketplace`) from one source. Regenerate
 before cutting a release so the served plugin matches the published `cadrumo`
 wheel version.

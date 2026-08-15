@@ -1,0 +1,14 @@
+# Parity is anchored on this ejercicio's own Diseno de Registros, which is the
+# only machine-readable official layout AEAT publishes for Modelo 714. There is
+# no AEAT calculation workbook for this modelo, so coverage is the record-design
+# layout and no formula runner is required.
+
+[[revisions."2023".workbook_parity_refs]]
+id = "modelo-714-2023-record-design"
+workbook_source = "aeat-dr-714-2023"
+fixture_id = "modelo-714-2023-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]

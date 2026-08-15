@@ -51,7 +51,7 @@ import pytest
 
 from .....core import DirectoryEntryKind, scan_directory
 from .....core.resources import bundled_path
-from .. import extract_record_design
+from .. import RecordDesignCorrection, RecordDesignFieldTypeCorrection, extract_record_design
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -80,6 +80,20 @@ _CAUSE_CLASSES: tuple[tuple[str, str], ...] = (
     ("missing description", "a field row declares no description"),
     ("misordered", "envelope composition markers out of order"),
 )
+
+
+def _describe_correction(item: RecordDesignCorrection) -> str:
+    """Render one applied correction for the worklist, per its own kind.
+
+    The two kinds address different subjects -- a data row versus a header
+    column -- and carry different fields, so the human-readable summary needs
+    its own kind branch even though the CLASSIFICATION above it (``corrected``
+    is checked before ``is_complete``) needs none: both kinds already feed the
+    same ``extraction.corrections`` tuple.
+    """
+    if isinstance(item, RecordDesignFieldTypeCorrection):
+        return f"{item.sheet!r} row {item.source_row}: type {item.corrected_type!r} -- {item.reason}"
+    return f"{item.sheet!r} header row {item.header_row} col {item.column_index} ({item.column_role}) -- {item.reason}"
 
 
 @dataclass(frozen=True)
@@ -134,10 +148,7 @@ def _classify(path: Path) -> _Outcome:
             modelo=modelo,
             design=path.name,
             kind="corrected",
-            detail="; ".join(
-                f"{item.sheet!r} row {item.source_row}: {item.corrected_type!r} -- {item.reason}"
-                for item in extraction.corrections
-            ),
+            detail="; ".join(_describe_correction(item) for item in extraction.corrections),
         )
     if extraction.is_complete:
         return _Outcome(modelo=modelo, design=path.name, kind="complete", detail="")

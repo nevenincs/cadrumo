@@ -49,9 +49,9 @@ from cadrumo.domain.calculations.registry import (
     LegalReference,
     SourceReference,
     legal_reference_quotes_corpus,
-    load_registry_tree,
     verify_legal_catalogue_grounding,
 )
+from cadrumo.tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -150,7 +150,7 @@ def dana_authority() -> DanaAuthority:
     Raises:
         AssertionError: If any expected DANA entry is absent from the tree.
     """
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _, catalogues = bundled_registry_tree()
     missing_legal = [ref for ref in DANA_LEGAL_REFS if ref not in catalogues.legal]
     missing_sources = [ref for ref in DANA_SOURCE_REFS if ref not in catalogues.sources]
     assert not missing_legal, f"DANA legal entries absent from the registry: {missing_legal!r}"

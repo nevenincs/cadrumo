@@ -42,7 +42,6 @@ from ._validate_revision_identity import duplicates
 
 
 def validate_relation_section(
-    failures: list[str],
     *,
     prefix: str,
     revision: ModeloRevision,
@@ -51,8 +50,8 @@ def validate_relation_section(
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
-) -> None:
-    """Append relation reference, period, and grounding failures.
+) -> list[str]:
+    """Return relation reference, period, and grounding failures.
 
     The supplied :class:`~cadrumo.domain.calculations.registry.ModeloRevision`
     contributes relation declarations. Each relation must target a known
@@ -60,6 +59,7 @@ def validate_relation_section(
     source refs carried by that target binding, and stay inside the revision
     period selector.
     """
+    failures: list[str] = []
     for relation in revision.relations:
         owner = f"relation {relation.id}"
         failures.extend(missing_refs(prefix, owner, relation.legal_refs, legal_refs, "legal"))
@@ -87,10 +87,10 @@ def validate_relation_section(
                 f"{prefix}: relation {relation.id!r} targets periods outside revision selector "
                 f"{unknown_target_periods!r}",
             )
+    return failures
 
 
 def validate_dependency_classification_section(
-    failures: list[str],
     *,
     prefix: str,
     revision: ModeloRevision,
@@ -99,8 +99,8 @@ def validate_dependency_classification_section(
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
-) -> None:
-    """Append dependency-classification closure and duplicate failures.
+) -> list[str]:
+    """Return dependency-classification closure and duplicate failures.
 
     The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
     dependency classifications and relations. Each
@@ -108,6 +108,7 @@ def validate_dependency_classification_section(
     must cite known refs, point at declared constructs/relations, and cover every
     relation source modelo with a dependency-bearing treatment.
     """
+    failures: list[str] = []
     previous_filing_bindings_by_source = _previous_filing_bindings_by_source(revision)
     for classification in revision.dependency_classifications:
         _validate_single_dependency_classification(
@@ -159,6 +160,7 @@ def validate_dependency_classification_section(
         previous_filing_bindings_by_source=previous_filing_bindings_by_source,
         construct_by_id=construct_by_id,
     )
+    return failures
 
 
 def _validate_single_dependency_classification(
@@ -332,21 +334,21 @@ def _validate_previous_filing_classification_completeness(
 
 
 def validate_filing_schedule_section(
-    failures: list[str],
     *,
     prefix: str,
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
-) -> None:
-    """Append filing-schedule reference and period-selector failures.
+) -> list[str]:
+    """Return filing-schedule reference and period-selector failures.
 
     The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies the
     accepted period selector and filing-schedule declarations. Each schedule and
     profile condition must be legally/source grounded and may only name periods
     declared by the revision selector.
     """
+    failures: list[str] = []
     selector_periods = set(revision.period_selector.periods)
     for schedule in revision.filing_schedules:
         owner = f"filing schedule {schedule.id}"
@@ -377,3 +379,4 @@ def validate_filing_schedule_section(
                     "official_source_guidance",
                 ),
             )
+    return failures

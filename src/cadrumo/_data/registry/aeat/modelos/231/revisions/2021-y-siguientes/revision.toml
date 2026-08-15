@@ -1,5 +1,8 @@
 [revisions."2021-y-siguientes"]
-authority_grade = "filing"
+# Applicability grade: the country-by-country report binds only groups above the 750
+# million euro consolidated-revenue threshold, a population this application does not
+# serve.
+authority_grade = "applicability"
 valid_from = 2021-01-01
 period_selector = { year_from = 2021, periods = ["0A"] }
 orden_aplicabilidad = ["orden-hac-1285-2020:art-primero-anexo"]

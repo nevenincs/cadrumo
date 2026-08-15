@@ -65,7 +65,7 @@ from .....core.resources import bundled_path
 from .. import (
     ValidatedRegistryAuthority,
 )
-from ._manual_oracle_support import read_manual_worked_example
+from ._manual_oracle_support import oracle_declared_figures
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -132,16 +132,6 @@ _REL_2024: dict[str, Decimal] = {
 _ORACLE_PAYLOAD_NAME = "modelo-100-2024-integracion-compensacion-ganancias-patrimoniales.json"
 
 
-def _declared_gp_inputs() -> dict[CasillaId, Decimal]:
-    """The manual's four ganancia/pérdida figures, read FROM the oracle."""
-    declared = read_manual_worked_example(_ORACLE_PAYLOAD_NAME).declared_inputs
-    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
-    return {
-        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
-        for casilla_id, value in declared.by_casilla_id.items()
-    }
-
-
 def _scenario(
     *,
     ganancia_general: str | None = None,
@@ -175,7 +165,7 @@ def _scenario(
     # The manual's own four figures by default; a caller overrides the two general
     # legs only to build a scenario the example does NOT state, so a departure from
     # the printed case is visible at the call site rather than buried in a literal.
-    inputs = _declared_gp_inputs()
+    inputs = oracle_declared_figures(_ORACLE_PAYLOAD_NAME)
     if ganancia_general is not None:
         inputs[_GANANCIA_BASE_GENERAL_LEAF] = Decimal(ganancia_general)
     if perdida_general is not None:

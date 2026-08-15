@@ -19,7 +19,7 @@ from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .. import ManualWorkedExamplePayload
 
-__all__ = ["declared_manual_inputs", "read_manual_worked_example"]
+__all__ = ["oracle_declared_figures", "read_manual_worked_example"]
 
 
 def read_manual_worked_example(name: str) -> ManualWorkedExamplePayload:
@@ -28,13 +28,19 @@ def read_manual_worked_example(name: str) -> ManualWorkedExamplePayload:
     return ManualWorkedExamplePayload.model_validate_json(path.read_text(encoding="utf-8"))
 
 
-def declared_manual_inputs(oracle_payload_name: str) -> dict[CasillaId, Decimal]:
+def oracle_declared_figures(oracle_payload_name: str) -> dict[CasillaId, Decimal]:
     """The facts the manual PRINTS for a case, read from the named oracle's declaration.
 
     This test and the payload used to be two independent transcriptions of one worked
     example -- the test hardcoding both the inputs and the expected figures, the payload
     declaring the figures again for the grounding fold, and nothing anywhere checking
     the two agreed. They did agree; nothing made them.
+
+    Named for what it returns (printed-manual figures), never "input": that word is
+    reserved in this repo for the ``BindingSourceKind.MANUAL_INPUT`` allowlist hazard --
+    the escape hatch that can silence a binding-source refusal and leave a casilla
+    resolving to a silent blank. This helper means the opposite: a figure an AEAT
+    manual states for a worked example, not an operator-declared substitute for one.
     """
     declared = read_manual_worked_example(oracle_payload_name).declared_inputs
     assert declared is not None, f"{oracle_payload_name} must declare its scenario inputs"

@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
+from .....tests.registry_tree import bundled_registry_tree
 from .. import resolve_keyed_bracket
 from .._convenio import load_convenio_authority
 from .._errors import RegistryValidationError
@@ -32,7 +33,7 @@ _M210_TIPO_GRAVAMEN_CASILLA = "tipo_gravamen"
 def _current_m210_rate_expression() -> FormulaExpression:
     # Compile-only load (no full-registry validation) so the M210 rate-formula
     # shape assertion is independent of unrelated peer modelo churn.
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     revision = next(modelo for modelo in modelos if modelo.id == "210").revisions["2025"]
     return next(formula.expression for formula in revision.formulas if formula.id == _M210_RATE_FORMULA_ID)
 

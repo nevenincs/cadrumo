@@ -53,22 +53,21 @@ def _create_profile() -> None:
 
 
 def _create_legal_entity_profile() -> None:
-    result = invoke_cached_cli(
-        [
-            "config", "profile", "create", "company",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "legal_entity",
-            "--legal-entity-form", "sl",
-            "--tax-id", "B12345674",
-            "--name", "Company",
-            "--surnames", "Company SL",
-            "--legal-name", "Company SL",
-            "--activity", "consulting",
-            "--incn-prior-12-months", "7500000.00",
-            "--no-new-entity-first-two-profit-periods",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='company',
+        facts={
+            "taxpayer_type.entity_type": 'legal_entity',
+            "taxpayer_type.legal_entity_form": 'sl',
+            "identity.tax_id": 'B12345674',
+            "identity.name": 'Company',
+            "identity.surnames": 'Company SL',
+            "identity.legal_name": 'Company SL',
+            "activities.description": 'consulting',
+            "taxpayer_type.incn_prior_12_months": '7500000.00',
+            "taxpayer_type.new_entity_first_two_profit_periods": 'false',
+        },
+    )
 
 
 # ---------------------------------------------------------------------------

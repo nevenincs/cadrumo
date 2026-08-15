@@ -244,15 +244,6 @@
         "reason": "White-box roundtrip over the encrypted secure-object substrate: the test must derive the same revision id the production writer derives in order to assert an on-disk row is the one it wrote. Re-implementing the derivation in the test would make the assertion tautological against the test's own arithmetic rather than against the writer. Revision derivation is internal to the crypto layer and deliberately not on the storage facade, since a caller that can mint revision ids can defeat the optimistic-concurrency guard."
       },
       {
-        "importer_path": "src/cadrumo/agent/tests/test_rule_surface_conformance.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._command_suggestions",
-        "imported_names": [
-          "_LAZY_REGISTRY"
-        ],
-        "reason": "White-box test walking the private lazy-suggestion registry to confirm every registered rule cites a real CLI verb. Internal caching structure, not a public contract."
-      },
-      {
         "importer_path": "src/cadrumo/application/aggregation/tests/test_period_boundary_authority.py",
         "occurrence": 1,
         "target_mod": "cadrumo.entrypoints.cli._common",

@@ -46,45 +46,41 @@ def _create_profile() -> None:
 
 
 def _create_first_year_activity_profile() -> None:
-    result = _invoke(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--tax-id", "12345678Z",
-            "--name", "Daniel",
-            "--surnames", "Persona",
-            "--activity", "consultoria",
-            "--activity-start-date", "2025-01-01",
-            "--irpf-income-categories", "actividad_economica",
-            "--irpf-estimation-regime", "directa_simplificada",
-            "--iva-regime", "GENERAL",
-            "--fiscal-residency", "resident_irpf",
-            "--tax-residence-ccaa", "madrid",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Daniel',
+            "identity.surnames": 'Persona',
+            "activities.description": 'consultoria',
+            "censo.activity_start_date": '2025-01-01',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "irpf.estimation_regime": 'directa_simplificada',
+            "iva.regime": 'GENERAL',
+            "fiscal_residency.status": 'resident_irpf',
+            "tax_residence.ccaa": 'madrid',
+        },
+    )
 
 
 def _create_autonoma_2024_activity_profile() -> None:
-    result = _invoke(
-        [
-            "config", "profile", "create", "autonoma",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--tax-id", "12345678Z",
-            "--name", "Ana",
-            "--surnames", "Persona",
-            "--activity", "consultoria",
-            "--activity-start-date", "2024-01-01",
-            "--irpf-income-categories", "actividad_economica",
-            "--irpf-estimation-regime", "directa_simplificada",
-            "--iva-regime", "GENERAL",
-            "--fiscal-residency", "resident_irpf",
-            "--tax-residence-ccaa", "madrid",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    register_cli_profile(
+        label='autonoma',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Ana',
+            "identity.surnames": 'Persona',
+            "activities.description": 'consultoria',
+            "censo.activity_start_date": '2024-01-01',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "irpf.estimation_regime": 'directa_simplificada',
+            "iva.regime": 'GENERAL',
+            "fiscal_residency.status": 'resident_irpf',
+            "tax_residence.ccaa": 'madrid',
+        },
+    )
 
 
 def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -> None:

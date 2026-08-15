@@ -28,6 +28,7 @@ from ....tests.secure_sql import isolated_profile_storage, isolated_profile_stor
 
 __all__ = ["isolated_profile_storage"]
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
+from ....tests.user_profile import register_cli_profile
 from .privacy_helpers import assert_public_profile_id_not_leaked, assert_public_profile_payload_redacted
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -38,26 +39,17 @@ def _invoke(args: list[str]) -> Result:
 
 
 def _create_profile(name: str, *, tax_id: str) -> Result:
-    return _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            name,
-            "--quiet",
-            "--tax-id",
-            tax_id,
-            "--activity",
-            "design",
-            "--entity-type",
-            "natural_person",
-            "--iva-regime",
-            "GENERAL",
-            "--name",
-            "Archive",
-            "--surnames",
-            "Roundtrip",
-        ],
+    """Register the profile through the shared CLI registration door."""
+    return register_cli_profile(
+        label=name,
+        facts={
+            "identity.tax_id": tax_id,
+            "activities.description": 'design',
+            "taxpayer_type.entity_type": 'natural_person',
+            "iva.regime": 'GENERAL',
+            "identity.name": 'Archive',
+            "identity.surnames": 'Roundtrip',
+        },
     )
 
 

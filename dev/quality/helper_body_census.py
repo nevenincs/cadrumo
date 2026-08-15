@@ -31,12 +31,79 @@ sites; a `_bound_repo_with_engine` mirroring `_ephemeral_secure_repo`) and no
 AST census, this one included, will ever reach them.  Closing that axis is
 `vaultspec-rag` discovery by MEANING before any consolidation, not this gate.
 
+A second, narrower blind spot, named here as documentation rather than
+detection: this module scores FUNCTIONS only, exactly as fixture_census.py
+does.  Module-level DATA constants duplicated verbatim across files --
+`_CASILLA_FRAGMENT`, `_REVISION_ID` and `_LEGAL_REF` are byte-identical
+across four files in this tree today -- carry no function body for either
+census to walk, so neither reports them.  This module does not attempt to
+detect that population; it only says plainly that it would not catch it if
+it tried.
+
 The census is intentionally descriptive, exactly as fixture_census.py's own
 census is: a matching normalized body digest is candidate evidence for a
 later review, never a conclusion that two sites are substitutable.  Grouping
 is disambiguated by what each body's imported names actually resolve to
 (``body_symbol_origins_sha256``), so two same-shaped bodies calling different
 underlying functions do not collapse into one false-positive behaviour.
+
+A flagged group may still be CONSTANT-DEPENDENT: its body is identical
+because it closes over a module-level constant of the same NAME in every
+file, but that constant's VALUE can differ per file.  The 2026-08-15 B16/
+B18/B24/B25 burndown found this concretely twice -- one site's
+``_READY_PROFILE_FACTS`` carried a different taxpayer surname than another's;
+one site's ``_WORKFLOW`` pointed at a different CI YAML file than another's
+-- both cases where the function SHAPE was a real duplicate but a naive
+merge would have silently unified different test data.  Every
+``AliasedHelperBehaviour`` reports which such names its group's bodies
+reference (``closed_over_constants``); a non-empty tuple is the signal to
+PARAMETERISE the constant into the consolidated helper's signature, never to
+delete the duplicate outright without checking each site's value first. This
+detector deliberately does NOT compare the constants' values across sites --
+guessing divergent-vs-identical from source text would produce exactly the
+confident-but-wrong output this campaign spent the session correcting; a
+human reads the referenced constants before consolidating.
+
+A body-identical, constant-dependent group can ALSO be the correct end
+state already: a thin per-file wrapper that does nothing but forward its
+own closed-over constant into one call on a shared implementation is not
+debt, it is composition. ``2026-08-15``'s W09.P30.S141 verification found
+exactly that shape live in the tree (``_write_modelo``/``_load_revision``
+in `domain/calculations/registry/tests/`, each delegating in full to
+`_loader_directory_mode_support.py`) reported as duplication -- the census
+was flagging the solution as the problem. A record whose body is exactly
+one ``return``/expression statement wrapping a call to a name resolved
+through an import (:func:`_delegating_wrapper_target`) is excluded from
+`aliased_behaviours` entirely and surfaced instead as `delegating_wrappers`.
+Deliberately conservative: a call reached through attribute access
+(`_RUNNER.invoke(...)`) or an unresolved callee is left in the duplicate
+bucket rather than guessed at, per the same no-guessing discipline as the
+constant detector above.
+
+**Duplication matters when it can diverge.** That is the standing test for
+whether a body-identical group belongs on a burndown list at all. A copy
+that can be fixed in one place and silently survive unfixed in another is
+the failure this census exists to catch. A delegating wrapper cannot do
+that -- every site routes through the one canonical callee, so a fix to the
+canonical reaches all of them, and there is no second implementation to
+drift. What remains at that point is a naming preference, not a divergence
+risk.
+
+`_invoke` in `src/cadrumo/entrypoints/cli/tests/` is the operator ruling
+this principle produced (2026-08-15, S141 follow-up): 51 sites, each a
+signature-preserving, value-free passthrough to the one canonical
+`cadrumo.tests.cli_runner.invoke_cached_cli` -- unlike `_write_modelo`
+above, none of them inject a per-file argument the canonical lacks. Read as
+real but low-value debt and DELIBERATELY LEFT UNSWEPT: every site already
+routes through the single implementation, so there is nothing to diverge,
+while a 51-file sweep on a tree three teams are actively committing to
+carries real collision risk for a purely cosmetic gain. Recorded here so
+the next reader does not mistake "on this census" for "on the burndown
+list" and does not rediscover the question assuming it was simply missed.
+If this pattern is worth preventing going forward, the right tool is a lint
+rule blocking NEW value-free wrappers over an already-canonical callee, not
+a retrospective sweep of the existing ones -- this census does not attempt
+that rule; it only records why one was not derived from its own output.
 
 Usage::
 
@@ -98,6 +165,22 @@ class HelperRecord:
     #: statements run differently, so they must not collapse into one
     #: behaviour just because the raw AST dump of the body matches.
     decorators: tuple[str, ...]
+    #: Names this body references that are free (not a parameter, not locally
+    #: bound, not an import) AND are assigned at module scope somewhere in
+    #: this same module -- i.e. a closed-over module-level constant.  NOT
+    #: part of the aliasing key: two sites naming a same-shaped constant
+    #: differently (``_YEAR`` vs ``_FILING_YEAR``) still share one behaviour.
+    #: Values are never compared -- see the module docstring.
+    closed_over_constants: tuple[str, ...] = ()
+    #: ``<module>.<name>`` this body delegates to in full, or ``None``.  Set
+    #: only when the body's SOLE executable statement is a ``return`` or bare
+    #: expression wrapping exactly one call to a name resolved through an
+    #: import in this module -- see :func:`_delegating_wrapper_target`.  A
+    #: non-``None`` value means this site is NOT counted as a duplicate: it
+    #: already routes through the single shared implementation the name
+    #: names, and a per-file closed-over constant supplying that call's
+    #: arguments is the correct end state, not debt.
+    delegates_to: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,6 +198,18 @@ class AliasedHelperBehaviour:
     body_sha256: str
     function_names: tuple[str, ...]
     sites: tuple[str, ...]
+    #: Union of every group member's :attr:`HelperRecord.closed_over_constants`.
+    #: Non-empty means this is the CONSTANT-DEPENDENT class the 2026-08-15
+    #: burndown found: the shape is a real duplicate, but before deleting any
+    #: site, read what each one's named constant(s) actually hold -- the fix
+    #: shape is to PARAMETERISE the constant into the consolidated helper's
+    #: signature, not to pick one site's value and discard the rest.
+    closed_over_constants: tuple[str, ...] = ()
+
+    @property
+    def is_constant_dependent(self) -> bool:
+        """Return whether this behaviour's bodies close over a module constant."""
+        return bool(self.closed_over_constants)
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,10 +227,19 @@ class HelperCensus:
 
     @property
     def aliased_behaviours(self) -> tuple[AliasedHelperBehaviour, ...]:
-        """Return every helper body reached through more than one site."""
+        """Return every helper body reached through more than one site.
+
+        A record whose sole executable statement delegates to a resolved
+        import (:attr:`HelperRecord.delegates_to` is set) is excluded from
+        this population entirely, not merely annotated -- it already routes
+        through one shared implementation, so counting it as a duplicate
+        reports the solution as the problem. See
+        :attr:`delegating_wrappers` for that population, surfaced rather than
+        silently discarded.
+        """
         by_body: dict[tuple[str, str, tuple[str, ...]], list[HelperRecord]] = {}
         for record in self.helpers:
-            if record.body_performs_no_work:
+            if record.body_performs_no_work or record.delegates_to is not None:
                 continue
             key = (record.normalized_body_sha256, record.body_symbol_origins_sha256, record.decorators)
             by_body.setdefault(key, []).append(record)
@@ -144,6 +248,9 @@ class HelperCensus:
                 body_sha256=body,
                 function_names=tuple(sorted({record.function_name for record in group})),
                 sites=tuple(sorted(f"{record.path}:{record.line}:{record.qualname}" for record in group)),
+                closed_over_constants=tuple(
+                    sorted({name for record in group for name in record.closed_over_constants}),
+                ),
             )
             for (body, _origins, _decorators), group in sorted(by_body.items())
             if len({(record.path, record.qualname) for record in group}) > 1
@@ -153,6 +260,22 @@ class HelperCensus:
     def aliased_behaviour_count(self) -> int:
         """Return how many distinct helper behaviours are reached through several sites."""
         return len(self.aliased_behaviours)
+
+    @property
+    def delegating_wrappers(self) -> tuple[HelperRecord, ...]:
+        """Return every record excluded from :attr:`aliased_behaviours` as a delegating wrapper.
+
+        Counted and listed rather than silently dropped, exactly as
+        `fixture_census.py`'s own `behaviourless_fixtures` surfaces its own
+        excluded population: a reader comparing this figure across runs needs
+        to see what the detector declined to consider, and why.
+        """
+        return tuple(record for record in self.helpers if record.delegates_to is not None)
+
+    @property
+    def delegating_wrapper_count(self) -> int:
+        """Return how many records were excluded from aliasing as delegating wrappers."""
+        return len(self.delegating_wrappers)
 
 
 def _is_test_owned(relative: str) -> bool:
@@ -193,6 +316,7 @@ class _HelperVisitor(ast.NodeVisitor):
         symbol_origins: dict[str, str],
         pytest_modules: frozenset[str],
         fixture_aliases: frozenset[str],
+        module_constants: frozenset[str],
         *,
         module_is_private: bool,
     ) -> None:
@@ -200,6 +324,7 @@ class _HelperVisitor(ast.NodeVisitor):
         self.symbol_origins = symbol_origins
         self.pytest_modules = pytest_modules
         self.fixture_aliases = fixture_aliases
+        self.module_constants = module_constants
         self.module_is_private = module_is_private
         self.records: list[HelperRecord] = []
         self._qualname: list[str] = []
@@ -239,6 +364,14 @@ class _HelperVisitor(ast.NodeVisitor):
                         is not None
                     )
                 )
+                parameters = frozenset(
+                    argument.arg
+                    for argument in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
+                ) | {
+                    argument.arg
+                    for argument in (node.args.vararg, node.args.kwarg)
+                    if argument is not None
+                }
                 self.records.append(
                     HelperRecord(
                         path=self.path,
@@ -250,11 +383,150 @@ class _HelperVisitor(ast.NodeVisitor):
                         body_symbol_origins_sha256=_body_symbol_origins_sha256(executable_body, self.symbol_origins),
                         body_performs_no_work=_performs_no_work(executable_body),
                         decorators=decorators,
+                        closed_over_constants=_closed_over_module_constants(
+                            executable_body,
+                            parameters=parameters,
+                            symbol_origins=self.symbol_origins,
+                            module_constants=self.module_constants,
+                        ),
+                        delegates_to=_delegating_wrapper_target(executable_body, self.symbol_origins),
                     ),
                 )
         self._qualname.append(node.name)
         self.generic_visit(node)
         self._qualname.pop()
+
+
+def _module_level_constant_names(tree: ast.Module) -> frozenset[str]:
+    """Return every name a top-level ``Assign``/``AnnAssign`` binds in this module.
+
+    Deliberately shallow -- only ``tree.body`` (module top level), not
+    ``ast.walk``, so a same-named local inside some unrelated function is
+    never mistaken for a module constant.
+    """
+    names: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            names.add(node.target.id)
+    return frozenset(names)
+
+
+def _bound_names(body: list[ast.stmt]) -> frozenset[str]:
+    """Return every name this body assigns, binds, or declares as a parameter.
+
+    An approximation, not a scope-correct resolver: nested-function and
+    lambda parameters are folded into the same flat set as the outer body's
+    locals. Good enough for a diagnostic "is this name free" check -- a
+    coincidental name collision only makes the detector under-report a
+    closed-over constant, never fabricate one that is not there.
+    """
+
+    def _targets(expr: ast.expr) -> set[str]:
+        if isinstance(expr, ast.Name):
+            return {expr.id}
+        if isinstance(expr, ast.Starred):
+            return _targets(expr.value)
+        if isinstance(expr, ast.Tuple | ast.List):
+            return {name for element in expr.elts for name in _targets(element)}
+        return set()
+
+    def _arg_names(arguments: ast.arguments) -> set[str]:
+        names = {
+            argument.arg
+            for argument in (*arguments.posonlyargs, *arguments.args, *arguments.kwonlyargs)
+        }
+        if arguments.vararg is not None:
+            names.add(arguments.vararg.arg)
+        if arguments.kwarg is not None:
+            names.add(arguments.kwarg.arg)
+        return names
+
+    bound: set[str] = set()
+    for statement in body:
+        for node in ast.walk(statement):
+            match node:
+                case ast.Assign(targets=targets):
+                    bound.update(name for target in targets for name in _targets(target))
+                case ast.AnnAssign(target=target) | ast.AugAssign(target=target) | ast.NamedExpr(target=target):
+                    bound.update(_targets(target))
+                case ast.For(target=target) | ast.AsyncFor(target=target):
+                    bound.update(_targets(target))
+                case ast.comprehension(target=target):
+                    bound.update(_targets(target))
+                case ast.With(items=items) | ast.AsyncWith(items=items):
+                    bound.update(
+                        name
+                        for item in items
+                        if item.optional_vars is not None
+                        for name in _targets(item.optional_vars)
+                    )
+                case ast.ExceptHandler(name=str() as name):
+                    bound.add(name)
+                case ast.Lambda(args=arguments):
+                    bound.update(_arg_names(arguments))
+                case ast.FunctionDef(name=name, args=arguments) | ast.AsyncFunctionDef(name=name, args=arguments):
+                    bound.add(name)
+                    bound.update(_arg_names(arguments))
+                case ast.ClassDef(name=name):
+                    bound.add(name)
+    return frozenset(bound)
+
+
+def _delegating_wrapper_target(body: list[ast.stmt], symbol_origins: dict[str, str]) -> str | None:
+    """Return the ``<module>.<name>`` this body delegates to in full, or ``None``.
+
+    A delegating wrapper's body is exactly ONE executable statement -- a
+    ``return`` or a bare expression -- wrapping exactly one ``Call`` to a
+    plain name (never an attribute access: ``_RUNNER.invoke(...)`` is not
+    recognised, since the callee there is not itself an imported symbol)
+    resolved through an import in this module.  Extra positional or keyword
+    arguments to that call, however many, do not disqualify it -- the
+    wrapper commonly supplies its own per-file constant as one of them, and
+    that is the whole point of the wrapper existing.
+
+    Deliberately conservative: two statements, an unresolved callee, or a
+    call reached through attribute access all return ``None`` rather than a
+    guess.  A false negative here leaves a genuine wrapper in the duplicate
+    bucket for a human to notice and clear by hand; a false positive would
+    silently hide a real duplicate from the count, which is the worse
+    failure.
+    """
+    if len(body) != 1:
+        return None
+    match body[0]:
+        case ast.Return(value=ast.Call() as candidate) | ast.Expr(value=ast.Call() as candidate):
+            pass
+        case _:
+            return None
+    if not isinstance(candidate.func, ast.Name):
+        return None
+    return symbol_origins.get(candidate.func.id)
+
+
+def _closed_over_module_constants(
+    body: list[ast.stmt],
+    *,
+    parameters: frozenset[str],
+    symbol_origins: dict[str, str],
+    module_constants: frozenset[str],
+) -> tuple[str, ...]:
+    """Return every module-level constant this body references but does not bind.
+
+    A name counts only if it is genuinely free: not a parameter, not
+    assigned or bound anywhere within the body, and not an imported name
+    (imports are already covered by ``body_symbol_origins_sha256``).
+    """
+    bound = _bound_names(body) | parameters
+    referenced = {
+        node.id
+        for statement in body
+        for node in ast.walk(statement)
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)
+    }
+    free = referenced - bound - symbol_origins.keys()
+    return tuple(sorted(free & module_constants))
 
 
 def _body_symbol_origins_sha256(body: list[ast.stmt], origins: dict[str, str]) -> str:
@@ -281,11 +553,13 @@ def census(repo_root: Path = REPO_ROOT) -> HelperCensus:
             continue
         pytest_modules, fixture_aliases = _pytest_bindings(tree)
         symbol_origins = _module_symbol_origins(tree, path, root)
+        module_constants = _module_level_constant_names(tree)
         visitor = _HelperVisitor(
             relative,
             symbol_origins,
             pytest_modules,
             fixture_aliases,
+            module_constants,
             module_is_private=path.name.startswith("_"),
         )
         visitor.visit(tree)
@@ -303,9 +577,20 @@ def _json_payload(result: HelperCensus) -> dict[str, object]:
         "source_count": len(result.sources),
         "helper_count": result.helper_count,
         "aliased_behaviour_count": result.aliased_behaviour_count,
+        "delegating_wrapper_count": result.delegating_wrapper_count,
         "aliased_behaviours": [
-            {"body_sha256": b.body_sha256, "function_names": list(b.function_names), "sites": list(b.sites)}
+            {
+                "body_sha256": b.body_sha256,
+                "function_names": list(b.function_names),
+                "sites": list(b.sites),
+                "is_constant_dependent": b.is_constant_dependent,
+                "closed_over_constants": list(b.closed_over_constants),
+            }
             for b in result.aliased_behaviours
+        ],
+        "delegating_wrappers": [
+            {"path": r.path, "line": r.line, "qualname": r.qualname, "delegates_to": r.delegates_to}
+            for r in result.delegating_wrappers
         ],
     }
 
@@ -328,11 +613,21 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     print(f"helper census: {result.helper_count} private test-helper definitions across {len(result.sources)} files")
+    print(
+        f"delegating wrappers (excluded from duplication -- already routed to one shared "
+        f"implementation): {result.delegating_wrapper_count}",
+    )
     print(f"aliased behaviours (body reached through >1 site): {result.aliased_behaviour_count}")
     for behaviour in result.aliased_behaviours:
+        label = (
+            f"CONSTANT-DEPENDENT (closes over {', '.join(behaviour.closed_over_constants)} -- "
+            "read each site's value before consolidating; parameterise, do not delete)"
+            if behaviour.is_constant_dependent
+            else "duplicate"
+        )
         print(
             f"  one body under {len(behaviour.function_names)} names "
-            f"({', '.join(behaviour.function_names)}): {', '.join(behaviour.sites)}",
+            f"({', '.join(behaviour.function_names)}), {label}: {', '.join(behaviour.sites)}",
         )
     return 0
 

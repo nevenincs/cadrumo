@@ -54,9 +54,11 @@ from ._record_design_schema import (
     RecordDesignAuxiliaryEnvelopeHeaderField,
     RecordDesignAuxiliaryEnvelopeHeaderRole,
     RecordDesignCompositeRelativeClosing,
+    RecordDesignCorrection,
     RecordDesignExtraction,
     RecordDesignField,
     RecordDesignFieldTypeCorrection,
+    RecordDesignHeaderCellCorrection,
     RecordDesignRelativeSuffixMarker,
     RecordDesignSheet,
     RecordDesignSkippedSheet,
@@ -100,47 +102,128 @@ class _WorkbookSheetRows:
     relative_suffix_marker_rows: list[int] = field(default_factory=list)
     variable_total_marker_rows: list[int] = field(default_factory=list)
     mixed_total_rows: list[int] = field(default_factory=list)
-    corrections_applied: list[RecordDesignFieldTypeCorrection] = field(default_factory=list)
+    corrections_applied: list[RecordDesignCorrection] = field(default_factory=list)
 
 
 type _TypeCorrectionIndex = Mapping[tuple[str, int], RecordDesignFieldTypeCorrection]
+type _HeaderCorrectionIndex = Mapping[tuple[str, int, str], RecordDesignHeaderCellCorrection]
 
-_TYPE_CORRECTION_SUFFIX: Final[str] = ".type-correction.json"
+_CORRECTION_SUFFIX: Final[str] = ".record-design-correction.json"
+_CORRECTION_ADAPTER: Final[TypeAdapter[RecordDesignCorrection]] = TypeAdapter(RecordDesignCorrection)
 
 
-def _load_type_corrections(source_path: Path) -> _TypeCorrectionIndex:
-    """Load a hand-authored, per-binary sidecar declaring blank-type corrections.
+@dataclass(frozen=True)
+class _CorrectionIndex:
+    """One binary's declared corrections, split by the row they address.
+
+    ``type_corrections`` keys on ``(sheet, source_row)`` -- one data row.
+    ``header_corrections`` keys on ``(sheet, header_row, column_role)`` -- one
+    header column, since a header row's blank cell is looked up by ROLE
+    (``"length"``) at probe time, not by a data row number.
+    """
+
+    type_corrections: _TypeCorrectionIndex
+    header_corrections: _HeaderCorrectionIndex
+
+
+_EMPTY_CORRECTIONS: Final[_CorrectionIndex] = _CorrectionIndex(type_corrections={}, header_corrections={})
+
+
+def _load_corrections(source_path: Path) -> _CorrectionIndex:
+    """Load a hand-authored, per-binary sidecar declaring record-design corrections.
 
     Colocated with the exact source binary it corrects, named
-    ``<binary-name>.type-correction.json`` -- a distinct suffix from the
-    parser's own generated ``.extracted.json``/``.extracted.md`` cache, so a
-    hand-authored grounding declaration is never confused with, or
+    ``<binary-name>.record-design-correction.json`` -- a distinct suffix from
+    the parser's own generated ``.extracted.json``/``.extracted.md`` cache, so
+    a hand-authored grounding declaration is never confused with, or
     overwritten by, machine output. Absent for the overwhelming majority of
-    bundled binaries, which read as AEAT published them; this returns an
-    empty mapping for those, so the parser's behaviour is unchanged unless a
-    sidecar is deliberately authored.
+    bundled binaries, which read as AEAT published them; this returns empty
+    indexes for those, so the parser's behaviour is unchanged unless a sidecar
+    is deliberately authored. One file, one discriminated ``corrections`` list
+    -- a field-type correction and a header-cell correction may both appear in
+    it, per :data:`RecordDesignCorrection`.
     """
-    sidecar_path = source_path.with_name(source_path.name + _TYPE_CORRECTION_SUFFIX)
+    sidecar_path = source_path.with_name(source_path.name + _CORRECTION_SUFFIX)
     if not sidecar_path.is_file():
-        return {}
+        return _EMPTY_CORRECTIONS
     payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
     entries = payload.get("corrections") if isinstance(payload, dict) else None
     if not isinstance(entries, list):
-        raise RegistryValidationError(f"{sidecar_path}: type-correction sidecar must declare a 'corrections' list")
-    corrections: dict[tuple[str, int], RecordDesignFieldTypeCorrection] = {}
+        raise RegistryValidationError(f"{sidecar_path}: correction sidecar must declare a 'corrections' list")
+    type_corrections: dict[tuple[str, int], RecordDesignFieldTypeCorrection] = {}
+    header_corrections: dict[tuple[str, int, str], RecordDesignHeaderCellCorrection] = {}
     for entry in entries:
         # ``strict=False`` here only: JSON has no tuple literal, so the sidecar's
         # ``editions_read`` array arrives as a ``list`` and needs the ordinary
         # list-to-tuple coercion. Every field's own type is still checked --
-        # this does not relax ``min_length``, blank-string, or shape checks.
-        correction = RecordDesignFieldTypeCorrection.model_validate(entry, strict=False)
-        key = (correction.sheet, correction.source_row)
-        if key in corrections:
-            raise RegistryValidationError(
-                f"{sidecar_path}: duplicate correction for sheet {correction.sheet!r} row {correction.source_row}",
+        # this does not relax ``min_length``, blank-string, discriminator, or shape checks.
+        correction = _CORRECTION_ADAPTER.validate_python(entry, strict=False)
+        if isinstance(correction, RecordDesignFieldTypeCorrection):
+            type_key = (correction.sheet, correction.source_row)
+            if type_key in type_corrections:
+                raise RegistryValidationError(
+                    f"{sidecar_path}: duplicate type correction for sheet {correction.sheet!r} "
+                    f"row {correction.source_row}",
+                )
+            type_corrections[type_key] = correction
+        else:
+            header_key = (correction.sheet, correction.header_row, correction.column_role)
+            if header_key in header_corrections:
+                raise RegistryValidationError(
+                    f"{sidecar_path}: duplicate header correction for sheet {correction.sheet!r} "
+                    f"row {correction.header_row} role {correction.column_role!r}",
+                )
+            header_corrections[header_key] = correction
+    return _CorrectionIndex(type_corrections=type_corrections, header_corrections=header_corrections)
+
+
+_DECLARED_NON_RECORD_SHEETS_FILENAME: Final[str] = "declared-non-record-sheets.json"
+
+
+def _load_declared_non_record_sheet_reasons(source_path: Path) -> Mapping[str, str]:
+    """Load one modelo's declared, sourced reasons for sheets that are never records.
+
+    Lives once per MODELO directory (sibling to that modelo's own
+    ``manifest.json``), not per binary: a legend or lookup tab AEAT republishes
+    unchanged across several editions is one judgement, not one per file. This
+    never turns a skip into a read -- the sheet stays in
+    :attr:`RecordDesignExtraction.skipped` exactly as before -- it only
+    replaces the parser's own generic header-probe failure message with the
+    grounded reason a reviewer recorded after opening the design. The
+    extractor cannot itself tell a lookup tab apart from a dropped record
+    body, so that judgement is a registry act, never inferred here.
+    """
+    modelo_root = source_path.parent.parent
+    declaration_path = modelo_root / _DECLARED_NON_RECORD_SHEETS_FILENAME
+    if not declaration_path.is_file():
+        return {}
+    payload = json.loads(declaration_path.read_text(encoding="utf-8"))
+    entries = payload.get("declared_non_record_sheets") if isinstance(payload, dict) else None
+    if not isinstance(entries, list):
+        raise RegistryValidationError(
+            f"{declaration_path}: must declare a 'declared_non_record_sheets' list",
+        )
+    reasons: dict[str, str] = {}
+    for entry in entries:
+        if (
+            not isinstance(entry, dict)
+            or not isinstance(entry.get("sheet"), str)
+            or not isinstance(
+                entry.get("reason"),
+                str,
             )
-        corrections[key] = correction
-    return corrections
+        ):
+            raise RegistryValidationError(
+                f"{declaration_path}: every entry needs a string 'sheet' and a string 'reason'",
+            )
+        sheet = entry["sheet"].strip()
+        reason = entry["reason"].strip()
+        if not sheet or not reason:
+            raise RegistryValidationError(f"{declaration_path}: 'sheet' and 'reason' must be non-blank")
+        if sheet in reasons:
+            raise RegistryValidationError(f"{declaration_path}: duplicate declaration for sheet {sheet!r}")
+        reasons[sheet] = reason
+    return reasons
 
 
 def extract_record_design(path: Path) -> RecordDesignExtraction:
@@ -226,7 +309,8 @@ def _extract_record_design_workbook_cached(
     from openpyxl import load_workbook
 
     source_path = Path(path)
-    corrections = _load_type_corrections(source_path)
+    corrections = _load_corrections(source_path)
+    declared_skip_reasons = _load_declared_non_record_sheet_reasons(source_path)
     with _ignore_openpyxl_header_footer_metadata_warnings():
         workbook = load_workbook(source_path, read_only=True, data_only=True)
         try:
@@ -238,7 +322,9 @@ def _extract_record_design_workbook_cached(
                 except ValueError as exc:
                     if "has no record-design header" not in str(exc):
                         raise
-                    skipped.append(RecordDesignSkippedSheet(name=worksheet.title.strip(), reason=str(exc)))
+                    sheet_title = worksheet.title.strip()
+                    reason = declared_skip_reasons.get(sheet_title, str(exc))
+                    skipped.append(RecordDesignSkippedSheet(name=sheet_title, reason=reason))
             return _extraction(source_path, sheets, skipped)
         finally:
             workbook.close()
@@ -254,6 +340,8 @@ def _extract_record_design_xls_workbook_cached(
     import xlrd
 
     source_path = Path(path)
+    corrections = _load_corrections(source_path)
+    declared_skip_reasons = _load_declared_non_record_sheet_reasons(source_path)
     workbook = xlrd.open_workbook(str(source_path), on_demand=True)
     try:
         sheets: list[RecordDesignSheet] = []
@@ -261,11 +349,13 @@ def _extract_record_design_xls_workbook_cached(
         for sheet_name in workbook.sheet_names():
             worksheet = workbook.sheet_by_name(sheet_name)
             try:
-                sheets.append(_extract_xls_sheet(worksheet))
+                sheets.append(_extract_xls_sheet(worksheet, corrections))
             except ValueError as exc:
                 if "has no record-design header" not in str(exc):
                     raise
-                skipped.append(RecordDesignSkippedSheet(name=sheet_name.strip(), reason=str(exc)))
+                stripped_name = sheet_name.strip()
+                reason = declared_skip_reasons.get(stripped_name, str(exc))
+                skipped.append(RecordDesignSkippedSheet(name=stripped_name, reason=reason))
         return _extraction(source_path, sheets, skipped)
     finally:
         workbook.release_resources()
@@ -361,8 +451,8 @@ def _extract_record_design_pdf_stream(
         raise
 
 
-def _extract_sheet(worksheet: Worksheet, corrections: _TypeCorrectionIndex | None = None) -> RecordDesignSheet:
-    header = _find_header(worksheet)
+def _extract_sheet(worksheet: Worksheet, corrections: _CorrectionIndex = _EMPTY_CORRECTIONS) -> RecordDesignSheet:
+    header, header_correction = _find_header(worksheet, corrections.header_corrections)
     return _extract_sheet_rows(
         worksheet.title,
         header,
@@ -371,15 +461,18 @@ def _extract_sheet(worksheet: Worksheet, corrections: _TypeCorrectionIndex | Non
             start=header.row_number + 1,
         ),
         corrections,
+        header_correction,
     )
 
 
-def _extract_xls_sheet(worksheet: XlrdSheet) -> RecordDesignSheet:
-    header = _find_xls_header(worksheet)
+def _extract_xls_sheet(worksheet: XlrdSheet, corrections: _CorrectionIndex = _EMPTY_CORRECTIONS) -> RecordDesignSheet:
+    header, header_correction = _find_xls_header(worksheet, corrections.header_corrections)
     return _extract_sheet_rows(
         worksheet.name,
         header,
         ((rowx + 1, tuple(worksheet.row_values(rowx))) for rowx in range(header.row_number, worksheet.nrows)),
+        corrections,
+        header_correction,
     )
 
 
@@ -387,7 +480,8 @@ def _extract_sheet_rows(
     sheet_name: str,
     header: _WorkbookHeader,
     rows: Iterator[tuple[int, tuple[object, ...]]],
-    corrections: _TypeCorrectionIndex | None = None,
+    corrections: _CorrectionIndex = _EMPTY_CORRECTIONS,
+    header_correction: RecordDesignHeaderCellCorrection | None = None,
 ) -> RecordDesignSheet:
     # AEAT Diseño workbooks occasionally carry surrounding whitespace on a
     # sheet tab (e.g. 'DP200026 '). The sheet name is the record-segment
@@ -395,7 +489,9 @@ def _extract_sheet_rows(
     # completeness derivation match against, so the raw tab whitespace
     # must not leak into that identity.
     sheet_name = sheet_name.strip()
-    parsed_rows = _scan_sheet_rows(sheet_name, header, rows, corrections or {})
+    parsed_rows = _scan_sheet_rows(sheet_name, header, rows, corrections.type_corrections)
+    if header_correction is not None:
+        parsed_rows.corrections_applied.insert(0, header_correction)
     terminal_extent = _require_contiguous_field_geometry(sheet_name, parsed_rows.fields)
     if parsed_rows.total_positions is not None and terminal_extent != parsed_rows.total_positions:
         raise RegistryValidationError(
@@ -909,66 +1005,132 @@ def _is_blank_row(values: tuple[object, ...]) -> bool:
     return all(value is None or str(value).strip() == "" for value in values)
 
 
-def _find_header(worksheet: Worksheet) -> _WorkbookHeader:
-    for row_number, row in enumerate(worksheet.iter_rows(min_row=1, max_row=10, values_only=True), start=1):
-        values = tuple(row)
-        if not _is_ordinal_header(_cell(values, 0)):
-            continue
-        try:
-            offset_index = _required_header_index(values, "posic.")
-            length_index = _required_header_index(values, "lon")
-            type_index = _required_header_index(values, "tipo")
-            description_index = _required_header_index(values, "descripcion")
-        except ValueError as header_exc:
-            _log.debug(
-                "record-design header probe (xlsx %s): row %d missing required columns (%s); trying next",
-                worksheet.title,
-                row_number,
-                header_exc,
-            )
-            continue
-        return _WorkbookHeader(
-            row_number=row_number,
-            ordinal_index=0,
-            offset_index=offset_index,
-            length_index=length_index,
-            type_index=type_index,
-            complementary_index=_optional_header_index(values, "com", "comp"),
-            description_index=description_index,
-            validation_index=_optional_header_index(values, "validacion", "oblig."),
-            content_index=_optional_header_index(values, "contenido"),
+def _probe_header_row(
+    values: tuple[object, ...],
+    row_number: int,
+    *,
+    label: str,
+    sheet_name: str,
+    header_corrections: _HeaderCorrectionIndex,
+) -> tuple[_WorkbookHeader, RecordDesignHeaderCellCorrection | None] | None:
+    """Match one row against either recognised AEAT record-design header shape.
+
+    Shape A is AEAT's ordinary header: ``Posic.``/``Lon``/``Tipo``/``Descripcion``,
+    with an optional ``Validacion`` and an optional ``Com.`` (complementary
+    indicator) column. Its ``Lon`` cell may be recovered by a declared
+    ``RecordDesignHeaderCellCorrection`` when AEAT's own publication leaves it
+    blank -- applied ONLY when a sidecar names this exact
+    ``(sheet, row, "length")``, never inferred from column position alone.
+
+    Shape B is a second, real AEAT shape -- confirmed only in bundled Modelo
+    151 annex sheets (``M15100000``, ``M15102000``-``M15109000``) -- carrying
+    the same ``Posic.``/``Lon``/``Tipo`` columns, but where the description
+    column holds the sheet's own topical caption instead of the literal word
+    ``Descripcion``, sitting directly after a recognised ``Com.`` column, with
+    no separate ``Validacion`` column at all. This is resilience to a real
+    AEAT format variation, not a widened match: Shape B still requires the
+    ``Com.`` token by its own recognised alias AND the very next column to
+    carry real text, so a sheet lacking either -- no ``Descripcion`` token, no
+    ``Com.`` token, or a blank column following ``Com.`` -- matches neither
+    shape and still refuses.
+    """
+    if not _is_ordinal_header(_cell(values, 0)):
+        return None
+    try:
+        offset_index = _required_header_index(values, "posic.")
+        type_index = _required_header_index(values, "tipo")
+    except ValueError as header_exc:
+        _log.debug(
+            "record-design header probe (%s): row %d missing required columns (%s); trying next",
+            label,
+            row_number,
+            header_exc,
         )
+        return None
+    length_correction: RecordDesignHeaderCellCorrection | None = None
+    try:
+        length_index = _required_header_index(values, "lon")
+    except ValueError:
+        length_correction = header_corrections.get((sheet_name, row_number, "length"))
+        if length_correction is None:
+            _log.debug(
+                "record-design header probe (%s): row %d missing required columns ('lon'); trying next",
+                label,
+                row_number,
+            )
+            return None
+        length_index = length_correction.column_index
+    complementary_index = _optional_header_index(values, "com", "comp")
+    description_index = _optional_header_index(values, "descripcion")
+    validation_index = _optional_header_index(values, "validacion", "oblig.")
+    if description_index is None:
+        if complementary_index is None:
+            _log.debug(
+                "record-design header probe (%s): row %d matches neither header shape "
+                "(no 'descripcion' and no 'com'/'comp'); trying next",
+                label,
+                row_number,
+            )
+            return None
+        caption_index = complementary_index + 1
+        if caption_index >= len(values) or not coerce_cell_text(_cell(values, caption_index)):
+            _log.debug(
+                "record-design header probe (%s): row %d has 'com'/'comp' but no caption in the "
+                "following column; trying next",
+                label,
+                row_number,
+            )
+            return None
+        description_index = caption_index
+        validation_index = None
+    header = _WorkbookHeader(
+        row_number=row_number,
+        ordinal_index=0,
+        offset_index=offset_index,
+        length_index=length_index,
+        type_index=type_index,
+        complementary_index=complementary_index,
+        description_index=description_index,
+        validation_index=validation_index,
+        content_index=_optional_header_index(values, "contenido"),
+    )
+    return header, length_correction
+
+
+def _find_header(
+    worksheet: Worksheet,
+    header_corrections: _HeaderCorrectionIndex | None = None,
+) -> tuple[_WorkbookHeader, RecordDesignHeaderCellCorrection | None]:
+    sheet_name = worksheet.title.strip()
+    for row_number, row in enumerate(worksheet.iter_rows(min_row=1, max_row=10, values_only=True), start=1):
+        matched = _probe_header_row(
+            tuple(row),
+            row_number,
+            label=f"xlsx {worksheet.title}",
+            sheet_name=sheet_name,
+            header_corrections=header_corrections or {},
+        )
+        if matched is not None:
+            return matched
     raise RegistryValidationError(f"{worksheet.title!r} has no record-design header")
 
 
-def _find_xls_header(worksheet: XlrdSheet) -> _WorkbookHeader:
+def _find_xls_header(
+    worksheet: XlrdSheet,
+    header_corrections: _HeaderCorrectionIndex | None = None,
+) -> tuple[_WorkbookHeader, RecordDesignHeaderCellCorrection | None]:
+    sheet_name = worksheet.name.strip()
+    header_corrections = header_corrections or {}
     for rowx in range(min(10, worksheet.nrows)):
-        values = tuple(worksheet.row_values(rowx))
-        if not _is_ordinal_header(_cell(values, 0)):
-            continue
-        try:
-            offset_index = _required_header_index(values, "posic.")
-            length_index = _required_header_index(values, "lon")
-            type_index = _required_header_index(values, "tipo")
-            description_index = _required_header_index(values, "descripcion")
-        except ValueError as header_exc:
-            _log.debug(
-                "record-design header probe (xls): row %d missing required columns (%s); trying next",
-                rowx + 1,
-                header_exc,
-            )
-            continue
-        return _WorkbookHeader(
-            row_number=rowx + 1,
-            ordinal_index=0,
-            offset_index=offset_index,
-            length_index=length_index,
-            type_index=type_index,
-            complementary_index=_optional_header_index(values, "com", "comp"),
-            description_index=description_index,
-            validation_index=_optional_header_index(values, "validacion", "oblig."),
-            content_index=_optional_header_index(values, "contenido"),
+        matched = _probe_header_row(
+            tuple(worksheet.row_values(rowx)),
+            rowx + 1,
+            label="xls",
+            sheet_name=sheet_name,
+            header_corrections=header_corrections,
         )
+        if matched is not None:
+            return matched
     raise RegistryValidationError(f"{worksheet.name!r} has no record-design header")
 
 
@@ -1183,7 +1345,7 @@ _PDF_RECORD_HEADING_REVERSED_RE = re.compile(
 )
 
 
-@dataclass
+@dataclass(slots=True)
 class _PdfFieldDraft:
     sheet: str
     row: int
@@ -1218,7 +1380,7 @@ class _PdfFieldDraft:
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class _PdfSheetDraft:
     name: str
     fields: list[RecordDesignField] = field(default_factory=list)
@@ -1250,7 +1412,7 @@ class _PdfSheetDraft:
         return sheet
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _PdfRow:
     source_row: int
     ordinal: str | None
@@ -1260,7 +1422,7 @@ class _PdfRow:
     description: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _PdfWord:
     text: str
     x0: float
@@ -1269,7 +1431,7 @@ class _PdfWord:
     bottom: float
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _PdfRect:
     x0: float
     x1: float
@@ -1280,14 +1442,14 @@ class _PdfRect:
     fill: object | None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _PdfPageSnapshot:
     lines: tuple[str, ...]
     words: tuple[_PdfWord, ...]
     rects: tuple[_PdfRect, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _VisualChartFragment:
     start: int
     end: int
@@ -1921,9 +2083,11 @@ __all__ = [
     "DerivedDisenoCasilla",
     "DisenoCoverageReport",
     "RecordDesignCompositeRelativeClosing",
+    "RecordDesignCorrection",
     "RecordDesignExtraction",
     "RecordDesignField",
     "RecordDesignFieldTypeCorrection",
+    "RecordDesignHeaderCellCorrection",
     "RecordDesignRelativeSuffixMarker",
     "RecordDesignSheet",
     "RecordDesignSkippedSheet",

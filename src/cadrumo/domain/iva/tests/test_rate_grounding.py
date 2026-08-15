@@ -14,7 +14,7 @@ import pytest
 
 from ....core import normalise_corpus_text
 from ....core.resources import bundled_path
-from ...calculations.registry import load_registry_tree
+from ....tests.registry_tree import bundled_registry_tree
 from .. import EUMemberState, IvaRateKind, IvaRateNotFoundError, load_iva_rate_table, lookup_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -121,7 +121,7 @@ def test_rate_source_registry_identities_use_the_canonical_iva_stem() -> None:
     referenced_source_ids = {
         source_id for member_rates in table.values() for rate in member_rates for source_id in rate.source_refs
     }
-    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _, catalogues = bundled_registry_tree()
 
     violations = [
         identity

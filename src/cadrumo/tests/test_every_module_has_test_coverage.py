@@ -80,12 +80,6 @@ _DYNAMIC_DISPATCH_EXEMPTIONS: Final[Mapping[str, str]] = {
         "it end-to-end through that spawn. Retire when the worker body is "
         "reachable without the subprocess boundary."
     ),
-    "src/cadrumo/entrypoints/cli/_app_agent_workspace.py": (
-        "Typer subcommand registered through the `_lazy(...)` "
-        "importlib.import_module dispatch in entrypoints/cli/__init__.py. "
-        "Exercised end-to-end by the app-agent CLI suite invoking the real "
-        "command. Retire when the command module is registered statically."
-    ),
     "src/cadrumo/entrypoints/cli/_app_maintenance.py": (
         "Typer subcommand registered through the same `_lazy(...)` dispatch; "
         "exercised end-to-end by the maintenance export-reconcile CLI suite. "

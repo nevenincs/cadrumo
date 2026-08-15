@@ -180,9 +180,7 @@ def test_validate_applicability_section_accumulates_without_raising() -> None:
     )
     legal_refs = {REFERENCE_LEGAL_ID: minimal_legal_ref()}
 
-    failures: list[str] = []
-    validate_applicability_section(
-        failures,
+    failures = validate_applicability_section(
         prefix="modelo 100 revision 2025",
         modelo=Modelo.M100.value,
         revision=revision,

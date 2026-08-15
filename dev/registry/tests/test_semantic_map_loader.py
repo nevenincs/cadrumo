@@ -496,7 +496,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
             "compile_filing_projection_ref",
             "freeze_toml",
             "read_toml",
-            "scan_directory",
+            "iter_directory",
         },
         "cadrumo.domain.calculations.registry": {
             "ExportComputedKey",

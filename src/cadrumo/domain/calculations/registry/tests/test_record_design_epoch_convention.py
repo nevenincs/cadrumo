@@ -36,9 +36,8 @@ from collections import defaultdict
 import pytest
 
 from .....core import RECORD_DESIGN_EPOCH_PATTERN
-from .....core.resources import bundled_path
+from .....tests.registry_tree import bundled_registry_tree
 from .._errors import RegistryValidationError
-from .._loader import load_registry_tree
 from .._schema_references import SourceReference
 from .._validate_record_design_epochs import (
     validate_record_design_epoch_uniqueness,
@@ -51,7 +50,7 @@ _CORPUS_MODELO = re.compile(r"disenos_registro/(modelo_[0-9]+)/")
 
 
 def _tagged_sources() -> dict[str, SourceReference]:
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _modelos, catalogues = bundled_registry_tree()
     return {str(ref): source for ref, source in catalogues.sources.items() if source.record_design_epoch is not None}
 
 

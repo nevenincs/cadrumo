@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ...core.errors import BaseSeverity
 from ...core.logging import get_logger
 from ._schema import (
     IvaCatalogue,
@@ -57,7 +58,7 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
     for member in missing:
         issues.append(
             IvaVerificationIssue(
-                level="error",
+                level=BaseSeverity.ERROR,
                 code="missing_category",
                 message=f"catalogue does not cover IvaCategory.{member.name}",
                 category_id=member.value,
@@ -68,7 +69,7 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
         if not regulation.citations and not regulation.legal_basis_exempt:
             issues.append(
                 IvaVerificationIssue(
-                    level="error",
+                    level=BaseSeverity.ERROR,
                     code="missing_citation",
                     message="regulation has no IvaCitation records",
                     category_id=regulation.category.value,
@@ -107,7 +108,7 @@ def _citation_issues(
     if citation.grounding is IvaCitationGrounding.VERIFIED and not citation.quoted_text.strip():
         issues.append(
             IvaVerificationIssue(
-                level="error",
+                level=BaseSeverity.ERROR,
                 code="empty_quoted_text",
                 message=f"citation {citation.legal_reference!r} claims verified grounding with no quotation",
                 category_id=category_id,
@@ -117,7 +118,7 @@ def _citation_issues(
     if reference is None:
         issues.append(
             IvaVerificationIssue(
-                level="error",
+                level=BaseSeverity.ERROR,
                 code="unknown_legal_reference",
                 message=(
                     f"citation legal_reference {citation.legal_reference!r} is absent from the registry legal catalogue"
@@ -129,7 +130,7 @@ def _citation_issues(
     if reference.article is None:
         issues.append(
             IvaVerificationIssue(
-                level="error",
+                level=BaseSeverity.ERROR,
                 code="legal_reference_not_article_qualified",
                 message=f"citation legal_reference {citation.legal_reference!r} has no registry article",
                 category_id=category_id,
@@ -141,7 +142,7 @@ def _citation_issues(
     except Exception as exc:
         issues.append(
             IvaVerificationIssue(
-                level="error",
+                level=BaseSeverity.ERROR,
                 code="legal_reference_unverified",
                 message=(f"citation legal_reference {citation.legal_reference!r} has invalid corpus evidence: {exc}"),
                 category_id=category_id,
@@ -162,7 +163,7 @@ def _citation_issues(
     except Exception as exc:
         issues.append(
             IvaVerificationIssue(
-                level="error",
+                level=BaseSeverity.ERROR,
                 code="quotation_uncheckable",
                 message=(
                     f"citation {citation.legal_reference!r} quotation could not be read "
@@ -175,7 +176,7 @@ def _citation_issues(
     if not quoted:
         issues.append(
             IvaVerificationIssue(
-                level="error",
+                level=BaseSeverity.ERROR,
                 code="quotation_absent_from_corpus",
                 message=(
                     f"citation {citation.legal_reference!r} claims verified grounding, but its "

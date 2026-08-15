@@ -37,9 +37,8 @@ from decimal import Decimal
 import pytest
 
 from ....core import validated_casilla_id
-from ....core.resources import bundled_path
 from ....domain.calculations.registry import ModeloRevision, select_revision
-from ....domain.calculations.registry._loader import load_registry_tree
+from ....tests.registry_tree import bundled_registry_tree
 from ...aggregation import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
 from .._minimo_descendientes_advisory import (
     _count_desync_advisory,
@@ -121,7 +120,7 @@ def _headroom_revision() -> ModeloRevision:
     validates the whole registry first, so either would make a message-length
     test unobtainable for reasons that have nothing to do with messages.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "100")
     return select_revision(modelo, filing_year=2024, period="0A")
 

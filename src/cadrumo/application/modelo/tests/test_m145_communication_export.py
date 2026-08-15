@@ -27,10 +27,10 @@ from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
     ExportFieldDefinition,
     ResolvedExportLayout,
-    load_registry_tree,
     resolve_export_layout,
 )
 from ....domain.calculations.registry.tests import build_snapshot
+from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     M145CommunicationCreateCommand,
@@ -55,7 +55,7 @@ def _field_values(**overrides: str) -> dict[str, str]:
 
 
 def _resolved_layout() -> ResolvedExportLayout:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = bundled_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "145")
     snapshot = build_snapshot(
         modelo,

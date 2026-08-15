@@ -53,7 +53,6 @@ class CommandRiskDeclaration(BaseModel):
 #: The declared risk table. One row per LOCAL_STATE_MUTATING-family command,
 #: keyed by full command key. Read-only families are absent (derived).
 COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
-    "agent": CommandRiskDeclaration(),
     "app.live.borrador.100.latest": CommandRiskDeclaration(),
     "app.live.borrador.100.list": CommandRiskDeclaration(),
     "app.live.borrador.100.view": CommandRiskDeclaration(),

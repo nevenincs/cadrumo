@@ -26,7 +26,6 @@ from .....tests.profile_storage_root_fixture import profile_storage_root_fixture
 
 __all__ = ["profile_storage_root_fixture"]
 
-from .....tests.cli_runner import invoke_cached_cli
 from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
 from .....tests.user_profile import register_cli_profile
 from ....cli._config import _status_frontend

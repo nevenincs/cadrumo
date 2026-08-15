@@ -35,9 +35,12 @@ from pathlib import Path
 
 import pytest
 
-from ....core import scan_directory
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+# Absolute, string-form import by necessity: this directory carries no
+# ``__init__.py``, so the module is imported in rootdir mode and a relative
+# import cannot reach ``cadrumo``.
+scan_directory = import_module("cadrumo.core").scan_directory
 
 # Sanctioned parser authorities: the two inbound-PDF parser packages, plus the
 # registry's own in-tree export-payload parser (a domain-internal callable).

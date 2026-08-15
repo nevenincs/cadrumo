@@ -148,7 +148,6 @@ def _validate_casilla_export_links(
 
 
 def validate_casilla_section(
-    failures: list[str],
     *,
     prefix: str,
     revision: ModeloRevision,
@@ -158,8 +157,8 @@ def validate_casilla_section(
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
-) -> None:
-    """Append casilla metadata, formula, binding, and export-ref failures.
+) -> list[str]:
+    """Return casilla metadata, formula, binding, and export-ref failures.
 
     The :class:`~domain.calculations.registry.ModeloRevision` supplies
     :class:`~domain.calculations.registry.CasillaDefinition` rows. Each
@@ -167,6 +166,7 @@ def validate_casilla_section(
     binding, alternate-binding, and export-field references must point at ids in
     the shared revision-validation context.
     """
+    failures: list[str] = []
     for casilla in revision.casillas:
         _validate_casilla_grounding(
             failures,
@@ -184,24 +184,25 @@ def validate_casilla_section(
             bindings=bindings,
             export_field_ids=export_field_ids,
         )
+    return failures
 
 
 def validate_parameter_section(
-    failures: list[str],
     *,
     prefix: str,
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
-) -> None:
-    """Append parameter reference, citation, and dated-value failures.
+) -> list[str]:
+    """Return parameter reference, citation, and dated-value failures.
 
     The :class:`~domain.calculations.registry.ModeloRevision` supplies
     :class:`~domain.calculations.registry.ParameterDefinition` rows. Each
     parameter must carry known legal/source refs, official-source citations, and
     valid dated-value windows.
     """
+    failures: list[str] = []
     for parameter in revision.parameters:
         owner = f"parameter {parameter.id}"
         failures.extend(missing_refs(prefix, owner, parameter.legal_refs, legal_refs, "legal"))
@@ -217,18 +218,18 @@ def validate_parameter_section(
             ),
         )
         failures.extend(validate_dated_values(prefix, parameter.id, parameter.values))
+    return failures
 
 
 def validate_binding_section(
-    failures: list[str],
     *,
     prefix: str,
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
-) -> None:
-    """Append binding selector-shape, reference, and evidence failures.
+) -> list[str]:
+    """Return binding selector-shape, reference, and evidence failures.
 
     The :class:`~domain.calculations.registry.ModeloRevision` supplies
     :class:`~domain.calculations.registry.DataBindingDefinition` rows.
@@ -236,6 +237,7 @@ def validate_binding_section(
     bindings require layout-authority evidence, while other bindings require
     official-source guidance and source citations.
     """
+    failures: list[str] = []
     for binding in revision.bindings:
         failures.extend(f"{prefix}: {fail}" for fail in validate_binding_selector_shape(binding))
     failures.extend(
@@ -265,6 +267,7 @@ def validate_binding_section(
     # previous_filing) are run by the single ``validate_binding_selector_shape``
     # dispatch loop above. The prior separate try/except per-family calls here
     # were a redundant second validation path; one path now covers every family.
+    return failures
 
 
 def _is_layout_binding(binding: DataBindingDefinition) -> bool:
@@ -273,7 +276,6 @@ def _is_layout_binding(binding: DataBindingDefinition) -> bool:
 
 
 def validate_extraction_profile_section(
-    failures: list[str],
     *,
     prefix: str,
     modelo_id: str,
@@ -284,8 +286,8 @@ def validate_extraction_profile_section(
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
     corpus_root: Path | None = None,
-) -> None:
-    """Append extraction-profile reference, artefact, and specimen failures.
+) -> list[str]:
+    """Return extraction-profile reference, artefact, and specimen failures.
 
     The :class:`~domain.calculations.registry.ModeloRevision` supplies
     :class:`~domain.calculations.registry._schema_extraction.ExtractionProfileDefinition`
@@ -294,6 +296,7 @@ def validate_extraction_profile_section(
     bundled justificante PDF specimen/round-trip gates when a corpus root is
     available.
     """
+    failures: list[str] = []
     for profile in revision.extraction_profiles:
         owner = f"extraction profile {profile.id}"
         failures.extend(missing_refs(prefix, owner, profile.legal_refs, legal_refs, "legal"))
@@ -318,3 +321,4 @@ def validate_extraction_profile_section(
         if corpus_root is not None:
             failures.extend(validate_declaracion_pdf_specimen_gate(prefix, modelo_id, profile, corpus_root))
             failures.extend(validate_declaracion_pdf_round_trip_gate(prefix, modelo_id, profile, corpus_root))
+    return failures

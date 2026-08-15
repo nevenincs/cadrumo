@@ -138,6 +138,7 @@ if TYPE_CHECKING:
         PreconditionVerdict,
     )
     from ...application.operator_surface import (
+        CommandSchemaRef,
         ExplicitExclusionInventoryRow,
         InputSchemaInventoryRow,
         LiveLeafInventoryRow,
@@ -156,7 +157,6 @@ if TYPE_CHECKING:
     from ...domain.transactions import TransactionCatalogue
     from ...domain.user_profile import UserProfileRecord
     from ..mcp import VerbInputSchema
-    from ._app_contract import CommandSchemaRef
 
 __all__ = [
     "active_profile_label",
@@ -805,7 +805,7 @@ def _current_operator_surface_input_schemas() -> tuple[
 ]:
     """Collect the complete result-schema and S05 input-schema projections."""
     from ...entrypoints.mcp import build_verb_input_schemas
-    from ._app_contract import command_schema_refs
+    from ._command_schema import command_schema_refs
 
     schema_references = command_schema_refs()
     command_keys = tuple(reference.command for reference in schema_references)

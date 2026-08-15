@@ -8,10 +8,10 @@ import pytest
 
 from .....core import RevisionReviewStatus
 from .....core.resources import bundled_path
+from .....tests.registry_tree import bundled_registry_tree
 from .. import ValidatedRegistryAuthority
 from .._errors import RegistryValidationError
 from .._export import derive_export_layouts_from_bindings
-from .._loader import load_registry_tree
 from .._snapshot import _check_snapshot_filing_capability, build_validated_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -75,7 +75,7 @@ def test_build_validated_snapshot_refuses_real_m182_non_operator_revision(
 
 def _committed_registry():
     """Load the tree through the compiler, so this proof survives a red validation gate."""
-    return load_registry_tree(bundled_path("registry", "aeat"))
+    return bundled_registry_tree()
 
 
 def test_filing_grade_snapshot_refuses_a_reviewed_revision_that_declares_no_export_layout() -> None:

@@ -110,7 +110,7 @@ from .....core.resources import bundled_path
 from .. import (
     ValidatedRegistryAuthority,
 )
-from ._manual_oracle_support import read_manual_worked_example
+from ._manual_oracle_support import oracle_declared_figures
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -165,6 +165,10 @@ _BASE_BINDINGS_2024 = {
     "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
 }
 
+# Casilla 0107 is the one that needs a reader's attention: the registry lumps
+# two separately printed line items into it -- intereses 150 and reparación y
+# conservación 157,50 -- so its locator spans both rather than citing
+# whichever happens to appear first.
 _ORACLE_PAYLOAD_NAME = "modelo-100-2024-capital-inmobiliario-arrendamiento-vivienda-tensionada.json"
 
 #: The reducción flag: scenario scaffolding, and local because that is what it is.
@@ -183,22 +187,6 @@ _REDUCCION_FLAG_INPUT: dict[CasillaId, Decimal] = {
 }
 
 
-def _declared_inmobiliario_inputs() -> dict[CasillaId, Decimal]:
-    """The manual's own ingreso/gasto figures, read FROM the oracle rather than retyped.
-
-    Casilla 0107 is the one that needs a reader's attention: the registry lumps two
-    separately printed line items into it -- intereses 150 and reparación y
-    conservación 157,50 -- so its locator spans both rather than citing whichever
-    happens to appear first.
-    """
-    declared = read_manual_worked_example(_ORACLE_PAYLOAD_NAME).declared_inputs
-    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
-    return {
-        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
-        for casilla_id, value in declared.by_casilla_id.items()
-    } | _REDUCCION_FLAG_INPUT
-
-
 def _scenario(
     *, tier: str, expected_0150: Decimal, expected_0154: Decimal, scenario_id: str
 ) -> RegistryCalculationScenario:
@@ -208,7 +196,7 @@ def _scenario(
         revision="2024",
         filing_year=2024,
         period="0A",
-        inputs=_declared_inmobiliario_inputs(),
+        inputs=oracle_declared_figures(_ORACLE_PAYLOAD_NAME) | _REDUCCION_FLAG_INPUT,
         binding_values=dict(_BASE_BINDINGS_2024),
         enum_binding_values={
             "renta-2024-profile-tax-residence-ccaa": "madrid",

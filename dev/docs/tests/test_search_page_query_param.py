@@ -38,8 +38,8 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ._http_serve_support import serve_directory
 from ..pagefind_index import build_search_index
+from ._http_serve_support import serve_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

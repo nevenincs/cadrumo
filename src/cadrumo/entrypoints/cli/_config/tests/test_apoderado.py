@@ -78,29 +78,17 @@ def test_apoderado_happy_path_against_active_profile(profile_storage_root: Path)
     """
     from .....adapters.persistence.storage.sql.engine import dispose_engine
 
-    create = invoke_typer_app(
-        root_app,
-        [
-            "config",
-            "profile",
-            "create",
-            "myco",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "MyCo",
-            "--surnames",
-            "Operator",
-            "--activity",
-            "design",
-            "--iva-regime",
-            "GENERAL",
-        ],
+    register_cli_profile(
+        label='myco',
+        facts={
+            "identity.tax_id": '12345678Z',
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": 'MyCo',
+            "identity.surnames": 'Operator',
+            "activities.description": 'design',
+            "iva.regime": 'GENERAL',
+        },
     )
-    assert create.exit_code == 0, f"create failed: {create.output}"
 
     # status: exit 0 on the active profile (previously crashed with
     # AttributeError because the UUID never matched a label).
@@ -242,29 +230,17 @@ def test_apoderado_configure_leaves_profile_facts_untouched(profile_storage_root
     from .....adapters.persistence.storage.sql.engine import dispose_engine
     from .._profile_readiness import _read_profile_record
 
-    create = invoke_typer_app(
-        root_app,
-        [
-            "config",
-            "profile",
-            "create",
-            "myco",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "MyCo",
-            "--surnames",
-            "Operator",
-            "--activity",
-            "design",
-            "--iva-regime",
-            "GENERAL",
-        ],
+    register_cli_profile(
+        label='myco',
+        facts={
+            "identity.tax_id": '12345678Z',
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": 'MyCo',
+            "identity.surnames": 'Operator',
+            "activities.description": 'design',
+            "iva.regime": 'GENERAL',
+        },
     )
-    assert create.exit_code == 0, f"create failed: {create.output}"
 
     from .....application.workflow import read_profile_bucket
 

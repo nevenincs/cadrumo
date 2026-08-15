@@ -31,12 +31,11 @@ from pydantic import ValidationError
 
 from ....core import BindingSourceKind, NoRecoveryOutcome, Period
 from ....core.errors import get_registered_error_code
-from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
-    load_registry_tree,
     resolve_foreign_asset_binding_row_values,
     select_revision,
 )
+from ....tests.registry_tree import bundled_registry_tree
 from .. import (
     ACCEPTED_SOURCE_KINDS,
     AggregationErrorCodes,
@@ -342,7 +341,7 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
             foreign_asset_observations=observations,
         ),
     )
-    _modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _modelos, _catalogues = bundled_registry_tree()
     _modelo_720 = next(candidate for candidate in _modelos if candidate.id == "720")
     snapshot = SimpleNamespace(revision=select_revision(_modelo_720, filing_year=2025, period="0A"))
     context = CalculationSourceContext(
@@ -413,7 +412,7 @@ def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenanc
             foreign_asset_observations=observations,
         ),
     )
-    _modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _modelos, _catalogues = bundled_registry_tree()
     _modelo_720 = next(candidate for candidate in _modelos if candidate.id == "720")
     snapshot = SimpleNamespace(revision=select_revision(_modelo_720, filing_year=2025, period="0A"))
     context = CalculationSourceContext(

@@ -534,7 +534,7 @@ def test_the_generated_cohort_declares_the_retirement_not_only_the_scaffold(tmp_
     return early having nothing to verify, and the retired identity would survive
     every publication with no gate reporting anything.
     """
-    from cadrumo.agent import materialise_marketplace
+    from cadrumo_harness import materialise_marketplace
 
     generated = tmp_path / "generated-marketplace"
     materialise_marketplace(generated)
@@ -656,7 +656,7 @@ def test_the_real_generated_description_survives_the_preflight(tmp_path: Path) -
     guard is proven against the exact bytes a release pushes rather than a
     paraphrase of them.
     """
-    from cadrumo.agent import materialise_marketplace
+    from cadrumo_harness import materialise_marketplace
 
     cohort = tmp_path / "generated-cohort"
     materialise_marketplace(cohort)

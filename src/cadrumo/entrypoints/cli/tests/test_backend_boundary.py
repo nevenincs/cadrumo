@@ -26,6 +26,7 @@ from ....core.resources import bundled_path
 from ....domain.calculations.registry import discover_modelo_sources
 from ....tests import REPO_ROOT
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.user_profile import register_cli_profile
 from .. import _ledger
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -277,19 +278,16 @@ def test_manual_ledger_root_format_still_controls_emitted_payload_shape(tmp_path
     """The root ``--format`` flag remains the switch used by the envelope emitter."""
 
     env = {"CADRUMO_SECRET_PASSPHRASE": "backend-boundary-passphrase"}
-    created = invoke_cached_cli(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--surnames", "Operator",
-            "--activity", "design",
-        ],
-        env=env,
-    )  # fmt: skip
-    assert created.exit_code == 0, created.output
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Operator',
+            "activities.description": 'design',
+        },
+    )
 
     statement = tmp_path / "statement.csv"
     statement.write_text(

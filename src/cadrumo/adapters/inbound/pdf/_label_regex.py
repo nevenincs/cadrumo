@@ -138,7 +138,7 @@ def parse_spanish_decimal(raw: str) -> Decimal | None:
     return parsed
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class LabelHit:
     """One successful label-anchored regex match.
 

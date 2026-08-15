@@ -13,8 +13,7 @@ from datetime import date
 
 import pytest
 
-from .....core.resources import bundled_path
-from .._loader import load_registry_tree
+from .....tests.registry_tree import bundled_registry_tree
 from .._validate_revision_id_window_agreement import (
     revision_id_claims_open_window,
     revision_window_closures,
@@ -46,7 +45,7 @@ _KNOWN_ID_TAILS = frozenset(
 
 
 def _committed_revisions():
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     return tuple((modelo.id, revision) for modelo in modelos for revision in modelo.revisions.values())
 
 
@@ -106,7 +105,7 @@ def test_an_uninformative_id_is_neither_refused_nor_cleared() -> None:
     failures: list[str] = []
     for modelo_id, revision in _committed_revisions():
         if str(revision.id) == "2025" and revision.valid_to is not None:
-            validate_revision_id_window_agreement(failures, prefix=f"modelo {modelo_id}", revision=revision)
+            failures.extend(validate_revision_id_window_agreement(prefix=f"modelo {modelo_id}", revision=revision))
     assert failures == []
 
 
@@ -135,13 +134,11 @@ def test_the_gate_refuses_a_constructed_contradiction_and_passes_its_open_twin()
         if revision_id_claims_open_window(str(revision.id)) and not revision_window_closures(revision)
     )
 
-    passing: list[str] = []
-    validate_revision_id_window_agreement(passing, prefix="modelo TEST", revision=genuinely_open)
+    passing = validate_revision_id_window_agreement(prefix="modelo TEST", revision=genuinely_open)
     assert passing == [], f"a genuinely open-ended revision was refused: {genuinely_open.id}"
 
     closed = genuinely_open.model_copy(update={"valid_to": date(2025, 12, 31)})
-    refusing: list[str] = []
-    validate_revision_id_window_agreement(refusing, prefix="modelo TEST", revision=closed)
+    refusing = validate_revision_id_window_agreement(prefix="modelo TEST", revision=closed)
 
     assert len(refusing) == 1
     # Keyed on the two facts the refusal must carry -- which axis closed the window

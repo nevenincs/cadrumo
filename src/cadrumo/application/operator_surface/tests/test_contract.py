@@ -23,8 +23,9 @@ See Also:
         Refusal gate that raises the registered operator-surface contract error.
     :func:`~application.operator_surface.build_operator_surface_manifest`
         Agent-facing manifest builder that consumes the same backend contract.
-    :mod:`~entrypoints.cli._app_contract`
-        CLI adapter that emits the manifest without owning the contract.
+    :mod:`~entrypoints.cli`
+        Entrypoint layer supplying the result-schema references the manifest
+        composes with, without owning the contract.
 """
 
 from __future__ import annotations

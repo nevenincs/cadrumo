@@ -1,9 +1,7 @@
 """Master-key persisted-format contracts."""
 
-import json
 
 import pytest
-from pydantic import ValidationError
 
 from .. import LOGIN_THROTTLE_FILENAME
 from ..master_key import _login_throttle

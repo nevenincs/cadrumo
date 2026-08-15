@@ -54,6 +54,7 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path, resources
+from .....tests.registry_tree import bundled_registry_tree
 from ....period import Period, calculation_filing_date
 from .. import (
     RegistryCalculationResult,
@@ -151,7 +152,7 @@ def test_the_expired_window_is_not_declared_in_the_revisions_that_neutralise_it(
     Built through :func:`build_snapshot` rather than the authority so this asserts
     the registry's own declaration independently of revision review status.
     """
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = bundled_registry_tree()
     modelo = next(m for m in modelos if m.id == "303")
     snapshot = build_snapshot(
         modelo,

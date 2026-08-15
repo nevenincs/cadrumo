@@ -20,8 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
-from .._loader import load_registry_tree
+from .....tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -50,7 +49,7 @@ def test_export_record_profiles_removed_without_deleting_pdf_authority() -> None
     and a guard that goes quiet whenever something else is broken is one nobody
     can rely on at the moment it matters.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     by_id = {modelo.id: modelo for modelo in modelos}
     profiles = {
         profile.id: profile.surface

@@ -53,14 +53,14 @@ _PROFILE_PREDICATE_VALIDATORS: dict[str, Callable[[str, str, str], list[str]]] =
 
 
 def validate_cross_reference_section(
-    failures: list[str],
     *,
     prefix: str,
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
-) -> None:
+) -> list[str]:
+    failures: list[str] = []
     oracle_bindings: dict[str, str] = {}
     for cross_reference in revision.live_cross_references:
         owner = f"cross-reference {cross_reference.id}"
@@ -96,16 +96,17 @@ def validate_cross_reference_section(
                 )
             else:
                 oracle_bindings[cross_reference.oracle_id] = cross_reference.id
+    return failures
 
 
 def validate_workbook_parity_section(
-    failures: list[str],
     *,
     prefix: str,
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
-) -> None:
+) -> list[str]:
+    failures: list[str] = []
     for workbook in revision.workbook_parity_refs:
         owner = f"workbook parity {workbook.id}"
         failures.extend(_missing_refs(prefix, owner, workbook.legal_refs, legal_refs, "legal"))
@@ -126,6 +127,7 @@ def validate_workbook_parity_section(
                 f"{prefix}: workbook parity {workbook.id!r} non-formula workbook "
                 "requires layout_authority source evidence",
             )
+    return failures
 
 
 _APPLICATION_LINK_ALLOWED_SOURCE_TIERS: Mapping[str, tuple[str, ...]] = {
@@ -161,7 +163,6 @@ def _application_link_source_tier_failures(
 
 
 def validate_verification_expectation_section(
-    failures: list[str],
     *,
     prefix: str,
     revision: ModeloRevision,
@@ -169,7 +170,8 @@ def validate_verification_expectation_section(
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
-) -> None:
+) -> list[str]:
+    failures: list[str] = []
     casilla_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
     for expectation in revision.verification_expectations:
@@ -198,6 +200,7 @@ def validate_verification_expectation_section(
                 casilla_by_id=casilla_by_id,
             ),
         )
+    return failures
 
 
 def _unknown_casilla_failures(
@@ -293,14 +296,14 @@ def _verification_predicate_expression_failures(
 
 
 def validate_application_link_section(
-    failures: list[str],
     *,
     prefix: str,
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
-) -> None:
+) -> list[str]:
+    failures: list[str] = []
     for link in revision.application_links:
         owner = f"application link {link.id}"
         failures.extend(_missing_refs(prefix, owner, link.legal_refs, legal_refs, "legal"))
@@ -314,17 +317,18 @@ def validate_application_link_section(
                 source_refs=source_refs,
             ),
         )
+    return failures
 
 
 def validate_deadline_window_section(
-    failures: list[str],
     *,
     prefix: str,
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
-) -> None:
+) -> list[str]:
+    failures: list[str] = []
     for window in revision.deadline_windows:
         owner = f"deadline window {window.id}"
         failures.extend(_missing_refs(prefix, owner, window.legal_refs, legal_refs, "legal"))
@@ -342,3 +346,4 @@ def validate_deadline_window_section(
                     "official_source_guidance",
                 ),
             )
+    return failures

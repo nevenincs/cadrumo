@@ -195,7 +195,10 @@ def validate_modelo_directory_source(entry: Path) -> tuple[ModeloRevisionSource,
     takes it from here instead of repeating the walk.
     """
     allowed_directories = frozenset({"locales", "revisions"})
-    for child in scan_directory(entry):
+    # require_root: both callers have already confirmed this modelo directory's
+    # manifest.toml, so an unreadable path is a broken tree. A silent empty
+    # listing would validate nothing and report the modelo as sourceless.
+    for child in scan_directory(entry, require_root=True):
         if child.is_file():
             if child.name != "manifest.toml":
                 raise RegistryLoadError(f"{child}: unrecognized modelo source file; only manifest.toml is allowed")
@@ -211,7 +214,8 @@ def validate_modelo_directory_source(entry: Path) -> tuple[ModeloRevisionSource,
 
 
 def _validate_flat_toml_files(directory: Path, *, description: str) -> None:
-    for entry in scan_directory(directory):
+    # require_root: the caller passes a directory it just enumerated.
+    for entry in scan_directory(directory, require_root=True):
         if not entry.is_file() or entry.suffix != ".toml":
             raise RegistryLoadError(f"{entry}: unrecognized {description} entry; only TOML files are allowed")
 
@@ -246,7 +250,8 @@ def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSourc
 
 
 def _validate_revision_directory_entries(revisions_dir: Path) -> None:
-    for entry in scan_directory(revisions_dir):
+    # require_root: the sole caller guards on is_dir() before reaching here.
+    for entry in scan_directory(revisions_dir, require_root=True):
         if entry.is_file() and entry.suffix != ".toml":
             raise RegistryLoadError(
                 f"{entry}: unrecognized revision file; revision files must use the '.toml' suffix",
@@ -300,7 +305,9 @@ def _validate_revision_fragment_tree(path: Path) -> None:
 
 
 def _validate_revision_fragment_top_level(path: Path) -> None:
-    for entry in scan_directory(path, select=DirectoryEntryKind.FILES):
+    # require_root: this revision fragment directory was just enumerated, so an
+    # unreadable path would silently pass a tree this function exists to refuse.
+    for entry in scan_directory(path, select=DirectoryEntryKind.FILES, require_root=True):
         if entry.name != "revision.toml":
             raise RegistryLoadError(
                 f"{entry}: revision section fragment must live in its owned section subdirectory",
@@ -321,15 +328,22 @@ def _is_generated_export_provenance(entry: Path, revision_root: Path) -> bool:
 
 
 def _revision_fragment_section_directories(path: Path) -> tuple[Path, ...]:
+    # require_root: mirrors _loader._revision_section_directories -- an
+    # unreadable revision directory is a broken tree, not a sectionless revision.
     return tuple(
-        entry for entry in scan_directory(path, select=DirectoryEntryKind.DIRECTORIES) if entry.name != "locales"
+        entry
+        for entry in scan_directory(path, select=DirectoryEntryKind.DIRECTORIES, require_root=True)
+        if entry.name != "locales"
     )
 
 
 def _validate_section_fragment_names(section_dir: Path) -> None:
     # The first nested directory settles the refusal, so this asks for one
     # rather than building the listing every populated section discards.
-    nested_entry = next(iter_directory(section_dir, select=DirectoryEntryKind.DIRECTORIES), None)
+    nested_entry = next(
+        iter_directory(section_dir, select=DirectoryEntryKind.DIRECTORIES, require_root=True),
+        None,
+    )
     if nested_entry is not None:
         raise RegistryLoadError(
             f"{nested_entry}: nested revision section directories are not allowed; "

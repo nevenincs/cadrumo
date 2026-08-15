@@ -85,7 +85,7 @@ from .....core.resources import bundled_path
 from .. import (
     ValidatedRegistryAuthority,
 )
-from ._manual_oracle_support import declared_manual_inputs, read_manual_worked_example
+from ._manual_oracle_support import oracle_declared_figures, read_manual_worked_example
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -194,7 +194,7 @@ def _scenario(*, ccaa: str, scenario_id: str, grounded: bool) -> RegistryCalcula
         revision="2024",
         filing_year=2024,
         period="0A",
-        inputs=declared_manual_inputs(_ORACLE_PAYLOAD_NAME),
+        inputs=oracle_declared_figures(_ORACLE_PAYLOAD_NAME),
         binding_values=_BASE_BINDINGS_2024,
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": ccaa},
         relation_values=_REL_2024,

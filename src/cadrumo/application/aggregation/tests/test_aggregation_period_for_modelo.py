@@ -16,6 +16,7 @@ import pytest
 from ....core import Period, StandardPeriodCode
 from .. import aggregation_period_for_modelo
 from .._errors import AggregationValidationError
+from ._renta_income_aggregation_support import _period as _canonical_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -61,7 +62,8 @@ _DELETED_ALIASES = (
 
 
 def _period(code: str, *, year: int = 2025) -> Period:
-    return Period.from_year_and_code(year, code)
+    """Delegate to the canonical builder, keeping this module's code-first convention."""
+    return _canonical_period(year, code)
 
 
 def test_canonical_span_token_maps_to_typed_period() -> None:

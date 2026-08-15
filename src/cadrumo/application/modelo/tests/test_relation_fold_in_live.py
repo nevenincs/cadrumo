@@ -48,13 +48,13 @@ from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     RegistryModeloObservation,
     calculate_registry_snapshot,
-    load_registry_tree,
     resolve_available_bound_inputs_by_casilla_id,
     select_revision,
 )
 from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
+from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
     AggregationValidationError,
@@ -235,7 +235,7 @@ def test_modelo_180_115_fold_in_fires_on_live_calculate(secure_objects: SecureOb
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    modelos_180, _catalogues_180 = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos_180, _catalogues_180 = bundled_registry_tree()
     modelo_180 = next(candidate for candidate in modelos_180 if candidate.id == "180")
     revision_180 = select_revision(modelo_180, filing_year=_YEAR, period="0A")
     work_unit = create_work_unit(
@@ -292,7 +292,7 @@ def test_relation_target_collision_refused_by_mesh_guard(secure_objects: SecureO
     obs_repo = CalculationObservationRepository()
     _seed_115_quarters(obs_repo=obs_repo)
 
-    modelos_180, catalogues_180 = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos_180, catalogues_180 = bundled_registry_tree()
     modelo_180 = next(candidate for candidate in modelos_180 if candidate.id == "180")
     snapshot_180 = build_snapshot(
         modelo_180,

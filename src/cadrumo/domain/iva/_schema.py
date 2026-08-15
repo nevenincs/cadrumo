@@ -31,6 +31,7 @@ from pydantic import (
 )
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.errors import BaseSeverity
 from ...core.parsing import parse_iso8601_date
 from ._errors import IvaValidationError
 
@@ -849,13 +850,14 @@ class IvaVerificationIssue(_IvaStrictFrozen):
     """A single finding produced by :func:`cadrumo.domain.iva.verify_catalogue`.
 
     Attributes:
-        level: Severity, either ``"error"`` or ``"warning"``.
+        level: Severity, shared with every other diagnostic and validation
+            issue in the project via :class:`~cadrumo.core.errors.BaseSeverity`.
         code: Short stable issue code.
         message: Human-readable detail.
         category_id: Affected IVA category value, if any.
     """
 
-    level: str = Field(description="'error' or 'warning'.")
+    level: BaseSeverity
     code: str = Field(description="Short, stable issue code.")
     message: str = Field(description="Human-readable detail.")
     category_id: str | None = Field(
@@ -876,14 +878,23 @@ class IvaVerificationReport(_IvaStrictFrozen):
 
     @property
     def errors(self) -> tuple[IvaVerificationIssue, ...]:
-        """Return the subset of issues whose :attr:`IvaVerificationIssue.level` is ``"error"``.
+        """Return the subset of issues at :attr:`~cadrumo.core.errors.BaseSeverity.ERROR`.
 
         Returns:
             Tuple of :class:`IvaVerificationIssue` objects with error-level severity.
         """
-        return tuple(issue for issue in self.issues if issue.level == "error")
+        return tuple(issue for issue in self.issues if issue.level is BaseSeverity.ERROR)
 
     @property
-    def clean(self) -> bool:
+    def warnings(self) -> tuple[IvaVerificationIssue, ...]:
+        """Return the subset of issues at :attr:`~cadrumo.core.errors.BaseSeverity.WARNING`.
+
+        Returns:
+            Tuple of :class:`IvaVerificationIssue` objects with warning-level severity.
+        """
+        return tuple(issue for issue in self.issues if issue.level is BaseSeverity.WARNING)
+
+    @property
+    def ok(self) -> bool:
         """Return ``True`` when no error-level issues were found."""
         return not self.errors

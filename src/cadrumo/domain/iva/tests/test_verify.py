@@ -16,7 +16,7 @@ _CATALOGUE = resolve_catalogue(on=date(2025, 1, 1))
 def test_shipped_catalogue_is_clean() -> None:
     assert len(_CATALOGUE) > 0, "catalogue must be non-empty for the clean check to be meaningful"
     report = verify_catalogue(_CATALOGUE)
-    assert report.clean is True, [issue.model_dump() for issue in report.errors]
+    assert report.ok is True, [issue.model_dump() for issue in report.errors]
     assert report.errors == ()
 
 

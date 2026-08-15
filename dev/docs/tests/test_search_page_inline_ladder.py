@@ -36,9 +36,9 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ._http_serve_support import serve_directory
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records
+from ._http_serve_support import serve_directory
 from .test_palette_ranking import _approved_concept_records
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]

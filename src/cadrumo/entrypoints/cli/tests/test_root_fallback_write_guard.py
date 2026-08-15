@@ -233,7 +233,7 @@ def _live_leaf_paths() -> tuple[str, ...]:
     import typer
 
     from ...cli import app
-    from ._lazy_command_tree import materialise_lazy_subcommands
+    from .._command_suggestions import materialise_lazy_subcommands
 
     materialise_lazy_subcommands(app)
     root = typer.main.get_command(app)
@@ -487,9 +487,7 @@ def test_mutation_token_set_still_matches_live_verbs() -> None:
 #:   name: it composes reads into a walkthrough and emits, writing nothing.
 #: - Writes that land OUTSIDE the bucket -- ``modelo review-package build``,
 #:   ``encrypt-for-recipient`` and ``encrypt-feedback`` write only to their
-#:   ``--output`` path, and ``app agent`` materialises shipped harness data
-#:   into an operator directory (its handler documents that it never enters
-#:   the bucket session). Their signing / decrypting siblings are NOT here --
+#:   ``--output`` path. Their signing / decrypting siblings are NOT here --
 #:   those mint and persist a keypair into the bucket on first use.
 #: - Reads that decrypt but never write -- ``diagnostics telemetry flush``
 #:   builds a payload and hands it to the telemetry sink, and
@@ -500,8 +498,6 @@ def test_mutation_token_set_still_matches_live_verbs() -> None:
 #: absent. Do not add one to silence the census.
 _REVIEWED_NON_MUTATING_APP_LEAVES: frozenset[str] = frozenset(
     {
-        "app agent",
-        "app contract",
         "app diagnostics errors",
         "app diagnostics latency",
         "app diagnostics llm-usage",

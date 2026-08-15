@@ -53,6 +53,7 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
+from .....tests.registry_tree import bundled_registry_tree
 from .._authority import ValidatedRegistryAuthority
 from .._record_design import extract_record_design
 from .._schema import ModeloRevision
@@ -74,9 +75,8 @@ def _record_design_sources() -> dict[str, Path]:
     compared Modelo 303's revisions against a design neither of them encodes and
     produced a 194-byte overshoot that was an artefact of the comparison.
     """
-    from .._loader import load_registry_tree
 
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _modelos, catalogues = bundled_registry_tree()
     corpus_root = Path(bundled_path())
     resolved: dict[str, Path] = {}
     for source_id, source in catalogues.sources.items():

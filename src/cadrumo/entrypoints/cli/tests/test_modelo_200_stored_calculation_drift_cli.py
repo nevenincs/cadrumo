@@ -7,6 +7,7 @@ import pytest
 
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -18,22 +19,20 @@ def _invoke(arguments: list[str]):
 def test_verify_after_profile_activity_start_change_refuses_without_traceback(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    profile = _invoke(
-        [
-            "config", "profile", "create", "sa-drift",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "legal_entity",
-            "--legal-entity-form", "sa",
-            "--tax-id", "A12345674",
-            "--legal-name", "S.A. Drift Test",
-            "--activity", "industrial services",
-            "--incn-prior-12-months", "500000",
-            "--no-new-entity-first-two-profit-periods",
-            "--iva-regime", "GENERAL",
-            "--tax-residence-ccaa", "madrid",
-        ],
-    )  # fmt: skip
-    assert profile.exit_code == 0, profile.output
+    register_cli_profile(
+        label='sa-drift',
+        facts={
+            "taxpayer_type.entity_type": 'legal_entity',
+            "taxpayer_type.legal_entity_form": 'sa',
+            "identity.tax_id": 'A12345674',
+            "identity.legal_name": 'S.A. Drift Test',
+            "activities.description": 'industrial services',
+            "taxpayer_type.incn_prior_12_months": '500000',
+            "taxpayer_type.new_entity_first_two_profit_periods": 'false',
+            "iva.regime": 'GENERAL',
+            "tax_residence.ccaa": 'madrid',
+        },
+    )
 
     work = _invoke(
         [

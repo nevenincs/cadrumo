@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 
 from .....core.resources import bundled_path
-from .._loader import load_registry_tree
+from .....tests.registry_tree import bundled_registry_tree
 from .._validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -22,7 +22,7 @@ def test_committed_modelo_202_2025_2p_and_3p_deadline_windows_match_aeat_calenda
     2025-10-15, and December PF 25 closes on 2025-12-22 with direct debit
     through 2025-12-17.
     """
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = bundled_registry_tree()
     modelo = next(modelo for modelo in modelos if modelo.id == "202")
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     revision = modelo.revisions["2025-y-siguientes"]

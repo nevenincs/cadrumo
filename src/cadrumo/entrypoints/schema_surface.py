@@ -17,8 +17,6 @@ from ..core.product_identity import PRODUCT_IDENTITY
 # tests reconcile it exactly to both decorator owners and the live schema surface.
 RESULT_SCHEMA_MODULES: tuple[str, ...] = (
     "cadrumo.application.wizard._results",
-    "cadrumo.entrypoints.cli._app_agent_workspace_payloads",
-    "cadrumo.entrypoints.cli._app_contract_payloads",
     "cadrumo.entrypoints.cli._app_live_payloads",
     "cadrumo.entrypoints.cli._app_maintenance_payloads",
     "cadrumo.entrypoints.cli._app_quickfile_payloads",
@@ -34,7 +32,6 @@ RESULT_SCHEMA_MODULES: tuple[str, ...] = (
     "cadrumo.entrypoints.cli._config_bucket_history_payloads",
     "cadrumo.entrypoints.cli._config_descendiente_payloads",
     "cadrumo.entrypoints.cli._config_payloads",
-    "cadrumo.entrypoints.cli._config_sandbox_payloads",
     "cadrumo.entrypoints.cli._diagnostics_payloads",
     "cadrumo.entrypoints.cli._ledger_business_payloads",
     "cadrumo.entrypoints.cli._ledger_catalogue_invoice_payloads",
@@ -71,8 +68,6 @@ CALLBACK_SCHEMA_KEY_BY_CLI_PATH = MappingProxyType(
         ("config",): "root.config",
         ("config", "repair"): "config.repair",
         ("app", "ledger", "participation"): "ledger.participation",
-        ("app", "contract"): "contract",
-        ("app", "agent"): "agent",
         ("app", "quickfile"): "quickfile",
     },
 )

@@ -19,8 +19,7 @@ from ....domain.calculations.registry import load_modelo_path
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage
-from ....tests.user_profile import register_minimal_profile
-from ....tests.user_profile import register_cli_profile
+from ....tests.user_profile import register_cli_profile, register_minimal_profile
 
 __all__ = ["isolated_profile_storage"]
 

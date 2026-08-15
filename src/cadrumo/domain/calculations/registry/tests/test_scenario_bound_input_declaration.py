@@ -50,10 +50,9 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import CasillaId, scan_directory, validated_casilla_id
-from .....core.resources import bundled_path
+from .....tests.registry_tree import bundled_registry_tree
 from .. import ModeloRevision, build_snapshot
 from .._errors import RegistryValidationError
-from .._loader import load_registry_tree
 from .._schema_input_kind import InputKind
 from ._registry_schema_support import _committed_modelo
 from ._scenarios import bound_casilla_ids, run_registry_calculation_scenario
@@ -158,7 +157,7 @@ def test_the_bound_surface_spans_the_registry_not_one_revision() -> None:
     than one revision's local quirk, so a future reader can tell the difference
     between "the check found nothing" and "there was nothing to find".
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     assert modelos, "the registry tree yielded no modelos"
 
     revisions_with_bound = 0

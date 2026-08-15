@@ -118,7 +118,12 @@ _PATRIMONIO_LEGAL_REFS = (
     "ley-19-1991:art-30",
     "ley-19-1991:art-31",
 )
-_PATRIMONIO_FORM_ORDER_REF = "orden-hac-1023-2021:modelo-714"
+# orden-hac-1023-2021:modelo-714 (formerly cited here) resolved, on live BOE,
+# to an unrelated municipal job-posting resolution -- fabricated, not a real
+# citation. The real governing instrument for ejercicio 2021 is Orden
+# HFP/207/2022 art. 4 (BOE-A-2022-4296), a numbered-article citation rather
+# than the old whole-orden "modelo 714" anchor shape.
+_PATRIMONIO_FORM_ORDER_REF = "orden-hfp-207-2022:art-4"
 
 
 def _load_modelo_714() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -217,10 +222,10 @@ def test_modelo_714_form_order_is_boe_corpus_backed() -> None:
     assert _PATRIMONIO_FORM_ORDER_REF in revision.legal_refs
     assert revision.orden_aplicabilidad == (_PATRIMONIO_FORM_ORDER_REF,)
     reference = legal[_PATRIMONIO_FORM_ORDER_REF]
-    assert reference.document_id == "BOE-A-2021-7593"
+    assert reference.document_id == "BOE-A-2022-4296"
     assert reference.kind == "orden"
-    assert reference.article == "modelo 714"
-    assert "ejercicio 2021 y siguientes" in reference.required_text
+    assert reference.article == "4"
+    assert "Aprobación del modelo de declaración del Impuesto sobre el Patrimonio" in reference.required_text
 
 
 def test_modelo_714_boe_form_source_is_layout_only() -> None:

@@ -9,6 +9,7 @@ import pytest
 
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -20,27 +21,16 @@ def _json_output(output: str) -> str:
 
 
 def test_profile_create_show_round_trips_pareja_de_hecho_marital_status() -> None:
-    created = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            "andrea",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "natural_person",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Andrea",
-            "--surnames",
-            "High",
-            "--taxpayer-marital-status",
-            "5",
-        ],
+    register_cli_profile(
+        label='andrea',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Andrea',
+            "identity.surnames": 'High',
+            "renta_taxpayer.marital_status": '5',
+        },
     )
-    assert created.exit_code == 0, created.output
 
     shown = invoke_cached_cli(["--format", "json", "config", "profile", "show"])
     assert shown.exit_code == 0, shown.output

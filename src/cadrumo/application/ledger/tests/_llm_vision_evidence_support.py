@@ -36,15 +36,6 @@ from .._evidence import PurchaseInvoiceEvidenceService
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 
 
-def _json_object(value: object) -> dict[str, object]:
-    assert isinstance(value, dict)
-    result: dict[str, object] = {}
-    for key, item in value.items():
-        assert isinstance(key, str)
-        result[key] = item
-    return result
-
-
 def _json_array(value: object) -> list[object]:
     assert isinstance(value, list)
     return list(value)
