@@ -50292,6 +50292,10 @@ modelo:
             x-chin6or5dpi6ipbeehin6bjedtmm4sj5:
               label: Regularización descendientes con discapacidad. Apellidos y nombre
                 del descendiente
+            x-cpgmqqbcd5giqrjldlin4rrjc4n62ojfdpniqobeehkm6qbgc5i6u:
+              label: Regularización familia numerosa. Importe del abono anticipado
+            x-cpgmqqbcd5giqrjldlin4rrjc4n68pb4elhm6qbfdo:
+              label: Regularización familia numerosa. Importe de la deducción
             x-cpgmqqbcd5giqrjldlin4rrjc4n78qbkelm6u:
               label: Regularización familia numerosa. Número de identificación del
                 título de familia numerosa
@@ -74115,6 +74119,12 @@ modelo:
           iva-deducible-aic-inversion-tipo-10-cuota:
             label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
               de inversión al tipo 10% - Cuota deducible
+          iva-deducible-aic-inversion-tipo-2-base:
+            label: IVA deducible en adquisiciones intracomunitarias de bienes de inversión
+              - Tipo 2% - Base imponible [769]
+          iva-deducible-aic-inversion-tipo-2-cuota:
+            label: IVA deducible en adquisiciones intracomunitarias de bienes de inversión
+              - Tipo 2% - Cuota deducible [770]
           iva-deducible-aic-inversion-tipo-21-base:
             label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
               de inversión al tipo 21% - Base imponible
@@ -74133,6 +74143,12 @@ modelo:
           iva-deducible-aic-inversion-tipo-5-cuota:
             label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
               de inversión al tipo 5% - Cuota deducible
+          iva-deducible-aic-inversion-tipo-7-5-base:
+            label: IVA deducible en adquisiciones intracomunitarias de bienes de inversión
+              - Tipo 7,5% - Base imponible [771]
+          iva-deducible-aic-inversion-tipo-7-5-cuota:
+            label: IVA deducible en adquisiciones intracomunitarias de bienes de inversión
+              - Tipo 7,5% - Cuota deducible [772]
           iva-deducible-aic-inversion-total-base:
             label: 'Total: IVA soportado deducible en adquisiciones intracomunitarias
               de bienes de inversión - Base imponible'
@@ -74145,6 +74161,12 @@ modelo:
           iva-deducible-aic-servicios-tipo-10-cuota:
             label: IVA soportado deducible en adquisiciones intracomunitarias de servicios
               al tipo 10% - Cuota deducible
+          iva-deducible-aic-servicios-tipo-2-base:
+            label: IVA deducible en adquisiciones intracomunitarias de servicios -
+              Tipo 2% - Base imponible [773]
+          iva-deducible-aic-servicios-tipo-2-cuota:
+            label: IVA deducible en adquisiciones intracomunitarias de servicios -
+              Tipo 2% - Cuota deducible [774]
           iva-deducible-aic-servicios-tipo-21-base:
             label: IVA soportado deducible en adquisiciones intracomunitarias de servicios
               al tipo 21% - Base imponible
@@ -74163,6 +74185,12 @@ modelo:
           iva-deducible-aic-servicios-tipo-5-cuota:
             label: IVA soportado deducible en adquisiciones intracomunitarias de servicios
               al tipo 5% - Cuota deducible
+          iva-deducible-aic-servicios-tipo-7-5-base:
+            label: IVA deducible en adquisiciones intracomunitarias de servicios -
+              Tipo 7,5% - Base imponible [775]
+          iva-deducible-aic-servicios-tipo-7-5-cuota:
+            label: IVA deducible en adquisiciones intracomunitarias de servicios -
+              Tipo 7,5% - Cuota deducible [776]
           iva-deducible-aic-servicios-total-base:
             label: 'Total: IVA soportado deducible en adquisiciones intracomunitarias
               de servicios - Base imponible'

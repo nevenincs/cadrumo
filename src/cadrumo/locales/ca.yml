@@ -48031,6 +48031,13 @@ modelo:
             x-chin6or5dpi6ipbeehin6bjedtmm4sj5:
               label: Regularització descendents amb discapacitat. Cognoms i nom del
                 descendent
+            x-cpgmqqbcd5giqrjldlin4rrjc4n62ojfdpniqobeehkm6qbgc5i6u:
+              label: Regularització família nombrosa. Import de l'abonament anticipat
+            x-cpgmqqbcd5giqrjldlin4rrjc4n68pb4elhm6qbfdo:
+              label: Regularització família nombrosa. Import de la deducció
+            x-cpgmqqbcd5giqrjldlin4rrjc4n78qbkelm6u:
+              label: Regularització família nombrosa. Número d'identificació del títol
+                de família nombrosa
           construct:
             modelo-122-regularizacion:
               field:
@@ -71368,6 +71375,12 @@ modelo:
           iva-deducible-aic-inversion-tipo-10-cuota:
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               d'inversió al tipus 10% - quota deduïble
+          iva-deducible-aic-inversion-tipo-2-base:
+            label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
+              - Tipus 2% - Base imposable [769]
+          iva-deducible-aic-inversion-tipo-2-cuota:
+            label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
+              - Tipus 2% - Quota deduïble [770]
           iva-deducible-aic-inversion-tipo-21-base:
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               d'inversió al tipus 21% - base imposable
@@ -71386,6 +71399,12 @@ modelo:
           iva-deducible-aic-inversion-tipo-5-cuota:
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               d'inversió al tipus 5% - quota deduïble
+          iva-deducible-aic-inversion-tipo-7-5-base:
+            label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
+              - Tipus 7,5% - Base imposable [771]
+          iva-deducible-aic-inversion-tipo-7-5-cuota:
+            label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
+              - Tipus 7,5% - Quota deduïble [772]
           iva-deducible-aic-inversion-total-base:
             label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
               de béns d''inversió - base imposable'
@@ -71398,6 +71417,12 @@ modelo:
           iva-deducible-aic-servicios-tipo-10-cuota:
             label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
               al tipus 10% - quota deduïble
+          iva-deducible-aic-servicios-tipo-2-base:
+            label: IVA deduïble en adquisicions intracomunitàries de serveis - Tipus
+              2% - Base imposable [773]
+          iva-deducible-aic-servicios-tipo-2-cuota:
+            label: IVA deduïble en adquisicions intracomunitàries de serveis - Tipus
+              2% - Quota deduïble [774]
           iva-deducible-aic-servicios-tipo-21-base:
             label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
               al tipus 21% - base imposable
@@ -71416,6 +71441,12 @@ modelo:
           iva-deducible-aic-servicios-tipo-5-cuota:
             label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
               al tipus 5% - quota deduïble
+          iva-deducible-aic-servicios-tipo-7-5-base:
+            label: IVA deduïble en adquisicions intracomunitàries de serveis - Tipus
+              7,5% - Base imposable [775]
+          iva-deducible-aic-servicios-tipo-7-5-cuota:
+            label: IVA deduïble en adquisicions intracomunitàries de serveis - Tipus
+              7,5% - Quota deduïble [776]
           iva-deducible-aic-servicios-total-base:
             label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
               de serveis - base imposable'

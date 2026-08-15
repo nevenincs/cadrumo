@@ -47950,6 +47950,10 @@ modelo:
             x-chin6or5dpi6ipbeehin6bjedtmm4sj5:
               label: Fogyatékossággal élő leszármazottak utáni korrekció. A leszármazott
                 vezeték- és utóneve
+            x-cpgmqqbcd5giqrjldlin4rrjc4n68pb4elhm6qbfdo:
+              label: Nagycsaládos korrekció. A levonás összege
+            x-cpgmqqbcd5giqrjldlin4rrjc4n78qbkelm6u:
+              label: Nagycsaládos korrekció. A nagycsaládos igazolvány azonosító száma
           construct:
             modelo-122-regularizacion:
               field:
@@ -71436,6 +71440,12 @@ modelo:
           iva-deducible-aic-inversion-tipo-10-cuota:
             label: Közösségen belüli tárgyieszköz-beszerzések után levonható előzetesen
               felszámított ÁFA 10% kulccsal - levonható adóösszeg
+          iva-deducible-aic-inversion-tipo-2-base:
+            label: Tárgyi eszközök Közösségen belüli beszerzésének levonható áfája
+              - 2% adókulcs - Adóalap [769]
+          iva-deducible-aic-inversion-tipo-2-cuota:
+            label: Tárgyi eszközök Közösségen belüli beszerzésének levonható áfája
+              - 2% adókulcs - Levonható adó [770]
           iva-deducible-aic-inversion-tipo-21-base:
             label: Közösségen belüli tárgyieszköz-beszerzések után levonható előzetesen
               felszámított ÁFA 21% kulccsal - adóalap
@@ -71454,6 +71464,12 @@ modelo:
           iva-deducible-aic-inversion-tipo-5-cuota:
             label: Közösségen belüli tárgyieszköz-beszerzések után levonható előzetesen
               felszámított ÁFA 5% kulccsal - levonható adóösszeg
+          iva-deducible-aic-inversion-tipo-7-5-base:
+            label: Tárgyi eszközök Közösségen belüli beszerzésének levonható áfája
+              - 7,5% adókulcs - Adóalap [771]
+          iva-deducible-aic-inversion-tipo-7-5-cuota:
+            label: Tárgyi eszközök Közösségen belüli beszerzésének levonható áfája
+              - 7,5% adókulcs - Levonható adó [772]
           iva-deducible-aic-inversion-total-base:
             label: 'Összesen: Közösségen belüli tárgyieszköz-beszerzések után levonható
               előzetesen felszámított ÁFA - adóalap'
@@ -71466,6 +71482,12 @@ modelo:
           iva-deducible-aic-servicios-tipo-10-cuota:
             label: Közösségen belüli szolgáltatásbeszerzések után levonható előzetesen
               felszámított ÁFA 10% kulccsal - levonható adóösszeg
+          iva-deducible-aic-servicios-tipo-2-base:
+            label: Szolgáltatások Közösségen belüli beszerzésének levonható áfája
+              - 2% adókulcs - Adóalap [773]
+          iva-deducible-aic-servicios-tipo-2-cuota:
+            label: Szolgáltatások Közösségen belüli beszerzésének levonható áfája
+              - 2% adókulcs - Levonható adó [774]
           iva-deducible-aic-servicios-tipo-21-base:
             label: Közösségen belüli szolgáltatásbeszerzések után levonható előzetesen
               felszámított ÁFA 21% kulccsal - adóalap
@@ -71484,6 +71506,12 @@ modelo:
           iva-deducible-aic-servicios-tipo-5-cuota:
             label: Közösségen belüli szolgáltatásbeszerzések után levonható előzetesen
               felszámított ÁFA 5% kulccsal - levonható adóösszeg
+          iva-deducible-aic-servicios-tipo-7-5-base:
+            label: Szolgáltatások Közösségen belüli beszerzésének levonható áfája
+              - 7,5% adókulcs - Adóalap [775]
+          iva-deducible-aic-servicios-tipo-7-5-cuota:
+            label: Szolgáltatások Közösségen belüli beszerzésének levonható áfája
+              - 7,5% adókulcs - Levonható adó [776]
           iva-deducible-aic-servicios-total-base:
             label: 'Összesen: Közösségen belüli szolgáltatásbeszerzések után levonható
               előzetesen felszámított ÁFA - adóalap'
