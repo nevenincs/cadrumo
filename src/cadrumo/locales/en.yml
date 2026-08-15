@@ -48478,6 +48478,10 @@ modelo:
       revision:
         2015-y-siguientes:
           casilla:
+            impatriado:
+              anexo-transmision-iic:
+                tipo-renta:
+                  label: Income type
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Tax year the return refers to

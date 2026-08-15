@@ -51515,6 +51515,10 @@ modelo:
       revision:
         2015-y-siguientes:
           casilla:
+            impatriado:
+              anexo-transmision-iic:
+                tipo-renta:
+                  label: Tipo de renta
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la declaracion

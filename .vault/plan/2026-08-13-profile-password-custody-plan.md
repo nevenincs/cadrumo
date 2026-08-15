@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:82dbef6a3d396bf16e32a834537a14f3154f4d69749b20e9e04607bdd97b0b27'
+body_hash: 'sha256:36b851ddd29a8b70bfc94ebaf52f5344aada6c3a95c514df793c64168e6d4f9a'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -213,6 +213,8 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S143` - Have Sol Medium rule where companion distributions built from this repository live, since two established companions sit under one directory and a third was placed elsewhere, which is one concept in two homes and the fragmentation this campaign exists to remove; `pyproject.toml`.
 - [ ] `W04.P07.S144` - Have Sol Medium rule whether a deletion landing without its consumer sweep should be mechanically detectable, since three separate removals in one session each shipped the deletion in one commit and the consumer repair in another or not at all, blocking collection tree-wide for every agent until somebody noticed, which makes the split the norm on this tree rather than the exception; `.vault/audit/ and dev/import_hygiene_scan.py`.
 - [ ] `W04.P07.S145` - Have Terra XHigh sever the dependency cycle between the core distribution and the extracted harness by moving the four harness-delivery surfaces into the harness package and dropping the core dependency, since the harness project file states that it consumes the core library and never the reverse while a repair added exactly that reverse edge, making the current shape a deliberate temporary the sever supersedes; `pyproject.toml and src/cadrumo/entrypoints/ and src/cadrumo-harness/`.
+- [ ] `W04.P07.S148` - Have Terra XHigh reconcile the two enrolment gates whose key spaces disagree, adding the four standalone capsule and pointer files to the independent path discovery source rather than to the hand list, and narrowing the namespace pin so it excludes namespaces without excluding a payload grammar that carries its own version constant; `src/cadrumo/tests/test_persisted_format_enrollment.py and src/cadrumo/adapters/persistence/storage/`.
+- [ ] `W04.P07.S149` - Have Sol Medium triage the forty-two persisted models whose schema version defaults to a bare literal rather than a named constant, since the binding gate discovers formats by constant name so a version that never gets a name is invisible to it entirely, and establish which of the forty-two are genuine persisted formats before naming any of them; `src/cadrumo/`.
 
 ## Wave `W05` - end-to-end proof
 

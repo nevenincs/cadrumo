@@ -49,7 +49,13 @@ def select_relation_source_revisions(
     twice per relation. The failures slot is real, wired infrastructure (the
     caller already does `failures.extend(selector_failures)`), currently
     always empty only because no branch below yet has a selection failure to
-    report -- not vestigial, just unexercised.
+    report -- not vestigial, just unexercised. The distinction matters: an
+    unreachable slot (nothing ever calls the code that would populate it) is
+    the defect class this registry has hit before -- a schema family with
+    validation declared but no executor reaching it. This slot IS reached,
+    on every call, by a real caller that already drains it; it is simply
+    quiet because no selection failure has occurred yet, not because nothing
+    can reach it.
     """
     selected = tuple(
         revision

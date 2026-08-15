@@ -49236,6 +49236,10 @@ modelo:
       revision:
         2015-y-siguientes:
           casilla:
+            impatriado:
+              anexo-transmision-iic:
+                tipo-renta:
+                  label: Tipus de renda
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici a què es refereix la declaració
