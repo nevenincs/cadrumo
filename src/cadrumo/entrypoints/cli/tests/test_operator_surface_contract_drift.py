@@ -176,17 +176,18 @@ def test_no_risk_row_outlives_the_command_it_classifies() -> None:
 
     The reverse is NOT asserted, because an absent row is a designed state
     rather than a gap. ``classify`` derives safe for a command with no row, so
-    read-only verbs are intentionally undeclared, and today 26 of them are --
-    the overview reports, the citation reads, ``config check``, ``contract``.
+    read-only verbs are intentionally undeclared, and many of them are --
+    the overview reports, the citation reads, ``config check``.
     Asserting an exact mirror would therefore fail against correct data and
     would have to be "fixed" by declaring rows that say nothing, which is how a
     risk table stops meaning anything. The classification tests own the other
     direction, where absence is checked as behaviour rather than inventory.
     """
-    from ...mcp import build_tool_descriptors
+    from .._command_schema import command_schema_refs
+    from .._verb_input_schema import is_exposable_command
 
-    live_keys = {descriptor.command_key for descriptor in build_tool_descriptors()}
-    assert live_keys, "descriptor set is empty, so this gate would pass while checking nothing"
+    live_keys = {ref.command for ref in command_schema_refs() if is_exposable_command(ref.command)}
+    assert live_keys, "exposable command set is empty, so this gate would pass while checking nothing"
     assert COMMAND_RISK, "risk table is empty, so this gate would pass while checking nothing"
 
     orphans = sorted(key for key in COMMAND_RISK if key not in live_keys)

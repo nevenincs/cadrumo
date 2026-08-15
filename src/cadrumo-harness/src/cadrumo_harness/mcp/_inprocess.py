@@ -44,7 +44,7 @@ from pydantic import BaseModel, ConfigDict
 from cadrumo.core import PRODUCT_IDENTITY
 from cadrumo.core.json_contract import OutputSchemaError, validate_registered_envelope_document
 from ._call_runtime import CallTier
-from ._input_schema import VerbInputSchema, cli_argv_for
+from cadrumo.entrypoints.cli import VerbInputSchema, cli_argv_for
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -135,7 +135,7 @@ def run_cli_in_process(argv_tail: Sequence[str], *, acquire_timeout_s: float) ->
 
     ``argv_tail`` is the argv the subprocess transport would pass after the
     executable - ``["--format", "json", *cli_path, *positional, *options]`` from
-    :func:`~entrypoints.mcp._input_schema.cli_argv_for`. The command is dispatched
+    :func:`~entrypoints.cli._verb_input_schema.cli_argv_for`. The command is dispatched
     exactly as the console entry point does
     (``get_command(app).main(..., standalone_mode=True)``), so the whole CLI
     pipeline - root callback, bucket-session activation, the verb body, the
@@ -196,7 +196,7 @@ def dispatch_verb_in_process(
 
     The argv is reconstructed from the per-verb input schema and the named
     ``arguments`` through the same
-    :func:`~entrypoints.mcp._input_schema.cli_argv_for` the subprocess transport
+    :func:`~entrypoints.cli._verb_input_schema.cli_argv_for` the subprocess transport
     uses, so both transports dispatch the identical command line. Returns ``None``
     when the capture could not be acquired within ``acquire_timeout_s``.
     """

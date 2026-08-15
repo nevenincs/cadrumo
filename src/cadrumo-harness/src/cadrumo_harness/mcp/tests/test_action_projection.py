@@ -13,8 +13,8 @@ from cadrumo.application.operator_actions import (
 )
 from cadrumo.core.json_contract import Notice
 from cadrumo.entrypoints.cli import command_schema_refs
-from .._dispatch import is_exposable_command
-from .._input_schema import (
+from cadrumo.entrypoints.cli import is_exposable_command
+from cadrumo.entrypoints.cli import (
     VerbInputSchema,
     build_mcp_action_input_schemas,
     build_verb_input_schemas,

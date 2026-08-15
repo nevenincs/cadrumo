@@ -46,7 +46,7 @@ from ._inprocess import (
     tier_runs_in_process,
     warm_capture_holder_age,
 )
-from ._input_schema import cli_argv_for
+from cadrumo.entrypoints.cli import cli_argv_for
 from ._meta_tools import ToolRunOutcome
 from ._tools import McpToolDescriptor
 

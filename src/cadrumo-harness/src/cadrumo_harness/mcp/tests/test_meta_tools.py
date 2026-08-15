@@ -13,7 +13,7 @@ import pytest
 from cadrumo.core import PRODUCT_IDENTITY
 from cadrumo.tests.declared_command_risk import declared_live_write
 from .._annotations import McpAnnotations
-from .._input_schema import VerbInputSchema
+from cadrumo.entrypoints.cli import VerbInputSchema
 from .._meta_tools import (
     MetaDescribeResult,
     ToolRunOutcome,

@@ -23,11 +23,19 @@ There is no ``agent`` extra to reach them through any more: it was removed from
 ``[tool.uv.sources]`` path dependency rather than a ``[tool.uv.workspace]``
 member, so ``uv export --package cadrumo-harness`` refuses it ("the workspace
 does not have a member cadrumo-harness") and the harness tree carries no
-lockfile of its own for a second export to run against. Both closures reach this
-export only while the root lockfile records the harness inside ``cadrumo``'s
-resolution; :func:`export_runtime_constraints` asserts that it does, and refuses
-rather than emitting a constraints file the MCP server's dependencies fell out
-of.
+lockfile of its own for a second export to run against. Both closures therefore
+reach this export only through the root lockfile's record of the harness inside
+``cadrumo``'s own resolution.
+
+TODO: that record is not durable. ``cadrumo-harness`` sits in the ``dev``
+dependency group, not in ``[project.dependencies]``, so the next ``uv lock``
+moves it out of ``cadrumo``'s runtime resolution and the MCP server's
+dependencies leave this export with it. There is no flag that recovers them:
+promoting ``cadrumo-harness`` to a ``[tool.uv.workspace]`` member, so
+``uv export --package cadrumo-harness`` can address it directly, is the
+lockfile-shape decision that resolves this and it is deliberately not taken
+here. Until it is, :func:`export_runtime_constraints` refuses rather than
+emitting a constraints file the MCP server's dependencies fell out of.
 """
 
 from __future__ import annotations
@@ -175,8 +183,8 @@ def _assert_harness_closure_present(lines: list[str], *, repo_root: Path) -> Non
             "uv cannot export a path-sourced non-workspace dependency on its own "
             "(`uv export --package cadrumo-harness` refuses: the workspace has no "
             "such member), and src/cadrumo-harness carries no lockfile of its own. "
-            "Promote cadrumo-harness to a [tool.uv.workspace] member and export it "
-            "with --package, or re-lock so cadrumo's resolution records it again.",
+            "Promote cadrumo-harness to a [tool.uv.workspace] member and export its "
+            "closure with --package.",
         )
 
 

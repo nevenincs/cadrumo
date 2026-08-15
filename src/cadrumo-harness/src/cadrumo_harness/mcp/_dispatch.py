@@ -6,7 +6,7 @@ the server runs. The actual invocation lives in the server shell; this module is
 deterministic and unit-tested.
 
 The live serving path builds its argv from the command's per-verb input schema
-via :func:`~entrypoints.mcp._input_schema.cli_argv_for` (named arguments in,
+via :func:`~entrypoints.cli._verb_input_schema.cli_argv_for` (named arguments in,
 resolved CLI path out); :func:`tool_request_argv` remains the pure
 ``(command_key, cli_tokens) -> argv`` mapper the determinism-replay eval uses to
 reconstruct a recorded raw-token call.
@@ -16,12 +16,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from cadrumo.entrypoints.schema_surface import ROOT_LANDING_SCHEMA_KEYS
-
 _TOOL_PREFIX = "cadrumo_"
-# Command keys that are group-callback / help emit surfaces, not operator-callable
-# tools. They are excluded from the exposed tool set.
-_NON_TOOL_KEYS: frozenset[str] = ROOT_LANDING_SCHEMA_KEYS
 
 # The client-side namespace prefix a Claude plugin prepends to every tool name
 # (``mcp__plugin_<plugin>_<server>__``). The plugin and the server are both named
@@ -77,21 +72,6 @@ _SEGMENT_ABBREVIATIONS: tuple[tuple[str, str], ...] = (
 )
 
 
-def is_exposable_command(command_key: str) -> bool:
-    """Return True when a registry command key should surface as an MCP tool.
-
-    A key declared in
-    :data:`~entrypoints.mcp._input_schema.DECLARED_UNIMPLEMENTED_SURFACES` is
-    never exposable: the declaration records that no verb backs it, and
-    advertising a tool whose verb does not exist hands the operator agent an
-    instruction it cannot recover from. The declaration keeps the gap visible in
-    source; it must not put a dead tool on the wire.
-    """
-    from ._input_schema import DECLARED_UNIMPLEMENTED_SURFACES
-
-    return command_key not in _NON_TOOL_KEYS and command_key not in DECLARED_UNIMPLEMENTED_SURFACES
-
-
 def tool_name_for_command(command_key: str) -> str:
     """Render a registry command key as a namespaced MCP tool name.
 
@@ -140,7 +120,7 @@ def tool_request_argv(command_key: str, args: Iterable[str]) -> list[str]:
     machine envelope is always requested. The pre-resolved ``args`` tokens are
     appended after the command path. The live serving path instead builds its
     argv from the per-verb schema via
-    :func:`~entrypoints.mcp._input_schema.cli_argv_for`; this mapper serves
+    :func:`~entrypoints.cli._verb_input_schema.cli_argv_for`; this mapper serves
     the determinism-replay eval, which records raw CLI-token calls.
     """
     return ["--format", "json", *_cli_path_tokens(command_key), *args]

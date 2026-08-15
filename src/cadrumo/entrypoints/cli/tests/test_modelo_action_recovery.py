@@ -14,7 +14,7 @@ from ....adapters.persistence.storage.sql import dispose_engine
 from ....application.modelo import get_work_unit
 from ....core import resolve_active_bucket_id
 from ....core.config import SecretStoreBackend, load_settings, override_settings
-from ....entrypoints.mcp import build_verb_input_schemas, cli_argv_for
+from .._verb_input_schema import build_verb_input_schemas, cli_argv_for
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_cli_profile
 

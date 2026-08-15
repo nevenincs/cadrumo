@@ -32,7 +32,7 @@ from cadrumo.application.operator_surface import (
     build_operator_surface_manifest,
 )
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
-from ._dispatch import is_exposable_command
+from cadrumo.entrypoints.cli import is_exposable_command
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 

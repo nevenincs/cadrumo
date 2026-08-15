@@ -59,7 +59,7 @@ from cadrumo.core.identity import (
     TaxIdIdentityToken,
 )
 from cadrumo.core.json_contract import SCHEMA_REGISTRY
-from .._dispatch import is_exposable_command
+from cadrumo.entrypoints.cli import is_exposable_command
 from .._result_thinning import THINNED_VERBS, thin_envelope
 from .._tools import _output_schema_for, build_tool_descriptors
 

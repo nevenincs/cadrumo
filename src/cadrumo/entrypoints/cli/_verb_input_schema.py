@@ -40,12 +40,12 @@ from typer._click.core import Context as ClickContext
 from typer._click.core import Parameter as ClickParameter
 from typer.main import get_command as _typer_get_command
 
-from cadrumo.application.operator_actions import (
+from ...application.operator_actions import (
     OPERATOR_ACTION_CATALOGUE,
     ActionArgumentBindingSpecification,
     ActionCatalogue,
 )
-from cadrumo.application.operator_surface import (
+from ...application.operator_surface import (
     CommandSchemaRef,
     InputSchemaInventoryRow,
     LiveLeafInventoryRow,
@@ -54,7 +54,7 @@ from cadrumo.application.operator_surface import (
     ResultSchemaInventoryRow,
     resolve_action_catalogue,
 )
-from cadrumo.entrypoints.schema_surface import CLI_PATH_BY_SCHEMA_KEY, GROUP_CALLBACK_SCHEMA_KEYS, ROOT_LANDING_SCHEMA_KEYS
+from ..schema_surface import CLI_PATH_BY_SCHEMA_KEY, GROUP_CALLBACK_SCHEMA_KEYS, ROOT_LANDING_SCHEMA_KEYS
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 _ACTION_CAPABILITIES_SCHEMA_KEY = "x-cadrumo-action-capabilities"
@@ -576,6 +576,20 @@ capability rather than to whoever is trying to make a build pass.
 """
 
 
+def is_exposable_command(command_key: str) -> bool:
+    """Return True when a registry command key is operator-callable.
+
+    A group-callback or root-landing key (:data:`ROOT_LANDING_SCHEMA_KEYS`) is a
+    help emit surface, not a verb. A key declared in
+    :data:`DECLARED_UNIMPLEMENTED_SURFACES` is never callable either: the
+    declaration records that no verb backs it, and advertising a surface whose
+    verb does not exist hands an operator an instruction it cannot recover from.
+    The declaration keeps the gap visible in source; it must not put a dead
+    surface on the wire.
+    """
+    return command_key not in ROOT_LANDING_SCHEMA_KEYS and command_key not in DECLARED_UNIMPLEMENTED_SURFACES
+
+
 def assert_schema_coverage(resolution_errors: tuple[VerbLeafResolutionFailure, ...]) -> None:
     """Fail the build when any command key's subtree failed to materialise.
 
@@ -637,7 +651,7 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
     Returns:
         A mapping of command key to its :class:`VerbInputSchema`.
     """
-    from cadrumo.entrypoints.cli import app as cli_app
+    from . import app as cli_app
 
     root = _typer_get_command(cli_app)
     schemas: dict[str, VerbInputSchema] = {}

@@ -9,7 +9,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.entrypoints.cli import command_schema_refs
-from .._dispatch import is_exposable_command
+from cadrumo.entrypoints.cli import is_exposable_command
 from .._toolsets import (
     Toolset,
     ToolsetGroup,

@@ -12,7 +12,7 @@ import pytest
 from ....core import scan_directory
 from ....core.i18n import extract_placeholders, lookup_translation_entry
 from ....entrypoints.cli import command_schema_refs
-from ....entrypoints.mcp import build_verb_input_schemas
+from ....entrypoints.cli import build_verb_input_schemas
 from ...operator_actions import OPERATOR_ACTION_CATALOGUE
 from ...operator_surface import (
     InputSchemaInventoryRow,

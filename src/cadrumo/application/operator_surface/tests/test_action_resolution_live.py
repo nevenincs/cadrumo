@@ -6,7 +6,7 @@ import pytest
 
 from ....core import NoRecoveryOutcome
 from ....entrypoints.cli import command_schema_refs
-from ....entrypoints.mcp import build_verb_input_schemas
+from ....entrypoints.cli import build_verb_input_schemas
 from ...operator_actions import (
     OPERATOR_ACTION_CATALOGUE,
     ActionReference,

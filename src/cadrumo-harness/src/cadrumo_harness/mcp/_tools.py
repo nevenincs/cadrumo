@@ -3,7 +3,7 @@
 Each operator-callable registry command becomes one SDK-independent
 :class:`McpToolDescriptor`: a namespaced tool name, a description drawn from the
 family's operator intent, a per-verb input schema derived from the command's own
-click parameters (via :func:`~entrypoints.mcp._input_schema.build_verb_input_schemas`),
+click parameters (via :func:`~entrypoints.cli._verb_input_schema.build_verb_input_schemas`),
 the command's registered result model inside the shared CLI envelope as the output
 schema, and the mutability annotations. The server shell adapts these into the MCP
 SDK's ``Tool`` / ``ToolAnnotations`` types. This module owns no protocol detail and
@@ -25,8 +25,9 @@ from cadrumo.application.operator_surface import (
 from cadrumo.core.errors import ErrorEnvelope
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION, SCHEMA_REGISTRY, Notice
 from ._annotations import McpAnnotations, annotations_for_command
-from ._dispatch import is_exposable_command, tool_name_for_command
-from ._input_schema import VerbInputSchema, build_mcp_action_input_schemas
+from cadrumo.entrypoints.cli import is_exposable_command
+from ._dispatch import tool_name_for_command
+from cadrumo.entrypoints.cli import VerbInputSchema, build_mcp_action_input_schemas
 from ._result_thinning import thin_output_schema
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")

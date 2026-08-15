@@ -11,16 +11,15 @@ from typer._click.core import Command as ClickCommand
 from typer.main import get_command as _typer_get_command
 
 from .._annotations import annotation_coverage_gaps
-from .._dispatch import command_key_for_tool, is_exposable_command, tool_name_for_command
-from .._input_schema import (
+from cadrumo.entrypoints.cli import is_exposable_command
+from .._dispatch import command_key_for_tool, tool_name_for_command
+from cadrumo.entrypoints.cli import (
     JsonType,
     SchemaResolutionError,
     VerbInputSchema,
     VerbLeafResolutionFailure,
     VerbParameter,
     VerbParamKind,
-    _json_safe_default,
-    _parameter_from_click,
     assert_schema_coverage,
     build_verb_input_schemas,
     cli_argv_for,
@@ -226,61 +225,6 @@ def test_toolset_membership_derives_from_the_live_descriptor_set() -> None:
 
 
 # --- H2: input-schema fidelity -------------------------------------------------
-
-
-def test_json_safe_default_renders_paths_tuples_and_falls_back_to_none() -> None:
-    # Scalars pass through unchanged.
-    assert _json_safe_default(True) is True
-    assert _json_safe_default(7) == 7
-    assert _json_safe_default("x") == "x"
-    # A Path renders as its string form.
-    assert _json_safe_default(Path("probe-cert-store") / "cert.p12") == str(Path("probe-cert-store") / "cert.p12")
-    # A tuple/list renders as a JSON array of recursively json-safe items.
-    assert _json_safe_default(("a", 1)) == ["a", 1]
-    assert _json_safe_default([Path("p"), ("nested",)]) == [str(Path("p")), ["nested"]]
-    # Only a genuinely unserialisable object falls back to None.
-    assert _json_safe_default(object()) is None
-
-
-def _probe_leaf_command() -> ClickCommand:
-    """A real Typer command carrying a Path default, a list default, and a flag pair.
-
-    ``probe-cert-store`` is a fictional parent segment, deliberately not a real
-    ``StorageCategory`` subpath: this default only exercises the click-to-schema
-    Path-rendering projection and never resolves against
-    ``cadrumo_local_storage_root``, so it must not spell a taxonomy-governed name
-    a reader could mistake for a real, application-chosen location.
-    """
-    probe = typer.Typer()
-
-    @probe.command()
-    def run(
-        cert: Annotated[Path, typer.Option("--cert")] = Path("probe-cert-store/cert.p12"),
-        tags: Annotated[list[str], typer.Option("--tag")] = ["a", "b"],  # noqa: B006
-        colour: Annotated[bool, typer.Option("--colour/--no-colour")] = True,
-    ) -> None: ...
-
-    return _typer_get_command(probe)
-
-
-def test_path_and_list_option_defaults_project_and_round_trip_into_the_schema() -> None:
-    leaf = _probe_leaf_command()
-    by_name = {
-        projected.name: projected
-        for parameter in leaf.params
-        if (projected := _parameter_from_click(parameter)) is not None
-    }
-    # A Path default renders as a string, both on the parameter and in its property.
-    cert = by_name["cert"]
-    assert cert.default == str(Path("probe-cert-store/cert.p12"))
-    assert cert.property_schema()["default"] == str(Path("probe-cert-store/cert.p12"))
-    # A list default renders as a JSON array on the array-typed property.
-    tags = by_name["tags"]
-    assert tags.multiple is True
-    assert tags.default == ["a", "b"]
-    tags_property = tags.property_schema()
-    assert tags_property["type"] == "array"
-    assert tags_property["default"] == ["a", "b"]
 
 
 def test_default_true_flag_pair_is_expressible_false_and_emits_the_off_token() -> None:

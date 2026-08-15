@@ -35,7 +35,7 @@ def _resolves(verb_path: str) -> bool:
     Walks the real tree the way dispatch does, materialising lazily-loaded
     subcommands, so a verb behind a lazy group counts as registered.
     """
-    from ...mcp._input_schema import _resolve_command
+    from .._verb_input_schema import _resolve_command
 
     command, _resolved, error = _resolve_command(get_command(app), verb_path.replace(" ", "."))
     return error is None and command is not None

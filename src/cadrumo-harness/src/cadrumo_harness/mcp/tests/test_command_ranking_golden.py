@@ -24,16 +24,14 @@ from collections.abc import Callable
 
 import pytest
 
-from ....entrypoints.mcp import McpToolDescriptor, build_tool_descriptors
+from cadrumo.application.command_search import CommandIndex
+from .._tools import McpToolDescriptor, build_tool_descriptors
 
-# The ranking helpers live only on the ``_meta_tools`` private surface (they wrap
-# the ``search`` meta-tool, not a public facade); this golden test is a white-box
-# reach into them to assert the live ranking, registered in the test-only
-# import-hygiene debt allowlist (dev/quality/import_hygiene_test_debt.json).
-from ....entrypoints.mcp._meta_tools import build_command_search_index, search_commands
-from ...command_search import CommandIndex
+# The ranking helpers live on this package's own ``_meta_tools`` module (they wrap
+# the ``search`` meta-tool, not a public facade); the reach is intra-package.
+from .._meta_tools import build_command_search_index, search_commands
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 @pytest.fixture(scope="module")

@@ -1236,6 +1236,31 @@ def full_command_tree() -> click.Command:
     return root
 
 
+#: The per-verb input-schema projection re-exported from this facade. The module
+#: walks the live command tree and pulls in the operator-action catalogue, so it
+#: stays off the eager import path with the other lazy re-exports below.
+_VERB_INPUT_SCHEMA_EXPORTS: frozenset[str] = frozenset(
+    {
+        "DECLARED_UNIMPLEMENTED_SURFACES",
+        "JsonType",
+        "McpActionCapability",
+        "ResolvedVerbLeaf",
+        "SchemaResolutionError",
+        "VerbInputSchema",
+        "VerbLeafKind",
+        "VerbLeafResolutionFailure",
+        "VerbParamKind",
+        "VerbParameter",
+        "assert_schema_coverage",
+        "build_mcp_action_input_schemas",
+        "build_verb_input_schemas",
+        "cli_argv_for",
+        "is_exposable_command",
+        "resolve_mcp_action_capabilities",
+    }
+)
+
+
 def __getattr__(name: str) -> object:
     """Lazily resolve re-exported names without importing heavy submodules eagerly.
 
@@ -1250,6 +1275,10 @@ def __getattr__(name: str) -> object:
         from ._command_schema import command_schema_refs
 
         return command_schema_refs
+    if name in _VERB_INPUT_SCHEMA_EXPORTS:
+        from . import _verb_input_schema
+
+        return getattr(_verb_input_schema, name)
     if name == "OAuthClientPayload":
         from ._config._google import OAuthClientPayload
 
@@ -1391,14 +1420,30 @@ def _emit_operator_progress(progress: object) -> None:
 
 
 __all__ = [
+    "DECLARED_UNIMPLEMENTED_SURFACES",
     "AppRootResult",
+    "JsonType",
+    "McpActionCapability",
     "OAuthClientPayload",
+    "ResolvedVerbLeaf",
     "RootStatusResult",
+    "SchemaResolutionError",
+    "VerbInputSchema",
+    "VerbLeafKind",
+    "VerbLeafResolutionFailure",
+    "VerbParamKind",
+    "VerbParameter",
     "app",
+    "assert_schema_coverage",
+    "build_mcp_action_input_schemas",
+    "build_verb_input_schemas",
     "calculation_revision_lines",
     "calculation_revision_payload",
+    "cli_argv_for",
     "command_schema_refs",
     "full_command_tree",
+    "is_exposable_command",
     "main",
     "resolve_cli_precondition_action",
+    "resolve_mcp_action_capabilities",
 ]
