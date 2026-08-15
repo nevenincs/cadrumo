@@ -229,7 +229,7 @@ def test_a_recognized_unmodeled_obligation_is_advised_not_invisible() -> None:
     assert _coverage._UNMODELED_OBLIGATIONS is UNMODELED_OBLIGATIONS, (
         "the builder no longer reads the module-level declaration this test rebinds"
     )
-    with _replacing(_coverage, "_UNMODELED_OBLIGATIONS", declared):
+    with scoped_attribute(_coverage, "_UNMODELED_OBLIGATIONS", declared):
         report = build_obligation_coverage(_paying_autonomo(), surfaced_input, today=_TODAY)
         _assert_total_partition(report, unmodeled=declared)
 

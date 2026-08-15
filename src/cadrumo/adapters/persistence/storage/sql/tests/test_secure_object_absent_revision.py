@@ -20,23 +20,18 @@ real AEAD, real stored-metadata erasure. Nothing is mocked.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from contextlib import contextmanager
-
 import pytest
 
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ._secure_objects_support import (
     UTC,
-    Base,
     Path,
     SecureObjectRecord,
     SecureObjectRepository,
     SecureObjectUnreadable,
     SecureObjectUnreadableError,
     SensitivityClass,
-    Settings,
-    create_engine_from_settings,
+    _repo_at,
     datetime,
     sqlite3,
 )
@@ -56,16 +51,6 @@ _REVISION_COLUMNS = (
     "ciphertext_hash",
     "previous_payload_hash",
 )
-
-
-@contextmanager
-def _repo_at(db_path: Path) -> Iterator[SecureObjectRepository]:
-    engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-    Base.metadata.create_all(engine)
-    try:
-        yield SecureObjectRepository(engine=engine)
-    finally:
-        engine.dispose()
 
 
 def _seed(db_path: Path) -> None:

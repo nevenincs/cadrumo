@@ -26,11 +26,7 @@ and drives one browser -- seconds, ``integration`` marked.
 
 from __future__ import annotations
 
-import http.server
 import io
-import socketserver
-import threading
-from functools import partial
 from pathlib import Path
 
 import pytest
@@ -38,6 +34,7 @@ import pytest
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
+from ._http_serve_support import serve_directory
 from ..glossary_reference import generate_glossary_reference
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records, _Materialised
@@ -152,14 +149,6 @@ def _build_glossary_site(out: Path) -> Path:
     )
     app.build()
     return build
-
-
-def _serve(directory: Path) -> tuple[socketserver.TCPServer, int]:
-    handler = partial(http.server.SimpleHTTPRequestHandler, directory=str(directory))
-    httpd = socketserver.TCPServer(("127.0.0.1", 0), handler)
-    port = httpd.server_address[1]
-    threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    return httpd, port
 
 
 def test_palette_ranks_exact_term_concept_first(tmp_path: Path) -> None:

@@ -16,20 +16,16 @@ carried its own copy, so such a change moved only one.
 from __future__ import annotations
 
 import inspect
-from collections.abc import Iterator
-from contextlib import contextmanager
 
 import pytest
 
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ._secure_objects_support import (
     UTC,
-    Base,
     Path,
     SecureObjectRepository,
     SensitivityClass,
-    Settings,
-    create_engine_from_settings,
+    _repo_at,
     datetime,
     sqlite3,
 )
@@ -75,16 +71,6 @@ def test_every_integrity_surface_routes_through_the_shared_probe() -> None:
     probe_source = inspect.getsource(integrity_module.probe_row_decryptability)
     assert "decrypt_secure_object_payload(" in probe_source
     assert "secure_object_payload_aad(" in probe_source
-
-
-@contextmanager
-def _repo_at(db_path: Path) -> Iterator[SecureObjectRepository]:
-    engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-    Base.metadata.create_all(engine)
-    try:
-        yield SecureObjectRepository(engine=engine)
-    finally:
-        engine.dispose()
 
 
 def _seed_mixed_namespace(db_path: Path) -> None:

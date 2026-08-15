@@ -19,22 +19,18 @@ real AEAD, real stored-metadata corruption. Nothing is mocked.
 from __future__ import annotations
 
 import inspect
-from collections.abc import Iterator
-from contextlib import contextmanager
 
 import pytest
 
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ._secure_objects_support import (
     UTC,
-    Base,
     Path,
     SecureObjectRepository,
     SecureObjectUnreadable,
     SecureObjectUnreadableError,
     SensitivityClass,
-    Settings,
-    create_engine_from_settings,
+    _repo_at,
     datetime,
     sqlite3,
 )
@@ -44,16 +40,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _NAMESPACE = "cadrumo.decode.order"
 _KEY = "decode-order-subject"
 _LINEAGE_REASON = "revision lineage self-consistency check failed"
-
-
-@contextmanager
-def _repo_at(db_path: Path) -> Iterator[SecureObjectRepository]:
-    engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-    Base.metadata.create_all(engine)
-    try:
-        yield SecureObjectRepository(engine=engine)
-    finally:
-        engine.dispose()
 
 
 def _seed(db_path: Path) -> None:

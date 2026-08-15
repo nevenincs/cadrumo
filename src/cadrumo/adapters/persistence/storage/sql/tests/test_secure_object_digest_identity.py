@@ -21,9 +21,6 @@ fixture.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from contextlib import contextmanager
-
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
@@ -32,12 +29,10 @@ from ......tests.master_key import EphemeralMasterKeyProvider
 from .._secure_object_records import SecureObjectRawRow, SecureObjectRecord
 from ._secure_objects_support import (
     UTC,
-    Base,
     Path,
     SecureObjectRepository,
     SensitivityClass,
-    Settings,
-    create_engine_from_settings,
+    _repo_at,
     datetime,
 )
 
@@ -100,16 +95,6 @@ def _raw_row(**overrides: object) -> SecureObjectRawRow:
     }
     payload.update(overrides)
     return SecureObjectRawRow.model_validate(payload)
-
-
-@contextmanager
-def _repo_at(db_path: Path) -> Iterator[SecureObjectRepository]:
-    engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-    Base.metadata.create_all(engine)
-    try:
-        yield SecureObjectRepository(engine=engine)
-    finally:
-        engine.dispose()
 
 
 @pytest.mark.parametrize("malformed", _MALFORMED)

@@ -28,13 +28,14 @@ import tempfile
 import threading
 import time
 from collections.abc import Callable
-from contextlib import contextmanager, suppress
+from contextlib import suppress
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from .. import atomic_write
+from ...tests.attribute_scope import scoped_attribute
 from ..atomic_write import (
     _write_all,
     atomic_write_best_effort_bytes,
@@ -50,25 +51,6 @@ from ..atomic_write import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-
-@contextmanager
-def _replacing(target: object, name: str, value: object):
-    """Replace ``target.name`` for the scope, restoring the original on exit.
-
-    A local context manager rather than the pytest ``monkeypatch`` fixture,
-    per this repo's ban on monkeypatch in production tests: the fixture and
-    a hand-rolled save/restore do the identical mutation, so nothing about
-    real-behaviour testing changes -- only the vocabulary the AST inventory
-    gate gets to see.
-    """
-    original = getattr(target, name)
-    setattr(target, name, value)
-    try:
-        yield
-    finally:
-        setattr(target, name, original)
-
 
 _PERMISSION_PROBE_WRITES = 20
 
@@ -678,7 +660,7 @@ class TestDurableWriteBatch:
         payload = b"y" * 512
         writes = 8
 
-        with _replacing(os, "fsync", counting_fsync):
+        with scoped_attribute(os, "fsync", counting_fsync):
             with tempfile.TemporaryDirectory() as raw_unbatched:
                 unbatched_dir = Path(raw_unbatched)
                 calls = 0
@@ -793,7 +775,7 @@ def test_staged_publication_reservation_refuses_a_pre_existing_staging_file(tmp_
 
     reserved.write_bytes(b"PLANTED")
     with (
-        _replacing(atomic_write, "_hardened_staging_path", lambda _path: reserved),
+        scoped_attribute(atomic_write, "_hardened_staging_path", lambda _path: reserved),
         pytest.raises(FileExistsError),
         hardened_staged_publication(target),
     ):

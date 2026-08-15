@@ -18,57 +18,22 @@ resolved rate and fail the test.
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from ....core import validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    BindingId,
-    calculate_registry_snapshot,
-    resolve_available_bound_inputs_by_casilla_id,
-)
 from ....tests.secure_sql import isolated_runtime_profile
+from ._convenio_rate_support import resolve_convenio_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_MODELO = "210"
-_YEAR = 2025
-_COUNTRY_BINDING = "m210-2025-profile-country-of-fiscal-residence"
-_TIPO_GRAVAMEN = validated_casilla_id("tipo_gravamen", surface="es_fr_canones_test")
-_CUOTA_INTEGRA = validated_casilla_id("cuota_integra", surface="es_fr_canones_test")
-
-
-def _resolve_rate(*, tipo_renta: str, country_code: str, base: str) -> tuple[Decimal, Decimal]:
-    """Drive the REAL engine and return (tipo_gravamen, cuota_integra)."""
-    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR, period="EVENT-1")
-    binding_values: dict[BindingId, Decimal] = {}
-    enum_binding_values: dict[BindingId, str] = {_COUNTRY_BINDING: country_code}
-    text_inputs = {validated_casilla_id("tipo_renta", surface="es_fr_canones_test"): tipo_renta}
-    casilla_inputs = {
-        validated_casilla_id("rendimientos_integros", surface="es_fr_canones_test"): Decimal(base),
-        validated_casilla_id("gastos_deducibles", surface="es_fr_canones_test"): Decimal("0"),
-        validated_casilla_id("retencion_practicada", surface="es_fr_canones_test"): Decimal("0"),
-    }
-    bound = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs={**bound, **casilla_inputs},
-        binding_values=binding_values,
-        enum_binding_values=enum_binding_values,
-        text_inputs=text_inputs,
-        date_context={"filing_period": date(_YEAR, 12, 31)},
-    )
-    return result.values[_TIPO_GRAVAMEN], result.values[_CUOTA_INTEGRA]
 
 
 def test_fr_canones_resolves_treaty_ceiling_of_5_percent(tmp_path: Path) -> None:
     """FR-resident cánones: min(domestic 0.24, treaty 0.05) = 0.05 (art 12.2.a)."""
     with isolated_runtime_profile(tmp_path=tmp_path):
-        tipo, cuota = _resolve_rate(tipo_renta="canones", country_code="FR", base="1000.00")
+        tipo, cuota = resolve_convenio_rate(tipo_renta="canones", country_code="FR", base="1000.00")
 
     assert tipo == Decimal("0.05")
     assert cuota == Decimal("50.00")  # 1000 × 0.05

@@ -65,7 +65,7 @@ def _resolve_rate(*, tipo_renta: str, country_code: str, base: str) -> tuple[Dec
 def test_us_canones_is_source_state_exempt(tmp_path: Path) -> None:
     """US-resident cánones: source-state exemption (art 12, Protocolo 2019) → 0."""
     with isolated_runtime_profile(tmp_path=tmp_path):
-        tipo, cuota = _resolve_rate(tipo_renta="canones", country_code="US", base="1000.00")
+        tipo, cuota = resolve_convenio_rate(tipo_renta="canones", country_code="US", base="1000.00")
 
     assert tipo == Decimal("0")
     assert cuota == Decimal("0.00")

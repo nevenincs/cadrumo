@@ -5,6 +5,8 @@ from __future__ import annotations
 import hashlib as hashlib
 import logging as logging
 import sqlite3 as sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -63,6 +65,17 @@ from ..secure_objects import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+@contextmanager
+def _repo_at(db_path: Path) -> Iterator[SecureObjectRepository]:
+    """Open a real :class:`SecureObjectRepository` against a fresh schema at ``db_path``."""
+    engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
+    Base.metadata.create_all(engine)
+    try:
+        yield SecureObjectRepository(engine=engine)
+    finally:
+        engine.dispose()
 
 
 def _seed_under_key(

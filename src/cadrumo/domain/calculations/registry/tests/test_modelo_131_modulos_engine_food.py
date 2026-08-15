@@ -154,54 +154,96 @@ class TestCafesEspecial6731EstimacionObjetiva:
         assert modulos == Decimal("44603.33")
 
 
-class TestOtrosCafes6732EstimacionObjetiva:
-    """Epígrafe IAE 673.2 (Otros cafés y bares)."""
+#: Fase 1ª clone-collapsed dataset for the food/hospitality split — each entry
+#: was a separate hand-forked ``TestXxxEstimacionObjetiva.test_fase_1_...``
+#: method (identical body, differing only by epígrafe, coefficient table,
+#: módulo units and expected figure) before the AST clone scan flagged them.
+_FASE_1_CASES = [
+    pytest.param(
+        "673.2",
+        _OTROS_CAFES_673_2,
+        {1: Decimal("1"), 2: Decimal("1"), 4: Decimal("3")},
+        Decimal("13416.02"),
+        id="673.2-otros-cafes-y-bares",
+    ),
+    pytest.param(
+        "642.5",
+        _HUEVOS_AVES_642_5,
+        {1: Decimal("1"), 4: Decimal("20")},
+        Decimal("3923.96"),
+        id="642.5-comercio-al-por-menor-de-huevos-aves-conejos-caza",
+    ),
+    pytest.param(
+        "643.1",
+        _PESCADOS_643_1,
+        {1: Decimal("1"), 2: Decimal("1")},
+        Decimal("17119.61"),
+        id="643.1-comercio-al-por-menor-de-pescados",
+    ),
+    pytest.param(
+        "644.2",
+        _DESPACHOS_PAN_644_2,
+        {1: Decimal("1"), 3: Decimal("1")},
+        Decimal("20401.19"),
+        id="644.2-despachos-de-pan-panes-especiales-y-bolleria",
+    ),
+    pytest.param(
+        "644.3",
+        _PASTELERIA_644_3,
+        {1: Decimal("1"), 4: Decimal("20")},
+        Decimal("7237.09"),
+        id="644.3-comercio-al-por-menor-de-pasteleria-bolleria-y-confiteria",
+    ),
+    pytest.param(
+        "644.6",
+        _MASAS_FRITAS_644_6,
+        {1: Decimal("1"), 2: Decimal("1")},
+        Decimal("9107.78"),
+        id="644.6-comercio-al-por-menor-de-masas-fritas",
+    ),
+    pytest.param(
+        "647.2",
+        _AUTOSERVICIO_647_2,
+        {1: Decimal("1"), 3: Decimal("30")},
+        Decimal("2488.10"),
+        id="647.2-comercio-al-por-menor-de-alimentacion-en-autoservicio",
+    ),
+]
 
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 1 personal no asalariado, 3 mesas.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "673.2",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-            modulo_4=Decimal("3"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _OTROS_CAFES_673_2[1]
-            + Decimal("1") * _OTROS_CAFES_673_2[2]
-            + Decimal("3") * _OTROS_CAFES_673_2[4],
-        )
-        assert previo == expected_previo == Decimal("13416.02")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "673.2",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-            modulo_4=Decimal("3"),
-        )
+#: Fase 4ª (5% reducción general) clone-collapsed dataset — same módulo units
+#: as the matching Fase 1ª case above.
+_FASE_4_CASES = [
+    pytest.param("673.2", {1: Decimal("1"), 2: Decimal("1"), 4: Decimal("3")}, id="673.2-otros-cafes-y-bares"),
+    pytest.param("642.5", {1: Decimal("1"), 4: Decimal("20")}, id="642.5-huevos-aves"),
+    pytest.param("643.1", {1: Decimal("1"), 2: Decimal("1")}, id="643.1-pescados"),
+    pytest.param("644.2", {1: Decimal("1"), 3: Decimal("1")}, id="644.2-despachos-de-pan"),
+    pytest.param("644.3", {1: Decimal("1"), 4: Decimal("20")}, id="644.3-pasteleria"),
+    pytest.param("644.6", {1: Decimal("1"), 2: Decimal("1")}, id="644.6-masas-fritas"),
+    pytest.param("647.2", {1: Decimal("1"), 3: Decimal("30")}, id="647.2-autoservicio"),
+]
 
 
-class TestHuevosAves6425EstimacionObjetiva:
-    """Epígrafe IAE 642.5 (Comercio al por menor de huevos, aves, conejos de granja, caza)."""
+@pytest.mark.parametrize(("epigrafe", "table", "modulos", "expected_previo"), _FASE_1_CASES)
+def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(
+    epigrafe: str,
+    table: dict[int, Decimal],
+    modulos: dict[int, Decimal],
+    expected_previo: Decimal,
+) -> None:
+    previo, _minorado, _modulos, _actividad = _run_modulos_engine(
+        epigrafe,
+        **{f"modulo_{idx}": units for idx, units in modulos.items()},
+    )
+    expected = round_to_cents(sum((units * table[idx] for idx, units in modulos.items()), start=Decimal("0")))
+    assert previo == expected == expected_previo
 
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 20 m2 superficie local independiente.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "642.5",
-            modulo_1=Decimal("1"),
-            modulo_4=Decimal("20"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _HUEVOS_AVES_642_5[1] + Decimal("20") * _HUEVOS_AVES_642_5[4],
-        )
-        assert previo == expected_previo == Decimal("3923.96")
 
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "642.5",
-            modulo_1=Decimal("1"),
-            modulo_4=Decimal("20"),
-        )
+@pytest.mark.parametrize(("epigrafe", "modulos"), _FASE_4_CASES)
+def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(
+    epigrafe: str,
+    modulos: dict[int, Decimal],
+) -> None:
+    _assert_fase4_reduccion_general(epigrafe, **{f"modulo_{idx}": units for idx, units in modulos.items()})
 
 
 class TestCasquerias6426EstimacionObjetiva:
@@ -227,116 +269,3 @@ class TestCasquerias6426EstimacionObjetiva:
         )
 
 
-class TestPescados6431EstimacionObjetiva:
-    """Epígrafe IAE 643.1 y 2 (Comercio al por menor de pescados)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 1 personal no asalariado.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "643.1",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _PESCADOS_643_1[1] + Decimal("1") * _PESCADOS_643_1[2],
-        )
-        assert previo == expected_previo == Decimal("17119.61")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "643.1",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-        )
-
-
-class TestDespachosPan6442EstimacionObjetiva:
-    """Epígrafe IAE 644.2 (Despachos de pan, panes especiales y bollería) — 7-módulo activity."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado de fabricación, 1 personal no asalariado.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "644.2",
-            modulo_1=Decimal("1"),
-            modulo_3=Decimal("1"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _DESPACHOS_PAN_644_2[1] + Decimal("1") * _DESPACHOS_PAN_644_2[3],
-        )
-        assert previo == expected_previo == Decimal("20401.19")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "644.2",
-            modulo_1=Decimal("1"),
-            modulo_3=Decimal("1"),
-        )
-
-
-class TestPasteleria6443EstimacionObjetiva:
-    """Epígrafe IAE 644.3 (Comercio al por menor de pastelería, bollería y confitería) — 7-módulo activity."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado de fabricación, 20 m2 superficie del local de fabricación.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "644.3",
-            modulo_1=Decimal("1"),
-            modulo_4=Decimal("20"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _PASTELERIA_644_3[1] + Decimal("20") * _PASTELERIA_644_3[4],
-        )
-        assert previo == expected_previo == Decimal("7237.09")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "644.3",
-            modulo_1=Decimal("1"),
-            modulo_4=Decimal("20"),
-        )
-
-
-class TestMasasFritas6446EstimacionObjetiva:
-    """Epígrafe IAE 644.6 (Comercio al por menor de masas fritas, patatas fritas y similares)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado de fabricación, 1 resto personal asalariado.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "644.6",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _MASAS_FRITAS_644_6[1] + Decimal("1") * _MASAS_FRITAS_644_6[2],
-        )
-        assert previo == expected_previo == Decimal("9107.78")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "644.6",
-            modulo_1=Decimal("1"),
-            modulo_2=Decimal("1"),
-        )
-
-
-class TestAutoservicio6472EstimacionObjetiva:
-    """Epígrafe IAE 647.2 y 3 (Comercio al por menor de alimentación en autoservicio < 400 m2)."""
-
-    def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
-        # 1 personal asalariado, 30 m2 superficie del local.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-            "647.2",
-            modulo_1=Decimal("1"),
-            modulo_3=Decimal("30"),
-        )
-        expected_previo = round_to_cents(
-            Decimal("1") * _AUTOSERVICIO_647_2[1] + Decimal("30") * _AUTOSERVICIO_647_2[3],
-        )
-        assert previo == expected_previo == Decimal("2488.10")
-
-    def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
-            "647.2",
-            modulo_1=Decimal("1"),
-            modulo_3=Decimal("30"),
-        )

@@ -65,7 +65,7 @@ def _resolve_rate(*, tipo_renta: str, country_code: str, base: str) -> tuple[Dec
 def test_pt_canones_resolves_treaty_ceiling_of_5_percent(tmp_path: Path) -> None:
     """PT-resident cánones: min(domestic 0.24, treaty 0.05) = 0.05 (art 12.2)."""
     with isolated_runtime_profile(tmp_path=tmp_path):
-        tipo, cuota = _resolve_rate(tipo_renta="canones", country_code="PT", base="1000.00")
+        tipo, cuota = resolve_convenio_rate(tipo_renta="canones", country_code="PT", base="1000.00")
 
     assert tipo == Decimal("0.05")
     assert cuota == Decimal("50.00")  # 1000 × 0.05
