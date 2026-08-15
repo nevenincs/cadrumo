@@ -27,6 +27,7 @@ import pytest
 from cadrumo.agent import materialise_marketplace
 from dev._paths import REPO_ROOT
 
+from .._hashing import sha256_path
 from .._smoke_common import (
     build_companion_wheels,
     build_wheel,
@@ -98,14 +99,6 @@ class InstalledCohort:
 def _installed_script(venv: Path, name: str) -> Path:
     suffix = ".exe" if sys.platform == "win32" else ""
     return (venv_bin_dir(venv) / f"{name}{suffix}").resolve()
-
-
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _text_sha256(value: str) -> str:
@@ -201,7 +194,7 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
             cohort_dir / "python-cohort.json",
             {
                 "artifacts": artifacts,
-                "sha256": {name: _sha256(cohort_dir / filename) for name, filename in artifacts.items()},
+                "sha256": {name: sha256_path(cohort_dir / filename) for name, filename in artifacts.items()},
                 "source_commit": source_commit,
                 "version": version,
             },
@@ -406,7 +399,7 @@ def test_marketplace_plugin_embeds_and_executes_the_exact_built_cohort(
     assert retained["source_commit"] == cohort.source_commit
     assert retained["sha256"] == cohort.artifact_sha256
     for distribution, filename in retained["artifacts"].items():
-        assert _sha256(embedded / filename) == cohort.artifact_sha256[distribution]
+        assert sha256_path(embedded / filename) == cohort.artifact_sha256[distribution]
 
     mcp = json.loads((plugin_root / ".mcp.json").read_text(encoding="utf-8"))
     server = mcp["mcpServers"]["cadrumo"]

@@ -29,11 +29,10 @@ See Also:
 from __future__ import annotations
 
 import json
-import threading
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from queue import Empty, Queue
 from typing import Any, ClassVar, cast, override
@@ -47,6 +46,7 @@ from ....core.config import override_settings
 from ....core.telemetry import TelemetryEventPayload, TelemetryTier
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.loopback_recording_server import run_loopback_server, stop_loopback_server
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
@@ -87,21 +87,6 @@ class _RecordingTelemetryEndpoint(BaseHTTPRequestHandler):
     @override
     def log_message(self, format: str, *args: object) -> None:
         """Silence stdlib request logging during tests."""
-
-
-def _run_loopback_server() -> tuple[ThreadingHTTPServer, threading.Thread, Queue[dict[str, object]]]:
-    events: Queue[dict[str, object]] = Queue()
-    _RecordingTelemetryEndpoint.events = events
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _RecordingTelemetryEndpoint)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    return server, thread, events
-
-
-def _stop_loopback_server(server: ThreadingHTTPServer, thread: threading.Thread) -> None:
-    server.shutdown()
-    server.server_close()
-    thread.join(timeout=3)
 
 
 def test_telemetry_status_defaults_to_fully_inert(_isolated_backend: None) -> None:
@@ -307,7 +292,7 @@ def test_telemetry_flush_dry_run_is_the_default_and_sends_nothing(_isolated_back
 
 def test_telemetry_flush_dry_run_never_dials_out_even_when_fully_configured(_isolated_backend: None) -> None:
     """Even a fully opted-in, tiered, endpoint-configured, acknowledged ``--dry-run`` sends nothing."""
-    server, thread, events = _run_loopback_server()
+    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         result = _invoke(
@@ -328,7 +313,7 @@ def test_telemetry_flush_dry_run_never_dials_out_even_when_fully_configured(_iso
             ],
         )
     finally:
-        _stop_loopback_server(server, thread)
+        stop_loopback_server(server, thread)
 
     assert result.exit_code == 0, result.output
     payload = _json_result(result)
@@ -341,7 +326,7 @@ def test_telemetry_flush_dry_run_never_dials_out_even_when_fully_configured(_iso
 
 def test_telemetry_flush_no_dry_run_refuses_without_acknowledgement(_isolated_backend: None) -> None:
     """``--no-dry-run`` without ``--acknowledge-remote-telemetry`` is still a safe no-op."""
-    server, thread, events = _run_loopback_server()
+    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         result = _invoke(
@@ -361,7 +346,7 @@ def test_telemetry_flush_no_dry_run_refuses_without_acknowledgement(_isolated_ba
             ],
         )
     finally:
-        _stop_loopback_server(server, thread)
+        stop_loopback_server(server, thread)
 
     assert result.exit_code == 0, result.output
     payload = _json_result(result)
@@ -386,7 +371,7 @@ def test_telemetry_flush_no_dry_run_sends_when_fully_permitted(_isolated_backend
         ),
     )
 
-    server, thread, events = _run_loopback_server()
+    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         result = _invoke(
@@ -408,7 +393,7 @@ def test_telemetry_flush_no_dry_run_sends_when_fully_permitted(_isolated_backend
         )
         observed = events.get_nowait()
     finally:
-        _stop_loopback_server(server, thread)
+        stop_loopback_server(server, thread)
 
     assert result.exit_code == 0, result.output
     payload = _json_result(result)

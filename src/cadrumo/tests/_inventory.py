@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import ast
+import os
 import re
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from functools import cache
 from pathlib import Path
+from typing import Final
 
 SRC_CADRUMO: Path = Path(__file__).resolve().parents[1]
 """Root of the ``src/cadrumo`` package tree."""
@@ -34,17 +36,77 @@ _TEST_MODULE_GLOBS: tuple[str, ...] = ("**/test_*.py", "**/_test_*.py")
 PROJECT_TEST_ROOTS: tuple[Path, ...] = (REPO_ROOT / "dev", REPO_ROOT / "docs")
 """Project-level test roots outside the ``src/cadrumo`` package tree."""
 
+_PRUNED_DIRECTORY_NAMES: Final[frozenset[str]] = frozenset({"__pycache__", ".git", ".venv", ".pytest_cache"})
+"""Directory names no source scan ever wants, pruned before descending."""
+
+
+def _is_test_module_name(name: str) -> bool:
+    """Whether *name* is a test module, matching the retired ``test_*`` globs."""
+    return name != "__init__.py" and (name.startswith(("test_", "_test_")))
+
+
+@cache
+def python_files_under(root: Path, *, include_data: bool = True) -> tuple[Path, ...]:
+    """Return every ``.py`` file under ``root``, sorted, walked once per process.
+
+    ``os.scandir`` rather than :meth:`pathlib.Path.rglob`, which is roughly ten
+    times slower over this tree (0.28s against 0.025s for the same 4,984 files)
+    because it materialises a ``Path`` per entry and re-stats it to decide
+    whether to descend. ``scandir`` answers ``is_dir`` from the directory entry
+    the operating system already returned.
+
+    Pruning happens BEFORE descending, so an excluded directory costs one
+    ``is_dir`` check rather than a full subtree walk -- which is what makes
+    excluding ``_data`` cheap rather than merely correct.
+
+    The result is memoised for the process. That is sound for the repository
+    tree, which does not change while a test session runs, and is NOT sound for
+    a directory a test is writing to: callers working under ``tmp_path`` must
+    walk it themselves.
+    """
+    resolved = root.resolve()
+    found: list[Path] = []
+    stack = [str(resolved)]
+    while stack:
+        current = stack.pop()
+        try:
+            entries = list(os.scandir(current))
+        except OSError:
+            continue
+        for entry in entries:
+            if entry.is_dir(follow_symlinks=False):
+                if entry.name in _PRUNED_DIRECTORY_NAMES:
+                    continue
+                if not include_data and entry.name == "_data" and Path(entry.path).parent == resolved:
+                    continue
+                stack.append(entry.path)
+            elif entry.name.endswith(".py"):
+                found.append(Path(entry.path))
+    return tuple(sorted(found))
+
+
+@cache
+def read_source(path: Path) -> str:
+    """Return *path* decoded as UTF-8, read once per process.
+
+    The shared read behind every structural ratchet that scans the repository
+    for text. ``errors="replace"`` because a scan must not die on one stray
+    byte; a ratchet that needs strict decoding should read the file itself.
+
+    Same immutability premise as :func:`python_files_under`: sound for the
+    repository tree during a session, never for a file the caller writes.
+    """
+    return path.read_text(encoding="utf-8", errors="replace")
+
 
 @cache
 def discover_test_modules() -> tuple[Path, ...]:
     """Return production test modules under ``src/cadrumo`` excluding fixture payloads."""
-    collected: set[Path] = set()
-    for glob in _TEST_MODULE_GLOBS:
-        for path in SRC_CADRUMO.glob(glob):
-            if path.name == "__init__.py" or _is_relative_to(path, FIXTURES_DIR):
-                continue
-            collected.add(path)
-    return tuple(sorted(collected))
+    return tuple(
+        path
+        for path in python_files_under(SRC_CADRUMO)
+        if _is_test_module_name(path.name) and not _is_relative_to(path, FIXTURES_DIR)
+    )
 
 
 @cache
@@ -67,9 +129,7 @@ def project_test_modules() -> tuple[Path, ...]:
     for root in PROJECT_TEST_ROOTS:
         if not root.exists():
             continue
-        for path in root.glob("**/test_*.py"):
-            if "__pycache__" not in path.parts:
-                collected.add(path)
+        collected.update(path for path in python_files_under(root) if path.name.startswith("test_"))
     return tuple(sorted(collected))
 
 
@@ -80,7 +140,7 @@ def project_test_control_modules() -> tuple[Path, ...]:
     for root in PROJECT_TEST_ROOTS:
         if not root.exists():
             continue
-        for path in root.rglob("*.py"):
+        for path in python_files_under(root):
             if "__pycache__" in path.parts or path.name == "__init__.py":
                 continue
             relative_parts = path.relative_to(root).parts
@@ -104,7 +164,7 @@ def package_python_files(*, include_data: bool = False) -> tuple[Path, ...]:
     """
     return tuple(
         path
-        for path in sorted(SRC_CADRUMO.rglob("*.py"))
+        for path in python_files_under(SRC_CADRUMO)
         if "__pycache__" not in path.parts and (include_data or "_data" not in path.relative_to(SRC_CADRUMO).parts)
     )
 
@@ -117,7 +177,7 @@ def production_python_files() -> tuple[Path, ...]:
     are excluded so structural production ratchets share one definition of their
     scan surface.
     """
-    return tuple(path for path in sorted(SRC_CADRUMO.rglob("*.py")) if _is_production_python_file(path))
+    return tuple(path for path in python_files_under(SRC_CADRUMO) if _is_production_python_file(path))
 
 
 def non_test_package_python_files(

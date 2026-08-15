@@ -283,4 +283,6 @@ def test_the_detector_clears_a_private_symbol_in_its_defining_module() -> None:
 def test_the_detector_resolves_a_method_through_its_owning_class() -> None:
     """A ``Class.method`` target names a module one segment further up."""
     assert cross_reference_defect("meth", "core.Modelo.no_such_method") is None
-    assert cross_reference_defect("meth", "core.NoSuchClass.method") is not None
+    reason = cross_reference_defect("meth", "core.NoSuchClass.method")
+    assert reason is not None
+    assert "NoSuchClass" in reason

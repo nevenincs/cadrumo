@@ -30,52 +30,35 @@ from .....core.i18n import tr
 from .....tests.cli_runner import invoke_cached_cli
 from .....tests.profile_capsule import open_test_profile_session
 from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from .....tests.user_profile import register_cli_profile
 from .._errors import ConfigBoundaryError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _create_profile(name: str = "test-operator") -> None:
-    """Provision a real profile so downstream show/health commands can resolve it."""
-    result = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            name,
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Test",
-            "--surnames",
-            "Operator",
-            "--tax-id",
-            "00000000T",
-            "--activity",
-            "Servicios",
-            "--activity-start-date",
-            "2026-01-01",
-            "--irpf-income-categories",
-            "actividad_economica",
-            "--irpf-estimation-regime",
-            "directa_normal",
-            "--tax-residence-ccaa",
-            "madrid",
-            "--iva-regime",
-            "GENERAL",
-            "--iva-m303-regime-composition",
-            "general",
-            "--no-iva-redeme-enrolled",
-            "--no-iva-cash-accounting-regime-enrolled",
-            "--no-iva-voluntary-sii-enrolled",
-            "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
-            "--tax-residence-jurisdiction-scope",
-            "common_regime",
-        ],
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label=name,
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": 'Test',
+            "identity.surnames": 'Operator',
+            "identity.tax_id": '00000000T',
+            "activities.description": 'Servicios',
+            "censo.activity_start_date": '2026-01-01',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "irpf.estimation_regime": 'directa_normal',
+            "tax_residence.ccaa": 'madrid',
+            "iva.regime": 'GENERAL',
+            "iva.m303_regime_composition": 'general',
+            "iva.redeme_enrolled": 'false',
+            "iva.cash_accounting_regime_enrolled": 'false',
+            "iva.voluntary_sii_enrolled": 'false',
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": 'false',
+            "tax_residence.jurisdiction_scope": 'common_regime',
+        },
     )
-    assert result.exit_code == 0, result.output
 
 
 # ---------------------------------------------------------------------------

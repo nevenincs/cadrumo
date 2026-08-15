@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import inspect
+import itertools
 import subprocess
 import sys
 from pathlib import Path
@@ -1305,7 +1306,7 @@ def test_a_dotted_ordinal_is_absorbed_as_a_component_not_a_peer() -> None:
     # Zero remainder: the eight components exactly tile the parent's own span.
     assert parent.components[0].offset == parent.offset
     assert parent.components[-1].offset + parent.components[-1].length == parent.offset + parent.length
-    for left, right in zip(parent.components, parent.components[1:], strict=True):
+    for left, right in itertools.pairwise(parent.components):
         assert left.offset + left.length == right.offset, "components must themselves be contiguous"
 
     # A component is never counted as a top-level peer -- the outer sheet sees

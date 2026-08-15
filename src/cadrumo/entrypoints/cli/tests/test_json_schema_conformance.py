@@ -79,7 +79,6 @@ from .. import _app_quickfile_payloads as _app_quickfile_payloads
 from .. import _config_bucket_history_payloads as _config_bucket_history_payloads
 from .. import _config_descendiente_payloads as _config_descendiente_payloads
 from .. import _config_payloads as _config_payloads
-from .. import _config_sandbox_payloads as _config_sandbox_payloads
 from ._lazy_command_tree import materialise_lazy_subcommands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

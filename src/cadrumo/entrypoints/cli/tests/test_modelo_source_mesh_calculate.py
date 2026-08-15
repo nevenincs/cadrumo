@@ -36,6 +36,7 @@ from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -43,29 +44,18 @@ _IVA_WALLET_DECIDED_AT = datetime(2026, 5, 28, 16, 10, tzinfo=UTC)
 
 
 def _create_profile() -> None:
-    result = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--accept-defaults",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Operator",
-            "--surnames",
-            "Operator",
-            "--activity",
-            "design",
-            "--irpf-income-categories",
-            "actividad_economica",
-        ],
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='operator',
+        facts={
+            "identity.tax_id": '12345678Z',
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Operator',
+            "activities.description": 'design',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+        },
     )
-    assert result.exit_code == 0, result.output
 
 
 def _create_work_unit(*, modelo: str, year: int, period: str) -> dict[str, str]:

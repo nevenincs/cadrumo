@@ -435,12 +435,18 @@ def test_dotted_reference_scan_is_non_empty() -> None:
 
 def test_dotted_reference_detector_still_discriminates() -> None:
     """Anti-vacuity: the resolver must reject a fabricated symbol and accept a real one."""
-    assert _owning_module("core.identity.ThisSymbolIsNotDefinedAnywhere") is not None, (
-        "the resolver no longer reaches core.identity"
-    )
-    assert _unresolved_reference("core.identity.ThisSymbolIsNotDefinedAnywhere") is not None, (
-        "a fabricated symbol resolved, so the check can never fail"
-    )
+    owned = _owning_module("core.identity.ThisSymbolIsNotDefinedAnywhere")
+    assert owned is not None, "the resolver no longer reaches core.identity"
+    owning_file, owning_symbol = owned
+    assert owning_file.parent.name == "identity", f"resolved to the wrong module: {owning_file}"
+    assert owning_symbol == "ThisSymbolIsNotDefinedAnywhere"
+
+    unresolved = _unresolved_reference("core.identity.ThisSymbolIsNotDefinedAnywhere")
+    assert unresolved is not None, "a fabricated symbol resolved, so the check can never fail"
+    unresolved_file, unresolved_symbol = unresolved
+    assert unresolved_file.parent.name == "identity", f"reported the wrong owning module: {unresolved_file}"
+    assert unresolved_symbol == "ThisSymbolIsNotDefinedAnywhere"
+
     assert _unresolved_reference("core.identity.BucketId") is None, (
         "a known-good target was rejected, so the check always fails"
     )

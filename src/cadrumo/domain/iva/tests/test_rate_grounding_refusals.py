@@ -133,9 +133,12 @@ def test_window_refusal_is_skipped_for_spain() -> None:
     """
     rate = _rate(member_state=EUMemberState.ES, effective_from=date(2025, 1, 1))
     assert _source_window_failure(rate, "ES/general/2025-01-01", []) is None
-    # ... while the same empty source list refuses for any other member state.
+    # ... while the same empty source list refuses for any other member state,
+    # and refuses for the window reason specifically (not some other cause).
     foreign = _rate(member_state=EUMemberState.DE, effective_from=date(2025, 1, 1))
-    assert _source_window_failure(foreign, "DE/general/2025-01-01", []) is not None
+    failure = _source_window_failure(foreign, "DE/general/2025-01-01", [])
+    assert failure is not None
+    assert "no source_ref applicability window covers" in failure
 
 
 @pytest.mark.parametrize(

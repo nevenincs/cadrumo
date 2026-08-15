@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import shutil
 import sys
@@ -12,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
+from dev.packaging._hashing import sha256_path
 from dev.packaging._smoke_common import (
     build_companion_wheels,
     build_wheel,
@@ -36,14 +36,6 @@ class BuiltCohort:
     official: Path
     version: str
     release_base: str
-
-
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _generator_command(cohort: BuiltCohort, *, cohort_dir: Path | None = None) -> list[str]:
@@ -152,7 +144,7 @@ def test_generated_manifest_binds_exact_cohort_and_both_commands(
     assert set(manifest["architecture"]) == {"64bit"}
     architecture = manifest["architecture"]["64bit"]
     assert architecture["url"] == [f"{built_cohort.release_base}/{artifact.name}" for artifact in artifacts]
-    assert architecture["hash"] == [_sha256(artifact) for artifact in artifacts]
+    assert architecture["hash"] == [sha256_path(artifact) for artifact in artifacts]
     assert manifest["depends"] == ["python", "uv"]
     assert manifest["bin"] == [["aeat.cmd", "aeat"], ["cadrumo-mcp.cmd", "cadrumo-mcp"]]
     assert manifest["persist"] == ["state"]

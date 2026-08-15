@@ -8,12 +8,8 @@ flow from the subprocess is unit isolation, not a service double.
 
 from __future__ import annotations
 
-import contextlib
-from collections.abc import Iterator
-
 import pytest
 
-from ....application.operator_surface import COMMAND_RISK, CommandRiskDeclaration
 from ....core import PRODUCT_IDENTITY
 from .._annotations import McpAnnotations
 from .._input_schema import VerbInputSchema
@@ -34,6 +30,7 @@ from .._server import (
 )
 from .._tools import McpToolDescriptor, build_tool_descriptors
 from .._transport import _run_subprocess_tool
+from ._risk_table_support import declared_live_write
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -103,29 +100,8 @@ def test_gate_refusal_matches_the_direct_path_for_every_scoped_refusal() -> None
     assert refused > 0
 
 
-@contextlib.contextmanager
-def _declared_live_write(command_key: str) -> Iterator[None]:
-    """Declare ``command_key`` a live-write in the risk table for the test body.
-
-    A live-write BLOCK now fires from the DECLARED risk table, not a leaf-name
-    heuristic: no real command declares live_write
-    (never-submit is enforced as "no such tool exists"), so a test that exercises
-    the defensive BLOCK branch must supply a declared live-write row and restore
-    the table after - test data, not a mocked behaviour.
-    """
-    previous = COMMAND_RISK.get(command_key)
-    COMMAND_RISK[command_key] = CommandRiskDeclaration(live_write=True)
-    try:
-        yield
-    finally:
-        if previous is None:
-            COMMAND_RISK.pop(command_key, None)
-        else:
-            COMMAND_RISK[command_key] = previous
-
-
 def test_gate_refusal_blocks_a_declared_live_write_command() -> None:
-    with _declared_live_write("x.submit"):
+    with declared_live_write("x.submit"):
         assert gate_refusal(persona=None, descriptor=_blocked_descriptor()) == (
             "refused: AEAT live-write is permanently forbidden"
         )
@@ -136,7 +112,7 @@ def test_meta_execute_never_reaches_the_runner_on_a_blocked_command() -> None:
         raise AssertionError("the runner must not be reached for a blocked command")
 
     blocked = _blocked_descriptor()
-    with _declared_live_write("x.submit"):
+    with declared_live_write("x.submit"):
         outcome = meta_execute("x.submit", {}, descriptors=(blocked,), persona=None, run=boom)
     assert outcome.refused == "refused: AEAT live-write is permanently forbidden"
     assert outcome.envelope is None

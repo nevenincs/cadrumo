@@ -2,41 +2,17 @@
 
 from __future__ import annotations
 
-import contextlib
-from collections.abc import Iterator
-
 import pytest
 
-from ....application.operator_surface import COMMAND_RISK, CommandRiskDeclaration
 from .._hitl import ConfirmationPolicy, confirmation_for_tool
 from .._tools import build_tool_descriptors
+from ._risk_table_support import declared_live_write
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _decision(command_key: str) -> ConfirmationPolicy:
     return confirmation_for_tool(command_key=command_key)
-
-
-@contextlib.contextmanager
-def _declared_live_write(command_key: str) -> Iterator[None]:
-    """Declare ``command_key`` a live-write in the risk table for the test body.
-
-    A live-write BLOCK now fires from the DECLARED risk table, not a leaf-name
-    heuristic: no real command declares
-    ``live_write`` (never-submit is enforced as "no such tool exists"), so a test
-    that exercises the defensive BLOCK branch must supply a declared live-write
-    row and restore the table after - test data, not a mocked behaviour.
-    """
-    previous = COMMAND_RISK.get(command_key)
-    COMMAND_RISK[command_key] = CommandRiskDeclaration(live_write=True)
-    try:
-        yield
-    finally:
-        if previous is None:
-            COMMAND_RISK.pop(command_key, None)
-        else:
-            COMMAND_RISK[command_key] = previous
 
 
 def test_read_only_tools_auto_approve() -> None:
@@ -69,7 +45,7 @@ def test_a_hypothetical_live_write_would_be_blocked() -> None:
     # Defensive: if a live-write verb ever entered the command set - declared
     # live_write in the risk table - the gate blocks it outright. This proves the
     # BLOCK rail is real, not vacuous.
-    with _declared_live_write("modelo.work.submit"):
+    with declared_live_write("modelo.work.submit"):
         assert confirmation_for_tool(command_key="modelo.work.submit") is ConfirmationPolicy.BLOCK
 
 
