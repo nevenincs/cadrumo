@@ -35,7 +35,7 @@ SINGLE resume authority: both the login no-op path and the CLI root
 callback call it, so the two surfaces cannot drift.
 
 See Also:
-    :mod:`cadrumo.adapters.persistence.storage.master_key._acceleration_receipt`
+    :mod:`cadrumo.adapters.persistence.storage.custody._acceleration_receipt`
         The split-knowledge receipt this module mints and resumes.
     :func:`~cadrumo.application.user_profile.logout_active_profile`
         The symmetric strong close, which reuses
