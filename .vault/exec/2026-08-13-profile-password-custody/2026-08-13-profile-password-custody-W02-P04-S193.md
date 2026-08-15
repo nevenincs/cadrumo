@@ -159,3 +159,77 @@ identity lookup and the new suite are all present and unmangled. As with the two
 earlier rows that recorded the same capture, the condition that a custody fix be
 legible in history under its own description is not met, and this record carries
 the account instead.
+
+## Addendum: the distinguishing refusal and its missing registry entry
+
+**A later session refined this fix and broke the tree doing it.** It kept the
+retirement and both call sites untouched and replaced the generic transaction
+conflict with a dedicated subclass carrying an operator-facing message, on the
+correct reasoning that creation refuses on a label collision and on a failed
+retirement alike, so the collision text is a false account of the second. The
+subclass shipped without a declared error-code entry. Every such subclass binds
+its code at CLASS-DEFINITION time, so the module could not be imported at all,
+and because the capsule lifecycle imports it, the entire profile lifecycle
+import chain was down tree-wide rather than in tests only. A peer reported it,
+the failure was reproduced directly rather than accepted on report, and it was
+real.
+
+**The reported authorship was wrong and the correction matters more than the
+credit.** The commit carrying the subclass named this row in its subject but was
+not from this session, which performed no git write at any point; it touched
+nine files, several of them explicitly held by other agents. On a shared
+worktree neither a commit subject nor the status of the working tree attributes
+anything, because the subject is whatever its author typed and the tree is
+everyone's at once. Only file overlap and timing discriminate. The defect sat in
+an owned file regardless, so ownership of the fix was never in question.
+
+**The fix was held rather than taken, and the hold was the right call.** The
+declared registry lives under the core package and a dedicated message needs
+four catalogue strings, both areas assigned elsewhere at the time. No variant of
+the subclass could stay inside the owned module, so the options were reported
+with the exact content for each: a registry entry alone reusing an existing key,
+or that entry plus four real strings. Applying and reverting an experiment was
+declined too, because this tree captures working-copy edits into other sessions'
+commits and the catalogues had already broken the parity gate that way once in
+this campaign. The dispatcher chose the complete variant and released both
+areas, reasoning that a message which is merely less wrong would sit behind a
+green tree and never be revisited.
+
+**A concurrent session had meanwhile landed the compromise, so the work became a
+collapse rather than an addition.** Two declarations for the same class existed,
+which is itself a hard refusal at registry build. They were folded into one that
+keeps the other session's code string, because it matches the sibling custody
+codes, and takes the dedicated message key. Nothing was discarded that was
+better than what replaced it.
+
+**Retryable is a considered value, recorded where a reader will meet it.** The
+removal fails when another reader, a backup agent or a scanner holds the receipt
+open, which clears by itself, so advising a retry is honest. The reasoning is
+written into the class docstring rather than left in this record alone, because
+the reader most likely to "correct" it to false is reading the code.
+
+**Verification.** The import chain is restored: importing the capsule lifecycle
+succeeds, and the whole user-profile package collects clean at 288 selected of
+386 with no collection error. The never-blank message gate is five passed, which
+is the direct proof that all four catalogue strings landed, since it reds on a
+registered code whose key resolves to nothing; the registry and enforcement
+gates pass with it. All four values were written through the locale CLI, never
+by hand, and were read back from disk as valid accented UTF-8. The two suites
+this row owns are ten passed after the change. Lint, format and type checking
+are clean on every touched file.
+
+**Three locale gates are red and none of them is this change.** Its key appears
+nowhere in their output and is present in all four catalogues. They are the
+modelo casilla parity debt: eight hundred and twenty missing schema keys, and a
+single inter-locale drift between Spanish and Catalan on two differently-named
+casilla leaves of the same modelo, both arriving from the concurrent registry
+authority sweep that is adding modelos faster than their Spanish terminology is
+authored. That debt already has its own open row.
+
+**One verification is claimed weaker than it looks, deliberately.** The
+co-landing gate reports zero modules examined, because with nothing staged it
+compares the previous commit rather than the working tree, and this session
+still commits nothing. It did not inspect this change and is not evidence about
+it. The property it enforces was confirmed by inspection instead: the call site
+and its four keys are both present, which is exactly the pairing it exists to
+require.
