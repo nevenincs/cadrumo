@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:b2395af7d4316deba423288b078d47fdfe47335aa5bf88c8cf02d300b4380df9'
+body_hash: 'sha256:f8df17406603e974543750e21b501fa81027ea7a357cc8830f4a6184af45a260'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -110,6 +110,7 @@ Expose canonical profile verbs and secret channels through typed action envelope
 - [ ] `W03.P06.S93` - Have Terra XHigh retire or rewrite the two hundred and ninety-four tests asserting a wizard profile-creation capability this campaign deliberately removed, which is the single largest cause of failure in the whole integration lane at roughly twenty-three percent of it and is stale tests rather than broken code, sequencing the work behind the ruling on whether scripted profile creation is permitted at all so the rewrite is not done twice; `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/application/wizard/`.
 - [ ] `W03.P06.S99` - Have Terra XHigh converge the twenty-seven per-module profile-creation helpers onto the canonical registration helpers that one hundred and five other modules already use, treating any helper that genuinely cannot convert as a finding to state rather than a conversion to force, and searching by meaning first because a name-stem sweep structurally cannot find the duplicate that carries a different name; `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/tests/`.
 - [ ] `W03.P06.S103` - Have Sol Medium rule on the remaining sixty-odd test profile-seeding helpers spread across fourteen further names beyond the one already being converted, classifying each as drives-a-retired-path, already-canonical, or a genuinely different need that writes a domain record without a bucket or session, since the last class is not substitutable against the canonical registration door which publishes a capsule and must be documented as legitimate rather than collapsed; `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/domain/modelos/tests/`.
+- [ ] `W03.P06.S104` - Have Sol Medium rule per family whether the capabilities the capsule cutover removed should be restored, the sandbox and archive families being wiring rather than building because their application layer survived, the four single profile verbs being unassessed, and the subject-access-request surface being recoverable from history rather than greenfield since its test module still asserts a working implementation and the cutover commit is what deleted it; `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/entrypoints/cli/_config/`.
 
 ## Wave `W04` - retire superseded custody
 
@@ -187,3 +188,4 @@ Exercise the actual local system and read-only DEHu path, then complete an indep
 - [ ] `W05.P08.S23` - Have Terra XHigh run and codify real CLI, TUI, recovery-isolation, artifact, and live read-only DEHu routes without remote writes; `src/cadrumo/entrypoints/cli/tests/`.
 - [ ] `W05.P08.S24` - Have Sol Medium complete the final security and architecture proof against every accepted custody invariant and execution record; `.vault/audit/`.
 - [ ] `W05.P08.S25` - After S24 proves the hard cutover, perform the explicitly authorized local-only destructive reset of the existing disposable retired/shared-master store through the new canonical application-owned profile deletion authority, capture journal and receipt evidence, re-enrol only current-format profiles, never read/adopt/migrate retired custody, never delete through raw filesystem or SQL, and perform no AEAT or external mutation; `src/cadrumo/application/user_profile/; .vault/exec/`.
+- [ ] `W05.P08.S105` - Have Sol Medium close the gap that lets a decision be made without a record, since a ruling delivered as a report and never persisted is indistinguishable from no ruling and cost a full search to establish, which is the campaign-close discipline failing in the direction nobody watches; `.vault/audit/`.
