@@ -16,6 +16,14 @@ from .._values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+#: The shape these tests describe, stated once rather than at each call site.
+#: It is a fixture value, NOT a mirror of the production write version: the
+#: model deliberately has no default, because the current write version belongs
+#: to the bundle lineage that also owns the floor and the upgraders, and this
+#: layer cannot see it. A detector for the two disagreeing is being built
+#: separately; until it exists, this constant pins the shape under test and
+#: claims nothing about what production stamps.
+_SHAPE_UNDER_TEST = 3
 _INSTANT = datetime(2026, 6, 30, 10, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "88888888-8888-4888-8888-888888888888"
 _OBJECT_KEY = "catalogue"
@@ -90,7 +98,7 @@ def test_portable_export_carries_campaign_schema_additions_at_v3() -> None:
     re-default to ``COMPLETE`` and fail the identity check).
     """
     record = _campaign_record()
-    bundle = UserProfilePortableExport(profile=record, exported_at=_INSTANT)
+    bundle = UserProfilePortableExport(bundle_schema_version=_SHAPE_UNDER_TEST, profile=record, exported_at=_INSTANT)
     assert bundle.bundle_schema_version == 3
 
     reloaded = UserProfilePortableExport.model_validate_json(bundle.model_dump_json())
@@ -113,7 +121,9 @@ def test_portable_export_campaign_roundtrip_is_not_tautological() -> None:
     tautological the mangled bundle would still compare equal.
     """
     record = _campaign_record()
-    payload = UserProfilePortableExport(profile=record, exported_at=_INSTANT).model_dump_json()
+    payload = UserProfilePortableExport(
+        bundle_schema_version=_SHAPE_UNDER_TEST, profile=record, exported_at=_INSTANT
+    ).model_dump_json()
 
     mangled = payload.replace("Consultoria informatica", "Corrupted on the wire")
     assert "Corrupted on the wire" in mangled, "payload mutation did not apply"
@@ -123,7 +133,9 @@ def test_portable_export_campaign_roundtrip_is_not_tautological() -> None:
 
 
 def test_portable_export_v3_defaults_keep_empty_custody_fields_json_valid() -> None:
-    bundle = UserProfilePortableExport(profile=_profile(), exported_at=_INSTANT)
+    bundle = UserProfilePortableExport(
+        bundle_schema_version=_SHAPE_UNDER_TEST, profile=_profile(), exported_at=_INSTANT
+    )
 
     assert bundle.bundle_schema_version == 3
     assert bundle.carried_objects == ()
@@ -152,6 +164,7 @@ def test_carried_secure_object_and_coverage_manifest_round_trip_binary_payload()
     )
 
     bundle = UserProfilePortableExport(
+        bundle_schema_version=_SHAPE_UNDER_TEST,
         profile=_profile(),
         exported_at=_INSTANT,
         carried_objects=(carried,),
@@ -177,7 +190,9 @@ def test_portable_export_schema_rejects_extra_fields_and_is_frozen() -> None:
             },
         )
 
-    bundle = UserProfilePortableExport(profile=_profile(), exported_at=_INSTANT)
+    bundle = UserProfilePortableExport(
+        bundle_schema_version=_SHAPE_UNDER_TEST, profile=_profile(), exported_at=_INSTANT
+    )
     with pytest.raises(ValidationError, match="frozen"):
         bundle.bundle_schema_version = 4
 

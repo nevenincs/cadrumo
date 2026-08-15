@@ -153,8 +153,20 @@ applies_from = 2008-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G416.shtml"
 review_status = "reviewed"
 
+# Retiered 2026-08-15: this 915-byte orden excerpt carries no annex section
+# and no record-layout vocabulary, so it was never layout authority. The
+# real Diseño de Registro is aeat-dr-151-2023 below, but it only covers
+# ejercicio 2023 onward (applies_from 2023-01-01) -- it era-matches the
+# 2025-y-siguientes revision's workbook_parity_ref, which is redirected to
+# it. The 2015-y-siguientes revision (bounded 2015-2022) has NO
+# era-appropriate layout-authority source bundled: no AEAT design predating
+# 2023 is registered for this modelo, so its workbook_parity_ref stays
+# pointed at this now-honestly-retiered source and its own fragment
+# documents that gap explicitly rather than citing a 2023 design that would
+# not have applied. This excerpt remains a genuine official_source_guidance
+# citation (the orden that approves the form), just not the layout's home.
 [sources."boe-modelo-151-layout"]
-evidence_tier = "layout_authority"
+evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-2887-2008.html"

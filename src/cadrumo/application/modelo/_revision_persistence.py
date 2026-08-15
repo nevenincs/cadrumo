@@ -54,6 +54,8 @@ from ...core import (
     validated_casilla_id,
 )
 from ...core.hashing import sha256_hex
+from ...core.logging import get_logger
+from ..filing import FilingRetentionAuthority
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepositoryProtocol,
@@ -735,9 +737,6 @@ def _refresh_filing_retention_snapshot(
     absent snapshot comes to mean "nothing retained" -- this swallow becomes a
     fail-open and must be revisited with it.
     """
-    from ...core.logging import get_logger
-    from ..filing import FilingRetentionAuthority
-
     try:
         FilingRetentionAuthority().record_filing_catalogue(
             profile_id=UUID(str(bucket_id)),
