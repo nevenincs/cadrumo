@@ -22,9 +22,10 @@ import pytest
 
 from ....adapters.persistence.storage import BUCKET_MANIFEST_FILENAME
 from ....core import DirectoryEntryKind, scan_directory
-from ....core.config import load_settings
+from ....core.config import load_settings, override_settings
 from ....tests import REPO_ROOT
 from ....tests.subprocess_cli import run_cadrumo_subprocess
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -61,40 +62,51 @@ def _combined_output(result: subprocess.CompletedProcess[str]) -> str:
     return f"{result.stdout}\n{result.stderr}"
 
 
-def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: Path) -> None:
-    """Profile lifecycle is the custody surface; no legacy bootstrap command is reintroduced."""
+def _register_profile(storage_root: Path, label: str, **facts: str) -> str:
+    """Register one profile in-process against ``storage_root``, and return its id.
 
-    created = _run_cadrumo(
+    Credential registration is the only creation door and it takes a passphrase
+    as an argument rather than a flag, so a subprocess cannot mint a profile.
+    The sanctioned shape is to create in-process and hand the storage root to
+    the child, which then reaches the profile through its own login.
+    """
+    with override_settings(
+        cadrumo_local_storage_root=storage_root,
+        cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
+        cadrumo_active_profile=None,
+    ):
+        return register_cli_profile(label=label, facts=facts)
+
+
+def test_registered_profile_custody_survives_logout_and_reopens_on_login(tmp_path: Path) -> None:
+    """Profile lifecycle is the custody surface; no legacy bootstrap command is reintroduced.
+
+    The profile is registered in-process and the storage root is handed to the
+    subprocess CLI, which is the only shape available: credential registration
+    takes a passphrase as an argument and no CLI verb creates a profile.
+
+    The file-fallback secret-store assertions this test carried (``master.key``
+    and ``master.kdf`` under the configured secret directory) were dropped
+    rather than moved. No live door writes that store any more -- a registered
+    profile's custody rides its own capsule envelope, and the whole lifecycle
+    below runs against a root that has no secrets directory at all -- so the
+    assertions described an artefact of the retired creation path, not a
+    property of custody.
+    """
+
+    _register_profile(
         tmp_path,
-        (
-            "config",
-            "profile",
-            "create",
-            "custody",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Custody Operator",
-            "--entity-type",
-            "natural_person",
-            "--surnames",
-            "Operator",
-            "--activity",
-            "design",
-            "--iva-regime",
-            "GENERAL",
-        ),
+        "custody",
+        **{
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Custody Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
+        },
     )
 
-    assert created.returncode == 0, _combined_output(created)
-    assert "Status\tcreated" in created.stdout
-    secret_dir = tmp_path / "fallback-store"
-    assert (secret_dir / "master.key").is_file()
-    assert (secret_dir / "master.kdf").is_file()
-    # The per-store salt lives inside master.kdf (salt_b64); no standalone
-    # salt artefact is written.
-    assert not (secret_dir / "salt").is_file()
     bucket_dirs = list(scan_directory(tmp_path / "buckets"))
     assert len(bucket_dirs) == 1
     manifest = tomllib.loads((bucket_dirs[0] / BUCKET_MANIFEST_FILENAME).read_text(encoding="utf-8"))
@@ -121,29 +133,18 @@ def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: 
 def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) -> None:
     """Strong profile logout replaces the duplicate root lock door."""
 
-    created = _run_cadrumo(
+    _register_profile(
         tmp_path,
-        (
-            "config",
-            "profile",
-            "create",
-            "custody",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Custody Operator",
-            "--entity-type",
-            "natural_person",
-            "--surnames",
-            "Operator",
-            "--activity",
-            "design",
-            "--iva-regime",
-            "GENERAL",
-        ),
+        "custody",
+        **{
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Custody Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
+        },
     )
-    assert created.returncode == 0, _combined_output(created)
 
     logged_out = _run_cadrumo(tmp_path, ("config", "logout"))
     assert logged_out.returncode == 0, _combined_output(logged_out)
@@ -177,29 +178,18 @@ def test_config_passphrase_change_round_trips_file_custody(tmp_path: Path) -> No
     ``test_config_recovery_lifecycle.py``.)
     """
 
-    created = _run_cadrumo(
+    _register_profile(
         tmp_path,
-        (
-            "config",
-            "profile",
-            "create",
-            "custody",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Custody Operator",
-            "--entity-type",
-            "natural_person",
-            "--surnames",
-            "Operator",
-            "--activity",
-            "design",
-            "--iva-regime",
-            "GENERAL",
-        ),
+        "custody",
+        **{
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Custody Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
+        },
     )
-    assert created.returncode == 0, _combined_output(created)
 
     # Match the child harness's resolution through the sanctioned settings
     # accessor (no direct environment read): the dev/test password field's
@@ -305,52 +295,30 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     pointer file, never from the shell.
     """
 
-    first = _run_cadrumo(
+    _register_profile(
         tmp_path,
-        (
-            "config",
-            "profile",
-            "create",
-            "alpha",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Alpha Operator",
-            "--entity-type",
-            "natural_person",
-            "--surnames",
-            "Operator",
-            "--activity",
-            "consulting",
-            "--iva-regime",
-            "GENERAL",
-        ),
+        "alpha",
+        **{
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Alpha Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "consulting",
+            "iva.regime": "GENERAL",
+        },
     )
-    assert first.returncode == 0, _combined_output(first)
-    second = _run_cadrumo(
+    _register_profile(
         tmp_path,
-        (
-            "config",
-            "profile",
-            "create",
-            "beta",
-            "--quiet",
-            "--tax-id",
-            "87654321X",
-            "--name",
-            "Beta Operator",
-            "--entity-type",
-            "natural_person",
-            "--surnames",
-            "Operator",
-            "--activity",
-            "design",
-            "--iva-regime",
-            "GENERAL",
-        ),
+        "beta",
+        **{
+            "identity.tax_id": "87654321X",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Beta Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
+        },
     )
-    assert second.returncode == 0, _combined_output(second)
 
     bucket_dirs = scan_directory(tmp_path / "buckets", select=DirectoryEntryKind.DIRECTORIES)
     labels_by_id: dict[str, str] = {}
