@@ -9,7 +9,9 @@ import pytest
 from click.testing import Result
 
 from ....tests.cli_runner import invoke_cached_cli
-from ._ledger_empty_profile_fixture import _isolated_backend
+from ._isolated_profile_storage_fixtures import (
+    active_profile_isolated_backend as _isolated_backend,
+)
 
 __all__ = ["_isolated_backend"]
 
