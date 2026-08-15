@@ -199,7 +199,7 @@ def test_a_vanished_database_still_moves_the_digest(tmp_path: Path) -> None:
     assert inventory_profile_custody_capsule(_PROFILE_ID, capsule).digest != settled.digest
 
 
-def test_database_CONTENT_deliberately_does_not_move_the_digest(tmp_path: Path) -> None:
+def test_database_content_deliberately_does_not_move_the_digest(tmp_path: Path) -> None:
     """Pin the limitation so it is executable, not merely documented.
 
     Rows written into the capsule database between preflight and execution do
