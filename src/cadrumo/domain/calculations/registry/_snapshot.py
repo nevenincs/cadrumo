@@ -19,7 +19,7 @@ from datetime import date
 from pathlib import Path
 from typing import Protocol
 
-from ....core import RegistryAuthorityGrade, RevisionReviewStatus
+from ....core import REVIEWED_REVISION_REVIEW_STATUSES, RegistryAuthorityGrade
 from ._errors import RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
 from ._ids import RevisionId
@@ -359,13 +359,26 @@ def _check_snapshot_revision_review_status(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
 ) -> None:
-    """Require human sign-off on the selected revision before legal checks."""
-    if revision.review_status is RevisionReviewStatus.OPERATOR_REVIEWED:
+    """Require a recorded review of the selected revision before legal checks.
+
+    Admits any member of :data:`REVIEWED_REVISION_REVIEW_STATUSES` — agent or
+    operator — rather than ``operator_reviewed`` specifically. Demanding that
+    one status made a filing-grade snapshot unreachable by construction:
+    nothing in this project may stamp ``operator_reviewed``, so no revision
+    could satisfy the check and the gate refused every modelo rather than the
+    unreviewed ones. A check no input can pass tests nothing.
+
+    ``pending_review`` — the fail-closed default every ungraded revision reads
+    as — still refuses, which is the tooth that matters. The set is the one
+    already declared in ``core`` beside the enum, not a second vocabulary
+    invented here.
+    """
+    if revision.review_status in REVIEWED_REVISION_REVIEW_STATUSES:
         return
     status = getattr(revision.review_status, "value", revision.review_status)
     raise RegistryValidationError(
         f"modelo {modelo.id} revision {revision.id} is {status!r}; "
-        "filing-grade snapshot requires operator_reviewed revision",
+        "filing-grade snapshot requires a reviewed revision",
     )
 
 
