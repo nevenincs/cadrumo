@@ -101,23 +101,6 @@ _RESPONSE_CONTRACT: Final[str] = (
 #: rot into a rubber stamp that pre-authorises the next literal in that class.
 STANDING_LITERAL_VERSION_DECLARATIONS: Final[Mapping[tuple[str, str, str], str]] = {
     (
-        "src/cadrumo/adapters/outbound/storage/_records.py",
-        "RemoteMirrorNamespaceManifest",
-        "manifest_schema_version",
-    ): (
-        f"{_DEAD_SECOND_DECLARATION} The constant is REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION in the "
-        "sibling mirror-manifest module, which both the builder and the version check already read."
-    ),
-    (
-        "src/cadrumo/application/user_profile/_custody_transactions.py",
-        "ProfileCustodyOwnerReceipt",
-        "schema_version",
-    ): (
-        f"{_DEAD_SECOND_DECLARATION} The constant is CUSTODY_RECEIPT_SCHEMA_VERSION, declared in "
-        "this same module, and the two sibling records above this one already bind it -- this "
-        "field is the odd one out rather than the convention."
-    ),
-    (
         "src/cadrumo/adapters/persistence/operations/_lease.py",
         "_OperationLeaseRecord",
         "schema_version",
@@ -163,14 +146,6 @@ STANDING_LITERAL_VERSION_DECLARATIONS: Final[Mapping[tuple[str, str, str], str]]
         "OperationLeaseResult",
         "schema_version",
     ): _UNNAMED_SOLE_DECLARATION,
-    (
-        "src/cadrumo/application/user_profile/_custody_hold_models.py",
-        "ProfileCustodyHoldEvidence",
-        "schema_version",
-    ): (
-        f"{_UNNAMED_SOLE_DECLARATION} This one HAS been classified as a regenerable derived "
-        "artefact, so only the naming half is outstanding, and it is owned by the module."
-    ),
     (
         "src/cadrumo/application/user_profile/_login_session.py",
         "_ProfileLoginHandoverJournal",

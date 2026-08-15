@@ -495,18 +495,19 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
     if record is None:
         # The reason travels with the absence, so each one reaches the operator
         # as itself. A session that vanished between the probe above and this
-        # read lands here as a lock rather than as a missing record.
+        # read lands here as a lock rather than as a missing record, and a lock
+        # is not a broken pointer, so it offers no pointer repair.
         assert resolution.unavailability is not None
+        unavailability = resolution.unavailability
+        locked = unavailability is ProfileRecordUnavailability.SESSION_REQUIRED
         return _finalise_health(
             ActiveProfileHealth(
                 active_profile=active_profile,
                 source=source,
-                status=_UNAVAILABILITY_STATUSES[resolution.unavailability],
+                status=_UNAVAILABILITY_STATUSES[unavailability],
                 registered_bucket=True,
                 profile_total_keys=total_keys,
-                repairable_by_clearing_pointer=(
-                    source == "pointer" and resolution.unavailability is not ProfileRecordUnavailability.SESSION_REQUIRED
-                ),
+                repairable_by_clearing_pointer=source == "pointer" and not locked,
             ),
             label=registered_pointer.label,
         )

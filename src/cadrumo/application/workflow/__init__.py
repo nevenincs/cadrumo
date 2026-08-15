@@ -212,9 +212,9 @@ from ._resume import (
 
 __all__ = [
     "ActiveProfileHealth",
+    "ActiveProfileRecordResolution",
     "ActiveProfileRepairResult",
     "AuthCleanupCertificateSource",
-    "ActiveProfileRecordResolution",
     "AuthCleanupIntent",
     "AuthCleanupOperationKind",
     "AuthState",

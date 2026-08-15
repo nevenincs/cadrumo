@@ -7887,6 +7887,7 @@ flows:
     language:
       unavailable: Este perfil no ofrece un ajuste de idioma.
     namespace_detail: detalle {number}
+    next_step_modelo: Los datos declarados de este perfil lo dirigen al Modelo {modelo}.
     required_field_unavailable: Campo obligatorio del perfil
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'

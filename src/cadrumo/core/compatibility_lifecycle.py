@@ -305,6 +305,18 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     # identifiers, which arrive from a legal matter outside the application. It
     # is classed here on the refusal argument alone, not on rebuildability.
     "profile_legal_hold_snapshot": PersistedFormatClass.REGENERABLE,
+    # The derived evidence the deletion preflight assembles from the two
+    # snapshots above. It clears the nested-format boundary test in the loose
+    # sense -- its own `schema_version` is independent and its own bytes are
+    # durably written to a per-owner file -- but fails the stricter half that
+    # would argue DURABLE: nothing in the tree ever loads this file back
+    # through its typed grammar. Its owning `refresh()` unconditionally
+    # recomputes the evidence from the already-durable legal-hold and
+    # filing-retention snapshots and overwrites the file on every call, which
+    # is the participation-index shape exactly -- a derived read-side artefact
+    # for which delete-and-rebuild is the correct response to an unreadable
+    # version, not a promise to keep reading old bytes nothing consults again.
+    "profile_custody_hold_evidence": PersistedFormatClass.REGENERABLE,
 }
 
 

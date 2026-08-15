@@ -1,4 +1,5 @@
 import logging
+import re
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,7 @@ from dev.locales import (
 )
 from dev.locales.cli import app
 
+from ..application.operator_surface import MOUNTED_COMMAND_FAMILIES, FamilyMountState
 from ..core import scan_directory
 from ..core.external_constants import OutputLanguage
 from .cli_runner import invoke_typer_app
@@ -44,6 +46,134 @@ def _mapping(data: dict[str, LocaleNode], *keys: str) -> dict[str, LocaleNode]:
         node = node[key]
     assert isinstance(node, dict), f"expected dict node, got {type(node).__name__}"
     return node
+
+
+# ---------------------------------------------------------------------------
+# Product and executable naming contract
+# ---------------------------------------------------------------------------
+
+# The naming contract distinguishes four tokens that a catalogue string may
+# legitimately carry, and pinning the surrounding prose to catch a violation
+# means every unrelated copy edit reds this file instead. These patterns extract
+# only the tokens the contract governs, so a reword stays green while a rename,
+# a case slip, or an authority substitution does not.
+_IDENTITY_TOKEN_PATTERNS: dict[str, re.Pattern[str]] = {
+    # Identity contexts: headings, banners, the product as a name.
+    "CADRUMO": re.compile(r"\bCADRUMO\b"),
+    # Sentence prose: the product as a subject or possessive.
+    "Cadrumo": re.compile(r"\bCadrumo\b"),
+    # Machine names, which stay lower case and are not product prose.
+    "cadrumo-mcp": re.compile(r"\bcadrumo-mcp\b"),
+    "cadrumo": re.compile(r"\bcadrumo\b(?!-mcp)(?!://)"),
+    # The tax authority, which is never renamed to the product.
+    "AEAT": re.compile(r"\bAEAT\b"),
+    # The sole human executable token.
+    "aeat": re.compile(r"\baeat\b"),
+}
+
+
+def _identity_tokens(value: str) -> frozenset[str]:
+    """Return the naming-contract tokens a catalogue string carries."""
+
+    return frozenset(name for name, pattern in _IDENTITY_TOKEN_PATTERNS.items() if pattern.search(value))
+
+
+def _assert_identity_contract(
+    data: dict[str, LocaleNode],
+    *keys: str,
+    expected: frozenset[str],
+) -> None:
+    """Assert a catalogue string carries exactly the contract's identity tokens."""
+
+    value = _leaf(data, *keys)
+    actual = _identity_tokens(value)
+    assert actual == expected, (
+        f"{'.'.join(keys)} carries identity tokens {sorted(actual)}, expected {sorted(expected)}: {value!r}"
+    )
+
+
+# The root help heading and the landing headline are identity contexts: they name
+# the product, and the first of them names the authority it files with. Neither
+# may drift to sentence-case prose, a machine name, or an executable token.
+_ROOT_HEADING_IDENTITY_TOKENS = frozenset({"CADRUMO", "AEAT"})
+_LANDING_HEADLINE_IDENTITY_TOKENS = frozenset({"CADRUMO"})
+
+# A command family's own catalogue strings live under ``cli.<root>.<child>``.
+_CUSTODY_PASSPHRASE_NAMESPACE = ("cli", "config", "passphrase")
+_CUSTODY_PASSPHRASE_PROMPTS = (
+    "current_passphrase_prompt",
+    "new_passphrase_prompt",
+    "confirm_new_passphrase_prompt",
+)
+# A prompt is sentence prose addressed to the operator, not a heading.
+_CUSTODY_PASSPHRASE_IDENTITY_TOKENS = frozenset({"Cadrumo"})
+
+
+def _declared_family_mount_state(namespace: tuple[str, ...]) -> FamilyMountState:
+    """Resolve a ``cli.<root>.<child>`` catalogue namespace to its family's mount state.
+
+    Whether a family's strings are live, held, or gone is the operator surface's
+    ruling, not this test's. ``MOUNTED_COMMAND_FAMILIES`` is that ruling, so the
+    namespace is mapped to the family identity and the answer is read from
+    :class:`FamilyMountState` rather than judged from the catalogue's contents.
+
+    A namespace resolving to no declared family is a hard failure. Retirement is a
+    deletion from the register, and the expectation here must be deleted in the
+    same move rather than left asserting against a family that no longer exists.
+    """
+
+    matches = [family for family in MOUNTED_COMMAND_FAMILIES if ("cli", family.root.value, family.child) == namespace]
+    assert matches, (
+        f"{'.'.join(namespace)} resolves to no declared command family. "
+        "Either the family was retired without removing this expectation, or the "
+        "catalogue namespace no longer matches the family's root and child tokens."
+    )
+    (family,) = matches
+    return family.mount_state
+
+
+def _assert_command_family_catalogue_strings(
+    data: dict[str, LocaleNode],
+    namespace: tuple[str, ...],
+    *,
+    leaves: tuple[str, ...],
+    expected: frozenset[str],
+) -> None:
+    """Assert a command family's catalogue strings against the family register.
+
+    A ``MOUNTED`` family is on the wire, so every string it renders must exist and
+    must satisfy the naming contract.
+
+    A ``DECLARED_UNIMPLEMENTED`` family holds its strings: the operator surface
+    declares the family and states the capability it is waiting on, but nothing
+    reaches those strings, so their absence is not a defect and their presence is
+    not stale residue to prune. Presence is therefore not asserted; the naming
+    contract still binds whatever is present. The day the capability ships and the
+    family flips to ``MOUNTED``, this demands the strings back without an edit here.
+    """
+
+    state = _declared_family_mount_state(namespace)
+    held = state is FamilyMountState.DECLARED_UNIMPLEMENTED
+
+    node: LocaleNode = data
+    for key in namespace:
+        if not isinstance(node, dict) or key not in node:
+            assert held, (
+                f"{'.'.join(namespace)} is absent from the catalogue while its command "
+                f"family is {state.value}: a family the tree reaches must carry every string it renders."
+            )
+            return
+        node = node[key]
+
+    assert isinstance(node, dict), f"expected a namespace node at {'.'.join(namespace)}"
+    for leaf in leaves:
+        if leaf not in node:
+            assert held, (
+                f"{'.'.join((*namespace, leaf))} is absent from the catalogue while its "
+                f"command family is {state.value}."
+            )
+            continue
+        _assert_identity_contract(data, *namespace, leaf, expected=expected)
 
 
 @pytest.fixture(scope="module")
@@ -110,14 +240,11 @@ def test_english_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "Google Drive vault folder {vault_folder_name} belongs to the former product and cannot be used; "
         "use the Cadrumo vault instead."
     )
-    assert _leaf(data, "cli", "config", "passphrase", "current_passphrase_prompt") == (
-        "Current Cadrumo secret-store passphrase: "
-    )
-    assert _leaf(data, "cli", "config", "passphrase", "confirm_new_passphrase_prompt") == (
-        "Confirm new Cadrumo secret-store passphrase: "
-    )
-    assert _leaf(data, "cli", "config", "passphrase", "new_passphrase_prompt") == (
-        "New Cadrumo secret-store passphrase: "
+    _assert_command_family_catalogue_strings(
+        data,
+        _CUSTODY_PASSPHRASE_NAMESPACE,
+        leaves=_CUSTODY_PASSPHRASE_PROMPTS,
+        expected=_CUSTODY_PASSPHRASE_IDENTITY_TOKENS,
     )
     assert _leaf(data, "cli", "config", "google", "profile_help") == (
         "Cadrumo profile name override (default = active profile on workflow state)"
@@ -128,10 +255,28 @@ def test_english_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "Run it from a client that can ask you questions, or run the equivalent Cadrumo CLI (`aeat`) command "
         "directly in a terminal."
     )
-    assert _leaf(data, "cli", "operator_surface", "help", "root", "heading") == (
-        "CADRUMO - local-first workflow for Spanish tax work with AEAT"
+    # Identity contract only, not the prose. These two strings are live operator
+    # copy this test does not own; pinning the sentence made every reword fail
+    # here, and re-pinning it to whatever the catalogue now says only resets the
+    # clock. What must not drift is the naming: the product in its identity
+    # casing, the authority under its own acronym, and nothing else.
+    _assert_identity_contract(
+        data,
+        "cli",
+        "operator_surface",
+        "help",
+        "root",
+        "heading",
+        expected=_ROOT_HEADING_IDENTITY_TOKENS,
     )
-    assert _leaf(data, "cli", "root", "landing", "headline") == "CADRUMO Tax Assistant"
+    _assert_identity_contract(
+        data,
+        "cli",
+        "root",
+        "landing",
+        "headline",
+        expected=_LANDING_HEADLINE_IDENTITY_TOKENS,
+    )
 
 
 def test_spanish_catalogue_distinguishes_product_prose_cli_and_identity_headings(
@@ -165,10 +310,24 @@ def test_spanish_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "(`aeat`) "
         "directamente en un terminal."
     )
-    assert _leaf(data, "cli", "operator_surface", "help", "root", "heading") == (
-        "CADRUMO, herramienta de declaraciones fiscales con la AEAT."
+    # Identity contract only — see the English counterpart for why the prose is not pinned.
+    _assert_identity_contract(
+        data,
+        "cli",
+        "operator_surface",
+        "help",
+        "root",
+        "heading",
+        expected=_ROOT_HEADING_IDENTITY_TOKENS,
     )
-    assert _leaf(data, "cli", "root", "landing", "headline") == "Asistente fiscal CADRUMO"
+    _assert_identity_contract(
+        data,
+        "cli",
+        "root",
+        "landing",
+        "headline",
+        expected=_LANDING_HEADLINE_IDENTITY_TOKENS,
+    )
 
 
 def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings(
@@ -190,14 +349,11 @@ def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "La carpeta vault de Google Drive {vault_folder_name} pertany al producte anterior i no es pot utilitzar; "
         "usa la carpeta vault de Cadrumo."
     )
-    assert _leaf(data, "cli", "config", "passphrase", "current_passphrase_prompt") == (
-        "Contrasenya actual del magatzem secret Cadrumo: "
-    )
-    assert _leaf(data, "cli", "config", "passphrase", "confirm_new_passphrase_prompt") == (
-        "Confirma la nova contrasenya del magatzem secret Cadrumo: "
-    )
-    assert _leaf(data, "cli", "config", "passphrase", "new_passphrase_prompt") == (
-        "Nova contrasenya del magatzem secret Cadrumo: "
+    _assert_command_family_catalogue_strings(
+        data,
+        _CUSTODY_PASSPHRASE_NAMESPACE,
+        leaves=_CUSTODY_PASSPHRASE_PROMPTS,
+        expected=_CUSTODY_PASSPHRASE_IDENTITY_TOKENS,
     )
     assert _leaf(data, "cli", "config", "google", "profile_help") == (
         "Perfil Cadrumo a usar (per defecte = perfil actiu de l'estat de flux)"
@@ -219,10 +375,24 @@ def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "Executa'l des d'un client que pugui fer-te preguntes, o executa l'ordre equivalent de Cadrumo CLI "
         "(`aeat`) directament en un terminal."
     )
-    assert _leaf(data, "cli", "operator_surface", "help", "root", "heading") == (
-        "CADRUMO, eina de declaracions fiscals amb l'AEAT."
+    # Identity contract only — see the English counterpart for why the prose is not pinned.
+    _assert_identity_contract(
+        data,
+        "cli",
+        "operator_surface",
+        "help",
+        "root",
+        "heading",
+        expected=_ROOT_HEADING_IDENTITY_TOKENS,
     )
-    assert _leaf(data, "cli", "root", "landing", "headline") == "Assistent fiscal CADRUMO"
+    _assert_identity_contract(
+        data,
+        "cli",
+        "root",
+        "landing",
+        "headline",
+        expected=_LANDING_HEADLINE_IDENTITY_TOKENS,
+    )
 
 
 def test_hungarian_catalogue_distinguishes_product_prose_cli_and_identity_headings(
@@ -249,10 +419,151 @@ def test_hungarian_catalogue_distinguishes_product_prose_cli_and_identity_headin
         "(elicitation) funkciót. Futtasd olyan kliensből, amely tud kérdezni, vagy futtasd a megfelelő "
         "Cadrumo CLI (`aeat`) parancsot közvetlenül a terminálban."
     )
-    assert _leaf(data, "cli", "operator_surface", "help", "root", "heading") == (
-        "CADRUMO - helyi-alapú spanyol adóügyi munkafolyamat az AEAT hatósággal"
+    # Identity contract only — see the English counterpart for why the prose is not pinned.
+    _assert_identity_contract(
+        data,
+        "cli",
+        "operator_surface",
+        "help",
+        "root",
+        "heading",
+        expected=_ROOT_HEADING_IDENTITY_TOKENS,
     )
-    assert _leaf(data, "cli", "root", "landing", "headline") == "CADRUMO Adóasszisztens"
+    _assert_identity_contract(
+        data,
+        "cli",
+        "root",
+        "landing",
+        "headline",
+        expected=_LANDING_HEADLINE_IDENTITY_TOKENS,
+    )
+
+
+def test_identity_token_extractor_discriminates_product_spellings() -> None:
+    """The naming-contract extractor separates the four spellings it governs.
+
+    Anti-vacuity for the re-founded heading assertions: an extractor that matched
+    every spelling as one token, or matched none, would let those assertions pass
+    on exactly the rename they exist to refuse.
+    """
+
+    assert _identity_tokens("CADRUMO - workflow with the Spanish Tax Agency (AEAT)") == {"CADRUMO", "AEAT"}
+    assert _identity_tokens("Cadrumo prepares the draft.") == {"Cadrumo"}
+    assert _identity_tokens("Install cadrumo; launch cadrumo-mcp.") == {"cadrumo", "cadrumo-mcp"}
+    assert _identity_tokens("launch cadrumo-mcp only") == {"cadrumo-mcp"}
+    assert _identity_tokens("read cadrumo://status") == set()
+    assert _identity_tokens("Run `aeat config profile status`.") == {"aeat"}
+    assert _identity_tokens("nothing to see here") == set()
+
+
+def test_root_heading_identity_contract_refuses_a_product_rename() -> None:
+    """The heading contract reds on a rename and stays green on a reword.
+
+    The rot this replaced was a pinned sentence, so the replacement is only worth
+    having if it still bites the thing the pin was there for.
+    """
+
+    reworded = {"cli": {"operator_surface": {"help": {"root": {"heading": "CADRUMO - anything at all (AEAT)"}}}}}
+    _assert_identity_contract(
+        reworded,
+        "cli",
+        "operator_surface",
+        "help",
+        "root",
+        "heading",
+        expected=_ROOT_HEADING_IDENTITY_TOKENS,
+    )
+
+    for corrupted in (
+        "Cadrumo - local-first workflow with AEAT",
+        "cadrumo - local-first workflow with AEAT",
+        "CADRUMO - local-first workflow with CADRUMO",
+        "CADRUMO - local-first workflow with the AEAT, run aeat config check",
+    ):
+        with pytest.raises(AssertionError):
+            _assert_identity_contract(
+                {"cli": {"operator_surface": {"help": {"root": {"heading": corrupted}}}}},
+                "cli",
+                "operator_surface",
+                "help",
+                "root",
+                "heading",
+                expected=_ROOT_HEADING_IDENTITY_TOKENS,
+            )
+
+
+def test_custody_passphrase_strings_are_held_by_the_family_register() -> None:
+    """The passphrase namespace's disposition is read, not judged.
+
+    The catalogue strings for ``config passphrase`` are neither live nor prunable:
+    the operator surface declares the family and records that credential rotation
+    exists at no layer. That disposition lives in ``MOUNTED_COMMAND_FAMILIES``, so
+    this pins that the register is what answers, and that the answer is currently
+    ``DECLARED_UNIMPLEMENTED`` rather than silently absent.
+    """
+
+    assert _declared_family_mount_state(_CUSTODY_PASSPHRASE_NAMESPACE) is FamilyMountState.DECLARED_UNIMPLEMENTED
+
+    with pytest.raises(AssertionError, match="resolves to no declared command family"):
+        _declared_family_mount_state(("cli", "config", "recover"))
+
+
+def test_a_mounted_family_may_not_hold_its_catalogue_strings() -> None:
+    """Absence is tolerated for a held family and refused for a mounted one.
+
+    Anti-vacuity for the held branch: without this, a catalogue that lost every
+    command family's strings would pass the four locale tests unchanged.
+    """
+
+    mounted = next(family for family in MOUNTED_COMMAND_FAMILIES if family.mount_state is FamilyMountState.MOUNTED)
+    mounted_namespace = ("cli", mounted.root.value, mounted.child)
+
+    _assert_command_family_catalogue_strings(
+        {},
+        _CUSTODY_PASSPHRASE_NAMESPACE,
+        leaves=_CUSTODY_PASSPHRASE_PROMPTS,
+        expected=_CUSTODY_PASSPHRASE_IDENTITY_TOKENS,
+    )
+
+    with pytest.raises(AssertionError, match="absent from the catalogue"):
+        _assert_command_family_catalogue_strings(
+            {},
+            mounted_namespace,
+            leaves=("some_prompt",),
+            expected=frozenset({"Cadrumo"}),
+        )
+
+    with pytest.raises(AssertionError, match="absent from the catalogue"):
+        _assert_command_family_catalogue_strings(
+            {"cli": {mounted.root.value: {mounted.child: {"other": "Cadrumo"}}}},
+            mounted_namespace,
+            leaves=("some_prompt",),
+            expected=frozenset({"Cadrumo"}),
+        )
+
+
+def test_a_held_family_string_still_carries_the_naming_contract() -> None:
+    """Held is not unchecked: a present string still answers to the contract."""
+
+    catalogue = {
+        "cli": {
+            "config": {
+                "passphrase": {
+                    "current_passphrase_prompt": "Current cadrumo secret-store passphrase: ",
+                    "new_passphrase_prompt": "New Cadrumo secret-store passphrase: ",
+                    "confirm_new_passphrase_prompt": "Confirm new Cadrumo secret-store passphrase: ",
+                }
+            }
+        }
+    }
+
+    with pytest.raises(AssertionError, match="carries identity tokens"):
+        _assert_command_family_catalogue_strings(
+            catalogue,
+            _CUSTODY_PASSPHRASE_NAMESPACE,
+            leaves=_CUSTODY_PASSPHRASE_PROMPTS,
+            expected=_CUSTODY_PASSPHRASE_IDENTITY_TOKENS,
+        )
 
 
 def test_set_locale_value_updates_one_leaf(tmp_path: Path):

@@ -33,6 +33,7 @@ import re
 import pytest
 
 from .....core import ExportLayoutFormat
+from .._export import derive_export_layouts_from_bindings
 from .._record_design import extract_record_design
 from .._record_design_schema import RecordDesignExtraction, RecordDesignSheet, RecordDesignSkippedSheet
 from .._schema import ExportLayoutDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, SourceReference
@@ -61,7 +62,19 @@ _INCOMPLETE_ANCHOR = ("714", "2021", "modelo-714-fichero-aeat")
 
 
 def _fixed_width_layouts(revision: ModeloRevision) -> tuple[ExportLayoutDefinition, ...]:
-    return tuple(layout for layout in revision.export_layouts if layout.format is ExportLayoutFormat.FIXED_WIDTH)
+    """Resolve layouts the way snapshot build -- and the gate -- resolve them.
+
+    Through ``derive_export_layouts_from_bindings`` rather than off
+    ``revision.export_layouts`` directly, so a record assembled from
+    ``binding_record`` selectors carries its materialised fields here too.
+    Reading the raw tuple would make Modelo 720's records look empty and hand
+    this test a gap the gate correctly does not see.
+    """
+    return tuple(
+        layout
+        for layout in derive_export_layouts_from_bindings(revision)
+        if layout.format is ExportLayoutFormat.FIXED_WIDTH
+    )
 
 
 def _revisions_with_fixed_width_layouts(
@@ -277,12 +290,16 @@ def test_deleting_one_required_slot_reds_an_accepted_layout(
         update={"fields": tuple(field for field in victim_record.fields if field is not victim)}
     )
     broken_layout = layout.model_copy(
-        update={"records": tuple(broken_record if r is victim_record else r for r in layout.records)}
+        update={"records": tuple(broken_record if r.id == victim_record.id else r for r in layout.records)}
     )
+    # Substituted BY ID, not by identity: the layout under test came out of
+    # ``derive_export_layouts_from_bindings``, which may hand back a
+    # materialised copy rather than the object the revision holds, and an
+    # identity swap would then silently substitute nothing and prove nothing.
     broken_revision = revision.model_copy(
         update={
             "export_layouts": tuple(
-                broken_layout if candidate is layout else candidate for candidate in revision.export_layouts
+                broken_layout if candidate.id == layout.id else candidate for candidate in revision.export_layouts
             )
         }
     )

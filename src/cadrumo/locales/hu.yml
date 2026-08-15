@@ -7680,6 +7680,7 @@ flows:
     language:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
     namespace_detail: '{number}. részlet'
+    next_step_modelo: A profil megadott adatai a(z) {modelo} modellhez vezetnek.
     required_field_unavailable: Kötelező profilmező
     section_title: '{title} - {present}/{total}'
     title: 'Profil: {profile}'
