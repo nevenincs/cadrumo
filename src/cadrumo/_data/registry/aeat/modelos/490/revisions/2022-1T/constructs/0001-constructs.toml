@@ -1,0 +1,7 @@
+[[revisions."2022-1T".constructs]]
+id = "modelo-490-autoliquidacion"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure", "aeat-dr-490-2021"]
+casilla_ids = ["decl.ejercicio", "decl.periodo"]
+application_links = ["modelo-490-filing"]
+workbook_parity_refs = ["modelo-490-2022-1t-static-layout"]

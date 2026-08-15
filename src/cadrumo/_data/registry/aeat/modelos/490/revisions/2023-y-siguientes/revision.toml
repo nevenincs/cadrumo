@@ -1,0 +1,48 @@
+[revisions."2023-y-siguientes"]
+authority_grade = "applicability"
+# Modelo 490 autoliquidacion del Impuesto sobre Determinados Servicios
+# Digitales, approved by orden-hac-590-2021 art 1, plazo grounded verbatim in
+# orden-hac-590-2021 art 3.
+#
+# ERA SPLIT. AEAT publishes THREE record designs for this modelo and binds each
+# to a disjoint span; the previous single '2021-y-siguientes' revision spanned
+# all three at once, so no layout authored on it could be correct for more than
+# one era. Every boundary below is read off AEAT's own index title for the
+# artefact, never chosen to make a window check pass.
+#
+# TWO of the three boundaries fall MID-YEAR (2022-1T|2T and nothing else at
+# 2023), which a year-granular period_selector cannot express on its own. They
+# are carried by PERIOD narrowing instead: '2021' and '2022-1T' both consume the
+# same design but are separate revisions because one covers a whole year and the
+# other a single quarter, and '2022-1T' / '2022-2T-4T' share filing year 2022
+# with disjoint period lists. select_revision resolves on (year, period) so the
+# pair is unambiguous; select_revision_for_year deliberately refuses a year-only
+# answer here, naming this exact case.
+#
+# This revision consumes AEAT's "Ejercicio 2023 y siguientes" design.
+id = "2023-y-siguientes"
+valid_from = 2023-01-01
+period_selector = { year_from = 2023, periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-hac-590-2021:art-1"]
+legal_refs = [
+    "orden-hac-590-2021:art-1",
+    "orden-hac-590-2021:art-3",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-490-procedure",
+    "aeat-dr-490-2023",
+]
+
+
+[revisions."2023-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision. Revision '2023-y-siguientes' of modelo 490 DOES have a strictly-earlier sibling, so a within-modelo continuity transition is structurally possible here and this family is NOT empty by construction. None is declared because no casilla-to-position mapping has been authored for the earlier era, so there is no pair of numbered casillas between which an evolution could be asserted. Declaring one would claim a continuity nobody has checked. This is an honest empty family on a stated reason, not a claim that the family cannot exist -- when the earlier era is transcribed, revisit it."
+legal_refs = [
+    "orden-hac-590-2021:art-1",
+    "orden-hac-590-2021:art-3",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-490-procedure",
+    "aeat-dr-490-2023",
+]
