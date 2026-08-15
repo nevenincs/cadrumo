@@ -8,7 +8,6 @@ only a successful production mint may create a resumable receipt.
 from __future__ import annotations
 
 import base64
-import json
 import os
 import secrets
 import subprocess
@@ -524,13 +523,27 @@ class TestProfileSessionAcceleration:
             delete_profile_session(storage_root=tmp_path, profile_id=other_profile)
 
     def test_tampered_aad_record_is_refused_and_cleaned(self, tmp_path: Path) -> None:
+        """A canonical receipt whose AAD-bound field was altered fails authentication.
+
+        The tamper is re-encoded THROUGH the production canonical encoder on
+        purpose. Rewriting the receipt with a plain ``json.dumps`` leaves bytes
+        the canonical-form check refuses, so the resume returned MALFORMED from
+        that check and the authenticated-data branch this test exists to cover
+        was never evaluated -- for as long as the test existed, and it did not
+        run at all until its module was given a lane.
+
+        ``idle_deadline`` is the altered field because it is bound into the
+        AEAD associated data, so a receipt that stays byte-canonical and
+        well-formed still fails to unwrap. Extending it rather than shortening
+        it also carries the record PAST the idle-expiry check above, so a pass
+        here cannot be an expiry refusal wearing the tamper name.
+        """
         profile_id = _profile_id()
         record, _ = self._mint(tmp_path, profile_id)
         path = profile_session_path(storage_root=tmp_path, profile_id=profile_id)
         try:
-            document = json.loads(path.read_text(encoding="utf-8"))
-            document["idle_deadline"] = (_NOW + timedelta(hours=3)).isoformat()
-            path.write_text(json.dumps(document), encoding="utf-8")
+            forged = record.model_copy(update={"idle_deadline": _NOW + timedelta(hours=3)})
+            path.write_bytes(_receipt_bytes(forged))
             outcome, resumed = resume_profile_session(
                 storage_root=tmp_path,
                 profile_id=profile_id,
@@ -538,7 +551,10 @@ class TestProfileSessionAcceleration:
                 dek_epoch=_EPOCH,
                 now=_NOW + timedelta(minutes=1),
             )
-            assert outcome.refusal is ProfileSessionRefusalReason.TAMPERED
+            assert outcome.refusal is ProfileSessionRefusalReason.TAMPERED, (
+                "a canonical receipt with an altered AAD field must fail authentication, "
+                f"not any earlier check; got {outcome.refusal}"
+            )
             assert resumed is None
             assert not path.exists()
             assert (
