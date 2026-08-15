@@ -190,6 +190,49 @@ def parse_profile_custody_recovery_artifact(value: bytes) -> ProfileCustodyRecov
         raise ProfileCustodyRecordError("profile recovery artifact is not a valid current-format record") from exc
 
 
+def refuse_hostile_recovery_artifact_destination(target: Path, *, settings: Settings | None = None) -> None:
+    """Refuse a destination this export must not resolve, rather than warn about it.
+
+    An artifact is wrapped key material leaving the encrypted store, so the
+    destination is part of the exposure decision and not a formatting detail.
+    Three shapes are refused outright because no warning makes them safe.
+
+    A RELATIVE destination names a file the operator did not fully choose: it
+    resolves against whatever directory the process happened to start in, so
+    the operator and the export can disagree about where the second door was
+    left, and the answer is unrecoverable afterwards.
+
+    A destination carrying ``..`` or ``.`` is refused for the same reason
+    reversed -- the written path and the typed path are not visibly the same
+    path, and the parent-identity anchor below verifies the parent the export
+    actually opens, not the one the operator believes they named.
+
+    A destination INSIDE the Cadrumo storage root is refused because it
+    defeats the export's own store-separately warning by construction: the
+    artifact and the ciphertext it can unwrap would share one directory tree,
+    one backup, and one theft. Inside a bucket it is worse than pointless --
+    the capsule inventory folds every regular file under the bucket into the
+    deletion fingerprint, so a stray artifact would silently change a
+    fingerprint a later resume compares against.
+    """
+    if not target.is_absolute():
+        raise ProfileCustodyRecordError(
+            "recovery artifact destination must be an absolute path, not one resolved against a working directory"
+        )
+    if any(part in {os.pardir, os.curdir} for part in target.parts):
+        raise ProfileCustodyRecordError(
+            "recovery artifact destination must be a direct path carrying no parent or current directory segment"
+        )
+    from .....core.paths import effective_storage_root
+
+    storage_root = effective_storage_root(settings=settings)
+    if target == storage_root or storage_root in target.parents:
+        raise ProfileCustodyRecordError(
+            "recovery artifact destination must be outside the Cadrumo storage root, "
+            "so the artifact cannot be stored with the data it unwraps"
+        )
+
+
 def export_profile_custody_recovery_artifact(
     envelope: ProfileCustodyRecoveryEnvelope,
     *,
@@ -200,6 +243,7 @@ def export_profile_custody_recovery_artifact(
     settings: Settings | None = None,
 ) -> ProfileCustodyRecoveryArtifactExportReceipt:
     """Exclusively create a durable external artifact after password authentication."""
+    refuse_hostile_recovery_artifact_destination(target, settings=settings)
     if password_envelope.profile_id != envelope.profile_id or password_envelope.dek_epoch != envelope.dek_epoch:
         raise ProfileCustodyRecordError(
             "current password custody proof does not authorize this recovery artifact export"
@@ -463,5 +507,6 @@ __all__ = [
     "export_profile_custody_recovery_artifact",
     "import_profile_custody_recovery_artifact",
     "parse_profile_custody_recovery_artifact",
+    "refuse_hostile_recovery_artifact_destination",
     "unlock_imported_profile_custody_recovery_artifact",
 ]
