@@ -27,8 +27,13 @@ from another lane's hand-off and was not independently re-derived; those claims
 are the ones to re-check before acting on them.
 
 Two premises supplied with the consolidation request did not survive that
-re-derivation. Both are recorded as findings rather than silently corrected,
-because in each case the correction changes what is being asked for.
+re-derivation, and both are recorded as findings rather than silently corrected,
+because in each case the correction changes what is being asked for. The first
+is that `review_status` has no unreviewed state: true of the legal-catalogue
+vocabulary, false of the revision one, which already ships the pending member.
+The second is that era splits and multi-design revisions are one decision: the
+seven modelos named fall into three groups needing three different remedies, and
+one of them has no era gap at all.
 
 Scope boundary: this document ranks nothing and decides nothing. Several of
 these are product decisions whose evidence does not select an option, and where
@@ -58,12 +63,14 @@ alongside optional `reviewed_by` and `reviewed_at`. That module's own docstring
 at lines 18 to 22 states the distinction explicitly.
 
 So the schema work for the revision axis has shipped. What has not happened is
-the review: no modelo revision in the bundled tree declares a non-default
-`review_status`. The five string matches for `review_status` under the modelo
-tree are all Modelo 303 *binding* fragments, a third subject again.
+the review. The bundled tree holds 103 revision directories and **not one**
+`revision.toml` declares `review_status` at all, so every revision sits at the
+`pending_review` default. The five string matches for `review_status` elsewhere
+under the modelo tree are all Modelo 303 *binding* fragments, a third subject
+again.
 
 The consequence is that the revision axis is **not blocked on a decision at
-all** — it is blocked on someone performing 102 per-revision reviews, which is
+all** — it is blocked on someone performing 103 per-revision reviews, which is
 work, not a ruling. Only the legal-catalogue axis is genuinely gated, and it is
 gated in one specific way: because `SourceReference.review_status` admits only
 `"reviewed"`, enrolling **any** new source is an unavoidable assertion of
