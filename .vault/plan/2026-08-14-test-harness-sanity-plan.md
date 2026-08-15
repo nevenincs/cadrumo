@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-15'
-body_hash: 'sha256:0cebb136ad1825c7ba9b8b1acd0d8587e3e35007efa85c0c15974614cb40b799'
+body_hash: 'sha256:f96e2ace8576cdde4e55539af5c571f9a6593d5fd721b33123acabc60eeabdf2'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -194,7 +194,7 @@ Twenty-five file-disjoint batches of byte-identical helper bodies, partitioned b
 - [x] `W09.P29.S112` - Consolidate the thirteen observation-lookup helpers into one narrowest-owner helper carrying the return annotation every original lacked; `src/cadrumo/application/calculations/tests/_observation_lookup_support.py`.
 - [x] `W09.P29.S113` - Consolidate the ten attribute-replacement context managers onto the documented submodule-direct convention and preserve the monkeypatch-ban rationale; `src/cadrumo/tests/attribute_scope.py`.
 - [x] `W09.P29.S114` - Consolidate the twelve convenio rate resolvers and prove every per-country treaty rate and legal citation stayed in its own file; `src/cadrumo/application/calculations/tests/_convenio_rate_support.py`.
-- [x] `W09.P29.S115` - Consolidate the five secure-object repository builders into the existing support module and remove the unused imports a prior slice left behind; `src/cadrumo/adapters/persistence/storage/sql/tests/_secure_objects_support.py`.
+- [x] `W09.P29.S115` - Consolidate the secure-object repository builders into the existing support module and remove the unused imports a prior slice left behind (the original "five" was wrong: the tree carries two canonical builders plus a third justified-divergence construction); `src/cadrumo/adapters/persistence/storage/sql/tests/_secure_objects_support.py`.
 - [x] `W09.P29.S116` - Consolidate the five docs HTTP server helpers to the strictest cleanup form and close the listening socket every copy leaked; `dev/docs/tests/_http_serve_support.py`.
 - [x] `W09.P29.S117` - Collapse the sixty-six structurally identical modelo 131 modulos tests into parametrized cases without losing a single expected value or IAE citation; `src/cadrumo/domain/calculations/registry/tests/test_modelo_131_modulos_engine*.py`.
 - [x] `W09.P29.S118` - Consolidate the ledger corpus match and oracle-rule helpers and upgrade the existing shared copies to the stricter guarded variant; `src/cadrumo/entrypoints/cli/tests/_ledger_corpus_support.py`.
@@ -221,8 +221,8 @@ The classes the name-keyed census cannot reach. Drift is scored by structural si
 - [x] `W09.P30.S134` - Sweep every test HTTP server for the shutdown-close-join triad and close the socket and thread leaks that accumulate under parallel execution; `dev/docs/tests, src/cadrumo/adapters/outbound`.
 - [x] `W09.P30.S135` - Move the in-memory engine disposal in the hash-column-width test inside a finally so a failing assertion cannot skip it; `src/cadrumo/adapters/persistence/storage/sql/tests/test_hash_column_widths.py`.
 - [x] `W09.P30.S136` - Close the live-write declaration helper still duplicated in the evaluation tree, or record the cross-tree import direction as the standing reason it cannot move; `dev/agent_eval/tests/test_confirmation_gate_golden.py`.
-- [x] `W09.P30.S137` - Sweep key providers and encrypted sessions for guaranteed teardown, the one resource class left unexamined; `src/cadrumo/adapters/persistence/storage`.
-- [x] `W09.P30.S138` - Re-run the registry-tests failure-set diff from a quiesced tree so the consolidation pair is cleared on evidence rather than on zero-overlap reasoning; `src/cadrumo/domain/calculations/registry/tests`.
+- [ ] `W09.P30.S137` - Sweep key providers and encrypted sessions for guaranteed teardown, the one resource class left unexamined; 15 EphemeralMasterKeyProvider constructions are assigned without ever being context-managed and each needs adjudicating as helper-managed or leaking; `src/cadrumo/adapters/persistence/storage`.
+- [ ] `W09.P30.S138` - Re-run the registry-tests failure-set diff from a quiesced tree so the consolidation pair is cleared on evidence rather than on zero-overlap reasoning; `src/cadrumo/domain/calculations/registry/tests`.
 - [x] `W09.P30.S139` - Migrate the CLI-surface workflow tests off application-layer profile seeding onto the credential-registering door so the custody envelope opens under the configured passphrase; `src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`.
 - [x] `W09.P30.S140` - Record the fourth storage-plus-auth isolation composition in the isolated-backend cluster census so the cluster count reflects every known site; `src/cadrumo/entrypoints/cli/tests/_cli_surface_support.py`.
 - [x] `W09.P30.S141` - Treat a body-duplicate that closes over a same-named module constant as its own triage bucket, since the safe fix is to parameterise the constant rather than delete the duplicate; `dev/quality/helper_body_census.py`.

@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:000e316b486acd10891f7e272317e1078c3172c7dad4c7134bd01b86378604ac'
+body_hash: 'sha256:1ce3d687a3361d5e8f7f2fdd62ff722722ea6929b81c45313c0273d932c1af7f'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -210,6 +210,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [x] `W04.P07.S141` - Have Terra XHigh complete the half-landed harness extraction that currently breaks collection tree-wide, since the extracted package carries its own project file and source but the root project declares no workspace membership for it so it is not importable, while four production modules in the MCP and CLI entrypoints still import the deleted package; `pyproject.toml and src/cadrumo/entrypoints/`.
 - [ ] `W04.P07.S142` - Have Terra XHigh repair the telemetry producer test that imports a private helper from a sibling test module which no longer defines it, the helper having been removed rather than renamed with no equivalent surviving, and rule on the shape independently since a test module importing another test module's private helper is fragile by construction; `src/cadrumo/core/telemetry/tests/`.
 - [ ] `W04.P07.S143` - Have Sol Medium rule where companion distributions built from this repository live, since two established companions sit under one directory and a third was placed elsewhere, which is one concept in two homes and the fragmentation this campaign exists to remove; `pyproject.toml`.
+- [ ] `W04.P07.S144` - Have Sol Medium rule whether a deletion landing without its consumer sweep should be mechanically detectable, since three separate removals in one session each shipped the deletion in one commit and the consumer repair in another or not at all, blocking collection tree-wide for every agent until somebody noticed, which makes the split the norm on this tree rather than the exception; `.vault/audit/ and dev/import_hygiene_scan.py`.
 
 ## Wave `W05` - end-to-end proof
 

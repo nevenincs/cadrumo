@@ -468,7 +468,8 @@ def test_canonical_cohort_renders_bundle_local_sources(real_cohort: Path) -> Non
     cohort = BUILD.load_cohort(real_cohort)
     project = tomllib.loads(BUILD.runtime_pyproject(cohort))
     assert project["project"]["dependencies"] == [
-        f"cadrumo[agent]=={cohort.version}",
+        f"cadrumo=={cohort.version}",
+        f"cadrumo-harness=={BUILD.harness_version()}",
         f"cadrumo-data-manuals=={cohort.version}",
         f"cadrumo-data-official=={cohort.version}",
     ]

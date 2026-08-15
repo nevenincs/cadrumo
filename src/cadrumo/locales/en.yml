@@ -2193,11 +2193,7 @@ categories:
       notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
 cli:
   agent:
-    app_help: Materialise the operator agent harness (rules, personas, skills) as
-      a Claude-native .claude workspace for an agent runtime.
     materialise:
-      layout_help: 'Materialisation layout: ''workspace'' for a Claude-native .claude
-        project mirror, or ''plugin'' for a one-click Claude plugin.'
       output_help: Directory to write the Claude-native operator workspace (.claude/
         plus a CLAUDE.md) into.
       plugin_summary: 'Wrote Claude plugin to {path}: {skills} skills, {agents} agents
