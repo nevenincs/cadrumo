@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:bbbe84b6b55d420480901404f512273182d5161855973570f102de86cff13f1d'
+body_hash: 'sha256:9045fe0b0545b29008de59f03bca8aba5d8b47aff742e12180dee9ecd81f54ee'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -421,3 +421,46 @@ subprocess, therefore cache it" reflex is not re-chased on the next pass.
 standalone call in `test_audit_layering_evaluates_every_declared_contract` is
 cheap enough that routing it through the fixture buys nothing and costs a
 coupling.
+
+### Fixed: the drift census ran five times for one answer
+
+`dev.quality.regulatory_drift_census.census()` scans the production tree,
+measured at 18.96s / 19.50s / 20.01s across three calls (603 findings), and
+carries no memo. `test_the_detector_recovers_known_regulatory_data` is
+parametrized over five `_KNOWN_INSTANCES` entries and called `census()` in the
+test body -- so it ran the full scan five times to produce an answer that does
+not vary with the parameters at all. Every case filters the SAME result by path
+and kind.
+
+A module-scoped fixture now runs it once. Per-test durations, which are the
+trustworthy signal here because the machine is under peer load:
+
+    before : 26.38s, 24.94s, 23.78s, 21.99s calls (fifth below the cutoff)
+    after  : one 22.33s setup, every case below the cutoff
+
+### The optimisation that would have broken the gate
+
+The obvious move -- put `@cache` on `census()` at its definition -- is WRONG and
+was rejected. `test_the_census_reproduces_itself_exactly` calls `census()` twice
+and asserts the results are equal, which is a real non-determinism gate. Memoise
+the function and both calls return the SAME OBJECT, so the assertion compares a
+thing with itself and holds no matter how unstable the census becomes. The test
+would go green and stay green while measuring nothing.
+
+So the fixture is scoped to the parametrized recovery cases only, and the
+reproducibility test still calls the unmemoised function twice. Its duration
+after the change is 38.62s, still about two census runs, which is the
+confirmation that its two independent scans survived rather than a hope that
+they did.
+
+Worth generalising: in a suite full of "run the expensive thing once and share
+it" wins, the one place sharing must NOT reach is a test whose subject is
+whether two independent runs agree. Redundant work and the measurement of
+redundancy look identical from the durations table.
+
+Wall clock across repeats was 181.97s / 222.37s before and 147.82s / 121.65s
+after -- a wide spread in both configurations, which is why the per-test
+structural figure (five census runs to one) is reported as the result and the
+wall clock only as corroboration. One pre-existing failure,
+`test_every_finding_carries_exactly_one_adjudication`, reproduces identically in
+both configurations; it goes through `reconcile()` and was not touched.
