@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:e0eaedb99ba0de17ba7ffdada9f136ef33620bb8def1d6c5d77bbda0111a5a6c'
+body_hash: 'sha256:03987ef1a16ce62b528fa07d48e597e19f51a355e0e14b6c6c4fbb1727071d89'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -865,3 +865,25 @@ amortises over roughly eight gate files each, which is already a good ratio.
 
 Both stay declined unless the worker cap rises materially -- at which point the
 memory arithmetic changes and this entry is the place to start.
+
+## Aborted: profiling the `dev` slice under peer load
+
+An attempt to profile the `dev` tree for fresh targets was started and then
+STOPPED rather than allowed to finish. It reached roughly 80% in about fifty
+minutes, then produced no further output for seventeen. The machine was carrying
+161 concurrent python processes from peer suites at the time.
+
+Stopped rather than waited out, for two reasons. A durations table gathered
+under that load would rank tests by who was starved rather than by what costs,
+and this campaign has already had to withdraw one figure taken in exactly those
+conditions. And the run was itself contributing to the load it was being
+distorted by.
+
+No targeting conclusions are drawn from the partial output, and it was deleted
+rather than kept, because a partial durations file invites exactly the "the top
+entry is the slowest test" reading it cannot support.
+
+The `dev` slice therefore remains UNPROFILED, which is a different state from
+"profiled and clean". Recorded so the next pass knows there is no data here yet
+rather than assuming an absent entry means nothing was found. Retry when the box
+is quiet; `dev/locales` is the only part of `dev` this campaign has measured.
