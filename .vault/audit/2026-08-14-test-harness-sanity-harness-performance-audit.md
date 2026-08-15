@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:2a01a31f0502072c18b8da0f98360b7b7ef9ec68ddbe5f6f63f4f3886b7d3adc'
+body_hash: 'sha256:b7113f9b0baebe21ddd8e7bfb5f13e3a11e3c81454954611ce845cff9aadd9d9'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1404,3 +1404,53 @@ a run finishes.
 A disproven setting is also worth removing rather than keeping as
 belt-and-braces: kept, it reads as a tuned knob and the next reader inherits the
 hypothesis rather than the measurement.
+
+## Round: three more targets ruled out, all by the same discriminator
+
+No change this round. Each remaining target from the clean full profile was
+re-measured in isolation first, then probed with the repeat-cost check that has
+now settled several of these.
+
+**`test_a_design_title_never_contradicts_a_trustworthy_filename_year`** --
+58.31s in-table, **55.90s isolated**, so genuine work. It reads every bundled
+design's title, and three sibling tests in the module read designs too, which
+looks like a shared-fixture opportunity. Measured instead:
+
+    full pass over 218 designs, call 0 : 72.89s
+    call 1                             :  0.00s
+
+Already memoised downstream. The first test pays and the siblings do not repeat
+it, so there is nothing to share. One genuine pass over 218 PDFs and workbooks.
+
+**`test_family9_has_no_orphaned_reexport_bridges`** -- 46.86s in-table, 38.47s
+isolated. Its module IMPORTS `_package_import_sites` and `_package_py_files`
+from `test_import_hygiene_gate`, i.e. the cached helpers added earlier in this
+campaign, so the tree walk is already shared across both modules. Its own
+components measure `find_shim_modules` 5.54s (once) and
+`first_party_census_files` 0.19s; the remaining ~33s is the single orphan scan
+the test exists to perform.
+
+**`test_bootstrap_safe_probes_still_run_on_root_fallback_database`** -- 42.69s
+in-table, 37.17s isolated. The module declares no fixtures at all: every test
+calls `run_cadrumo_subprocess` directly, and the cost is real CLI process boots.
+A guard against a root-fallback database cannot be exercised in-process, so the
+subprocess IS the test.
+
+### The discriminator that keeps working
+
+Three targets, three plausible duplication stories, three refutations from the
+same two-line check: call the suspected shared computation twice and time both.
+A second call at 0.00s means the work is already shared however the code looks;
+a second call at full cost means it is not.
+
+That check has now been decisive five times in this campaign, twice against my
+own strong prior. It is cheaper than reading the call graph and, on the evidence
+here, more reliable -- the call graph is what produced the wrong hypothesis in
+the cold-start round.
+
+### A quiet confirmation worth noting
+
+`test_import_edge_integrity_gate` importing the cached helpers from
+`test_import_hygiene_gate` means an earlier fix in this campaign is being reused
+by a module it was not written for. That is the shape worth preferring: the win
+compounds where a per-module fixture would not have.
