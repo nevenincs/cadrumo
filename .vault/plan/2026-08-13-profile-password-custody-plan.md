@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:8f7c4406a4aa90b08aa6b6d2f8cd193c56ca174250318c6fa2bbb165996c559d'
+body_hash: 'sha256:4d3d4030f0fad7f42b5a548ad8310829d665e43f84e643b421c7006805faaf60'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -120,6 +120,7 @@ Expose canonical profile verbs and secret channels through typed action envelope
 - [ ] `W03.P06.S129` - Have Sol Medium rule whether a bucket carrying a manifest and no profile record is still a reachable torn state worth testing, since listing and resolution are capsule-only so such a bucket is invisible to every operator path, which would make the premise of the tests named for it obsolete rather than merely awkward; `src/cadrumo/entrypoints/cli/tests/_profile_lifecycle_support.py`.
 - [x] `W03.P06.S135` - Have Terra XHigh name the capsules root path in the retired-custody refusal, since the message names which retired member was found but never where, so an operator is told to destructively reset a store whose location the refusal does not give, and naming the root preserves every constraint because it is not a bucket and not an identity and requires no inference from retired content; `src/cadrumo/adapters/persistence/storage/custody/_capsule_discovery.py`.
 - [ ] `W03.P06.S136` - Have Terra XHigh finish the creation-door conversion enumerated by CALL SITE of the creation verb rather than by named helper, since the helper census structurally cannot see a test invoking the verb inline in its own body and the measured population is fifty-one modules against the thirty the census reported, so converting a helper while leaving an inline invocation is a half-fix that reads complete from the diff; `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/entrypoints/cli/_config/tests/`.
+- [ ] `W03.P06.S139` - Have Terra XHigh re-found the four modules whose subject IS the creation surface rather than converting them, since the retired verb is what they exist to test so a fixture conversion would destroy the coverage, while most of their call sites currently expect success and therefore assert a capability the product no longer offers; `src/cadrumo/entrypoints/cli/_config/tests/`.
 
 ## Wave `W04` - retire superseded custody
 
@@ -221,3 +222,4 @@ Exercise the actual local system and read-only DEHu path, then complete an indep
 - [ ] `W05.P08.S105` - Have Sol Medium close the gap that lets a decision be made without a record, since a ruling delivered as a report and never persisted is indistinguishable from no ruling and cost a full search to establish, which is the campaign-close discipline failing in the direction nobody watches; `.vault/audit/`.
 - [ ] `W05.P08.S134` - Have Sol Medium rule what the destructive profile deletion surface should be, since both of its primitives have zero definitions anywhere in the tree while tests still import them and four further tests assert a retention assessment the producer can never satisfy, so the surface was demolished rather than deferred and its contract now specifies work nothing implements; `src/cadrumo/application/config_reset.py and src/cadrumo/application/bucket_maintenance/`.
 - [ ] `W05.P08.S137` - Have Terra XHigh restore the retention detail to the hold projection so the deletion preflight can answer a count and a floor and a safe-erase date rather than two booleans, since the filing retention authority already computes the position and the projection discards it at the boundary, this being a narrowing to undo rather than a capability to build and a precondition for retiring the older assessment contract; `src/cadrumo/application/filing/_profile_filing_retention.py and src/cadrumo/application/user_profile/`.
+- [ ] `W05.P08.S138` - Have Terra XHigh make the delete hold guard compare the owner facts its docstring names rather than the whole assessment object, since the assessment re-projects its observation instant and the digest attesting it on every call, so the equality check fails whenever preflight and execution happen at different instants which is always because the operator must echo a confirmation between them, leaving no profile deletable in production and blocking the campaign's closing destructive reset outright; `src/cadrumo/application/user_profile/_custody_service.py`.
