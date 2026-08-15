@@ -18,7 +18,7 @@ from pathlib import Path
 
 import typer
 
-from ...agent import materialise_plugin, materialise_workspace
+from cadrumo_harness import materialise_plugin, materialise_workspace
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._app_agent_workspace_payloads import AgentLayout, AgentWorkspaceResult

@@ -13,8 +13,8 @@ See Also:
         including relation, dependency-classification and filing-schedule
         validation in :mod:`_validate_dependency_sections`. This module's
         :func:`validate_applicability_section` follows the same
-        accumulate-never-raise shape and is meant to be dispatched from
-        there alongside its siblings.
+        accumulate-never-raise shape (returning ``list[str]``) and is meant
+        to be dispatched from there alongside its siblings.
 """
 
 from __future__ import annotations
@@ -29,14 +29,13 @@ from ._validate_helpers import missing_refs
 
 
 def validate_applicability_section(
-    failures: list[str],
     *,
     prefix: str,
     modelo: str,
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
-) -> None:
-    """Append applicability-rule reference, cardinality and hydration failures.
+) -> list[str]:
+    """Return applicability-rule reference, cardinality and hydration failures.
 
     The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
     the ``applicability`` family. Accumulates rather than raises, and
@@ -46,8 +45,6 @@ def validate_applicability_section(
     field it broke.
 
     Args:
-        failures: Accumulator every validation function in this package
-            appends to.
         prefix: The revision-scoped diagnostic prefix every failure line
             starts with, matching the sibling section validators.
         modelo: The modelo id the revision belongs to (a plain ``str``,
@@ -57,6 +54,7 @@ def validate_applicability_section(
         revision: The revision supplying the ``applicability`` family.
         legal_refs: The bundled legal-reference catalogue, keyed by id.
     """
+    failures: list[str] = []
     rules = revision.applicability
     if len(rules) > 1:
         failures.append(
@@ -69,3 +67,4 @@ def validate_applicability_section(
             hydrate_applicability_rule(Modelo(modelo), rule)
         except RegistryValidationError as exc:
             failures.append(f"{prefix}: {owner}: {exc}")
+    return failures

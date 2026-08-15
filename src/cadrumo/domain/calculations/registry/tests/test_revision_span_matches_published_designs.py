@@ -146,9 +146,9 @@ from .....core import DirectoryEntryKind, PeriodKind, registry_period_kind, scan
 from .....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
 from .....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from .....core.resources import bundled_path
+from .....tests.registry_tree import bundled_registry_tree
 from .. import ModeloDefinition
 from .._authority import ValidatedRegistryAuthority
-from .._loader import load_registry_tree
 from .._record_design import (
     _clean_pdf_line,
     _extract_pdf_text_lines,
@@ -863,7 +863,7 @@ def _all_declared_revisions() -> list[tuple[ModeloDefinition, str, object]]:
     remove, now reproduced as "the coverage gate didn't even run" instead of
     "the coverage gate reported clean".
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     return [(modelo, revision_id, revision) for modelo in modelos for revision_id, revision in modelo.revisions.items()]
 
 
@@ -2768,7 +2768,7 @@ def test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_throug
     one of them still resolves its own current-arrears year (2025). No
     periodic modelo has ever failed this check.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     today_year = _current_filing_year()
 
     holes: list[str] = []

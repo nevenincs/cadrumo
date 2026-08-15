@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...agent import iter_skill_documents, operator_rules_text, parse_skill_metadata
+from cadrumo_harness import iter_skill_documents, operator_rules_text, parse_skill_metadata
 from ...core import accepted_filing_period_patterns
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ._resources import HarnessResourceKind, resource_uri

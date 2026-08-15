@@ -5,7 +5,7 @@ templates ``cadrumo://skill/{name}``, ``cadrumo://rule/{name}`` and
 ``cadrumo://persona/{name}`` let a resources-capable client enumerate and pull the
 shipped operating layer verbatim as ``text/markdown``. The concrete resource set
 and the read resolution are both DERIVED from the shipped ``cadrumo/_data/agent/``
-tree through the ``cadrumo.agent`` package facade (``iter_skill_documents``,
+tree through the ``cadrumo_harness`` package facade (``iter_skill_documents``,
 ``iter_operator_rules``, ``iter_personas``), never hand-listed, so a new skill,
 rule, or persona ships as a new resource with zero registration and the surface
 cannot drift from the data.
@@ -25,7 +25,7 @@ from importlib.resources.abc import Traversable
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...agent import iter_operator_rules, iter_personas, iter_skill_documents
+from cadrumo_harness import iter_operator_rules, iter_personas, iter_skill_documents
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")

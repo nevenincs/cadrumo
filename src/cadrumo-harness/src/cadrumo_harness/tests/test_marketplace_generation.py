@@ -19,7 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from ...core import DirectoryEntryKind, scan_directory
+from cadrumo.core import DirectoryEntryKind, scan_directory
+
 from .._workspace import materialise_marketplace, materialise_plugin
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]

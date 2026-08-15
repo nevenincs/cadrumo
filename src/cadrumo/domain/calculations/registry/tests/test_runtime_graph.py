@@ -17,8 +17,7 @@ from graphlib import CycleError
 import pytest
 
 from .....core import CasillaId, validated_casilla_id
-from .....core.resources import bundled_path
-from .._loader import load_registry_tree
+from .....tests.registry_tree import bundled_registry_tree
 from .._runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
@@ -55,12 +54,12 @@ def _operator(op: str, *args: FormulaExpression) -> FormulaExpression:
 def _m210_2025_revision() -> ModeloRevision:
     # Compile-only load (no full-registry validation) so the M210 formula-graph
     # shape assertions are independent of unrelated peer modelo churn.
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     return next(modelo for modelo in modelos if modelo.id == "210").revisions["2025"]
 
 
 def _m130_2025_revision() -> ModeloRevision:
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     return next(modelo for modelo in modelos if modelo.id == "130").revisions["2019-y-siguientes"]
 
 

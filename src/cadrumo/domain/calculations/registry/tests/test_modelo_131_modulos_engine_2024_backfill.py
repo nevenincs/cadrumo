@@ -40,9 +40,8 @@ import pytest
 
 from .....core import RegistryAuthorityGrade
 from .....core.money import round_to_cents
-from .....core.resources import bundled_path
+from .....tests.registry_tree import bundled_registry_tree
 from .._formula_runtime import calculate_registry_snapshot
-from .._loader import load_registry_tree
 from .._temporal import select_revision
 from ._registry_schema_support import _committed_snapshot
 
@@ -273,7 +272,7 @@ class TestModulos2024DateAxisBoundaries:
     """
 
     def test_filing_year_2024_selects_the_2024_revision_across_the_calendar_year(self) -> None:
-        modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+        modelos, _catalogues = bundled_registry_tree()
         modelo_131 = next(modelo for modelo in modelos if modelo.id == "131")
         revision = select_revision(modelo_131, filing_year=2024, period="1T", on=date(2024, 1, 1))
         assert revision.id == "2024"
@@ -281,7 +280,7 @@ class TestModulos2024DateAxisBoundaries:
         assert revision.id == "2024"
 
     def test_filing_year_boundaries_do_not_cross_into_the_2024_revision(self) -> None:
-        modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+        modelos, _catalogues = bundled_registry_tree()
         modelo_131 = next(modelo for modelo in modelos if modelo.id == "131")
         # 2023-12-31 (the last day before the 2024 revision's valid_from)
         # resolves to the flatter historical 2019-2023 revision, not 2024.

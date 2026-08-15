@@ -35,8 +35,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from .....core import RegistrySelectorPeriodCode, accepted_period_codes
-from .....core.resources import bundled_path
-from .._loader import load_registry_tree
+from .....tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
@@ -59,7 +58,7 @@ def _canonical_selector_form(declared_code: str) -> str:
 
 def collect_declared_selector_tokens() -> dict[str, tuple[str, ...]]:
     """Return every declared selector token mapped to its owning revisions."""
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     owners: dict[str, set[str]] = {}
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -71,7 +70,7 @@ def collect_declared_selector_tokens() -> dict[str, tuple[str, ...]]:
 
 def count_revisions_declaring_a_selector() -> int:
     """Return how many revisions declare at least one selector period."""
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     return sum(
         1
         for modelo in modelos

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:a816064de37dd1d65d0fc6deb5b20134ac5e3fc4876127c386521a22c3b00f92'
+body_hash: 'sha256:5c04dfa296c04708dd15da7138624b58f036d3de9b467f33cfe39736cf925c95'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
   - "[[2026-08-14-test-harness-sanity-successor-adr]]"
@@ -96,6 +96,8 @@ Grounding: `uvx vaultspec-rag search "MANUAL_INPUT binding source kind unrouted 
 - **Nominated owner:** `src/cadrumo/adapters/persistence/storage/sql/tests/_secure_objects_support.py`.
 
 **Third construction settled (`W09.P30.S133`/adjacent triage).** `_bound_repo_with_engine(tmp_path) -> tuple[_RoundtripRepository, Engine]` in `src/cadrumo/adapters/persistence/storage/envelope/tests/test_secure_bound_repository.py:67` is a THIRD construction of an encrypted repository, flagged by a peer as possibly skipping the real key provider. Checked all 7 call sites (`test_secure_bound_repository.py:85,116,153,193,229,257,303`): every one wraps the call in `with EphemeralMasterKeyProvider(): ...`, the same caller-side-key convention `_repo_at` uses (as opposed to `_ephemeral_secure_repo`'s self-contained key lifecycle). **Correctness cleared — no fake/skip anywhere in any of the three.** Duplication verdict: the 2-line engine-bootstrap snippet (`create_engine_from_settings(Settings(cadrumo_database_url=...)); Base.metadata.create_all(engine)`) is repeated verbatim across all three, but the wrapping contracts are genuinely different — contextmanager vs plain function, self-key vs external-key, return shape, and `_bound_repo_with_engine` wraps a different class (`SecureBoundRepository`, not bare `SecureObjectRepository`) because `test_secure_bound_repository.py` exists specifically to test that higher base-class layer. **JUSTIFIED-DIVERGENCE at the function level; not consolidated.** A cheap future follow-up, not done here: extract only the 2-line bootstrap snippet into a shared `_bootstrap_sqlite_engine(db_path) -> Engine` micro-helper next time any of the three is touched.
+
+**Superseded later in the same session — the follow-up above WAS done.** `src/cadrumo/adapters/persistence/storage/tests/engine_bootstrap.py::bootstrap_sqlite_engine` exists and is imported by both `_secure_objects_support.py` and `envelope/tests/test_secure_bound_repository.py`. The "not done here" wording above is retained rather than rewritten so the sequence stays legible, but read it as closed. The function-level JUSTIFIED-DIVERGENCE verdict still stands unchanged: the three wrapping contracts remain separate: only the shared 2-line bootstrap moved.
 
 ### serve_directory | census | verified 7 consumers, not 5; real socket-fd leak fix confirmed in the docstring
 
@@ -275,7 +277,7 @@ Grounding queries used: `uvx vaultspec-rag search "resolve the on-disk directory
 
 ## Recommendations
 
-- Land plan step `W09.P30.S131` (rename `declared_manual_inputs` to something in the `oracle_declared_figures` family) before the next agent reads the name cold — the collision is confirmed real, not speculative.
+- ~~Land plan step `W09.P30.S131` (rename `declared_manual_inputs` to something in the `oracle_declared_figures` family) before the next agent reads the name cold — the collision is confirmed real, not speculative.~~ **CLOSED.** The rename landed and went further than recommended: `declared_manual_inputs` returns zero hits across the registry tests tree, and `oracle_declared_figures` is defined in `_manual_oracle_support.py` and adopted by **9** test files, not the 3 the original recommendation named.
 - Assign an owner to close the `declared_live_write` / `dev/agent_eval/tests/test_confirmation_gate_golden.py` gap: either an accepted cross-tree import exception or a relocated shared home reachable from both `dev/` and `src/cadrumo/`. Do not let it stand as a silent "already consolidated" assumption — this record is the evidence it is not.
 - Re-run the `application/calculations/tests/` and `domain/calculations/registry/tests/` failure-set diffs one more time from a fully quiesced tree (no concurrent peer writes) before this wave is declared closeable, given how many peer batches are landing on the same shared worktree concurrently with this record's own verification runs.
 - Treat the consumer-count corrections above (`_repo_at`/`_ephemeral_secure_repo`: 10 not 8; `serve_directory`: 7 not 5; `_match`/`_oracle_rules`: 11 not 7) as the census superseding the original assignment tallies, not as errors in either — the assignment counts likely predate later call sites landing on the same shared clusters.
@@ -324,4 +326,21 @@ Run as an independent fresh-context pass against the live tree, briefed to belie
 2. The `aliased_behaviour_count` recorded above as **225** now reads **224** live. Re-run independently and confirmed: `helper_count=7987` (was 7990), `delegating_wrapper_count=1676` (was 1672), `aliased_behaviour_count=224` (was 225). This is concurrent-worktree drift from peer commits landing between the census write and the re-run, not an error in either figure — the census's own notes flag this tree as heavily contended. **The 309 → 225 correction is confirmed real and live; only its last digit has moved since.** Treat 225 as "as-of the census write" rather than a standing invariant, and re-derive before quoting.
 
 **Explicitly still unverified, carried forward rather than assumed:** the exact tallies "9 AEAT live-write refusal guards" and "4 extractor tamper tests" were not exhaustively enumerated by this review either — the review confirmed the qualitative safety property (all separate, none merged) but not the precise counts, which is the same limitation this record already declares for those two figures. The historical "66 modelo-131 clone tests" figure likewise remains unconfirmed from git history; the `@pytest.mark.parametrize` decorators over `_FASE_1_CASES` and `_FASE_4_CASES` are confirmed present, the pre-consolidation count is not.
+
+
+### no-monkeypatch gate | REGRESSION FOUND AND FIXED | the wave declared a gate clean against a state that no longer held
+
+**This is the finding the close-phase honesty review exists to produce, and it was missed by a second, count-focused reviewer run in parallel — recorded here because the contrast is the lesson.**
+
+`src/cadrumo/tests/test_monkeypatch_inventory.py::test_no_monkeypatch_fixture_or_context_usage` was FAILING on the live tree, contradicting the plan's own Verification bullet ("The no-monkeypatch inventory and its discriminating controls pass with no allowlist, suppression, or renamed equivalent") and the checked status of `S79` (restore the gate to green) and `S89` (run it and confirm).
+
+**Violation:** `src/cadrumo/domain/calculations/registry/tests/test_read_parameter_authority_invalidation.py` used the pytest `monkeypatch` fixture — `monkeypatch.setattr(core_resources, "bundled_path", _redirected)` at line 138, plus the `monkeypatch: pytest.MonkeyPatch` fixture parameter at line 115 — inside a real fixture in a deterministic production test file.
+
+**Not live churn, and that was checked before acting.** The file was committed clean on 2026-08-14 (`6d80634e6b`, an unrelated registry-campaign commit bounding `read_parameter`'s authority on the tree fingerprint) with zero uncommitted changes. The gate went red when that commit landed, AFTER `W07.P23` last verified it green, and nothing re-ran it in between. **A wave declared a gate clean on the strength of a past run, and the tree moved underneath the claim.**
+
+**Fix:** the fixture now uses the campaign's own canonical `cadrumo.tests.attribute_scope.scoped_attribute` context manager — the helper created earlier in this very campaign for exactly this case, already carrying 10-11 consumers. The fixture wraps its `yield` in `with scoped_attribute(core_resources, "bundled_path", _redirected):` and drops the `monkeypatch` parameter entirely. This is a vocabulary change, not a behaviour change: a save/restore performs the identical mutation `monkeypatch.setattr` would, so the test still exercises the real default-root branch with the real loader, authority and verdict store, exactly as its module docstring promises. **No allowlist, no suppression, no renamed equivalent** — the mechanism the gate bans is gone, not hidden from the matcher.
+
+**Verification, with the revert-to-red proof obtained for free:** the gate was RED (1 failed / 8 passed) before the edit and is GREEN (9 passed) after, on the same sequential `-n0` invocation — so the gate is proven to bite on exactly this violation without needing a deliberate breakage window. The subject file's own three tests pass (3 passed), and `ruff check` is clean on it.
+
+**Standing lesson for the campaign:** a checked gate step records that the gate passed *once*. On a worktree three teams commit to concurrently, that is a perishable claim. The close-phase honesty review must RE-RUN the gates a wave claims green, not re-read the checkmarks — a reviewer that verifies counts and file existence will confirm every structural claim in this record and still miss a red gate entirely, which is precisely what happened here.
 

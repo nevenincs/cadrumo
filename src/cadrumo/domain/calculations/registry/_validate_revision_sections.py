@@ -147,12 +147,13 @@ def _validate_revision_surface_sections(
         source_refs=source_refs,
         evidence=evidence,
     )
-    validate_applicability_section(
-        failures,
-        prefix=prefix,
-        modelo=modelo_id,
-        revision=revision,
-        legal_refs=legal_refs,
+    failures.extend(
+        validate_applicability_section(
+            prefix=prefix,
+            modelo=modelo_id,
+            revision=revision,
+            legal_refs=legal_refs,
+        ),
     )
     validate_filing_schedule_section(
         failures,

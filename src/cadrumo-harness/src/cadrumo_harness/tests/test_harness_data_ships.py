@@ -1,20 +1,20 @@
 """Packaging probe: the operator harness data ships and the accessor reads it.
 
-The harness operating layer is reviewed product data under ``cadrumo/_data/agent/``.
-It ships in the wheel through the same hatch tracked-file inclusion that ships the
-corpus, registry, and terminology trees, and it is read through the same
-bundled-data boundary (``importlib.resources`` via ``cadrumo.core.resources``). This
-probe asserts the tree resolves through that boundary and the ``cadrumo.agent``
-accessor reads the shipped rules, so a packaging or accessor regression that would
-leave the harness empty at install time fails here rather than at operator runtime.
+The harness operating layer is reviewed product data under
+``cadrumo_harness/_data/agent/``. It ships in this package's own wheel and is
+read through this package's own bundled-data boundary (``importlib.resources``
+via ``cadrumo_harness._resources``). This probe asserts the tree resolves
+through that boundary and the ``cadrumo_harness`` accessor reads the shipped
+rules, so a packaging or accessor regression that would leave the harness empty
+at install time fails here rather than at operator runtime.
 """
 
 from __future__ import annotations
 
 import pytest
 
-from ...core.resources import packaged_data
 from .. import harness_root, iter_operator_rules, operator_rules_text
+from .._resources import packaged_data
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

@@ -256,6 +256,18 @@ def _load_manifests() -> dict[str, _Manifest]:
 
 
 def _load_historical_exclusions() -> _HistoricalExclusions:
+    """Read the classified historical-URL exclusions.
+
+    The file's ``support_years`` window does NOT describe what the corpus
+    actually ships, and the discrepancy is not theoretical: ``DR714_2022.xls``
+    is bundled and represented in ``modelo_714/manifest.json`` while sitting
+    outside the declared ``[2023, 2024, 2025, 2026]`` window, so the stated rule
+    already has a live counter-example. Reading the window as the reason a URL is
+    absent will therefore mislead: ``DR714_2021.xls`` was excluded under it, was
+    then found to be genuinely published and fit, and was bundled. Treat the
+    ``urls`` list as the authority for what is classified out, and the window as
+    prose that has drifted from it.
+    """
     return json.loads(_HISTORICAL_EXCLUSIONS_PATH.read_text(encoding=_UTF_8))
 
 
