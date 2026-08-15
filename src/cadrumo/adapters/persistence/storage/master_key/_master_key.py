@@ -167,6 +167,20 @@ class MasterKeyProvider(Protocol):
     def get_master_key(self) -> bytes:
         """Return the 32-byte AES-256 master key.
 
+        Immutable by contract, and deliberately so. The DEK unwraps return
+        wipeable ``bytearray`` buffers because an unwrapped DEK is minted for
+        one caller and handed over outright, so wiping it is that caller's
+        business. Master-key material is not owned that way: a provider may
+        return the SAME object to every consumer -- the unsecured provider
+        returns a module-level constant -- so a mutable contract would let one
+        consumer's wipe zero the key for every later caller, silently and
+        unattributably.
+
+        A holder that needs to clear its own copy makes one and wipes that.
+        ``BucketSession`` does exactly this, and its copy is correct rather
+        than redundant precisely because the session does not own the key it
+        was handed.
+
         Returns:
             The 32-byte AES-256 master key for the active session.
         """
