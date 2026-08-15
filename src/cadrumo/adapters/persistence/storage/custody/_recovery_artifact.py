@@ -448,12 +448,40 @@ def _write_external_exclusive(path: Path, payload: bytes) -> None:
                     0o600,
                     dir_fd=parent_descriptor,
                 )
-            _write_export_descriptor(descriptor, payload, parent_descriptor=parent_descriptor)
+            try:
+                _write_export_descriptor(descriptor, payload, parent_descriptor=parent_descriptor)
+            except BaseException:
+                # A short or interrupted write leaves a file that exists,
+                # holds a fragment of wrapped key material, and parses as
+                # nothing. Left in place it is worse than no file at all:
+                # the exclusive create then refuses every retry to the same
+                # destination, and the operator is holding something that
+                # looks like their recovery artifact and will not open their
+                # records on the day they need it. It is removed through the
+                # same anchored parent that authorised its creation, so the
+                # removal cannot reach a substituted directory.
+                os.close(descriptor)
+                descriptor = None
+                _remove_failed_export(path, parent_descriptor=parent_descriptor)
+                raise
     except OSError as exc:
         raise ProfileCustodyRecordError("recovery artifact target must be created exclusively") from exc
     finally:
         if descriptor is not None:
             os.close(descriptor)
+
+
+def _remove_failed_export(path: Path, *, parent_descriptor: int | None) -> None:
+    """Best-effort removal of a partial export, never masking the real failure."""
+    try:
+        if parent_descriptor is None:
+            os.unlink(path)
+        else:
+            os.unlink(path.name, dir_fd=parent_descriptor)
+    except OSError:
+        # The write failure is the operator's actionable fact; a removal that
+        # could not complete must not replace it with a second, vaguer one.
+        return
 
 
 @contextmanager

@@ -1,10 +1,6 @@
-# Modelo 490 declaration-header casillas (scheduling/applicability-grade). Only
-# the declaration header is declared, grounded in orden-hac-590-2021 art 1. No
-# numbered form casilla is invented — the authoritative Modelo 490 diseño de
-# registro IS bundled (aeat-dr-490-2023) but no casilla-to-position mapping
-# has been authored from it yet.
+# Modelo 490 declaration-header casillas, grounded in orden-hac-590-2021 art 1.
 
-[[revisions."2021-y-siguientes".casillas]]
+[[revisions."2022-1T".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
 section = ["declarante"]
@@ -15,7 +11,7 @@ input_kind = "informational"
 legal_refs = ["orden-hac-590-2021:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-490-procedure"]
 
-[[revisions."2021-y-siguientes".casillas]]
+[[revisions."2022-1T".casillas]]
 id = "decl.periodo"
 number = "periodo"
 section = ["declarante"]
@@ -25,3 +21,6 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-hac-590-2021:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-490-procedure"]
+
+# No numbered form casilla is declared for this era: its diseno de registro
+# (aeat-dr-490-2021) has not been transcribed. Nothing is fabricated here.

@@ -61,6 +61,19 @@ from ..sequences.__main__ import main as sequences_cli_main
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
+#: Wall ceiling for the two gates that fan out into a pool of child
+#: interpreters. Deliberately far above the repository's 300s default rather
+#: than a shaved margin: the unscoped gate measured 344s on an IDLE box, and
+#: these tests run in a lane sharing the machine, so a tight bound would fire
+#: on load rather than on a defect. The ceiling still exists -- a genuinely
+#: wedged pool fails here instead of running forever.
+#:
+#: Sizing this correctly is load-bearing beyond this file. When the ceiling
+#: fires on a test parked in ``subprocess.wait()``, the thread timeout method
+#: cannot interrupt it, so the xdist WORKER dies instead of the test failing,
+#: and the run is then re-scheduled or wedged rather than reported.
+_SUBPROCESS_POOL_TIMEOUT = 1800
+
 _PAGE = "tutorials/anti-tautology-gate"
 
 #: The representative sequence: a real capture-threaded JSON read chain. The
@@ -211,6 +224,7 @@ class TestCommittedGoldensCleanGate:
     printed verbatim on failure.
     """
 
+    @pytest.mark.timeout(_SUBPROCESS_POOL_TIMEOUT)
     def test_every_committed_golden_matches_live_execution(self) -> None:
         """Every enrolled sequence re-executes clean against its committed golden.
 
@@ -219,6 +233,15 @@ class TestCommittedGoldensCleanGate:
         to the serial run — only the scheduling changes. Width 8 is the
         machine-aware CI lane size (24 cores / 3 co-resident lanes, the same
         bound the pytest lanes use; ``.github/ci-control-plane.md``).
+
+        Carries its own timeout because it legitimately outruns the repository
+        ceiling: measured at 344s on an idle box, against a 300s default. That
+        gap is what killed xdist workers rather than failing this test. The
+        default timeout method here is ``thread``, which cannot interrupt a
+        thread parked in ``subprocess.wait()`` on eight children, so the ceiling
+        fired, the test did not die, and the WORKER exited uncleanly instead --
+        after which xdist re-ran this test on a replacement node (one id
+        reported as three failures) or wedged its scheduler.
         """
         problems = check_sequences_in_subprocess(jobs=8)
         assert problems == (), "cli-sequence goldens diverge from live execution:\n" + "\n".join(problems)
@@ -489,9 +512,16 @@ class TestPageCoherenceGate:
     own accumulated state and the page content must change.
     """
 
+    @pytest.mark.timeout(_SUBPROCESS_POOL_TIMEOUT)
     def test_every_enrolled_page_is_coherent_top_to_bottom(self) -> None:
         """Coherence is a page-scoped property (one sandbox per page, state
         accumulating only within the page), so pages shard cleanly across the
-        same bounded 8-wide child pool as the goldens gate above."""
+        same bounded 8-wide child pool as the goldens gate above.
+
+        Carries the same ceiling as that gate, and for the same reason: it fans
+        out into the identical 8-wide child pool, so it has the identical
+        exposure to a ceiling firing while the test thread is parked in
+        ``subprocess.wait()`` and unkillable by the thread timeout method.
+        """
         problems = check_page_coherence_in_subprocess(jobs=8)
         assert problems == (), "enrolled pages are not coherent under cumulative execution:\n" + "\n".join(problems)

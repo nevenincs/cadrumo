@@ -94,8 +94,17 @@ def _refuse_erase_inside_the_retention_floor(assessment: BucketDeletionAssessmen
     years (Ley 58/2003 LGT art. 66/67) and the supporting documentation must be
     conserved for the same window (art. 70.2). The count and the date are read
     from the assessment the maintenance authority computed from the filing
-    snapshot, never recomputed here, so this refusal and the all-profile one
-    cannot drift into stating different law about the same records.
+    snapshot and are never recomputed here, so the two refusals cannot report
+    different NUMBERS for the same records.
+
+    What is duplicated, and stated plainly rather than claimed away, is the
+    DECISION: the all-profile flow tests the blocking flag together with a
+    recorded override, and this verb tests the flag alone because it offers no
+    override. A third condition added to the retention contract would reach one
+    site and not the other. Making that impossible means promoting the decision
+    to a shared application function, which lives in a module this surface does
+    not own; until that happens the duplication is a known cost, not an
+    invariant.
     """
     from ....domain.retention import RetentionFloorError
 

@@ -46,6 +46,7 @@ Submodules
    cadrumo.application.user_profile._profile_record_repository
    cadrumo.application.user_profile._profile_repository
    cadrumo.application.user_profile._projections
+   cadrumo.application.user_profile._recovery_custody
    cadrumo.application.user_profile._registration
    cadrumo.application.user_profile._repository
    cadrumo.application.user_profile._section_rows

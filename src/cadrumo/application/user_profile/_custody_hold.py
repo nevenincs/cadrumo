@@ -21,10 +21,13 @@ from ._custody_transactions import (
     canonical_model_bytes,
 )
 
-
-DERIVED_HOLD_EVIDENCE_DIRNAME: Final[str] = storage_location(
-    StorageCategory.PROFILE_CUSTODY_HOLD_DERIVED_EVIDENCE,
-).relative_path().name
+DERIVED_HOLD_EVIDENCE_DIRNAME: Final[str] = (
+    storage_location(
+        StorageCategory.PROFILE_CUSTODY_HOLD_DERIVED_EVIDENCE,
+    )
+    .relative_path()
+    .name
+)
 """The derived join's directory name, read from its one taxonomy declaration.
 
 The storage path registry spells the same segment in this format's grammar, so

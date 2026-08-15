@@ -20,6 +20,7 @@ It is the regression for exactly that defect.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
@@ -113,6 +114,37 @@ def test_registration_creates_an_addressable_profile_with_no_tax_facts(tmp_path:
         assert record.setup_state is ProfileSetupState.INCOMPLETE
         tax_id_facts = [fact for fact in record.facts if fact.path == "identity.tax_id"]
         assert tax_id_facts == []
+
+
+def test_registration_records_zero_known_open_legal_cases(tmp_path: Path) -> None:
+    """A freshly registered profile is left deletion-assessable, not deletion-blind.
+
+    Before this: the legal-owner half of the deletion preflight had no
+    production writer anywhere, so ``LegalHoldCaseAuthority.project`` raised
+    ``FileNotFoundError`` for every profile that ever existed and the custody
+    deletion preflight refused unconditionally -- no profile, seeded or real,
+    could ever be deleted. A profile at the instant of registration has no
+    filings and no captured AEAT proceedings, so "zero known open cases" is a
+    fact about a brand-new profile rather than an assumption of clearance,
+    exactly the same class of fact already recorded for its filing history.
+    """
+    from ....application.evidence import LegalHoldCaseAuthority
+    from .._lifecycle import ProfileCapsuleLifecycle
+
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        outcome = register_profile_with_credentials(
+            label="Legal Hold Subject",
+            passphrase=_OPERATOR_PASSPHRASE,
+        )
+        identity = UUID(outcome.profile_id)
+
+        projection = LegalHoldCaseAuthority(root=storage_root).project(identity, now=datetime.now(UTC))
+        assert projection.blocks_local_deletion is False
+
+        # The real join of the legal and filing hold owners now succeeds for
+        # a profile that has done nothing but register.
+        journal = ProfileCapsuleLifecycle(root=storage_root).prepare_delete(profile_id=identity)
+        assert journal is not None
 
 
 # ── refusals ────────────────────────────────────────────────────────────────

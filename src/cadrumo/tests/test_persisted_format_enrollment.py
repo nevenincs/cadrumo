@@ -73,6 +73,7 @@ _NON_FILE_FORMAT_KEYS: Final[frozenset[str]] = frozenset(
     {"secure_object", "bundle", "archive"},
 )
 
+
 def _declared_record_formats() -> frozenset[str]:
     """Return every record format the secure-object namespaces declare.
 
@@ -88,9 +89,7 @@ def _declared_record_formats() -> frozenset[str]:
     author adding such a record meets the obligation beside the namespace and
     this gate cannot be satisfied by an entry nothing in production points at.
     """
-    return frozenset(
-        key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces for key in definition.record_formats
-    )
+    return frozenset(key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces for key in definition.record_formats)
 
 
 def _discovered_format_keys() -> frozenset[str]:

@@ -24,6 +24,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from ....adapters.persistence.storage.custody import (
+    ProfileCustodyEnvelope,
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
     ProfileCustodyRecoveryArtifactWarning,
@@ -35,6 +36,7 @@ from ...profile_custody import create_profile_custody_registration_material
 from .._capsule_record import ProfileRecordSession
 from .._lifecycle import ProfileCapsuleLifecycle
 from .._recovery_custody import (
+    ProfileRecoveryArtifactReceipt,
     ProfileRecoveryEnrollment,
     enroll_profile_recovery,
     export_profile_recovery_artifact,
@@ -64,7 +66,12 @@ class _EnrolledProfile:
             dek_epoch=dek_epoch,
             salt=token_bytes(16),
         )
-        self.envelope = material.envelope
+        envelope = material.envelope
+        # Narrowed on the way out of the boundary and needed back at its
+        # substrate type here, because this module builds a second sentinel
+        # against the same envelope to construct the divergent-key case.
+        assert isinstance(envelope, ProfileCustodyEnvelope)
+        self.envelope = envelope
         self.sentinel = material.sentinel
         self.enrollment = enroll_profile_recovery(
             profile_id=self.profile_id,
@@ -93,7 +100,7 @@ class _EnrolledProfile:
     def database_bytes(self) -> bytes:
         return (self.root / "buckets" / str(self.profile_id) / "db" / "cadrumo.db").read_bytes()
 
-    def export(self, target: Path) -> object:
+    def export(self, target: Path) -> ProfileRecoveryArtifactReceipt:
         return export_profile_recovery_artifact(
             self.enrollment,
             current_password=_PASSWORD,
@@ -157,7 +164,7 @@ def test_export_import_prove_returns_exactly_the_profiles_key(
     assert receipt.profile_id == enrolled.profile_id
     assert receipt.dek_epoch == enrolled.envelope.dek_epoch
     assert receipt.target == target
-    assert set(receipt.warnings) == {member.value for member in ProfileCustodyRecoveryArtifactWarning}
+    assert set(receipt.warnings) == set(ProfileCustodyRecoveryArtifactWarning)
 
     restored = restore_profile_from_recovery_artifact(
         label="Recovered by artifact",
@@ -454,6 +461,7 @@ def test_restore_refuses_a_sentinel_from_a_different_profile(
         dek_epoch=enrolled.envelope.dek_epoch,
         salt=token_bytes(16),
     ).envelope
+    assert isinstance(other_envelope, ProfileCustodyEnvelope)
     foreign_sentinel = create_profile_custody_sentinel(envelope=other_envelope, dek=enrolled.dek)
     session = ProfileRecordSession.from_envelope(envelope=enrolled.envelope, dek=enrolled.dek)
     try:

@@ -1,0 +1,13 @@
+# Modelo 490 record-design parity anchor for the 2022-2T-4T era, pointing at that
+# era's own bundled diseno de registro. runner_required stays false pending a
+# verified byte-position parity run against the design.
+
+[[revisions."2022-2T-4T".workbook_parity_refs]]
+id = "modelo-490-2022-2t-4t-static-layout"
+workbook_source = "aeat-dr-490-2022-2t"
+fixture_id = "modelo-490-orden-hac-590-2021-layout"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hac-590-2021:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2022-2t"]

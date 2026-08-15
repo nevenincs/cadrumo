@@ -23,4 +23,8 @@ orden_aplicabilidad = [
 source_refs = [
     "aeat-modelo-151-procedure",
     "boe-modelo-151-layout",
+    # Already-registered record design, declared 2023-01-01 open-ended, which
+    # matches this revision's own valid_from exactly. AEAT titles it
+    # "151 - Orden HAP/2783/2015 (Ejercicios 2023 y siguientes)".
+    "aeat-dr-151-2023",
 ]

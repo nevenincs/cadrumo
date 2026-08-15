@@ -1,0 +1,57 @@
+[revisions."2021"]
+authority_grade = "applicability"
+# Modelo 490 autoliquidacion del Impuesto sobre Determinados Servicios
+# Digitales, approved by orden-hac-590-2021 art 1, plazo grounded verbatim in
+# orden-hac-590-2021 art 3.
+#
+# ERA SPLIT. AEAT publishes THREE record designs for this modelo and binds each
+# to a disjoint span; the previous single '2021-y-siguientes' revision spanned
+# all three at once, so no layout authored on it could be correct for more than
+# one era. Every boundary below is read off AEAT's own index title for the
+# artefact, never chosen to make a window check pass.
+#
+# TWO of the three boundaries fall MID-YEAR (2022-1T|2T and nothing else at
+# 2023), which a year-granular period_selector cannot express on its own. They
+# are carried by PERIOD narrowing instead: '2021' and '2022-1T' both consume the
+# same design but are separate revisions because one covers a whole year and the
+# other a single quarter, and '2022-1T' / '2022-2T-4T' share filing year 2022
+# with disjoint period lists. select_revision resolves on (year, period) so the
+# pair is unambiguous; select_revision_for_year deliberately refuses a year-only
+# answer here, naming this exact case.
+#
+# This revision consumes AEAT's "Orden HAC/590/2021 (Ejercicio 2021 y 2022 hasta periodo 1T)" design.
+#
+# NO export layout is declared on this revision: the aeat-dr-490-2021 design has not
+# been transcribed. That is an absent filing capability honestly reported by the
+# export-layout gate, not an exemption.
+#
+# No deadline_windows and no deadline application link: the only windows this modelo
+# ever declared were for 2025 and 2026, which belong to the 2023-y-siguientes
+# revision. No window is fabricated for a past year.
+id = "2021"
+valid_from = 2021-01-01
+valid_to = 2021-12-31
+period_selector = { years = [2021], periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-hac-590-2021:art-1"]
+legal_refs = [
+    "orden-hac-590-2021:art-1",
+    "orden-hac-590-2021:art-3",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-490-procedure",
+    "aeat-dr-490-2021",
+]
+
+
+[revisions."2021".family_dispositions.casilla_continuidad_evolutions]
+reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2021' of modelo 490 has no strictly-earlier sibling revision of this modelo (valid_from 2021-01-01 precedes every other declared revision of modelo 490), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+legal_refs = [
+    "orden-hac-590-2021:art-1",
+    "orden-hac-590-2021:art-3",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-490-procedure",
+    "aeat-dr-490-2021",
+]

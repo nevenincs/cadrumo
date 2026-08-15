@@ -25,6 +25,12 @@ source_refs = [
     "boe-modelo-210-2024-form-layout",
     "boe-modelo-210-2026-deadline-update",
     "boe-modelo-210-2026-form-layout",
+    # Both already-registered record designs. This revision opens 2025-01-01
+    # and is open-ended, so it spans the boundary between them: AEAT governs
+    # devengos up to 2025-12-31 with the first and "a partir del 01-01-2026"
+    # with the second. Neither was cited.
+    "aeat-dr-210-2022",
+    "aeat-dr-210-2026",
 ]
 
 

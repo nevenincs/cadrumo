@@ -218,9 +218,14 @@ source_refs = ["aeat-dr-131-2026"]
 id = "modelo-131-complementaria-indicator"
 offset = 12
 length = 1
-kind = "header"
-producer_key = "amendment_evidence.is_complementaria"
-data_type = "boolean"
+kind = "filler"
+# Design row 5, "Indicador de pagina complementaria.", whose declared
+# contenido is exactly "En blanco": AEAT wants no datum in this position.
+# It marks a COMPLEMENTARY PAGE (a repeated instance of the same page), not
+# a complementary DECLARATION; Modelo 131 files one Pag. 1, so there is
+# never a complementary page to mark. The declaration-level flag is its own
+# row and is written there.
+data_type = "text"
 required = false
 padding = "right_space"
 justification = "left"

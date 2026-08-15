@@ -1,10 +1,10 @@
-[[revisions."2021-y-siguientes".constructs]]
+[[revisions."2023-y-siguientes".constructs]]
 id = "modelo-490-autoliquidacion"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-490-procedure", "enrolled-modelo-490-layout", "aeat-dr-490-2023"]
+source_refs = ["enrolled-modelo-490-procedure", "aeat-dr-490-2023"]
 casilla_ids = ["decl.ejercicio", "decl.periodo"]
 application_links = ["modelo-490-filing", "modelo-490-deadline"]
-workbook_parity_refs = ["modelo-490-orden-static-layout"]
+workbook_parity_refs = ["modelo-490-2023-y-siguientes-static-layout"]
 deadline_windows = [
     "modelo-490-2025-1t",
     "modelo-490-2025-2t",
