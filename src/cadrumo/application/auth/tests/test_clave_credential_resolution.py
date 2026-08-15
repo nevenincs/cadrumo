@@ -16,17 +16,13 @@ on an unlocked bucket session.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from pathlib import Path
-
 import pytest
 from pydantic import SecretStr
 
 from ....core import AuthProviderKind, ClaveMovilRoute
 from ....core.config import override_settings
 from ....core.resources import resources
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ...user_profile import build_profile_preflight_requirement
 from .._sessions import (
@@ -440,10 +436,4 @@ def test_a_clave_identity_disagreeing_with_the_profile_is_refused_for_every_clav
     )
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_BUCKET_ID),
-    ):
-        yield
+_isolated_backend = bucket_session_storage_fixture(_BUCKET_ID)

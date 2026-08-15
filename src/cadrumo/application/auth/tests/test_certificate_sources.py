@@ -7,14 +7,12 @@ fakes.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from ....core.config import Settings
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ... import auth as _auth_facade
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
@@ -45,20 +43,7 @@ def _register_operator_profile() -> None:
     )
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    """Open an isolated storage root plus an active bucket session for the whole test.
-
-    Mirrors the sibling ``test_operator.py`` fixture: certificate-source
-    mutations write encrypted workflow-state rows, which require an
-    active master-key session bound to the profile bucket being created
-    (:func:`application.user_profile.profile_create_storage_span`).
-    """
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_BUCKET_ID),
-    ):
-        yield
+_isolated_backend = bucket_session_storage_fixture(_BUCKET_ID)
 
 
 def test_register_two_sources_are_both_enumerable(tmp_path: Path) -> None:

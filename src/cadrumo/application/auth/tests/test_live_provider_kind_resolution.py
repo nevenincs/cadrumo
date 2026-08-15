@@ -23,15 +23,11 @@ witnessed active-profile storage span to read that state.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from pathlib import Path
-
 import pytest
 
 from ....core import AuthProviderKind
 from ....core.config import override_settings
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ...workflow import workflow_state_repository
 from .._actions import update_auth
@@ -44,13 +40,7 @@ _PROFILE_LABEL = "live-provider-operator"
 _TAX_ID = "12345678Z"
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_BUCKET_ID),
-    ):
-        yield
+_isolated_backend = bucket_session_storage_fixture(_BUCKET_ID)
 
 
 def _register_profile_selecting(provider: AuthProviderKind | None) -> None:

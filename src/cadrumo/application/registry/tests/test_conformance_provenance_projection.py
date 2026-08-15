@@ -5,14 +5,10 @@ from __future__ import annotations
 import pytest
 
 from ....domain.calculations.registry import ValidatedRegistryAuthority
-from ....tests.registry_authority_fixture import bundled_registry_authority_fixture
 from .. import RegistryConformanceProfile
 from ._conformance_profile_fixtures import degraded_profile, validated_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-#: The real bundled authority, used here to resolve each projected revision.
-registry_authority = bundled_registry_authority_fixture(name="registry_authority")
 
 
 def test_validated_rows_keep_construct_floor_and_casilla_provenance_as_separate_axes(
