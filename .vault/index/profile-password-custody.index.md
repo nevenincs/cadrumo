@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:f9cd4d7fe2c05991c09a8f7827fa19a6d403fd3acfb4f80eba9f3a1df7656b87'
+body_hash: 'sha256:c59fad3b9a60b40d08322a5bd44c6e81f5711a1dc564f2beeb75b935cecdc973'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -51,6 +51,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W04-P07-S126]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S133]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S141]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S148]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S19]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S28]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S32]]'
@@ -83,6 +84,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W05-P08-S134]]'
   - '[[2026-08-13-profile-password-custody-W05-P08-S137]]'
   - '[[2026-08-13-profile-password-custody-W05-P08-S138]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S147]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -193,6 +195,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W04-P07-S126` - Have Sol Medium enrol the custody capsule formats in the governed persisted-format inventory
 - `2026-08-13-profile-password-custody-W04-P07-S133` - Have Sol Medium classify the roughly one dozen genuine persisted formats the binding gate found unbound
 - `2026-08-13-profile-password-custody-W04-P07-S141` - Have Terra XHigh complete the half-landed harness extraction that currently breaks collection tree-wide
+- `2026-08-13-profile-password-custody-W04-P07-S148` - Have Terra XHigh reconcile the two enrolment gates whose key spaces disagree, adding the four standalone capsule and pointer files to the independent path discovery source rather than to the hand list, and narrowing the namespace pin so it excludes namespaces without excluding a payload grammar that carries its own version constant
 - `2026-08-13-profile-password-custody-W04-P07-S19` - Have Terra XHigh dissolve the forwarding port package in five ordered parts
 - `2026-08-13-profile-password-custody-W04-P07-S28` - Have Terra XHigh relocate the surviving per-profile session, wipe and identity residue into the custody package that the accepted decision names as sole authority, in one atomic move, so no surviving primitive is left behind a shared-master name
 - `2026-08-13-profile-password-custody-W04-P07-S39` - Have Terra XHigh delete the re-export bridge module in the custody package and repoint its sole consumer at the two modules it forwards to, in one commit
@@ -208,6 +211,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W05-P08-S134` - Have Sol Medium rule what the destructive profile deletion surface should be, since both of its primitives have zero definitions anywhere in the tree
 - `2026-08-13-profile-password-custody-W05-P08-S137` - Have Terra XHigh restore the retention detail to the hold projection so the deletion preflight can answer a count and a floor and a safe-erase date rather than two booleans
 - `2026-08-13-profile-password-custody-W05-P08-S138` - Have Terra XHigh make the delete hold guard compare the owner facts its docstring names rather than the whole assessment object
+- `2026-08-13-profile-password-custody-W05-P08-S147` - Have Terra XHigh retire the manifest digest field from the bucket deletion contract and complete the retirement half of the deletion supersession
 
 ### plan
 
