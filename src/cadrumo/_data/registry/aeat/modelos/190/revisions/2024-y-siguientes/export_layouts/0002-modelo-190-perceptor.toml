@@ -628,53 +628,35 @@ legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-190-perc-rendimientos-gestion-fondos"
+id = "modelo-190-perc-blancos-389"
 offset = 389
-length = 1
+length = 112
 kind = "filler"
-# Design campo 37, 389 RENDIMIENTOS DEL TRABAJO OBTENIDOS POR LA GESTION
-# DE FONDOS VINCULADOS AL EMPRENDIMIENTO. Present only in the 2025
-# edition of the design (the 2024 edition declares 389-500 as BLANCOS),
-# which is why this field cites the 2025 source alone. Only for clave A;
-# Cadrumo does not model carried-interest rendimientos.
-data_type = "text"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = false
-legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-190-perc-tipos-prestacion-b01"
-offset = 390
-length = 5
-kind = "filler"
-# Design campo 38, 390-394 TIPO/S DE PRESTACION/ES DE LA CLAVE B.01,
-# five one-byte flags ("1" satisfied, "0" not). Present only in the 2025
-# edition. Only for clave B subclave 01; Cadrumo's withholding store does
-# not record which Seguridad Social prestacion types were paid.
-data_type = "text"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = false
-legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025"]
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-190-perc-blancos-395"
-offset = 395
-length = 106
-kind = "filler"
-# Design campo 39, 395-500: BLANCOS in the 2025 edition. The 2024 edition
-# declares 389-500 as BLANCOS instead; positions 389-394 are covered by
-# the two 2025-only fields above.
+# Design campo 39 of the 2024 edition, 389-500: BLANCOS.
+# 
+# THE TWO EDITIONS DISAGREE HERE AND ONLY ONE CAN BE WRITTEN. The 2025
+# edition carves two data fields out of this run -- 389 RENDIMIENTOS DEL
+# TRABAJO OBTENIDOS POR LA GESTION DE FONDOS VINCULADOS AL EMPRENDIMIENTO
+# (clave A only) and 390-394 TIPO/S DE PRESTACION/ES DE LA CLAVE B.01
+# (five one-byte "1"/"0" flags, clave B.01 only) -- leaving 395-500 as the
+# blancos remainder. Both are Numerico, so writing them as unpopulated
+# numeric slots emits CEROS, and a 2024 filing would then carry ceros
+# across 389-394 where the 2024 edition declares blancos.
+# 
+# Wrong bytes beat a visible gap only in the wrong direction: ceros over
+# blancos ships silently behind a valid digest, while an unwritten
+# position is reported by the coverage gate every time the registry
+# loads. So this writes the run the 2024 edition declares and leaves the
+# two 2025-only fields UNWRITTEN. They cost 2 positions of reported
+# coverage on the 2025 sheet, and that refusal is the honest signal that
+# one revision is spanning two incompatible record designs. Neither field
+# can be expressed until revision '2024-y-siguientes' is split per
+# edition; Cadrumo holds no fact for either one in any case.
 data_type = "text"
 required = false
 padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
