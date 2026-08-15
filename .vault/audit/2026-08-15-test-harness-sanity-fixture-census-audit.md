@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:4c62f8f722a58bfbcccac155939a0ea73b9b6b00e4b50d001ae10989e3804213'
+body_hash: 'sha256:a61fd05f785026da81952fd9a2e1ea3b668be6a64c814039eb9a4afab4a18984'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
   - "[[2026-08-14-test-harness-sanity-successor-adr]]"
@@ -426,3 +426,30 @@ This step had been marked complete with no locatable evidence, was returned to o
 So the test-side gap is a best-effort memory-hygiene nicety over test key material, with no OS handle, no registered global outliving the test, and a GC-reclaimed buffer. **Adding `.close()` to ~30 call sites would be churn on a tree three teams are committing to, in exchange for nothing observable.** Recorded as a deliberate non-fix. The principle generalises the census's own "duplication matters when it can diverge": **a leak matters when it can outlive the test.** One that cannot is a style preference, and this campaign does not spend collision risk on style.
 
 **Verification:** the 9 affected files run sequentially give 154 passed, 1 failed — `test_materialisation.py::test_get_secret_store_writes_a_real_blob_at_the_declared_taxonomy_path`, failing inside `open_test_profile_session` on `UUID("materialisation-wiring-test")` with `ValueError: badly formed hexadecimal UUID string`. That fails before any master-key-provider code runs, and **no code was changed in this step, so the before and after sets are the same set** — there is no diff to claim. That failure is separate pre-existing tree noise and is not attributed to this sweep.
+
+### `S138` | BLOCKED, with the blocker finally measured | "collection succeeds" is the WRONG quiescence criterion
+
+The first collectable tree of the session appeared and the diff was taken immediately: `domain/calculations/registry/tests` plus `application/calculations/tests`, sequential `-n0`, full output to disk. It ran 1 hour 9 minutes and produced **1722 failed, 3429 passed, 221 errors**.
+
+**That is not a baseline, and it must not be recorded as one.** Grouping the failures by cause shows a single systemic refusal, not a distribution:
+
+| Cause | Count |
+|---|---|
+| `RegistryValidationError` | 1704 |
+| `AssertionError` | 93 |
+| `RegistryLoadError` | 50 |
+| `ProfileCustodyRecordError` | 43 |
+| `TomlParsingError` | 41 |
+| everything else | <30 each |
+
+Every one of the 1704 carries the same message: modelos 036 and 038 declare no export layout, modelo 100 revision 2020 claims `filing` authority grade while four families "remain blocked pending evidence", and so on. Alongside them, `_rtoml.TomlParsingError: duplicate key: 'segmento' for key 'revisions.2022.completeness_manifest.casillas' at line 113`. **The registry itself does not currently validate**, so every test that loads an authority fails identically regardless of anything this campaign did.
+
+**Committed, not in-flight, and not ours to fix:** `git status` shows zero uncommitted registry changes, and `git log` shows `registry: continue authority-grade sweep (round 41)`. The registry is in a knowingly intermediate state between rounds of another campaign's long-running sweep. Waiting it out is not a strategy measured in loop ticks.
+
+**The correction this produces is the valuable part.** `S138` and this record's own recommendation both said "re-run from a quiesced tree", and the working definition of quiesced had silently become *"`pytest --collect-only` succeeds"*. It does not follow: collection only proves every module imports. Registry validity is a **runtime** property evaluated when a test loads an authority, and the two are independent. This session watched collection errors go 67 → 4 → 3 → 7 → 0 and treated the 0 as the green light — while the registry underneath had been invalid the whole time.
+
+**The quiescence criterion for `S138` is therefore restated:** the tree is ready when the registry VALIDATES, not when collection succeeds. The cheap precondition check is a single authority-loading test — if it raises `RegistryValidationError`, the tree is not ready and a full 70-minute run is wasted before it starts. **Run that check first next time.** This run cost 70 minutes to learn something a single test would have said in seconds.
+
+**Also confirmed still live:** 43 `ProfileCustodyRecordError` failures, the same uncommitted `custody/_inventory.py` regression recorded above. Unchanged and still unowned.
+
+**`S138` stays OPEN.** It is the only open step in the wave, it is blocked on another campaign completing its authority-grade sweep, and no amount of re-running changes that. It is not deferred silently: the blocker, its cause, its owner and the corrected precondition are all recorded here.

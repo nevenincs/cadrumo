@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-15'
-body_hash: 'sha256:95b9f24068d4db62b58a9f0a96a871a6f1bbfec79c60a9556481ccdbae292c94'
+body_hash: 'sha256:654b257c8d5149fdfb994f17f2d0c1109eaa359b5a16daa7f6251d3ba52c2b1a'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -222,7 +222,7 @@ The classes the name-keyed census cannot reach. Drift is scored by structural si
 - [x] `W09.P30.S135` - Move the in-memory engine disposal in the hash-column-width test inside a finally so a failing assertion cannot skip it; `src/cadrumo/adapters/persistence/storage/sql/tests/test_hash_column_widths.py`.
 - [x] `W09.P30.S136` - Close the live-write declaration helper still duplicated in the evaluation tree, or record the cross-tree import direction as the standing reason it cannot move; `dev/agent_eval/tests/test_confirmation_gate_golden.py`.
 - [x] `W09.P30.S137` - Sweep key providers and encrypted sessions for guaranteed teardown, the one resource class left unexamined, adjudicating each of the 15 EphemeralMasterKeyProvider constructions that are assigned without ever being context-managed as helper-managed or leaking; `15 EphemeralMasterKeyProvider constructions are assigned without ever being context-managed and each needs adjudicating as helper-managed or leaking; `src/cadrumo/adapters/persistence/storage`.
-- [ ] `W09.P30.S138` - Re-run the registry-tests failure-set diff from a quiesced tree so the consolidation pair is cleared on evidence rather than on zero-overlap reasoning; `src/cadrumo/domain/calculations/registry/tests`.
+- [ ] `W09.P30.S138` - Re-run the registry-tests failure-set diff once the registry VALIDATES (not merely once collection succeeds) so the consolidation pair is cleared on evidence rather than on zero-overlap reasoning, gating the run on a single authority-loading test because the authority-grade sweep currently leaves 1704 tests failing on one shared RegistryValidationError; `src/cadrumo/domain/calculations/registry/tests`.
 - [x] `W09.P30.S139` - Migrate the CLI-surface workflow tests off application-layer profile seeding onto the credential-registering door so the custody envelope opens under the configured passphrase; `src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`.
 - [x] `W09.P30.S140` - Record the fourth storage-plus-auth isolation composition in the isolated-backend cluster census so the cluster count reflects every known site; `src/cadrumo/entrypoints/cli/tests/_cli_surface_support.py`.
 - [x] `W09.P30.S141` - Treat a body-duplicate that closes over a same-named module constant as its own triage bucket, since the safe fix is to parameterise the constant rather than delete the duplicate; `dev/quality/helper_body_census.py`.

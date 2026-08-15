@@ -124,7 +124,11 @@ def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
 
 def _validate_modelos_directory_entries(modelos_dir: Path) -> None:
     """Refuse plausible modelo sources that discovery would otherwise ignore."""
-    for entry in scan_directory(modelos_dir):
+    # require_root: an unreadable modelos/ yielding empty would validate nothing
+    # and hand discovery a registry with no modelos in it, so every casilla would
+    # resolve blank instead of the load refusing. Reading nothing here is a broken
+    # tree, never a registry that legitimately declares no modelo.
+    for entry in scan_directory(modelos_dir, require_root=True):
         if entry.is_file():
             if entry.suffix != ".toml":
                 raise RegistryLoadError(
