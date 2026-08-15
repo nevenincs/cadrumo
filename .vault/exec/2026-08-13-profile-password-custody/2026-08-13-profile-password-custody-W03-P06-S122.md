@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:d444babb4a696ef9ad0dc4a00f9d40447d2f7d08bcefc3500c671a4d1597f0ae'
+body_hash: 'sha256:f7d68d897f6b434cc2c164fc65ea71153e275da372e1355474599924e74b4bc6'
 step_id: 'S122'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -40,14 +40,20 @@ related:
 - Proved the candidate coverage bites, by breaking the production classifier
   at runtime from outside the repository and confirming the assertion goes
   red, then restoring it.
-- Wrote the candidate module in landable form and left it in the session
-  scratchpad pending the ownership ruling.
+- Obtained the ownership ruling the row needed, the fence having been lifted
+  once the holding agent's row closed, and landed the work.
+- Split the module in two, so each subject sits under a name that describes
+  it, and gave the shared registration helper the incomplete-state passthrough
+  its underlying door already supported.
+- Re-ran the bite-proof against the LANDED test rather than the scratchpad
+  candidate, breaking the classifier through a plugin loaded from outside the
+  repository.
 
 ## Outcome
 
-**The re-founding mechanism is established and proven. The code was NOT
-landed, because its file is in a directory this row's dispatch assigned to
-another owner. Everything short of the edit is delivered.**
+**The re-founding mechanism is established, proven, and LANDED. One case is
+green and bite-proven; its anti-tautology companion is blocked by an ambient
+registry refusal and is recorded unproven rather than claimed.**
 
 ### The re-founding mechanism
 
@@ -80,22 +86,38 @@ obvious way — a workable profile beside an uncommitted one, which is how the
 ORIGINAL module was written — walks straight into it. The single-profile shape
 is not merely sufficient, it is the shape that can run today.
 
-### What the peer sweep did, and the coverage that is currently missing
+### A coverage deletion disguised as a re-founding — the row's real finding
 
-The module was rewritten by a peer's sweep commit before this row began, and
-the rewrite accepted the drift instead of correcting it. The original module
-covered the setup-incomplete surface in three tests: the listing naming the
-status per row with an info advisory, an anti-tautology all-complete case, and
-the calendar naming a mid-setup profile without counting it. The rewrite
-re-pointed the assertions at the retired-custody refusal the staged member now
-triggers, kept the filename, and dropped every setup-incomplete assertion
-including the anti-tautology one.
+This is recorded as a result in its own right, not as background to the
+re-founding, because it is a distinct defect with a distinct lesson.
 
-So the surface this module is named for currently has ZERO coverage, and the
-filename says otherwise. That is worse than an obviously broken test, because
-it reads as covered. The two refusal tests the peer wrote do cover a real live
-guard and are worth keeping; they simply belong under a name that says what
-they test.
+Sweep commit `518118f8be`, "registry: continue authority-grade sweep (round
+21)", re-founded this module on the WRONG SUBJECT and kept the filename. The
+original covered the setup-incomplete CLI surface in three tests: the listing
+naming the status token per row with an info advisory, an anti-tautology
+all-active case, and the calendar naming a mid-setup profile without counting
+it. The rewrite re-pointed the assertions at the retired-custody refusal that
+the staged member now triggers, and dropped every setup-incomplete assertion
+including the anti-tautology one. Its whole diff was three lines: two
+assertions removed, one substituted.
+
+The net effect is that a surface still LIVE in production — the calendar's
+classifier and its marker line, with a matching advisory entry in the locale
+catalogues — had ZERO coverage, while the filename went on asserting it was
+covered.
+
+A file whose NAME claims coverage it no longer provides is worse than an
+absent file, because nobody goes looking for it. An absent module is a gap
+someone eventually notices; a mis-aimed one is a gap that reads as closed.
+This is the same failure the campaign's standing audit describes as
+delivered-narrower wearing the same checkbox as delivered-as-specified, and
+it reached the tree through a sweep whose stated subject was something else
+entirely.
+
+The two refusal tests the sweep wrote do cover a real live guard and are
+KEPT. They were never the problem; their name was. They now live in a module
+named for the refusal they assert, so neither subject is hidden behind the
+other's name.
 
 ### A capability finding this row surfaced and does not own
 
@@ -123,29 +145,45 @@ Consequently a re-founded module can honestly cover the calendar half only.
 Writing a listing assertion today would mean asserting the reduced payload,
 which would freeze the loss into a contract.
 
+### What landed
+
+The module is split so each subject carries its own name. The
+setup-incomplete module now covers the calendar classifier on a genuinely
+uncommitted bucket; the retired-custody refusal tests move verbatim into a
+module named for the refusal they assert. Each module's docstring records why
+the two were separated, so the next reader meets the reason rather than
+re-deriving it.
+
+The shared CLI registration helper gained an incomplete-state passthrough. The
+door beneath it already supported the state; only the helper withheld it, so
+this exposes an existing capability rather than adding one.
+
 ### Verification and its honest limits
 
-The candidate coverage was proven outside the repository, driving the real CLI
-against a real registered profile with no test doubles.
+Real CLI, real registered profile, no test doubles anywhere.
 
-The uncommitted case PASSES: the profile is named on its own line, the label
-is the one registered, and the calendar-bearing count is zero.
+Three of the four tests PASS: both refusal tests in their new home, and the
+uncommitted case, which finds exactly one marker row, ending in the label
+registered, alongside a calendar-bearing count of zero.
 
-It BITES. Breaking the production classifier at runtime so a mid-setup profile
-is dropped rather than named — the exact defect the coverage exists to catch —
-turns the assertion red. Restoring the classifier turns it green again. The
-break was applied from outside the repository, so no tracked file was mutated
-and no peer sweep could have captured it.
+The uncommitted case BITES, proven against the LANDED test rather than a
+candidate. A plugin loaded from outside the repository breaks the production
+classifier so a mid-setup profile is dropped rather than named — the exact
+defect this coverage exists to catch — and the test goes red; without the
+plugin it is green. Nothing under source control was mutated to prove it, so
+no peer sweep could have captured the break.
 
-The anti-tautology companion case, a committed profile that should be counted
-and raise no incomplete line, is UNPROVEN and honestly so. It is the only case
-that builds an actual calendar, so it loads the registry authority, and the
-concurrent authority-grade sweep has that load refusing tree-wide right now
-over unrelated export-layout and authority-grade complaints against several
-modelo revisions. Five retries across a wide window all refused for that same
-cause. The case is written and is expected to pass once the sweep settles; it
-is recorded as unproven rather than quietly dropped, because an anti-tautology
-case that was never observed to pass is not evidence of anything.
+The anti-tautology companion — a committed profile that must be counted and
+must raise no marker row — is UNPROVEN, and is recorded as unproven rather
+than quietly dropped. It is the only case that builds an actual calendar, so
+it is the only one that loads the registry authority, and the concurrent
+authority-grade sweep has that load refusing tree-wide over unrelated
+export-layout and authority-grade complaints against several modelo
+revisions. Every retry across a wide window refused for that same cause. The
+case is landed and correct by construction; it has simply never been observed
+green, and an anti-tautology case that was never observed to pass is not yet
+evidence of anything. It must be re-run once the sweep settles before this
+row's coverage claim is complete.
 
 One incidental finding shapes the assertion and is worth recording: the bucket
 id is REDACTED on this surface. An assertion embedding the registered id fails
@@ -155,23 +193,35 @@ could not have been carried over unchanged either.
 
 ## Notes
 
-No source file was modified by this row, and that is the row's main
-shortfall rather than a clean outcome. The candidate module is written,
-proven, and sitting in the session scratchpad; landing it needs a ruling that
-either grants this row the fenced file or hands the row to that directory's
-owner. The ruling was requested at the start of the row, with the conflict and
-three options set out, and had not arrived when the row was written up.
+The row's scope path is WRONG and should be corrected for the next reader:
+it names the module under the config package's test directory, and the module
+has lived in the CLI package's own test directory since it was first added and
+was never anywhere else. Time was spent hunting a file that never existed at
+the stated path, and the real path belonged to another owner at the time, so
+the correction is worth carrying rather than silently absorbing.
 
 This row does not re-open the retired plaintext member's status, consistent
-with the closed rows that settled it. Nothing in the candidate writes one, and
-the retired-member anchor in the custody capsule-discovery module remains the
-naming authority.
+with the closed rows that settled it. The re-founded coverage writes no such
+member — it needs none, because the incomplete state is a record state rather
+than a directory shape — and the retired-member anchor in the custody
+capsule-discovery module remains the naming authority. The refusal tests that
+DO stage one keep staging it, unchanged, because that member's presence is
+precisely the guard they assert.
 
-Two attempts to run the candidate under pytest from the scratchpad failed on
-collection for environment reasons rather than test reasons: the repository's
-session-scoped temporary directories were being torn down underneath the run
-by concurrent peer sessions. The standalone proof script avoids the shared
-session lifecycle entirely and is what the verification above rests on.
+Only ONE profile is registered per test here, and that is deliberate rather
+than incidental. The live handover defect tracked elsewhere makes a second
+registration in one process fail, so a fixture built the obvious way — a
+workable profile beside an uncommitted one, which is how the ORIGINAL module
+was written — would not run today. The single-profile shape is not merely
+sufficient; it is the shape that works, and it is also the more honest one,
+since the surface's classifier only ever inspects the active profile.
 
-No commit was made, no plan checkbox was set, and every capture lives under
-the session scratchpad rather than the repository.
+Two attempts to run the candidate under pytest from the scratchpad, before the
+work was landed, failed on collection for environment reasons rather than test
+reasons: the repository's session-scoped temporary directories were being torn
+down underneath the run by concurrent peer sessions. That is why the
+pre-landing proof used a standalone script; the post-landing verification runs
+in the normal suite and did not hit it.
+
+No commit was made and no plan checkbox was set. Every capture lives under the
+session scratchpad rather than the repository.

@@ -1,0 +1,187 @@
+# Registro de tipo 1 (registro de declarante) -- positions transcribed from the
+# bundled Diseno de Registro, source aeat-dr-189-2023, sha256
+# c493f8d9d927f28211336324cbe17ab7bae7b256d3c563273e01a76834757d6a. The record
+# is 500 bytes and its declared field lengths sum to exactly 500.
+
+[[revisions."2025".casillas]]
+id = "declarante-razon-social"
+number = "tipo1.18-57"
+section = ["identificacion_declaracion"]
+data_type = "name"
+semantic_role = "m189_declarante_razon_social"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+[[revisions."2025".casillas]]
+id = "tipo-soporte"
+number = "tipo1.58"
+section = ["identificacion_declaracion"]
+data_type = "text"
+semantic_role = "m189_tipo_soporte"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+[[revisions."2025".casillas]]
+id = "persona-relacion"
+number = "tipo1.59-107"
+section = ["identificacion_declaracion"]
+data_type = "text"
+semantic_role = "m189_persona_relacion"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+[[revisions."2025".casillas]]
+id = "numero-justificante"
+number = "tipo1.108-120"
+section = ["identificacion_declaracion"]
+data_type = "integer"
+semantic_role = "m189_numero_justificante"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+[[revisions."2025".casillas]]
+id = "declaracion-complementaria-sustitutiva"
+number = "tipo1.121-122"
+section = ["identificacion_declaracion"]
+data_type = "text"
+semantic_role = "m189_declaracion_complementaria_sustitutiva"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+[[revisions."2025".casillas]]
+id = "numero-identificativo-anterior"
+number = "tipo1.123-135"
+section = ["identificacion_declaracion"]
+data_type = "integer"
+semantic_role = "m189_numero_identificativo_anterior"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+[[revisions."2025".casillas]]
+id = "numero-total-declarados"
+number = "tipo1.136-144"
+section = ["identificacion_declaracion"]
+data_type = "integer"
+semantic_role = "m189_numero_total_declarados"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+[[revisions."2025".casillas]]
+id = "valoracion-total"
+number = "tipo1.145-167"
+section = ["identificacion_declaracion", "valoracion"]
+data_type = "money"
+semantic_role = "m189_valoracion_total"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero"]
+source_refs = [
+    "boe-modelo-189-base-order",
+    "boe-modelo-189-2023-amendment-hfp-1180",
+    "aeat-dr-189-2023",
+]
+
+# Registro de tipo 2 (registro de declarado) -- 500 bytes, declared field
+# lengths sum to exactly 500. Same bundled Diseno de Registro.
+
+[[revisions."2025".casillas]]
+id = "representante-legal-nif"
+number = "tipo2.27-35"
+section = ["declarado"]
+data_type = "nif"
+semantic_role = "m189_representante_legal_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+[[revisions."2025".casillas]]
+id = "codigo-provincia"
+number = "tipo2.76-77"
+section = ["declarado", "localizacion"]
+data_type = "province_code"
+semantic_role = "m189_codigo_provincia"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+[[revisions."2025".casillas]]
+id = "clave-mercado"
+number = "tipo2.80"
+section = ["valores_seguros_rentas", "identificacion_valor"]
+data_type = "text"
+semantic_role = "m189_clave_mercado"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+[[revisions."2025".casillas]]
+id = "clave-identificacion"
+number = "tipo2.82"
+section = ["valores_seguros_rentas", "identificacion_valor"]
+data_type = "text"
+semantic_role = "m189_clave_identificacion"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+[[revisions."2025".casillas]]
+id = "identificacion-valores"
+number = "tipo2.83-94"
+section = ["valores_seguros_rentas", "identificacion_valor"]
+data_type = "text"
+semantic_role = "m189_identificacion_valores"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+[[revisions."2025".casillas]]
+id = "clave-representacion"
+number = "tipo2.95"
+section = ["valores_seguros_rentas", "identificacion_valor"]
+data_type = "text"
+semantic_role = "m189_clave_representacion"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+[[revisions."2025".casillas]]
+id = "porcentaje-participacion"
+number = "tipo2.124-128"
+section = ["valores_seguros_rentas", "detalle_valor"]
+data_type = "decimal"
+semantic_role = "m189_porcentaje_participacion"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+
+[[revisions."2025".casillas]]
+id = "clave-titularidad"
+number = "tipo2.129"
+section = ["valores_seguros_rentas", "detalle_valor"]
+data_type = "text"
+semantic_role = "m189_clave_titularidad"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]

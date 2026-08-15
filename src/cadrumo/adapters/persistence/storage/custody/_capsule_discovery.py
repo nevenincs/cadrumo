@@ -68,6 +68,21 @@ undetected.
 """
 
 
+_RETIRED_MEMBER_CANDIDATE_GLOB = "*"
+"""Stands in for the candidate directory a retired member was found inside.
+
+The scan shape is fixed: a retired member sits exactly one level below a
+scanned root, inside a candidate directory whose name the detector refuses to
+disclose because naming it would assert that the directory IS a retired
+profile -- an identity inferred from retired custody, which this boundary does
+not do.  Substituting the wildcard keeps the operator's search pattern
+directly usable against the named root while disclosing exactly the same
+nothing.  A literal candidate name would not survive the operator envelope in
+any case: it is a UUID, and the redaction funnel rewrites a bare UUID to its
+profile-id placeholder.
+"""
+
+
 def detect_retired_profile_custody_member_paths(capsules_root: Path, *, keystore_root: Path) -> tuple[str, ...]:
     """Return exact retired member names found by the anchored, no-open detector.
 
@@ -76,9 +91,8 @@ def detect_retired_profile_custody_member_paths(capsules_root: Path, *, keystore
     retired shared-master key material.  Either root may be absent; an absent
     root simply contributes nothing.
     """
-    detected = set(_anchored_retired_member_paths(capsules_root, PROFILE_CUSTODY_RETIRED_BUCKET_MEMBER_PATHS))
-    detected.update(_anchored_retired_member_paths(keystore_root, PROFILE_CUSTODY_RETIRED_KEYSTORE_MEMBER_PATHS))
-    return tuple(sorted(detected))
+    capsule_members, keystore_members = _retired_members_by_root(capsules_root, keystore_root=keystore_root)
+    return _merged_member_paths(capsule_members, keystore_members)
 
 
 def refuse_retired_profile_custody_paths(capsules_root: Path, *, keystore_root: Path) -> None:
@@ -96,22 +110,53 @@ def refuse_retired_profile_custody_paths(capsules_root: Path, *, keystore_root: 
     names a directory, never a bucket or an identity, so the refusal discloses
     nothing the detector declined to infer and requires reading no retired
     content.
+
+    Those two roots are the REMEDY, and both are always named for that reason.
+    Which root each member was found under is a separate question -- the CAUSE
+    -- and a flat union of member names across both roots answers it only by
+    accident, when a single member is detected.  A store carrying both members
+    reported two names and two roots with no pairing, and a store carrying only
+    retired key material reported a buckets root that has nothing wrong with
+    it.  So each firing arm additionally contributes a root-relative search
+    pattern under its own key, and an arm that did not fire contributes none.
+    Both facts are pure existence: which member name matched, below which
+    named root, at the one depth the scan looks.
     """
-    detected = detect_retired_profile_custody_member_paths(capsules_root, keystore_root=keystore_root)
-    if not detected:
+    capsule_members, keystore_members = _retired_members_by_root(capsules_root, keystore_root=keystore_root)
+    if not capsule_members and not keystore_members:
         return
+    context: dict[str, object] = {
+        "capsules_root": str(capsules_root),
+        "keystore_root": str(keystore_root),
+        "retired_member_paths": _merged_member_paths(capsule_members, keystore_members),
+    }
+    if capsule_members:
+        context["capsules_root_retired_matches"] = _root_relative_matches(capsule_members)
+    if keystore_members:
+        context["keystore_root_retired_matches"] = _root_relative_matches(keystore_members)
     raise ProfileCustodyRefusedError(
         ProfileCustodyRefusal.LEGACY_CUSTODY_DETECTED,
-        context={
-            "capsules_root": str(capsules_root),
-            "keystore_root": str(keystore_root),
-            "retired_member_paths": detected,
-        },
+        context=context,
         recovery_guidance=(
             ProfileCustodyRecoveryGuidance.DESTRUCTIVE_RESET,
             ProfileCustodyRecoveryGuidance.REENROLL_PROFILE,
         ),
     )
+
+
+def _retired_members_by_root(capsules_root: Path, *, keystore_root: Path) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    return (
+        _anchored_retired_member_paths(capsules_root, PROFILE_CUSTODY_RETIRED_BUCKET_MEMBER_PATHS),
+        _anchored_retired_member_paths(keystore_root, PROFILE_CUSTODY_RETIRED_KEYSTORE_MEMBER_PATHS),
+    )
+
+
+def _merged_member_paths(capsule_members: tuple[str, ...], keystore_members: tuple[str, ...]) -> tuple[str, ...]:
+    return tuple(sorted({*capsule_members, *keystore_members}))
+
+
+def _root_relative_matches(member_paths: tuple[str, ...]) -> tuple[str, ...]:
+    return tuple(f"{_RETIRED_MEMBER_CANDIDATE_GLOB}/{member_path}" for member_path in member_paths)
 
 
 def _anchored_retired_member_paths(scan_root: Path, member_paths: tuple[str, ...]) -> tuple[str, ...]:

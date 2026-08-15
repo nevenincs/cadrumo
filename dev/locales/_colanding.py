@@ -54,7 +54,6 @@ from dev._paths import REPO_ROOT
 
 from ._ast_scanner import declares_locale_keys, scan_source_text
 from ._errors import LocaleError
-from ._paths import LOCALES_DIR
 from .manager import LocaleManager, _parse_locale
 
 #: The change to compare when the caller names none. ``staged`` is the useful
@@ -103,10 +102,10 @@ class ColandingResult(BaseModel):
         return not self.findings
 
 
-def _git(*arguments: str) -> subprocess.CompletedProcess[str]:
+def _git(repo_root: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(  # noqa: S603 - fixed executable, arguments are internal
         ["git", *arguments],  # noqa: S607 - resolved from PATH, as every other dev tool here is
-        cwd=REPO_ROOT,
+        cwd=repo_root,
         capture_output=True,
         text=True,
         encoding=UTF_8_ENCODING,
@@ -115,23 +114,23 @@ def _git(*arguments: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def _blob(revision: str, path: str) -> str:
+def _blob(repo_root: Path, revision: str, path: str) -> str:
     """Return one path's content at ``revision``, or empty when it does not exist.
 
     An added file has no content at the base revision and a deleted file has none
     at the head; both read as an empty module, which is exactly right -- an added
     file declares every key it carries, and a deleted file declares none.
     """
-    result = _git("show", f"{revision}:{path}")
+    result = _git(repo_root, "show", f"{revision}:{path}")
     return result.stdout if result.returncode == 0 else ""
 
 
-def _changed_python_paths(base: str, head: str | None) -> tuple[str, ...]:
+def _changed_python_paths(repo_root: Path, base: str, head: str | None) -> tuple[str, ...]:
     """Return the repo-relative Python paths the change touches."""
     if head is None:
-        result = _git("diff", "--cached", "--name-only", "--diff-filter=ACMRD", base)
+        result = _git(repo_root, "diff", "--cached", "--name-only", "--diff-filter=ACMRD", base)
     else:
-        result = _git("diff", "--name-only", "--diff-filter=ACMRD", base, head)
+        result = _git(repo_root, "diff", "--name-only", "--diff-filter=ACMRD", base, head)
     if result.returncode != 0:
         raise LocaleError(f"could not list the changed files: {result.stderr.strip()}")
     return tuple(
@@ -141,8 +140,8 @@ def _changed_python_paths(base: str, head: str | None) -> tuple[str, ...]:
     )
 
 
-def _index_has_content() -> bool:
-    return _git("diff", "--cached", "--quiet").returncode != 0
+def _index_has_content(repo_root: Path) -> bool:
+    return _git(repo_root, "diff", "--cached", "--quiet").returncode != 0
 
 
 class _Change(BaseModel):
@@ -160,7 +159,7 @@ class _Change(BaseModel):
         return _INDEX_REV if self.head is None else self.head
 
 
-def resolve_change(selector: str) -> _Change:
+def resolve_change(selector: str, repo_root: Path = REPO_ROOT) -> _Change:
     """Resolve a change selector to the revision pair to compare.
 
     ``staged`` compares the index against ``HEAD`` and falls back to ``last``
@@ -169,9 +168,9 @@ def resolve_change(selector: str) -> _Change:
     a pull-request check names its own change with.
     """
     if selector == STAGED_CHANGE:
-        if _index_has_content():
+        if _index_has_content(repo_root):
             return _Change(label="staged changes against HEAD", base="HEAD")
-        return resolve_change(LAST_CHANGE)
+        return resolve_change(LAST_CHANGE, repo_root)
     if selector == LAST_CHANGE:
         return _Change(label="HEAD~1..HEAD", base="HEAD~1", head="HEAD")
     base, separator, head = selector.partition("..")
@@ -191,7 +190,7 @@ def _held_family_namespaces() -> frozenset[str]:
     )
 
 
-def _catalogue_key_sets(manager: LocaleManager, revision: str) -> dict[str, set[str]]:
+def _catalogue_key_sets(manager: LocaleManager, repo_root: Path, revision: str) -> dict[str, set[str]]:
     """Return each catalogue's key set as the change leaves it.
 
     Read from the revision rather than the working tree on purpose: the question
@@ -199,35 +198,39 @@ def _catalogue_key_sets(manager: LocaleManager, revision: str) -> dict[str, set[
     sitting in the checkout is not part of the change being judged.
     """
     key_sets: dict[str, set[str]] = {}
-    for locale_path in sorted(LOCALES_DIR.glob("*.yml")):
-        content = _blob(revision, locale_path.relative_to(REPO_ROOT).as_posix())
+    for locale_path in sorted(manager.locales_dir.glob("*.yml")):
+        content = _blob(repo_root, revision, locale_path.relative_to(repo_root).as_posix())
         if not content.strip():
             continue
         key_sets[locale_path.name] = manager.get_yaml_keys(_parse_locale(content))
     return key_sets
 
 
-def check_colanding(manager: LocaleManager, selector: str = STAGED_CHANGE) -> ColandingResult:
+def check_colanding(
+    manager: LocaleManager,
+    selector: str = STAGED_CHANGE,
+    repo_root: Path = REPO_ROOT,
+) -> ColandingResult:
     """Compare one change's locale-key delta against the catalogues it leaves.
 
     The full-tree confirmation behind the orphan invariant is deliberately lazy:
     it runs only when the change actually removed a call site, so an ordinary
     commit costs one ``git diff`` and a handful of blob reads.
     """
-    change = resolve_change(selector)
-    paths = _changed_python_paths(change.base, change.head)
+    change = resolve_change(selector, repo_root)
+    paths = _changed_python_paths(repo_root, change.base, change.head)
 
     before: set[str] = set()
     after: set[str] = set()
     for path in paths:
-        before |= scan_source_text(_blob(change.base, path), filename=path)
-        after |= scan_source_text(_blob(change.head_revision, path), filename=path)
+        before |= scan_source_text(_blob(repo_root, change.base, path), filename=path)
+        after |= scan_source_text(_blob(repo_root, change.head_revision, path), filename=path)
 
     added = sorted(after - before)
     removed = sorted(before - after)
 
     findings: list[ColandingFinding] = []
-    key_sets = _catalogue_key_sets(manager, change.head_revision) if (added or removed) else {}
+    key_sets = _catalogue_key_sets(manager, repo_root, change.head_revision) if (added or removed) else {}
 
     for key in added:
         absent = tuple(name for name, keys in sorted(key_sets.items()) if key not in keys)

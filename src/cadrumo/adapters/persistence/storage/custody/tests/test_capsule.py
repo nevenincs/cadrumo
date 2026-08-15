@@ -377,6 +377,7 @@ def test_discovery_refuses_a_retired_manifest_by_stat_only_without_opening_its_b
         "capsules_root": str(tmp_path / "buckets"),
         "keystore_root": str(tmp_path / "keystore"),
         "retired_member_paths": ("manifest.toml",),
+        "capsules_root_retired_matches": ("*/manifest.toml",),
     }
     assert opened_retired_paths == []
 
@@ -421,8 +422,70 @@ def test_discovery_refuses_a_retired_keystore_member_by_stat_only_without_openin
         "capsules_root": str(tmp_path / "buckets"),
         "keystore_root": str(tmp_path / "keystore"),
         "retired_member_paths": ("bucket.dek.json",),
+        "keystore_root_retired_matches": ("*/bucket.dek.json",),
     }
+    # The buckets root is still named -- it is part of the prescribed reset --
+    # but it contributes no match, so the operator is not sent looking for a
+    # retired member in a tree that has none.
+    assert "capsules_root_retired_matches" not in captured.value.context
     assert opened_retired_paths == []
+
+
+def test_a_store_retired_in_both_roots_pairs_each_match_with_the_root_it_was_found_under(
+    tmp_path: Path,
+) -> None:
+    """Two retired members must not collapse into an unpaired list of names.
+
+    A flat union answers "which member" but not "where", and the flat union
+    answers "where" only by accident when exactly one member is detected. The
+    operator's route from the refusal to its cause is the pairing, and it costs
+    no read: which name matched below which root is what the scan already
+    observed.
+    """
+    settings = _settings(tmp_path)
+    retired_manifest = tmp_path / "buckets" / str(_PROFILE_ID) / "manifest.toml"
+    retired_manifest.parent.mkdir(parents=True)
+    retired_manifest.write_bytes(b"retired manifest bytes must never be parsed")
+    retired_dek = tmp_path / "keystore" / str(_PROFILE_ID) / "bucket.dek.json"
+    retired_dek.parent.mkdir(parents=True)
+    retired_dek.write_bytes(b"retired wrapped DEK bytes must never be parsed")
+
+    with pytest.raises(ProfileCustodyRefusedError) as captured:
+        list_current_profile_custody_capsule_ids(settings=settings)
+
+    assert captured.value.context == {
+        "refusal": "LEGACY_CUSTODY_DETECTED",
+        "recovery_guidance": ("DESTRUCTIVE_RESET", "REENROLL_PROFILE"),
+        "capsules_root": str(tmp_path / "buckets"),
+        "keystore_root": str(tmp_path / "keystore"),
+        "retired_member_paths": ("bucket.dek.json", "manifest.toml"),
+        "capsules_root_retired_matches": ("*/manifest.toml",),
+        "keystore_root_retired_matches": ("*/bucket.dek.json",),
+    }
+
+
+def test_the_refusal_never_names_the_candidate_directory_it_found_a_retired_member_in(
+    tmp_path: Path,
+) -> None:
+    """The search pattern must stay a wildcard, never a resolved identity.
+
+    Disclosing the candidate name would assert that the directory IS a retired
+    profile -- an identity inferred from retired custody. The pattern is the
+    whole of what the operator gets, and it must remain unresolved.
+    """
+    settings = _settings(tmp_path)
+    retired_manifest = tmp_path / "buckets" / str(_PROFILE_ID) / "manifest.toml"
+    retired_manifest.parent.mkdir(parents=True)
+    retired_manifest.write_bytes(b"retired manifest bytes must never be parsed")
+
+    with pytest.raises(ProfileCustodyRefusedError) as captured:
+        list_current_profile_custody_capsule_ids(settings=settings)
+
+    rendered = " ".join(
+        str(value) for key, value in captured.value.context.items() if key not in {"capsules_root", "keystore_root"}
+    )
+    assert str(_PROFILE_ID) not in rendered
+    assert captured.value.context["capsules_root_retired_matches"] == ("*/manifest.toml",)
 
 
 def test_a_current_store_with_live_keystore_sidecars_is_not_refused(tmp_path: Path) -> None:

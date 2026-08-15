@@ -49688,12 +49688,24 @@ modelo:
       revision:
         '2025':
           casilla:
+            clave-identificacion:
+              label: Az azonosítás módjának kódja
+            clave-mercado:
+              label: A piac típuskódja
+            clave-representacion:
+              label: Az értékpapír megjelenítési kódja
+            clave-titularidad:
+              label: A tulajdonlás típuskódja
             clave-valor:
               help: null
               label: Az értékpapír típuskódja
             codigo-pais:
               help: null
               label: Országkód
+            codigo-provincia:
+              label: Tartománykód
+            declaracion-complementaria-sustitutiva:
+              label: Kiegészítő vagy helyettesítő bevallás
             declarado-nif:
               help: null
               label: A bejelentett fél adószáma
@@ -49703,18 +49715,38 @@ modelo:
             declarante-nif:
               help: null
               label: A bejelentő adószáma
+            declarante-razon-social:
+              label: A bejelentő cégneve
             ejercicio-declaracion:
               help: null
               label: A bevallás éve
+            identificacion-valores:
+              label: Az értékpapírok azonosítója
             nominal-unitario-valores:
               help: null
               label: Az értékpapírok egységnyi névértéke
+            numero-identificativo-anterior:
+              label: A korábbi bevallás azonosító száma
+            numero-justificante:
+              label: A bevallás igazolásszáma
+            numero-total-declarados:
+              label: A bejelentett felek teljes száma
             numero-valores:
               help: null
               label: Az értékpapírok száma
+            persona-relacion:
+              label: Kapcsolattartó személy
+            porcentaje-participacion:
+              label: Tulajdoni hányad százaléka
+            representante-legal-nif:
+              label: A törvényes képviselő adószáma
+            tipo-soporte:
+              label: Az adathordozó típusa
             valoracion:
               help: null
               label: Értékelés
+            valoracion-total:
+              label: Teljes értékelés
           field:
             label: null
     '190':

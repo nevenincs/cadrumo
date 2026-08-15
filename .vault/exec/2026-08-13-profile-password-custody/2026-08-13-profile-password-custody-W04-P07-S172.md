@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:aa2318540979850cfcbf5417706e5ab51a65f4f4477085ad41c4fd8cbe47eba0'
+body_hash: 'sha256:cf7fb11a032bdc4d66892a3c226799137973c6eeaf08c7d46deb677c811735a3'
 step_id: 'S172'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -26,6 +26,8 @@ related:
 - Declare all five in the error-code registry against existing four-locale
   message keys.
 - Prove each re-root bites by runtime patch from outside the tree.
+- Split the command-event refusal so the event-type half and the timestamp
+  half each report themselves.
 
 ## Notes
 
@@ -48,9 +50,10 @@ absorbed rather than negotiated: the ancestry stays.
 **THE REST OF THE CENSUS IS NEGATIVE, AND THE NEGATIVES MATTER AS MUCH.** No
 production handler catches `RuntimeError` anywhere on the custody crypto path;
 the only two in the tree are an asyncio guard in the inbound TUI and a PDF
-backend's optional-dependency arm. The two `except ValueError` sites inside the
-record module itself guard a strict JSON decode and an event-type/timestamp
-parse, so they see pydantic and builtin refusals, never these classes. The
+backend's optional-dependency arm. The `except ValueError` sites inside the
+record module itself guard a strict JSON decode, an event-type lookup and a
+timestamp parse, so they see pydantic and builtin refusals, never these
+classes. The
 crypto port's own two handlers are `except Exception`, which no re-root can
 change. The source mesh that drives the annual-summary resolver wraps no
 resolver call at all, and neither calculation-action module carries a
@@ -133,6 +136,42 @@ content is intact and verified present at head; what is lost is the
 attribution, which is exactly the shared-index hazard the worktree rule
 describes. Only a docstring cross-reference role adjustment remained
 uncommitted afterwards.
+
+**THE ROUTED-IN TYPING ITEM IS NOT A ONE-LINE CHANGE, AND MEASURING IT FIRST
+IS WHAT ESTABLISHED THAT.** The command-event model that still carries its
+event type as a bounded string is configured strict, and a strict pydantic enum
+field refuses a raw string even when that string is a valid member value. So
+narrowing the field is not a drop-in: every construction site must pass a
+member in the same change or refuse at runtime. There are four, not one. One is
+in the owned record module; two are in the record repository and one is in the
+user-profile test support module, all three owned elsewhere. The narrowing was
+therefore NOT landed here -- a half-landed version would leave every profile
+record write refusing, and this session has already had its working tree
+consumed by a peer's bare commit once, so a half-finished narrowing sitting
+uncommitted is a live hazard rather than a staging area. It is reported with
+the exact site list instead.
+
+**THE MODEL IS TRANSIENT, SO NO VERSIONING QUESTION ARISES.** The command event
+is never serialised: the only payload write in the module is the profile
+record's own JSON, and the command is converted into a bucket event whose type
+field is ALREADY the closed enum, with the durable digest preimage taking the
+member's value. The bytes on disk are identical either way, so the narrowing is
+not a persisted-shape change, needs no version bump, and must not acquire a
+fabricated upgrader or old-version fixture. The compatibility regime was
+confirmed pre-release for the record.
+
+**ONE HALF OF THE ITEM WAS INDEPENDENT AND WAS TAKEN.** The event builder ran
+the event-type lookup and the timestamp parse inside ONE try block reporting a
+single message that named only the event type, so a command carrying an
+unparsable instant was told its event type was wrong. That is a live false
+diagnostic today, independent of any typing decision, and it is the same shape
+the closed count-versus-key row corrected one function over in this same file.
+The two conditions are now two arms, each naming what it observed. No shipped
+assertion pinned the old combined wording. Six probe assertions from outside
+the tree drive both arms and require each refusal NOT to blame the other half,
+plus a well-formed command clearing both arms so the pair cannot pass for a
+builder that refuses everything. Narrowing the field later simply deletes the
+first arm; it does not have to reason about the message again.
 
 **A PRE-EXISTING VIOLATION SITS IN AN OWNED FILE AND WAS NOT ABSORBED.** The
 import hygiene gate is red on seven counts, none of them introduced here; one

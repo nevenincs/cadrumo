@@ -5,14 +5,11 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:6f1d2cd0b6433430fa49d7abbd1ea4da4e4598a656afb582c4ef5b56cb1e8d7f'
+body_hash: 'sha256:870fb37df881ffe8759d2a24d8125b89f03767ff221e6c4ed38ab7e24412de23'
 step_id: 'S186'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
-
-
-
 
 # Have Sol Medium land the two enrolment consequences of striking the duplicate version literals, retiring the three detector-table entries whose literals no longer exist and binding the newly named hold-evidence constant into the durability inventory as regenerable, since the detector and the binding gate each now fail on the tidier state they themselves demanded
 

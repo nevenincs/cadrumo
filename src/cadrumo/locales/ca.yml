@@ -49770,12 +49770,24 @@ modelo:
       revision:
         '2025':
           casilla:
+            clave-identificacion:
+              label: Clau d'identificació
+            clave-mercado:
+              label: Clau de mercat
+            clave-representacion:
+              label: Clau de representació
+            clave-titularidad:
+              label: Clau de titularitat
             clave-valor:
               help: null
               label: Clau de valor
             codigo-pais:
               help: null
               label: Codi de país
+            codigo-provincia:
+              label: Codi de província
+            declaracion-complementaria-sustitutiva:
+              label: Declaració complementària o substitutiva
             declarado-nif:
               help: null
               label: NIF del declarat
@@ -49785,18 +49797,38 @@ modelo:
             declarante-nif:
               help: null
               label: NIF del declarant
+            declarante-razon-social:
+              label: Raó social del declarant
             ejercicio-declaracion:
               help: null
               label: Exercici de declaració
+            identificacion-valores:
+              label: Identificació dels valors
             nominal-unitario-valores:
               help: null
               label: Nominal unitari dels valors
+            numero-identificativo-anterior:
+              label: Número identificatiu de la declaració anterior
+            numero-justificante:
+              label: Número de justificant de la declaració
+            numero-total-declarados:
+              label: Nombre total de declarats
             numero-valores:
               help: null
               label: Nombre de valors
+            persona-relacion:
+              label: Persona amb qui relacionar-se
+            porcentaje-participacion:
+              label: Percentatge de participació
+            representante-legal-nif:
+              label: NIF del representant legal
+            tipo-soporte:
+              label: Tipus de suport
             valoracion:
               help: null
               label: Valoració
+            valoracion-total:
+              label: Valoració total
           field:
             label: null
     '190':

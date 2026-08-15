@@ -49014,12 +49014,24 @@ modelo:
       revision:
         '2025':
           casilla:
+            clave-identificacion:
+              label: Identification method code
+            clave-mercado:
+              label: Market type code
+            clave-representacion:
+              label: Securities representation code
+            clave-titularidad:
+              label: Ownership type code
             clave-valor:
               help: null
               label: Security type code
             codigo-pais:
               help: null
               label: Country code
+            codigo-provincia:
+              label: Province code
+            declaracion-complementaria-sustitutiva:
+              label: Supplementary or replacement return
             declarado-nif:
               help: null
               label: Tax ID of the reported holder
@@ -49030,18 +49042,38 @@ modelo:
             declarante-nif:
               help: null
               label: Tax ID of the filer
+            declarante-razon-social:
+              label: Business name of the filer
             ejercicio-declaracion:
               help: null
               label: Filing year
+            identificacion-valores:
+              label: Securities identifier
             nominal-unitario-valores:
               help: null
               label: Unit nominal value of the securities
+            numero-identificativo-anterior:
+              label: Identifying number of the previous return
+            numero-justificante:
+              label: Filing receipt number
+            numero-total-declarados:
+              label: Total number of reported holders
             numero-valores:
               help: null
               label: Number of securities
+            persona-relacion:
+              label: Contact person
+            porcentaje-participacion:
+              label: Ownership percentage
+            representante-legal-nif:
+              label: Tax ID of the legal representative
+            tipo-soporte:
+              label: Submission medium
             valoracion:
               help: null
               label: Valuation
+            valoracion-total:
+              label: Total valuation
           field:
             label: null
     '190':

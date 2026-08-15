@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:5157ba435dbaacadba7b80763d298906353b0040215d83552de1a443dcc824e5'
+body_hash: 'sha256:6e73c6420c3d69d604319b5973057accc28faa40bbbc4ae3bc1990e7991ada31'
 step_id: 'S171'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -143,13 +143,15 @@ plus this one preimage row equals fourteen; the preimage row and the
 rehoming ledger's separate `historical_old_value_source` field are both
 correctly-preserved history, not drift.
 
-**Landing.** All edits to `dev/quality/*.toml` were captured by a peer's broad
-sweep commit (`registry: continue authority-grade sweep (round 64)`,
-`7bcadaf18b`) before this session committed anything, consistent with this
-worktree's heavy concurrent-commit cadence (HEAD advanced from round 59 to
-round 65 over the course of this Step). Confirmed post-hoc against `git show`
-that the landed diff is byte-identical to the intended edit, and that neither
-file shows further modification in `git status`.
+**Landing.** Both edits were captured by peer broad-sweep commits rather than
+committed by this session: `error_code_default_recovery_rehoming.toml` in
+`registry: continue authority-grade sweep (round 63)` (`715001d055`), and
+`cli_action_census_dispositions.toml` in `registry: continue authority-grade
+sweep (round 64)` (`7bcadaf18b`), consistent with this worktree's heavy
+concurrent-commit cadence (HEAD advanced from round 59 to round 65 over the
+course of this Step). Confirmed post-hoc against `git show` that each landed
+diff is byte-identical to the intended edit, and that neither file shows
+further modification in `git status`.
 
 ## Notes
 

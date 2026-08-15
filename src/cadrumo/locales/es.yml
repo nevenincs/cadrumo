@@ -52076,12 +52076,24 @@ modelo:
       revision:
         '2025':
           casilla:
+            clave-identificacion:
+              label: Clave de identificacion
+            clave-mercado:
+              label: Clave de mercado
+            clave-representacion:
+              label: Clave de representacion
+            clave-titularidad:
+              label: Clave de titularidad
             clave-valor:
               help: null
               label: Clave de valor
             codigo-pais:
               help: null
               label: Codigo pais
+            codigo-provincia:
+              label: Codigo provincia
+            declaracion-complementaria-sustitutiva:
+              label: Declaracion complementaria o sustitutiva
             declarado-nif:
               help: null
               label: NIF del declarado
@@ -52091,18 +52103,38 @@ modelo:
             declarante-nif:
               help: null
               label: NIF del declarante
+            declarante-razon-social:
+              label: Razon social del declarante
             ejercicio-declaracion:
               help: null
               label: Ejercicio de declaracion
+            identificacion-valores:
+              label: Identificacion de los valores
             nominal-unitario-valores:
               help: null
               label: Nominal unitario de los valores
+            numero-identificativo-anterior:
+              label: Numero identificativo de la declaracion anterior
+            numero-justificante:
+              label: Numero de justificante de la declaracion
+            numero-total-declarados:
+              label: Numero total de declarados
             numero-valores:
               help: null
               label: Numero de valores
+            persona-relacion:
+              label: Persona con quien relacionarse
+            porcentaje-participacion:
+              label: Porcentaje de participacion
+            representante-legal-nif:
+              label: NIF del representante legal
+            tipo-soporte:
+              label: Tipo de soporte
             valoracion:
               help: null
               label: Valoracion
+            valoracion-total:
+              label: Valoracion total
           field:
             label: Modelo 189 ejercicio 2025 (Orden EHA/3481/2008; Ordenes HFP/1180/2023,
               HFP/1284/2023 y HAC/132/2026)
