@@ -24,7 +24,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # no `__init__.py` (they are a data tree, not a package chain), so this module
 # is imported in rootdir mode and a relative import cannot reach `cadrumo`.
 # The sibling `dev.*` imports above are absolute for the same reason.
-normalise_corpus_text = importlib.import_module("cadrumo.core").normalise_corpus_text
+_core = importlib.import_module("cadrumo.core")
+normalise_corpus_text = _core.normalise_corpus_text
+DirectoryEntryKind = _core.DirectoryEntryKind
+scan_directory = _core.scan_directory
 
 # src/cadrumo/_data/corpus/tests/test_extraction_sidecar_freshness.py -> parents[5] is repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[5]
@@ -80,7 +83,7 @@ def _is_legal_citation_evidence_sidecar(json_path: Path) -> bool:
 def test_normative_html_sources_use_canonical_lf_bytes() -> None:
     """Normative HTML hashes must be identical on Windows and Unix checkouts."""
     html_root = _CORPUS_ROOT / "normatives" / "html"
-    sources = sorted(html_root.glob("*.html"))
+    sources = scan_directory(html_root, pattern="*.html")
     noncanonical = [source.name for source in sources if b"\r" in source.read_bytes()]
 
     assert sources, "no normative HTML sources found"
@@ -90,15 +93,15 @@ def test_normative_html_sources_use_canonical_lf_bytes() -> None:
 def test_normative_html_sidecars_equal_current_production_extraction() -> None:
     """Committed normative records are exact outputs of the live extractor."""
     html_root = _CORPUS_ROOT / "normatives" / "html"
-    sources = sorted(html_root.glob("*.html"))
+    sources = scan_directory(html_root, pattern="*.html")
     failures: list[str] = []
 
     for source in sources:
-        json_paths = sorted(
+        json_paths = [
             path
-            for path in html_root.glob(f"{source.name}*{EXTRACTED_JSON_SUFFIX}")
+            for path in scan_directory(html_root, pattern=f"{source.name}*{EXTRACTED_JSON_SUFFIX}")
             if _matches_origin_name(path.name, source.name)
-        )
+        ]
         if not json_paths:
             continue
         committed = [PreprocessOutput.model_validate_json(path.read_text(encoding="utf-8")) for path in json_paths]
@@ -113,7 +116,7 @@ def test_normative_html_sidecars_equal_current_production_extraction() -> None:
 def test_committed_extraction_sidecars_match_current_sources() -> None:
     """Every committed extraction sidecar still matches its source bytes."""
     failures: list[str] = []
-    sidecars = sorted(_CORPUS_ROOT.rglob(f"*{EXTRACTED_JSON_SUFFIX}"))
+    sidecars = scan_directory(_CORPUS_ROOT, pattern=f"*{EXTRACTED_JSON_SUFFIX}", recursive=True)
 
     for json_path in sidecars:
         if _is_legal_citation_evidence_sidecar(json_path):
@@ -158,7 +161,7 @@ def test_manual_pdf_corpus_text_sidecars_exist_and_match_source_sha256() -> None
     any corpus PDF changed, so the shipped sidecars are always in sync with
     the source PDFs that _validate_evidence._read_manual_pdf_sidecar reads.
     """
-    sidecars = sorted(_MANUAL_CORPUS_TEXT_ROOT.rglob(f"*{_CORPUS_TEXT_SUFFIX}"))
+    sidecars = scan_directory(_MANUAL_CORPUS_TEXT_ROOT, pattern=f"*{_CORPUS_TEXT_SUFFIX}", recursive=True)
     failures: list[str] = []
 
     for sidecar_path in sidecars:
@@ -215,7 +218,7 @@ def test_manual_pdf_corpus_text_sidecars_exist_and_match_source_sha256() -> None
 
 def test_every_corpus_pdf_has_a_corpus_text_sidecar() -> None:
     """Every bundled PDF is represented in the shipped searchable text corpus."""
-    pdfs = sorted(_CORPUS_ROOT.rglob("*.pdf"))
+    pdfs = scan_directory(_CORPUS_ROOT, pattern="*.pdf", recursive=True)
     missing: list[str] = []
 
     for pdf_path in pdfs:
@@ -244,7 +247,7 @@ def test_pdf_corpus_text_sidecars_equal_current_production_extraction() -> None:
     variance never reaches the product.
     """
     failures: list[str] = []
-    sidecars = sorted(_MANUAL_CORPUS_TEXT_ROOT.rglob(f"*{_CORPUS_TEXT_SUFFIX}"))
+    sidecars = scan_directory(_MANUAL_CORPUS_TEXT_ROOT, pattern=f"*{_CORPUS_TEXT_SUFFIX}", recursive=True)
 
     for sidecar_path in sidecars:
         rel_sidecar = sidecar_path.relative_to(_REPO_ROOT).as_posix()
@@ -285,10 +288,10 @@ def test_every_record_design_workbook_has_extraction_sidecars() -> None:
     missing: list[str] = []
     workbook_root = _CORPUS_ROOT / "aeat_official" / "disenos_registro"
 
-    for source in sorted(workbook_root.rglob("*")):
-        if not source.is_file() or source.suffix.lower() not in workbook_suffixes:
+    for source in scan_directory(workbook_root, recursive=True, select=DirectoryEntryKind.FILES):
+        if source.suffix.lower() not in workbook_suffixes:
             continue
-        json_sidecars = sorted(source.parent.glob(f"{source.name}*.extracted.json"))
+        json_sidecars = scan_directory(source.parent, pattern=f"{source.name}*.extracted.json")
         if not json_sidecars or any(not path.with_suffix(".md").is_file() for path in json_sidecars):
             missing.append(source.relative_to(_REPO_ROOT).as_posix())
 

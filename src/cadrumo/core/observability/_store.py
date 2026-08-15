@@ -28,7 +28,7 @@ from typing import Never
 
 from pydantic import ValidationError
 
-from .. import StorageCategory, storage_path
+from .. import StorageCategory, scan_directory, storage_path
 from ..atomic_write import atomic_write_text
 from ..config import Settings, load_settings
 from ..logging import get_logger
@@ -470,7 +470,7 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
     if not base.is_dir():
         return
     try:
-        entries = tuple(base.iterdir())
+        entries = scan_directory(base, require_root=True)
     except OSError as exc:
         _raise_persistence_error("iter_runs", base, exc)
     for entry in entries:
@@ -573,7 +573,7 @@ def prune_run_traces(
     cutoff = now() - timedelta(days=effective_retention_days)
     base = runs_dir(cfg)
     try:
-        entries = tuple(base.iterdir())
+        entries = scan_directory(base, require_root=True)
     except OSError:
         _logger.debug("prune_run_traces: runs directory not enumerable at %s", base, exc_info=True)
         return 0

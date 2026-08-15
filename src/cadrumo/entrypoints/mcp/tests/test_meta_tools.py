@@ -11,6 +11,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import PRODUCT_IDENTITY
+from ....tests.declared_command_risk import declared_live_write
 from .._annotations import McpAnnotations
 from .._input_schema import VerbInputSchema
 from .._meta_tools import (
@@ -30,7 +31,6 @@ from .._server import (
 )
 from .._tools import McpToolDescriptor, build_tool_descriptors
 from .._transport import _run_subprocess_tool
-from ._risk_table_support import declared_live_write
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

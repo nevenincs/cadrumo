@@ -30,6 +30,7 @@ import sys
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core import iter_directory, scan_directory
 from dev._paths import UTF_8
 
 _UTF_8: Final = UTF_8
@@ -53,7 +54,7 @@ def sweep_directory_for_leaks(directory: Path, *, tokens: tuple[str, ...] = ()) 
     if not directory.is_dir():
         raise EvidenceLeakSweepError(f"leak-sweep directory does not exist: {directory}")
     leaks: list[str] = []
-    for path in sorted(p for p in directory.rglob("*") if p.is_file()):
+    for path in (p for p in scan_directory(directory, recursive=True) if p.is_file()):
         label = path.relative_to(directory).as_posix()
         document: dict[str, object]
         if path.suffix == ".json":
@@ -84,7 +85,9 @@ def _leak_sweep(args: argparse.Namespace) -> int:
         raise EvidenceLeakSweepError(
             "publication leak sweep failed:\n" + "\n".join(f"  - {leak}" for leak in leaks),
         )
-    files = sum(1 for directory in directories for path in directory.rglob("*") if path.is_file())
+    files = sum(
+        1 for directory in directories for path in iter_directory(directory, recursive=True) if path.is_file()
+    )
     print(f"leak sweep clean: {files} file(s) under {len(directories)} directory(ies)")
     return 0
 

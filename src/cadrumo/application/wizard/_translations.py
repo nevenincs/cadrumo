@@ -20,6 +20,7 @@ import re
 from collections.abc import Iterable
 from pathlib import Path
 
+from ...core import scan_directory
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ._catalogue import WIZARD_FLOWS
 from ._models import WizardFlow, WizardQuestion
@@ -111,7 +112,7 @@ def cli_keys_referenced_in_source() -> tuple[str, ...]:
     descriptor catalogue instead.
     """
     keys: set[str] = set()
-    for module in _cli_entrypoints_root().rglob("*.py"):
+    for module in scan_directory(_cli_entrypoints_root(), pattern="*.py", recursive=True):
         # Test modules cite translation-key prefixes in assertions
         # (e.g. `"cli.app.live.iva_wallet.acquisition.outcome"` used as a
         # leak-detection sentinel in `not in label` checks). Those are

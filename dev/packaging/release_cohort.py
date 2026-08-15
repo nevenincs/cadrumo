@@ -28,6 +28,8 @@ for _import_root in (str(_REPO_ROOT), str(_SOURCE_ROOT)):
 if not __package__:
     __package__ = "dev.packaging"
 
+from cadrumo.core import scan_directory  # noqa: E402
+
 from ._hashing import sha256_path  # noqa: E402
 from .cohort_manifest import (  # noqa: E402
     ArtifactKind,
@@ -97,7 +99,7 @@ def _safe_new_output(output_dir: Path, *, repo_root: Path) -> Path:
 def deterministic_zip_tree(source: Path, destination: Path) -> Path:
     """Archive a real directory tree with stable paths, metadata, and bytes."""
     root = source.resolve(strict=True)
-    files = tuple(path for path in sorted(root.rglob("*")) if path.is_file())
+    files = tuple(path for path in scan_directory(root, recursive=True) if path.is_file())
     if not files:
         raise ValueError(f"cannot archive an empty artifact tree: {root}")
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -391,7 +393,7 @@ def build_from_clean_source(
     )
     write_manifest(output, manifest)
     declared = {record.path for record in manifest.artifacts} | {"release-cohort.json"}
-    observed = {path.relative_to(output).as_posix() for path in output.rglob("*") if path.is_file()}
+    observed = {path.relative_to(output).as_posix() for path in scan_directory(output, recursive=True) if path.is_file()}
     if observed != declared:
         raise SystemExit(
             "release cohort contains undeclared or missing files: "

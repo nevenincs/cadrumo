@@ -9,6 +9,7 @@ from pathlib import Path
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
+from .....core import scan_directory
 from .....core.resources import bundled_path
 from .. import (
     CasillaFieldKind,
@@ -139,11 +140,11 @@ def _fixed_export_selectors(
 
 
 def _record_design_pdf_files() -> tuple[Path, ...]:
-    # rglob, not the fixed-depth "modelo_*/files/*.pdf": Modelo 210 keeps
+    # Recursive, not the fixed-depth "modelo_*/files/*.pdf": Modelo 210 keeps
     # dr210_2011.pdf directly in its modelo directory rather than under
     # files/, and the fixed-depth glob silently dropped it from the corpus
     # this function's callers assert coverage over.
-    return tuple(sorted(_RECORD_DESIGN_ROOT.rglob("*.pdf")))
+    return scan_directory(_RECORD_DESIGN_ROOT, pattern="*.pdf", recursive=True)
 
 
 def _record_design_pdf(*path_parts: str) -> Path:

@@ -26,8 +26,7 @@ import pytest
 
 from ....application.wizard import load_active_taxpayer_profile
 from ....application.workflow import workflow_state_repository
-from ....tests.pdf_fixtures import text_pdf_bytes
-from ._ledger_ux_support import _invoke, _open_bucket_session
+from ._ledger_ux_support import _add_evidence, _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_open_bucket_session"]
@@ -53,20 +52,6 @@ def _invoice_lines(tax_id: str, *, number: str) -> tuple[str, ...]:
 def _own_tax_id() -> str:
     """Return the active profile's own tax id, as the running app sees it."""
     return str(load_active_taxpayer_profile(workflow_state_repository().load()).tax_id)
-
-
-def _add_evidence(tmp_path: Path, lines: tuple[str, ...], *, filename: str) -> str:
-    pdf = tmp_path / filename
-    pdf.write_bytes(text_pdf_bytes(lines))
-    added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", str(pdf), "--supplier", "Acme SL"])
-    assert added.exit_code == 0, added.output
-    payload = json.loads(added.output)
-    assert isinstance(payload, dict), added.output
-    body = payload.get("result")
-    assert isinstance(body, dict), added.output
-    evidence_id = body.get("evidence_id")
-    assert isinstance(evidence_id, str), added.output
-    return evidence_id
 
 
 def test_an_invoice_reading_back_the_filers_own_nif_is_refused(tmp_path: Path) -> None:

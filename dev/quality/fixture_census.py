@@ -55,6 +55,7 @@ from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core import DirectoryEntryKind, scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
@@ -443,7 +444,15 @@ def iter_source_files(repo_root: Path = REPO_ROOT) -> tuple[Path, ...]:
         source_root = root / relative_root
         if not source_root.is_dir():
             raise FixtureCensusError(f"fixture census requires source root {relative_root!r} at {root}")
-        files.extend(path for path in source_root.rglob("*.py") if path.is_file())
+        files.extend(
+            scan_directory(
+                source_root,
+                pattern="*.py",
+                recursive=True,
+                select=DirectoryEntryKind.FILES,
+                prune_directories=("__pycache__",),
+            )
+        )
 
     included = [path for path in files if not _relative_path(path, root).startswith(f"{_EXCLUDED_PREFIX.as_posix()}/")]
     return tuple(sorted(set(included), key=lambda path: _relative_path(path, root)))

@@ -25,6 +25,7 @@ import tomllib
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core import scan_directory
 from dev._paths import UTF_8
 
 #: Declared locally rather than imported from ``cadrumo.core``: ``dev/`` is
@@ -54,7 +55,7 @@ def load_legal_entries(root: Path) -> dict[str, dict[str, object]]:
     if not legal_dir.is_dir():
         raise SystemExit(f"legal catalogue is missing, so the result would be meaningless: {legal_dir}")
     entries: dict[str, dict[str, object]] = {}
-    for path in sorted(legal_dir.glob("*.toml")):
+    for path in scan_directory(legal_dir, pattern="*.toml"):
         data = tomllib.loads(path.read_text(encoding=_UTF_8))
         for entry_id, body in data.get("legal", {}).items():
             entries[entry_id] = body

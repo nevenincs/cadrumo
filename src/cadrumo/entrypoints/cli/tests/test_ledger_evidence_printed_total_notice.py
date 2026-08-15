@@ -40,8 +40,7 @@ from ....tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from ....tests.pdf_fixtures import text_pdf_bytes
-from ._ledger_ux_support import _invoke, _open_bucket_session
+from ._ledger_ux_support import _add_evidence, _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_open_bucket_session"]
@@ -153,20 +152,6 @@ def _loopback_reader() -> Iterator[None]:
         override_settings(cadrumo_llm_ollama_chat_url=chat_url),
     ):
         yield
-
-
-def _add_evidence(tmp_path: Path, lines: tuple[str, ...], *, filename: str) -> str:
-    pdf = tmp_path / filename
-    pdf.write_bytes(text_pdf_bytes(lines))
-    added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", str(pdf), "--supplier", "Acme SL"])
-    assert added.exit_code == 0, added.output
-    payload = json.loads(added.output)
-    assert isinstance(payload, dict), added.output
-    body = payload.get("result")
-    assert isinstance(body, dict), added.output
-    evidence_id = body.get("evidence_id")
-    assert isinstance(evidence_id, str), added.output
-    return evidence_id
 
 
 _UNRESOLVED_BLOCKER_ID = re.compile(r"Unresolved: ([0-9a-f]+) \(closure_discrepancy\)")

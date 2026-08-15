@@ -36,6 +36,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
+from ....core import DirectoryEntryKind, scan_directory
 from ....tests.bucket_layout import provision_bucket_directory
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import BucketMaintenanceService, DiskUsageBucketCommand
@@ -66,8 +67,8 @@ def test_disk_usage_reports_two_fixed_subdir_rows(runtime: TestRuntimeProfile) -
 
 def test_disk_usage_db_row_reflects_the_real_sqlite_file_and_manifest(runtime: TestRuntimeProfile) -> None:
     """The ``db`` row's byte total matches the real on-disk database file plus the manifest."""
-    db_files = list(runtime.paths.db_dir.rglob("*"))
-    db_file_bytes = sum(f.stat().st_size for f in db_files if f.is_file())
+    db_files = scan_directory(runtime.paths.db_dir, recursive=True, select=DirectoryEntryKind.FILES)
+    db_file_bytes = sum(f.stat().st_size for f in db_files)
     manifest_bytes = manifest_path(runtime.paths).stat().st_size
 
     result = BucketMaintenanceService().disk_usage(DiskUsageBucketCommand(bucket_id=runtime.bucket_id))

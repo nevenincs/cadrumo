@@ -67,6 +67,7 @@ from typing import Final
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 from .._html import build_outputs
@@ -130,7 +131,7 @@ def _provenance_bearing_sidecars(
     """
     found: list[tuple[Path, PreprocessOutput]] = []
     unloadable: list[str] = []
-    for json_path in sorted(corpus_root.rglob(f"*{EXTRACTED_JSON_SUFFIX}")):
+    for json_path in scan_directory(corpus_root, pattern=f"*{EXTRACTED_JSON_SUFFIX}", recursive=True):
         raw = json_path.read_text(encoding=_UTF_8)
         try:
             document = json.loads(raw)

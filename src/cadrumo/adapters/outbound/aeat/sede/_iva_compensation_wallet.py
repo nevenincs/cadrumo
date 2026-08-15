@@ -21,7 +21,7 @@ from urllib.parse import quote, urljoin, urlsplit
 
 from pydantic import AnyUrl
 
-from .....core import Period
+from .....core import Period, scan_directory
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings, load_settings
 from .....core.external_constants import UTF_8_ENCODING
@@ -852,7 +852,7 @@ def prune_wallet_diagnostic_dumps(
     )
     cutoff = now() - timedelta(days=effective_retention_days)
     try:
-        entries = tuple(dump_dir.iterdir())
+        entries = scan_directory(dump_dir, require_root=True)
     except OSError:
         log.debug("wallet diagnostic: dump dir not enumerable at %s", dump_dir, exc_info=True)
         return 0

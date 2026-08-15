@@ -22,6 +22,7 @@ if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
 if not __package__:
     __package__ = "dev.docs"
 
+from cadrumo.core import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
@@ -256,7 +257,7 @@ def _single_page_source_set(docs_root: Path, targets: list[Path]) -> list[str]:
         (docs_root / "_inventories").resolve(),
     }
     sources: list[str] = []
-    for source in sorted(docs_root.rglob("*")):
+    for source in scan_directory(docs_root, recursive=True):
         if source.suffix not in DOC_SUFFIXES:
             continue
         resolved = source.resolve()
@@ -382,7 +383,7 @@ def remove_orphan_pages(docs_root: Path, html_root: Path, repo_root: Path) -> in
     if not html_root.exists():
         return 0
     removed = 0
-    for page in html_root.rglob("*.html"):
+    for page in scan_directory(html_root, pattern="*.html", recursive=True):
         rel = page.relative_to(html_root)
         if rel.as_posix() in _ORPHAN_SPECIAL_PAGES or rel.parts[0] in _ORPHAN_SKIP_DIRS:
             continue
@@ -411,7 +412,7 @@ def remove_noncanonical_build_entries(docs_root: Path) -> None:
     if not build_root.exists():
         return
     allowed = (build_root / "html").resolve()
-    for entry in build_root.iterdir():
+    for entry in scan_directory(build_root):
         resolved = entry.resolve()
         if resolved == allowed:
             continue
@@ -622,7 +623,7 @@ def _sitemap_page_url(base_url: str, rel_posix: str) -> str:
 def _sitemap_urls(html_root: Path, base_url: str) -> list[str]:
     """Return the deterministic canonical human-page URL set for the sitemap."""
     urls: set[str] = set()
-    for page in sorted(html_root.rglob("*.html")):
+    for page in scan_directory(html_root, pattern="*.html", recursive=True):
         rel = page.relative_to(html_root)
         parts = rel.parts
         if parts[0] in _SITEMAP_EXCLUDED_ROOTS:

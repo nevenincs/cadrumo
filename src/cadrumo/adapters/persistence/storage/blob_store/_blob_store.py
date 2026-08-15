@@ -41,6 +41,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ValidationError
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import scan_directory
 from .....core.atomic_write import atomic_write_bytes
 from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
 from .....core.external_constants import BINARY_MIME_TYPE
@@ -619,10 +620,10 @@ class EncryptedBlobStore:
         blobs_dir = self._root_dir / _BLOB_STORE_DIRNAME
         if not blobs_dir.exists():
             return
-        for shard_dir in sorted(blobs_dir.iterdir()):
+        for shard_dir in scan_directory(blobs_dir):
             if not shard_dir.is_dir():
                 continue
-            for manifest_path in sorted(shard_dir.glob("*.manifest.json")):
+            for manifest_path in scan_directory(shard_dir, pattern="*.manifest.json"):
                 # Single read + inline gate: iter_manifests is
                 # classification-class-agnostic at the API surface, so the
                 # schema-version contract is the only *expectation* gate here.

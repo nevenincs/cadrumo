@@ -39,7 +39,7 @@ from datetime import date
 from enum import StrEnum
 from pathlib import Path
 
-from cadrumo.core import ConceptLifecycle
+from cadrumo.core import ConceptLifecycle, iter_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
 from ._enrolment import EnrolmentCandidate
@@ -294,7 +294,7 @@ def scaffold_handbook(
 
 
 def _load_existing(concepts_dir: Path) -> dict[str, ConceptRecord]:
-    if not concepts_dir.is_dir() or not any(concepts_dir.glob("*.toml")):
+    if not concepts_dir.is_dir() or not any(iter_directory(concepts_dir, pattern="*.toml")):
         return {}
     handbook = load_terminology_handbook(concepts_dir)
     return dict(handbook.by_id)

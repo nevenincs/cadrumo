@@ -26,6 +26,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import DirectoryEntryKind, iter_directory
 from .....core.hashing import sha256_hex
 from .._errors import OutboundStorageIntegrityError, OutboundStorageValidationError
 from .._local import LocalFileSystemProvider
@@ -41,8 +42,12 @@ def _stored(tmp_path: Path, payload: bytes) -> tuple[LocalFileSystemProvider, Pa
     provider = LocalFileSystemProvider(tmp_path / "vault")
     provider.put(_NAMESPACE, _HMAC, payload, content_hash=f"sha256-{sha256_hex(payload)}", label="obj")
     root = tmp_path / "vault"
-    sidecar = next(root.rglob("*.json"))
-    blob = next(p for p in root.rglob("*") if p.is_file() and p.suffix != ".json")
+    sidecar = next(iter_directory(root, pattern="*.json", recursive=True))
+    blob = next(
+        p
+        for p in iter_directory(root, recursive=True, select=DirectoryEntryKind.FILES)
+        if p.suffix != ".json"
+    )
     return provider, blob, sidecar
 
 

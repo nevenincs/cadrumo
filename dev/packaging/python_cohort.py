@@ -15,6 +15,7 @@ from typing import Any, Final
 
 from packaging.requirements import Requirement
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
@@ -108,7 +109,7 @@ def _run(argv: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
 
 
 def _single(directory: Path, pattern: str, *, label: str) -> Path:
-    matches = tuple(sorted(directory.glob(pattern)))
+    matches = scan_directory(directory, pattern=pattern)
     if len(matches) != 1:
         raise SystemExit(
             f"expected exactly one {label} matching {pattern!r} in {directory}; "
@@ -466,7 +467,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
     declared_files = {str(name) for name in artifacts.values()} | {_MANIFEST_NAME}
     observed_files = {
         path.relative_to(cohort_dir).as_posix()
-        for path in cohort_dir.rglob("*")
+        for path in scan_directory(cohort_dir, recursive=True)
         if path.is_file() and path.name not in _BUILD_TOOL_EMITTED_FILES
     }
     if observed_files != declared_files:

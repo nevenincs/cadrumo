@@ -35,7 +35,13 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, ConceptLifecycle, fold_diacritics
+from ...core import (
+    OBJECT_TUPLE_ADAPTER,
+    STR_KEYED_MAPPING_ADAPTER,
+    ConceptLifecycle,
+    fold_diacritics,
+    scan_directory,
+)
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.resources import bundled_path
@@ -259,7 +265,7 @@ def load_terminology_concepts(locale: str = _FALLBACK_LOCALE) -> tuple[Terminolo
     """
     root = _terminology_root()
     concepts: list[TerminologyConcept] = []
-    for path in sorted(root.glob("*.toml"), key=lambda item: item.name):
+    for path in scan_directory(root, pattern="*.toml"):
         payload = tomllib.loads(path.read_text(encoding=UTF_8_ENCODING))
         projected = _project_concept(payload, locale=locale)
         if projected is not None:

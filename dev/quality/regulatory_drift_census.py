@@ -76,6 +76,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core import DirectoryEntryKind, scan_directory
 from dev._paths import REPO_ROOT
 
 SOURCE_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo"
@@ -302,7 +303,7 @@ def repo_relative(path: Path) -> str:
 
 def _iter_python_files(*, scope: str) -> Iterator[Path]:
     for root in (SOURCE_ROOT, DEV_ROOT):
-        for path in sorted(root.rglob("*.py")):
+        for path in scan_directory(root, pattern="*.py", recursive=True, prune_directories=("__pycache__",)):
             if is_test_path(path) is not (scope == "tests"):
                 continue
             if path.resolve() in {home.resolve() for home in SANCTIONED_PYTHON_HOMES}:
@@ -536,9 +537,7 @@ def _dev_data_findings() -> Iterator[Finding]:
         if not directory.is_dir():
             continue
         groups: dict[str, int] = {}
-        for path in sorted(directory.rglob("*")):
-            if not path.is_file():
-                continue
+        for path in scan_directory(directory, recursive=True, select=DirectoryEntryKind.FILES):
             relative = path.relative_to(directory).parts
             group = "/".join(relative[:2]) if len(relative) > 2 else "/".join(relative[:-1]) or "."
             groups[group] = groups.get(group, 0) + 1

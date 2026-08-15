@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.core import iter_directory, scan_directory
 from dev._paths import REPO_ROOT
 
 from ..apidocs import ApiStubManager
@@ -38,7 +39,7 @@ def test_every_source_module_has_a_stub() -> None:
     # Proof of scan: a walk that found no modules reports exactly what a
     # conformant tree reports, so the clean result below is only evidence
     # if the source tree was genuinely enumerated.
-    assert any(_SRC_CADRUMO.rglob("*.py")), (
+    assert any(iter_directory(_SRC_CADRUMO, pattern="*.py", recursive=True)), (
         f"no source modules found under {_SRC_CADRUMO}; the stub check scanned nothing"
     )
 
@@ -70,7 +71,7 @@ def test_the_committed_stub_tree_carries_untranslated_terminators() -> None:
     separator is not already LF, which is where the drift was measured; on a
     line-feed platform it holds trivially and costs nothing.
     """
-    rst_paths = sorted(_DOCS_API.glob("*.rst"))
+    rst_paths = scan_directory(_DOCS_API, pattern="*.rst")
     assert rst_paths, f"no stub files found under {_DOCS_API}; this gate scanned nothing"
 
     translated = [rst_path.name for rst_path in rst_paths if b"\r\n" in rst_path.read_bytes()]

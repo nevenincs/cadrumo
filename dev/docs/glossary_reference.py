@@ -46,7 +46,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
-from cadrumo.core import ConceptLifecycle
+from cadrumo.core import ConceptLifecycle, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import UTF_8
 
@@ -106,7 +106,7 @@ def _legal_permalinks(repo_root: Path) -> dict[str, LegalGrounding]:
     grounding: dict[str, LegalGrounding] = {}
     if not catalogue.is_dir():
         return grounding
-    for fragment in sorted(catalogue.glob("*.toml")):
+    for fragment in scan_directory(catalogue, pattern="*.toml"):
         try:
             data = cast(dict[str, object], tomllib.loads(fragment.read_text(encoding=_UTF_8)))
         except (OSError, tomllib.TOMLDecodeError):

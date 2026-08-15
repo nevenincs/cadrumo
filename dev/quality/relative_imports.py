@@ -40,6 +40,7 @@ import sys
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
@@ -140,7 +141,11 @@ def _resolve_targets(args: list[str]) -> list[Path]:
     With args, keep only Python files inside either root.
     """
     if not args:
-        return sorted(path for root, _package in PACKAGE_ROOTS for path in root.rglob("*.py"))
+        return sorted(
+            path
+            for root, _package in PACKAGE_ROOTS
+            for path in scan_directory(root, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
+        )
 
     targets: list[Path] = []
     for raw in args:

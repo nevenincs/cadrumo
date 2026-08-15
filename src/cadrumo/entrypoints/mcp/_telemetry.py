@@ -35,6 +35,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core import scan_directory
 from ...core.config import load_settings
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.hashing import sha256_hex
@@ -173,7 +174,7 @@ def prune_telemetry(
         return ()
     reference = time.time() if now is None else now
     cutoff = reference - max_age_days * _SECONDS_PER_DAY
-    entries = [(path, path.stat().st_mtime) for path in directory.glob("*.jsonl")]
+    entries = [(path, path.stat().st_mtime) for path in scan_directory(directory, pattern="*.jsonl")]
     # Pre-sort by filename descending: the shared selector's stable,
     # timestamp-only sort then preserves this order for any mtime tie,
     # reproducing the newest-first-by-(mtime, name) tie-break deterministically

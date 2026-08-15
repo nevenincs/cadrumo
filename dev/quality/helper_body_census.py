@@ -311,6 +311,7 @@ def _json_payload(result: HelperCensus) -> dict[str, object]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Print the census or a machine-readable record population."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
     parser.add_argument("--json", action="store_true")

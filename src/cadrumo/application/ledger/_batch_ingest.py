@@ -43,7 +43,7 @@ from typing import TYPE_CHECKING, Final, Literal, get_args, override
 
 from pydantic import BaseModel, Field
 
-from ...core import LOCAL_TRANSPORT_LABEL, STRICT_FROZEN_CONFIG
+from ...core import LOCAL_TRANSPORT_LABEL, STRICT_FROZEN_CONFIG, scan_directory
 from ...core.identity import ContentDigest
 from ...domain.iva import InvoiceKind
 from ..operator_actions import PreconditionVerdict
@@ -518,7 +518,7 @@ def _batch_sources(sources: Iterable[Path | str]) -> tuple[Path, ...]:
     for source in sources:
         path = Path(source).expanduser()
         if path.is_dir():
-            resolved.extend(child for child in path.iterdir() if child.is_file())
+            resolved.extend(child for child in scan_directory(path) if child.is_file())
         else:
             resolved.append(path)
     return tuple(resolved)

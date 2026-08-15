@@ -16,7 +16,6 @@ from pydantic import ValidationError as ValidationError
 from sqlalchemy import event as event
 
 from ......core.classification import SensitivityClass
-from ......core.config import Settings
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ... import (
     STORAGE_NAMESPACE_REGISTRY as STORAGE_NAMESPACE_REGISTRY,
@@ -44,8 +43,7 @@ from ... import (
 )
 from ...errors import ClassificationError as ClassificationError
 from ...errors import StorageValidationError as StorageValidationError
-from .._orm import Base
-from ..engine import create_engine_from_settings
+from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from ..secure_objects import (
     EnvelopeVersionError as EnvelopeVersionError,
 )
@@ -80,8 +78,7 @@ def _ephemeral_secure_repo(
     """
     with EphemeralMasterKeyProvider():
         db_path = tmp_path / database_name
-        engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
+        engine = bootstrap_sqlite_engine(db_path)
         try:
             yield db_path, engine, SecureObjectRepository(engine=engine)
         finally:
@@ -91,8 +88,7 @@ def _ephemeral_secure_repo(
 @contextmanager
 def _repo_at(db_path: Path) -> Iterator[SecureObjectRepository]:
     """Open a real :class:`SecureObjectRepository` against a fresh schema at ``db_path``."""
-    engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-    Base.metadata.create_all(engine)
+    engine = bootstrap_sqlite_engine(db_path)
     try:
         yield SecureObjectRepository(engine=engine)
     finally:
@@ -109,8 +105,7 @@ def _seed_under_key(
 ) -> None:
     """Seed one secure-object row through the public repository under ``provider``."""
     with provider:
-        engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
+        engine = bootstrap_sqlite_engine(db_path)
         try:
             SecureObjectRepository(engine=engine).save(
                 namespace=namespace,

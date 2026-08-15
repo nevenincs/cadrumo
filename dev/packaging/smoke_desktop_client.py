@@ -33,6 +33,8 @@ if str(_REPO_ROOT) not in sys.path:
 if not __package__:
     __package__ = "dev.packaging"
 
+from cadrumo.core import iter_directory  # noqa: E402
+
 from . import desktop_capture as dc  # noqa: E402
 from ._acquire_common import capture_owned_server_launch  # noqa: E402
 from .cohort_manifest import load_release_cohort  # noqa: E402
@@ -179,7 +181,7 @@ def main(argv: list[str] | None = None) -> int:
         _close_desktop(running)
 
     # 4. Launch as primary (MSIX activation; requires non-elevated interactive session).
-    pre_launch_entries = {entry.name for entry in profile.iterdir()}
+    pre_launch_entries = {entry.name for entry in iter_directory(profile)}
     dc.activate_desktop(package.aumid, remote_debugging_port=args.remote_debugging_port, user_data_dir=profile)
     version_doc = dc.wait_for_cdp(args.remote_debugging_port, timeout_seconds=args.launch_timeout_seconds)
     endpoint = version_doc.get("webSocketDebuggerUrl") or f"http://127.0.0.1:{args.remote_debugging_port}"
@@ -188,7 +190,7 @@ def main(argv: list[str] | None = None) -> int:
     # against the operator's real %APPDATA%\Claude — stop before any prompt or
     # write lands there. A honored isolated dir gains Chromium runtime entries
     # (DevToolsActivePort, caches, Preferences) beyond what was seeded.
-    post_launch_entries = {entry.name for entry in profile.iterdir()}
+    post_launch_entries = {entry.name for entry in iter_directory(profile)}
     if post_launch_entries == pre_launch_entries:
         _close_desktop(dc.running_desktop_pids(package.executable))
         raise dc.DesktopCaptureError(

@@ -46,6 +46,7 @@ from typing import Annotated, Final
 from pydantic import BaseModel, Field, StringConstraints, ValidationError
 
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 from ._compare import check_transcript, evaluate_expectations
@@ -131,7 +132,7 @@ def default_docs_root() -> Path:
 def _page_files(docs_root: Path) -> list[Path]:
     """Return every markdown page under ``docs_root``, skipping non-page trees."""
     pages: list[Path] = []
-    for path in sorted(docs_root.rglob("*.md")):
+    for path in scan_directory(docs_root, pattern="*.md", recursive=True):
         relative = path.relative_to(docs_root)
         if relative.parts and relative.parts[0] in _SKIPPED_DOC_DIRS:
             continue

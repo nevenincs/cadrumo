@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 from ..manager import ApiStubManager, DriftResult, ScaffoldResult
@@ -150,7 +151,7 @@ def test_scaffold_writes_line_feed_terminators(tmp_path: pytest.TempPathFactory)
     manager = ApiStubManager(src_cadrumo=src_cadrumo, docs_api=docs_api)
     result = manager.scaffold()
 
-    rst_paths = sorted(docs_api.glob("*.rst"))
+    rst_paths = scan_directory(docs_api, pattern="*.rst")
     assert len(rst_paths) == result.written, "the scan must cover every stub the run reported writing"
 
     translated = [rst_path.name for rst_path in rst_paths if b"\r\n" in rst_path.read_bytes()]

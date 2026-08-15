@@ -500,7 +500,9 @@ def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -
 
 
 def _revision_section_directories(path: Path) -> tuple[Path, ...]:
-    return tuple(entry for entry in scan_directory(path, select=DirectoryEntryKind.DIRECTORIES) if entry.name != "locales")
+    return tuple(
+        entry for entry in scan_directory(path, select=DirectoryEntryKind.DIRECTORIES) if entry.name != "locales"
+    )
 
 
 def _revision_section_fragment_paths(section_dirs: tuple[Path, ...]) -> tuple[Path, ...]:
@@ -1035,7 +1037,7 @@ def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:
     _validate_legal_directory(legal_dir)
     legal: dict[str, LegalReference] = {}
     parameters: dict[str, LegalParameter] = {}
-    for path in sorted(legal_dir.glob("*.toml")):
+    for path in scan_directory(legal_dir, pattern="*.toml"):
         catalogue = load_catalogue_file(path)
         overlap_legal = set(legal).intersection(catalogue.legal)
         overlap_parameters = set(parameters).intersection(catalogue.parameters)
@@ -1132,18 +1134,15 @@ def _registry_source_fingerprints(resolved: Path) -> tuple[_RegistryPathFingerpr
     schema) is load-bearing and must not be reordered.
     """
     fingerprints: list[_RegistryPathFingerprint] = []
-    authorization_dir = resolved / "authorization.d"
-    if authorization_dir.is_dir():
-        for fragment in sorted(authorization_dir.glob("*.toml")):
-            fingerprints.append(_toml_fingerprint(fragment))
-    for path in sorted((resolved / "legal").glob("*.toml")):
+    for fragment in scan_directory(resolved / "authorization.d", pattern="*.toml"):
+        fingerprints.append(_toml_fingerprint(fragment))
+    for path in scan_directory(resolved / "legal", pattern="*.toml"):
         fingerprints.append(_toml_fingerprint(path))
     modelos_dir = resolved / "modelos"
-    for path in sorted(modelos_dir.glob("*.toml")):
+    for path in scan_directory(modelos_dir, pattern="*.toml"):
         fingerprints.append(_toml_fingerprint(path))
-    if modelos_dir.is_dir():
-        for entry in sorted(modelos_dir.iterdir()):
-            fingerprints.extend(_modelo_directory_fingerprints(entry))
+    for entry in scan_directory(modelos_dir):
+        fingerprints.extend(_modelo_directory_fingerprints(entry))
     schema_path = resolved / "user_profile" / "schema.toml"
     if schema_path.is_file():
         fingerprints.append(_toml_fingerprint(schema_path))
@@ -1196,14 +1195,10 @@ def _collect_modelo_directory_fingerprints(resolved: Path) -> _RegistryPathFinge
     manifest_path = resolved / "manifest.toml"
     fingerprints: list[_RegistryPathFingerprint] = list(_collect_registry_directory_fingerprints(resolved))
     fingerprints.append(_toml_fingerprint(manifest_path))
-    locales_dir = resolved / "locales"
-    if locales_dir.is_dir():
-        for path in sorted(locales_dir.glob("*.toml")):
-            fingerprints.append(_toml_fingerprint(path))
-    revisions_dir = resolved / "revisions"
-    if revisions_dir.is_dir():
-        for path in sorted(revisions_dir.rglob("*.toml")):
-            fingerprints.append(_toml_fingerprint(path))
+    for path in scan_directory(resolved / "locales", pattern="*.toml"):
+        fingerprints.append(_toml_fingerprint(path))
+    for path in scan_directory(resolved / "revisions", pattern="*.toml", recursive=True):
+        fingerprints.append(_toml_fingerprint(path))
     return tuple(fingerprints)
 
 
@@ -1212,14 +1207,10 @@ def _modelo_directory_fingerprints(entry: Path) -> _RegistryPathFingerprints:
     if not (entry.is_dir() and (entry / "manifest.toml").is_file()):
         return ()
     fingerprints: list[_RegistryPathFingerprint] = [_toml_fingerprint(entry / "manifest.toml")]
-    locales_dir = entry / "locales"
-    if locales_dir.is_dir():
-        for path in sorted(locales_dir.rglob("*.toml")):
-            fingerprints.append(_toml_fingerprint(path))
-    revisions_dir = entry / "revisions"
-    if revisions_dir.is_dir():
-        for rev_path in sorted(revisions_dir.rglob("*.toml")):
-            fingerprints.append(_toml_fingerprint(rev_path))
+    for path in scan_directory(entry / "locales", pattern="*.toml", recursive=True):
+        fingerprints.append(_toml_fingerprint(path))
+    for rev_path in scan_directory(entry / "revisions", pattern="*.toml", recursive=True):
+        fingerprints.append(_toml_fingerprint(rev_path))
     return tuple(fingerprints)
 
 
@@ -1254,7 +1245,7 @@ def _load_shared_catalogue_files(legal_dir: Path) -> RegistryCatalogues:
     legal: dict[str, LegalReference] = {}
     sources: dict[str, SourceReference] = {}
     parameters: dict[str, LegalParameter] = {}
-    for path in sorted(legal_dir.glob("*.toml")):
+    for path in scan_directory(legal_dir, pattern="*.toml"):
         catalogue = load_catalogue_file(path)
         overlap_legal = set(legal).intersection(catalogue.legal)
         overlap_sources = set(sources).intersection(catalogue.sources)
@@ -1275,7 +1266,7 @@ def _validate_legal_directory(legal_dir: Path) -> None:
     """Require the shared legal catalogue to remain one flat TOML directory."""
     if not legal_dir.is_dir():
         return
-    for entry in sorted(legal_dir.iterdir()):
+    for entry in scan_directory(legal_dir):
         if entry.is_dir():
             raise RegistryLoadError(f"{entry}: unrecognized legal directory; legal catalogues must be flat")
         if not entry.is_file() or entry.suffix != ".toml":

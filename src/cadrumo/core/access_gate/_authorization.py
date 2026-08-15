@@ -41,7 +41,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, scan_directory
 from .. import NON_REGISTRY_MODELOS, Modelo, read_toml
 from ._errors import AuthorizationManifestError
 
@@ -345,7 +345,7 @@ def load_authorization_manifest(registry_root: Path) -> AuthorizationManifest:
     directory = manifest_dir(registry_root)
     if not directory.is_dir():
         return AuthorizationManifest()
-    entries = tuple(_load_manifest_fragment(path) for path in sorted(directory.glob("*.toml")))
+    entries = tuple(_load_manifest_fragment(path) for path in scan_directory(directory, pattern="*.toml"))
     try:
         return AuthorizationManifest(entries=entries)
     except ValueError as exc:

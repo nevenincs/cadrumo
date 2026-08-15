@@ -71,6 +71,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 from ..quality.import_hygiene_scan import (
@@ -151,7 +152,7 @@ def audit_shadowing() -> DimensionReport:
     tolerated_entries = baseline.get("family3_pinned_duplicate_symbols", {}).get("tolerated_multi_sourced_symbols", [])
     tolerated = {entry["symbol"] for entry in tolerated_entries}
 
-    py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
+    py_files = list(scan_directory(PKG_ROOT, pattern="*.py", recursive=True, prune_directories=("__pycache__",)))
     facades = discover_facades()
     all_sites = [site for path in py_files for site in walk_module_imports(path)]
     multi_sourced = find_multi_sourced_symbols(facades, all_sites)

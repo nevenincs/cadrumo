@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 from ..shard import shard_of
@@ -23,7 +24,13 @@ _REPO_ROOT = REPO_ROOT
 def test_shard_assignment_is_a_deterministic_partition() -> None:
     """Every real unit-test module lands in exactly one of two shards."""
     files = sorted(
-        path.relative_to(_REPO_ROOT).as_posix() for path in (_REPO_ROOT / "src" / "cadrumo").rglob("test_*.py")
+        path.relative_to(_REPO_ROOT).as_posix()
+        for path in scan_directory(
+            _REPO_ROOT / "src" / "cadrumo",
+            pattern="test_*.py",
+            recursive=True,
+            prune_directories=("__pycache__",),
+        )
     )
     assert files, "no test modules found under src/cadrumo"
     assignments = {path: shard_of(path, 2) for path in files}

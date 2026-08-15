@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core import resolve_anchored_extracted_unit
+from cadrumo.core import resolve_anchored_extracted_unit, scan_directory
 from dev._paths import REPO_ROOT
 
 from ...corpus.fetch_boe_normative import (
@@ -507,7 +507,7 @@ def test_only_the_shared_loader_walks_the_legal_catalogue() -> None:
     already diverged in what they returned. Keyed on the directory path rather
     than on a function name, so a re-implementation under any name is caught.
     """
-    audit_modules = sorted((_REPO_ROOT / "dev" / "audit").glob("*.py"))
+    audit_modules = scan_directory(_REPO_ROOT / "dev" / "audit", pattern="*.py")
     assert audit_modules
     walkers = [path.name for path in audit_modules if str(LEGAL_DIR.as_posix()) in path.read_text(encoding="utf-8")]
     assert walkers == ["legal_catalogue.py"]

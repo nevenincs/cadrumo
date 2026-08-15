@@ -13,6 +13,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
+
 from .. import (
     SANDBOX_PROFILE_LABEL,
     SEED_SUFFIX,
@@ -155,8 +157,8 @@ def test_seed_grammar_faults_are_located_in_the_recipe(tmp_path: Path) -> None:
 # HERE, naming the seed and line, instead of failing in the docs build.
 
 
-def _committed_seeds() -> list[Path]:
-    return sorted(default_seeds_root().glob(f"*{SEED_SUFFIX}"))
+def _committed_seeds() -> tuple[Path, ...]:
+    return scan_directory(default_seeds_root(), pattern=f"*{SEED_SUFFIX}")
 
 
 def _profile_label_positional(argv: tuple[str, ...]) -> str | None:

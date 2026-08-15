@@ -36,6 +36,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
 from ....core.config import override_settings
 from ....core.i18n import tr
 from .._errors import AggregationConfigError, AggregationValidationError, t
@@ -132,7 +133,9 @@ def _literal_text(node: ast.expr) -> str | None:
 def _production_modules() -> tuple[Path, ...]:
     """Return every non-test module in the aggregation package."""
     return tuple(
-        path for path in sorted(_PACKAGE_ROOT.rglob("*.py")) if "tests" not in path.relative_to(_PACKAGE_ROOT).parts
+        path
+        for path in scan_directory(_PACKAGE_ROOT, pattern="*.py", recursive=True)
+        if "tests" not in path.relative_to(_PACKAGE_ROOT).parts
     )
 
 

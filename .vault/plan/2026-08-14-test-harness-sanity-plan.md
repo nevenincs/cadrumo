@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-15'
-body_hash: 'sha256:0505c33ece003938f0babb1d70b029699d25d16ba6a375dd64d77c22d9f92f57'
+body_hash: 'sha256:008c797f3d8a1cade3ae7c885a1ed4bc973cd01f41ac8f60ff18ad028729d45e'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -221,7 +221,7 @@ The classes the name-keyed census cannot reach. Drift is scored by structural si
 - [x] `W09.P30.S134` - Sweep every test HTTP server for the shutdown-close-join triad and close the socket and thread leaks that accumulate under parallel execution; `dev/docs/tests, src/cadrumo/adapters/outbound`.
 - [x] `W09.P30.S135` - Move the in-memory engine disposal in the hash-column-width test inside a finally so a failing assertion cannot skip it; `src/cadrumo/adapters/persistence/storage/sql/tests/test_hash_column_widths.py`.
 - [ ] `W09.P30.S136` - Close the live-write declaration helper still duplicated in the evaluation tree, or record the cross-tree import direction as the standing reason it cannot move; `dev/agent_eval/tests/test_confirmation_gate_golden.py`.
-- [ ] `W09.P30.S137` - Sweep key providers and encrypted sessions for guaranteed teardown, the one resource class left unexamined; `src/cadrumo/adapters/persistence/storage`.
+- [x] `W09.P30.S137` - Sweep key providers and encrypted sessions for guaranteed teardown, the one resource class left unexamined; `src/cadrumo/adapters/persistence/storage`.
 - [ ] `W09.P30.S138` - Re-run the registry-tests failure-set diff from a quiesced tree so the consolidation pair is cleared on evidence rather than on zero-overlap reasoning; `src/cadrumo/domain/calculations/registry/tests`.
 
 ## Parallelization

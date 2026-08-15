@@ -36,6 +36,7 @@ from email.parser import Parser
 from pathlib import Path
 from typing import Any, Final
 
+from cadrumo.core import iter_directory, scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 from ._command import CommandResult, run_command
@@ -749,7 +750,7 @@ def build_wheel(repo_root: Path, work_dir: Path, uv: str, *, build_root: Path) -
     wheel_dir = work_dir / "wheel"
     wheel_dir.mkdir(parents=True, exist_ok=True)
     run_checked([uv, "build", "--wheel", "--out-dir", str(wheel_dir)], cwd=build_root)
-    wheels = sorted(wheel_dir.glob("cadrumo-*.whl"))
+    wheels = scan_directory(wheel_dir, pattern="cadrumo-*.whl")
     if len(wheels) != 1:
         raise SystemExit(f"expected exactly one Cadrumo wheel in {wheel_dir}; got {[wheel.name for wheel in wheels]!r}")
     assert_wheel_contains_tracked_data(repo_root, wheels[0], expected_data_paths)
@@ -769,7 +770,7 @@ def build_companion_wheels(work_dir: Path, uv: str, *, build_root: Path) -> tupl
             [uv, "build", "--project", str(build_root / project_dir), "--out-dir", str(out_dir)],
             cwd=build_root,
         )
-        built = sorted(out_dir.glob(wheel_glob))
+        built = scan_directory(out_dir, pattern=wheel_glob)
         if len(built) != 1:
             raise SystemExit(f"expected one {project_name} wheel in {out_dir}; got {built!r}")
         wheel = built[0]
@@ -796,7 +797,7 @@ def build_sdist(work_dir: Path, uv: str, *, build_root: Path) -> Path:
     sdist_dir = work_dir / "sdist"
     sdist_dir.mkdir(parents=True, exist_ok=True)
     run_checked([uv, "build", "--sdist", "--out-dir", str(sdist_dir)], cwd=build_root)
-    sdists = sorted(sdist_dir.glob("cadrumo-*.tar.gz"))
+    sdists = scan_directory(sdist_dir, pattern="cadrumo-*.tar.gz")
     if len(sdists) != 1:
         names = [sdist.name for sdist in sdists]
         raise SystemExit(f"expected exactly one cadrumo sdist in {sdist_dir}; got {names!r}")
@@ -1138,7 +1139,7 @@ def resolve_work_dir(repo_root: Path, requested: str | None, *, prefix: str = "c
     """Resolve a new packaging smoke work directory."""
     if requested is not None:
         path = Path(requested).resolve()
-        if path.exists() and any(path.iterdir()):
+        if path.exists() and any(iter_directory(path)):
             raise SystemExit(f"--work-dir must be empty or absent: {path}")
         path.mkdir(parents=True, exist_ok=True)
         return path

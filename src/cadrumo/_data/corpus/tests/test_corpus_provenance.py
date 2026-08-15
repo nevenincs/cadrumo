@@ -26,6 +26,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 bundled_path = importlib.import_module("cadrumo.core.resources").bundled_path
+_core = importlib.import_module("cadrumo.core")
+iter_directory = _core.iter_directory
+scan_directory = _core.scan_directory
 _CORPUS_ROOT = bundled_path("corpus", "aeat_official", "instructions")
 
 
@@ -36,8 +39,8 @@ def _corpus_subdirectories_with_files() -> list[Path]:
         return []
     return [
         subdir
-        for subdir in sorted(_CORPUS_ROOT.iterdir())
-        if subdir.is_dir() and (subdir / "files").is_dir() and any((subdir / "files").iterdir())
+        for subdir in scan_directory(_CORPUS_ROOT)
+        if subdir.is_dir() and (subdir / "files").is_dir() and any(iter_directory(subdir / "files"))
     ]
 
 
@@ -80,7 +83,7 @@ def test_modelo_131_corpus_provenance_lists_every_committed_file() -> None:
     files_dir = _CORPUS_ROOT / "modelo_131" / "files"
     provenance_body = (_CORPUS_ROOT / "modelo_131" / "PROVENANCE.md").read_text(encoding="utf-8")
 
-    undocumented = [f.name for f in sorted(files_dir.iterdir()) if f.is_file() and f.name not in provenance_body]
+    undocumented = [f.name for f in scan_directory(files_dir) if f.is_file() and f.name not in provenance_body]
     assert not undocumented, (
         f"modelo_131/files entries not listed in PROVENANCE.md: {undocumented!r}; "
         "add an entry to the Documents section before landing"

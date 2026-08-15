@@ -33,6 +33,7 @@ from pathlib import Path
 from ...core import (
     STR_KEYED_MAPPING_ADAPTER,
     fts_or_group,
+    scan_directory,
     spanish_stemmer,
     spanish_word_tokens,
     stem_spanish_terms,
@@ -75,7 +76,7 @@ def iter_corpus_chunks(corpus_root: Path | None = None) -> Iterator[CorpusChunk]
         then chunk order.
     """
     root = corpus_root or bundled_corpus_html_root()
-    for json_path in sorted(root.glob("*" + _EXTRACTED_JSON_SUFFIX), key=lambda item: item.name):
+    for json_path in scan_directory(root, pattern="*" + _EXTRACTED_JSON_SUFFIX):
         yield from _chunks_for_source(json_path)
 
 

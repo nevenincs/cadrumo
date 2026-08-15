@@ -31,7 +31,7 @@ from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.auth import _session_store
 from ....adapters.persistence.storage.bucket import bucket_paths
-from ....core import AuthProviderKind
+from ....core import AuthProviderKind, DirectoryEntryKind, scan_directory
 from ....core.config import override_settings
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -144,7 +144,7 @@ def _hash_bucket_tree(storage_root: Path, bucket_id: str) -> str:
     """Return a stable fingerprint of every on-disk byte under one bucket's directory."""
     bucket_dir = bucket_paths(storage_root, bucket_id).bucket_dir
     digest = hashlib.sha256()
-    for file in sorted(p for p in bucket_dir.rglob("*") if p.is_file()):
+    for file in scan_directory(bucket_dir, recursive=True, select=DirectoryEntryKind.FILES):
         digest.update(file.relative_to(bucket_dir).as_posix().encode("utf-8"))
         digest.update(b"\0")
         digest.update(file.read_bytes())

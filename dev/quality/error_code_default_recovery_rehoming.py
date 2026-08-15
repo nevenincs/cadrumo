@@ -20,6 +20,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, Literal, cast
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 from .error_code_default_suggestion_preimage_ledger import (
@@ -1006,7 +1007,7 @@ def _production_modules(root: Path) -> tuple[_ProductionModule, ...]:
     if not source_root.is_dir():
         raise _recovery_error("E_REHOMING_SOURCE_ROOT", source_root)
     modules: list[_ProductionModule] = []
-    for path in sorted(source_root.rglob("*.py")):
+    for path in scan_directory(source_root, pattern="*.py", recursive=True, prune_directories=("__pycache__",)):
         relative_parts = path.relative_to(root).parts
         if "tests" in relative_parts:
             continue

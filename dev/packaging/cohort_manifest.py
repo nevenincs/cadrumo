@@ -13,6 +13,7 @@ from typing import Final, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from cadrumo.core import scan_directory
 from dev._paths import UTF_8
 
 from ._hashing import sha256_path
@@ -268,7 +269,7 @@ def load_release_cohort(directory: Path) -> LoadedReleaseCohort:
         manifest_path.read_text(encoding=_UTF_8),
     )
     declared = {record.path for record in manifest.artifacts} | {_MANIFEST_NAME}
-    observed = {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()}
+    observed = {path.relative_to(root).as_posix() for path in scan_directory(root, recursive=True) if path.is_file()}
     if observed != declared:
         raise SystemExit(
             f"release cohort file inventory drifted: declared={sorted(declared)!r}, observed={sorted(observed)!r}",

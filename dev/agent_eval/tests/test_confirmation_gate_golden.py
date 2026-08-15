@@ -42,15 +42,13 @@ enforces the live-write prohibition at that same layer.
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import inspect
-from collections.abc import Coroutine, Iterator, Mapping
+from collections.abc import Coroutine, Mapping
 from pathlib import Path
 
 import mcp.types as mcp_types
 import pytest
 
-from cadrumo.application.operator_surface import COMMAND_RISK, CommandRiskDeclaration
 from cadrumo.entrypoints.mcp import (
     ConfirmationPolicy,
     McpToolDescriptor,
@@ -59,6 +57,7 @@ from cadrumo.entrypoints.mcp import (
     confirmation_for_tool,
 )
 from cadrumo.tests import connected_server_and_client_session as connect
+from cadrumo.tests.declared_command_risk import declared_live_write
 
 from .. import ConfirmationGateCheck, ConfirmationTier, load_scenario, run_golden_scenario
 from ._real_cli_support import valid_cli_commands
@@ -90,27 +89,6 @@ def _tier(policy: ConfirmationPolicy) -> ConfirmationTier:
 
 def _run[T](coro: Coroutine[object, object, T]) -> T:
     return asyncio.run(coro)
-
-
-@contextlib.contextmanager
-def _declared_live_write(command_key: str) -> Iterator[None]:
-    """Declare ``command_key`` a live-write in the risk table for the test body.
-
-    A live-write BLOCK now fires from the DECLARED risk table, not a leaf-name
-    heuristic: no real command declares
-    ``live_write`` (never-submit is enforced as "no such tool exists"), so a test
-    that exercises the defensive BLOCK branch must supply a declared live-write
-    row and restore the table after - test data, not a mocked behaviour.
-    """
-    previous = COMMAND_RISK.get(command_key)
-    COMMAND_RISK[command_key] = CommandRiskDeclaration(live_write=True)
-    try:
-        yield
-    finally:
-        if previous is None:
-            COMMAND_RISK.pop(command_key, None)
-        else:
-            COMMAND_RISK[command_key] = previous
 
 
 async def _call_tool(name: str, arguments: Mapping[str, object]) -> mcp_types.CallToolResult:
@@ -197,7 +175,7 @@ def test_hypothetical_live_write_leaf_blocks_unconditionally() -> None:
     whatever its family mutability, so the outcome does not depend on getting the
     mutability classification right.
     """
-    with _declared_live_write(_HYPOTHETICAL_LIVE_WRITE_STEP):
+    with declared_live_write(_HYPOTHETICAL_LIVE_WRITE_STEP):
         decision = confirmation_for_tool(command_key=_HYPOTHETICAL_LIVE_WRITE_STEP)
         assert decision is ConfirmationPolicy.BLOCK
 
@@ -214,7 +192,7 @@ def test_confirmation_gate_wired_into_golden_scenario_passes_when_tiers_match() 
     export_descriptor = _descriptors_by_command_key()[_EXPORT_STEP]
     calculate_descriptor = _descriptors_by_command_key()[_CALCULATE_STEP]
 
-    with _declared_live_write(_HYPOTHETICAL_LIVE_WRITE_STEP):
+    with declared_live_write(_HYPOTHETICAL_LIVE_WRITE_STEP):
         live_write_tier = _tier(confirmation_for_tool(command_key=_HYPOTHETICAL_LIVE_WRITE_STEP))
 
     checks = (

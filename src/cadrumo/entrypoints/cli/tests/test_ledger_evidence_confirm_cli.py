@@ -97,7 +97,7 @@ _TAXABLE_BASE = "100.00"
 _GRAND_TOTAL = "126.20"
 
 
-def _add_evidence(tmp_path: Path, *, filename: str = "factura.xml") -> str:
+def _add_structured_evidence(tmp_path: Path, *, filename: str = "factura.xml") -> str:
     """Store the bundled structured document as real evidence, through the CLI."""
     source = tmp_path / filename
     source.write_bytes(_STRUCTURED_INVOICE.read_bytes())
@@ -113,7 +113,7 @@ def _add_evidence(tmp_path: Path, *, filename: str = "factura.xml") -> str:
 
 
 def test_confirm_by_evidence_id_mints_a_real_catalogue_invoice(tmp_path: Path) -> None:
-    evidence_id = _add_evidence(tmp_path)
+    evidence_id = _add_structured_evidence(tmp_path)
 
     confirmed = _invoke(
         [
@@ -149,7 +149,7 @@ def test_confirm_by_evidence_id_mints_a_real_catalogue_invoice(tmp_path: Path) -
 
 def test_confirm_is_idempotent_guarded_on_a_second_identical_confirm(tmp_path: Path) -> None:
     """A re-confirm with the same resolved identity is a guarded no-op, not a duplicate."""
-    evidence_id = _add_evidence(tmp_path)
+    evidence_id = _add_structured_evidence(tmp_path)
 
     first = _invoke(
         [
@@ -192,7 +192,7 @@ def test_confirm_is_idempotent_guarded_on_a_second_identical_confirm(tmp_path: P
 
 def test_confirm_honours_an_override_of_an_extracted_field(tmp_path: Path) -> None:
     """A supplied override wins over the best-effort extracted value."""
-    evidence_id = _add_evidence(tmp_path)
+    evidence_id = _add_structured_evidence(tmp_path)
 
     confirmed = _invoke(
         [
@@ -230,7 +230,7 @@ def test_confirm_of_a_different_override_refuses_rather_than_duplicating(tmp_pat
     depends on it: a corrected number means the stored record is wrong, a
     different total means these are not the same invoice.
     """
-    evidence_id = _add_evidence(tmp_path)
+    evidence_id = _add_structured_evidence(tmp_path)
 
     first = _invoke(
         [
@@ -264,7 +264,7 @@ def test_confirm_of_a_different_override_refuses_rather_than_duplicating(tmp_pat
 
 
 def test_confirm_by_attachment_id_uses_the_same_in_store_bytes(tmp_path: Path) -> None:
-    evidence_id = _add_evidence(tmp_path)
+    evidence_id = _add_structured_evidence(tmp_path)
 
     viewed = _invoke(["--format", "json", "app", "ledger", "evidence", "view", evidence_id])
     assert viewed.exit_code == 0, viewed.output
@@ -303,7 +303,7 @@ def test_confirm_reads_the_counterparty_the_document_names(tmp_path: Path) -> No
     THIS document's buyer side rather than about the reader being unable to
     read a party at all.
     """
-    evidence_id = _add_evidence(tmp_path)
+    evidence_id = _add_structured_evidence(tmp_path)
 
     confirmed = _invoke(
         [
@@ -327,7 +327,7 @@ def test_confirm_refuses_the_wrong_side_rather_than_minting_a_mirrored_invoice(t
     this filer, so ISSUED is unanswerable from it and the refusal says which
     way round it should go.
     """
-    evidence_id = _add_evidence(tmp_path)
+    evidence_id = _add_structured_evidence(tmp_path)
 
     confirmed = _invoke(
         [
@@ -357,7 +357,7 @@ def test_confirm_requires_exactly_one_reference(tmp_path: Path) -> None:
 
 def test_confirm_never_writes_a_file_to_disk(tmp_path_factory: pytest.TempPathFactory, tmp_path: Path) -> None:
     """Bytes are re-read from secure storage into memory only; nothing lands on disk."""
-    evidence_id = _add_evidence(tmp_path)
+    evidence_id = _add_structured_evidence(tmp_path)
 
     empty_dir = tmp_path_factory.mktemp("no-write-expected-cli-confirm")
     confirmed = _invoke(
@@ -385,7 +385,7 @@ def test_confirm_never_writes_a_file_to_disk(tmp_path_factory: pytest.TempPathFa
 
 def test_confirm_accepts_the_operators_supply_nature_answer(tmp_path: Path) -> None:
     """The channel exists and a stated answer does not disturb the confirm."""
-    evidence_id = _add_evidence(tmp_path)
+    evidence_id = _add_structured_evidence(tmp_path)
 
     confirmed = _invoke(
         [
@@ -409,7 +409,7 @@ def test_both_answers_are_reachable(tmp_path: Path, answer: str) -> None:
     A channel accepting one of the two would silently make the other
     unanswerable, which is indistinguishable from never asking.
     """
-    evidence_id = _add_evidence(tmp_path, filename=f"factura-{answer}.xml")
+    evidence_id = _add_structured_evidence(tmp_path, filename=f"factura-{answer}.xml")
 
     confirmed = _invoke(
         [
@@ -434,7 +434,7 @@ def test_an_answer_outside_the_closed_set_is_refused_and_names_what_is_accepted(
     cannot act on. Typed at the boundary, click renders the accepted members on
     the parse failure itself.
     """
-    evidence_id = _add_evidence(tmp_path)
+    evidence_id = _add_structured_evidence(tmp_path)
 
     refused = _invoke(
         [
@@ -459,7 +459,7 @@ def test_not_answering_leaves_the_confirm_exactly_as_it_was(tmp_path: Path) -> N
     report the gap -- rather than defaulting to a nature, which would be a
     guess wearing an operator's provenance.
     """
-    evidence_id = _add_evidence(tmp_path)
+    evidence_id = _add_structured_evidence(tmp_path)
 
     confirmed = _invoke(
         [
@@ -490,7 +490,7 @@ def test_not_answering_leaves_the_confirm_exactly_as_it_was(tmp_path: Path) -> N
 
 def test_the_class_and_its_correction_can_be_stated_by_the_operator(tmp_path: Path) -> None:
     """The override channel for a document that states no class of its own."""
-    evidence_id = _add_evidence(tmp_path)
+    evidence_id = _add_structured_evidence(tmp_path)
 
     confirmed = _invoke(
         [
@@ -517,7 +517,7 @@ def test_declaring_the_class_without_its_series_is_refused(tmp_path: Path) -> No
     class is stated the invariant bites, and the override channel is only
     complete because the series can be stated alongside it.
     """
-    evidence_id = _add_evidence(tmp_path, filename="no-series.xml")
+    evidence_id = _add_structured_evidence(tmp_path, filename="no-series.xml")
 
     refused = _invoke(
         [
@@ -541,7 +541,7 @@ def test_declaring_the_class_without_its_series_is_refused(tmp_path: Path) -> No
 
 def test_a_class_outside_the_closed_set_is_refused_naming_what_is_accepted(tmp_path: Path) -> None:
     """Typed at the boundary, so click renders the members on the parse failure."""
-    evidence_id = _add_evidence(tmp_path)
+    evidence_id = _add_structured_evidence(tmp_path)
 
     refused = _invoke(
         [
@@ -568,7 +568,7 @@ def test_saying_nothing_leaves_the_documents_own_class_standing(tmp_path: Path) 
     default on every single confirm -- reinstating exactly the silent
     misclassification the reader change removed.
     """
-    evidence_id = _add_evidence(tmp_path)
+    evidence_id = _add_structured_evidence(tmp_path)
 
     confirmed = _invoke(
         [

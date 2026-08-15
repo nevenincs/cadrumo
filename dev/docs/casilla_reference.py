@@ -60,6 +60,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 from ._locale_chrome import docs_chrome
@@ -1245,7 +1246,7 @@ def _remove_generated_rst(out_dir: Path, keep: frozenset[Path]) -> None:
     so :func:`_write_if_changed` can leave unchanged bytes untouched, rather
     than recreating the whole tree and making Sphinx re-read it every build.
     """
-    for path in out_dir.iterdir():
+    for path in scan_directory(out_dir, require_root=True):
         if path.suffix != ".rst":
             continue
         if path.is_symlink() or not path.is_file() or path.parent != out_dir:

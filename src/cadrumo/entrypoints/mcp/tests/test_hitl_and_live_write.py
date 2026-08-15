@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from ....tests.declared_command_risk import declared_live_write
 from .._hitl import ConfirmationPolicy, confirmation_for_tool
 from .._tools import build_tool_descriptors
-from ._risk_table_support import declared_live_write
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

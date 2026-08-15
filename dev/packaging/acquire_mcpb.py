@@ -32,6 +32,8 @@ if str(_REPO_ROOT) not in sys.path:
 if not __package__:
     __package__ = "dev.packaging"
 
+from cadrumo.core import scan_directory  # noqa: E402
+
 from ._acquire_common import (  # noqa: E402
     AcquisitionError,
     capture_owned_server_launch,
@@ -142,7 +144,7 @@ def _download_bundle(
         version=version,
         next_step=f"attach cadrumo-{version}.mcpb to the {tag} GitHub release and rerun",
     )
-    bundles = sorted(dist.glob("*.mcpb"))
+    bundles = scan_directory(dist, pattern="*.mcpb")
     if len(bundles) != 1:
         raise AcquisitionError(f"expected one published .mcpb asset for {tag}; got {[b.name for b in bundles]!r}")
     return bundles[0]

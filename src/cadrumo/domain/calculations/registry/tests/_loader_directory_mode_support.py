@@ -7,6 +7,7 @@ import re
 from functools import cache
 from pathlib import Path
 
+from .....core import scan_directory
 from .....core.resources import bundled_path
 from .. import ModeloDefinition, ModeloSource
 from .._loader import (
@@ -63,7 +64,7 @@ def _committed_registry_modelos() -> tuple[ModeloDefinition, ...]:
 
 @cache
 def _committed_modelo_toml_paths() -> tuple[Path, ...]:
-    return tuple(sorted(_committed_modelos_dir().rglob("*.toml")))
+    return scan_directory(_committed_modelos_dir(), pattern="*.toml", recursive=True)
 
 
 @cache

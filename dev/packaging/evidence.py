@@ -15,6 +15,7 @@ from typing import Final, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
+from cadrumo.core import DirectoryEntryKind, scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 from ._command import CommandResult
@@ -401,7 +402,7 @@ def checkpoint_smoke_evidence(
 
     evidence_root.mkdir(parents=True, exist_ok=True)
     checkpointed: list[Path] = []
-    for work_dir in sorted(path for path in smoke_root.iterdir() if path.is_dir()):
+    for work_dir in scan_directory(smoke_root, select=DirectoryEntryKind.DIRECTORIES):
         manifest = work_dir / _MANIFEST_NAME
         if not manifest.is_file():
             continue

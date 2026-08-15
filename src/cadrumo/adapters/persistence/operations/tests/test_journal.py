@@ -22,7 +22,7 @@ from .....application.operations import (
     OperationTerminalReceipt,
     operation_conflict_scope_reference,
 )
-from .....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from .....core import OperationEffect, OperationLifecycle, OperationTerminalCondition, scan_directory
 from ...storage import RepositoryError
 from .._journal import OperationJournalRepository
 from .._lease import OperationLeaseFilesystemRepository
@@ -210,7 +210,7 @@ def test_operation_journal_creates_and_resolves_idempotency_only_from_a_complete
         asyncio.run(OperationJournalRepository(storage_root=tmp_path).resolve_idempotency(claim))
         == initial.operation_id
     )
-    assert tuple((tmp_path / "operation-journals").glob("claim-*.json")) == ()
+    assert scan_directory(tmp_path / "operation-journals", pattern="claim-*.json") == ()
 
     conflicting_request = OperationIdempotencyClaim.bind(
         identity=initial.identity,

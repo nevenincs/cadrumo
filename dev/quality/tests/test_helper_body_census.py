@@ -305,24 +305,18 @@ def test_non_underscore_export_from_a_private_support_module_is_a_candidate(tmp_
 #: allowlist discipline. `test_allowlist_entries_are_not_stale` fails the
 #: moment a site here stops existing or stops aliasing anything, so a fix
 #: that resolves an entry cannot leave a dead exemption behind unnoticed.
-_ALLOWED_DUPLICATE_SITES: Final[dict[tuple[str, str], str]] = {
-    ("dev/agent_eval/tests/test_confirmation_gate_golden.py", "_declared_live_write"): (
-        "dev/ repo tooling cannot import from src/cadrumo's private test modules "
-        "(aeat-architecture-boundaries dev/src boundary). The canonical body lives "
-        "at src/cadrumo/entrypoints/mcp/tests/_risk_table_support.py::"
-        "declared_live_write. Both declare the SAME tree-wide "
-        "live-AEAT-write-is-permanently-forbidden rail (2026-07-02-agent-harness-"
-        "refoundation-adr: 'no console tool may ever expose it, and R6(iv) is that "
-        "rail, not a configurable policy') -- confirmed by a vaultspec-rag ADR "
-        "search before this pin was authored, not per-surface variance. See the "
-        "2026-08-15 B18 duplicate-helper burndown report."
-    ),
-    ("src/cadrumo/entrypoints/mcp/tests/_risk_table_support.py", "declared_live_write"): (
-        "canonical home of the pair above; declared here too so the property "
-        "this gate checks -- every site in a flagged group is allowlisted -- "
-        "holds without special-casing which side is 'the' duplicate."
-    ),
-}
+#:
+#: Empty today: B18's `declared_live_write` was first merged to two of its
+#: three sites this session (the `dev/agent_eval/tests/` copy kept separate,
+#: believed blocked by the dev/src import boundary), then a peer consolidation
+#: found the real boundary is narrower than assumed -- `cadrumo.tests.*` is a
+#: sanctioned submodule-direct reach point even for `dev/` tooling, so all
+#: three sites now import one canonical `cadrumo.tests.declared_command_risk`.
+#: No exemption is needed while that holds; a future genuinely-forced
+#: duplicate (a different helper, a different boundary) is declared here the
+#: same way, never by weakening `test_canonical_homes_carry_no_unallowlisted_
+#: duplicate` itself.
+_ALLOWED_DUPLICATE_SITES: Final[dict[tuple[str, str], str]] = {}
 
 #: Every (path, qualname) the B16/B18/B24/B25 burndown consolidated to one
 #: canonical home this session. A NEW body-identical copy of any of these,
@@ -330,7 +324,7 @@ _ALLOWED_DUPLICATE_SITES: Final[dict[tuple[str, str], str]] = {
 #: regression.
 _CANONICAL_HOMES: Final[tuple[tuple[str, str], ...]] = (
     ("dev/packaging/_hashing.py", "sha256_path"),
-    ("src/cadrumo/entrypoints/mcp/tests/_risk_table_support.py", "declared_live_write"),
+    ("src/cadrumo/tests/declared_command_risk.py", "declared_live_write"),
     ("src/cadrumo/adapters/persistence/storage/sql/tests/_secure_objects_support.py", "_ephemeral_secure_repo"),
     ("dev/docs/terminology_handbook/tests/_support.py", "write_concept_fragment"),
 )

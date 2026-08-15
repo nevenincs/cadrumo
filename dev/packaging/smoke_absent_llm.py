@@ -35,6 +35,7 @@ from typing import Final
 
 from packaging.requirements import Requirement
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 from ._distribution_names import normalise_distribution_name
@@ -173,7 +174,7 @@ def _guarded_surfaces_from_production_guards(repo_root: Path, symbol: str) -> tu
     package = repo_root / "src" / "cadrumo" / "llm"
     exported = _exported_names(package / "__init__.py")
     derived: set[str] = set()
-    for path in sorted(package.rglob("*.py")):
+    for path in scan_directory(package, pattern="*.py", recursive=True):
         if "tests" in path.relative_to(package).parts:
             continue
         tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))

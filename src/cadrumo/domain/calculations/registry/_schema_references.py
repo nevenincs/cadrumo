@@ -256,11 +256,62 @@ class SourceReference(RegistryModel):
     record_design_epoch: str | None = Field(default=None, min_length=1, max_length=128)
     source_url: RegistryExternalLink
     review_status: ReviewStatus
+    period_selector: PeriodSelector | None = None
+    """Disambiguates two designs that share one ``applies_from``/``applies_to`` window.
+
+    Deliberately optional and deliberately reuses :class:`PeriodSelector` --
+    the registry's one period-selector shape, already carrying the AEAT-token
+    vocabulary (:data:`RegistrySelectorPeriodCode`) -- rather than inventing a
+    second grammar. ``applies_from``/``applies_to`` alone cannot express two
+    real AEAT designs published for the SAME year that govern different
+    PERIODS within it: M303 published one whole-year 2018 record design and a
+    second covering every period except the last (quarter 4 / month 12), and
+    a 2021 pair split at period 07 (one design "hasta periodo 06", the
+    successor "desde periodo 07"). Both members of each pair carry an
+    identical nominal date window, so nothing before this field could tell
+    :func:`resolve_record_design_binary`'s caller which one to pick for a
+    given filing period. Declare it only for a design whose own filename or
+    published text states the period boundary; leave it undeclared rather
+    than infer one.
+    """
+    corpus_tier: Literal["full_consolidated", "provision_excerpt"] | None = None
+    """Mirrors :attr:`LegalReference.corpus_tier` in philosophy, recalibrated here.
+
+    Same two-valued, verified-not-merely-typed contract: optional so adding
+    the field cannot itself introduce a refusal, and deliberately two-valued
+    so a paraphrase can never become a *declarable* tier -- that shape stays
+    a build-time refusal, never a state this field can assert. The
+    calibration is NOT reused from :attr:`LegalReference.corpus_tier`: this
+    model's ``corpus_path`` is a bare repository-relative path with no
+    ``#anchor`` convention (``LegalReference.corpus_ref`` is ``path#anchor``),
+    so a resolved-anchor read does not apply here, and the size floor is
+    calibrated against THIS model's own observed population, not
+    ``LegalReference``'s. The excerpt/full-text duality only exists for
+    ``corpus_path`` entries under ``corpus/normatives/`` -- the same BOE/AEAT
+    norm-text tree ``LegalReference.corpus_ref`` resolves into, which is why a
+    ``form_spec`` source can legitimately point at the exact file a
+    ``LegalReference`` entry also cites. A design workbook, manual PDF, XSD or
+    data dictionary under ``corpus/aeat_official/`` has no such duality --
+    verified by ``_corpus_catalogue.py``'s check, which refuses the field
+    outside ``corpus/normatives/`` rather than silently accepting a claim the
+    concept does not apply to.
+    """
 
     @model_validator(mode="after")
     def _validate_source_reference(self) -> SourceReference:
         if self.applies_to is not None and self.applies_from is not None and self.applies_to < self.applies_from:
             raise RegistryValidationError("source reference applies_to must be on or after applies_from")
+        if self.period_selector is not None and self.applies_from is not None:
+            if not self.period_selector.includes_year(self.applies_from.year):
+                raise RegistryValidationError(
+                    f"source reference {self.id!r} declares period_selector that does not cover "
+                    f"applies_from's year {self.applies_from.year}",
+                )
+            if self.applies_to is not None and not self.period_selector.includes_year(self.applies_to.year):
+                raise RegistryValidationError(
+                    f"source reference {self.id!r} declares period_selector that does not cover "
+                    f"applies_to's year {self.applies_to.year}",
+                )
         if "\\" in self.corpus_path or self.corpus_path.startswith(("/", ".")):
             raise RegistryValidationError("source reference corpus_path must be repository-relative POSIX style")
         if self.kind == "record_design":

@@ -27,6 +27,7 @@ from mcp.client.stdio import stdio_client
 from mcp.types import CallToolResult, TextResourceContents
 from pydantic import AnyUrl
 
+from cadrumo.core import scan_directory
 from dev._paths import UTF_8
 
 from .installed_tax_oracle import (
@@ -481,7 +482,7 @@ async def _run_protocol(
 
 
 def _observed_cli_attestation(storage_root: Path) -> tuple[str, dict[str, str]]:
-    telemetry_files = tuple(sorted((storage_root.resolve() / "telemetry").glob("*.jsonl")))
+    telemetry_files = scan_directory(storage_root.resolve() / "telemetry", pattern="*.jsonl")
     if len(telemetry_files) != 1:
         raise InstalledMcpOracleError(
             f"expected one MCP telemetry session, got {[path.name for path in telemetry_files]!r}",

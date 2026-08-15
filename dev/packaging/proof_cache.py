@@ -38,6 +38,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
+from cadrumo.core import iter_directory
 from dev._paths import UTF_8
 
 _UTF_8: Final[str] = UTF_8
@@ -203,7 +204,7 @@ def _max_records() -> int:
 
 def _evict_beyond_cap(cache_dir: Path, keep: Path, cap: int) -> None:
     """Delete oldest records beyond the size cap; the fresh record survives."""
-    records = sorted(cache_dir.glob("*.json"), key=lambda p: p.stat().st_mtime)
+    records = sorted(iter_directory(cache_dir, pattern="*.json"), key=lambda p: p.stat().st_mtime)
     excess = len(records) - cap
     for stale in records:
         if excess <= 0:

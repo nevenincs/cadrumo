@@ -35,8 +35,7 @@ from pathlib import Path
 
 import pytest
 
-from ....tests.pdf_fixtures import text_pdf_bytes
-from ._ledger_ux_support import _invoke, _open_bucket_session
+from ._ledger_ux_support import _add_evidence, _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_open_bucket_session"]
@@ -73,22 +72,8 @@ _FULL_INVOICE_LINES = (
 )
 
 
-def _add_evidence(tmp_path: Path, lines: tuple[str, ...], *, filename: str = "factura.pdf") -> str:
-    pdf = tmp_path / filename
-    pdf.write_bytes(text_pdf_bytes(lines))
-    added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", str(pdf), "--supplier", "Acme SL"])
-    assert added.exit_code == 0, added.output
-    payload = json.loads(added.output)
-    assert isinstance(payload, dict), added.output
-    body = payload.get("result")
-    assert isinstance(body, dict), added.output
-    evidence_id = body.get("evidence_id")
-    assert isinstance(evidence_id, str), added.output
-    return evidence_id
-
-
 def test_extract_by_evidence_id_recovers_every_grounded_field(tmp_path: Path) -> None:
-    evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES)
+    evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES, filename="factura.pdf")
 
     extracted = _invoke(
         ["--format", "json", "app", "ledger", "evidence", "extract", "--evidence-id", evidence_id],
@@ -162,7 +147,7 @@ def test_a_structured_xml_invoice_survives_add_then_extract_through_the_cli(tmp_
 
 def test_extract_never_persists_an_invoice(tmp_path: Path) -> None:
     """Extracting is a read: the invoice catalogue stays empty after the call."""
-    evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES)
+    evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES, filename="factura.pdf")
 
     extracted = _invoke(
         ["--format", "json", "app", "ledger", "evidence", "extract", "--evidence-id", evidence_id],
@@ -188,7 +173,7 @@ def test_extract_by_attachment_id_uses_the_evidence_records_in_store_bytes(tmp_p
     record lookup) must recover identical fields to extracting by
     ``evidence_id``.
     """
-    evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES)
+    evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES, filename="factura.pdf")
 
     viewed = _invoke(["--format", "json", "app", "ledger", "evidence", "view", evidence_id])
     assert viewed.exit_code == 0, viewed.output
@@ -209,7 +194,7 @@ def test_extract_requires_exactly_one_reference(tmp_path: Path) -> None:
     neither = _invoke(["--format", "json", "app", "ledger", "evidence", "extract"])
     assert neither.exit_code != 0, neither.output
 
-    evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES)
+    evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES, filename="factura.pdf")
     both = _invoke(
         [
             "--format",
@@ -237,7 +222,7 @@ def test_extract_unknown_evidence_id_refuses_actionably() -> None:
 
 def test_extract_never_writes_a_file_to_disk(tmp_path_factory: pytest.TempPathFactory, tmp_path: Path) -> None:
     """Bytes are read from secure storage into memory only; nothing lands on disk."""
-    evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES)
+    evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES, filename="factura.pdf")
 
     empty_dir = tmp_path_factory.mktemp("no-write-expected-cli-extract")
     extracted = _invoke(

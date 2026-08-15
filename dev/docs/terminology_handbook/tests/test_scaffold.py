@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import iter_directory
 from cadrumo.core.external_constants import OutputLanguage
 
 from .. import (
@@ -324,7 +325,7 @@ def test_check_mode_does_not_write(tmp_path: Path) -> None:
 
     assert plan.counts[ScaffoldAction.SCAFFOLD_EMPTY] == 1
     # --check seam: the plan is computed but nothing is written.
-    assert not concepts.exists() or not any(concepts.glob("*.toml"))
+    assert not concepts.exists() or not any(iter_directory(concepts, pattern="*.toml"))
 
 
 # --------------------------------------------------------------------------

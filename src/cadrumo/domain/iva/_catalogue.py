@@ -16,7 +16,7 @@ from types import MappingProxyType
 
 from pydantic import ValidationError
 
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml
+from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml, scan_directory
 from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import IvaCatalogueError
@@ -74,7 +74,7 @@ def load_iva_catalogues(root: Path | None = None) -> Mapping[int, IvaCatalogue]:
     """
     target = root if root is not None else bundled_path("registry", "aeat", "iva", "catalogues")
     resolved = target.resolve()
-    paths = tuple(sorted(resolved.glob("*.toml")))
+    paths = scan_directory(resolved, pattern="*.toml")
     fingerprint = tuple(file_stat_fingerprint(path) for path in paths)
     return _load_iva_catalogues_cached(str(resolved), fingerprint)
 

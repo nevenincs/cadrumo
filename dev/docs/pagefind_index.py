@@ -54,6 +54,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+from cadrumo.core import iter_directory, scan_directory
 from dev._paths import UTF_8
 
 if TYPE_CHECKING:
@@ -126,7 +127,7 @@ def injected_record_kinds_in_index(html_root: Path) -> frozenset[str]:
         caller renders one refusal naming what is absent.
     """
     found: set[str] = set()
-    for fragment in sorted((html_root / "pagefind" / "fragment").rglob("*.pf_fragment")):
+    for fragment in iter_directory(html_root / "pagefind" / "fragment", pattern="*.pf_fragment", recursive=True):
         for kind in _fragment_filter_kinds(fragment):
             if kind in DECIDED_INJECTED_RECORD_KINDS:
                 found.add(kind)
@@ -195,7 +196,7 @@ def _mark_excluded_pages(html_root: Path) -> int:
         root = html_root / subdir
         if not root.is_dir():
             continue
-        for page in root.rglob("*.html"):
+        for page in scan_directory(root, pattern="*.html", recursive=True):
             html = page.read_text(encoding=_UTF_8)
             new_html, count = _BODY_TAG_RE.subn("<body data-pagefind-ignore", html, count=1)
             if count:
@@ -259,7 +260,7 @@ def _mark_page_display_classes(html_root: Path) -> int:
         The number of pages stamped.
     """
     tagged = 0
-    for page in html_root.rglob("*.html"):
+    for page in scan_directory(html_root, pattern="*.html", recursive=True):
         rel_path = page.relative_to(html_root).as_posix()
         html = page.read_text(encoding=_UTF_8)
         if not _BODY_UNSTAMPED_RE.search(html):

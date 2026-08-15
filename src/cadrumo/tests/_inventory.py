@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import ast
-import os
 import re
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from functools import cache
 from pathlib import Path
 from typing import Final
+
+from ..core import DirectoryEntryKind, scan_directory
 
 SRC_CADRUMO: Path = Path(__file__).resolve().parents[1]
 """Root of the ``src/cadrumo`` package tree."""
@@ -49,15 +50,19 @@ def _is_test_module_name(name: str) -> bool:
 def python_files_under(root: Path, *, include_data: bool = True) -> tuple[Path, ...]:
     """Return every ``.py`` file under ``root``, sorted, walked once per process.
 
-    ``os.scandir`` rather than :meth:`pathlib.Path.rglob`, which is roughly ten
-    times slower over this tree (0.28s against 0.025s for the same 4,984 files)
-    because it materialises a ``Path`` per entry and re-stats it to decide
-    whether to descend. ``scandir`` answers ``is_dir`` from the directory entry
-    the operating system already returned.
+    The walk goes through :func:`~cadrumo.core.scan_directory` rather than
+    :meth:`pathlib.Path.rglob`. The measurement that first motivated moving off
+    ``rglob`` was taken here, over this tree: 0.28s for 4,984 files against a
+    ``scandir`` walk, because ``rglob`` materialised a ``Path`` per entry and
+    re-stat'ed it to decide whether to descend while ``scandir`` answers
+    ``is_dir`` from the directory entry the operating system already returned.
+    Python 3.13 rewrote globbing onto ``os.scandir`` and closed most of that
+    gap; :func:`~cadrumo.core.scan_directory` carries the current numbers.
 
-    Pruning happens BEFORE descending, so an excluded directory costs one
-    ``is_dir`` check rather than a full subtree walk -- which is what makes
-    excluding ``_data`` cheap rather than merely correct.
+    What has not changed is pruning, which ``rglob`` cannot express at all:
+    it happens BEFORE descending, so an excluded directory costs one ``is_dir``
+    check rather than a full subtree walk -- which is what makes excluding
+    ``_data`` cheap rather than merely correct.
 
     The result is memoised for the process. That is sound for the repository
     tree, which does not change while a test session runs, and is NOT sound for
@@ -65,7 +70,7 @@ def python_files_under(root: Path, *, include_data: bool = True) -> tuple[Path, 
     walk it themselves.
     """
     resolved = root.resolve()
-    return _scan_files(resolved, suffix=".py", prune_data_at=None if include_data else resolved)
+    return _scan_files(resolved, suffix=".py", prune_top_level_data=not include_data)
 
 
 def iter_files_under(root: Path, *, suffix: str | None = None) -> tuple[Path, ...]:
@@ -74,8 +79,8 @@ def iter_files_under(root: Path, *, suffix: str | None = None) -> tuple[Path, ..
     The sibling of :func:`python_files_under` for a directory that changes: a
     ``tmp_path`` a test is writing, a build output, an extracted archive. Those
     callers cannot take the memoised walk -- a cached listing of a directory
-    under construction is simply wrong -- but they can still have the walk
-    itself be ten times cheaper than ``Path.rglob``.
+    under construction is simply wrong -- but they still get the same pruned
+    ``scandir`` walk underneath.
 
     Splitting the two is the whole point. One function that guessed which
     directories were safe to cache would eventually guess wrong, and the failure
@@ -91,25 +96,43 @@ def iter_files_under(root: Path, *, suffix: str | None = None) -> tuple[Path, ..
     return _scan_files(root, suffix=suffix)
 
 
-def _scan_files(root: Path, *, suffix: str | None, prune_data_at: Path | None = None) -> tuple[Path, ...]:
-    """Walk *root* with ``os.scandir``, pruning noise directories before descent."""
-    found: list[Path] = []
-    stack = [str(root)]
-    while stack:
-        current = stack.pop()
-        try:
-            entries = list(os.scandir(current))
-        except OSError:
+def _scan_files(root: Path, *, suffix: str | None, prune_top_level_data: bool = False) -> tuple[Path, ...]:
+    """Walk *root* through the shared scandir primitive, pruning before descent.
+
+    *suffix* is matched with :meth:`str.endswith` rather than handed to the
+    primitive as a ``"*.py"`` pattern: glob matching is case-insensitive on
+    Windows, so a pattern would start admitting a ``.PY`` file this scan has
+    never seen and the platforms would disagree about the inventory.
+    """
+    found = _scan_tree_excluding_top_level_data(root) if prune_top_level_data else _scan_tree(root)
+    return tuple(path for path in found if suffix is None or path.name.endswith(suffix))
+
+
+def _scan_tree(root: Path) -> tuple[Path, ...]:
+    """Every file beneath *root*, with the noise directories never entered."""
+    return scan_directory(
+        root,
+        recursive=True,
+        select=DirectoryEntryKind.FILES,
+        prune_directories=_PRUNED_DIRECTORY_NAMES,
+    )
+
+
+def _scan_tree_excluding_top_level_data(root: Path) -> tuple[Path, ...]:
+    """Every file beneath *root* with ``root/_data`` skipped, deeper ones kept.
+
+    ``prune_directories`` matches a bare name at any depth, which is a
+    different rule: it would also drop a ``_data`` package nested further down.
+    Over-pruning is the dangerous direction here -- a structural ratchet that
+    silently scans fewer files passes vacuously -- so the walk is split at
+    *root* instead, which still prunes before descending into the one directory
+    the caller named.
+    """
+    found = list(scan_directory(root, select=DirectoryEntryKind.FILES))
+    for child in scan_directory(root, select=DirectoryEntryKind.DIRECTORIES):
+        if child.name == "_data" or child.name in _PRUNED_DIRECTORY_NAMES:
             continue
-        for entry in entries:
-            if entry.is_dir(follow_symlinks=False):
-                if entry.name in _PRUNED_DIRECTORY_NAMES:
-                    continue
-                if prune_data_at is not None and entry.name == "_data" and Path(entry.path).parent == prune_data_at:
-                    continue
-                stack.append(entry.path)
-            elif suffix is None or entry.name.endswith(suffix):
-                found.append(Path(entry.path))
+        found.extend(_scan_tree(child))
     return tuple(sorted(found))
 
 

@@ -26,7 +26,7 @@ from pathlib import Path
 
 from pydantic import Field, field_validator, model_validator
 
-from ....core import ConvenioOverrideKind, TipoRentaIrnr, freeze_toml, read_toml
+from ....core import ConvenioOverrideKind, TipoRentaIrnr, freeze_toml, read_toml, scan_directory
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._ids import LegalRefId
 from ._loader_cache import toml_file_fingerprint
@@ -214,7 +214,7 @@ def load_convenio_authority(treaties_dir: Path) -> ConvenioAuthority:
     if not resolved.is_dir():
         return ConvenioAuthority.empty()
     treaties: dict[str, ConvenioTreaty] = {}
-    for path in sorted(resolved.glob("*.toml")):
+    for path in scan_directory(resolved, pattern="*.toml"):
         raw = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
         table = raw.get("treaty")
         if not isinstance(table, Mapping):
@@ -241,9 +241,7 @@ def collect_convenio_fingerprints(root: Path) -> tuple[tuple[str, int, int, str]
     that collides on ``(size, mtime_ns)`` still re-keys via the content digest.
     """
     treaties_dir = root.resolve() / "treaties"
-    if not treaties_dir.is_dir():
-        return ()
-    return tuple(toml_file_fingerprint(path.resolve()) for path in sorted(treaties_dir.glob("*.toml")))
+    return tuple(toml_file_fingerprint(path.resolve()) for path in scan_directory(treaties_dir, pattern="*.toml"))
 
 
 def validate_convenio_legal_refs(

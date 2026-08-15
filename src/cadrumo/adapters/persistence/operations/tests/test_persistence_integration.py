@@ -24,7 +24,7 @@ from .....application.operations import (
     OperationReplayStatus,
     operation_conflict_scope_reference,
 )
-from .....core import OperationEffect, OperationLifecycle
+from .....core import OperationEffect, OperationLifecycle, scan_directory
 from ...storage import RepositoryError
 from .. import OperationJournalRepository, OperationLeaseFilesystemRepository
 
@@ -132,7 +132,7 @@ def _commit_in_process(
 
 
 def _assert_no_staging_residue(directory: Path) -> None:
-    assert tuple(directory.glob("*.tmp")) == ()
+    assert scan_directory(directory, pattern="*.tmp") == ()
 
 
 def test_public_persistence_facades_commit_replay_and_reload_credential_free_history(tmp_path: Path) -> None:
@@ -391,4 +391,4 @@ def test_public_persistence_facades_serialize_snapshot_cas_and_refuse_linked_roo
     linked_leases = OperationLeaseFilesystemRepository(storage_root=linked_storage_root)
     with pytest.raises(RepositoryError, match="symlink or junction"):
         asyncio.run(linked_leases.acquire(owner, observed_at=_STARTED))
-    assert tuple(redirected_directory.glob("*.json")) == ()
+    assert scan_directory(redirected_directory, pattern="*.json") == ()

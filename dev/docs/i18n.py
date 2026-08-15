@@ -40,6 +40,7 @@ if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
 if not __package__:
     __package__ = "dev.docs"
 
+from cadrumo.core import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
@@ -163,8 +164,8 @@ def user_scope_source_pages(docs_root: Path) -> list[str]:
         ``["disclaimer.md", "how-to/quickstart.md", "index.md"]``.
     """
     pages: list[str] = []
-    for source in docs_root.rglob("*"):
-        if source.suffix not in _DOC_SUFFIXES or not source.is_file():
+    for source in scan_directory(docs_root, recursive=True, select=DirectoryEntryKind.FILES):
+        if source.suffix not in _DOC_SUFFIXES:
             continue
         relative = source.relative_to(docs_root)
         if relative.parts[0] in _EXCLUDED_TOP_DIRS:

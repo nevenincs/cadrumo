@@ -42,6 +42,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
@@ -234,7 +235,7 @@ def screen(root: Path) -> tuple[int, list[tuple[str, str, int]]]:
         base = root / tree
         if not base.is_dir():
             raise SystemExit(f"screened tree is missing, so the result would be meaningless: {base}")
-        for path in base.rglob("test_*.py"):
+        for path in scan_directory(base, pattern="test_*.py", recursive=True, prune_directories=("__pycache__",)):
             scanned += 1
             try:
                 parsed = ast.parse(path.read_text(encoding=_UTF_8))

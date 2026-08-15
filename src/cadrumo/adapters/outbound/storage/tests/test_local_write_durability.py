@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import DirectoryEntryKind, scan_directory
 from .....core.hashing import sha256_hex
 from .....tests.path_obstruction import obstructed_path
 from .._errors import OutboundStorageError
@@ -47,7 +48,7 @@ def _stored_files(tmp_path: Path) -> set[str]:
     namespace_dir = tmp_path / _NAMESPACE
     if not namespace_dir.is_dir():
         return set()
-    return {entry.name for entry in namespace_dir.iterdir() if entry.is_file()}
+    return {entry.name for entry in scan_directory(namespace_dir, select=DirectoryEntryKind.FILES)}
 
 
 class TestLabelDriftReplacement:
