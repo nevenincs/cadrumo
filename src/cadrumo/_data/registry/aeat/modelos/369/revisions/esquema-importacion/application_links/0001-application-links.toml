@@ -75,3 +75,11 @@ consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure"]

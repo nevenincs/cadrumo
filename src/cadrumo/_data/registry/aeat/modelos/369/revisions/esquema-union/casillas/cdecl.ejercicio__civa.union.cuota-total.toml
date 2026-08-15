@@ -77,3 +77,10 @@ legal_refs = [
     "orden-hac-610-2021:art-1",
 ]
 source_refs = ["aeat-dr-369-2021"]
+# The union design carries no total-cuota position: its only money field
+# outside the per-country detail blocks is "Importe pagado" @38+17, which is
+# the amount actually paid, a different concept. Verified across all six
+# union sheets. Not filed_via_binding_field -- that would assert the value
+# IS written, and no binding writes it either.
+export_exemption_reason = "not_in_record_design"
+

@@ -134,7 +134,6 @@ record_type = "t36900-info-adicional"
 order = 1
 encoding = "latin-1"
 line_ending = "none"
-binding_record = "modelo-369-union-info-adicional"
 [[revisions."esquema-union".export_layouts.records.fields]]
 id = "modelo-369-union-info-adicional-1-inicio-del-identificador-de-modelo-y-pag"
 offset = 1
@@ -741,7 +740,6 @@ record_type = "t36909-un"
 order = 7
 encoding = "latin-1"
 line_ending = "none"
-binding_record = "modelo-369-union-t36909"
 [[revisions."esquema-union".export_layouts.records.fields]]
 id = "modelo-369-union-t36909-1-inicio-del-identificador-de-modelo-y-pag"
 offset = 1
