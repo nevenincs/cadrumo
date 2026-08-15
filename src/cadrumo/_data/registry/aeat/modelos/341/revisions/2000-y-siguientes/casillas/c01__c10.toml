@@ -1,0 +1,140 @@
+# Modelo 341 numbered casillas [01]-[10], transcribed from the bundled Diseno de
+# Registro, source aeat-dr-341-2016, sha256
+# 7bb06cb80b865993fa60fe6ecceae8d28da1126fae5174b56cbe2cf13b534600, sheet M34101.
+# The record is 800 positions and its declared field lengths sum to exactly 800.
+#
+# AEAT repeats each concept across three rows and distinguishes them ONLY by box
+# number: the design text for [01], [02] and [03] is byte-identical
+# ("Compensacion: Importe de las operaciones"), as it is for [04]/[05]/[06] and
+# for [07]/[08]/[09]. The compensation percentage is itself a DATA slot
+# ([04]/[05]/[06]), not a label, so nothing in the design says which row carries
+# which of the art. 130.Cinco LIVA percentages. No row is therefore named after a
+# rate -- that identity is not stated by the source and is not invented here.
+#
+# [10] is left manual deliberately. AEAT's own text is
+# "Importe total [07]+[08]+[09]... [10]" -- the trailing ellipsis is AEAT's, and
+# it leaves the enumeration open, so declaring a closed add(07,08,09) formula
+# would assert a summation the source does not close. Open question for tax
+# review.
+
+[[revisions."2000-y-siguientes".casillas]]
+id = "01"
+number = "01"
+section = ["iva", "reagp", "compensacion", "operaciones"]
+data_type = "money"
+semantic_role = "reagp_importe_operaciones"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-341-p01-importe-operaciones-01"]
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".casillas]]
+id = "02"
+number = "02"
+section = ["iva", "reagp", "compensacion", "operaciones"]
+data_type = "money"
+semantic_role = "reagp_importe_operaciones"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-341-p01-importe-operaciones-02"]
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".casillas]]
+id = "03"
+number = "03"
+section = ["iva", "reagp", "compensacion", "operaciones"]
+data_type = "money"
+semantic_role = "reagp_importe_operaciones"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-341-p01-importe-operaciones-03"]
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".casillas]]
+id = "04"
+number = "04"
+section = ["iva", "reagp", "compensacion", "porcentaje"]
+data_type = "ratio"
+semantic_role = "reagp_porcentaje_compensacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-341-p01-porcentaje-compensacion-04"]
+legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".casillas]]
+id = "05"
+number = "05"
+section = ["iva", "reagp", "compensacion", "porcentaje"]
+data_type = "ratio"
+semantic_role = "reagp_porcentaje_compensacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-341-p01-porcentaje-compensacion-05"]
+legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".casillas]]
+id = "06"
+number = "06"
+section = ["iva", "reagp", "compensacion", "porcentaje"]
+data_type = "ratio"
+semantic_role = "reagp_porcentaje_compensacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-341-p01-porcentaje-compensacion-06"]
+legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".casillas]]
+id = "07"
+number = "07"
+section = ["iva", "reagp", "compensacion", "importe"]
+data_type = "money"
+semantic_role = "reagp_importe_compensacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-341-p01-importe-compensacion-07"]
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".casillas]]
+id = "08"
+number = "08"
+section = ["iva", "reagp", "compensacion", "importe"]
+data_type = "money"
+semantic_role = "reagp_importe_compensacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-341-p01-importe-compensacion-08"]
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".casillas]]
+id = "09"
+number = "09"
+section = ["iva", "reagp", "compensacion", "importe"]
+data_type = "money"
+semantic_role = "reagp_importe_compensacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-341-p01-importe-compensacion-09"]
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2000-y-siguientes".casillas]]
+id = "10"
+number = "10"
+section = ["iva", "reagp", "compensacion", "totales"]
+data_type = "money"
+semantic_role = "reagp_importe_compensacion_total"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The Modelo 341 record design declares exactly one total-compensacion slot, [10] at position 226; the per-row compensacion amounts it aggregates are [07], [08] and [09], which share the sibling role reagp_importe_compensacion. There is no second casilla in this or any other revision that carries a total of REAGP compensations, so the role is a singleton by the design's construction rather than by a missing sibling declaration."
+required = false
+input_kind = "manual"
+export_refs = ["modelo-341-p01-importe-total-10"]
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
