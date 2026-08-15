@@ -270,9 +270,7 @@ def test_a_retirement_that_cannot_complete_refuses_the_registration_in_its_own_w
         receipt.mkdir()
         (receipt / "occupant.bin").write_bytes(b"an occupied receipt path cannot be unlinked")
 
-        refusal = _attempt_registration_in_separate_process(
-            storage_root, "Obstructed Two", _PASSWORD_ENTERING
-        )
+        refusal = _attempt_registration_in_separate_process(storage_root, "Obstructed Two", _PASSWORD_ENTERING)
 
         assert refusal["refused"] is True
         assert refusal["cause"] == "ProfileCustodyDisplacedSessionRetirementError"

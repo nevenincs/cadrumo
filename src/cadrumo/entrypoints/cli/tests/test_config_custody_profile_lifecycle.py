@@ -8,19 +8,24 @@ locations -- the on-disk shape the CLI must actually produce for the
 profile lifecycle to be filing-grade. Re-deriving either side from the
 taxonomy accessor would make the assertion agree unconditionally with
 the code path it exists to independently confirm.
+
+Profiles are registered in-process and the storage root is handed to the
+subprocess CLI. That is the only available shape rather than a convenience:
+credential registration is the sole creation door and it takes a passphrase
+as an argument, so no CLI verb -- and therefore no subprocess -- can mint a
+profile. Everything after the seed still runs through the real console
+script, which is what these tests exist to cover.
 """
 
 from __future__ import annotations
 
 import json
 import subprocess
-import tomllib
 from pathlib import Path
 from typing import Final
 
 import pytest
 
-from ....adapters.persistence.storage import BUCKET_MANIFEST_FILENAME
 from ....core import DirectoryEntryKind, scan_directory
 from ....core.config import load_settings, override_settings
 from ....tests import REPO_ROOT
@@ -107,10 +112,16 @@ def test_registered_profile_custody_survives_logout_and_reopens_on_login(tmp_pat
         },
     )
 
-    bucket_dirs = list(scan_directory(tmp_path / "buckets"))
+    bucket_dirs = scan_directory(tmp_path / "buckets", select=DirectoryEntryKind.DIRECTORIES)
     assert len(bucket_dirs) == 1
-    manifest = tomllib.loads((bucket_dirs[0] / BUCKET_MANIFEST_FILENAME).read_text(encoding="utf-8"))
-    assert manifest["key_schedule"] == "bucket-dek-v1"
+
+    # The plaintext bucket manifest this test used to read is retired: every
+    # resolution path projects committed custody capsules and none reads a
+    # manifest, so the label is asserted through the operator-facing listing,
+    # which is the surface an operator actually reconciles against.
+    listed = _run_cadrumo(tmp_path, ("config", "profile", "list"))
+    assert listed.returncode == 0, _combined_output(listed)
+    assert "custody" in listed.stdout
 
     logged_out = _run_cadrumo(tmp_path, ("config", "logout"))
     assert logged_out.returncode == 0, _combined_output(logged_out)
@@ -295,7 +306,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     pointer file, never from the shell.
     """
 
-    _register_profile(
+    alpha_id = _register_profile(
         tmp_path,
         "alpha",
         **{
@@ -307,7 +318,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
             "iva.regime": "GENERAL",
         },
     )
-    _register_profile(
+    beta_id = _register_profile(
         tmp_path,
         "beta",
         **{
@@ -320,13 +331,12 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
         },
     )
 
-    bucket_dirs = scan_directory(tmp_path / "buckets", select=DirectoryEntryKind.DIRECTORIES)
-    labels_by_id: dict[str, str] = {}
-    for bucket_dir in bucket_dirs:
-        manifest = tomllib.loads((bucket_dir / BUCKET_MANIFEST_FILENAME).read_text(encoding="utf-8"))
-        labels_by_id[bucket_dir.name] = manifest["label"]
-    alpha_id = next(bucket_id for bucket_id, label in labels_by_id.items() if label == "alpha")
-    beta_id = next(bucket_id for bucket_id, label in labels_by_id.items() if label == "beta")
+    # The registration door returns the minted identity, so the ids are known
+    # without reading the retired plaintext bucket manifest.
+    labels_by_id = {alpha_id: "alpha", beta_id: "beta"}
+    assert set(labels_by_id) == {
+        entry.name for entry in scan_directory(tmp_path / "buckets", select=DirectoryEntryKind.DIRECTORIES)
+    }
 
     pointer_default = _run_cadrumo(tmp_path, ("config", "profile", "show"))
     assert pointer_default.returncode == 0, _combined_output(pointer_default)
