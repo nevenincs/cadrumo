@@ -32,7 +32,6 @@ RESULT_SCHEMA_MODULES: tuple[str, ...] = (
     "cadrumo.entrypoints.cli._config_bucket_history_payloads",
     "cadrumo.entrypoints.cli._config_descendiente_payloads",
     "cadrumo.entrypoints.cli._config_payloads",
-    "cadrumo.entrypoints.cli._config_sandbox_payloads",
     "cadrumo.entrypoints.cli._diagnostics_payloads",
     "cadrumo.entrypoints.cli._ledger_business_payloads",
     "cadrumo.entrypoints.cli._ledger_catalogue_invoice_payloads",

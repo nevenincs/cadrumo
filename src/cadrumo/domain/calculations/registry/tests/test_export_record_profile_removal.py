@@ -13,13 +13,14 @@ deleted too, which is the failure this guards.
 
 Nothing here claims the export layouts SHOULD be absent. Which modelos can emit is
 answered by the filing capability worklist, derived from the registry rather than
-from .....tests.registry_tree import bundled_registry_tree
 from a list maintained by hand.
 """
 
 from __future__ import annotations
 
 import pytest
+
+from .....tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
